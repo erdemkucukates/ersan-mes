@@ -1072,6 +1072,24 @@ async function analyzeWithAI() {
   document.getElementById('ai-result-text').textContent = 'Claude teknik resmi analiz ediyor...';
 
   try {
+    const imageContent = uploadedMimeType === 'application/pdf'
+      ? {
+          type: 'document',
+          source: {
+            type: 'base64',
+            media_type: 'application/pdf',
+            data: uploadedBase64
+          }
+        }
+      : {
+          type: 'image',
+          source: {
+            type: 'base64',
+            media_type: uploadedMimeType,
+            data: uploadedBase64
+          }
+        };
+
     const response = await fetch('/.netlify/functions/claude', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1081,14 +1099,7 @@ async function analyzeWithAI() {
         messages: [{
           role: 'user',
           content: [
-            {
-              type: 'image',
-              source: {
-                type: 'base64',
-                media_type: uploadedMimeType,
-                data: uploadedBase64
-              }
-            },
+            imageContent,
             {
               type: 'text',
               text: `Bu teknik resmi analiz et. Sadece JSON formatında yanıt ver, başka hiçbir şey yazma:
