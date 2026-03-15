@@ -13,6 +13,9 @@ exports.handler = async (event) => {
 
   try {
     const body = JSON.parse(event.body);
+    const bodySize = event.body ? event.body.length : 0;
+    console.log('Request body size:', bodySize, 'bytes');
+    
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
