@@ -27,6 +27,8 @@ exports.handler = async (event) => {
     });
 
     const data = await response.json();
+    console.log('Claude response status:', response.status);
+    console.log('Claude response:', JSON.stringify(data).slice(0, 500));
     return {
       statusCode: response.status,
       headers: {
