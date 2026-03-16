@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — Planlama</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#f0f2f5;--surface:#fff;--surface2:#f7f8fa;--border:#e2e5ea;--border2:#c8cdd6;
+  --text:#1a1d23;--text2:#5a6170;--text3:#9aa0ad;
+  --accent:#7c3aed;--accent-light:#ede9fe;--accent-hover:#6d28d9;
+  --green:#059669;--green-light:#d1fae5;--red:#dc2626;--red-light:#fee2e2;
+  --orange:#d97706;--orange-light:#fef3c7;--blue:#2563eb;--blue-light:#dbeafe;
+  --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;--radius:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);height:100vh;overflow:hidden;font-size:13px;}
+
+.header{height:52px;background:#1e1b4b;display:flex;align-items:center;padding:0 20px;gap:16px;position:fixed;top:0;left:0;right:0;z-index:100;}
+.logo-badge{width:28px;height:28px;border-radius:6px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:white;font-family:var(--mono);}
+.header-title{color:white;font-size:14px;font-weight:600;}
+.header-sub{color:rgba(255,255,255,.5);font-size:11px;}
+.header-sep{width:1px;height:28px;background:rgba(255,255,255,.2);}
+.header-nav{display:flex;gap:4px;}
+.header-nav a{color:rgba(255,255,255,.6);font-size:13px;font-weight:500;text-decoration:none;padding:6px 12px;border-radius:6px;transition:all .15s;}
+.header-nav a:hover{background:rgba(255,255,255,.1);color:white;}
+.header-nav a.active{background:rgba(255,255,255,.15);color:white;}
+
+.layout{display:flex;height:calc(100vh - 52px);margin-top:52px;}
+
+/* LIST */
+.list-panel{width:300px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;}
+.list-header{padding:14px 16px 10px;border-bottom:1px solid var(--border);}
+.list-header h2{font-size:13px;font-weight:600;}
+.list-count{font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:2px;}
+.list-search{padding:8px 12px;border-bottom:1px solid var(--border);display:flex;gap:6px;}
+.list-search input{flex:1;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:var(--sans);background:var(--surface2);outline:none;}
+.list-search input:focus{border-color:var(--accent);}
+.filter-row{padding:6px 12px;border-bottom:1px solid var(--border);display:flex;gap:4px;flex-wrap:wrap;}
+.fc{padding:3px 10px;border-radius:10px;font-size:10px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text3);}
+.fc.on{background:var(--accent-light);color:var(--accent);border-color:var(--accent);}
+.list-scroll{flex:1;overflow-y:auto;}
+
+.se-item{padding:11px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s;}
+.se-item:hover{background:var(--surface2);}
+.se-item.active{background:var(--accent-light);border-left:3px solid var(--accent);}
+.se-top{display:flex;justify-content:space-between;}
+.se-no{font-family:var(--mono);font-size:11px;font-weight:500;color:var(--accent);}
+.se-parca{font-size:12px;font-weight:500;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.se-bottom{display:flex;justify-content:space-between;margin-top:4px;}
+.se-meta{font-size:11px;color:var(--text3);}
+
+/* DETAIL */
+.detail-panel{flex:1;overflow:hidden;display:flex;flex-direction:column;}
+.detail-toolbar{height:52px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:10px;flex-shrink:0;}
+.detail-title{font-size:16px;font-weight:700;font-family:var(--mono);}
+.detail-scroll{flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:14px;}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.card-header{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;}
+.card-body{padding:14px;}
+.card-dot{width:6px;height:6px;border-radius:50%;}
+
+/* BUTTONS */
+.btn{display:flex;align-items:center;gap:5px;padding:6px 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;background:var(--surface);color:var(--text2);font-family:var(--sans);transition:all .15s;white-space:nowrap;}
+.btn:hover{border-color:var(--accent);color:var(--accent);}
+.btn.primary{background:var(--accent);color:white;border-color:var(--accent);}
+.btn.primary:hover{background:var(--accent-hover);}
+.btn.success{background:var(--green);color:white;border-color:var(--green);}
+.btn.warn{background:var(--orange);color:white;border-color:var(--orange);}
+
+/* FORM */
+.fg{display:flex;flex-direction:column;gap:4px;}
+.fl{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;}
+.fi{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:12px;font-family:var(--sans);color:var(--text);outline:none;transition:border-color .15s;width:100%;}
+.fi:focus{border-color:var(--accent);}
+select.fi{cursor:pointer;}
+.fi:disabled{opacity:.6;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+.grid4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;}
+.full{grid-column:1/-1;}
+
+/* STATUS */
+.badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;}
+.b-Onaylandı{background:var(--green-light);color:var(--green);}
+.b-Beklemede{background:#f3f4f6;color:#6b7280;}
+.b-Gönderildi{background:var(--blue-light);color:var(--blue);}
+.b-Taslak{background:#f3f4f6;color:#6b7280;}
+.b-Teklif\ Alındı{background:var(--orange-light);color:var(--orange);}
+
+/* STL TABLE */
+.stl-table{width:100%;border-collapse:collapse;}
+.stl-table th{padding:6px 8px;text-align:left;font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;background:var(--surface2);border-bottom:1px solid var(--border);}
+.stl-table td{padding:6px 8px;border-bottom:1px solid var(--border);vertical-align:middle;}
+.stl-table tr:last-child td{border-bottom:none;}
+.stl-table tr:hover td{background:var(--surface2);}
+
+/* TOAST */
+.toast-wrap{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;}
+.toast{padding:10px 16px;border-radius:8px;font-size:12px;font-weight:500;color:white;}
+.toast.ok{background:var(--green);}
+.toast.err{background:var(--red);}
+.toast.inf{background:var(--accent);}
+
+/* EMPTY */
+.empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text3);gap:12px;padding:40px;}
+
+/* MODAL */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;display:flex;align-items:center;justify-content:center;}
+.modal-box{background:white;border-radius:12px;width:560px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.2);}
+.modal-head{background:#1e1b4b;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;}
+.modal-head-title{color:white;font-weight:600;font-size:14px;}
+.modal-body{padding:16px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:12px;}
+.modal-foot{padding:12px 16px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;}
+.btn-x{background:transparent;border:none;color:white;font-size:20px;cursor:pointer;}
+
+@keyframes spin{to{transform:rotate(360deg);}}
+.spin{width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:white;border-radius:50%;animation:spin .6s linear infinite;display:inline-block;}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div class="logo-badge">MES</div>
+    <div><div class="header-title">Ersan MES</div><div class="header-sub">Planlama</div></div>
+  </div>
+  <div class="header-sep"></div>
+  <nav class="header-nav">
+    <a href="ersan_teklif.html">Teklifler</a>
+    <a href="ersan_teklif.html#siparisler">Siparişler</a>
+    <a href="ersan_planlama.html" class="active">Planlama</a>
+    <a href="ersan_isemirleri.html">İş Emirleri</a>
+  </nav>
+</header>
+
+<div class="layout">
+
+  <!-- LIST -->
+  <div class="list-panel">
+    <div class="list-header">
+      <h2>Satış Emirleri</h2>
+      <div class="list-count" id="se-count">Yükleniyor...</div>
+    </div>
+    <div class="list-search">
+      <input type="text" id="se-search" placeholder="SE no, parça ara..." oninput="filterSE()">
+    </div>
+    <div class="filter-row">
+      <div class="fc on" data-f="Tümü" onclick="setFilter(this)">Tümü</div>
+      <div class="fc" data-f="Beklemede" onclick="setFilter(this)">Beklemede</div>
+      <div class="fc" data-f="Üretimde" onclick="setFilter(this)">Üretimde</div>
+      <div class="fc" data-f="Tamamlandı" onclick="setFilter(this)">Tamamlandı</div>
+    </div>
+    <div class="list-scroll" id="se-list">
+      <div style="padding:20px;text-align:center;color:var(--text3);">Yükleniyor...</div>
+    </div>
+  </div>
+
+  <!-- DETAIL -->
+  <div class="detail-panel">
+    <div id="detail-content">
+      <div class="empty">
+        <svg width="64" height="64" viewBox="0 0 64 64" fill="none" style="opacity:.25"><rect x="8" y="8" width="48" height="48" rx="6" stroke="currentColor" stroke-width="2"/><path d="M20 24h24M20 32h24M20 40h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="48" cy="48" r="10" fill="currentColor" opacity=".15"/><path d="M44 48h8M48 44v8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <p>Listeden bir satış emri seçin</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<script>
+// ── CONFIG ──
+const BASE = 'app5LDgJMgocw79Ix';
+const T = {
+  se:       'tbl56Oj1nPaqefI60',
+  musteriler:'tblPxhjJDEx0fyUQx',
+  tedarikci:'tblEI6683Im5AXj36',
+  isEmirleri:'tbl58qL39I2tv8hK4',
+  stl:      'tblHmfCvNZq0qNtb1',
+  rfq:      'RFQ_TABLE_PLACEHOLDER', // Satınalma Teklifleri tablosu
+};
+
+let seList = [], filteredSE = [], musteriler = [], tedarikci = [];
+let activeId = null;
+let activeFilter = 'Tümü';
+let stlSatirlar = []; // talep satırları (local)
+
+// ── API ──
+const apiFn = async (method, table, body, id='') => {
+  const path = `/v0/${BASE}/${table}${id?'/'+id:''}`;
+  const res = await fetch('/.netlify/functions/airtable', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({method, path, body})
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+};
+const apiGet = async (table, params='') => {
+  const path = `/v0/${BASE}/${table}?${params}`;
+  const res = await fetch('/.netlify/functions/airtable', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({method:'GET', path})
+  });
+  return res.json();
+};
+
+// ── HELPERS ──
+const fmt = n => n ? Number(n).toLocaleString('tr-TR',{minimumFractionDigits:2}) : '—';
+const fmtDate = d => { if(!d) return ''; try{ return new Date(d).toLocaleDateString('tr-TR'); }catch{ return d; } };
+function toast(msg, type='ok') {
+  const el = document.createElement('div');
+  el.className = `toast ${type}`; el.textContent = msg;
+  document.getElementById('toast-wrap').appendChild(el);
+  setTimeout(()=>el.remove(), 3500);
+}
+const getMusteriAd = id => musteriler.find(r=>r.id===id)?.fields?.['Müşteri Adı'] || '—';
+
+// ── LOAD ──
+async function loadAll() {
+  try {
+    let all=[], offset='';
+    do {
+      const d = await apiGet(T.se, `sort[0][field]=SE%20No&sort[0][direction]=desc${offset?'&offset='+offset:''}`);
+      all = all.concat(d.records||[]);
+      offset = d.offset||'';
+    } while(offset);
+    seList = all;
+
+    const [m, td] = await Promise.all([
+      apiGet(T.musteriler, 'fields[]=Müşteri%20Adı'),
+      apiGet(T.tedarikci, 'fields[]=Tedarikçi%20Adı&fields[]=E-posta&fields[]=Telefon'),
+    ]);
+    musteriler = m.records||[];
+    tedarikci = td.records||[];
+    filterAndRender();
+  } catch(e) {
+    document.getElementById('se-list').innerHTML = `<div style="padding:16px;color:var(--red);font-size:12px;">Hata: ${e.message}</div>`;
+  }
+}
+
+function filterAndRender() {
+  const q = document.getElementById('se-search').value.toLowerCase();
+  filteredSE = seList.filter(r => {
+    const f = r.fields;
+    const mFilter = activeFilter === 'Tümü' || f['Durum'] === activeFilter;
+    const mSearch = !q ||
+      (f['SE No']||'').toLowerCase().includes(q) ||
+      (f['Parça Adı']||'').toLowerCase().includes(q) ||
+      (f['Parça No']||'').toLowerCase().includes(q);
+    return mFilter && mSearch;
+  });
+  document.getElementById('se-count').textContent = `${filteredSE.length} sipariş`;
+  renderSEList();
+}
+
+function renderSEList() {
+  const el = document.getElementById('se-list');
+  if (!filteredSE.length) {
+    el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:12px;">Sipariş bulunamadı</div>';
+    return;
+  }
+  el.innerHTML = filteredSE.map(r => {
+    const f = r.fields;
+    const durum = f['Durum']||'Beklemede';
+    const musteriAd = getMusteriAd(f['Müşteri']?.[0]);
+    return `<div class="se-item${r.id===activeId?' active':''}" onclick="loadDetail('${r.id}')">
+      <div class="se-top">
+        <span class="se-no">${f['SE No']||'—'}</span>
+        <span class="badge b-${durum}">${durum}</span>
+      </div>
+      <div class="se-parca">${f['Parça Adı']||'—'}</div>
+      <div class="se-bottom">
+        <span class="se-meta">${musteriAd}</span>
+        <span class="se-meta">${f['Miktar']||0} ${f['Birim']||'Adet'}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function setFilter(el) {
+  document.querySelectorAll('.fc').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on');
+  activeFilter = el.dataset.f;
+  filterAndRender();
+}
+function filterSE() { filterAndRender(); }
+
+// ── DETAIL ──
+async function loadDetail(id) {
+  activeId = id;
+  renderSEList();
+  const se = seList.find(r=>r.id===id);
+  const f = se?.fields||{};
+  const musteriAd = getMusteriAd(f['Müşteri']?.[0]);
+  const durum = f['Durum']||'Beklemede';
+
+  // Load STL records for this SE
+  let stlRecords = [];
+  if (T.stl !== 'STL_TABLE_ID') {
+    try {
+      const d = await apiGet(T.stl,
+        `filterByFormula=${encodeURIComponent(`FIND("${id}",ARRAYJOIN({SE No}))`)}&sort[0][field]=Sıra%20No&sort[0][direction]=asc`);
+      stlRecords = d.records||[];
+    } catch(e) { console.warn('STL load error:', e); }
+  }
+
+  document.getElementById('detail-content').innerHTML = `
+    <div class="detail-toolbar">
+      <div class="detail-title">${f['SE No']||'—'}</div>
+      <span class="badge b-${durum}">${durum}</span>
+      <span style="font-size:12px;color:var(--text2);">${musteriAd}</span>
+      <div style="flex:1;"></div>
+      <button class="btn warn" onclick="createSTL('${id}')">
+        📋 Satınalma Talebi Oluştur
+      </button>
+      <button class="btn success" onclick="openIEModal('${id}')" ${stlRecords.some(r=>r.fields['Durum']==='Onaylandı')?'':'title="Önce satınalma talebi onaylanmalı"'}>
+        ⚙️ İş Emri Aç
+      </button>
+      <select class="fi" style="width:150px;font-size:12px;" onchange="updateSEDurum('${id}',this.value)">
+        ${['Beklemede','Üretimde','Tamamlandı','Kısmi Sevk','İptal'].map(d=>`<option ${durum===d?'selected':''}>${d}</option>`).join('')}
+      </select>
+    </div>
+    <div class="detail-scroll">
+
+      <!-- SE BİLGİLERİ -->
+      <div class="card">
+        <div class="card-header"><div class="card-dot" style="background:#6366f1"></div>Sipariş Bilgileri</div>
+        <div class="card-body">
+          <div class="grid4" style="gap:10px;">
+            <div class="fg"><div class="fl">SE No</div><input class="fi" value="${f['SE No']||''}" disabled style="font-family:var(--mono)"></div>
+            <div class="fg"><div class="fl">Parça No</div><input class="fi" value="${f['Parça No']||''}" disabled></div>
+            <div class="fg"><div class="fl">Parça Adı</div><input class="fi" value="${f['Parça Adı']||''}" disabled></div>
+            <div class="fg"><div class="fl">Müşteri</div><input class="fi" value="${musteriAd}" disabled></div>
+            <div class="fg"><div class="fl">Miktar</div><input class="fi" value="${f['Miktar']||0} ${f['Birim']||'Adet'}" disabled></div>
+            <div class="fg"><div class="fl">Termin</div><input class="fi" value="${fmtDate(f['Termin Tarihi'])}" disabled></div>
+            <div class="fg"><div class="fl">Müşteri PO No</div><input class="fi" value="${f['Müşteri PO No']||'—'}" disabled></div>
+            <div class="fg"><div class="fl">Durum</div><input class="fi" value="${durum}" disabled></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SATINALMA TALEPLERİ -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-dot" style="background:#f59e0b"></div>
+          Satınalma Talepleri
+          <span style="margin-left:auto;font-size:10px;font-weight:400;color:var(--text3);">${stlRecords.length} talep</span>
+          <button class="btn" style="padding:3px 8px;font-size:10px;margin-left:8px;" onclick="loadDetail('${id}')">Yenile</button>
+        </div>
+        <div class="card-body" style="padding:0;">
+          ${stlRecords.length === 0
+            ? `<div style="padding:20px;text-align:center;color:var(--text3);font-size:12px;">
+                Henüz satınalma talebi yok. "📋 Satınalma Talebi Oluştur" butonuna tıklayın.
+              </div>`
+            : `<div style="overflow-x:auto;">
+                <table class="stl-table">
+                  <thead><tr>
+                    <th>#</th><th>Tip</th><th>Malzeme / İşlem</th><th>Miktar</th><th>Ölçü / Spec</th>
+                    <th>Durum</th><th>Tedarikçi</th><th>Fiyat</th><th></th>
+                  </tr></thead>
+                  <tbody>
+                    ${stlRecords.map((r,i) => {
+                      const rf = r.fields;
+                      const stlDurum = rf['Durum']||'Taslak';
+                      return `<tr>
+                        <td style="font-family:var(--mono);font-size:11px;">${i+1}</td>
+                        <td><span class="badge ${rf['Talep Tipi']==='Hammadde'?'b-Gönderildi':'b-Teklif Alındı'}">${rf['Talep Tipi']||'—'}</span></td>
+                        <td style="font-weight:500;">${rf['Malzeme İşlem']||'—'}</td>
+                        <td style="font-family:var(--mono);">${rf['Miktar']||0} ${rf['Birim']||''}</td>
+                        <td style="color:var(--text2);font-size:11px;">${rf['Ölçü']||'—'}</td>
+                        <td><span class="badge b-${stlDurum}">${stlDurum}</span></td>
+                        <td style="font-size:11px;">${rf['Seçilen Tedarikçi']||'—'}</td>
+                        <td style="font-family:var(--mono);color:var(--accent);">${rf['Onay Fiyatı']?fmt(rf['Onay Fiyatı'])+' TL':'—'}</td>
+                        <td>
+                          <div style="display:flex;gap:4px;">
+                            <button class="btn" style="padding:2px 7px;font-size:10px;" onclick="openRFQFromSTL('${r.id}','${id}')">📧 RFQ</button>
+                            <button class="btn" style="padding:2px 7px;font-size:10px;" onclick="openSTLDurum('${r.id}','${id}')">✏️</button>
+                          </div>
+                        </td>
+                      </tr>`;
+                    }).join('')}
+                  </tbody>
+                </table>
+              </div>`
+          }
+        </div>
+      </div>
+
+    </div>`;
+}
+
+// ── SATINALMA TALEBİ OLUŞTUR ──
+// ── STL DATA ──
+// stlKalemler = [ { kalemId, kalemAdi, stokKodu, miktar, birim, altSatirlar: [{tip,malzemeTipi,malzemeCinsi,cap,ic_cap,boy,en,yukseklik,kalinlik,miktar,birim,spec,yogunluk}, ...] } ]
+let stlKalemler = [];
+let stlPdfUrl = null;
+
+const YOGUNLUK = { 'Çelik':7.85,'Paslanmaz':7.93,'Alüminyum':2.70,'Titanyum':4.51,'Bakır':8.96 };
+
+function kgHesapla(s) {
+  const rho = YOGUNLUK[s.yogunluk] || 7.85;
+  if (s.malzemeTipi === 'Mil') {
+    const r = (parseFloat(s.cap)||0) / 2 / 10;
+    const h = (parseFloat(s.boy)||0) / 10;
+    return Math.PI * r * r * h * rho / 1000;
+  } else if (s.malzemeTipi === 'Boru') {
+    const rd = (parseFloat(s.cap)||0) / 2 / 10;
+    const ri = (parseFloat(s.ic_cap)||0) / 2 / 10;
+    const h = (parseFloat(s.boy)||0) / 10;
+    return Math.PI * (rd*rd - ri*ri) * h * rho / 1000;
+  } else if (s.malzemeTipi === 'Lama' || s.malzemeTipi === 'Sac') {
+    const en = (parseFloat(s.en)||0) / 10;
+    const boy = (parseFloat(s.boy)||0) / 10;
+    const yuk = (parseFloat(s.yukseklik || s.kalinlik)||0) / 10;
+    return en * boy * yuk * rho / 1000;
+  }
+  return 0;
+}
+
+function olcuAlanlar(ki, ai, s) {
+  const tip = s.malzemeTipi;
+  if (s.tip === 'Fason') return `
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">
+      <div class="fg"><div class="fl">İşlem Tipi</div><input class="fi" value="${s.malzemeCinsi||''}" oninput="stlKalemler[${ki}].altSatirlar[${ai}].malzemeCinsi=this.value" placeholder="Isıl İşlem, Kaynak..."></div>
+      <div class="fg"><div class="fl">Teknik Şartname</div><input class="fi" value="${s.spec||''}" oninput="stlKalemler[${ki}].altSatirlar[${ai}].spec=this.value" placeholder="58-60 HRC..."></div>
+      <div class="fg"><div class="fl">Miktar</div><input type="number" class="fi" value="${s.miktar||''}" oninput="stlKalemler[${ki}].altSatirlar[${ai}].miktar=parseFloat(this.value)||0;renderKgBadge(${ki},${ai})"></div>
+    </div>`;
+
+  let olcuInputs = '';
+  if (tip === 'Mil') {
+    olcuInputs = `
+      <div class="fg"><div class="fl">Çap (mm)</div><input type="number" class="fi" value="${s.cap||''}" oninput="stlKalemler[${ki}].altSatirlar[${ai}].cap=this.value;renderKgBadge(${ki},${ai})" placeholder="ör: 150"></div>
+      <div class="fg"><div class="fl">Boy (mm)</div><input type="number" class="fi" value="${s.boy||''}" oninput="stlKalemler[${ki}].altSatirlar[${ai}].boy=this.value;renderKgBadge(${ki},${ai})" placeholder="ör: 200"></div>
+      <div class="fg"></div>`;
+  } else if (tip === 'Boru') {
+    olcuInputs = `
+      <div class="fg"><div class="fl">Dış Çap (mm)</div><input type="number" class="fi" value="${s.cap||''}" oninput="stlKalemler[${ki}].altSatirlar[${ai}].cap=this.value;renderKgBadge(${ki},${ai})" placeholder="ör: 150"></div>
+      <div class="fg"><div class="fl">İç Çap (mm)</div><input type="number" class="fi" value="${s.ic_cap||''}" oninput="stlKalemler[${ki}].altSatirlar[${ai}].ic_cap=this.value;renderKgBadge(${ki},${ai})" placeholder="ör: 100"></div>
+      <div class="fg"><div class="fl">Boy (mm)</div><input type="number" class="fi" value="${s.boy||''}" oninput="stlKalemler[${ki}].altSatirlar[${ai}].boy=this.value;renderKgBadge(${ki},${ai})" placeholder="ör: 60"></div>`;
+  } else if (tip === 'Lama') {
+    olcuInputs = `
+      <div class="fg"><div class="fl">En (mm)</div><input type="number" class="fi" value="${s.en||''}" oninput="stlKalemler[${ki}].altSatirlar[${ai}].en=this.value;renderKgBadge(${ki},${ai})"></div>
+      <div class="fg"><div class="fl">Boy (mm)</div><input type="number" class="fi" value="${s.boy||''}" oninput="stlKalemler[${ki}].altSatirlar[${ai}].boy=this.value;renderKgBadge(${ki},${ai})"></div>
+      <div class="fg"><div class="fl">Yükseklik (mm)</div><input type="number" class="fi" value="${s.yukseklik||''}" oninput="stlKalemler[${ki}].altSatirlar[${ai}].yukseklik=this.value;renderKgBadge(${ki},${ai})"></div>`;
+  } else if (tip === 'Sac') {
+    olcuInputs = `
+      <div class="fg"><div class="fl">En (mm)</div><input type="number" class="fi" value="${s.en||''}" oninput="stlKalemler[${ki}].altSatirlar[${ai}].en=this.value;renderKgBadge(${ki},${ai})"></div>
+      <div class="fg"><div class="fl">Boy (mm)</div><input type="number" class="fi" value="${s.boy||''}" oninput="stlKalemler[${ki}].altSatirlar[${ai}].boy=this.value;renderKgBadge(${ki},${ai})"></div>
+      <div class="fg"><div class="fl">Kalınlık (mm)</div><input type="number" class="fi" value="${s.kalinlik||''}" oninput="stlKalemler[${ki}].altSatirlar[${ai}].kalinlik=this.value;renderKgBadge(${ki},${ai})"></div>`;
+  } else {
+    olcuInputs = `<div class="fg" style="grid-column:span 3;"><div class="fl">Ölçü / Spec</div><input class="fi" value="${s.spec||''}" oninput="stlKalemler[${ki}].altSatirlar[${ai}].spec=this.value" placeholder="Ölçü veya teknik özellik..."></div>`;
+  }
+
+  const kg = kgHesapla(s);
+  const kgText = kg > 0 ? `~${kg.toFixed(3)} kg/adet` : '— kg';
+  const topKg = kg > 0 && s.miktar ? `${(kg*s.miktar).toFixed(2)} kg toplam` : '';
+
+  return `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;">
+      <div class="fg"><div class="fl">Malzeme Cinsi</div><input class="fi" value="${s.malzemeCinsi||''}" oninput="stlKalemler[${ki}].altSatirlar[${ai}].malzemeCinsi=this.value" placeholder="AISI 4140, S235..."></div>
+      <div class="fg"><div class="fl">Yoğunluk</div>
+        <select class="fi" onchange="stlKalemler[${ki}].altSatirlar[${ai}].yogunluk=this.value;renderKgBadge(${ki},${ai})">
+          ${Object.keys(YOGUNLUK).map(k=>`<option ${s.yogunluk===k?'selected':''}>${k}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px;">${olcuInputs}</div>
+    <div style="display:grid;grid-template-columns:80px 80px 1fr;gap:6px;align-items:end;">
+      <div class="fg"><div class="fl">Miktar</div><input type="number" class="fi" value="${s.miktar||''}" oninput="stlKalemler[${ki}].altSatirlar[${ai}].miktar=parseFloat(this.value)||0;renderKgBadge(${ki},${ai})"></div>
+      <div class="fg"><div class="fl">Birim</div>
+        <select class="fi" onchange="stlKalemler[${ki}].altSatirlar[${ai}].birim=this.value">
+          ${['Adet','Kg','Mt','Tk','m²'].map(b=>`<option ${s.birim===b?'selected':''}>${b}</option>`).join('')}
+        </select>
+      </div>
+      <div id="kg-badge-${ki}-${ai}" style="background:var(--blue-light);color:var(--blue);border-radius:6px;padding:6px 10px;font-size:11px;font-weight:600;text-align:center;">
+        ${kgText}${topKg?`<div style="font-size:10px;font-weight:400;opacity:.8;">${topKg}</div>`:''}
+      </div>
+    </div>`;
+}
+
+function renderKgBadge(ki, ai) {
+  const s = stlKalemler[ki]?.altSatirlar[ai];
+  if (!s) return;
+  const el = document.getElementById(`kg-badge-${ki}-${ai}`);
+  if (!el) return;
+  const kg = kgHesapla(s);
+  const kgText = kg > 0 ? `~${kg.toFixed(3)} kg/adet` : '— kg';
+  const topKg = kg > 0 && s.miktar ? `<div style="font-size:10px;font-weight:400;opacity:.8;">${(kg*s.miktar).toFixed(2)} kg toplam</div>` : '';
+  el.innerHTML = kgText + topKg;
+}
+
+function renderSTLKalemler() {
+  const el = document.getElementById('stl-kalemler');
+  if (!el) return;
+  el.innerHTML = stlKalemler.map((k, ki) => `
+    <div style="border:1px solid var(--border);border-radius:10px;margin-bottom:12px;overflow:hidden;">
+      <div style="background:var(--surface2);padding:10px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);">
+        <div style="width:24px;height:24px;border-radius:50%;background:#1e1b4b;color:white;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${ki+1}</div>
+        <div style="flex:1;">
+          <div style="font-size:13px;font-weight:600;">${k.kalemAdi||'—'}</div>
+          <div style="font-size:11px;color:var(--text3);">Stok: ${k.stokKodu||'—'} · ${k.miktar||0} ${k.birim||'Adet'}</div>
+        </div>
+        <div style="font-size:11px;color:var(--text3);background:var(--surface);padding:2px 8px;border-radius:20px;border:1px solid var(--border);">${k.altSatirlar.length} alt satır</div>
+      </div>
+      ${k.altSatirlar.map((s, ai) => `
+        <div style="padding:10px 14px;border-bottom:1px solid var(--border);background:${s.tip==='Fason'?'var(--surface2)':'var(--surface)'};">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+            <span style="font-size:10px;font-weight:600;color:var(--text3);background:var(--surface2);padding:2px 7px;border-radius:20px;border:1px solid var(--border);">${ki+1}.${ai+1}</span>
+            <select style="font-size:11px;padding:3px 6px;border-radius:6px;border:1px solid var(--border);background:${s.tip==='Fason'?'var(--orange-light)':'var(--blue-light)'};color:${s.tip==='Fason'?'var(--orange)':'var(--blue)'};font-weight:600;cursor:pointer;" onchange="stlKalemler[${ki}].altSatirlar[${ai}].tip=this.value;renderSTLKalemler()">
+              <option ${s.tip==='Hammadde'?'selected':''}>Hammadde</option>
+              <option ${s.tip==='Fason'?'selected':''}>Fason</option>
+            </select>
+            ${s.tip==='Hammadde'?`<select style="font-size:11px;padding:3px 6px;border-radius:6px;border:1px solid var(--border);cursor:pointer;" onchange="stlKalemler[${ki}].altSatirlar[${ai}].malzemeTipi=this.value;renderSTLKalemler()">
+              ${['Mil','Boru','Lama','Sac','Profil','Diğer'].map(t=>`<option ${s.malzemeTipi===t?'selected':''}>${t}</option>`).join('')}
+            </select>`:''}
+            <button onclick="stlKalemler[${ki}].altSatirlar.splice(${ai},1);renderSTLKalemler()" style="margin-left:auto;background:transparent;border:none;color:var(--text3);cursor:pointer;font-size:16px;" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--text3)'">×</button>
+          </div>
+          ${olcuAlanlar(ki, ai, s)}
+        </div>`).join('')}
+      <div style="padding:8px 14px;display:flex;gap:8px;">
+        <button onclick="addAltSatir(${ki},'Hammadde')" style="flex:1;padding:6px;background:transparent;border:1px dashed var(--border2);border-radius:6px;color:var(--blue);font-size:11px;font-family:var(--sans);cursor:pointer;">+ Hammadde Satırı</button>
+        <button onclick="addAltSatir(${ki},'Fason')" style="flex:1;padding:6px;background:transparent;border:1px dashed var(--border2);border-radius:6px;color:var(--orange);font-size:11px;font-family:var(--sans);cursor:pointer;">+ Fason Satırı</button>
+      </div>
+    </div>`).join('');
+}
+
+function addAltSatir(ki, tip) {
+  stlKalemler[ki].altSatirlar.push({
+    tip, malzemeTipi:'Mil', malzemeCinsi:'', yogunluk:'Çelik',
+    cap:'', ic_cap:'', boy:'', en:'', yukseklik:'', kalinlik:'',
+    miktar: stlKalemler[ki].miktar||1, birim: stlKalemler[ki].birim||'Adet', spec:''
+  });
+  renderSTLKalemler();
+}
+
+// ── PDF VIEWER ──
+function initPdfViewer(pdfUrl) {
+  const viewer = document.getElementById('pdf-viewer-area');
+  if (!viewer) return;
+  if (pdfUrl) {
+    viewer.innerHTML = `<iframe src="${pdfUrl}#toolbar=0&navpanes=0&scrollbar=0" style="width:100%;height:100%;border:none;" title="Teknik Resim"></iframe>`;
+  } else {
+    viewer.innerHTML = `
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--text3);padding:20px;text-align:center;">
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" style="opacity:.3"><rect x="8" y="4" width="32" height="40" rx="4" stroke="currentColor" stroke-width="2"/><path d="M16 16h16M16 22h16M16 28h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <div style="font-size:13px;">Teknik resim yüklenmedi</div>
+        <div style="font-size:11px;">Airtable'daki "Dosyalar" alanından<br>teknik resim ekleyin</div>
+      </div>`;
+  }
+}
+
+function createSTL(seId) {
+  const se = seList.find(r=>r.id===seId);
+  const f = se?.fields||{};
+
+  // Kalemleri yükle — SE'ye bağlı teklif kalemlerinden
+  // Şimdilik SE'nin kendi parça bilgisinden tek kalem oluştur
+  stlKalemler = [{
+    kalemId: seId,
+    kalemAdi: f['Parça Adı']||'',
+    stokKodu: f['Parça No']||'',
+    miktar: f['Miktar']||1,
+    birim: f['Birim']||'Adet',
+    altSatirlar: [{
+      tip:'Hammadde', malzemeTipi:'Mil', malzemeCinsi:'', yogunluk:'Çelik',
+      cap:'', ic_cap:'', boy:'', en:'', yukseklik:'', kalinlik:'',
+      miktar: f['Miktar']||1, birim: f['Birim']||'Adet', spec:''
+    }]
+  }];
+
+  const modal = document.createElement('div');
+  modal.className = 'modal-bg';
+  modal.id = 'stl-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:999;display:flex;align-items:center;justify-content:center;padding:16px;';
+  modal.innerHTML = `
+    <div style="background:white;border-radius:12px;width:min(1100px,96vw);height:90vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.25);">
+      <div style="background:#1e1b4b;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;">
+        <div>
+          <div style="color:white;font-weight:600;font-size:14px;">📋 Satınalma Talebi — ${f['SE No']||''}</div>
+          <div style="color:rgba(255,255,255,.5);font-size:11px;margin-top:2px;">${f['Parça Adı']||''} · ${getMusteriAd(f['Müşteri']?.[0])}</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button class="btn" onclick="addSTLKalem('${seId}')" style="font-size:11px;padding:4px 10px;">+ Kalem Ekle</button>
+          <button onclick="document.getElementById('stl-modal').remove()" style="background:transparent;border:none;color:white;font-size:20px;cursor:pointer;line-height:1;">×</button>
+        </div>
+      </div>
+      <div style="flex:1;display:grid;grid-template-columns:1fr 360px;overflow:hidden;">
+
+        <!-- SOL: Form -->
+        <div style="padding:16px;overflow-y:auto;border-right:1px solid var(--border);">
+          <div style="background:var(--orange-light);border:1px solid #fcd34d;border-radius:6px;padding:8px 12px;font-size:11px;color:var(--orange);margin-bottom:14px;">
+            Her kalem için hammadde ve/veya fason satırı ekleyin. Malzeme tipine göre ölçü alanları değişir, kg otomatik hesaplanır.
+          </div>
+          <div id="stl-kalemler"></div>
+        </div>
+
+        <!-- SAĞ: PDF Viewer -->
+        <div style="display:flex;flex-direction:column;background:var(--surface2);">
+          <div style="padding:8px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;background:white;flex-shrink:0;">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><rect x="1" y="1" width="11" height="11" rx="2" stroke="currentColor" stroke-width="1.3"/><path d="M4 5h5M4 7h5M4 9h3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+            <span style="font-size:11px;font-weight:600;color:var(--text2);flex:1;">Teknik Resim</span>
+            <label style="font-size:10px;cursor:pointer;color:var(--accent);background:var(--accent-light);padding:3px 8px;border-radius:5px;" title="PDF yükle">
+              PDF Yükle
+              <input type="file" accept=".pdf,image/*" style="display:none;" onchange="loadPdfFile(this)">
+            </label>
+          </div>
+          <div id="pdf-viewer-area" style="flex:1;display:flex;overflow:hidden;"></div>
+        </div>
+      </div>
+
+      <div style="padding:12px 20px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;background:white;">
+        <div style="font-size:12px;color:var(--text3);" id="stl-ozet">—</div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn" onclick="document.getElementById('stl-modal').remove()">İptal</button>
+          <button class="btn primary" onclick="saveSTL('${seId}')">💾 Talebi Kaydet</button>
+        </div>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+  renderSTLKalemler();
+  initPdfViewer(null);
+  updateSTLOzet();
+}
+
+function addSTLKalem(seId) {
+  const se = seList.find(r=>r.id===seId);
+  const f = se?.fields||{};
+  stlKalemler.push({
+    kalemId: null, kalemAdi:'', stokKodu:'', miktar:1, birim:'Adet',
+    altSatirlar:[{
+      tip:'Hammadde', malzemeTipi:'Mil', malzemeCinsi:'', yogunluk:'Çelik',
+      cap:'', ic_cap:'', boy:'', en:'', yukseklik:'', kalinlik:'',
+      miktar:1, birim:'Adet', spec:''
+    }]
+  });
+  renderSTLKalemler();
+}
+
+function loadPdfFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const url = URL.createObjectURL(file);
+  const viewer = document.getElementById('pdf-viewer-area');
+  if (!viewer) return;
+
+  if (file.type === 'application/pdf') {
+    viewer.innerHTML = `
+      <div style="display:flex;flex-direction:column;width:100%;height:100%;">
+        <div style="display:flex;align-items:center;gap:6px;padding:6px 10px;background:white;border-bottom:1px solid var(--border);flex-shrink:0;">
+          <button onclick="pdfPrevPage()" style="padding:3px 8px;border-radius:5px;border:1px solid var(--border);background:transparent;cursor:pointer;font-size:12px;">◀</button>
+          <span id="pdf-page-info" style="font-size:11px;color:var(--text2);">1 / —</span>
+          <button onclick="pdfNextPage()" style="padding:3px 8px;border-radius:5px;border:1px solid var(--border);background:transparent;cursor:pointer;font-size:12px;">▶</button>
+          <div style="width:1px;height:16px;background:var(--border);margin:0 4px;"></div>
+          <button onclick="pdfZoomOut()" style="padding:3px 8px;border-radius:5px;border:1px solid var(--border);background:transparent;cursor:pointer;font-size:12px;">−</button>
+          <span id="pdf-zoom-info" style="font-size:11px;color:var(--text2);min-width:36px;text-align:center;">100%</span>
+          <button onclick="pdfZoomIn()" style="padding:3px 8px;border-radius:5px;border:1px solid var(--border);background:transparent;cursor:pointer;font-size:12px;">+</button>
+          <button onclick="pdfFit()" style="padding:3px 8px;border-radius:5px;border:1px solid var(--border);background:transparent;cursor:pointer;font-size:11px;">Fit</button>
+        </div>
+        <div style="flex:1;overflow:auto;display:flex;justify-content:center;padding:12px;background:#525659;">
+          <canvas id="pdf-canvas" style="box-shadow:0 2px 8px rgba(0,0,0,.3);"></canvas>
+        </div>
+      </div>`;
+    initPdfJs(url);
+  } else {
+    viewer.innerHTML = `<div style="padding:12px;width:100%;overflow:auto;"><img src="${url}" style="width:100%;border-radius:6px;" alt="Teknik Resim"></div>`;
+  }
+  toast('Teknik resim yüklendi ✓', 'inf');
+}
+
+let pdfDoc = null, pdfPage = 1, pdfScale = 1.2;
+
+async function initPdfJs(url) {
+  if (!window.pdfjsLib) {
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+    script.onload = () => {
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      loadPdfDoc(url);
+    };
+    document.head.appendChild(script);
+  } else {
+    loadPdfDoc(url);
+  }
+}
+
+async function loadPdfDoc(url) {
+  try {
+    pdfDoc = await pdfjsLib.getDocument(url).promise;
+    pdfPage = 1;
+    renderPdfPage();
+  } catch(e) {
+    toast('PDF yüklenemedi: ' + e.message, 'err');
+  }
+}
+
+async function renderPdfPage() {
+  if (!pdfDoc) return;
+  const canvas = document.getElementById('pdf-canvas');
+  if (!canvas) return;
+  const page = await pdfDoc.getPage(pdfPage);
+  const viewport = page.getViewport({ scale: pdfScale });
+  canvas.width = viewport.width;
+  canvas.height = viewport.height;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  await page.render({ canvasContext: ctx, viewport }).promise;
+  const info = document.getElementById('pdf-page-info');
+  if (info) info.textContent = `${pdfPage} / ${pdfDoc.numPages}`;
+  const zoomInfo = document.getElementById('pdf-zoom-info');
+  if (zoomInfo) zoomInfo.textContent = Math.round(pdfScale * 100) + '%';
+}
+
+window.pdfNextPage = function() { if (pdfDoc && pdfPage < pdfDoc.numPages) { pdfPage++; renderPdfPage(); } }
+window.pdfPrevPage = function() { if (pdfPage > 1) { pdfPage--; renderPdfPage(); } }
+window.pdfZoomIn = function() { pdfScale = Math.min(parseFloat((pdfScale + 0.25).toFixed(2)), 4); renderPdfPage(); }
+window.pdfZoomOut = function() { pdfScale = Math.max(parseFloat((pdfScale - 0.25).toFixed(2)), 0.25); renderPdfPage(); }
+window.pdfFit = function() {
+  const area = document.getElementById('pdf-viewer-area');
+  if (!area || !pdfDoc) return;
+  pdfDoc.getPage(pdfPage).then(page => {
+    const vp = page.getViewport({ scale: 1 });
+    pdfScale = parseFloat(((area.clientWidth - 40) / vp.width).toFixed(2));
+    renderPdfPage();
+  });
+}
+
+function updateSTLOzet() {
+  const el = document.getElementById('stl-ozet');
+  if (!el) return;
+  const toplamSatir = stlKalemler.reduce((s,k)=>s+k.altSatirlar.length, 0);
+  el.textContent = `${stlKalemler.length} kalem · ${toplamSatir} alt satır`;
+}
+
+async function saveSTL(seId) {
+  const tumSatirlar = [];
+  stlKalemler.forEach((k, ki) => {
+    k.altSatirlar.forEach((s, ai) => {
+      const olcu = s.tip === 'Fason' ? (s.spec||'') :
+        s.malzemeTipi === 'Mil' ? `Ø${s.cap||'—'}x${s.boy||'—'}mm` :
+        s.malzemeTipi === 'Boru' ? `Ø${s.cap||'—'}/Ø${s.ic_cap||'—'}x${s.boy||'—'}mm` :
+        s.malzemeTipi === 'Lama' ? `${s.en||'—'}x${s.boy||'—'}x${s.yukseklik||'—'}mm` :
+        s.malzemeTipi === 'Sac' ? `${s.en||'—'}x${s.boy||'—'}x${s.kalinlik||'—'}mm` : (s.spec||'');
+      const kg = kgHesapla(s);
+      tumSatirlar.push({
+        'SE No': [seId],
+        'Talep Tipi': s.tip,
+        'Kalem Adı': k.kalemAdi||'',
+        'Malzeme İşlem': s.tip==='Fason' ? (s.malzemeCinsi||'') : `${s.malzemeTipi} - ${s.malzemeCinsi||''}`,
+        'Miktar': s.miktar||0,
+        'Birim': s.birim||'Adet',
+        'Ölçü': olcu||null,
+        'Tahmini kg': kg > 0 ? parseFloat((kg*(s.miktar||1)).toFixed(3)) : null,
+        'Durum': 'Taslak',
+      });
+    });
+  });
+
+  const dolu = tumSatirlar.filter(s => (s['Malzeme İşlem']||'').replace(/^(Mil|Boru|Lama|Sac|Profil|Diğer) - $/,'').trim());
+  if (!dolu.length) { toast('En az bir satır doldurun', 'err'); return; }
+
+  try {
+    for (const fields of dolu) {
+      await apiFn('POST', T.stl, { fields });
+    }
+    document.getElementById('stl-modal')?.remove();
+    toast(`${dolu.length} talep satırı kaydedildi ✓`);
+    await loadDetail(seId);
+  } catch(e) {
+    toast('Kaydetme hatası: '+e.message, 'err');
+  }
+}
+
+// ── STL DURUM GÜNCELLE ──
+function openSTLDurum(stlId, seId) {
+  const modal = document.createElement('div');
+  modal.className = 'modal-bg';
+  modal.id = 'stldurum-modal';
+  modal.innerHTML = `
+    <div class="modal-box" style="width:380px;">
+      <div class="modal-head">
+        <div class="modal-head-title">Talep Durumu Güncelle</div>
+        <button class="btn-x" onclick="document.getElementById('stldurum-modal').remove()">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="fg">
+          <div class="fl">Yeni Durum</div>
+          <select class="fi" id="stl-new-durum">
+            <option>Taslak</option>
+            <option>Gönderildi</option>
+            <option>Teklif Alındı</option>
+            <option>Onaylandı</option>
+            <option>İptal</option>
+          </select>
+        </div>
+        <div class="fg">
+          <div class="fl">Seçilen Tedarikçi</div>
+          <select class="fi" id="stl-tedarikci">
+            <option value="">— Seçin —</option>
+            ${tedarikci.map(t=>`<option value="${t.fields['Tedarikçi Adı']||''}">${t.fields['Tedarikçi Adı']||''}</option>`).join('')}
+          </select>
+        </div>
+        <div class="fg">
+          <div class="fl">Onay Fiyatı (TL)</div>
+          <input type="number" class="fi" id="stl-fiyat" placeholder="0.00">
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn" onclick="document.getElementById('stldurum-modal').remove()">İptal</button>
+        <button class="btn primary" onclick="saveSTLDurum('${stlId}','${seId}')">Güncelle</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+async function saveSTLDurum(stlId, seId) {
+  const durum = document.getElementById('stl-new-durum').value;
+  const tedarikciAd = document.getElementById('stl-tedarikci').value;
+  const fiyat = parseFloat(document.getElementById('stl-fiyat').value)||null;
+  try {
+    await apiFn('PATCH', T.stl, { fields: {
+      'Durum': durum,
+      'Seçilen Tedarikçi': tedarikciAd||null,
+      'Onay Fiyatı': fiyat,
+    }}, stlId);
+    document.getElementById('stldurum-modal')?.remove();
+    toast('Durum güncellendi ✓');
+    await loadDetail(seId);
+  } catch(e) {
+    toast('Hata: '+e.message, 'err');
+  }
+}
+
+// ── RFQ FROM STL ──
+async function openRFQFromSTL(stlId, seId) {
+  const se = seList.find(r=>r.id===seId);
+  const f = se?.fields||{};
+
+  const modal = document.createElement('div');
+  modal.className = 'modal-bg';
+  modal.id = 'rfq-stl-modal';
+  modal.innerHTML = `
+    <div class="modal-box">
+      <div class="modal-head">
+        <div class="modal-head-title">📧 RFQ Gönder — ${f['SE No']||''}</div>
+        <button class="btn-x" onclick="document.getElementById('rfq-stl-modal').remove()">×</button>
+      </div>
+      <div class="modal-body">
+        <div style="font-size:11px;font-weight:600;color:var(--text3);margin-bottom:8px;">Tedarikçi Seçin</div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          ${tedarikci.map(t => {
+            const email = t.fields['E-posta']||'';
+            return `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;">
+              <input type="checkbox" data-id="${t.id}" data-adi="${(t.fields['Tedarikçi Adı']||'').replace(/"/g,'')}" data-email="${email}"
+                style="width:15px;height:15px;" ${!email?'disabled title="E-posta yok"':''}>
+              <div style="flex:1;">
+                <div style="font-size:12px;font-weight:500;">${t.fields['Tedarikçi Adı']||'—'}</div>
+                <div style="font-size:11px;color:var(--text3);">${email||'⚠️ E-posta yok'}</div>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+        <div id="rfq-stl-result" style="margin-top:8px;"></div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn" onclick="document.getElementById('rfq-stl-modal').remove()">İptal</button>
+        <button class="btn primary" onclick="sendRFQFromSTL('${seId}','${stlId}')">📧 Gönder</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+async function sendRFQFromSTL(seId, stlId) {
+  const se = seList.find(r=>r.id===seId);
+  const f = se?.fields||{};
+  const checkboxes = document.querySelectorAll('#rfq-stl-modal input[type=checkbox]:checked');
+  if (!checkboxes.length) { toast('Tedarikçi seçin', 'err'); return; }
+
+  const tedarikciler = Array.from(checkboxes).map(cb=>({
+    id: cb.dataset.id, adi: cb.dataset.adi, email: cb.dataset.email
+  }));
+
+  try {
+    const res = await fetch('/.netlify/functions/send-rfq', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        seNo: f['SE No']||'',
+        parcaAdi: f['Parça Adı']||'',
+        parcaNo: f['Parça No']||'',
+        miktar: f['Miktar']||0,
+        birim: f['Birim']||'Adet',
+        tedarikciler,
+      })
+    });
+    const data = await res.json();
+    const sent = (data.results||[]).filter(r=>r.status==='sent').length;
+    document.getElementById('rfq-stl-result').innerHTML =
+      `<div style="background:var(--green-light);color:var(--green);padding:8px 12px;border-radius:6px;font-size:12px;">
+        ✓ ${sent} tedarikçiye RFQ gönderildi.
+      </div>`;
+
+    // STL durumunu Gönderildi yap
+    if (T.stl !== 'STL_TABLE_ID') {
+      await apiFn('PATCH', T.stl, {fields:{'Durum':'Gönderildi'}}, stlId);
+    }
+    toast(`${sent} RFQ gönderildi ✓`);
+    setTimeout(()=>{ document.getElementById('rfq-stl-modal')?.remove(); loadDetail(seId); }, 1500);
+  } catch(e) {
+    toast('Hata: '+e.message, 'err');
+  }
+}
+
+// ── SE DURUM ──
+async function updateSEDurum(id, durum) {
+  try {
+    await apiFn('PATCH', T.se, {fields:{'Durum':durum}}, id);
+    const se = seList.find(r=>r.id===id);
+    if (se) se.fields['Durum'] = durum;
+    renderSEList();
+    toast(`Durum: ${durum}`);
+  } catch(e) {
+    toast('Hata: '+e.message, 'err');
+  }
+}
+
+// ── İŞ EMRİ MODAL ──
+function openIEModal(seId) {
+  const se = seList.find(r=>r.id===seId);
+  const f = se?.fields||{};
+
+  const modal = document.createElement('div');
+  modal.className = 'modal-bg';
+  modal.id = 'ie-modal';
+  modal.innerHTML = `
+    <div class="modal-box">
+      <div class="modal-head">
+        <div class="modal-head-title">⚙️ İş Emri Oluştur — ${f['SE No']||''}</div>
+        <button class="btn-x" onclick="document.getElementById('ie-modal').remove()">×</button>
+      </div>
+      <div class="modal-body">
+        <div style="background:var(--green-light);border:1px solid rgba(5,150,105,.3);border-radius:6px;padding:8px 12px;font-size:11px;color:var(--green);">
+          ✓ Satınalma talepleri onaylandı. İş emri açılabilir.
+        </div>
+        <div class="grid2" style="gap:10px;">
+          <div class="fg"><div class="fl">Parça Adı</div><input class="fi" id="ie-parca" value="${f['Parça Adı']||''}"></div>
+          <div class="fg"><div class="fl">Parça No</div><input class="fi" id="ie-parcano" value="${f['Parça No']||''}"></div>
+          <div class="fg"><div class="fl">Miktar</div><input type="number" class="fi" id="ie-miktar" value="${f['Miktar']||1}"></div>
+          <div class="fg"><div class="fl">Birim</div>
+            <select class="fi" id="ie-birim">
+              ${['Adet','Kg','Mt','Tk'].map(b=>`<option ${(f['Birim']||'Adet')===b?'selected':''}>${b}</option>`).join('')}
+            </select>
+          </div>
+          <div class="fg"><div class="fl">Termin Tarihi</div><input type="date" class="fi" id="ie-termin" value="${f['Termin Tarihi']||''}"></div>
+          <div class="fg"><div class="fl">Revizyon</div><input class="fi" id="ie-rev" placeholder="A, B..."></div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn" onclick="document.getElementById('ie-modal').remove()">İptal</button>
+        <button class="btn success" onclick="createIE('${seId}')">⚙️ İş Emri Oluştur</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+async function createIE(seId) {
+  try {
+    const year = new Date().getFullYear();
+    const lastIEs = await apiGet(T.isEmirleri, 'sort[0][field]=Sıra%20No&sort[0][direction]=desc&maxRecords=1');
+    const lastSira = lastIEs.records?.[0]?.fields?.['Sıra No']||0;
+    const newSira = lastSira + 1;
+    const ieNo = `IE-${year}-${String(newSira).padStart(5,'0')}`;
+    const lotNo = `LOT-${year}-${String(newSira).padStart(5,'0')}-A`;
+
+    const fields = {
+      'IE No': ieNo,
+      'Lot No': lotNo,
+      'Satış Emirleri': [seId],
+      'Parça Adı': document.getElementById('ie-parca').value||'',
+      'Parça No': document.getElementById('ie-parcano').value||null,
+      'Revizyon': document.getElementById('ie-rev').value||null,
+      'Miktar': parseFloat(document.getElementById('ie-miktar').value)||1,
+      'Birim': document.getElementById('ie-birim').value,
+      'Termin Tarihi': document.getElementById('ie-termin').value||null,
+      'Durum': 'Beklemede',
+      'Sıra No': newSira,
+    };
+
+    await apiFn('POST', T.isEmirleri, {fields});
+
+    // SE durumunu Üretimde yap
+    await apiFn('PATCH', T.se, {fields:{'Durum':'Üretimde'}}, seId);
+    const se = seList.find(r=>r.id===seId);
+    if (se) se.fields['Durum'] = 'Üretimde';
+
+    document.getElementById('ie-modal')?.remove();
+    toast(`${ieNo} iş emri oluşturuldu — Lot: ${lotNo} ✓`);
+    renderSEList();
+    await loadDetail(seId);
+  } catch(e) {
+    toast('Hata: '+e.message, 'err');
+  }
+}
+
+// ── INIT ──
+loadAll();
+</script>
+</body>
+</html>
