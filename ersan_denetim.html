@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — İç Denetim</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8fafc; min-height: 100vh; }
+.container { max-width: 960px; margin: 0 auto; padding: 3rem 1.5rem; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: calc(100vh - 48px); }
+.icon { font-size: 56px; margin-bottom: 1.5rem; }
+h1 { font-size: 24px; font-weight: 600; color: #1e293b; margin-bottom: .5rem; }
+.std { font-size: 11px; font-weight: 500; background: #ede9fe; color: #5b21b6; padding: 3px 10px; border-radius: 20px; margin-bottom: 1.25rem; display: inline-block; }
+p { font-size: 14px; color: #64748b; text-align: center; max-width: 420px; line-height: 1.7; margin-bottom: 2rem; }
+.wip { background: #fff; border: 0.5px solid #e2e8f0; border-radius: 12px; padding: 1.25rem 1.5rem; max-width: 480px; width: 100%; }
+.wip-title { font-size: 11px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: .06em; margin-bottom: .875rem; }
+.wip-item { display: flex; align-items: center; gap: 10px; padding: .5rem 0; border-top: 0.5px solid #f1f5f9; font-size: 13px; color: #475569; }
+.wip-item::before { content: "○"; color: #cbd5e1; font-size: 10px; }
+.back { margin-top: 1.5rem; font-size: 13px; color: #3b82f6; text-decoration: none; }
+.back:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<script src="ersan_nav.js"></script>
+<div class="container">
+  <div class="icon">🔍</div>
+  <h1>İç Denetim</h1>
+  <span class="std">AS9100 §9.2</span>
+  <p>Denetim planı, soru listesi, bulgu kaydı, kapanış takibi. Bu modül geliştirme aşamasındadır.</p>
+  <div class="wip">
+    <div class="wip-title">Planlanacak özellikler</div>
+    <div class="wip-item">Airtable tablo bağlantısı</div>
+    <div class="wip-item">Liste ve detay görünümü</div>
+    <div class="wip-item">Form ve kayıt yönetimi</div>
+    <div class="wip-item">PDF / rapor çıktısı</div>
+    <div class="wip-item">Diğer modüllerle entegrasyon</div>
+  </div>
+  <a href="index.html" class="back">← Ana sayfaya dön</a>
+</div>
+</body>
+</html>

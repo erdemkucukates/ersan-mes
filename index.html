@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — Ana Sayfa</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8fafc; min-height: 100vh; }
+.hero { background: #0f172a; padding: 2.5rem 2rem 2rem; }
+.hero h1 { color: #fff; font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+.hero p { color: rgba(255,255,255,0.5); font-size: 13px; }
+.hero-stats { display: flex; gap: 1.5rem; margin-top: 1.5rem; }
+.hstat { }
+.hstat-num { font-size: 22px; font-weight: 600; color: #fff; }
+.hstat-label { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 2px; }
+.content { max-width: 960px; margin: 0 auto; padding: 2rem 1.5rem; }
+.section-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: #94a3b8; margin-bottom: .875rem; display: flex; align-items: center; gap: 8px; }
+.section-title::after { content: ''; flex: 1; height: 0.5px; background: #e2e8f0; }
+.modules { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: .75rem; margin-bottom: 2rem; }
+.module-card { background: #fff; border: 0.5px solid #e2e8f0; border-radius: 12px; padding: 1rem 1.125rem; text-decoration: none; color: inherit; transition: border-color .15s, box-shadow .15s; display: flex; flex-direction: column; gap: 6px; }
+.module-card:hover { border-color: #94a3b8; box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+.module-card.active:hover { border-color: #3b82f6; }
+.module-card.soon { opacity: .55; cursor: default; pointer-events: none; }
+.module-icon { font-size: 22px; }
+.module-name { font-size: 13px; font-weight: 500; color: #1e293b; }
+.module-desc { font-size: 11px; color: #94a3b8; line-height: 1.5; }
+.module-std { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 2px; }
+.std-badge { font-size: 9px; padding: 1px 5px; border-radius: 4px; font-weight: 500; }
+.badge-as { background: #ede9fe; color: #5b21b6; }
+.badge-iso { background: #dcfce7; color: #166534; }
+.badge-oh { background: #fef3c7; color: #92400e; }
+.status-badge { margin-left: auto; font-size: 9px; padding: 2px 7px; border-radius: 20px; font-weight: 500; align-self: flex-start; }
+.s-active { background: #dcfce7; color: #166534; }
+.s-soon { background: #f1f5f9; color: #94a3b8; }
+.module-header { display: flex; align-items: center; gap: 10px; }
+</style>
+</head>
+<body>
+<script src="ersan_nav.js"></script>
+
+<div class="hero">
+  <h1>⚙ Ersan MES</h1>
+  <p>Makine İmalat Yönetim Sistemi · AS9100 Rev.D · Başiskele, Kocaeli</p>
+  <div class="hero-stats">
+    <div class="hstat"><div class="hstat-num" id="stat-teklif">—</div><div class="hstat-label">Açık Teklif</div></div>
+    <div class="hstat"><div class="hstat-num" id="stat-siparis">—</div><div class="hstat-label">Aktif Sipariş</div></div>
+    <div class="hstat"><div class="hstat-num" id="stat-ie">—</div><div class="hstat-label">İş Emri</div></div>
+    <div class="hstat"><div class="hstat-num" id="stat-stl">—</div><div class="hstat-label">Bekleyen Satınalma</div></div>
+  </div>
+</div>
+
+<div class="content">
+  <div class="section-title">Satış & Üretim Akışı</div>
+  <div class="modules" id="mod-uretim"></div>
+
+  <div class="section-title">Kalite & Uygunluk</div>
+  <div class="modules" id="mod-kalite"></div>
+
+  <div class="section-title">Destek Süreçleri</div>
+  <div class="modules" id="mod-destek"></div>
+
+  <div class="section-title">Yönetim Süreçleri</div>
+  <div class="modules" id="mod-yonetim"></div>
+</div>
+
+<script>
+const MODULES_DEF = [
+  // Satış & Üretim
+  { group:'uretim', icon:'📋', name:'Teklif Yönetimi', desc:'Teknik resim bazlı AI maliyet hesaplama, teklif oluşturma, PDF gönderme', url:'ersan_teklif.html', status:'active', std:['AS9100 §8.2'] },
+  { group:'uretim', icon:'📦', name:'Sipariş Yönetimi', desc:'Onaylanan tekliften sipariş, dosya no, müşteri şartları gözden geçirme', url:'ersan_teklif.html#siparisler', status:'active', std:['AS9100 §8.2'] },
+  { group:'uretim', icon:'🛒', name:'Satınalma', desc:'Hammadde & fason talebi, RFQ, tedarikçi teklif karşılaştırma, müzakere', url:'ersan_satinalma.html', status:'active', std:['AS9100 §8.4','ISO §8.4'] },
+  { group:'uretim', icon:'⚙️', name:'İş Emirleri', desc:'WO oluşturma, lot numarası, traveler, operasyon rotası, tezgah atama', url:'ersan_isemirleri.html', status:'active', std:['AS9100 §8.5'] },
+  { group:'uretim', icon:'🏭', name:'Üretim / Atölye', desc:'Operatör ekranı, QR okutma, operasyon onay, süre takibi', url:'ersan_uretim.html', status:'soon', std:['AS9100 §8.5'] },
+  { group:'uretim', icon:'🚚', name:'Sevkiyat', desc:'Ambalaj, etiket, irsaliye, teslimat kaydı, müşteri teslim onayı', url:'ersan_sevkiyat.html', status:'soon', std:['AS9100 §8.5.4'] },
+
+  // Kalite
+  { group:'kalite', icon:'✅', name:'Kalite Kontrol', desc:'Gelen malzeme muayenesi, proses kontrol, final muayene, ölçüm kaydı', url:'ersan_kalite.html', status:'soon', std:['AS9100 §8.6','ISO §8.6'] },
+  { group:'kalite', icon:'❌', name:'Düzeltici Faaliyet', desc:'NCR, kök neden analizi (8D/5Why), düzeltici aksiyon, kapanış takibi', url:'ersan_duzeltici.html', status:'soon', std:['AS9100 §10.2','ISO §10.2'] },
+  { group:'kalite', icon:'🔍', name:'İç Denetim', desc:'Denetim planı, soru listesi, bulgu kaydı, kapanış takibi', url:'ersan_denetim.html', status:'soon', std:['AS9100 §9.2','ISO §9.2'] },
+  { group:'kalite', icon:'💬', name:'Müşteri Geri Bildirimi', desc:'Müşteri şikayeti, garanti, iade, memnuniyet takibi', url:'ersan_musteri.html', status:'soon', std:['AS9100 §8.5.5'] },
+
+  // Destek
+  { group:'destek', icon:'🔩', name:'Ekipman & Bakım', desc:'Tezgah bakım planı, kalibrasyon takibi, arıza kaydı, ppk', url:'ersan_bakim.html', status:'soon', std:['AS9100 §7.1.3'] },
+  { group:'destek', icon:'📁', name:'Doküman Yönetimi', desc:'Prosedürler, talimatlar, formlar, revizyon takibi, dağıtım kontrolü', url:'ersan_dokuman.html', status:'soon', std:['AS9100 §7.5','ISO §7.5'] },
+  { group:'destek', icon:'👥', name:'Personel Yönetimi', desc:'Personel kartı, yetkinlik matrisi, görev tanımı, izin takibi', url:'ersan_personel.html', status:'soon', std:['ISO §7.1.2','OHSAS §4.4'] },
+  { group:'destek', icon:'🎓', name:'Eğitim', desc:'Eğitim planı, sertifika takibi, etkinlik değerlendirme', url:'ersan_egitim.html', status:'soon', std:['AS9100 §7.2','ISO §7.2'] },
+  { group:'destek', icon:'🦺', name:'İSG / Güvenlik', desc:'Tehlike kaydı, kaza/ramak kala bildirimi, KKD takibi, acil eylem', url:'ersan_isg.html', status:'soon', std:['OHSAS 18001 §4'] },
+
+  // Yönetim
+  { group:'yonetim', icon:'⚠️', name:'Risk Yönetimi', desc:'FMEA, proses risk değerlendirmesi, fırsat kaydı, aksiyon takibi', url:'ersan_risk.html', status:'soon', std:['AS9100 §6.1','ISO §6.1'] },
+  { group:'yonetim', icon:'📊', name:'Yönetim Gözden Geçirme', desc:'Dönemsel toplantı girdileri, hedef takibi, yönetim kararları', url:'ersan_ygg.html', status:'soon', std:['AS9100 §9.3','ISO §9.3'] },
+];
+
+function renderModules() {
+  const groups = { uretim: [], kalite: [], destek: [], yonetim: [] };
+  MODULES_DEF.forEach(m => groups[m.group].push(m));
+  Object.entries(groups).forEach(([key, mods]) => {
+    const el = document.getElementById('mod-' + key);
+    if (!el) return;
+    el.innerHTML = mods.map(m => `
+      <a href="${m.status === 'active' ? m.url : '#'}" class="module-card ${m.status === 'active' ? 'active' : 'soon'}">
+        <div class="module-header">
+          <span class="module-icon">${m.icon}</span>
+          <span class="status-badge ${m.status === 'active' ? 's-active' : 's-soon'}">${m.status === 'active' ? 'Aktif' : 'Yakında'}</span>
+        </div>
+        <div class="module-name">${m.name}</div>
+        <div class="module-desc">${m.desc}</div>
+        <div class="module-std">${m.std.map(s => {
+          const cls = s.startsWith('AS') ? 'badge-as' : s.startsWith('OH') ? 'badge-oh' : 'badge-iso';
+          return `<span class="std-badge ${cls}">${s}</span>`;
+        }).join('')}</div>
+      </a>`).join('');
+  });
+}
+
+async function airtableGet(table, filter) {
+  try {
+    const params = { table };
+    if (filter) params.filter = filter;
+    const qs = Object.entries(params).map(([k,v]) => k+'='+encodeURIComponent(v)).join('&');
+    const r = await fetch('/.netlify/functions/airtable?' + qs);
+    const d = await r.json();
+    return (d.records?.length ?? 0).toString();
+  } catch { return '—'; }
+}
+async function loadStats() {
+  const [t, s, ie, stl] = await Promise.all([
+    airtableGet('Teklifler', 'AND({Durum}!="Onaylandı",{Durum}!="Reddedildi")'),
+    airtableGet('Satış Emirleri', '{Durum}!="Tamamlandı"'),
+    airtableGet('İş Emirleri', '{Durum}!="Tamamlandı"'),
+    airtableGet('Satınalma Talepleri', '{Durum}="Taslak"'),
+  ]);
+  document.getElementById('stat-teklif').textContent = t;
+  document.getElementById('stat-siparis').textContent = s;
+  document.getElementById('stat-ie').textContent = ie;
+  document.getElementById('stat-stl').textContent = stl;
+}
+
+renderModules();
+loadStats();
+</script>
+</body>
+</html>
