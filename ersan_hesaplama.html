@@ -1,0 +1,1893 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — Teklif Hesaplama</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0f1117;
+  --surface: #1a1d27;
+  --surface2: #22263a;
+  --surface3: #2a2f47;
+  --border: #2e3350;
+  --border2: #3d4466;
+  --text: #e8eaf0;
+  --text2: #9aa0c0;
+  --text3: #5a6080;
+  --accent: #6366f1;
+  --accent2: #818cf8;
+  --accent-light: rgba(99,102,241,.15);
+  --green: #10b981;
+  --green-light: rgba(16,185,129,.15);
+  --red: #ef4444;
+  --red-light: rgba(239,68,68,.12);
+  --orange: #f59e0b;
+  --orange-light: rgba(245,158,11,.12);
+  --cyan: #06b6d4;
+  --cyan-light: rgba(6,182,212,.12);
+  --mono: 'IBM Plex Mono', monospace;
+  --sans: 'IBM Plex Sans', sans-serif;
+  --radius: 10px;
+  --shadow: 0 4px 24px rgba(0,0,0,.4);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  font-size: 13px;
+}
+
+/* HEADER */
+.header {
+  height: 56px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center;
+  padding: 0 24px; gap: 16px;
+  position: sticky; top: 0; z-index: 100;
+}
+.logo { display: flex; align-items: center; gap: 10px; }
+.logo-badge {
+  width: 32px; height: 32px; border-radius: 8px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: white; font-family: var(--mono);
+}
+.logo-text { font-size: 14px; font-weight: 600; }
+.logo-sub { font-size: 10px; color: var(--text3); font-family: var(--mono); }
+.header-sep { width: 1px; height: 28px; background: var(--border); }
+.header-back {
+  display: flex; align-items: center; gap: 6px;
+  color: var(--text2); font-size: 12px; text-decoration: none;
+  padding: 5px 10px; border-radius: 6px;
+  border: 1px solid var(--border); background: transparent;
+  cursor: pointer; transition: all .15s; font-family: var(--sans);
+}
+.header-back:hover { border-color: var(--accent); color: var(--accent2); }
+.header-title { font-size: 14px; font-weight: 600; color: var(--text); }
+.header-badge {
+  background: var(--accent-light); color: var(--accent2);
+  font-size: 10px; font-weight: 600; padding: 3px 8px;
+  border-radius: 10px; font-family: var(--mono);
+  border: 1px solid rgba(99,102,241,.3);
+}
+
+/* LAYOUT */
+.layout {
+  display: grid;
+  grid-template-columns: 420px 1fr;
+  gap: 0;
+  min-height: calc(100vh - 56px);
+}
+
+/* LEFT PANEL */
+.left-panel {
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  padding: 20px;
+  display: flex; flex-direction: column; gap: 16px;
+  overflow-y: auto;
+}
+
+/* RIGHT PANEL */
+.right-panel {
+  padding: 20px;
+  overflow-y: auto;
+  display: flex; flex-direction: column; gap: 16px;
+}
+
+/* CARDS */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.card-header {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 8px;
+  font-size: 11px; font-weight: 600; color: var(--text2);
+  text-transform: uppercase; letter-spacing: .6px;
+}
+.card-header-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+}
+.card-body { padding: 14px; }
+
+/* UPLOAD ZONE */
+.upload-zone {
+  border: 2px dashed var(--border2);
+  border-radius: var(--radius);
+  padding: 32px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all .2s;
+  position: relative;
+  background: var(--surface2);
+}
+.upload-zone:hover, .upload-zone.drag-over {
+  border-color: var(--accent);
+  background: var(--accent-light);
+}
+.upload-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.upload-icon { font-size: 32px; margin-bottom: 8px; }
+.upload-text { font-size: 13px; font-weight: 500; color: var(--text2); }
+.upload-sub { font-size: 11px; color: var(--text3); margin-top: 4px; }
+
+.preview-img {
+  width: 100%; border-radius: 8px;
+  border: 1px solid var(--border);
+  max-height: 280px; object-fit: contain;
+  background: #000;
+}
+.preview-file {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 12px 14px;
+  display: flex; align-items: center; gap: 10px;
+}
+
+/* FORM */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+.form-full { grid-column: 1 / -1; }
+.field-group { display: flex; flex-direction: column; gap: 4px; }
+.field-label {
+  font-size: 10px; font-weight: 600; color: var(--text3);
+  text-transform: uppercase; letter-spacing: .5px;
+}
+.field-input {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 6px; padding: 7px 10px;
+  font-size: 12px; font-family: var(--sans); color: var(--text);
+  outline: none; transition: border-color .15s;
+  width: 100%;
+}
+.field-input:focus { border-color: var(--accent); }
+select.field-input { cursor: pointer; }
+.field-input:disabled { opacity: .5; cursor: not-allowed; }
+
+/* ANALYZE BTN */
+.btn-analyze {
+  width: 100%; padding: 12px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: white; border: none; border-radius: 8px;
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  font-family: var(--sans); display: flex; align-items: center;
+  justify-content: center; gap: 8px;
+  transition: opacity .15s; box-shadow: 0 4px 16px rgba(99,102,241,.3);
+}
+.btn-analyze:hover { opacity: .9; }
+.btn-analyze:disabled { opacity: .5; cursor: not-allowed; }
+
+/* AI RESULT AREA */
+.ai-result {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 12px 14px;
+  font-size: 12px; line-height: 1.7; color: var(--text2);
+  white-space: pre-wrap; min-height: 80px;
+  font-family: var(--mono);
+}
+.ai-result.loading { color: var(--accent2); }
+.ai-result.success { border-color: rgba(16,185,129,.3); color: var(--text); }
+
+/* GEOMETRY BADGE */
+.geo-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 12px; border-radius: 20px;
+  font-size: 11px; font-weight: 600;
+  border: 1px solid;
+}
+.geo-silindirik { background: var(--cyan-light); color: var(--cyan); border-color: rgba(6,182,212,.3); }
+.geo-prizmatik { background: var(--orange-light); color: var(--orange); border-color: rgba(245,158,11,.3); }
+.geo-karma { background: var(--accent-light); color: var(--accent2); border-color: rgba(99,102,241,.3); }
+
+/* RESULTS */
+.result-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.result-section {
+  border-bottom: 1px solid var(--border);
+  padding: 12px 14px;
+}
+.result-section:last-child { border-bottom: none; }
+.result-section-title {
+  font-size: 10px; font-weight: 600; color: var(--text3);
+  text-transform: uppercase; letter-spacing: .6px;
+  margin-bottom: 8px; display: flex; align-items: center; gap: 6px;
+}
+.result-row {
+  display: flex; justify-content: space-between;
+  align-items: center; padding: 4px 0;
+}
+.result-label { font-size: 12px; color: var(--text2); }
+.result-val { font-family: var(--mono); font-size: 12px; font-weight: 500; color: var(--text); }
+.result-val.highlight { color: var(--green); font-size: 13px; font-weight: 600; }
+.result-total {
+  padding: 14px;
+  background: linear-gradient(135deg, rgba(99,102,241,.1), rgba(139,92,246,.1));
+  border-top: 1px solid rgba(99,102,241,.2);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.result-total-label { font-size: 12px; font-weight: 600; color: var(--text2); }
+.result-total-val { font-family: var(--mono); font-size: 20px; font-weight: 700; color: var(--accent2); }
+
+.breakdown-item {
+  display: flex; justify-content: space-between;
+  padding: 6px 0; border-bottom: 1px solid var(--border);
+}
+.breakdown-item:last-child { border-bottom: none; }
+.breakdown-name { font-size: 12px; color: var(--text2); }
+.breakdown-pct { font-size: 10px; color: var(--text3); font-family: var(--mono); }
+.breakdown-val { font-family: var(--mono); font-size: 12px; font-weight: 600; }
+
+/* AKTARMA BTN */
+.btn-export {
+  width: 100%; padding: 13px;
+  background: var(--green); color: white;
+  border: none; border-radius: 8px;
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  font-family: var(--sans); display: flex; align-items: center;
+  justify-content: center; gap: 8px; transition: opacity .15s;
+}
+.btn-export:hover { opacity: .9; }
+.btn-export:disabled { opacity: .4; cursor: not-allowed; }
+
+/* STEPS */
+.step {
+  display: flex; gap: 12px; align-items: flex-start;
+  padding: 12px; border-radius: 8px;
+  border: 1px solid var(--border); background: var(--surface2);
+  margin-bottom: 8px;
+}
+.step-num {
+  width: 24px; height: 24px; border-radius: 50%;
+  background: var(--accent-light); color: var(--accent2);
+  font-size: 11px; font-weight: 700; display: flex;
+  align-items: center; justify-content: center; flex-shrink: 0;
+  font-family: var(--mono); border: 1px solid rgba(99,102,241,.3);
+}
+.step-num.done { background: var(--green-light); color: var(--green); border-color: rgba(16,185,129,.3); }
+.step-content { flex: 1; }
+.step-title { font-size: 12px; font-weight: 600; margin-bottom: 2px; }
+.step-desc { font-size: 11px; color: var(--text3); }
+
+/* SPINNER */
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.3); border-top-color: white; border-radius: 50%; animation: spin .6s linear infinite; }
+
+/* TOAST */
+.toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 999; display: flex; flex-direction: column; gap: 8px; }
+.toast { padding: 10px 16px; border-radius: 8px; font-size: 12px; font-weight: 500; color: white; box-shadow: var(--shadow); animation: slideIn .2s ease; }
+.toast.success { background: var(--green); }
+.toast.error { background: var(--red); }
+.toast.info { background: var(--accent); }
+@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+/* RANGE SLIDER */
+input[type=range] {
+  -webkit-appearance: none; width: 100%; height: 4px;
+  background: var(--border); border-radius: 2px; outline: none;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 16px; height: 16px;
+  background: var(--accent); border-radius: 50%; cursor: pointer;
+}
+.range-val { font-family: var(--mono); font-size: 12px; color: var(--accent2); font-weight: 600; }
+
+/* TABS */
+.tabs { display: flex; gap: 2px; background: var(--surface2); border-radius: 8px; padding: 3px; }
+.tab {
+  flex: 1; padding: 6px 12px; border-radius: 6px;
+  font-size: 11px; font-weight: 600; cursor: pointer;
+  border: none; background: transparent; color: var(--text3);
+  transition: all .15s; font-family: var(--sans);
+}
+.tab.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,.3); }
+
+/* TOGGLE */
+.toggle-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; }
+.toggle-label { font-size: 12px; color: var(--text2); }
+.toggle {
+  width: 36px; height: 20px; border-radius: 10px;
+  background: var(--border2); position: relative; cursor: pointer;
+  border: none; transition: background .2s;
+}
+.toggle.on { background: var(--green); }
+.toggle::after {
+  content: ''; position: absolute; top: 2px; left: 2px;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: white; transition: left .2s;
+}
+.toggle.on::after { left: 18px; }
+
+.op-row {
+  display: grid; grid-template-columns: 1fr auto auto;
+  gap: 8px; align-items: center; padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+}
+.op-row:last-child { border-bottom: none; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="logo">
+    <div class="logo-badge">MES</div>
+    <div>
+      <div class="logo-text">Ersan MES</div>
+      <div class="logo-sub">Teklif Hesaplama</div>
+    </div>
+  </div>
+  <div class="header-sep"></div>
+  <button class="header-back" onclick="window.location='ersan_teklif.html'">
+    ← Teklife Dön
+  </button>
+  <div class="header-title">AI Destekli Maliyet Hesaplama</div>
+  <div class="header-badge">Claude Vision</div>
+</header>
+
+<!-- LAYOUT -->
+<div class="layout">
+
+<!-- LEFT PANEL -->
+<div class="left-panel">
+
+  <!-- ADIMLAR -->
+  <div>
+    <div class="step">
+      <div class="step-num" id="step1-num">1</div>
+      <div class="step-content">
+        <div class="step-title">Teknik Resim Yükle</div>
+        <div class="step-desc">JPG, PNG veya PDF — Claude geometriyi okuyacak</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num" id="step2-num">2</div>
+      <div class="step-content">
+        <div class="step-title">Parametreleri Gir / Onayla</div>
+        <div class="step-desc">AI'ın ölçüleri ve malzeme bilgilerini kontrol et</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num" id="step3-num">3</div>
+      <div class="step-content">
+        <div class="step-title">Maliyet Hesapla</div>
+        <div class="step-desc">Hammadde, işçilik, genel gider otomatik hesaplanır</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- UPLOAD -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-header-dot" style="background:#6366f1"></div>
+      Teknik Resim
+    </div>
+    <div class="card-body">
+      <div class="upload-zone" id="upload-zone"
+        ondragover="onDragOver(event)" ondrop="onDrop(event)" ondragleave="onDragLeave()">
+        <div id="upload-placeholder">
+          <div class="upload-icon">📐</div>
+          <div class="upload-text">Teknik resmi buraya sürükleyin</div>
+          <div class="upload-sub" style="margin-bottom:12px;">veya aşağıdaki butona tıklayın</div>
+          <label for="file-input" style="display:inline-block;background:var(--accent);color:white;padding:8px 20px;border-radius:7px;cursor:pointer;font-size:12px;font-weight:600;">
+            📁 Dosya Seç
+          </label>
+          <input type="file" id="file-input" accept="image/*,.pdf"
+            style="display:none;" onchange="onFileSelect(event)">
+        </div>
+        <div id="upload-preview" style="display:none;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GEOMETRİ & ÖLÇÜLER -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-header-dot" style="background:#06b6d4"></div>
+      Geometri & Ölçüler
+      <span id="geo-badge" style="margin-left:auto;display:none;"></span>
+    </div>
+    <div class="card-body" style="display:flex;flex-direction:column;gap:10px;">
+      <div class="tabs" id="geo-tabs">
+        <button class="tab active" id="tab-sil" onclick="switchGeo('silindirik')">Silindirik</button>
+        <button class="tab" id="tab-pri" onclick="switchGeo('prizmatik')">Prizmatik</button>
+        <button class="tab" id="tab-kar" onclick="switchGeo('karma')">Karma</button>
+      </div>
+
+      <!-- SİLİNDİRİK -->
+      <div id="form-silindirik">
+
+        <!-- İŞLENMİŞ PARÇA ÖLÇÜLERİ -->
+        <div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;display:flex;align-items:center;gap:6px;">
+          <div style="width:5px;height:5px;border-radius:50%;background:var(--orange)"></div>
+          İşlenmiş Parça Ölçüleri
+        </div>
+        <div class="form-grid" style="margin-bottom:12px;">
+          <div class="field-group">
+            <label class="field-label">Dış Çap (mm)</label>
+            <input type="number" class="field-input" id="sil-iscap" placeholder="ör: 146" oninput="hesapla();aiTavsiye()">
+          </div>
+          <div class="field-group">
+            <label class="field-label">İç Çap (mm)</label>
+            <input type="number" class="field-input" id="sil-isiccap" placeholder="0 = dolu" oninput="hesapla();aiTavsiye()">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Boy / Kalınlık (mm)</label>
+            <input type="number" class="field-input" id="sil-isboy" placeholder="ör: 20" oninput="hesapla();aiTavsiye()">
+          </div>
+        </div>
+
+        <!-- HAMMADDE ÖLÇÜLERİ -->
+        <div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <div style="width:5px;height:5px;border-radius:50%;background:var(--cyan)"></div>
+            Hammadde Ölçüleri
+          </div>
+          <span id="tavsiye-badge" style="font-size:9px;background:var(--accent-light);color:var(--accent2);padding:2px 7px;border-radius:8px;border:1px solid rgba(99,102,241,.3);">AI Tavsiye</span>
+        </div>
+
+        <!-- BORU / DOLU TOGGLE -->
+        <div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;margin-bottom:8px;">
+          <div>
+            <div style="font-size:12px;font-weight:500;" id="ham-tip-label">Boru olarak hesapla</div>
+            <div style="font-size:10px;color:var(--text3);" id="ham-tip-desc">Hammadde boru profili</div>
+          </div>
+          <button class="toggle on" id="boru-toggle" onclick="toggleBoruDolu()"></button>
+        </div>
+
+        <div class="form-grid" id="ham-boru-fields">
+          <div class="field-group">
+            <label class="field-label">Ham Dış Çap (mm)</label>
+            <input type="number" class="field-input" id="sil-cap" placeholder="AI tavsiye" oninput="hesapla()">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Ham İç Çap (mm)</label>
+            <input type="number" class="field-input" id="sil-iccap" placeholder="AI tavsiye" oninput="hesapla()">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Ham Boy (mm)</label>
+            <input type="number" class="field-input" id="sil-boy" placeholder="AI tavsiye" oninput="hesapla()">
+          </div>
+        </div>
+
+        <div class="form-grid" id="ham-dolu-fields" style="display:none;">
+          <div class="field-group">
+            <label class="field-label">Ham Çap (mm)</label>
+            <input type="number" class="field-input" id="sil-cap-dolu" placeholder="AI tavsiye" oninput="hesapla()">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Ham Boy (mm)</label>
+            <input type="number" class="field-input" id="sil-boy-dolu" placeholder="AI tavsiye" oninput="hesapla()">
+          </div>
+        </div>
+
+      </div>
+
+      <!-- PRİZMATİK -->
+      <div id="form-prizmatik" style="display:none;">
+        <div class="form-grid-3">
+          <div class="field-group">
+            <label class="field-label">En (mm)</label>
+            <input type="number" class="field-input" id="pri-en" placeholder="ör: 100" oninput="hesapla()">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Boy (mm)</label>
+            <input type="number" class="field-input" id="pri-boy" placeholder="ör: 200" oninput="hesapla()">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Yükseklik (mm)</label>
+            <input type="number" class="field-input" id="pri-yuk" placeholder="ör: 50" oninput="hesapla()">
+          </div>
+          <div class="field-group">
+            <label class="field-label">İşl. En (mm)</label>
+            <input type="number" class="field-input" id="pri-isen" placeholder="ör: 95" oninput="hesapla()">
+          </div>
+          <div class="field-group">
+            <label class="field-label">İşl. Boy (mm)</label>
+            <input type="number" class="field-input" id="pri-isboy" placeholder="ör: 195" oninput="hesapla()">
+          </div>
+          <div class="field-group">
+            <label class="field-label">İşl. Yük (mm)</label>
+            <input type="number" class="field-input" id="pri-isyuk" placeholder="ör: 45" oninput="hesapla()">
+          </div>
+        </div>
+      </div>
+
+      <!-- KARMA -->
+      <div id="form-karma" style="display:none;">
+        <div class="form-grid">
+          <div class="field-group">
+            <label class="field-label">Kütük Ağırlığı (kg)</label>
+            <input type="number" class="field-input" id="kar-ham" placeholder="AI hesaplar" oninput="hesapla()">
+          </div>
+          <div class="field-group">
+            <label class="field-label">İşlenmiş Ağırlık (kg)</label>
+            <input type="number" class="field-input" id="kar-is" placeholder="AI hesaplar" oninput="hesapla()">
+          </div>
+        </div>
+      </div>
+
+      <!-- MALZEME -->
+      <div class="form-grid">
+        <div class="field-group">
+          <label class="field-label">Malzeme</label>
+          <select class="field-input" id="malzeme" onchange="hesapla()">
+            <option value="celik">Çelik (7.85 g/cm³)</option>
+            <option value="aluminyum">Alüminyum (2.70 g/cm³)</option>
+            <option value="paslanmaz">Paslanmaz (7.93 g/cm³)</option>
+            <option value="bakir">Bakır (8.96 g/cm³)</option>
+            <option value="titanyum">Titanyum (4.51 g/cm³)</option>
+            <option value="diger">Diğer</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Kg Fiyatı (TL)</label>
+          <input type="number" class="field-input" id="kg-fiyat" value="85" oninput="hesapla()">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Kütük Payı (%)</label>
+          <input type="number" class="field-input" id="kutuk-pay" value="15" oninput="hesapla()">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Adet</label>
+          <input type="number" class="field-input" id="adet" value="1" min="1" oninput="hesapla()">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FASON İŞLEMLER -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-header-dot" style="background:#f59e0b"></div>
+      Fason İşlemler
+      <span style="margin-left:auto;font-size:10px;font-weight:400;color:var(--text3);" id="fason-count">Seçili yok</span>
+    </div>
+    <div class="card-body" style="display:flex;flex-direction:column;gap:6px;">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:4px;">Uygulanan fason işlemleri seçin, fiyat girilmesi gereken alanlar açılacak.</div>
+      <div id="fason-list" style="display:flex;flex-direction:column;gap:4px;"></div>
+      <button onclick="addFason()" style="margin-top:4px;background:transparent;border:1px dashed var(--border2);color:var(--text3);padding:6px;border-radius:6px;cursor:pointer;font-size:11px;font-family:var(--sans);transition:all .15s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent2)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text3)'">
+        + Özel Fason İşlem Ekle
+      </button>
+    </div>
+  </div>
+
+  <!-- OPERASYONLAR -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-header-dot" style="background:#10b981"></div>
+      Operasyonlar & İşçilik
+      <div style="margin-left:auto;display:flex;gap:6px;">
+        <button onclick="openOpGecmis()" style="background:transparent;border:1px solid var(--border2);border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer;color:var(--text2);font-family:var(--sans);" title="Geçmiş parçadan operasyon yükle">📋 Geçmişten Yükle</button>
+        <button onclick="saveOperasyonlar()" style="background:var(--green-light);border:1px solid rgba(5,150,105,.3);border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer;color:var(--green);font-family:var(--sans);font-weight:600;">💾 Kaydet</button>
+      </div>
+    </div>
+    <div class="card-body" style="display:flex;flex-direction:column;gap:6px;">
+      <!-- Tablo başlığı -->
+      <div style="display:grid;grid-template-columns:20px 1fr 70px 80px 24px;gap:6px;padding:4px 2px;border-bottom:1px solid var(--border);">
+        <div></div>
+        <div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;">Operasyon</div>
+        <div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;text-align:center;">Süre (dk)</div>
+        <div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;text-align:center;">TL/saat</div>
+        <div></div>
+      </div>
+      <div id="op-list" style="display:flex;flex-direction:column;gap:2px;">
+        <!-- Dinamik -->
+      </div>
+      <button onclick="addOperation()" style="margin-top:4px;background:transparent;border:1px dashed var(--border2);color:var(--text3);padding:6px;border-radius:6px;cursor:pointer;font-size:11px;font-family:var(--sans);transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent2)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text3)'">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 2v8M2 6h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        Operasyon Ekle
+      </button>
+    </div>
+  </div>
+
+  <!-- GENEL GİDER -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-header-dot" style="background:#a855f7"></div>
+      Genel Gider & Kâr
+    </div>
+    <div class="card-body" style="display:flex;flex-direction:column;gap:10px;">
+      <div class="field-group">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <label class="field-label">Genel Gider (%)</label>
+          <span class="range-val" id="gg-val">25%</span>
+        </div>
+        <input type="range" min="0" max="100" value="25" id="gg-range" oninput="document.getElementById('gg-val').textContent=this.value+'%';hesapla()">
+      </div>
+      <div class="field-group">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <label class="field-label">Kâr Marjı (%)</label>
+          <span class="range-val" id="kar-val">20%</span>
+        </div>
+        <input type="range" min="0" max="100" value="20" id="kar-range" oninput="document.getElementById('kar-val').textContent=this.value+'%';hesapla()">
+      </div>
+    </div>
+  </div>
+
+  <!-- ANALİZ BUTONU -->
+  <button class="btn-analyze" id="btn-analyze" onclick="analyzeWithAI()">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="white" stroke-width="1.5"/><path d="M5 8l2 2 4-4" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Teknik Resmi AI ile Analiz Et
+  </button>
+
+</div><!-- end left panel -->
+
+<!-- RIGHT PANEL -->
+<div class="right-panel" id="right-panel">
+
+  <!-- PLACEHOLDER -->
+  <div id="result-placeholder" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;color:var(--text3);text-align:center;padding:40px;">
+    <div style="font-size:64px;opacity:.3;">🔧</div>
+    <div>
+      <div style="font-size:16px;font-weight:600;color:var(--text2);margin-bottom:8px;">Hesaplama Bekleniyor</div>
+      <div style="font-size:13px;line-height:1.6;">Teknik resim yükleyin ve parametreleri girin.<br>AI otomatik analiz edecek veya manuel girebilirsiniz.</div>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px;max-width:360px;text-align:left;">
+      <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px;">Nasıl Çalışır?</div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div style="display:flex;gap:10px;align-items:flex-start;font-size:12px;color:var(--text2);">
+          <span style="color:var(--accent2);font-family:var(--mono);">01</span>
+          Teknik resim yükle — Claude geometriyi ve ölçüleri okur
+        </div>
+        <div style="display:flex;gap:10px;align-items:flex-start;font-size:12px;color:var(--text2);">
+          <span style="color:var(--accent2);font-family:var(--mono);">02</span>
+          Malzeme, kg fiyatı ve operasyonları onayla / düzelt
+        </div>
+        <div style="display:flex;gap:10px;align-items:flex-start;font-size:12px;color:var(--text2);">
+          <span style="color:var(--accent2);font-family:var(--mono);">03</span>
+          Maliyet otomatik hesaplanır, teklife tek tıkla aktarılır
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SONUÇLAR (gizli başlar) -->
+  <div id="result-content" style="display:none;flex-direction:column;gap:16px;">
+
+    <!-- AI ANALİZ ÖZETI -->
+    <div class="card" id="ai-summary-card">
+      <div class="card-header">
+        <div class="card-header-dot" style="background:#6366f1;animation:pulse 2s infinite"></div>
+        AI Analiz Sonucu
+      </div>
+      <div class="card-body">
+        <div class="ai-result" id="ai-result-text">—</div>
+      </div>
+    </div>
+
+    <!-- AĞIRLIK HESABI -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-header-dot" style="background:#06b6d4"></div>
+        Ağırlık Hesabı
+      </div>
+      <div class="card-body">
+        <div class="form-grid" style="gap:10px;">
+          <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;">
+            <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Kütük Ağırlığı</div>
+            <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--cyan);" id="r-ham-agirlik">—</div>
+            <div style="font-size:10px;color:var(--text3);margin-top:2px;">kg</div>
+          </div>
+          <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;">
+            <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">İşlenmiş Ağırlık</div>
+            <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--orange);" id="r-is-agirlik">—</div>
+            <div style="font-size:10px;color:var(--text3);margin-top:2px;">kg</div>
+          </div>
+          <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;">
+            <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Talaş Oranı</div>
+            <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--red);" id="r-talas-oran">—</div>
+            <div style="font-size:10px;color:var(--text3);margin-top:2px;">%</div>
+          </div>
+          <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;">
+            <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Toplam Süre</div>
+            <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--green);" id="r-toplam-sure">—</div>
+            <div style="font-size:10px;color:var(--text3);margin-top:2px;">dakika</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MALİYET DÖKÜMÜ -->
+    <div class="result-card">
+      <div style="padding:12px 14px;border-bottom:1px solid var(--border);font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;display:flex;align-items:center;gap:8px;">
+        <div style="width:6px;height:6px;border-radius:50%;background:#a855f7;"></div>
+        Maliyet Dökümü (Birim)
+      </div>
+
+      <div class="result-section">
+        <div class="result-section-title">
+          <span style="color:var(--cyan)">◆</span> Hammadde
+        </div>
+        <div class="result-row">
+          <span class="result-label">Kütük ağırlığı</span>
+          <span class="result-val" id="r-ham-kg">—</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Kg fiyatı</span>
+          <span class="result-val" id="r-ham-kgfiyat">—</span>
+        </div>
+        <div class="result-row" style="border-top:1px solid var(--border);margin-top:4px;padding-top:6px;">
+          <span class="result-label" style="font-weight:600;">Hammadde Toplam</span>
+          <span class="result-val highlight" id="r-ham-toplam">—</span>
+        </div>
+      </div>
+
+      <div class="result-section" id="r-isil-section" style="display:none;">
+        <div class="result-section-title">
+          <span style="color:var(--orange)">◆</span> Isıl İşlem
+        </div>
+        <div class="result-row">
+          <span class="result-label">İşlenmiş ağırlık</span>
+          <span class="result-val" id="r-isil-kg">—</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Fason fiyat</span>
+          <span class="result-val" id="r-isil-fiyat">—</span>
+        </div>
+        <div class="result-row" style="border-top:1px solid var(--border);margin-top:4px;padding-top:6px;">
+          <span class="result-label" style="font-weight:600;">Isıl İşlem Toplam</span>
+          <span class="result-val highlight" id="r-isil-toplam">—</span>
+        </div>
+      </div>
+
+      <div class="result-section">
+        <div class="result-section-title">
+          <span style="color:var(--green)">◆</span> İşçilik
+        </div>
+        <div id="r-op-rows">—</div>
+        <div class="result-row" style="border-top:1px solid var(--border);margin-top:4px;padding-top:6px;">
+          <span class="result-label" style="font-weight:600;">İşçilik Toplam</span>
+          <span class="result-val highlight" id="r-iscilik-toplam">—</span>
+        </div>
+      </div>
+
+      <div class="result-section">
+        <div class="result-section-title">
+          <span style="color:#a855f7">◆</span> Genel Gider & Kâr
+        </div>
+        <div class="result-row">
+          <span class="result-label">Genel gider</span>
+          <span class="result-val" id="r-gg">—</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Kâr</span>
+          <span class="result-val" id="r-kar">—</span>
+        </div>
+      </div>
+
+      <!-- GENEL TOPLAM -->
+      <div class="result-total">
+        <div>
+          <div class="result-total-label">BİRİM TEKLİF FİYATI</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:2px;" id="r-adet-info">1 adet için</div>
+        </div>
+        <div style="text-align:right;">
+          <div class="result-total-val" id="r-birim-fiyat">—</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:2px;" id="r-toplam-fiyat-info"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- % DAĞILIM -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-header-dot" style="background:#f59e0b"></div>
+        Maliyet Dağılımı
+      </div>
+      <div class="card-body" id="r-dagilim">—</div>
+    </div>
+
+    <!-- TEKLİFE AKTAR -->
+    <div class="card" style="border-color:rgba(16,185,129,.3);">
+      <div class="card-header" style="background:var(--green-light);">
+        <div class="card-header-dot" style="background:#10b981"></div>
+        Teklife Aktar
+      </div>
+      <div class="card-body" style="display:flex;flex-direction:column;gap:10px;">
+        <div class="form-grid">
+          <div class="field-group">
+            <label class="field-label">Parça Adı</label>
+            <input type="text" class="field-input" id="export-parca" placeholder="Parça adı">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Stok Kodu</label>
+            <input type="text" class="field-input" id="export-stok" placeholder="Stok kodu">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Malzeme No</label>
+            <input type="text" class="field-input" id="export-malzeme-no" placeholder="Malzeme no">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Teslim Süresi</label>
+            <input type="text" class="field-input" id="export-teslim" placeholder="25 İŞ GÜNÜ">
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--text3);background:var(--surface2);border-radius:6px;padding:8px 10px;">
+          💡 Hesaplanan birim fiyat teklif kalemine otomatik aktarılacak. Teklifler sayfasında açık bir teklif seçili olmalıdır.
+        </div>
+        <button class="btn-export" id="btn-export" onclick="exportToTeklif()" disabled>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v8M4 6l3 3 3-3M2 10v2h10v-2" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Aktif Teklife Ekle
+        </button>
+      </div>
+    </div>
+
+    <!-- AI DÜZELTME & ÖĞRETME -->
+    <div class="card" style="border-color:rgba(245,158,11,.3);">
+      <div class="card-header" style="background:rgba(245,158,11,.08);">
+        <div class="card-header-dot" style="background:#f59e0b"></div>
+        AI'yı Düzelt & Öğret
+        <span style="margin-left:auto;font-size:10px;font-weight:400;color:var(--text3);" id="ornek-count">Yükleniyor...</span>
+      </div>
+      <div class="card-body" style="display:flex;flex-direction:column;gap:10px;">
+        <div style="font-size:11px;color:var(--text3);background:var(--surface2);border-radius:6px;padding:8px 10px;">
+          💡 AI yanlış okudu mu? Düzeltmeyi kaydedin — bir sonraki analizde bu hatayı yapmaz.
+        </div>
+        <div class="form-grid" style="gap:10px;">
+          <div class="field-group">
+            <label class="field-label">Hata Tipi</label>
+            <select class="field-input" id="ogr-hata-tipi">
+              <option value="ic_cap_yanlis">İç çap yanlış (fatura/omuz karıştı)</option>
+              <option value="dis_cap_yanlis">Dış çap yanlış</option>
+              <option value="boy_yanlis">Boy / kalınlık yanlış</option>
+              <option value="geometri_yanlis">Geometri yanlış (silindirik/prizmatik)</option>
+              <option value="malzeme_yanlis">Malzeme yanlış</option>
+              <option value="boru_dolu_yanlis">Boru/dolu tespiti yanlış</option>
+              <option value="sure_yanlis">İşleme süresi yanlış</option>
+              <option value="diger">Diğer</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label class="field-label">AI Yanlış Okudu</label>
+            <input type="text" class="field-input" id="ogr-ai-okudu" placeholder="ör: 77.5">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Doğru Değer</label>
+            <input type="text" class="field-input" id="ogr-dogru" placeholder="ör: 70">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Hangi Alan</label>
+            <select class="field-input" id="ogr-alan">
+              <option value="ic_cap_mm">ic_cap_mm (iç çap)</option>
+              <option value="dis_cap_mm">dis_cap_mm (dış çap)</option>
+              <option value="boy_mm">boy_mm (boy/kalınlık)</option>
+              <option value="geometri">geometri</option>
+              <option value="malzeme">malzeme</option>
+              <option value="boru_mu">boru_mu</option>
+              <option value="diger">diğer</option>
+            </select>
+          </div>
+          <div class="field-group form-full">
+            <label class="field-label">Açıklama (AI neden yanıldı, doğrusu ne?)</label>
+            <textarea class="field-input" id="ogr-aciklama" rows="2"
+              placeholder="ör: Ø77.5 fatura/omuz çapıdır, iç delik Ø70 H7'dir. Birden fazla çap varsa en küçüğü iç çap olmalı."></textarea>
+          </div>
+        </div>
+        <button onclick="kaydetDuzeltme()" style="width:100%;padding:10px;background:#f59e0b;color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:opacity .15s;" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+          🧠 Düzeltmeyi Kaydet — AI'ya Öğret
+        </button>
+        <div id="ogr-sonuc"></div>
+      </div>
+    </div>
+
+  </div><!-- end result-content -->
+
+</div><!-- end right panel -->
+
+</div><!-- end layout -->
+
+<!-- TOAST -->
+<div class="toast-container" id="toast-container"></div>
+
+<script>
+// ── CONFIG ──
+const CLAUDE_MODEL = 'claude-sonnet-4-20250514';
+const AIRTABLE_BASE = 'app5LDgJMgocw79Ix';
+const OGRENME_TABLE = 'tblaIWnf5pFh5oX2r';
+
+let currentGeo = 'silindirik';
+let isilOn = false;
+let boruMod = true;
+let uploadedFile = null;
+let uploadedBase64 = null;
+let uploadedMimeType = null;
+let lastCalcResult = null;
+let ogrenmeOrnekleri = []; // Yüklenen öğrenme örnekleri
+
+// ── AIRTABLE PROXY ──
+const atFetch = async (method, tablePath, body) => {
+  const res = await fetch('/.netlify/functions/airtable', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ method, path: `/v0/${AIRTABLE_BASE}/${tablePath}`, body })
+  });
+  return res.json();
+};
+
+// ── ÖĞRENME ÖRNEKLERİ YÜKLE ──
+async function loadOgrenmeOrnekleri() {
+  if (OGRENME_TABLE === 'OGRENME_TABLE_ID') {
+    document.getElementById('ornek-count').textContent = 'Tablo ID girilmedi';
+    return;
+  }
+  try {
+    const data = await atFetch('GET',
+      `${OGRENME_TABLE}?filterByFormula=${encodeURIComponent('{Aktif}=1')}&sort[0][field]=Tarih&sort[0][direction]=desc&maxRecords=20`
+    );
+    ogrenmeOrnekleri = data.records || [];
+    document.getElementById('ornek-count').textContent = `${ogrenmeOrnekleri.length} örnek yüklendi`;
+  } catch(e) {
+    document.getElementById('ornek-count').textContent = 'Örnekler yüklenemedi';
+  }
+}
+
+// ── DÜZELTME KAYDET ──
+async function kaydetDuzeltme() {
+  if (OGRENME_TABLE === 'OGRENME_TABLE_ID') {
+    document.getElementById('ogr-sonuc').innerHTML =
+      `<div style="background:var(--red-light);color:var(--red);padding:8px 12px;border-radius:6px;font-size:11px;">
+        ⚠️ Önce OGRENME_TABLE_ID'yi gerçek tablo ID'siyle değiştirin.
+      </div>`;
+    return;
+  }
+
+  const hataTipi = document.getElementById('ogr-hata-tipi').value;
+  const aiOkudu = document.getElementById('ogr-ai-okudu').value.trim();
+  const dogru = document.getElementById('ogr-dogru').value.trim();
+  const alan = document.getElementById('ogr-alan').value;
+  const aciklama = document.getElementById('ogr-aciklama').value.trim();
+
+  if (!aiOkudu || !dogru) {
+    document.getElementById('ogr-sonuc').innerHTML =
+      `<div style="background:var(--red-light);color:var(--red);padding:8px 12px;border-radius:6px;font-size:11px;">
+        ⚠️ "AI yanlış okudu" ve "Doğru değer" alanları zorunlu.
+      </div>`;
+    return;
+  }
+
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const res = await atFetch('POST', OGRENME_TABLE, {
+      fields: {
+        'Hata Tipi': hataTipi,
+        'AI Okudu': aiOkudu,
+        'Doğrusu': dogru,
+        'Alan Adı': alan,
+        'Açıklama': aciklama || `${alan} için AI ${aiOkudu} okudu, doğrusu ${dogru}`,
+        'Aktif': true,
+        'Tarih': today,
+      }
+    });
+
+    if (res.id) {
+      // Yerel cache'e de ekle
+      ogrenmeOrnekleri.unshift({ id: res.id, fields: res.fields });
+      document.getElementById('ornek-count').textContent = `${ogrenmeOrnekleri.length} örnek yüklendi`;
+
+      document.getElementById('ogr-sonuc').innerHTML =
+        `<div style="background:var(--green-light);color:var(--green);padding:8px 12px;border-radius:6px;font-size:11px;">
+          ✓ Kaydedildi! Bir sonraki analizde bu örnek prompt'a eklenecek.
+        </div>`;
+
+      // Formu temizle
+      document.getElementById('ogr-ai-okudu').value = '';
+      document.getElementById('ogr-dogru').value = '';
+      document.getElementById('ogr-aciklama').value = '';
+
+      toast('Düzeltme kaydedildi 🧠 AI öğrendi!');
+    }
+  } catch(e) {
+    document.getElementById('ogr-sonuc').innerHTML =
+      `<div style="background:var(--red-light);color:var(--red);padding:8px 12px;border-radius:6px;font-size:11px;">
+        Hata: ${e.message}
+      </div>`;
+  }
+}
+
+// ── ÖĞRENME ÖRNEKLERİNDEN PROMPT OLUŞTUR ──
+function buildFewShotExamples() {
+  if (!ogrenmeOrnekleri.length) return '';
+
+  const ornekler = ogrenmeOrnekleri.map(r => {
+    const f = r.fields;
+    return `- ${f['Alan Adı'] || ''}: AI "${f['AI Okudu'] || ''}" okudu → DOĞRUSU "${f['Doğrusu'] || ''}". Neden: ${f['Açıklama'] || ''}`;
+  }).join('\n');
+
+  return `\n\nGEÇMİŞTE YAPILAN HATALAR — BUNLARI TEKRARLAMA:\n${ornekler}\n`;
+}
+
+const YOGUNLUK = {
+  celik: 7.85, aluminyum: 2.70, paslanmaz: 7.93,
+  bakir: 8.96, titanyum: 4.51, diger: 7.85
+};
+
+let operations = [
+  { name: 'Tornalama', sure: 45, saat: 180 },
+  { name: 'Frezeleme', sure: 0, saat: 200 },
+  { name: 'Taşlama', sure: 0, saat: 220 },
+];
+
+function toast(msg, type='success') {
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+
+// ── BORU / DOLU TOGGLE ──
+function toggleBoruDolu() {
+  boruMod = !boruMod;
+  const btn = document.getElementById('boru-toggle');
+  btn.className = `toggle ${boruMod?'on':''}`;
+  document.getElementById('ham-boru-fields').style.display = boruMod ? '' : 'none';
+  document.getElementById('ham-dolu-fields').style.display = boruMod ? 'none' : '';
+  document.getElementById('ham-tip-label').textContent = boruMod ? 'Boru olarak hesapla' : 'Dolu silindir olarak hesapla';
+  document.getElementById('ham-tip-desc').textContent = boruMod ? 'Hammadde boru profili' : 'Hammadde dolu çubuk/bilye';
+  // Dolu moda geçince otomatik tavsiye ver
+  if (!boruMod) aiTavsiye();
+  hesapla();
+}
+
+// ── AI TAVSİYE (hammadde ölçüleri) ──
+function aiTavsiye() {
+  if (currentGeo !== 'silindirik') return;
+  const isDis = parseFloat(document.getElementById('sil-iscap').value) || 0;
+  const isIc = parseFloat(document.getElementById('sil-isiccap').value) || 0;
+  const isBoy = parseFloat(document.getElementById('sil-isboy').value) || 0;
+  if (!isDis || !isBoy) return;
+
+  const pay = parseFloat(document.getElementById('kutuk-pay').value) || 15;
+  const payFactor = 1 + pay/100;
+
+  if (boruMod) {
+    // Boru tavsiye: dış çapa pay ekle, iç çaptan pay çıkar
+    const tavDisCap = Math.ceil(isDis * payFactor / 5) * 5; // 5mm yuvarlama
+    const tavIcCap = isIc > 0 ? Math.floor(isIc * (1 - (pay/2)/100) / 5) * 5 : 0;
+    const tavBoy = Math.ceil(isBoy * payFactor / 5) * 5;
+    if (!document.getElementById('sil-cap').value) document.getElementById('sil-cap').value = tavDisCap;
+    if (!document.getElementById('sil-iccap').value && tavIcCap > 0) document.getElementById('sil-iccap').value = tavIcCap;
+    if (!document.getElementById('sil-boy').value) document.getElementById('sil-boy').value = tavBoy;
+  } else {
+    // Dolu tavsiye: en büyük dış çap + pay
+    const tavCap = Math.ceil(isDis * payFactor / 5) * 5;
+    const tavBoy = Math.ceil(isBoy * payFactor / 5) * 5;
+    if (!document.getElementById('sil-cap-dolu').value) document.getElementById('sil-cap-dolu').value = tavCap;
+    if (!document.getElementById('sil-boy-dolu').value) document.getElementById('sil-boy-dolu').value = tavBoy;
+  }
+  hesapla();
+}
+
+// ── UPLOAD ──
+function onDragOver(e) {
+  e.preventDefault();
+  document.getElementById('upload-zone').classList.add('drag-over');
+}
+function onDragLeave() {
+  document.getElementById('upload-zone').classList.remove('drag-over');
+}
+function onDrop(e) {
+  e.preventDefault();
+  onDragLeave();
+  const file = e.dataTransfer.files[0];
+  if (file) processFile(file);
+}
+function onFileSelect(e) {
+  const file = e.target.files[0];
+  if (file) processFile(file);
+}
+
+function processFile(file) {
+  if (!file) return;
+  uploadedFile = file;
+
+  // Boyut kontrolü (10MB limit)
+  if (file.size > 10 * 1024 * 1024) {
+    toast('Dosya çok büyük (max 10MB). Lütfen sıkıştırın.', 'error');
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onerror = () => toast('Dosya okunamadı: ' + reader.error, 'error');
+  reader.onload = (e) => {
+    try {
+      const result = e.target.result;
+      uploadedBase64 = result.split(',')[1];
+      uploadedMimeType = file.type || 'image/jpeg';
+
+      const placeholder = document.getElementById('upload-placeholder');
+      const preview = document.getElementById('upload-preview');
+      placeholder.style.display = 'none';
+      preview.style.display = 'block';
+
+      if (file.type.startsWith('image/')) {
+        preview.innerHTML = `<img src="${result}" class="preview-img" alt="Teknik resim">
+          <label for="file-input" style="display:inline-block;margin-top:8px;background:var(--surface3);color:var(--text2);padding:5px 12px;border-radius:6px;cursor:pointer;font-size:11px;border:1px solid var(--border2);">
+            🔄 Değiştir
+          </label>`;
+      } else {
+        preview.innerHTML = `<div class="preview-file">
+          <span style="font-size:24px;">📄</span>
+          <div style="flex:1;">
+            <div style="font-size:12px;font-weight:600;">${file.name}</div>
+            <div style="font-size:11px;color:var(--text3);">${(file.size/1024).toFixed(1)} KB</div>
+          </div>
+          <label for="file-input" style="background:var(--surface3);color:var(--text2);padding:5px 10px;border-radius:6px;cursor:pointer;font-size:11px;border:1px solid var(--border2);">
+            🔄 Değiştir
+          </label>
+        </div>`;
+      }
+
+      document.getElementById('step1-num').classList.add('done');
+      document.getElementById('step1-num').textContent = '✓';
+      toast('Teknik resim yüklendi ✓', 'info');
+    } catch(err) {
+      toast('İşleme hatası: ' + err.message, 'error');
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+// ── GEO SWITCH ──
+function switchGeo(geo) {
+  currentGeo = geo;
+  ['silindirik','prizmatik','karma'].forEach(g => {
+    document.getElementById(`form-${g}`).style.display = g===geo ? '' : 'none';
+    document.getElementById(`tab-${g.slice(0,3)}`).className = `tab ${g===geo?'active':''}`;
+  });
+  hesapla();
+}
+
+// ── ISIL TOGGLE ──
+function toggleIsil() {
+  isilOn = !isilOn;
+  const btn = document.getElementById('isil-toggle');
+  btn.className = `toggle ${isilOn?'on':''}`;
+  document.getElementById('isil-fields').style.display = isilOn ? '' : 'none';
+  hesapla();
+}
+
+// ── DRAG STATE ──
+let dragSrcIdx = null;
+
+function renderOps() {
+  const list = document.getElementById('op-list');
+  if (!list) return;
+
+  if (!operations.length) {
+    list.innerHTML = `<div style="text-align:center;padding:12px;color:var(--text3);font-size:11px;">Henüz operasyon eklenmedi</div>`;
+    hesapla();
+    return;
+  }
+
+  list.innerHTML = operations.map((op, i) => `
+    <div class="op-row-item" draggable="true" data-idx="${i}"
+      ondragstart="opDragStart(event,${i})"
+      ondragover="opDragOver(event)"
+      ondrop="opDrop(event,${i})"
+      ondragend="opDragEnd()"
+      style="display:grid;grid-template-columns:20px 1fr 70px 80px 24px;gap:6px;align-items:center;padding:4px 2px;border-radius:6px;transition:background .1s;">
+      <div style="cursor:grab;color:var(--text3);font-size:14px;text-align:center;user-select:none;" title="Sürükleyerek sırala">⠿</div>
+      <select style="border:1px solid transparent;border-radius:5px;padding:4px 6px;font-size:12px;font-family:var(--sans);width:100%;outline:none;background:var(--surface2);"
+        onchange="operations[${i}].name=this.value;renderOps()" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='transparent'">
+        ${['Tornalama','Frezeleme','Taşlama','Sert Tornalama (CBN)','Taşlama (fason)','Delik Delme','Diş Açma','Çapak Alma',
+           'Isıl İşlem (fason)','İndüksiyon Sertleştirme (fason)','Yüzey İşlemi (fason)','Krom Kaplama (fason)',
+           'Kaynak','Montaj','Kalite Kontrol','Final Muayene','FAI']
+          .map(t => `<option ${op.name===t?'selected':''}>${t}</option>`).join('')}
+      </select>
+      <input type="number" style="border:1px solid transparent;border-radius:5px;padding:4px 6px;font-size:12px;font-family:var(--mono);text-align:right;width:100%;outline:none;background:var(--surface2);"
+        value="${op.sure||''}" placeholder="0"
+        oninput="operations[${i}].sure=parseFloat(this.value)||0;hesapla()"
+        onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='transparent'">
+      <input type="number" style="border:1px solid transparent;border-radius:5px;padding:4px 6px;font-size:12px;font-family:var(--mono);text-align:right;width:100%;outline:none;background:var(--surface2);"
+        value="${op.saat||''}" placeholder="0"
+        oninput="operations[${i}].saat=parseFloat(this.value)||0;hesapla()"
+        onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='transparent'">
+      <button onclick="removeOperation(${i})" style="width:22px;height:22px;background:transparent;border:none;color:var(--text3);cursor:pointer;font-size:15px;border-radius:4px;display:flex;align-items:center;justify-content:center;"
+        onmouseover="this.style.background='var(--red-light)';this.style.color='var(--red)'"
+        onmouseout="this.style.background='transparent';this.style.color='var(--text3)'">×</button>
+    </div>`).join('');
+
+  hesapla();
+}
+
+// ── DRAG & DROP ──
+function opDragStart(e, i) {
+  dragSrcIdx = i;
+  e.currentTarget.style.opacity = '.4';
+  e.dataTransfer.effectAllowed = 'move';
+}
+function opDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  e.currentTarget.style.background = 'var(--accent-light)';
+}
+function opDrop(e, i) {
+  e.preventDefault();
+  if (dragSrcIdx === null || dragSrcIdx === i) return;
+  const [moved] = operations.splice(dragSrcIdx, 1);
+  operations.splice(i, 0, moved);
+  renderOps();
+}
+function opDragEnd() {
+  dragSrcIdx = null;
+  document.querySelectorAll('.op-row-item').forEach(r => {
+    r.style.opacity = '1';
+    r.style.background = '';
+  });
+}
+
+function addOperation() {
+  operations.push({ name: 'Tornalama', sure: 0, saat: 180 });
+  renderOps();
+  // Focus last row
+  setTimeout(() => {
+    const rows = document.querySelectorAll('.op-row-item');
+    if (rows.length) rows[rows.length-1].querySelector('select')?.focus();
+  }, 50);
+}
+
+function removeOperation(i) {
+  operations.splice(i, 1);
+  renderOps();
+}
+
+// ── OPERASYON KAYDET (Airtable) ──
+const OP_SABLON_TABLE = 'tblVECelTUG33EYm8'; // Operasyon Rotaları tablosu
+
+async function saveOperasyonlar() {
+  const parcaNo = document.getElementById('export-stok')?.value ||
+                  document.getElementById('export-parca')?.value || '';
+  if (!parcaNo) {
+    toast('Önce sağdaki "Teklife Aktar" bölümünde Parça Adı veya Stok Kodu girin', 'error');
+    return;
+  }
+  if (!operations.length) {
+    toast('Kaydedilecek operasyon yok', 'error');
+    return;
+  }
+
+  try {
+    // Önce aynı parça no için eskilerini sil (opsiyonel — üzerine yaz mantığı)
+    // Sonra yenileri kaydet
+    let saved = 0;
+    for (let i = 0; i < operations.length; i++) {
+      const op = operations[i];
+      await atFetch('POST', OP_SABLON_TABLE, {
+        fields: {
+          'Operasyon Tipi': op.name,
+          'Tahmini Süre (dk)': op.sure || 0,
+          'Açıklama': `Şablon | ${parcaNo} | TL/saat:${op.saat}`,
+          'Sıra No': i + 1,
+          'Durum': 'Beklemede',
+        }
+      });
+      saved++;
+    }
+    toast(`${saved} operasyon kaydedildi ✓`);
+  } catch(e) {
+    toast('Kaydetme hatası: ' + e.message, 'error');
+  }
+}
+
+// ── GEÇMİŞTEN YÜKLE MODAL ──
+async function openOpGecmis() {
+  const modal = document.createElement('div');
+  modal.id = 'op-gecmis-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:999;display:flex;align-items:center;justify-content:center;';
+  modal.innerHTML = `
+    <div style="background:var(--surface);border-radius:12px;width:480px;max-height:80vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.4);">
+      <div style="background:#1e1b4b;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;">
+        <div style="color:white;font-weight:600;font-size:13px;">Geçmiş Operasyon Şablonları</div>
+        <button onclick="document.getElementById('op-gecmis-modal').remove()" style="background:transparent;border:none;color:white;font-size:18px;cursor:pointer;">×</button>
+      </div>
+      <div style="padding:12px 16px;border-bottom:1px solid var(--border);">
+        <input type="text" id="op-gecmis-ara" placeholder="Operasyon tipine göre ara..." oninput="filterOpGecmis()"
+          style="width:100%;border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:12px;font-family:var(--sans);background:var(--surface2);color:var(--text);outline:none;">
+      </div>
+      <div style="flex:1;overflow-y:auto;padding:8px;" id="op-gecmis-list">
+        <div style="text-align:center;padding:20px;color:var(--text3);font-size:12px;">Yükleniyor...</div>
+      </div>
+      <div style="padding:12px 16px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+        <div style="font-size:11px;color:var(--text3);">Seçilen rotayı mevcut operasyonların üzerine ekler</div>
+        <button onclick="document.getElementById('op-gecmis-modal').remove()" style="background:transparent;border:1px solid var(--border);border-radius:6px;padding:6px 14px;font-size:12px;cursor:pointer;font-family:var(--sans);">Kapat</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+  loadOpGecmis();
+}
+
+let gecmisOps = [];
+async function loadOpGecmis() {
+  try {
+    const data = await atFetch('GET',
+      `${OP_SABLON_TABLE}?sort[0][field]=Sıra%20No&sort[0][direction]=asc&maxRecords=100`);
+    gecmisOps = data.records || [];
+    renderOpGecmis(gecmisOps);
+  } catch(e) {
+    document.getElementById('op-gecmis-list').innerHTML =
+      `<div style="color:var(--red);font-size:12px;padding:10px;">Hata: ${e.message}</div>`;
+  }
+}
+
+function renderOpGecmis(records) {
+  const el = document.getElementById('op-gecmis-list');
+  if (!records.length) {
+    el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text3);font-size:12px;">Kayıtlı şablon bulunamadı</div>';
+    return;
+  }
+
+  // Açıklama alanından parça gruplama
+  const gruplar = {};
+  records.forEach(r => {
+    const aciklama = r.fields['Açıklama'] || '';
+    const parca = aciklama.includes('Şablon |') ? aciklama.split('|')[1]?.trim() : 'Diğer';
+    if (!gruplar[parca]) gruplar[parca] = [];
+    gruplar[parca].push(r);
+  });
+
+  el.innerHTML = Object.entries(gruplar).map(([parca, ops]) => `
+    <div style="border:1px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden;">
+      <div style="background:var(--surface2);padding:8px 12px;display:flex;justify-content:space-between;align-items:center;">
+        <div style="font-size:12px;font-weight:600;">${parca}</div>
+        <button onclick="yukleOpGrubu(${JSON.stringify(ops.map(r=>({
+          name: r.fields['Operasyon Tipi']||'',
+          sure: r.fields['Tahmini Süre (dk)']||0,
+          saat: parseInt((r.fields['Açıklama']||'').match(/TL\/saat:(\d+)/)?.[1]||180)
+        }))).replace(/"/g,'&quot;')})"
+          style="background:var(--accent);color:white;border:none;border-radius:5px;padding:4px 10px;font-size:11px;cursor:pointer;font-family:var(--sans);">
+          Yükle
+        </button>
+      </div>
+      <div style="padding:6px 12px;">
+        ${ops.sort((a,b)=>(a.fields['Sıra No']||0)-(b.fields['Sıra No']||0)).map(r =>
+          `<div style="display:flex;justify-content:space-between;padding:3px 0;font-size:11px;color:var(--text2);border-bottom:1px solid var(--border);">
+            <span>${r.fields['Sıra No']||'—'}. ${r.fields['Operasyon Tipi']||'—'}</span>
+            <span style="font-family:var(--mono);color:var(--text3);">${r.fields['Tahmini Süre (dk)']||0} dk</span>
+          </div>`
+        ).join('')}
+      </div>
+    </div>`).join('');
+}
+
+function filterOpGecmis() {
+  const q = document.getElementById('op-gecmis-ara').value.toLowerCase();
+  const filtered = gecmisOps.filter(r =>
+    (r.fields['Operasyon Tipi']||'').toLowerCase().includes(q) ||
+    (r.fields['Açıklama']||'').toLowerCase().includes(q)
+  );
+  renderOpGecmis(filtered);
+}
+
+function yukleOpGrubu(opsJson) {
+  try {
+    const ops = typeof opsJson === 'string' ? JSON.parse(opsJson) : opsJson;
+    operations = ops;
+    renderOps();
+    document.getElementById('op-gecmis-modal')?.remove();
+    toast(`${ops.length} operasyon yüklendi ✓`);
+  } catch(e) {
+    toast('Yükleme hatası: ' + e.message, 'error');
+  }
+}
+
+// ── HESAPLA ──
+function hesapla() {
+  const adet = parseFloat(document.getElementById('adet').value) || 1;
+  const yo = YOGUNLUK[document.getElementById('malzeme').value] || 7.85;
+  const kgFiyat = parseFloat(document.getElementById('kg-fiyat').value) || 0;
+  const kutukPay = parseFloat(document.getElementById('kutuk-pay').value) || 15;
+  const ggPct = parseFloat(document.getElementById('gg-range').value) || 0;
+  const karPct = parseFloat(document.getElementById('kar-range').value) || 0;
+
+  let hamKg = 0, isKg = 0;
+
+  if (currentGeo === 'silindirik') {
+    // İşlenmiş parça ölçüleri (her zaman aynı)
+    const iscap   = parseFloat(document.getElementById('sil-iscap').value) || 0;
+    const isiccap = parseFloat(document.getElementById('sil-isiccap').value) || 0;
+    const isboy   = parseFloat(document.getElementById('sil-isboy').value) || 0;
+    const payFactor = 1 + kutukPay/100;
+
+    // İşlenmiş ağırlık (boru formülü)
+    const disRis = iscap/2/10, icRis = isiccap/2/10;
+    isKg = Math.PI * (Math.pow(disRis,2) - Math.pow(icRis,2)) * (isboy/10) * yo / 1000;
+
+    // Hammadde ağırlığı (boru veya dolu)
+    if (boruMod) {
+      const cap   = parseFloat(document.getElementById('sil-cap').value) || 0;
+      const iccap = parseFloat(document.getElementById('sil-iccap').value) || 0;
+      const boy   = parseFloat(document.getElementById('sil-boy').value) || 0;
+      const disR = cap/2/10, icR = iccap/2/10;
+      hamKg = Math.PI * (Math.pow(disR,2) - Math.pow(icR,2)) * (boy/10) * yo / 1000;
+    } else {
+      const cap  = parseFloat(document.getElementById('sil-cap-dolu').value) || 0;
+      const boy  = parseFloat(document.getElementById('sil-boy-dolu').value) || 0;
+      hamKg = Math.PI * Math.pow(cap/2/10, 2) * (boy/10) * yo / 1000;
+    }
+  } else if (currentGeo === 'prizmatik') {
+    const en = parseFloat(document.getElementById('pri-en').value) || 0;
+    const boy = parseFloat(document.getElementById('pri-boy').value) || 0;
+    const yuk = parseFloat(document.getElementById('pri-yuk').value) || 0;
+    const isen = parseFloat(document.getElementById('pri-isen').value) || en;
+    const isboy = parseFloat(document.getElementById('pri-isboy').value) || boy;
+    const isyuk = parseFloat(document.getElementById('pri-isyuk').value) || yuk;
+    const payFactor = 1 + kutukPay/100;
+    hamKg = (en/10) * (boy/10) * (yuk/10) * yo / 1000 * payFactor;
+    isKg = (isen/10) * (isboy/10) * (isyuk/10) * yo / 1000;
+  } else {
+    hamKg = parseFloat(document.getElementById('kar-ham').value) || 0;
+    isKg = parseFloat(document.getElementById('kar-is').value) || 0;
+  }
+
+  const talasOran = hamKg > 0 ? ((hamKg - isKg) / hamKg * 100) : 0;
+  const hammadde = hamKg * kgFiyat;
+
+  let isilToplam = 0;
+  if (isilOn) {
+    const isilFiyat = parseFloat(document.getElementById('isil-fiyat').value) || 0;
+    isilToplam = isKg * isilFiyat;
+  }
+
+  const totalOpSure = operations.reduce((s, op) => s + (op.sure||0), 0);
+  const iscilik = operations.reduce((s, op) => s + (op.sure||0) * (op.saat||0) / 60, 0);
+
+  const maliyet = hammadde + isilToplam + iscilik;
+  const gg = maliyet * ggPct / 100;
+  const karBase = (maliyet + gg);
+  const kar = karBase * karPct / 100;
+  const birimFiyat = maliyet + gg + kar;
+  const toplamFiyat = birimFiyat * adet;
+
+  // Update UI
+  document.getElementById('r-ham-agirlik').textContent = hamKg.toFixed(3);
+  document.getElementById('r-is-agirlik').textContent = isKg.toFixed(3);
+  document.getElementById('r-talas-oran').textContent = talasOran.toFixed(1);
+  document.getElementById('r-toplam-sure').textContent = totalOpSure.toFixed(0);
+
+  document.getElementById('r-ham-kg').textContent = `${hamKg.toFixed(3)} kg`;
+  document.getElementById('r-ham-kgfiyat').textContent = `${kgFiyat.toLocaleString('tr-TR')} TL/kg`;
+  document.getElementById('r-ham-toplam').textContent = `${hammadde.toLocaleString('tr-TR', {minimumFractionDigits:2})} TL`;
+
+  if (isilOn) {
+    document.getElementById('r-isil-section').style.display = '';
+    document.getElementById('r-isil-kg').textContent = `${isKg.toFixed(3)} kg`;
+    document.getElementById('r-isil-fiyat').textContent = `${document.getElementById('isil-fiyat').value} TL/kg`;
+    document.getElementById('r-isil-toplam').textContent = `${isilToplam.toLocaleString('tr-TR', {minimumFractionDigits:2})} TL`;
+  } else {
+    document.getElementById('r-isil-section').style.display = 'none';
+  }
+
+  document.getElementById('r-op-rows').innerHTML = operations.map(op =>
+    op.sure > 0 ? `<div class="result-row">
+      <span class="result-label">${op.name} (${op.sure} dk)</span>
+      <span class="result-val">${((op.sure * op.saat)/60).toLocaleString('tr-TR', {minimumFractionDigits:2})} TL</span>
+    </div>` : ''
+  ).join('') || '<div style="color:var(--text3);font-size:12px;padding:4px 0;">Süre girilmemiş</div>';
+
+  document.getElementById('r-iscilik-toplam').textContent = `${iscilik.toLocaleString('tr-TR', {minimumFractionDigits:2})} TL`;
+  document.getElementById('r-gg').textContent = `${gg.toLocaleString('tr-TR', {minimumFractionDigits:2})} TL (%${ggPct})`;
+  document.getElementById('r-kar').textContent = `${kar.toLocaleString('tr-TR', {minimumFractionDigits:2})} TL (%${karPct})`;
+  document.getElementById('r-birim-fiyat').textContent = `${birimFiyat.toLocaleString('tr-TR', {minimumFractionDigits:2})} TL`;
+  document.getElementById('r-adet-info').textContent = `${adet} adet için`;
+
+  if (adet > 1) {
+    document.getElementById('r-toplam-fiyat-info').textContent = `Toplam: ${toplamFiyat.toLocaleString('tr-TR', {minimumFractionDigits:2})} TL`;
+  } else {
+    document.getElementById('r-toplam-fiyat-info').textContent = '';
+  }
+
+  // Dağılım
+  if (birimFiyat > 0) {
+    const items = [
+      { name: 'Hammadde', val: hammadde, color: 'var(--cyan)' },
+      ...(isilOn ? [{ name: 'Isıl İşlem', val: isilToplam, color: 'var(--orange)' }] : []),
+      { name: 'İşçilik', val: iscilik, color: 'var(--green)' },
+      { name: 'Genel Gider', val: gg, color: '#a855f7' },
+      { name: 'Kâr', val: kar, color: 'var(--accent2)' },
+    ];
+    document.getElementById('r-dagilim').innerHTML = items.map(item => {
+      const pct = (item.val / birimFiyat * 100).toFixed(1);
+      return `<div class="breakdown-item">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="width:8px;height:8px;border-radius:2px;background:${item.color};"></div>
+          <span class="breakdown-name">${item.name}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <span class="breakdown-pct">%${pct}</span>
+          <div style="width:80px;height:4px;background:var(--border);border-radius:2px;overflow:hidden;">
+            <div style="width:${pct}%;height:100%;background:${item.color};border-radius:2px;"></div>
+          </div>
+          <span class="breakdown-val" style="color:${item.color};">${item.val.toLocaleString('tr-TR', {minimumFractionDigits:2})} TL</span>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  lastCalcResult = { birimFiyat, hamKg, isKg, toplamFiyat, adet };
+  document.getElementById('btn-export').disabled = birimFiyat <= 0;
+
+  // Show results
+  document.getElementById('result-placeholder').style.display = 'none';
+  document.getElementById('result-content').style.display = 'flex';
+  document.getElementById('step3-num').classList.add('done');
+  document.getElementById('step3-num').textContent = '✓';
+}
+
+// ── AI ANALİZ ──
+async function analyzeWithAI() {
+  if (!uploadedBase64) {
+    toast('Önce teknik resim yükleyin', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('btn-analyze');
+  btn.disabled = true;
+  btn.innerHTML = `<div class="spinner"></div> Analiz ediliyor...`;
+
+  document.getElementById('result-placeholder').style.display = 'none';
+  document.getElementById('result-content').style.display = 'flex';
+  document.getElementById('ai-result-text').className = 'ai-result loading';
+  document.getElementById('ai-result-text').textContent = 'Claude teknik resmi analiz ediyor...';
+
+  try {
+    const imageContent = uploadedMimeType === 'application/pdf'
+      ? {
+          type: 'document',
+          source: {
+            type: 'base64',
+            media_type: 'application/pdf',
+            data: uploadedBase64
+          }
+        }
+      : {
+          type: 'image',
+          source: {
+            type: 'base64',
+            media_type: uploadedMimeType,
+            data: uploadedBase64
+          }
+        };
+
+    const response = await fetch('/.netlify/functions/claude', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: CLAUDE_MODEL,
+        max_tokens: 1000,
+        messages: [{
+          role: 'user',
+          content: [
+            imageContent,
+            {
+              type: 'text',
+              text: `Sen teknik resim okuma ve yorumlama konusunda uzmanlaşmış bir makine mühendisisin (makine parçaları, montajlar, GD&T, ISO ve ASME standartları). CNC talaşlı imalat ve maliyet hesaplama konusunda da deneyimlisin.` + buildFewShotExamples() + `
+
+GENEL KURALLAR:
+- Adım adım düşün ve dikkatli bir şekilde yanıt ver
+- Görselde okunamayan bir şey varsa tahmin etme — o alanı null bırak
+- Standartları uydurmak yerine emin değilsen null bırak
+- Göremediklerini varsayma
+
+ADIM 1 — PARÇAYI TANI:
+Parçanın veya montajın ne olduğunu kısaca tanımla (mil, flanş, brakete, kapak, burç vb.)
+Sektörü tahmin et: genel makine | havacılık | otomotiv | savunma | gıda/kimya
+
+ADIM 2 — GÖRÜNÜŞLERİ LİSTELE:
+Tüm görünüşleri tespit et: ön, üst, yan, kesit (A-A, B-B), detay görünüşleri ve ölçekleri
+⚠️ KAÇ GÖRÜNÜŞ VAR? Dikkatli say — tek görünüş varsa "iki görünüş var" deme!
+Kesit görünüşlerinde taralı alanları incele — merkez boşluk var mı? → boru/delik tespiti
+
+ADIM 3 — GEOMETRİYİ BELİRLE:
+- Dönel simetrik mi? (mil, flanş, disk, boru, burç) → "silindirik"
+- Dikdörtgen/prizmatik mi? (blok, plaka, brakete, konsol) → "prizmatik"
+- Her ikisi → "karma"
+- KURAL: Frezeleme delikleri olan flanş veya disk hâlâ "silindirik"tir
+- KURAL: Kesit görünüşünde merkez bölge taralı DEĞİLSE → iç delik var → boru_mu=true
+
+ADIM 4 — ANA ÖLÇÜLERİ ÇIKAR:
+- Ø veya ⌀ = çap (yarıçap DEĞİL)
+- R = yarıçap (çap = 2×R)
+- Tolerans varsa (±0.05, H7, k6 gibi) nominal değeri al
+- boy_mm = eksen yönü uzunluğu / flanş kalınlığı — SADECE parçanın toplam eksen boyunu al
+- dis_cap_mm = parçanın EN BÜYÜK dış çapı
+- ic_cap_mm = merkez delik / merkezi boşluk çapı — SADECE kesit görünüşündeki merkez boşluktan oku
+- Tüm ölçüler mm cinsinden (aksini belirtmedikçe)
+- OKUNAMIYORSA null bırak, asla tahmin etme
+
+KRİTİK ÖLÇÜ OKUMA KURALLARI — HATA YAPMA:
+❌ YANLIŞ: "Fatura" (omuz/basamak) ölçüsünü iç çap olarak okuma!
+   Fatura = torna parçasında çap geçişindeki omuz/basamak (step/shoulder). 
+   Fatura derinliği küçük bir ölçüdür, iç çap DEĞİLDİR.
+   Örnek: Ø130 dış çaplı parçada Ø132 yazan küçük bir ölçü → bu fatura derinliğidir, iç çap değildir!
+
+❌ YANLIŞ: Parça dışındaki yazılar, notlar, malzeme etiketleri, ölçek bilgileri içindeki sayıları ölçü olarak okuma!
+   Teknik resim çerçevesi dışındaki veya başlık bloğundaki sayılar ölçü değildir.
+
+❌ YANLIŞ: Boy için parçanın bir bölümünün ölçüsünü alma!
+   boy_mm = parçanın TOPLAM uzunluğu/yüksekliği, bölüm ölçüsü değil.
+
+✅ DOĞRU iç çap tespiti:
+   - İç çap = parçanın eksenini DİK KESEN ve MERKEZDEN GEÇEN boşluk
+   - Birden fazla merkez çapı varsa EN KÜÇÜĞÜ iç çaptır
+   - Ø77.5 gibi ara çaplar "fatura/omuz" basamağıdır — iç çap DEĞİLDİR
+   - ⚠️ YAĞ DELİĞİ, VİDA DELİĞİ, PİM DELİĞİ → İÇ ÇAP DEĞİLDİR!
+     Bunlar küçük çaplı yan/çevresel deliklerdir. Ø3, Ø4, Ø6 gibi çok küçük 
+     delikler büyük ihtimalle yağ/vida/pim deliğidir, iç çap olarak alma!
+   - İç çap her zaman işlev gören ana merkez boşluğudur
+   - Dolu parçalarda ic_cap_mm = null
+
+✅ DOĞRU boy tespiti:
+   - Parçanın sol ucundan sağ ucuna (veya alt-üst) giden en uzun ölçü çizgisi
+   - Genellikle en dışta, parçanın tamamını kapsayan ölçü
+
+ADIM 5 — GD&T VE YÜZEY KALİTESİ:
+- Parallellik ∥, diklik ⊥, dairesellik ○, konum ⊕ gibi GD&T sembolleri varsa not et
+- Ra yüzey pürüzlülüğü (Ra 1.6, Ra 3.2 vb.) varsa not et
+- Kaynak sembolleri varsa belirt
+- Kritik toleranslı yüzeyleri notlar'a ekle
+
+ADIM 6 — MALZEME TESPİT ET:
+- Çizimde yazıyorsa direkt al: ST37, S235, AISI 4140, AL 6061, 316L vb.
+- Yazılı yoksa: havacılık/uzay → aluminyum veya titanyum | genel makine → celik | gıda/kimya → paslanmaz
+
+ADIM 7 — İMALAT SIRASI VE SÜRE TAHMİNİ:
+Kritik özellikleri, olası imalat sırasını ve ölçüm yöntemlerini değerlendir.
+- Basit torna: 15-45 dk | Orta karmaşıklık: 45-120 dk | Karmaşık/çok operasyon: 120-300 dk
+- ⚠️ ISIL İŞLEM SONRASI: Sertleştirilmiş parçalarda (HRC>50) son işlem TAŞLAMA değil,
+  çoğunlukla CNC tezgahta CBN (Kübonik Bor Nitrür) insert ile SERT TORNALAMA'dır.
+  Taşlama sadece yüzey kalitesi Ra<0.4 veya çok dar tolerans gerektiğinde tercih edilir.
+  "taslama" süresini buna göre tahmin et.
+- Eksik veya belirsiz bilgi varsa notlar'a ekle
+
+SADECE şu JSON formatında yanıt ver — ama önce her adımın kısa analizini yaz, sonra JSON bloğunu ekle:
+Analiz notlarını yazdıktan HEMEN SONRA json kod bloğunu (üç backtick + json) ekle. JSON bloğu olmadan bitirme.
+{
+  "geometri": "silindirik|prizmatik|karma",
+  "boru_mu": false,
+  "ana_olcular": {
+    "dis_cap_mm": null,
+    "ic_cap_mm": null,
+    "boy_mm": null,
+    "en_mm": null,
+    "yukseklik_mm": null
+  },
+  "islenecek_olcular": {
+    "dis_cap_mm": null,
+    "ic_cap_mm": null,
+    "boy_mm": null,
+    "en_mm": null,
+    "yukseklik_mm": null
+  },
+  "malzeme": "celik|aluminyum|paslanmaz|bakir|titanyum|diger",
+  "malzeme_notu": "çizimde yazıyorsa tam malzeme kodu (ST37, AISI 4140 vb.)",
+  "tahmini_islem_suresi_dk": {
+    "tornalama": 0,
+    "frezeleme": 0,
+    "taslama": 0
+  },
+  "karmasiklik": "basit|orta|karmasik",
+  "notlar": "parça işlevi + sektör tahmini + GD&T/yüzey kalitesi + kritik özellikler + fatura/omuz özellikleri + okunamayan varsa belirt"
+}
+
+KRİTİK KONTROL — JSON yazmadan önce kontrol et:
+✓ boy_mm parçanın TOPLAM boyu mu? (bölüm ölçüsü değil)
+✓ ic_cap_mm MERKEZ DELİK mi? (birden fazla çap varsa EN KÜÇÜĞÜ — fatura/omuz değil!)
+✓ ic_cap_mm < dis_cap_mm mi? (değilse hata var)
+✓ Dolu parçada ic_cap_mm null mı?
+✓ boru_mu doğru mu? (kesit görünüşünde merkez delik var mı?)
+✓ dis_cap_mm en büyük dış çap mı?
+✓ Okunamayan ölçüler null mı? (asla tahmin etme)`
+            }
+          ]
+        }]
+      })
+    });
+
+    const data = await response.json();
+    const text = data.content?.[0]?.text || '';
+
+    // Hata varsa göster
+    if (data.error) {
+      document.getElementById('ai-result-text').className = 'ai-result';
+      document.getElementById('ai-result-text').textContent = `API Hatası: ${JSON.stringify(data.error)}\n\nÖlçüleri manuel girin.`;
+      toast('API hatası — detay için AI Analiz bölümüne bakın', 'error');
+      btn.disabled = false;
+      btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="white" stroke-width="1.5"/><path d="M5 8l2 2 4-4" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Teknik Resmi AI ile Analiz Et`;
+      return;
+    }
+
+    let parsed = null;
+    try {
+      // Önce ```json ... ``` bloğunu bul
+      const jsonMatch = text.match(/```json\s*([\s\S]*?)```/);
+      if (jsonMatch) {
+        parsed = JSON.parse(jsonMatch[1].trim());
+      } else {
+        // Yoksa { ile başlayan ilk JSON bloğunu bul
+        const jsonStart = text.indexOf('{');
+        const jsonEnd = text.lastIndexOf('}');
+        if (jsonStart !== -1 && jsonEnd !== -1) {
+          parsed = JSON.parse(text.slice(jsonStart, jsonEnd + 1));
+        } else {
+          // Son çare: backtick temizle
+          const clean = text.replace(/```json|```/g, '').trim();
+          parsed = JSON.parse(clean);
+        }
+      }
+    } catch(e) {
+      // JSON parse olmadı, metin olarak göster
+      console.warn('JSON parse failed:', e.message);
+    }
+
+    if (parsed) {
+      // Geometri seç
+      const geo = parsed.geometri || 'silindirik';
+      switchGeo(geo);
+
+      const badge = document.getElementById('geo-badge');
+      badge.style.display = '';
+      badge.innerHTML = `<span class="geo-badge geo-${geo}">${geo.charAt(0).toUpperCase() + geo.slice(1)}</span>`;
+
+      // Ölçüleri doldur — önce işlenmiş parça ölçülerini doldur
+      if (geo === 'silindirik') {
+        // İşlenmiş ölçüler
+        if (parsed.islenecek_olcular?.dis_cap_mm) document.getElementById('sil-iscap').value = parsed.islenecek_olcular.dis_cap_mm;
+        else if (parsed.ana_olcular?.dis_cap_mm) document.getElementById('sil-iscap').value = parsed.ana_olcular.dis_cap_mm;
+        if (parsed.islenecek_olcular?.ic_cap_mm) document.getElementById('sil-isiccap').value = parsed.islenecek_olcular.ic_cap_mm;
+        else if (parsed.ana_olcular?.ic_cap_mm) document.getElementById('sil-isiccap').value = parsed.ana_olcular.ic_cap_mm;
+        if (parsed.islenecek_olcular?.boy_mm) document.getElementById('sil-isboy').value = parsed.islenecek_olcular.boy_mm;
+        else if (parsed.ana_olcular?.boy_mm) document.getElementById('sil-isboy').value = parsed.ana_olcular.boy_mm;
+
+        // Boru mu dolu mu otomatik seç
+        const icCap = parsed.islenecek_olcular?.ic_cap_mm || parsed.ana_olcular?.ic_cap_mm;
+        if (icCap && icCap > 0 && !boruMod) toggleBoruDolu();
+        else if ((!icCap || icCap === 0) && boruMod) toggleBoruDolu();
+
+        // Hammadde tavsiyesini temizle (AI yeni dolduracak)
+        document.getElementById('sil-cap').value = '';
+        document.getElementById('sil-iccap').value = '';
+        document.getElementById('sil-boy').value = '';
+        document.getElementById('sil-cap-dolu').value = '';
+        document.getElementById('sil-boy-dolu').value = '';
+        // Tavsiye hesapla
+        setTimeout(aiTavsiye, 100);
+      } else if (geo === 'prizmatik') {
+        if (parsed.ana_olcular?.en_mm) document.getElementById('pri-en').value = parsed.ana_olcular.en_mm;
+        if (parsed.ana_olcular?.boy_mm) document.getElementById('pri-boy').value = parsed.ana_olcular.boy_mm;
+        if (parsed.ana_olcular?.yukseklik_mm) document.getElementById('pri-yuk').value = parsed.ana_olcular.yukseklik_mm;
+        if (parsed.islenecek_olcular?.en_mm) document.getElementById('pri-isen').value = parsed.islenecek_olcular.en_mm;
+        if (parsed.islenecek_olcular?.boy_mm) document.getElementById('pri-isboy').value = parsed.islenecek_olcular.boy_mm;
+        if (parsed.islenecek_olcular?.yukseklik_mm) document.getElementById('pri-isyuk').value = parsed.islenecek_olcular.yukseklik_mm;
+      }
+
+      // Malzeme
+      if (parsed.malzeme) document.getElementById('malzeme').value = parsed.malzeme;
+
+      // Operasyon süreleri
+      if (parsed.tahmini_islem_suresi_dk) {
+        const s = parsed.tahmini_islem_suresi_dk;
+        operations[0].sure = s.tornalama || 0;
+        if (operations[1]) operations[1].sure = s.frezeleme || 0;
+        if (operations[2]) operations[2].sure = s.taslama || 0;
+        renderOps();
+      }
+
+      // Null alanlar için uyarı topla
+      const nullAlanlar = [];
+      if (!parsed.islenecek_olcular?.dis_cap_mm && !parsed.ana_olcular?.dis_cap_mm) nullAlanlar.push('Dış Çap');
+      if (!parsed.islenecek_olcular?.boy_mm && !parsed.ana_olcular?.boy_mm) nullAlanlar.push('Boy/Kalınlık');
+
+      // Sonuç metnini oluştur — tam analiz metni varsa göster
+      const analizMetni = text.includes('ADIM') ? text.split('```')[0].trim() : '';
+      let sonucMetni = `✓ Geometri: ${geo.toUpperCase()} | Malzeme: ${parsed.malzeme || '?'} | Karmaşıklık: ${parsed.karmasiklik || '?'}\n\n`;
+      if (analizMetni) sonucMetni += analizMetni + '\n\n';
+      sonucMetni += parsed.notlar || '';
+      if (nullAlanlar.length > 0) {
+        sonucMetni += `\n\n⚠️ Manuel girilmesi gereken alanlar: ${nullAlanlar.join(', ')}`;
+      }
+      sonucMetni += '\n\nÖlçüler aşağıda dolduruldu — kontrol edip gerekirse düzeltin.';
+
+      document.getElementById('ai-result-text').className = 'ai-result success';
+      document.getElementById('ai-result-text').textContent = sonucMetni;
+
+      document.getElementById('step2-num').classList.add('done');
+      document.getElementById('step2-num').textContent = '✓';
+      toast('AI analizi tamamlandı ✓');
+      hesapla();
+    } else {
+      document.getElementById('ai-result-text').className = 'ai-result';
+      document.getElementById('ai-result-text').textContent = text || 'Analiz sonucu alınamadı. Ölçüleri manuel girin.';
+      toast('AI yanıtı işlendi — ölçüleri kontrol edin', 'info');
+    }
+  } catch(e) {
+    document.getElementById('ai-result-text').className = 'ai-result';
+    document.getElementById('ai-result-text').textContent = `Bağlantı hatası: ${e.message}\n\nÖlçüleri manuel olarak girebilirsiniz.`;
+    toast('AI bağlantı hatası — manuel giriş yapın', 'error');
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="white" stroke-width="1.5"/><path d="M5 8l2 2 4-4" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Teknik Resmi AI ile Analiz Et`;
+}
+
+// ── TEKLİFE AKTAR ──
+function exportToTeklif() {
+  if (!lastCalcResult) return;
+
+  const parcaAdi = document.getElementById('export-parca').value || 'Hesaplanan Parça';
+  const stokKodu = document.getElementById('export-stok').value || '';
+  const malzemeNo = document.getElementById('export-malzeme-no').value || '';
+  const teslim = document.getElementById('export-teslim').value || '';
+
+  // localStorage ile teklif sayfasına ilet
+  const exportData = {
+    parcaAdi,
+    stokKodu,
+    malzemeNo,
+    teslim,
+    birimFiyat: lastCalcResult.birimFiyat,
+    miktar: lastCalcResult.adet,
+    timestamp: Date.now()
+  };
+
+  try {
+    sessionStorage.setItem('hesaplama_export', JSON.stringify(exportData));
+    toast(`${parcaAdi} teklife hazır! Teklif sayfasına geçiyor...`, 'success');
+    setTimeout(() => {
+      window.location = 'ersan_teklif.html?import=1';
+    }, 1500);
+  } catch(e) {
+    // sessionStorage yoksa değerleri URL params ile ilet
+    const params = new URLSearchParams({
+      parca: parcaAdi,
+      stok: stokKodu,
+      malzeme: malzemeNo,
+      fiyat: lastCalcResult.birimFiyat.toFixed(2),
+      miktar: lastCalcResult.adet,
+      teslim
+    });
+    toast('Teklif sayfası açılıyor...', 'info');
+    setTimeout(() => window.location = `ersan_teklif.html?${params}`, 1000);
+  }
+}
+
+// ── INIT ──
+renderOps();
+hesapla();
+loadOgrenmeOrnekleri();
+</script>
+</body>
+</html>
