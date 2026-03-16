@@ -395,8 +395,11 @@ input[type=range]::-webkit-slider-thumb {
       Teknik Resim
     </div>
     <div class="card-body">
-      <div class="upload-zone" id="upload-zone" ondragover="onDragOver(event)" ondrop="onDrop(event)" ondragleave="onDragLeave()">
-        <input type="file" id="file-input" accept="image/*,.pdf" onchange="onFileSelect(event)">
+      <div class="upload-zone" id="upload-zone"
+        ondragover="onDragOver(event)" ondrop="onDrop(event)" ondragleave="onDragLeave()"
+        onclick="document.getElementById('file-input').click()">
+        <input type="file" id="file-input" accept="image/*,.pdf"
+          style="display:none;" onchange="onFileSelect(event)">
         <div id="upload-placeholder">
           <div class="upload-icon">📐</div>
           <div class="upload-text">Teknik resmi sürükle veya tıkla</div>
@@ -950,33 +953,46 @@ function onFileSelect(e) {
 }
 
 function processFile(file) {
+  if (!file) return;
   uploadedFile = file;
+
+  // Boyut kontrolü (10MB limit)
+  if (file.size > 10 * 1024 * 1024) {
+    toast('Dosya çok büyük (max 10MB). Lütfen sıkıştırın.', 'error');
+    return;
+  }
+
   const reader = new FileReader();
+  reader.onerror = () => toast('Dosya okunamadı: ' + reader.error, 'error');
   reader.onload = (e) => {
-    const result = e.target.result;
-    uploadedBase64 = result.split(',')[1];
-    uploadedMimeType = file.type || 'image/jpeg';
+    try {
+      const result = e.target.result;
+      uploadedBase64 = result.split(',')[1];
+      uploadedMimeType = file.type || 'image/jpeg';
 
-    const placeholder = document.getElementById('upload-placeholder');
-    const preview = document.getElementById('upload-preview');
-    placeholder.style.display = 'none';
-    preview.style.display = 'block';
+      const placeholder = document.getElementById('upload-placeholder');
+      const preview = document.getElementById('upload-preview');
+      placeholder.style.display = 'none';
+      preview.style.display = 'block';
 
-    if (file.type.startsWith('image/')) {
-      preview.innerHTML = `<img src="${result}" class="preview-img" alt="Teknik resim">`;
-    } else {
-      preview.innerHTML = `<div class="preview-file">
-        <span style="font-size:24px;">📄</span>
-        <div>
-          <div style="font-size:12px;font-weight:600;">${file.name}</div>
-          <div style="font-size:11px;color:var(--text3);">${(file.size/1024).toFixed(1)} KB</div>
-        </div>
-      </div>`;
+      if (file.type.startsWith('image/')) {
+        preview.innerHTML = `<img src="${result}" class="preview-img" alt="Teknik resim">`;
+      } else {
+        preview.innerHTML = `<div class="preview-file">
+          <span style="font-size:24px;">📄</span>
+          <div>
+            <div style="font-size:12px;font-weight:600;">${file.name}</div>
+            <div style="font-size:11px;color:var(--text3);">${(file.size/1024).toFixed(1)} KB</div>
+          </div>
+        </div>`;
+      }
+
+      document.getElementById('step1-num').classList.add('done');
+      document.getElementById('step1-num').textContent = '✓';
+      toast('Teknik resim yüklendi ✓', 'info');
+    } catch(err) {
+      toast('İşleme hatası: ' + err.message, 'error');
     }
-
-    document.getElementById('step1-num').classList.add('done');
-    document.getElementById('step1-num').textContent = '✓';
-    toast('Teknik resim yüklendi', 'info');
   };
   reader.readAsDataURL(file);
 }
