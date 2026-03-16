@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — İş Emirleri</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+<style>
+:root {
+  --bg: #f0f2f5; --surface: #fff; --surface2: #f7f8fa;
+  --border: #e2e5ea; --border2: #c8cdd6;
+  --text: #1a1d23; --text2: #5a6170; --text3: #9aa0ad;
+  --accent: #7c3aed; --accent-light: #ede9fe; --accent-hover: #6d28d9;
+  --green: #059669; --green-light: #d1fae5;
+  --red: #dc2626; --red-light: #fee2e2;
+  --orange: #d97706; --orange-light: #fef3c7;
+  --blue: #2563eb; --blue-light: #dbeafe;
+  --shadow: 0 1px 3px rgba(0,0,0,.08);
+  --radius: 8px; --mono: 'IBM Plex Mono',monospace; --sans: 'IBM Plex Sans',sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--sans); background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; font-size: 13px; }
+
+/* HEADER */
+.header { height: 52px; background: #1e1b4b; display: flex; align-items: center; padding: 0 20px; gap: 16px; position: fixed; top: 0; left: 0; right: 0; z-index: 100; }
+.header-logo { display: flex; align-items: center; gap: 10px; }
+.header-logo-badge { width: 28px; height: 28px; border-radius: 6px; background: rgba(255,255,255,.15); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: white; font-family: var(--mono); }
+.header-title { color: white; font-size: 14px; font-weight: 600; }
+.header-sub { color: rgba(255,255,255,.5); font-size: 11px; }
+.header-sep { width: 1px; height: 28px; background: rgba(255,255,255,.2); }
+.header-nav { display: flex; gap: 4px; }
+.header-nav a { color: rgba(255,255,255,.6); font-size: 13px; font-weight: 500; text-decoration: none; padding: 6px 12px; border-radius: 6px; transition: all .15s; }
+.header-nav a:hover { background: rgba(255,255,255,.1); color: white; }
+.header-nav a.active { background: rgba(255,255,255,.15); color: white; }
+.header-right { margin-left: auto; }
+.btn-new { display: flex; align-items: center; gap: 6px; background: var(--accent); color: white; border: none; border-radius: 7px; padding: 7px 14px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: var(--sans); transition: background .15s; }
+.btn-new:hover { background: var(--accent-hover); }
+
+/* LAYOUT */
+.layout { display: flex; height: calc(100vh - 52px); margin-top: 52px; }
+
+/* LIST PANEL */
+.list-panel { width: 300px; flex-shrink: 0; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
+.list-header { padding: 14px 16px 10px; border-bottom: 1px solid var(--border); }
+.list-header h2 { font-size: 13px; font-weight: 600; }
+.list-count { font-size: 11px; color: var(--text3); font-family: var(--mono); margin-top: 2px; }
+.list-search { padding: 10px 12px; border-bottom: 1px solid var(--border); display: flex; gap: 6px; }
+.list-search input { flex: 1; padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; font-family: var(--sans); color: var(--text); background: var(--surface2); outline: none; }
+.list-search input:focus { border-color: var(--accent); }
+.list-filter { padding: 6px 12px; border-bottom: 1px solid var(--border); display: flex; gap: 4px; flex-wrap: wrap; }
+.filter-chip { padding: 3px 10px; border-radius: 10px; font-size: 10px; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: var(--surface2); color: var(--text3); transition: all .12s; }
+.filter-chip.active { background: var(--accent-light); color: var(--accent); border-color: var(--accent); }
+.list-scroll { flex: 1; overflow-y: auto; }
+
+.wo-item { padding: 11px 14px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background .12s; }
+.wo-item:hover { background: var(--surface2); }
+.wo-item.active { background: var(--accent-light); border-left: 3px solid var(--accent); }
+.wo-top { display: flex; justify-content: space-between; align-items: flex-start; }
+.wo-no { font-family: var(--mono); font-size: 11px; font-weight: 500; color: var(--accent); }
+.wo-lot { font-family: var(--mono); font-size: 10px; color: var(--text3); }
+.wo-parca { font-size: 12px; font-weight: 500; margin-top: 3px; }
+.wo-bottom { display: flex; justify-content: space-between; margin-top: 4px; }
+.wo-meta { font-size: 11px; color: var(--text3); }
+.status-badge { font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 10px; }
+.s-Beklemede { background: #f3f4f6; color: #6b7280; }
+.s-Üretimde { background: var(--blue-light); color: var(--blue); }
+.s-Tamamlandı { background: var(--green-light); color: var(--green); }
+.s-İptal { background: var(--red-light); color: var(--red); }
+.s-op-Beklemede { background: #f3f4f6; color: #6b7280; }
+.s-op-Devam { background: var(--blue-light); color: var(--blue); }
+.s-op-Tamamlandı { background: var(--green-light); color: var(--green); }
+.s-op-Reddedildi { background: var(--red-light); color: var(--red); }
+
+/* DETAIL PANEL */
+.detail-panel { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+.detail-toolbar { height: 52px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 20px; gap: 10px; flex-shrink: 0; }
+.detail-toolbar-left { display: flex; align-items: center; gap: 10px; flex: 1; }
+.detail-title { font-size: 16px; font-weight: 700; font-family: var(--mono); color: var(--text); }
+.detail-lot { font-size: 11px; font-family: var(--mono); color: var(--text3); background: var(--surface2); padding: 3px 8px; border-radius: 6px; border: 1px solid var(--border); }
+.detail-scroll { flex: 1; overflow-y: auto; padding: 16px 20px; display: flex; flex-direction: column; gap: 14px; }
+
+/* CARDS */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+.card-header { padding: 10px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; }
+.card-body { padding: 14px; }
+
+/* TOOLBAR BTN */
+.toolbar-btn { display: flex; align-items: center; gap: 5px; padding: 6px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; background: var(--surface); color: var(--text2); font-family: var(--sans); transition: all .15s; white-space: nowrap; }
+.toolbar-btn:hover { border-color: var(--accent); color: var(--accent); }
+.toolbar-btn.primary { background: var(--accent); color: white; border-color: var(--accent); }
+.toolbar-btn.primary:hover { background: var(--accent-hover); }
+.toolbar-btn.success { background: var(--green); color: white; border-color: var(--green); }
+.toolbar-btn.danger { background: var(--red); color: white; border-color: var(--red); }
+
+/* FORM */
+.form-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.form-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.form-full { grid-column: 1/-1; }
+.field-group { display: flex; flex-direction: column; gap: 4px; }
+.field-label { font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .5px; }
+.field-input { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 7px 10px; font-size: 12px; font-family: var(--sans); color: var(--text); outline: none; transition: border-color .15s; width: 100%; }
+.field-input:focus { border-color: var(--accent); }
+.field-input:disabled { opacity: .6; cursor: not-allowed; }
+select.field-input { cursor: pointer; }
+
+/* OPERATIONS TABLE */
+.ops-table { width: 100%; border-collapse: collapse; }
+.ops-table th { padding: 7px 10px; text-align: left; font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .4px; background: var(--surface2); border-bottom: 1px solid var(--border); }
+.ops-table td { padding: 6px 8px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.ops-table tr:last-child td { border-bottom: none; }
+.ops-table tr.op-dragging { opacity: .5; }
+.ops-table tr:hover td { background: var(--surface2); }
+.drag-handle { cursor: grab; color: var(--text3); font-size: 14px; padding: 0 4px; user-select: none; }
+.drag-handle:active { cursor: grabbing; }
+.op-sira { font-family: var(--mono); font-size: 11px; font-weight: 600; color: var(--text3); width: 24px; text-align: center; }
+.fason-tag { font-size: 9px; background: var(--orange-light); color: var(--orange); padding: 2px 6px; border-radius: 8px; font-weight: 600; }
+.btn-add-op { display: flex; align-items: center; gap: 6px; background: transparent; border: 1px dashed var(--border2); border-radius: 6px; padding: 7px 12px; font-size: 12px; color: var(--text3); cursor: pointer; font-family: var(--sans); transition: all .15s; width: 100%; margin-top: 8px; }
+.btn-add-op:hover { border-color: var(--accent); color: var(--accent); }
+.btn-del-op { width: 22px; height: 22px; background: transparent; border: none; color: var(--text3); cursor: pointer; font-size: 14px; border-radius: 4px; display: flex; align-items: center; justify-content: center; }
+.btn-del-op:hover { background: var(--red-light); color: var(--red); }
+
+/* QR MODAL */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 999; display: flex; align-items: center; justify-content: center; }
+.modal { background: white; border-radius: 12px; padding: 24px; max-width: 400px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,.2); text-align: center; }
+.modal h3 { font-size: 16px; margin-bottom: 4px; }
+.modal p { font-size: 12px; color: var(--text3); margin-bottom: 16px; }
+#qr-container { display: flex; justify-content: center; margin: 16px 0; }
+.modal-btns { display: flex; gap: 8px; justify-content: center; margin-top: 16px; }
+
+/* EMPTY STATE */
+.empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text3); gap: 12px; }
+.empty-state p { font-size: 13px; }
+
+/* TOAST */
+.toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+.toast { padding: 10px 16px; border-radius: 8px; font-size: 12px; font-weight: 500; color: white; box-shadow: 0 4px 12px rgba(0,0,0,.15); }
+.toast.success { background: var(--green); }
+.toast.error { background: var(--red); }
+.toast.info { background: var(--accent); }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner { width: 16px; height: 16px; border: 2px solid rgba(0,0,0,.1); border-top-color: var(--accent); border-radius: 50%; animation: spin .6s linear infinite; display: inline-block; }
+
+/* OP TYPE COLORS */
+.op-type-tornalama { color: #2563eb; }
+.op-type-frezeleme { color: #7c3aed; }
+.op-type-taşlama { color: #d97706; }
+.op-type-fason { color: #dc2626; }
+.op-type-kalite { color: #059669; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-logo">
+    <div class="header-logo-badge">MES</div>
+    <div>
+      <div class="header-title">Ersan MES</div>
+      <div class="header-sub">Planlama</div>
+    </div>
+  </div>
+  <div class="header-sep"></div>
+  <nav class="header-nav">
+    <a href="ersan_teklif.html">Teklifler</a>
+    <a href="ersan_teklif.html#siparisler">Siparişler</a>
+    <a href="ersan_isemirleri.html" class="active">İş Emirleri</a>
+  </nav>
+  <div class="header-right">
+    <button class="btn-new" onclick="openNewWOModal()">
+      <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 2v9M2 6.5h9" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+      Yeni İş Emri
+    </button>
+  </div>
+</header>
+
+<!-- LAYOUT -->
+<div class="layout">
+  <!-- LIST -->
+  <div class="list-panel">
+    <div class="list-header">
+      <h2>İş Emirleri</h2>
+      <div class="list-count" id="wo-count">Yükleniyor...</div>
+    </div>
+    <div class="list-search">
+      <input type="text" id="wo-search" placeholder="WO no, lot, parça ara..." oninput="filterWOList()">
+    </div>
+    <div class="list-filter">
+      <div class="filter-chip active" data-filter="Tümü" onclick="setFilter(this)">Tümü</div>
+      <div class="filter-chip" data-filter="Beklemede" onclick="setFilter(this)">Beklemede</div>
+      <div class="filter-chip" data-filter="Üretimde" onclick="setFilter(this)">Üretimde</div>
+      <div class="filter-chip" data-filter="Tamamlandı" onclick="setFilter(this)">Tamamlandı</div>
+    </div>
+    <div class="list-scroll" id="wo-list">
+      <div style="padding:20px;text-align:center;color:var(--text3);">Yükleniyor...</div>
+    </div>
+  </div>
+
+  <!-- DETAIL -->
+  <div class="detail-panel">
+    <div id="detail-content">
+      <div class="empty-state">
+        <svg width="64" height="64" viewBox="0 0 64 64" fill="none" style="opacity:.3;"><rect x="8" y="8" width="48" height="48" rx="6" stroke="currentColor" stroke-width="2"/><path d="M20 24h24M20 32h24M20 40h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="48" cy="48" r="12" fill="currentColor"/><path d="M44 48h8M48 44v8" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+        <p>Listeden bir iş emri seçin veya yeni oluşturun</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toast-container"></div>
+
+<script>
+// ── CONFIG ──
+const BASE = 'app5LDgJMgocw79Ix';
+const TABLES = {
+  isEmirleri:   'tbl58qL39I2tv8hK4',
+  opRotalari:   'tblVECelTUG33EYm8',
+  tezgahlar:    'tblsBXDsWACBAFEJ5',
+  personel:     'tblwG9GqnLC9oFZzb',
+  satisEmirleri:'tbl56Oj1nPaqefI60',
+};
+
+const OP_TYPES = [
+  'Tornalama','Frezeleme','Taşlama','Taşlama (fason)',
+  'Delik Delme','Diş Açma','Çapak Alma',
+  'Isıl İşlem (fason)','İndüksiyon Sertleştirme (fason)',
+  'Yüzey İşlemi (fason)','Krom Kaplama (fason)',
+  'Kaynak','Montaj',
+  'Kalite Kontrol','Final Muayene','FAI'
+];
+
+const FASON_OPS = ['Isıl İşlem (fason)','İndüksiyon Sertleştirme (fason)',
+  'Yüzey İşlemi (fason)','Krom Kaplama (fason)','Taşlama (fason)'];
+
+let workOrders = [], filteredWOs = [];
+let tezgahlar = [], personel = [], satisEmirleri = [];
+let activeWOId = null;
+let currentOps = []; // {_id, _local, sira, tip, aciklama, fason, fasonFirma, sure, durum, tezgahId, personelId}
+let opsToDelete = [];
+let activeFilter = 'Tümü';
+let dragSrcIdx = null;
+
+// ── API ──
+const api = async (method, table, body, id='') => {
+  const url = `https://api.airtable.com/v0/${BASE}/${table}${id?'/'+id:''}`;
+  const res = await fetch(url, {
+    method, headers: {'Authorization':`Bearer ${await getToken()}`,'Content-Type':'application/json'},
+    body: body ? JSON.stringify(body) : undefined
+  });
+  if (!res.ok) throw new Error(`API ${res.status}: ${await res.text()}`);
+  return res.json();
+};
+const apiGet = async (table, params='') => {
+  const res = await fetch(`https://api.airtable.com/v0/${BASE}/${table}?${params}`, {
+    headers: {'Authorization':`Bearer ${await getToken()}`}
+  });
+  return res.json();
+};
+
+async function getToken() {
+  // Netlify function üzerinden token al (güvenli)
+  const res = await fetch('/.netlify/functions/airtable', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({method:'TOKEN'})
+  });
+  const d = await res.json();
+  return d.token || '';
+}
+
+// Geçici: token doğrudan (prod'da kaldır)
+const TOKEN_DIRECT = ''; // netlify function hazır olunca boş bırak
+
+// Override API for direct token use while netlify function ready
+const apiDirect = async (method, table, body, id='') => {
+  const url = `https://api.airtable.com/v0/${BASE}/${table}${id?'/'+id:''}`;
+  const res = await fetch(url, {
+    method, headers:{'Authorization':`Bearer ${TOKEN_DIRECT}`,'Content-Type':'application/json'},
+    body: body ? JSON.stringify(body) : undefined
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+};
+const apiGetDirect = (table, params='') =>
+  fetch(`https://api.airtable.com/v0/${BASE}/${table}?${params}`, {
+    headers:{'Authorization':`Bearer ${TOKEN_DIRECT}`}
+  }).then(r=>r.json());
+
+// Use proxy
+const apiFn = async (method, table, body, id='') => {
+  const path = `/v0/${BASE}/${table}${id?'/'+id:''}`;
+  const res = await fetch('/.netlify/functions/airtable', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({method, path, body})
+  });
+  if (!res.ok) throw new Error(`${res.status}`);
+  return res.json();
+};
+const apiGetFn = async (table, params='') => {
+  const path = `/v0/${BASE}/${table}?${params}`;
+  const res = await fetch('/.netlify/functions/airtable', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({method:'GET', path})
+  });
+  return res.json();
+};
+
+// ── HELPERS ──
+const fmt = n => n ? Number(n).toLocaleString('tr-TR',{minimumFractionDigits:0}) : '—';
+const fmtDate = d => { if(!d) return ''; try { return new Date(d).toLocaleDateString('tr-TR'); } catch { return d; } };
+function toast(msg, type='success') {
+  const el = document.createElement('div');
+  el.className = `toast ${type}`; el.textContent = msg;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+// ── LOAD ALL ──
+async function loadAll() {
+  try {
+    let all = [], offset = '';
+    do {
+      const d = await apiGetFn(TABLES.isEmirleri, `sort[0][field]=Sıra%20No&sort[0][direction]=desc${offset?'&offset='+offset:''}`);
+      all = all.concat(d.records || []);
+      offset = d.offset || '';
+    } while (offset);
+    workOrders = all;
+
+    const [tz, ps, se] = await Promise.all([
+      apiGetFn(TABLES.tezgahlar, 'fields[]=Tezgah%20Adı&fields[]=Tezgah%20No'),
+      apiGetFn(TABLES.personel, 'fields[]=Ad%20Soyad'),
+      apiGetFn(TABLES.satisEmirleri, 'fields[]=SE%20No&fields[]=Parça%20Adı&fields[]=Parça%20No&fields[]=Miktar&fields[]=Birim&sort[0][field]=SE%20No&sort[0][direction]=desc'),
+    ]);
+    tezgahlar = tz.records || [];
+    personel = ps.records || [];
+    satisEmirleri = se.records || [];
+
+    filterAndRender();
+  } catch(e) {
+    document.getElementById('wo-list').innerHTML = `<div style="padding:16px;color:var(--red);font-size:12px;">Hata: ${e.message}</div>`;
+  }
+}
+
+function filterAndRender() {
+  const q = document.getElementById('wo-search').value.toLowerCase();
+  filteredWOs = workOrders.filter(r => {
+    const f = r.fields;
+    const matchFilter = activeFilter === 'Tümü' || f['Durum'] === activeFilter;
+    const matchSearch = !q ||
+      (f['IE No']||'').toLowerCase().includes(q) ||
+      (f['Lot No']||'').toLowerCase().includes(q) ||
+      (f['Parça Adı']||'').toLowerCase().includes(q) ||
+      (f['Parça No']||'').toLowerCase().includes(q);
+    return matchFilter && matchSearch;
+  });
+  renderList();
+}
+
+function renderList() {
+  const el = document.getElementById('wo-list');
+  document.getElementById('wo-count').textContent = `${filteredWOs.length} iş emri`;
+  if (!filteredWOs.length) {
+    el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:12px;">İş emri bulunamadı</div>';
+    return;
+  }
+  el.innerHTML = filteredWOs.map(wo => {
+    const f = wo.fields;
+    const durum = f['Durum'] || 'Beklemede';
+    const active = wo.id === activeWOId ? ' active' : '';
+    return `<div class="wo-item${active}" onclick="loadDetail('${wo.id}')">
+      <div class="wo-top">
+        <div>
+          <div class="wo-no">${f['IE No']||'—'}</div>
+          <div class="wo-lot">${f['Lot No']||'—'}</div>
+        </div>
+        <span class="status-badge s-${durum}">${durum}</span>
+      </div>
+      <div class="wo-parca">${f['Parça Adı']||'—'}</div>
+      <div class="wo-bottom">
+        <span class="wo-meta">${f['Parça No']||''} ${f['Revizyon']?'Rev.'+f['Revizyon']:''}</span>
+        <span class="wo-meta">${f['Miktar']||0} ${f['Birim']||'Adet'}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function setFilter(el) {
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  activeFilter = el.dataset.filter;
+  filterAndRender();
+}
+function filterWOList() { filterAndRender(); }
+
+// ── LOAD DETAIL ──
+async function loadDetail(id) {
+  activeWOId = id;
+  renderList();
+  const wo = workOrders.find(r => r.id === id);
+  const f = wo?.fields || {};
+
+  document.getElementById('detail-content').innerHTML = `
+    <div class="detail-toolbar">
+      <div class="detail-toolbar-left">
+        <div class="detail-title">${f['IE No']||'—'}</div>
+        <div class="detail-lot">${f['Lot No']||'—'}</div>
+        <span class="status-badge s-${f['Durum']||'Beklemede'}">${f['Durum']||'Beklemede'}</span>
+      </div>
+      <button class="toolbar-btn" onclick="showQR('${id}')">
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><rect x="1" y="1" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="7" y="1" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="1" y="7" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="8" y="8" width="1.5" height="1.5" fill="currentColor"/><rect x="10" y="8" width="1.5" height="1.5" fill="currentColor"/><rect x="8" y="10" width="1.5" height="1.5" fill="currentColor"/><rect x="10" y="10" width="1.5" height="1.5" fill="currentColor"/></svg>
+        QR Göster
+      </button>
+      <button class="toolbar-btn" onclick="printTraveler('${id}')">
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M3 4V2h7v2M3 9H1V5h11v4h-2M3 7h7v4H3V7z" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Traveler PDF
+      </button>
+      <button class="toolbar-btn" onclick="setWODurum('${id}','Üretimde')" style="background:var(--blue-light);color:var(--blue);border-color:var(--blue);">▶ Üretime Al</button>
+      <button class="toolbar-btn success" onclick="setWODurum('${id}','Tamamlandı')">✓ Tamamla</button>
+      <button class="toolbar-btn primary" onclick="saveWO('${id}')">💾 Kaydet</button>
+    </div>
+    <div class="detail-scroll" id="wo-detail-scroll">
+      <!-- Bilgiler -->
+      <div class="card">
+        <div class="card-header">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="1" y="1" width="10" height="10" rx="2" stroke="currentColor" stroke-width="1.3"/><path d="M3.5 5h5M3.5 7h3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+          İş Emri Bilgileri
+        </div>
+        <div class="card-body">
+          <div class="form-grid" style="gap:10px;">
+            <div class="field-group">
+              <label class="field-label">IE No</label>
+              <input class="field-input" value="${f['IE No']||''}" disabled>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Lot No</label>
+              <input class="field-input" value="${f['Lot No']||''}" disabled style="font-family:var(--mono);">
+            </div>
+            <div class="field-group">
+              <label class="field-label">Satış Emri</label>
+              <select class="field-input" id="f-seno">
+                <option value="">— Seçin —</option>
+                ${satisEmirleri.map(r => `<option value="${r.id}" ${(f['Satış Emirleri']?.[0]===r.id)?'selected':''}>${r.fields['SE No']||r.id}</option>`).join('')}
+              </select>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Durum</label>
+              <select class="field-input" id="f-durum">
+                ${['Beklemede','Üretimde','Tamamlandı','İptal'].map(d=>`<option ${(f['Durum']||'Beklemede')===d?'selected':''}>${d}</option>`).join('')}
+              </select>
+            </div>
+            <div class="field-group" style="grid-column:span 2;">
+              <label class="field-label">Parça Adı</label>
+              <input class="field-input" id="f-parca-adi" value="${f['Parça Adı']||''}" placeholder="Parça adı">
+            </div>
+            <div class="field-group">
+              <label class="field-label">Parça No</label>
+              <input class="field-input" id="f-parca-no" value="${f['Parça No']||''}" placeholder="ör: 123456">
+            </div>
+            <div class="field-group">
+              <label class="field-label">Revizyon</label>
+              <input class="field-input" id="f-rev" value="${f['Revizyon']||''}" placeholder="ör: B">
+            </div>
+            <div class="field-group">
+              <label class="field-label">Miktar</label>
+              <input type="number" class="field-input" id="f-miktar" value="${f['Miktar']||''}">
+            </div>
+            <div class="field-group">
+              <label class="field-label">Birim</label>
+              <select class="field-input" id="f-birim">
+                ${['Adet','Kg','Mt','Tk'].map(b=>`<option ${(f['Birim']||'Adet')===b?'selected':''}>${b}</option>`).join('')}
+              </select>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Termin Tarihi</label>
+              <input type="date" class="field-input" id="f-termin" value="${f['Termin Tarihi']||''}">
+            </div>
+            <div class="field-group">
+              <label class="field-label">Malzeme Lotu</label>
+              <input class="field-input" id="f-lot" value="${f['Malzeme Lotu']||''}" placeholder="Tedarikçi lot no">
+            </div>
+            <div class="field-group">
+              <label class="field-label">Heat No</label>
+              <input class="field-input" id="f-heat" value="${f['Heat No']||''}" placeholder="Eriyik / ısıl lot">
+            </div>
+            <div class="field-group form-full">
+              <label class="field-label">Notlar</label>
+              <input class="field-input" id="f-notlar" value="${f['Notlar']||''}" placeholder="Özel talimat veya not...">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- OPERASYONLAR -->
+      <div class="card">
+        <div class="card-header">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="currentColor" stroke-width="1.3"/><path d="M6 3v3l2 2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+          Operasyon Rotası
+          <span style="margin-left:auto;font-size:10px;font-weight:400;color:var(--text3);" id="op-count"></span>
+        </div>
+        <div class="card-body" style="padding:0;">
+          <div style="overflow-x:auto;">
+            <table class="ops-table">
+              <thead>
+                <tr>
+                  <th style="width:28px;"></th>
+                  <th style="width:32px;">Sıra</th>
+                  <th>Operasyon</th>
+                  <th style="width:180px;">Açıklama / Talimat</th>
+                  <th style="width:130px;">Tezgah / Firma</th>
+                  <th style="width:68px;">Setup(dk)</th>
+                  <th style="width:68px;">İşleme(dk)</th>
+                  <th style="width:110px;">Durum</th>
+                  <th style="width:32px;"></th>
+                </tr>
+              </thead>
+              <tbody id="ops-tbody"></tbody>
+            </table>
+          </div>
+          <div style="padding:8px 12px;">
+            <button class="btn-add-op" onclick="addOp()">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 2v8M2 6h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+              Operasyon Ekle
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+
+  // Load operations
+  await loadOps(id);
+}
+
+// ── LOAD OPERATIONS ──
+async function loadOps(woId) {
+  try {
+    const data = await apiGetFn(TABLES.opRotalari,
+      `filterByFormula=${encodeURIComponent(`FIND("${woId}",ARRAYJOIN({İş Emirleri}))`)}&sort[0][field]=Operasyon%20No&sort[0][direction]=asc`);
+    currentOps = (data.records || []).map(r => ({
+      _id: r.id, _local: false,
+      sira: r.fields['Operasyon No'] || 0,
+      tip: r.fields['Operasyon Tanımı'] || '',
+      aciklama: r.fields['Açıklama'] || '',
+      fason: r.fields['Fason mı'] || false,
+      fasonFirma: r.fields['Fason Firma'] || '',
+      sure: r.fields['İşleme Süresi (dk)'] || 0,
+        setup: r.fields['Setup Süresi (dk)'] || 0,
+      durum: r.fields['Durum'] || 'Beklemede',
+      tezgahId: r.fields['Tezgah']?.[0] || '',
+      personelId: r.fields['Personel']?.[0] || '',
+    }));
+    opsToDelete = [];
+    renderOps();
+  } catch(e) {
+    console.error('Ops load error:', e);
+  }
+}
+
+// ── RENDER OPERATIONS ──
+function renderOps() {
+  const tbody = document.getElementById('ops-tbody');
+  if (!tbody) return;
+  document.getElementById('op-count').textContent = `${currentOps.length} operasyon`;
+
+  const tezgahOpts = tezgahlar.map(t =>
+    `<option value="${t.id}">${t.fields['Tezgah No']||''} ${t.fields['Tezgah Adı']||''}</option>`
+  ).join('');
+
+  if (!currentOps.length) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--text3);font-size:12px;">Henüz operasyon eklenmedi</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = currentOps.map((op, i) => {
+    const isFason = FASON_OPS.includes(op.tip) || op.fason;
+    const durumColor = op.durum === 'Tamamlandı' ? 'var(--green)' : op.durum === 'Devam' ? 'var(--blue)' : op.durum === 'Reddedildi' ? 'var(--red)' : 'var(--text3)';
+
+    return `<tr draggable="true" data-idx="${i}"
+      ondragstart="dragStart(event,${i})" ondragover="dragOver(event,${i})"
+      ondrop="dragDrop(event,${i})" ondragend="dragEnd()"
+      style="cursor:default;">
+      <td><span class="drag-handle" title="Sürükle">⠿</span></td>
+      <td><span class="op-sira">${i+1}</span></td>
+      <td style="min-width:160px;">
+        <select style="border:1px solid transparent;border-radius:5px;padding:4px 6px;font-size:12px;font-family:var(--sans);width:100%;outline:none;background:transparent;"
+          onchange="updateOp(${i},'tip',this.value);checkFason(${i})"
+          onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='transparent'">
+          ${OP_TYPES.map(t => `<option ${op.tip===t?'selected':''}>${t}</option>`).join('')}
+        </select>
+        ${isFason ? '<span class="fason-tag">FASON</span>' : ''}
+      </td>
+      <td>
+        <input style="border:1px solid transparent;border-radius:5px;padding:4px 7px;font-size:11px;font-family:var(--sans);width:100%;outline:none;"
+          value="${op.aciklama.replace(/"/g,'&quot;')}"
+          oninput="updateOp(${i},'aciklama',this.value)"
+          onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='transparent'"
+          placeholder="Talimat / not...">
+      </td>
+      <td>
+        ${isFason
+          ? `<input style="border:1px solid transparent;border-radius:5px;padding:4px 7px;font-size:11px;font-family:var(--sans);width:100%;outline:none;"
+              value="${op.fasonFirma.replace(/"/g,'&quot;')}"
+              oninput="updateOp(${i},'fasonFirma',this.value)"
+              onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='transparent'"
+              placeholder="Fason firma adı">`
+          : `<select style="border:1px solid transparent;border-radius:5px;padding:4px 6px;font-size:11px;font-family:var(--sans);width:100%;outline:none;background:transparent;"
+              onchange="updateOp(${i},'tezgahId',this.value)"
+              onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='transparent'">
+              <option value="">— Tezgah —</option>
+              ${tezgahOpts.replace(`value="${op.tezgahId}"`, `value="${op.tezgahId}" selected`)}
+            </select>`
+        }
+      </td>
+      <td>
+        <input type="number" style="border:1px solid transparent;border-radius:5px;padding:4px 6px;font-size:12px;font-family:var(--mono);width:60px;text-align:right;outline:none;"
+          value="${op.setup||''}"
+          oninput="updateOp(${i},'setup',parseFloat(this.value)||0)"
+          onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='transparent'"
+          placeholder="0">
+      </td>
+      <td>
+        <input type="number" style="border:1px solid transparent;border-radius:5px;padding:4px 6px;font-size:12px;font-family:var(--mono);width:60px;text-align:right;outline:none;"
+          value="${op.sure||''}"
+          oninput="updateOp(${i},'sure',parseFloat(this.value)||0)"
+          onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='transparent'"
+          placeholder="0">
+      </td>
+      <td>
+        <select style="border:1px solid transparent;border-radius:5px;padding:4px 6px;font-size:11px;font-family:var(--sans);width:100%;outline:none;color:${durumColor};font-weight:600;background:transparent;"
+          onchange="updateOp(${i},'durum',this.value)"
+          onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='transparent'">
+          ${['Beklemede','Devam','Tamamlandı','Reddedildi'].map(d=>`<option ${op.durum===d?'selected':''}>${d}</option>`).join('')}
+        </select>
+      </td>
+      <td><button class="btn-del-op" onclick="removeOp(${i})">×</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function updateOp(i, key, val) { currentOps[i][key] = val; }
+function checkFason(i) {
+  const op = currentOps[i];
+  op.fason = FASON_OPS.includes(op.tip);
+  renderOps();
+}
+function addOp() {
+  currentOps.push({
+    _id: null, _local: true,
+    sira: currentOps.length + 1,
+    tip: 'Tornalama', aciklama: '', fason: false,
+    fasonFirma: '', sure: 0, setup: 0, durum: 'Beklemede',
+    tezgahId: '', personelId: ''
+  });
+  renderOps();
+}
+function removeOp(i) {
+  const op = currentOps[i];
+  if (op._id) opsToDelete.push(op._id);
+  currentOps.splice(i, 1);
+  renderOps();
+}
+
+// ── DRAG & DROP ──
+function dragStart(e, i) { dragSrcIdx = i; e.currentTarget.style.opacity = '.4'; }
+function dragOver(e, i) { e.preventDefault(); }
+function dragDrop(e, i) {
+  e.preventDefault();
+  if (dragSrcIdx === null || dragSrcIdx === i) return;
+  const [moved] = currentOps.splice(dragSrcIdx, 1);
+  currentOps.splice(i, 0, moved);
+  currentOps.forEach((op, idx) => op.sira = idx + 1);
+  renderOps();
+}
+function dragEnd() {
+  dragSrcIdx = null;
+  document.querySelectorAll('#ops-tbody tr').forEach(r => r.style.opacity = '1');
+}
+
+// ── SAVE WO ──
+async function saveWO(id) {
+  try {
+    // 1. WO fields güncelle
+    const woFields = {
+      'Satış Emirleri': document.getElementById('f-seno').value ? [document.getElementById('f-seno').value] : null,
+      'Parça Adı': document.getElementById('f-parca-adi').value || '',
+      'Parça No': document.getElementById('f-parca-no').value || null,
+      'Revizyon': document.getElementById('f-rev').value || null,
+      'Miktar': parseFloat(document.getElementById('f-miktar').value) || null,
+      'Birim': document.getElementById('f-birim').value,
+      'Termin Tarihi': document.getElementById('f-termin').value || null,
+      'Malzeme Lotu': document.getElementById('f-lot').value || null,
+      'Heat No': document.getElementById('f-heat').value || null,
+      'Notlar': document.getElementById('f-notlar').value || null,
+      'Durum': document.getElementById('f-durum').value,
+    };
+    await apiFn('PATCH', TABLES.isEmirleri, {fields: woFields}, id);
+
+    // 2. Silinecek operasyonları sil
+    for (const oid of opsToDelete) {
+      await apiFn('DELETE', TABLES.opRotalari, null, oid);
+    }
+    opsToDelete = [];
+
+    // 3. Operasyonları kaydet
+    for (let i = 0; i < currentOps.length; i++) {
+      const op = currentOps[i];
+      const opFields = {
+        'Operasyon No': (i + 1) * 10,
+        'Operasyon Tanımı': op.tip,
+        'Açıklama': op.aciklama || null,
+        'Fason mı': op.fason || FASON_OPS.includes(op.tip),
+        'Fason Firma': op.fasonFirma || null,
+        'İşleme Süresi (dk)': op.sure || null,
+        'Setup Süresi (dk)': op.setup || null,
+        'Durum': op.durum,
+        'İş Emirleri': [id],
+      };
+      if (op.tezgahId) opFields['Tezgah'] = [op.tezgahId];
+
+      if (op._id) {
+        await apiFn('PATCH', TABLES.opRotalari, {fields: opFields}, op._id);
+      } else {
+        const res = await apiFn('POST', TABLES.opRotalari, {fields: opFields});
+        op._id = res.id; op._local = false;
+      }
+    }
+
+    // 4. Refresh
+    await loadAll();
+    await loadDetail(id);
+    toast('İş emri kaydedildi ✓');
+  } catch(e) {
+    toast('Kaydetme hatası: ' + e.message, 'error');
+  }
+}
+
+// ── SET DURUM ──
+async function setWODurum(id, durum) {
+  try {
+    await apiFn('PATCH', TABLES.isEmirleri, {fields: {'Durum': durum}}, id);
+    const wo = workOrders.find(r => r.id === id);
+    if (wo) wo.fields['Durum'] = durum;
+    await loadAll();
+    await loadDetail(id);
+    toast(`Durum: ${durum}`);
+  } catch(e) {
+    toast('Hata: ' + e.message, 'error');
+  }
+}
+
+// ── NEW WO MODAL ──
+function openNewWOModal() {
+  const seOpts = satisEmirleri.map(r =>
+    `<option value="${r.id}" data-parca="${r.fields['Parça Adı']||''}" data-no="${r.fields['Parça No']||''}" data-miktar="${r.fields['Miktar']||0}" data-birim="${r.fields['Birim']||'Adet'}" data-seno="${r.fields['SE No']||''}">${r.fields['SE No']||'—'} — ${r.fields['Parça Adı']||''}</option>`
+  ).join('');
+
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay';
+  modal.id = 'new-wo-modal';
+  modal.innerHTML = `
+    <div class="modal" style="max-width:520px;text-align:left;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <h3>Yeni İş Emri</h3>
+        <button onclick="this.closest('.modal-overlay').remove()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3);">×</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div class="field-group">
+          <label class="field-label">Satış Emrinden Oluştur (opsiyonel)</label>
+          <select class="field-input" id="nw-se" onchange="autoFillFromSE()">
+            <option value="">— Manuel giriş —</option>
+            ${seOpts}
+          </select>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div class="field-group">
+            <label class="field-label">Satış Emri</label>
+            <select class="field-input" id="nw-seno">
+              <option value="">— Seçin (opsiyonel) —</option>
+              ${satisEmirleri.map(r=>`<option value="${r.id}">${r.fields['SE No']||r.id} — ${r.fields['Parça Adı']||''}</option>`).join('')}
+            </select>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Parça No</label>
+            <input class="field-input" id="nw-parcano" placeholder="123456">
+          </div>
+          <div class="field-group" style="grid-column:span 2;">
+            <label class="field-label">Parça Adı *</label>
+            <input class="field-input" id="nw-parcaadi" placeholder="Parça adı">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Revizyon</label>
+            <input class="field-input" id="nw-rev" placeholder="A, B, C...">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Termin Tarihi</label>
+            <input type="date" class="field-input" id="nw-termin">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Miktar *</label>
+            <input type="number" class="field-input" id="nw-miktar" placeholder="0" min="1">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Birim</label>
+            <select class="field-input" id="nw-birim">
+              <option>Adet</option><option>Kg</option><option>Mt</option><option>Tk</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;">
+        <button class="toolbar-btn" onclick="document.getElementById('new-wo-modal').remove()">İptal</button>
+        <button class="toolbar-btn primary" onclick="createWO()">İş Emri Oluştur</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+function autoFillFromSE() {
+  const sel = document.getElementById('nw-se');
+  const opt = sel.options[sel.selectedIndex];
+  if (!opt.value) return;
+  document.getElementById('nw-seno').value = opt.value || '';
+  document.getElementById('nw-parcaadi').value = opt.dataset.parca || '';
+  document.getElementById('nw-parcano').value = opt.dataset.no || '';
+  document.getElementById('nw-miktar').value = opt.dataset.miktar || '';
+  document.getElementById('nw-birim').value = opt.dataset.birim || 'Adet';
+}
+
+async function createWO() {
+  const parcaAdi = document.getElementById('nw-parcaadi').value.trim();
+  const miktar = parseFloat(document.getElementById('nw-miktar').value) || 0;
+  if (!parcaAdi) { toast('Parça adı zorunlu', 'error'); return; }
+  if (!miktar) { toast('Miktar zorunlu', 'error'); return; }
+
+  try {
+    const year = new Date().getFullYear();
+    // Lot No için mevcut son kaydı bul
+    const lastWOs = await apiGetFn(TABLES.isEmirleri, 'sort[0][field]=Sıra%20No&sort[0][direction]=desc&maxRecords=1');
+    const lastSira = lastWOs.records?.[0]?.fields?.['Sıra No'] || 0;
+    const newSira = lastSira + 1;
+    const lotNo = `LOT-${year}-${String(newSira).padStart(5,'0')}-A`;
+
+    const fields = {
+      'Lot No': lotNo,
+      'Parça Adı': parcaAdi,
+      'Parça No': document.getElementById('nw-parcano').value || null,
+      'Revizyon': document.getElementById('nw-rev').value || null,
+      'Miktar': miktar,
+      'Birim': document.getElementById('nw-birim').value,
+      'Termin Tarihi': document.getElementById('nw-termin').value || null,
+      'Durum': 'Beklemede',
+    };
+
+    const seVal = document.getElementById('nw-seno').value;
+    if (seVal) fields['Satış Emirleri'] = [seVal];
+
+    const res = await apiFn('POST', TABLES.isEmirleri, {fields});
+    // IE No formula alanı Airtable'da otomatik üretiliyor
+    const ieNo = res.fields?.['IE No'] || `IE-${year}-${String(newSira).padStart(5,'0')}`;
+    document.getElementById('new-wo-modal').remove();
+    await loadAll();
+    await loadDetail(res.id);
+    toast(`${ieNo} oluşturuldu — Lot: ${lotNo} ✓`);
+  } catch(e) {
+    toast('Oluşturma hatası: ' + e.message, 'error');
+  }
+}
+
+// ── QR CODE ──
+function showQR(woId) {
+  const wo = workOrders.find(r => r.id === woId);
+  const f = wo?.fields || {};
+  const url = `${window.location.origin}/ersan_wo_operator.html?wo=${woId}`;
+
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay';
+  modal.innerHTML = `
+    <div class="modal">
+      <h3>${f['IE No']||'—'}</h3>
+      <p>Lot: ${f['Lot No']||'—'} | ${f['Parça Adı']||''}</p>
+      <div id="qr-container"></div>
+      <div style="font-size:11px;color:var(--text3);word-break:break-all;">${url}</div>
+      <div class="modal-btns">
+        <button class="toolbar-btn" onclick="this.closest('.modal-overlay').remove()">Kapat</button>
+        <button class="toolbar-btn primary" onclick="downloadQR('${f['IE No']||'ie'}')">İndir PNG</button>
+        <button class="toolbar-btn success" onclick="printTraveler('${woId}');this.closest('.modal-overlay').remove()">Traveler PDF</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+
+  setTimeout(() => {
+    new QRCode(document.getElementById('qr-container'), {
+      text: url, width: 200, height: 200,
+      colorDark: '#1e1b4b', colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M
+    });
+  }, 100);
+}
+
+function downloadQR(woNo) {
+  const canvas = document.querySelector('#qr-container canvas');
+  if (!canvas) return;
+  const a = document.createElement('a');
+  a.download = `QR-${woNo}.png`;
+  a.href = canvas.toDataURL();
+  a.click();
+}
+
+// ── TRAVELER PDF ──
+async function printTraveler(woId) {
+  const wo = workOrders.find(r => r.id === woId);
+  const f = wo?.fields || {};
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+  const tr = s => s.replace(/ı/g,'i').replace(/İ/g,'I').replace(/ş/g,'s').replace(/Ş/g,'S')
+    .replace(/ğ/g,'g').replace(/Ğ/g,'G').replace(/ü/g,'u').replace(/Ü/g,'U')
+    .replace(/ö/g,'o').replace(/Ö/g,'O').replace(/ç/g,'c').replace(/Ç/g,'C');
+
+  // Header bar
+  doc.setFillColor(30, 27, 75);
+  doc.rect(0, 0, 210, 28, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(14); doc.setFont('helvetica','bold');
+  doc.text('ERSAN ENDUSTRIYEL', 14, 10);
+  doc.setFontSize(9); doc.setFont('helvetica','normal');
+  doc.text('Makine ve Makine Parcalari Imalati | Basiskele, Kocaeli', 14, 16);
+  doc.setFontSize(16); doc.setFont('helvetica','bold');
+  doc.setFillColor(99, 102, 241);
+  doc.rect(140, 3, 58, 22, 'F');
+  doc.setTextColor(255,255,255);
+  doc.text('IS EMRI', 155, 12);
+  doc.setFontSize(10);
+  doc.text('TRAVELER', 153, 20);
+
+  // WO Info
+  doc.setTextColor(30, 27, 75);
+  doc.setFillColor(240, 242, 245);
+  doc.rect(10, 32, 190, 38, 'F');
+  doc.setFontSize(18); doc.setFont('helvetica','bold');
+  doc.text(tr(f['IE No']||'—'), 14, 44);
+  doc.setFontSize(10); doc.setFont('helvetica','normal');
+  doc.setTextColor(90, 97, 112);
+  doc.text(`Lot: ${tr(f['Lot No']||'—')}`, 14, 52);
+  doc.setTextColor(30, 27, 75);
+  doc.setFontSize(11); doc.setFont('helvetica','bold');
+  doc.text(tr(f['Parça Adı']||'—'), 80, 44);
+  doc.setFontSize(9); doc.setFont('helvetica','normal');
+  doc.setTextColor(90, 97, 112);
+  doc.text(`Parca No: ${tr(f['Parça No']||'—')} ${f['Revizyon']?'Rev.'+f['Revizyon']:''}`, 80, 51);
+  doc.text(`SE No: ${tr(satisEmirleri.find(r=>r.id===f['Satış Emirleri']?.[0])?.fields?.['SE No']||'—')}`, 80, 57);
+  doc.text(`Miktar: ${f['Miktar']||0} ${f['Birim']||'Adet'}`, 140, 51);
+  doc.text(`Termin: ${fmtDate(f['Termin Tarihi'])}`, 140, 57);
+  doc.text(`Malzeme Lotu: ${tr(f['Malzeme Lotu']||'—')}  |  Heat No: ${tr(f['Heat No']||'—')}`, 14, 64);
+
+  // QR Code
+  const canvas = document.querySelector('#qr-container canvas');
+  if (canvas) {
+    doc.addImage(canvas.toDataURL(), 'PNG', 162, 32, 36, 36);
+  }
+
+  // Ops table
+  const opRows = currentOps.map((op, i) => [
+    i+1,
+    tr(op.tip),
+    tr(op.aciklama || '—'),
+    op.fason ? tr(op.fasonFirma||'Fason') : (tezgahlar.find(t=>t.id===op.tezgahId)?.fields?.['Tezgah No'] || '—'),
+    op.sure ? `${op.sure} dk` : '—',
+    tr(op.durum),
+    ''
+  ]);
+
+  doc.autoTable({
+    startY: 76,
+    head: [['Sira','Operasyon','Talimat','Tezgah/Firma','Sure','Durum','Onay']],
+    body: opRows,
+    styles: { fontSize: 8, font: 'helvetica', cellPadding: 2.5 },
+    headStyles: { fillColor: [30, 27, 75], textColor: 255, fontStyle: 'bold', fontSize: 8 },
+    columnStyles: {
+      0: { cellWidth: 10, halign: 'center' },
+      1: { cellWidth: 38 },
+      2: { cellWidth: 55 },
+      3: { cellWidth: 28 },
+      4: { cellWidth: 18, halign: 'center' },
+      5: { cellWidth: 22 },
+      6: { cellWidth: 20 },
+    },
+    alternateRowStyles: { fillColor: [247, 248, 250] },
+  });
+
+  // Notes
+  const finalY = doc.lastAutoTable.finalY + 6;
+  if (f['Notlar']) {
+    doc.setFontSize(9); doc.setFont('helvetica','bold'); doc.setTextColor(30,27,75);
+    doc.text('NOTLAR:', 14, finalY);
+    doc.setFont('helvetica','normal'); doc.setTextColor(90,97,112);
+    doc.text(tr(f['Notlar']||''), 14, finalY + 5, {maxWidth: 180});
+  }
+
+  // Footer
+  doc.setFillColor(30, 27, 75);
+  doc.rect(0, 282, 210, 15, 'F');
+  doc.setFontSize(7); doc.setTextColor(165, 180, 252);
+  doc.text('Ersan Endustriyel Makine San. Tic. Ltd. Sti.  |  Basiskele Sanayi Sitesi 12.Blok No:2 Kocaeli  |  AS9100 Rev.D Kapsaminda Uretim', 14, 288);
+  doc.setTextColor(255,255,255);
+  doc.text(`Baski: ${new Date().toLocaleDateString('tr-TR')}`, 160, 288);
+
+  doc.save(`Traveler_${tr(f['IE No']||'WO')}.pdf`);
+  toast('Traveler PDF indiriliyor...');
+}
+
+// ── INIT ──
+// QR modal açık değilse showQR'yi çağırmadan önce container oluştur
+document.body.insertAdjacentHTML('beforeend', '<div id="qr-container-hidden" style="display:none;"></div>');
+loadAll();
+</script>
+</body>
+</html>
