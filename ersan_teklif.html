@@ -1,0 +1,2211 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — Teklif Yönetimi</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f0f2f5;
+    --surface: #ffffff;
+    --surface2: #f7f8fa;
+    --border: #e2e5ea;
+    --border2: #c8cdd6;
+    --text: #1a1d23;
+    --text2: #5a6170;
+    --text3: #9aa0ad;
+    --accent: #7c3aed;
+    --accent-light: #ede9fe;
+    --accent-hover: #6d28d9;
+    --green: #059669;
+    --green-light: #d1fae5;
+    --red: #dc2626;
+    --red-light: #fee2e2;
+    --orange: #d97706;
+    --orange-light: #fef3c7;
+    --blue: #2563eb;
+    --blue-light: #dbeafe;
+    --gray: #6b7280;
+    --gray-light: #f3f4f6;
+    --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+    --shadow-lg: 0 4px 16px rgba(0,0,0,.10);
+    --radius: 8px;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    overflow: hidden;
+    font-size: 13px;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    height: 52px;
+    background: #1e1b4b;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    gap: 16px;
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,.2);
+  }
+  .header-logo {
+    display: flex; align-items: center; gap: 10px;
+    color: white;
+  }
+  .header-logo svg { opacity: .9; }
+  .header-title { font-size: 15px; font-weight: 600; letter-spacing: -.3px; }
+  .header-sub { font-size: 11px; color: #a5b4fc; font-family: var(--mono); }
+  .header-sep { width: 1px; height: 24px; background: rgba(255,255,255,.15); }
+  .header-nav { display: flex; gap: 4px; }
+  .header-nav a {
+    color: #c7d2fe; font-size: 12px; padding: 5px 12px;
+    border-radius: 6px; text-decoration: none; transition: all .15s;
+    font-weight: 500;
+  }
+  .header-nav a:hover { background: rgba(255,255,255,.1); color: white; }
+  .header-nav a.active { background: rgba(255,255,255,.15); color: white; }
+  .header-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+  .btn-new {
+    background: var(--accent); color: white; border: none;
+    padding: 7px 14px; border-radius: 6px; font-size: 12px;
+    font-weight: 600; cursor: pointer; display: flex; align-items: center;
+    gap: 6px; transition: background .15s; font-family: var(--sans);
+  }
+  .btn-new:hover { background: var(--accent-hover); }
+
+  /* ── LAYOUT ── */
+  .layout {
+    display: flex;
+    height: calc(100vh - 52px);
+    margin-top: 52px;
+  }
+
+  /* ── LIST PANEL ── */
+  .list-panel {
+    width: 280px;
+    flex-shrink: 0;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .list-header {
+    padding: 14px 16px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .list-header h2 { font-size: 13px; font-weight: 600; color: var(--text); }
+  .list-count { font-size: 11px; color: var(--text3); font-family: var(--mono); margin-top: 2px; }
+  .list-search {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .list-search input {
+    width: 100%; padding: 6px 10px;
+    border: 1px solid var(--border); border-radius: 6px;
+    font-size: 12px; font-family: var(--sans); color: var(--text);
+    background: var(--surface2); outline: none;
+    transition: border-color .15s;
+  }
+  .list-search input:focus { border-color: var(--accent); }
+  .list-scroll { flex: 1; overflow-y: auto; }
+  .list-scroll::-webkit-scrollbar { width: 4px; }
+  .list-scroll::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+  .quote-item {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background .12s;
+    position: relative;
+  }
+  .quote-item:hover { background: var(--surface2); }
+  .quote-item.active { background: var(--accent-light); border-left: 3px solid var(--accent); }
+  .qi-top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .qi-no { font-family: var(--mono); font-size: 11px; font-weight: 500; color: var(--accent); }
+  .qi-status { font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 10px; }
+  .qi-musteri { font-size: 12px; font-weight: 500; margin-top: 4px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .qi-bottom { display: flex; justify-content: space-between; margin-top: 5px; }
+  .qi-tarih { font-size: 11px; color: var(--text3); font-family: var(--mono); }
+  .qi-tutar { font-size: 11px; font-weight: 600; color: var(--text2); font-family: var(--mono); }
+
+  /* ── DETAIL PANEL ── */
+  .detail-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--bg);
+  }
+  .detail-toolbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  .detail-toolbar-left { display: flex; align-items: center; gap: 8px; flex: 1; }
+  .detail-title { font-size: 16px; font-weight: 700; color: var(--text); font-family: var(--mono); }
+  .detail-musteri-tag { font-size: 11px; color: var(--text2); background: var(--surface2); border: 1px solid var(--border); padding: 3px 10px; border-radius: 12px; }
+
+  .toolbar-btn {
+    padding: 6px 14px; border-radius: 6px; font-size: 12px;
+    font-weight: 600; cursor: pointer; border: 1px solid var(--border);
+    font-family: var(--sans); transition: all .15s; display: flex;
+    align-items: center; gap: 5px; background: var(--surface);
+    color: var(--text);
+  }
+  .toolbar-btn:hover { background: var(--surface2); border-color: var(--border2); }
+  .toolbar-btn.primary { background: var(--accent); color: white; border-color: var(--accent); }
+  .toolbar-btn.primary:hover { background: var(--accent-hover); }
+  .toolbar-btn.success { background: var(--green); color: white; border-color: var(--green); }
+  .toolbar-btn.success:hover { background: #047857; }
+  .toolbar-btn.danger { background: var(--red); color: white; border-color: var(--red); }
+  .toolbar-btn.danger:hover { background: #b91c1c; }
+  .toolbar-btn.warn { background: var(--orange); color: white; border-color: var(--orange); }
+  .toolbar-btn.warn:hover { background: #b45309; }
+  .toolbar-btn.ghost { background: transparent; }
+
+  .detail-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .detail-scroll::-webkit-scrollbar { width: 5px; }
+  .detail-scroll::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .card-header {
+    padding: 10px 16px;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text2);
+    text-transform: uppercase;
+    letter-spacing: .6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-header svg { color: var(--accent); }
+  .card-body { padding: 16px; }
+
+  /* ── FORM GRID ── */
+  .form-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .form-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+  .form-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .form-full { grid-column: 1 / -1; }
+
+  .field-group { display: flex; flex-direction: column; gap: 4px; }
+  .field-label {
+    font-size: 10px; font-weight: 600; color: var(--text3);
+    text-transform: uppercase; letter-spacing: .5px;
+  }
+  .field-input {
+    border: 1px solid var(--border); border-radius: 6px;
+    padding: 7px 10px; font-size: 12px; font-family: var(--sans);
+    color: var(--text); background: var(--surface);
+    outline: none; transition: border-color .15s, box-shadow .15s;
+    width: 100%;
+  }
+  .field-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(124,58,237,.08); }
+  .field-input:disabled { background: var(--surface2); color: var(--text2); cursor: not-allowed; }
+  select.field-input { cursor: pointer; }
+  textarea.field-input { resize: vertical; min-height: 70px; }
+
+  /* ── STATUS BADGE ── */
+  .status-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 10px; border-radius: 12px; font-size: 11px;
+    font-weight: 600; white-space: nowrap;
+  }
+  .status-Taslak { background: var(--gray-light); color: var(--gray); }
+  .status-Gönderildi { background: var(--blue-light); color: var(--blue); }
+  .status-Onaylandı { background: var(--green-light); color: var(--green); }
+  .status-Reddedildi { background: var(--red-light); color: var(--red); }
+
+  /* ── ITEMS TABLE ── */
+  .items-table { width: 100%; border-collapse: collapse; }
+  .items-table th {
+    background: var(--surface2); padding: 8px 10px;
+    font-size: 10px; font-weight: 600; color: var(--text3);
+    text-transform: uppercase; letter-spacing: .5px;
+    text-align: left; border-bottom: 2px solid var(--border);
+    white-space: nowrap;
+  }
+  .items-table td {
+    padding: 6px 6px; border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  .items-table tr:last-child td { border-bottom: none; }
+  .items-table tr:hover td { background: #fafbfc; }
+  .items-table input, .items-table select {
+    border: 1px solid transparent; border-radius: 5px;
+    padding: 5px 7px; font-size: 12px; font-family: var(--sans);
+    color: var(--text); background: transparent; width: 100%;
+    outline: none; transition: all .12s;
+  }
+  .items-table input:focus, .items-table select:focus {
+    border-color: var(--accent);
+    background: white;
+    box-shadow: 0 0 0 2px rgba(124,58,237,.08);
+  }
+  .items-table input.num { text-align: right; font-family: var(--mono); font-size: 12px; }
+  .cell-total {
+    font-family: var(--mono); font-size: 12px; font-weight: 600;
+    color: var(--text); text-align: right; padding-right: 10px;
+    white-space: nowrap;
+  }
+  .cell-no {
+    font-family: var(--mono); font-size: 11px; color: var(--text3);
+    text-align: center; width: 32px;
+  }
+  .btn-del-row {
+    width: 26px; height: 26px; border-radius: 5px;
+    border: 1px solid var(--border); background: var(--surface);
+    cursor: pointer; display: flex; align-items: center;
+    justify-content: center; color: var(--text3);
+    transition: all .12s; font-size: 14px;
+  }
+  .btn-del-row:hover { background: var(--red-light); border-color: var(--red); color: var(--red); }
+
+  .items-footer {
+    display: flex; justify-content: space-between;
+    align-items: center; padding: 10px 16px;
+    border-top: 1px solid var(--border); background: var(--surface2);
+  }
+  .btn-add-row {
+    display: flex; align-items: center; gap: 6px;
+    padding: 6px 12px; border-radius: 6px;
+    border: 1px dashed var(--border2); background: transparent;
+    color: var(--text2); font-size: 12px; font-weight: 500;
+    cursor: pointer; font-family: var(--sans); transition: all .15s;
+  }
+  .btn-add-row:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+
+  .totals-box { text-align: right; }
+  .total-row { display: flex; justify-content: flex-end; gap: 24px; margin-bottom: 3px; }
+  .total-label { font-size: 11px; color: var(--text3); }
+  .total-val { font-family: var(--mono); font-size: 12px; font-weight: 600; min-width: 100px; text-align: right; }
+  .total-grand .total-label { color: var(--text); font-weight: 600; font-size: 12px; }
+  .total-grand .total-val { font-size: 14px; color: var(--accent); }
+
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 12px;
+    color: var(--text3);
+  }
+  .empty-state svg { opacity: .3; }
+  .empty-state p { font-size: 13px; }
+
+  /* ── LOADING ── */
+  .loading {
+    display: flex; align-items: center; justify-content: center;
+    padding: 40px; color: var(--text3);
+  }
+  .spinner {
+    width: 20px; height: 20px; border: 2px solid var(--border);
+    border-top-color: var(--accent); border-radius: 50%;
+    animation: spin .6s linear infinite; margin-right: 10px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── TOAST ── */
+  .toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 999; display: flex; flex-direction: column; gap: 8px; }
+  .toast {
+    padding: 10px 16px; border-radius: 8px; font-size: 12px;
+    font-weight: 500; color: white; box-shadow: var(--shadow-lg);
+    animation: slideIn .2s ease; display: flex; align-items: center; gap: 8px;
+  }
+  .toast.success { background: var(--green); }
+  .toast.error { background: var(--red); }
+  .toast.info { background: var(--accent); }
+  @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+  /* ── NAV arrows ── */
+  .nav-arrows { display: flex; gap: 2px; }
+  .nav-btn {
+    width: 28px; height: 28px; border-radius: 5px;
+    border: 1px solid var(--border); background: var(--surface);
+    cursor: pointer; display: flex; align-items: center;
+    justify-content: center; color: var(--text2);
+    transition: all .12s; font-size: 12px;
+  }
+  .nav-btn:hover { background: var(--surface2); }
+  .nav-btn:disabled { opacity: .3; cursor: not-allowed; }
+
+  /* ── DURUM BUTTONS ROW ── */
+  .durum-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 12px 16px;
+    background: var(--surface2);
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .durum-label { font-size: 11px; color: var(--text3); font-weight: 600; text-transform: uppercase; letter-spacing: .5px; margin-right: 4px; }
+
+  /* scrollbar for list */
+  .list-scroll::-webkit-scrollbar { width: 3px; }
+
+  /* col widths */
+  .col-no { width: 36px; }
+  .col-stok { width: 110px; }
+  .col-parca { min-width: 140px; }
+  .col-miktar { width: 80px; }
+  .col-birim { width: 70px; }
+  .col-fiyat { width: 100px; }
+  .col-iskonto { width: 75px; }
+  .col-toplam { width: 110px; }
+  .col-teslim { width: 90px; }
+  .col-del { width: 36px; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-logo">
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+      <rect width="28" height="28" rx="6" fill="rgba(255,255,255,.15)"/>
+      <path d="M7 14h14M14 7v14" stroke="white" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="14" cy="14" r="4" stroke="white" stroke-width="1.5"/>
+    </svg>
+    <div>
+      <div class="header-title">Ersan MES</div>
+      <div class="header-sub">Satış & Teklif</div>
+    </div>
+  </div>
+  <div class="header-sep"></div>
+  <nav class="header-nav">
+    <a href="#" id="nav-teklifler" class="active" onclick="switchView('teklifler')">Teklifler</a>
+    <a href="#" id="nav-siparisler" onclick="switchView('siparisler')">Siparişler</a>
+    <a href="ersan_hesaplama.html" style="background:rgba(99,102,241,.2);color:#a5b4fc;">🔧 Hesaplama</a>
+    <a href="ersan_planlama.html">Planlama</a>
+    <a href="ersan_satinalma.html">Satınalma</a>
+    <a href="ersan_isemirleri.html">İş Emirleri</a>
+  </nav>
+  <div class="header-right">
+    <button class="btn-new" id="btn-yeni" onclick="createNewQuote()">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7h10" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+      Yeni Teklif
+    </button>
+  </div>
+</header>
+
+<!-- LAYOUT -->
+<div class="layout">
+
+  <!-- LIST PANEL -->
+  <div class="list-panel">
+    <div class="list-header">
+      <h2>Teklifler</h2>
+      <div class="list-count" id="list-count">Yükleniyor...</div>
+    </div>
+    <div class="list-search">
+      <input type="text" placeholder="Teklif no veya müşteri ara..." id="search-input" oninput="filterList()">
+    </div>
+    <div class="list-scroll" id="quote-list">
+      <div class="loading"><div class="spinner"></div> Yükleniyor...</div>
+    </div>
+  </div>
+
+  <!-- DETAIL PANEL -->
+  <div class="detail-panel">
+    <div id="detail-content">
+      <div class="empty-state">
+        <svg width="64" height="64" viewBox="0 0 64 64" fill="none"><rect x="8" y="12" width="48" height="40" rx="4" stroke="currentColor" stroke-width="2"/><path d="M20 24h24M20 32h24M20 40h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <p>Listeden bir teklif seçin veya yeni teklif oluşturun</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- TOAST -->
+<div class="toast-container" id="toast-container"></div>
+
+<script>
+// ── CONFIG ──
+const BASE  = 'app5LDgJMgocw79Ix';
+const TABLES = {
+  teklifler:      'tblBvcPQjPDdg6N52',
+  kalemler:       'tblqRGCv8yu6zQXZ4',
+  musteriler:     'tblPxhjJDEx0fyUQx',
+  personel:       'tblwG9GqnLC9oFZzb',
+  satisEmirleri:  'tbl56Oj1nPaqefI60',
+  dosyaProjeler:  'tbl9tSg6MtTFSuj5w',
+  tedarikci:      'tblEI6683Im5AXj36',
+  rfqTeklifleri:  'RFQ_TABLE_ID', // Airtable'da Satınalma Teklifleri tablosunu oluşturduktan sonra bu ID'yi güncelleyin
+};
+
+// Tüm Airtable istekleri Netlify Functions üzerinden gidiyor (token güvenli)
+const api = async (method, table, body, id='') => {
+  const path = `/v0/${BASE}/${table}${id ? '/'+id : ''}`;
+  const res = await fetch('/.netlify/functions/airtable', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ method, path, body })
+  });
+  if (!res.ok) throw new Error(`API ${res.status}: ${await res.text()}`);
+  return res.json();
+};
+
+const apiGet = async (table, params='') => {
+  const path = `/v0/${BASE}/${table}?${params}`;
+  const res = await fetch('/.netlify/functions/airtable', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ method: 'GET', path })
+  });
+  return res.json();
+};
+
+// ── STATE ──
+let quotes = [];
+let filteredQuotes = [];
+let activeId = null;
+let musteriler = [];
+let personel = [];
+let currentItems = [];
+let itemsToDelete = [];
+let siparisler = [];
+let filteredSiparisler = [];
+let currentView = 'teklifler'; // teklifler | siparisler
+
+// ── HELPERS ──
+const fmt = (n) => n ? Number(n).toLocaleString('tr-TR', {minimumFractionDigits:2, maximumFractionDigits:2}) : '—';
+const fmtDate = (d) => {
+  if (!d) return '';
+  try { return new Date(d).toLocaleDateString('tr-TR'); } catch { return d; }
+};
+const toISO = (d) => { if (!d) return null; return d; };
+
+const statusColors = {
+  'Taslak': 'status-Taslak',
+  'Gönderildi': 'status-Gönderildi',
+  'Onaylandı': 'status-Onaylandı',
+  'Reddedildi': 'status-Reddedildi',
+};
+
+function toast(msg, type='success') {
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" stroke="white" stroke-width="1.5"/><path d="${type==='success'?'M4 7l2 2 4-4':'M5 5l4 4M9 5l-4 4'}" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>${msg}`;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+function onMusteriChange(id) {
+  const m = musteriler.find(r => r.id === id);
+  if (!m) {
+    document.getElementById('f-musteri-kodu').value = '';
+    document.getElementById('f-musteri-yetkili').value = '';
+    document.getElementById('f-musteri-tel').value = '';
+    document.getElementById('f-musteri-email').value = '';
+    return;
+  }
+  document.getElementById('f-musteri-kodu').value = m.fields['Müşteri Kodu'] || '';
+  document.getElementById('f-musteri-yetkili').value = m.fields['Yetkili Kişi'] || '';
+  document.getElementById('f-musteri-tel').value = m.fields['Telefon'] || '';
+  document.getElementById('f-musteri-email').value = m.fields['E-posta'] || '';
+}
+
+// ── LOAD DATA ──
+async function loadAll() {
+  try {
+    // Load quotes
+    let allQuotes = [];
+    let offset = '';
+    do {
+      const data = await apiGet(TABLES.teklifler, `sort[0][field]=Sıra%20No&sort[0][direction]=desc${offset?'&offset='+offset:''}`);
+      allQuotes = allQuotes.concat(data.records || []);
+      offset = data.offset || '';
+    } while (offset);
+    quotes = allQuotes;
+    filteredQuotes = [...quotes];
+
+    // Load müşteriler
+    const mData = await apiGet(TABLES.musteriler, 'fields[]=Müşteri%20Adı&fields[]=Müşteri%20Kodu&fields[]=Yetkili%20Kişi&fields[]=E-posta&fields[]=Telefon');
+    musteriler = mData.records || [];
+
+    // Load personel
+    const pData = await apiGet(TABLES.personel, 'fields[]=Ad%20Soyad&fields[]=E-posta&fields[]=Telefon');
+    personel = pData.records || [];
+
+    renderList();
+  } catch(e) {
+    document.getElementById('quote-list').innerHTML = `<div style="padding:20px;color:var(--red);font-size:12px;">Hata: ${e.message}</div>`;
+    toast('Veriler yüklenemedi: ' + e.message, 'error');
+  }
+}
+
+// ── RENDER LIST ──
+function renderList() {
+  const el = document.getElementById('quote-list');
+  document.getElementById('list-count').textContent = `${filteredQuotes.length} teklif`;
+
+  if (!filteredQuotes.length) {
+    el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:12px;">Teklif bulunamadı</div>';
+    return;
+  }
+
+  el.innerHTML = filteredQuotes.map(q => {
+    const f = q.fields;
+    const no = f['Teklif No'] || '—';
+    const musteri = f['Müşteri']?.[0] ? getMusteriName(f['Müşteri'][0]) : '—';
+    const durum = f['Durum'] || 'Taslak';
+    const tarih = fmtDate(f['Teklif Tarihi']);
+    const tutar = f['Toplam Tutar'] ? fmt(f['Toplam Tutar']) + ' ' + (f['Para Birimi']||'TL') : '—';
+    const active = q.id === activeId ? ' active' : '';
+
+    return `<div class="quote-item${active}" onclick="loadDetail('${q.id}')">
+      <div class="qi-top">
+        <span class="qi-no">${no}</span>
+        <span class="qi-status ${statusColors[durum]||'status-Taslak'}">${durum}</span>
+      </div>
+      <div class="qi-musteri">${musteri}</div>
+      <div class="qi-bottom">
+        <span class="qi-tarih">${tarih}</span>
+        <span class="qi-tutar">${tutar}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterList() {
+  const q = document.getElementById('search-input').value.toLowerCase();
+  if (currentView === 'siparisler') {
+    filteredSiparisler = siparisler.filter(r => {
+      const no = (r.fields['SE No']||'').toLowerCase();
+      const parca = (r.fields['Parça Adı']||'').toLowerCase();
+      const parcaNo = (r.fields['Parça No']||'').toLowerCase();
+      const musteri = getMusteriName(r.fields['Müşteri']?.[0]||'').toLowerCase();
+      return no.includes(q) || parca.includes(q) || parcaNo.includes(q) || musteri.includes(q);
+    });
+    renderSiparisList();
+    return;
+  }
+  filteredQuotes = quotes.filter(r => {
+    const no = (r.fields['Teklif No']||'').toLowerCase();
+    const m = getMusteriName(r.fields['Müşteri']?.[0]||'').toLowerCase();
+    return no.includes(q) || m.includes(q);
+  });
+  renderList();
+}
+
+function getMusteriName(id) {
+  const m = musteriler.find(r => r.id === id);
+  return m ? m.fields['Müşteri Adı'] : id || '—';
+}
+function getPersonelName(id) {
+  const p = personel.find(r => r.id === id);
+  return p ? p.fields['Ad Soyad'] : id || '—';
+}
+
+// ── LOAD DETAIL ──
+async function loadDetail(id) {
+  activeId = id;
+  renderList();
+  itemsToDelete = [];
+
+  const dc = document.getElementById('detail-content');
+  dc.innerHTML = '<div class="loading" style="padding:60px"><div class="spinner"></div> Yükleniyor...</div>';
+
+  try {
+    const q = quotes.find(r => r.id === id);
+    const f = q.fields;
+
+    // Load line items
+    currentItems = [];
+    if (f['Kalemler'] && f['Kalemler'].length > 0) {
+      const filter = f['Kalemler'].map(i => `RECORD_ID()='${i}'`).join(',');
+      const kData = await apiGet(TABLES.kalemler, `filterByFormula=OR(${encodeURIComponent(filter)})`);
+      currentItems = (kData.records || []).map(r => ({
+        _id: r.id,
+        _local: false,
+        no: r.fields['No'] || '',
+        stokKodu: r.fields['Stok Kodu'] || '',
+        parcaAdi: r.fields['Parça Adı'] || '',
+        miktar: r.fields['Miktar'] || 0,
+        birim: r.fields['Birim'] || 'Adet',
+        birimFiyat: r.fields['Birim Fiyat'] || 0,
+        iskonto: r.fields['İskonto'] || 0,
+        teslim: r.fields['Teklif Süresi (Gün)'] || '',
+        aciklama: r.fields['Notlar'] || '',
+        malzemeNo: r.fields['Malzeme No'] || '',
+        secili: true,
+      })).sort((a,b) => a.no - b.no);
+    }
+
+    renderDetail(q);
+
+    // Hesaplama sayfasından bekleyen aktarım varsa ekle
+    if (window._pendingImport) {
+      const d = window._pendingImport;
+      window._pendingImport = null;
+      currentItems.push({
+        _id: null, _local: true, secili: true,
+        stokKodu: d.stokKodu || '',
+        malzemeNo: d.malzemeNo || '',
+        parcaAdi: d.parcaAdi || '',
+        miktar: d.miktar || 1,
+        birim: 'Adet',
+        birimFiyat: d.birimFiyat || 0,
+        iskonto: 0,
+        teslim: d.teslim || '',
+        aciklama: ''
+      });
+      renderItems();
+      toast(`"${d.parcaAdi}" kalemi eklendi — kaydetmeyi unutmayın!`);
+    }
+  } catch(e) {
+    dc.innerHTML = `<div style="padding:20px;color:var(--red);">Hata: ${e.message}</div>`;
+    toast('Detay yüklenemedi', 'error');
+  }
+}
+
+// ── RENDER DETAIL ──
+function renderDetail(q) {
+  const f = q.fields;
+  const durum = f['Durum'] || 'Taslak';
+  const musteriId = f['Müşteri']?.[0] || '';
+  const hazirlayanId = f['Hazırlayan']?.[0] || '';
+
+  // Build müşteri options
+  const musteriOpts = musteriler.map(m =>
+    `<option value="${m.id}" ${m.id===musteriId?'selected':''}>${m.fields['Müşteri Adı']}</option>`
+  ).join('');
+
+  // Build personel options
+  const personelOpts = personel.map(p =>
+    `<option value="${p.id}" ${p.id===hazirlayanId?'selected':''}>${p.fields['Ad Soyad']}</option>`
+  ).join('');
+
+  const idx = filteredQuotes.findIndex(r => r.id === q.id);
+  const prevId = idx > 0 ? filteredQuotes[idx-1].id : null;
+  const nextId = idx < filteredQuotes.length-1 ? filteredQuotes[idx+1].id : null;
+
+  document.getElementById('detail-content').innerHTML = `
+    <!-- TOOLBAR -->
+    <div class="detail-toolbar">
+      <div class="detail-toolbar-left">
+        <div class="nav-arrows">
+          <button class="nav-btn" onclick="loadDetail('${prevId}')" ${!prevId?'disabled':''}>&#8593;</button>
+          <button class="nav-btn" onclick="loadDetail('${nextId}')" ${!nextId?'disabled':''}>&#8595;</button>
+        </div>
+        <div class="detail-title">${f['Teklif No']||'Yeni Teklif'}</div>
+        <span class="qi-status ${statusColors[durum]||'status-Taslak'} detail-musteri-tag">${durum}</span>
+        <span class="detail-musteri-tag">${getMusteriName(musteriId)}</span>
+      </div>
+      <button class="toolbar-btn ghost" onclick="loadDetail('${q.id}')">
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M11 6.5A4.5 4.5 0 112 6.5a4.5 4.5 0 019 0z" stroke="currentColor" stroke-width="1.5"/><path d="M9.5 9.5l2 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        Yenile
+      </button>
+      <button class="toolbar-btn" style="background:#1e1b4b;color:white;border-color:#1e1b4b;" onclick="generatePDF('${q.id}')">
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 10h9M6.5 2v6M4 6l2.5 2.5L9 6" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Proforma PDF
+      </button>
+      <button class="toolbar-btn" onclick="deleteQuote('${q.id}')">
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 3h9M5 3V2h3v1M4 3l.5 7h4L9 3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Sil
+      </button>
+      <button class="toolbar-btn primary" onclick="saveQuote('${q.id}')">
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 7l3 3 6-6" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Güncelle
+      </button>
+    </div>
+
+    <!-- SCROLL AREA -->
+    <div class="detail-scroll">
+
+      <!-- Temel Bilgiler -->
+      <div class="card">
+        <div class="card-header">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><rect x="1" y="2" width="11" height="9" rx="2" stroke="currentColor" stroke-width="1.3"/><path d="M4 5h5M4 7.5h3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+          Teklif Bilgileri
+        </div>
+        <div class="card-body">
+          <div class="form-grid-4" style="gap:10px;">
+            <div class="field-group">
+              <label class="field-label">Teklif No</label>
+              <input class="field-input" value="${f['Teklif No']||''}" disabled style="font-family:var(--mono);font-size:12px;">
+            </div>
+            <div class="field-group">
+              <label class="field-label">Teklif Tarihi</label>
+              <input type="date" class="field-input" id="f-teklif-tarihi" value="${f['Teklif Tarihi']||''}">
+            </div>
+            <div class="field-group">
+              <label class="field-label">Geçerlilik Tarihi</label>
+              <input type="date" class="field-input" id="f-gecerlilik" value="${f['Geçerlilik Tarihi']||''}">
+            </div>
+            <div class="field-group">
+              <label class="field-label">Vade Süresi (Gün)</label>
+              <input type="number" class="field-input" id="f-vade" value="${f['Vade Süresi (Gün)']||''}">
+            </div>
+          </div>
+          <div style="height:10px;"></div>
+          <div class="form-grid-4" style="gap:10px;">
+            <div class="field-group" style="grid-column:span 2;">
+              <label class="field-label">Müşteri</label>
+              <select class="field-input" id="f-musteri" onchange="onMusteriChange(this.value)">
+                <option value="">— Seçin —</option>
+                ${musteriOpts}
+              </select>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Müşteri Kodu</label>
+              <input class="field-input" id="f-musteri-kodu" value="${musteriler.find(m=>m.id===musteriId)?.fields?.['Müşteri Kodu']||''}" disabled style="background:var(--surface2);color:var(--text2);">
+            </div>
+            <div class="field-group">
+              <label class="field-label" style="display:flex;align-items:center;justify-content:space-between;">
+                Yetkili Kişi
+                <button onclick="openYetkiliModal()" style="background:var(--accent);color:white;border:none;border-radius:4px;width:18px;height:18px;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;">+</button>
+              </label>
+              <input class="field-input" id="f-musteri-yetkili" value="${f['Müşteri Yetkili Kişi']?.[0]||''}" placeholder="Yetkili kişi adı">
+            </div>
+            <div class="field-group">
+              <label class="field-label">Müşteri Telefon</label>
+              <input class="field-input" id="f-musteri-tel" value="${f['Müşteri Telefon']?.[0]||''}" placeholder="Telefon">
+            </div>
+            <div class="field-group">
+              <label class="field-label">Müşteri E-posta</label>
+              <input class="field-input" id="f-musteri-email" value="${f['Müşteri Email']?.[0]||''}" placeholder="E-posta">
+            </div>
+            <div class="field-group">
+              <label class="field-label">Hazırlayan</label>
+              <select class="field-input" id="f-hazirlayan">
+                <option value="">— Seçin —</option>
+                ${personelOpts}
+              </select>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Durum</label>
+              <select class="field-input" id="f-durum">
+                <option ${durum==='Taslak'?'selected':''}>Taslak</option>
+                <option ${durum==='Gönderildi'?'selected':''}>Gönderildi</option>
+                <option ${durum==='Onaylandı'?'selected':''}>Onaylandı</option>
+                <option ${durum==='Reddedildi'?'selected':''}>Reddedildi</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Para Birimi</label>
+              <select class="field-input" id="f-para">
+                <option ${(f['Para Birimi']||'TL')==='TL'?'selected':''}>TL</option>
+                <option ${f['Para Birimi']==='USD'?'selected':''}>USD</option>
+                <option ${f['Para Birimi']==='EUR'?'selected':''}>EUR</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label class="field-label">KDV Oranı (%)</label>
+              <input type="number" class="field-input" id="f-kdv" value="${f['KDV Oranı']||''}">
+            </div>
+            <div class="field-group" style="grid-column:span 4;">
+              <label class="field-label">Teklif Notu (Müşteri talep / proje no)</label>
+              <input type="text" class="field-input" id="f-not" value="${f['Teklif Notu']||''}" placeholder="Müşteri talep / proje no...">
+            </div>
+            <div class="field-group" style="grid-column:span 2;">
+              <label class="field-label">Dosya No / Proje No</label>
+              <input type="text" class="field-input" id="f-dosya-no" value="${f['Dosya No']||''}" placeholder="DOS-2026-001 (opsiyonel)">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Kalemler -->
+      <div class="card">
+        <div class="card-header">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 4h9M2 7h9M2 10h5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+          Teklif Kalemleri
+          <span style="margin-left:auto;font-size:10px;font-weight:400;color:var(--text3)" id="item-count">${currentItems.length} kalem</span>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="items-table">
+            <thead>
+              <tr>
+                <th style="width:32px;text-align:center;">
+                  <input type="checkbox" title="Tümünü seç" onchange="toggleAllItems(this.checked)" style="cursor:pointer;">
+                </th>
+                <th class="col-no">#</th>
+                <th class="col-stok">Stok Kodu</th>
+                <th style="width:90px">Malzeme No</th>
+                <th class="col-parca">Parça Adı / Açıklama</th>
+                <th class="col-miktar" style="text-align:right">Miktar</th>
+                <th class="col-birim">Birim</th>
+                <th class="col-fiyat" style="text-align:right">Birim Fiyat</th>
+                <th class="col-iskonto" style="text-align:right">İskonto%</th>
+                <th class="col-toplam" style="text-align:right">Toplam</th>
+                <th class="col-teslim">Teslim</th>
+                <th class="col-del"></th>
+              </tr>
+            </thead>
+            <tbody id="items-tbody">
+            </tbody>
+          </table>
+        </div>
+        <div class="items-footer">
+          <button class="btn-add-row" onclick="addItem()">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 2v9M2 6.5h9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            Kalem Ekle
+          </button>
+          <div class="totals-box" id="totals-box"></div>
+        </div>
+      </div>
+
+    </div><!-- end scroll -->
+
+    <!-- DURUM BUTTONS -->
+    <div class="durum-row">
+      <span class="durum-label">Teklif Durumu:</span>
+      <span class="qi-status ${statusColors[durum]}" style="font-size:12px;">${durum}</span>
+      <span style="flex:1"></span>
+      <button class="toolbar-btn warn" onclick="setDurum('${q.id}','Taslak')">↩ Revize Et</button>
+      <button class="toolbar-btn success" onclick="setDurum('${q.id}','Onaylandı')">✓ Onaylandı</button>
+      <button class="toolbar-btn danger" onclick="setDurum('${q.id}','Reddedildi')">✕ Reddedildi</button>
+      <button class="toolbar-btn" onclick="setDurum('${q.id}','Gönderildi')">
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 6.5h9M7.5 3l4 3.5-4 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Gönderildi
+      </button>
+    </div>
+  `;
+
+  renderItems();
+}
+
+// ── RENDER ITEMS ──
+function renderItems() {
+  const tbody = document.getElementById('items-tbody');
+  if (!tbody) return;
+
+  if (!currentItems.length) {
+    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:20px;color:var(--text3);font-size:12px;">Henüz kalem eklenmedi</td></tr>`;
+  } else {
+    tbody.innerHTML = currentItems.map((item, i) => {
+      const toplam = calcItemTotal(item);
+      return `<tr>
+        <td style="text-align:center;padding:6px 4px;">
+          <input type="checkbox" ${item.secili?'checked':''} onchange="updateItem(${i},'secili',this.checked)" style="cursor:pointer;width:14px;height:14px;">
+        </td>
+        <td class="cell-no">${i+1}</td>
+        <td><input class="field-input" style="border:1px solid transparent;border-radius:5px;padding:5px 7px;" value="${item.stokKodu||''}" oninput="updateItem(${i},'stokKodu',this.value)" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='transparent'" placeholder="Stok kodu"></td>
+        <td><input class="field-input" style="border:1px solid transparent;border-radius:5px;padding:5px 7px;" value="${item.malzemeNo||''}" oninput="updateItem(${i},'malzemeNo',this.value)" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='transparent'" placeholder="Malzeme no"></td>
+        <td><input class="field-input" style="border:1px solid transparent;border-radius:5px;padding:5px 7px;min-width:140px;" value="${item.parcaAdi||''}" oninput="updateItem(${i},'parcaAdi',this.value)" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='transparent'" placeholder="Parça adı / açıklama"></td>
+        <td><input type="number" class="num" style="border:1px solid transparent;border-radius:5px;padding:5px 7px;" value="${item.miktar||''}" oninput="updateItem(${i},'miktar',parseFloat(this.value)||0)" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='transparent'" placeholder="0"></td>
+        <td>
+          <select style="border:1px solid transparent;border-radius:5px;padding:5px 7px;font-size:12px;font-family:var(--sans);width:100%;outline:none;" onchange="updateItem(${i},'birim',this.value)" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='transparent'">
+            ${['Adet','Kg','Mt','Tk'].map(b=>`<option ${item.birim===b?'selected':''}>${b}</option>`).join('')}
+          </select>
+        </td>
+        <td><input type="number" class="num" style="border:1px solid transparent;border-radius:5px;padding:5px 7px;" value="${item.birimFiyat||''}" oninput="updateItem(${i},'birimFiyat',parseFloat(this.value)||0)" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='transparent'" placeholder="0.00"></td>
+        <td><input type="number" class="num" style="border:1px solid transparent;border-radius:5px;padding:5px 7px;" value="${item.iskonto||''}" oninput="updateItem(${i},'iskonto',parseFloat(this.value)||0)" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='transparent'" placeholder="0" min="0" max="100"></td>
+        <td class="cell-total">${fmt(toplam)}</td>
+        <td><input style="border:1px solid transparent;border-radius:5px;padding:5px 7px;font-size:12px;font-family:var(--sans);width:100%;outline:none;" value="${item.teslim||''}" oninput="updateItem(${i},'teslim',this.value)" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='transparent'" placeholder="25 İŞ GÜNÜ"></td>
+        <td><button class="btn-del-row" onclick="removeItem(${i})">×</button></td>
+      </tr>
+      <tr class="item-note-row">
+        <td></td>
+        <td></td>
+        <td colspan="10" style="padding:0 6px 6px 6px;">
+          <input style="width:100%;border:1px solid transparent;border-radius:5px;padding:4px 8px;font-size:11px;font-family:var(--sans);color:var(--text2);background:var(--surface2);outline:none;" 
+            value="${(item.aciklama||'').replace(/"/g,'&quot;')}" 
+            oninput="updateItem(${i},'aciklama',this.value)"
+            onfocus="this.style.borderColor='var(--accent)';this.style.background='white'"
+            onblur="this.style.borderColor='transparent';this.style.background='var(--surface2)'"
+            placeholder="Kalem notu / açıklama (opsiyonel)...">
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  document.getElementById('item-count').textContent = `${currentItems.length} kalem`;
+  renderTotals();
+}
+
+function calcItemTotal(item) {
+  return (item.miktar||0) * (item.birimFiyat||0) * (1 - (item.iskonto||0)/100);
+}
+
+function renderTotals() {
+  const box = document.getElementById('totals-box');
+  if (!box) return;
+  const kdv = parseFloat(document.getElementById('f-kdv')?.value||0) || 0;
+  const para = document.getElementById('f-para')?.value || 'TL';
+  const ara = currentItems.reduce((s,i) => s + calcItemTotal(i), 0);
+  const kdvTutar = ara * kdv / 100;
+  const genel = ara + kdvTutar;
+
+  box.innerHTML = `
+    <div class="total-row"><span class="total-label">Ara Toplam</span><span class="total-val">${fmt(ara)} ${para}</span></div>
+    ${kdv ? `<div class="total-row"><span class="total-label">KDV (%${kdv})</span><span class="total-val">${fmt(kdvTutar)} ${para}</span></div>` : ''}
+    <div class="total-row total-grand"><span class="total-label">Genel Toplam</span><span class="total-val">${fmt(genel)} ${para}</span></div>
+  `;
+}
+
+function updateItem(i, key, val) {
+  currentItems[i][key] = val;
+  // Re-render only total cells and totals box
+  const rows = document.querySelectorAll('#items-tbody tr');
+  if (rows[i]) {
+    const totalCell = rows[i].querySelector('.cell-total');
+    if (totalCell) totalCell.textContent = fmt(calcItemTotal(currentItems[i]));
+  }
+  renderTotals();
+}
+
+function addItem() {
+  currentItems.push({
+    _id: null, _local: true,
+    secili: true,
+    stokKodu:'', malzemeNo:'', parcaAdi:'',
+    miktar:0, birim:'Adet',
+    birimFiyat:0, iskonto:0, teslim:'', aciklama:''
+  });
+  renderItems();
+  setTimeout(() => {
+    const rows = document.querySelectorAll('#items-tbody tr.item-note-row');
+    const mainRows = document.querySelectorAll('#items-tbody tr:not(.item-note-row)');
+    if (mainRows.length) mainRows[mainRows.length-1].querySelector('input')?.focus();
+  }, 50);
+}
+
+function toggleAllItems(checked) {
+  currentItems.forEach(item => item.secili = checked);
+  renderItems();
+}
+
+// ── YETKILI MODAL ──
+function openYetkiliModal() {
+  const musteriId = document.getElementById('f-musteri')?.value;
+  if (!musteriId) { toast('Önce müşteri seçin', 'error'); return; }
+  const m = musteriler.find(r => r.id === musteriId);
+
+  const modal = document.createElement('div');
+  modal.id = 'yetkili-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;display:flex;align-items:center;justify-content:center;';
+  modal.innerHTML = `
+    <div style="background:white;border-radius:12px;width:400px;box-shadow:0 20px 60px rgba(0,0,0,.2);overflow:hidden;">
+      <div style="background:#1e1b4b;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;">
+        <div style="color:white;font-weight:600;font-size:14px;">Yeni Yetkili Kişi Ekle</div>
+        <button onclick="closeYetkiliModal()" style="background:transparent;border:none;color:white;font-size:18px;cursor:pointer;line-height:1;">×</button>
+      </div>
+      <div style="padding:20px;display:flex;flex-direction:column;gap:12px;">
+        <div style="font-size:11px;color:var(--text2);background:var(--surface2);padding:8px 12px;border-radius:6px;">
+          Müşteri: <strong>${m?.fields?.['Müşteri Adı']||'—'}</strong>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Ad Soyad *</label>
+          <input class="field-input" id="ym-adsoyad" placeholder="Yetkili kişi adı soyadı">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Telefon</label>
+          <input class="field-input" id="ym-tel" placeholder="0532 000 0000">
+        </div>
+        <div class="field-group">
+          <label class="field-label">E-posta</label>
+          <input class="field-input" id="ym-email" placeholder="yetkili@firma.com">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Ünvan</label>
+          <input class="field-input" id="ym-unvan" placeholder="Satınalma Müdürü...">
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px;">
+          <button class="toolbar-btn" onclick="closeYetkiliModal()">İptal</button>
+          <button class="toolbar-btn primary" onclick="saveYetkili('${musteriId}')">Kaydet</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  document.getElementById('ym-adsoyad').focus();
+}
+
+function closeYetkiliModal() {
+  document.getElementById('yetkili-modal')?.remove();
+}
+
+async function saveYetkili(musteriId) {
+  const adSoyad = document.getElementById('ym-adsoyad').value.trim();
+  if (!adSoyad) { toast('Ad Soyad zorunlu', 'error'); return; }
+  const tel = document.getElementById('ym-tel').value.trim();
+  const email = document.getElementById('ym-email').value.trim();
+  const unvan = document.getElementById('ym-unvan').value.trim();
+
+  try {
+    // Update müşteri record with yetkili bilgileri
+    const fields = { 'Yetkili Kişi': adSoyad };
+    if (tel) fields['Telefon'] = tel;
+    if (email) fields['E-posta'] = email;
+    await api('PATCH', TABLES.musteriler, {fields}, musteriId);
+
+    // Update local cache
+    const m = musteriler.find(r => r.id === musteriId);
+    if (m) {
+      m.fields['Yetkili Kişi'] = adSoyad;
+      if (tel) m.fields['Telefon'] = tel;
+      if (email) m.fields['E-posta'] = email;
+    }
+
+    // Fill form fields
+    document.getElementById('f-musteri-yetkili').value = adSoyad;
+    if (tel) document.getElementById('f-musteri-tel').value = tel;
+    if (email) document.getElementById('f-musteri-email').value = email;
+
+    closeYetkiliModal();
+    toast('Yetkili kişi kaydedildi ✓');
+  } catch(e) {
+    toast('Kaydetme hatası: ' + e.message, 'error');
+  }
+}
+
+function removeItem(i) {
+  const item = currentItems[i];
+  if (item._id) itemsToDelete.push(item._id);
+  currentItems.splice(i, 1);
+  renderItems();
+}
+
+// ── SAVE QUOTE ──
+async function saveQuote(id) {
+  try {
+    const fields = {
+      'Teklif Tarihi': document.getElementById('f-teklif-tarihi').value || null,
+      'Geçerlilik Tarihi': document.getElementById('f-gecerlilik').value || null,
+      'Vade Süresi (Gün)': parseFloat(document.getElementById('f-vade').value)||null,
+      'Durum': document.getElementById('f-durum').value,
+      'Para Birimi': document.getElementById('f-para').value,
+      'KDV Oranı': parseFloat(document.getElementById('f-kdv').value)||null,
+      'Teklif Notu': document.getElementById('f-not').value||null,
+      'Dosya No': document.getElementById('f-dosya-no').value||null,
+    };
+
+    const musteriVal = document.getElementById('f-musteri').value;
+    if (musteriVal) fields['Müşteri'] = [musteriVal];
+
+    const hazVal = document.getElementById('f-hazirlayan').value;
+    if (hazVal) fields['Hazırlayan'] = [hazVal];
+
+    // Calculate total from items
+    const ara = currentItems.reduce((s,i) => s + calcItemTotal(i), 0);
+    const kdv = fields['KDV Oranı']||0;
+    fields['Toplam Tutar'] = ara + ara*kdv/100;
+
+    // Save main record
+    await api('PATCH', TABLES.teklifler, {fields}, id);
+
+    // Delete removed items
+    for (const delId of itemsToDelete) {
+      await api('DELETE', TABLES.kalemler, null, delId);
+    }
+    itemsToDelete = [];
+
+    // Save/update items
+    const newItemIds = [];
+    for (const item of currentItems) {
+      const kFields = {
+        'Stok Kodu': item.stokKodu||null,
+        'Malzeme No': item.malzemeNo||null,
+        'Parça Adı': item.parcaAdi||'',
+        'Miktar': item.miktar||0,
+        'Birim': item.birim,
+        'Birim Fiyat': item.birimFiyat||0,
+        'İskonto': item.iskonto||0,
+        'Notlar': item.aciklama||null,
+        'Teklif Süresi (Gün)': item.teslim ? (parseInt(item.teslim)||null) : null,
+        'Teklifler': [id],
+      };
+
+      // Handle teslim as string if not a number
+      if (item.teslim && isNaN(parseInt(item.teslim))) {
+        delete kFields['Teklif Süresi (Gün)'];
+      }
+
+      if (item._id) {
+        await api('PATCH', TABLES.kalemler, {fields: kFields}, item._id);
+        newItemIds.push(item._id);
+      } else {
+        const res = await api('POST', TABLES.kalemler, {fields: kFields});
+        item._id = res.id;
+        item._local = false;
+        newItemIds.push(res.id);
+      }
+    }
+
+    // Reload quotes list
+    await loadAll();
+    // Re-select active
+    await loadDetail(id);
+
+    toast('Teklif kaydedildi ✓');
+  } catch(e) {
+    toast('Kaydetme hatası: ' + e.message, 'error');
+  }
+}
+
+// ── SET DURUM ──
+async function setDurum(id, durum) {
+  try {
+    await api('PATCH', TABLES.teklifler, {fields: {'Durum': durum}}, id);
+    const q = quotes.find(r => r.id === id);
+    if (q) q.fields['Durum'] = durum;
+
+    // Onaylandı → otomatik Satış Emri oluştur
+    if (durum === 'Onaylandı') {
+      await createSatisEmri(id);
+    }
+
+    await loadAll();
+    await loadDetail(id);
+    toast(`Durum: ${durum}`);
+  } catch(e) {
+    toast('Hata: ' + e.message, 'error');
+  }
+}
+
+// ── SATIŞ EMRİ OLUŞTUR ──
+async function createSatisEmri(teklifId) {
+  try {
+    const q = quotes.find(r => r.id === teklifId);
+    const f = q?.fields || {};
+    const musteriId = f['Müşteri']?.[0];
+    const today = new Date().toISOString().split('T')[0];
+
+    const seciliItems = currentItems.filter(item => item.secili);
+    if (!seciliItems.length) {
+      toast('Siparişe çevirmek için en az bir kalem seçin', 'error');
+      return;
+    }
+
+    // Teknik resim yükleme modalı göster
+    await showTeknikResimModal(teklifId, seciliItems, musteriId, f);
+  } catch(e) {
+    toast('SE oluşturma hatası: ' + e.message, 'error');
+  }
+}
+
+function showTeknikResimModal(teklifId, seciliItems, musteriId, f) {
+  return new Promise((resolve) => {
+    const existing = document.getElementById('teknik-resim-modal');
+    if (existing) existing.remove();
+    window._trFiles = {};
+    const modal = document.createElement('div');
+    modal.id = 'teknik-resim-modal';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
+    const kalemHtml = seciliItems.map((item, i) => `
+      <div style="border:1px solid #e2e5ea;border-radius:8px;padding:12px;">
+        <div style="font-size:12px;font-weight:600;margin-bottom:8px;">${i+1}. ${item.parcaAdi||'—'} <span style="font-size:10px;color:#9aa0ad;font-weight:400;">${item.stokKodu||''} · ${item.miktar||0} ${item.birim||'Adet'}</span></div>
+        <div id="tr-zone-${i}" style="border:2px dashed #e2e5ea;border-radius:6px;padding:10px;text-align:center;cursor:pointer;"
+          ondragover="event.preventDefault();this.style.borderColor='#7c3aed'"
+          ondragleave="this.style.borderColor='#e2e5ea'"
+          ondrop="handleTRDropKalem(event,${i})"
+          onclick="document.getElementById('tr-input-${i}').click()">
+          <div id="tr-preview-${i}" style="font-size:11px;color:#9aa0ad;">📎 Teknik resim yükle (PDF/JPG/PNG) — opsiyonel</div>
+          <input type="file" id="tr-input-${i}" accept=".pdf,image/*" style="display:none;" onchange="handleTRFileKalem(this.files[0],${i})">
+        </div>
+      </div>`).join('');
+    modal.innerHTML = `
+      <div style="background:white;border-radius:12px;width:560px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3);">
+        <div style="background:#1e1b4b;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;">
+          <div style="color:white;font-weight:600;font-size:14px;">Satış Emri Oluştur — ${seciliItems.length} Kalem</div>
+          <button onclick="document.getElementById('teknik-resim-modal').remove()" style="background:transparent;border:none;color:white;font-size:20px;cursor:pointer;">×</button>
+        </div>
+        <div style="padding:16px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:10px;">
+          <div style="background:#ede9fe;border-radius:8px;padding:10px 14px;font-size:12px;color:#5b21b6;">Her kalem için teknik resim yükleyebilirsiniz (opsiyonel).</div>
+          ${kalemHtml}
+          <div id="tr-error" style="color:#dc2626;font-size:12px;display:none;"></div>
+        </div>
+        <div style="padding:12px 20px;border-top:1px solid #e2e5ea;display:flex;justify-content:flex-end;gap:8px;flex-shrink:0;">
+          <button onclick="document.getElementById('teknik-resim-modal').remove()" style="padding:8px 16px;border-radius:6px;border:1px solid #e2e5ea;background:transparent;font-size:12px;cursor:pointer;font-family:var(--sans);">İptal</button>
+          <button id="btn-se-olustur" onclick="confirmSEOlustur('${teklifId}')" style="padding:8px 20px;border-radius:6px;border:none;background:#7c3aed;color:white;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);">✓ Satış Emirlerini Oluştur</button>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+    window._seCreateData = { teklifId, seciliItems, musteriId, f };
+    resolve();
+  });
+}
+
+function handleTRFileKalem(file, idx) {
+  if (!file) return;
+  window._trFiles[idx] = file;
+  const p = document.getElementById('tr-preview-'+idx);
+  const z = document.getElementById('tr-zone-'+idx);
+  if (p) p.innerHTML = '<div style="color:#059669;font-weight:500;">✓ ' + file.name + ' (' + (file.size/1024).toFixed(0) + ' KB)</div>';
+  if (z) z.style.borderColor = '#059669';
+}
+function handleTRDropKalem(e, idx) {
+  e.preventDefault();
+  document.getElementById('tr-zone-'+idx).style.borderColor = '#e2e5ea';
+  const file = e.dataTransfer.files[0];
+  if (file) handleTRFileKalem(file, idx);
+}
+
+async function confirmSEOlustur(teklifId) {
+  const btn = document.getElementById('btn-se-olustur');
+  if (btn) { btn.disabled = true; btn.textContent = 'Oluşturuluyor...'; }
+  try {
+    const { seciliItems, musteriId, f } = window._seCreateData || {};
+    if (!seciliItems?.length) return;
+    const existing = await apiGet(TABLES.satisEmirleri, 'fields[]=SE%20No&sort[0][field]=SE%20No&sort[0][direction]=desc&maxRecords=1');
+    const lastSE = existing.records?.[0]?.fields?.['SE No'] || ('SE-' + new Date().getFullYear() + '-000');
+    const lastNum = parseInt(lastSE.split('-').pop()) || 0;
+    const seIds = [];
+    for (let i = 0; i < seciliItems.length; i++) {
+      const item = seciliItems[i];
+      const seNoStr = 'SE-' + new Date().getFullYear() + '-' + String(lastNum + i + 1).padStart(3,'0');
+      const seFields = {
+        'SE No': seNoStr,
+        'Parça No': item.stokKodu || item.malzemeNo || null,
+        'Parça Adı': item.parcaAdi || '',
+        'Miktar': item.miktar || 0,
+        'Birim': item.birim || 'Adet',
+        'Durum': 'Beklemede',
+        'Revizyon': item.revizyon || null,
+      };
+      if (musteriId) seFields['Müşteri'] = [musteriId];
+      if (f['Geçerlilik Tarihi']) seFields['Termin Tarihi'] = f['Geçerlilik Tarihi'];
+      if (f['Teklif Notu']) seFields['Müşteri PO No'] = f['Teklif Notu'];
+      const res = await api('POST', TABLES.satisEmirleri, {fields: seFields});
+      seIds.push(res.id);
+      // Teknik resim varsa ayrıca yükle
+      if (window._trFiles && window._trFiles[i]) {
+        try {
+          const file = window._trFiles[i];
+          const b64 = await fileToBase64(file);
+          await api('PATCH', TABLES.satisEmirleri, {fields: {'Teknik Resim': [{url: b64, filename: file.name}]}}, res.id);
+        } catch(e2) {
+          toast(seNoStr + ': Teknik resim kaydedilemedi (SE oluşturuldu)', 'info');
+        }
+      }
+    }
+    document.getElementById('teknik-resim-modal')?.remove();
+    window._trFiles = {};
+    toast(seIds.length + ' adet Satış Emri oluşturuldu ✓', 'success');
+    await loadAll();
+    await loadDetail(teklifId);
+  } catch(e) {
+    const errEl = document.getElementById('tr-error');
+    if (errEl) { errEl.textContent = 'Hata: ' + e.message; errEl.style.display = 'block'; }
+    if (btn) { btn.disabled = false; btn.textContent = '✓ Satış Emirlerini Oluştur'; }
+  }
+}
+
+function fileToBase64(file) {
+  return new Promise((res, rej) => {
+    const reader = new FileReader();
+    reader.onload = e => res(e.target.result);
+    reader.onerror = rej;
+    reader.readAsDataURL(file);
+  });
+}
+
+// ── SİPARİŞLER'DEN STL OLUŞTUR ──
+function createSTLFromSiparisler(seId, seNo, parcaAdi, parcaNo, miktar, birim) {
+  const modal = document.createElement('div');
+  modal.id = 'stl-siparisler-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
+
+  let altSatirlar = [{ tip:'Hammadde', malzemeTipi:'Mil', malzemeCinsi:'', yogunluk:'Çelik', cap:'', ic_cap:'', boy:'', en:'', yukseklik:'', kalinlik:'', miktar, birim, spec:'' }];
+
+  const render = () => {
+    modal.querySelector('#stl-altSatirlar').innerHTML = altSatirlar.map((s, i) => `
+      <div style="border:1px solid var(--border);border-radius:8px;padding:12px;background:${s.tip==='Fason'?'var(--surface2)':'var(--surface)'};">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <span style="font-size:10px;font-weight:600;color:var(--text3);background:var(--surface2);padding:2px 7px;border-radius:20px;border:1px solid var(--border);">${i+1}</span>
+          <select style="font-size:11px;padding:3px 7px;border-radius:6px;border:1px solid var(--border);background:${s.tip==='Fason'?'var(--orange-light)':'var(--blue-light)'};color:${s.tip==='Fason'?'var(--orange)':'var(--blue)'};font-weight:600;cursor:pointer;" onchange="window._stlSatirlar[${i}].tip=this.value;window._stlRender()">
+            <option ${s.tip==='Hammadde'?'selected':''}>Hammadde</option>
+            <option ${s.tip==='Fason'?'selected':''}>Fason</option>
+          </select>
+          ${s.tip==='Hammadde'?`<select style="font-size:11px;padding:3px 7px;border-radius:6px;border:1px solid var(--border);cursor:pointer;" onchange="window._stlSatirlar[${i}].malzemeTipi=this.value;window._stlRender()">
+            ${['Mil','Boru','Lama','Sac','Profil','Diğer'].map(t=>`<option ${s.malzemeTipi===t?'selected':''}>${t}</option>`).join('')}
+          </select>`:''}
+          <button onclick="window._stlSatirlar.splice(${i},1);window._stlRender()" style="margin-left:auto;background:transparent;border:none;color:var(--text3);cursor:pointer;font-size:16px;" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--text3)'">×</button>
+        </div>
+        ${s.tip==='Fason'?`
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">
+            <div style="display:flex;flex-direction:column;gap:3px;"><div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;">İşlem Tipi</div><input class="field-input" style="font-size:12px;" value="${s.malzemeCinsi||''}" oninput="window._stlSatirlar[${i}].malzemeCinsi=this.value" placeholder="Isıl İşlem..."></div>
+            <div style="display:flex;flex-direction:column;gap:3px;"><div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;">Şartname</div><input class="field-input" style="font-size:12px;" value="${s.spec||''}" oninput="window._stlSatirlar[${i}].spec=this.value" placeholder="58-60 HRC..."></div>
+            <div style="display:flex;flex-direction:column;gap:3px;"><div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;">Miktar</div><input type="number" class="field-input" style="font-size:12px;" value="${s.miktar||''}" oninput="window._stlSatirlar[${i}].miktar=parseFloat(this.value)||0"></div>
+          </div>`:
+        `<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;">
+            <div style="display:flex;flex-direction:column;gap:3px;"><div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;">Malzeme Cinsi</div><input class="field-input" style="font-size:12px;" value="${s.malzemeCinsi||''}" oninput="window._stlSatirlar[${i}].malzemeCinsi=this.value" placeholder="AISI 4140..."></div>
+            <div style="display:flex;flex-direction:column;gap:3px;"><div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;">Yoğunluk</div>
+              <select class="field-input" style="font-size:12px;" onchange="window._stlSatirlar[${i}].yogunluk=this.value">
+                ${['Çelik','Paslanmaz','Alüminyum','Titanyum','Bakır'].map(k=>`<option ${s.yogunluk===k?'selected':''}>${k}</option>`).join('')}
+              </select>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:${s.malzemeTipi==='Boru'?'1fr 1fr 1fr':'1fr 1fr'};gap:6px;margin-bottom:6px;">
+            ${s.malzemeTipi==='Mil'?`<div style="display:flex;flex-direction:column;gap:3px;"><div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;">Çap (mm)</div><input type="number" class="field-input" style="font-size:12px;" value="${s.cap||''}" oninput="window._stlSatirlar[${i}].cap=this.value" placeholder="150"></div><div style="display:flex;flex-direction:column;gap:3px;"><div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;">Boy (mm)</div><input type="number" class="field-input" style="font-size:12px;" value="${s.boy||''}" oninput="window._stlSatirlar[${i}].boy=this.value" placeholder="200"></div>`:''}
+            ${s.malzemeTipi==='Boru'?`<div style="display:flex;flex-direction:column;gap:3px;"><div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;">Dış Çap (mm)</div><input type="number" class="field-input" style="font-size:12px;" value="${s.cap||''}" oninput="window._stlSatirlar[${i}].cap=this.value"></div><div style="display:flex;flex-direction:column;gap:3px;"><div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;">İç Çap (mm)</div><input type="number" class="field-input" style="font-size:12px;" value="${s.ic_cap||''}" oninput="window._stlSatirlar[${i}].ic_cap=this.value"></div><div style="display:flex;flex-direction:column;gap:3px;"><div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;">Boy (mm)</div><input type="number" class="field-input" style="font-size:12px;" value="${s.boy||''}" oninput="window._stlSatirlar[${i}].boy=this.value"></div>`:''}
+            ${['Lama','Sac'].includes(s.malzemeTipi)?`<div style="display:flex;flex-direction:column;gap:3px;"><div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;">En (mm)</div><input type="number" class="field-input" style="font-size:12px;" value="${s.en||''}" oninput="window._stlSatirlar[${i}].en=this.value"></div><div style="display:flex;flex-direction:column;gap:3px;"><div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;">Boy (mm)</div><input type="number" class="field-input" style="font-size:12px;" value="${s.boy||''}" oninput="window._stlSatirlar[${i}].boy=this.value"></div>`:''}
+          </div>
+          <div style="display:grid;grid-template-columns:80px 80px 1fr;gap:6px;align-items:end;">
+            <div style="display:flex;flex-direction:column;gap:3px;"><div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;">Miktar</div><input type="number" class="field-input" style="font-size:12px;" value="${s.miktar||''}" oninput="window._stlSatirlar[${i}].miktar=parseFloat(this.value)||0"></div>
+            <div style="display:flex;flex-direction:column;gap:3px;"><div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;">Birim</div>
+              <select class="field-input" style="font-size:12px;" onchange="window._stlSatirlar[${i}].birim=this.value">
+                ${['Adet','Kg','Mt','Tk','m²'].map(b=>`<option ${s.birim===b?'selected':''}>${b}</option>`).join('')}
+              </select>
+            </div>
+          </div>`}
+      </div>`).join('');
+  };
+
+  window._stlSatirlar = altSatirlar;
+  window._stlRender = render;
+
+  modal.innerHTML = `
+    <div style="background:white;border-radius:12px;width:560px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3);">
+      <div style="background:#1e1b4b;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;">
+        <div>
+          <div style="color:white;font-weight:600;font-size:14px;">📋 Satınalma Talebi — ${seNo}</div>
+          <div style="color:rgba(255,255,255,.5);font-size:11px;">${parcaAdi} · ${miktar} ${birim}</div>
+        </div>
+        <button onclick="document.getElementById('stl-siparisler-modal').remove()" style="background:transparent;border:none;color:white;font-size:20px;cursor:pointer;">×</button>
+      </div>
+      <div style="padding:16px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:10px;">
+        <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:6px;padding:8px 12px;font-size:11px;color:#92400e;">
+          Hammadde ve/veya fason satırları ekleyin. Malzeme tipine göre ölçü alanları değişir.
+        </div>
+        <div id="stl-altSatirlar" style="display:flex;flex-direction:column;gap:8px;"></div>
+        <div style="display:flex;gap:6px;">
+          <button onclick="window._stlSatirlar.push({tip:'Hammadde',malzemeTipi:'Mil',malzemeCinsi:'',yogunluk:'Çelik',cap:'',ic_cap:'',boy:'',en:'',yukseklik:'',kalinlik:'',miktar:${miktar},birim:'${birim}',spec:''});window._stlRender()" style="flex:1;padding:6px;background:transparent;border:1px dashed var(--border2);border-radius:6px;color:var(--blue);font-size:11px;font-family:var(--sans);cursor:pointer;">+ Hammadde Satırı</button>
+          <button onclick="window._stlSatirlar.push({tip:'Fason',malzemeTipi:'',malzemeCinsi:'',yogunluk:'Çelik',cap:'',ic_cap:'',boy:'',en:'',yukseklik:'',kalinlik:'',miktar:${miktar},birim:'${birim}',spec:''});window._stlRender()" style="flex:1;padding:6px;background:transparent;border:1px dashed var(--border2);border-radius:6px;color:var(--orange);font-size:11px;font-family:var(--sans);cursor:pointer;">+ Fason Satırı</button>
+        </div>
+        <div id="stl-modal-error" style="color:var(--red);font-size:12px;display:none;"></div>
+      </div>
+      <div style="padding:12px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;flex-shrink:0;">
+        <button onclick="document.getElementById('stl-siparisler-modal').remove()" style="padding:8px 16px;border-radius:6px;border:1px solid var(--border);background:transparent;font-size:12px;cursor:pointer;font-family:var(--sans);">İptal</button>
+        <button onclick="saveSTLFromSiparisler('${seId}','${seNo}','${parcaAdi}')" style="padding:8px 20px;border-radius:6px;border:none;background:#f59e0b;color:white;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);">💾 Talebi Kaydet</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+  render();
+}
+
+async function saveSTLFromSiparisler(seId, seNo, parcaAdi) {
+  const satirlar = window._stlSatirlar || [];
+  const dolu = satirlar.filter(s => s.malzemeCinsi?.trim() || s.spec?.trim());
+  if (!dolu.length) {
+    const errEl = document.getElementById('stl-modal-error');
+    if (errEl) { errEl.textContent = 'En az bir satır doldurun'; errEl.style.display = 'block'; }
+    return;
+  }
+
+  const STL_TABLE = 'tblHmfCvNZq0qNtb1';
+  const YOGUNLUK_MAP = { 'Çelik':7.85,'Paslanmaz':7.93,'Alüminyum':2.70,'Titanyum':4.51,'Bakır':8.96 };
+
+  try {
+    for (let i = 0; i < dolu.length; i++) {
+      const s = dolu[i];
+      const rho = YOGUNLUK_MAP[s.yogunluk] || 7.85;
+      let kg = 0;
+      if (s.malzemeTipi === 'Mil') {
+        const r = (parseFloat(s.cap)||0)/2/10, h = (parseFloat(s.boy)||0)/10;
+        kg = Math.PI * r * r * h * rho / 1000;
+      } else if (s.malzemeTipi === 'Boru') {
+        const rd = (parseFloat(s.cap)||0)/2/10, ri = (parseFloat(s.ic_cap)||0)/2/10, h = (parseFloat(s.boy)||0)/10;
+        kg = Math.PI * (rd*rd - ri*ri) * h * rho / 1000;
+      } else if (['Lama','Sac'].includes(s.malzemeTipi)) {
+        kg = ((parseFloat(s.en)||0)/10) * ((parseFloat(s.boy)||0)/10) * ((parseFloat(s.yukseklik||s.kalinlik)||0)/10) * rho / 1000;
+      }
+
+      const olcu = s.malzemeTipi==='Mil' ? `Ø${s.cap||'—'}x${s.boy||'—'}mm` :
+                   s.malzemeTipi==='Boru' ? `Ø${s.cap||'—'}/Ø${s.ic_cap||'—'}x${s.boy||'—'}mm` :
+                   ['Lama','Sac'].includes(s.malzemeTipi) ? `${s.en||'—'}x${s.boy||'—'}x${s.yukseklik||s.kalinlik||'—'}mm` : (s.spec||'');
+
+      await api('POST', STL_TABLE, { fields: {
+        'SE No': [seId],
+        'Kalem Adı': parcaAdi,
+        'Talep Tipi': s.tip,
+        'Malzeme İşlem': s.tip==='Fason' ? (s.malzemeCinsi||'') : `${s.malzemeTipi} - ${s.malzemeCinsi||''}`,
+        'Miktar': s.miktar || 0,
+        'Birim': s.birim || 'Adet',
+        'Ölçü': olcu || null,
+        'Tahmini kg': kg > 0 ? parseFloat((kg*(s.miktar||1)).toFixed(3)) : null,
+        'Durum': 'Taslak',
+      }});
+    }
+    document.getElementById('stl-siparisler-modal')?.remove();
+    toast(`${dolu.length} satınalma talebi oluşturuldu ✓`, 'success');
+    showSiparisDetail(seId);
+  } catch(e) {
+    const errEl = document.getElementById('stl-modal-error');
+    if (errEl) { errEl.textContent = 'Hata: ' + e.message; errEl.style.display = 'block'; }
+  }
+}
+
+// ── SWITCH VIEW ──
+function switchView(view) {
+  currentView = view;
+  document.getElementById('nav-teklifler').className = view==='teklifler' ? 'active' : '';
+  document.getElementById('nav-siparisler').className = view==='siparisler' ? 'active' : '';
+
+  const listHeader = document.querySelector('.list-header h2');
+  const listCount = document.getElementById('list-count');
+  const btnYeni = document.getElementById('btn-yeni');
+
+  if (view === 'teklifler') {
+    btnYeni.style.display = 'flex';
+    btnYeni.textContent = '';
+    btnYeni.innerHTML = `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7h10" stroke="white" stroke-width="2" stroke-linecap="round"/></svg> Yeni Teklif`;
+    btnYeni.onclick = createNewQuote;
+    listHeader.textContent = 'Teklifler';
+    document.getElementById('detail-content').innerHTML = `<div class="empty-state"><p>Listeden bir teklif seçin</p></div>`;
+    renderList();
+  } else {
+    btnYeni.style.display = 'none';
+    listHeader.textContent = 'Siparişler';
+    loadSiparisler();
+  }
+}
+
+// ── LOAD SİPARİŞLER ──
+async function loadSiparisler() {
+  document.getElementById('quote-list').innerHTML = '<div class="loading"><div class="spinner"></div> Yükleniyor...</div>';
+  document.getElementById('detail-content').innerHTML = '<div class="empty-state"><p>Yükleniyor...</p></div>';
+
+  try {
+    let all = [];
+    let offset = '';
+    do {
+      const data = await apiGet(TABLES.satisEmirleri, `sort[0][field]=SE%20No&sort[0][direction]=desc${offset?'&offset='+offset:''}`);
+      all = all.concat(data.records || []);
+      offset = data.offset || '';
+    } while (offset);
+    siparisler = all;
+    filteredSiparisler = [...siparisler];
+    renderSiparisList();
+    document.getElementById('list-count').textContent = `${siparisler.length} sipariş`;
+  } catch(e) {
+    toast('Siparişler yüklenemedi: ' + e.message, 'error');
+  }
+}
+
+function renderSiparisList() {
+  const el = document.getElementById('quote-list');
+  if (!filteredSiparisler.length) {
+    el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:12px;">Sipariş bulunamadı</div>';
+    return;
+  }
+  el.innerHTML = filteredSiparisler.map(s => {
+    const f = s.fields;
+    const durum = f['Durum'] || 'Beklemede';
+    const durumClass = durum === 'Tamamlandı' ? 'status-Onaylandı' : durum === 'İptal' ? 'status-Reddedildi' : durum === 'Üretimde' ? 'status-Gönderildi' : 'status-Taslak';
+    return `<div class="quote-item" onclick="showSiparisDetail('${s.id}')">
+      <div class="qi-top">
+        <span class="qi-no">${f['SE No']||'—'}</span>
+        <span class="qi-status ${durumClass}">${durum}</span>
+      </div>
+      <div class="qi-musteri">${f['Parça Adı']||'—'}</div>
+      <div class="qi-bottom">
+        <span class="qi-tarih">${f['Parça No']||'—'}</span>
+        <span class="qi-tutar">${f['Miktar']||0} ${f['Birim']||'Adet'}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function showSiparisDetail(id) {
+  const s = siparisler.find(r => r.id === id);
+  const f = s?.fields || {};
+  const musteriAd = getMusteriName(f['Müşteri']?.[0]||'');
+  const durum = f['Durum'] || 'Beklemede';
+
+  document.getElementById('detail-content').innerHTML = `
+    <div class="detail-toolbar">
+      <div class="detail-toolbar-left">
+        <div class="detail-title">${f['SE No']||'—'}</div>
+        <span class="qi-status ${durum==='Tamamlandı'?'status-Onaylandı':durum==='Beklemede'?'status-Taslak':'status-Gönderildi'}" style="font-size:12px;">${durum}</span>
+        <span class="detail-musteri-tag">${musteriAd}</span>
+      </div>
+      <button class="toolbar-btn" style="background:#f59e0b;color:white;border-color:#f59e0b;" onclick="createSTLFromSiparisler('${id}','${f['SE No']||''}','${f['Parça Adı']||''}','${f['Parça No']||''}',${f['Miktar']||0},'${f['Birim']||'Adet'}')">
+        📋 Satınalma Talebi Oluştur
+      </button>
+      <button class="toolbar-btn" onclick="window.location.href='ersan_satinalma.html'">
+        🔗 Satınalma Sayfası
+      </button>
+      <select class="field-input" style="width:160px;font-size:12px;" onchange="updateSEDurum('${id}',this.value)">
+        ${['Beklemede','Üretimde','Tamamlandı','Kısmi Sevk','İptal'].map(d=>`<option ${durum===d?'selected':''}>${d}</option>`).join('')}
+      </select>
+    </div>
+    <div class="detail-scroll">
+      <div class="card">
+        <div class="card-header">Sipariş Detayı</div>
+        <div class="card-body">
+          <div class="form-grid-4" style="gap:10px;">
+            <div class="field-group"><label class="field-label">SE No</label><input class="field-input" value="${f['SE No']||''}" disabled></div>
+            <div class="field-group"><label class="field-label">Parça No</label><input class="field-input" value="${f['Parça No']||''}" disabled></div>
+            <div class="field-group"><label class="field-label">Parça Adı</label><input class="field-input" value="${f['Parça Adı']||''}" disabled></div>
+            <div class="field-group"><label class="field-label">Müşteri</label><input class="field-input" value="${musteriAd}" disabled></div>
+            <div class="field-group"><label class="field-label">Miktar</label><input class="field-input" value="${f['Miktar']||0}" disabled></div>
+            <div class="field-group"><label class="field-label">Birim</label><input class="field-input" value="${f['Birim']||'Adet'}" disabled></div>
+            <div class="field-group"><label class="field-label">Termin</label><input class="field-input" value="${fmtDate(f['Termin Tarihi'])}" disabled></div>
+            <div class="field-group"><label class="field-label">Müşteri PO No</label><input class="field-input" value="${f['Müşteri PO No']||''}" disabled></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- GELEN TEKLİFLER -->
+      <div class="card" id="rfq-card-${id}">
+        <div class="card-header">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 4h9M2 7h9M2 10h5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+          Gelen Satınalma Teklifleri
+          <button onclick="loadRFQTeklifleri('${id}','${f['SE No']||''}')" style="margin-left:auto;background:transparent;border:1px solid var(--border);border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer;color:var(--text2);">Yenile</button>
+        </div>
+        <div class="card-body" id="rfq-list-${id}">
+          <div style="text-align:center;padding:20px;color:var(--text3);font-size:12px;">
+            Teklifleri görmek için "Yenile" butonuna tıklayın
+          </div>
+        </div>
+      </div>
+    </div>`;
+
+  // Otomatik yükle
+  loadRFQTeklifleri(id, f['SE No']||'');
+}
+
+// ── RFQ TEKLİFLERİ YÜKLE ──
+async function loadRFQTeklifleri(seId, seNo) {
+  const listEl = document.getElementById(`rfq-list-${seId}`);
+  if (!listEl) return;
+  listEl.innerHTML = '<div style="text-align:center;padding:16px;color:var(--text3);font-size:12px;">Yükleniyor...</div>';
+
+  try {
+    const data = await apiGet(TABLES.rfqTeklifleri,
+      `filterByFormula=${encodeURIComponent(`{SE No}="${seNo}"`)}&sort[0][field]=Teklif Fiyatı&sort[0][direction]=asc`);
+    const records = data.records || [];
+
+    if (!records.length) {
+      listEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text3);font-size:12px;">Henüz gelen teklif yok. "Satınalma Teklif İste" ile tedarikçilere gönderin.</div>';
+      return;
+    }
+
+    const yanitlananlar = records.filter(r => r.fields['Durum'] === 'Yanıtlandı' || r.fields['Durum'] === 'Seçildi');
+    const bekleyenler = records.filter(r => r.fields['Durum'] === 'Beklemede');
+
+    // AI tavsiye: en düşük fiyat + en kısa teslim
+    let tavsiyeId = null;
+    if (yanitlananlar.length > 0) {
+      // Basit skor: normalize fiyat (40%) + normalize teslim (40%) + geçerlilik (20%)
+      const skorlar = yanitlananlar.map(r => {
+        const f = r.fields;
+        return { id: r.id, fiyat: f['Teklif Fiyatı']||999999, teslim: f['Teslim Süresi Gün']||999 };
+      });
+      const minF = Math.min(...skorlar.map(s => s.fiyat));
+      const maxF = Math.max(...skorlar.map(s => s.fiyat));
+      const minT = Math.min(...skorlar.map(s => s.teslim));
+      const maxT = Math.max(...skorlar.map(s => s.teslim));
+      let bestScore = -1;
+      skorlar.forEach(s => {
+        const fSkor = maxF === minF ? 1 : 1 - (s.fiyat - minF) / (maxF - minF);
+        const tSkor = maxT === minT ? 1 : 1 - (s.teslim - minT) / (maxT - minT);
+        const total = fSkor * 0.6 + tSkor * 0.4;
+        if (total > bestScore) { bestScore = total; tavsiyeId = s.id; }
+      });
+    }
+
+    let html = '';
+
+    if (yanitlananlar.length > 0) {
+      html += `<div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">
+        Yanıtlanan Teklifler (${yanitlananlar.length})
+        <span style="margin-left:8px;background:var(--accent-light);color:var(--accent);padding:2px 8px;border-radius:8px;">AI: En uygun seçim işaretlendi</span>
+      </div>`;
+
+      html += `<table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead>
+          <tr style="background:var(--surface2);">
+            <th style="padding:6px 10px;text-align:left;font-weight:600;color:var(--text3);font-size:10px;text-transform:uppercase;">Seç</th>
+            <th style="padding:6px 10px;text-align:left;font-weight:600;color:var(--text3);font-size:10px;text-transform:uppercase;">Tedarikçi</th>
+            <th style="padding:6px 10px;text-align:right;font-weight:600;color:var(--text3);font-size:10px;text-transform:uppercase;">Fiyat</th>
+            <th style="padding:6px 10px;text-align:center;font-weight:600;color:var(--text3);font-size:10px;text-transform:uppercase;">Teslim</th>
+            <th style="padding:6px 10px;text-align:left;font-weight:600;color:var(--text3);font-size:10px;text-transform:uppercase;">Malzeme</th>
+            <th style="padding:6px 10px;text-align:left;font-weight:600;color:var(--text3);font-size:10px;text-transform:uppercase;">Geçerlilik</th>
+            <th style="padding:6px 10px;text-align:left;font-weight:600;color:var(--text3);font-size:10px;text-transform:uppercase;">Not</th>
+          </tr>
+        </thead>
+        <tbody>`;
+
+      yanitlananlar.forEach(r => {
+        const f = r.fields;
+        const isAI = r.id === tavsiyeId;
+        const isSecili = f['Seçildi'];
+        html += `<tr style="border-top:1px solid var(--border);${isAI?'background:#faf5ff;':''} ${isSecili?'background:#f0fdf4;':''}">
+          <td style="padding:8px 10px;text-align:center;">
+            <input type="checkbox" ${isSecili?'checked':''} onchange="toggleRFQSecim('${r.id}',this.checked,'${seId}','${seNo}')"
+              style="width:15px;height:15px;cursor:pointer;">
+          </td>
+          <td style="padding:8px 10px;">
+            <div style="font-weight:600;">${f['Tedarikçi Adı']||'—'}</div>
+            ${isAI ? '<div style="font-size:10px;color:#7c3aed;font-weight:600;">⭐ AI Tavsiye</div>' : ''}
+            ${isSecili ? '<div style="font-size:10px;color:#059669;font-weight:600;">✓ Seçildi</div>' : ''}
+          </td>
+          <td style="padding:8px 10px;text-align:right;font-weight:700;color:var(--accent);">
+            ${fmt(f['Teklif Fiyatı']||0)}<br>
+            <span style="font-size:10px;font-weight:400;color:var(--text3);">${f['Fiyat Birimi']||''}</span>
+          </td>
+          <td style="padding:8px 10px;text-align:center;">
+            <span style="background:var(--blue-light);color:var(--blue);padding:2px 8px;border-radius:8px;font-weight:600;">
+              ${f['Teslim Süresi Gün']||'—'} gün
+            </span>
+          </td>
+          <td style="padding:8px 10px;color:var(--text2);">${f['Malzeme Cinsi']||'—'}</td>
+          <td style="padding:8px 10px;color:var(--text2);">${fmtDate(f['Geçerlilik Tarihi'])||'—'}</td>
+          <td style="padding:8px 10px;color:var(--text2);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${f['Tedarikçi Notu']||''}">${f['Tedarikçi Notu']||'—'}</td>
+        </tr>`;
+        if (f['Tedarikçi Ölçüleri']) {
+          html += `<tr style="border-top:none;${isAI?'background:#faf5ff;':''}${isSecili?'background:#f0fdf4;':''}">
+            <td colspan="7" style="padding:0 10px 8px 42px;color:var(--text3);font-size:11px;">
+              📐 Tedarikçi ölçüleri: ${f['Tedarikçi Ölçüleri']}
+            </td>
+          </tr>`;
+        }
+      });
+
+      html += '</tbody></table>';
+    }
+
+    if (bekleyenler.length > 0) {
+      html += `<div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin:16px 0 8px;">
+        Yanıt Bekleyenler (${bekleyenler.length})
+      </div>`;
+      bekleyenler.forEach(r => {
+        html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border:1px solid var(--border);border-radius:6px;margin-bottom:6px;background:var(--surface2);">
+          <span style="font-size:12px;">${r.fields['Tedarikçi Adı']||'—'}</span>
+          <span style="font-size:10px;background:var(--orange-light);color:var(--orange);padding:2px 8px;border-radius:8px;">Beklemede</span>
+        </div>`;
+      });
+    }
+
+    listEl.innerHTML = html;
+  } catch(e) {
+    listEl.innerHTML = `<div style="color:var(--red);font-size:12px;padding:10px;">Hata: ${e.message}</div>`;
+  }
+}
+
+// ── RFQ SEÇİM TOGGLE ──
+async function toggleRFQSecim(recordId, secili, seId, seNo) {
+  try {
+    await api('PATCH', TABLES.rfqTeklifleri, {
+      fields: { 'Seçildi': secili, 'Durum': secili ? 'Seçildi' : 'Yanıtlandı' }
+    }, recordId);
+    toast(secili ? 'Tedarikçi seçildi ✓' : 'Seçim kaldırıldı');
+    loadRFQTeklifleri(seId, seNo);
+  } catch(e) {
+    toast('Hata: ' + e.message, 'error');
+  }
+}
+
+// ── RFQ MODAL ──
+function openRFQModal(seId) {
+  const s = siparisler.find(r => r.id === seId);
+  const f = s?.fields || {};
+
+  const modal = document.createElement('div');
+  modal.id = 'rfq-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;display:flex;align-items:center;justify-content:center;';
+
+  modal.innerHTML = `
+    <div style="background:white;border-radius:12px;width:500px;max-height:80vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.2);">
+      <div style="background:#1e1b4b;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <div style="color:white;font-weight:600;font-size:14px;">Satınalma Teklif İste</div>
+          <div style="color:#a5b4fc;font-size:11px;margin-top:2px;">${f['SE No']||''} — ${f['Parça Adı']||''}</div>
+        </div>
+        <button onclick="document.getElementById('rfq-modal').remove()" style="background:transparent;border:none;color:white;font-size:20px;cursor:pointer;">×</button>
+      </div>
+      <div style="padding:16px;overflow-y:auto;flex:1;">
+        <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">Tedarikçi Seçin</div>
+        <div id="rfq-tedarikci-list" style="display:flex;flex-direction:column;gap:6px;">
+          <div style="text-align:center;padding:20px;color:var(--text3);font-size:12px;">Tedarikçiler yükleniyor...</div>
+        </div>
+        <div style="margin-top:16px;display:flex;gap:8px;justify-content:flex-end;">
+          <button class="toolbar-btn" onclick="document.getElementById('rfq-modal').remove()">İptal</button>
+          <button class="toolbar-btn primary" id="rfq-send-btn" onclick="sendRFQ('${seId}')">
+            📧 Seçilenlere Gönder
+          </button>
+        </div>
+        <div id="rfq-send-result" style="margin-top:10px;"></div>
+      </div>
+    </div>`;
+
+  document.body.appendChild(modal);
+  loadTedarikcilerForRFQ();
+}
+
+async function loadTedarikcilerForRFQ() {
+  const listEl = document.getElementById('rfq-tedarikci-list');
+  try {
+    const data = await apiGet(TABLES.tedarikci, 'fields[]=Tedarikçi%20Adı&fields[]=E-posta&fields[]=Telefon');
+    const records = data.records || [];
+    if (!records.length) {
+      listEl.innerHTML = '<div style="color:var(--text3);font-size:12px;padding:10px;">Tedarikçi bulunamadı. Önce Airtable\'da Tedarikçiler tablosuna ekleyin.</div>';
+      return;
+    }
+    listEl.innerHTML = records.map(r => {
+      const f = r.fields;
+      const email = f['E-posta'] || '';
+      return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:all .15s;"
+        onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+        <input type="checkbox" data-id="${r.id}" data-adi="${(f['Tedarikçi Adı']||'').replace(/"/g,'')}" data-email="${email}"
+          style="width:16px;height:16px;cursor:pointer;" ${!email?'disabled title="E-posta adresi yok"':''}>
+        <div style="flex:1;">
+          <div style="font-size:13px;font-weight:500;">${f['Tedarikçi Adı']||'—'}</div>
+          <div style="font-size:11px;color:var(--text3);">${email || '⚠️ E-posta yok'}</div>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    listEl.innerHTML = `<div style="color:var(--red);font-size:12px;">Hata: ${e.message}</div>`;
+  }
+}
+
+async function sendRFQ(seId) {
+  const s = siparisler.find(r => r.id === seId);
+  const f = s?.fields || {};
+
+  const checkboxes = document.querySelectorAll('#rfq-tedarikci-list input[type=checkbox]:checked');
+  if (!checkboxes.length) { toast('Lütfen en az bir tedarikçi seçin', 'error'); return; }
+
+  const tedarikciler = Array.from(checkboxes).map(cb => ({
+    id: cb.dataset.id, adi: cb.dataset.adi, email: cb.dataset.email
+  }));
+
+  const btn = document.getElementById('rfq-send-btn');
+  btn.disabled = true;
+  btn.textContent = 'Gönderiliyor...';
+
+  try {
+    const res = await fetch('/.netlify/functions/send-rfq', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        seNo: f['SE No'] || '',
+        parcaAdi: f['Parça Adı'] || '',
+        parcaNo: f['Parça No'] || '',
+        miktar: f['Miktar'] || 0,
+        birim: f['Birim'] || 'Adet',
+        tedarikciler
+      })
+    });
+    const data = await res.json();
+    const sent = (data.results || []).filter(r => r.status === 'sent').length;
+    const failed = (data.results || []).filter(r => r.status === 'failed').length;
+
+    document.getElementById('rfq-send-result').innerHTML =
+      `<div style="background:${sent>0?'#d1fae5':'#fee2e2'};color:${sent>0?'#065f46':'#991b1b'};padding:10px 12px;border-radius:8px;font-size:12px;">
+        ${sent > 0 ? `✓ ${sent} tedarikçiye mail gönderildi.` : ''}
+        ${failed > 0 ? ` ⚠️ ${failed} mail gönderilemedi.` : ''}
+      </div>`;
+
+    toast(`${sent} tedarikçiye teklif talebi gönderildi ✓`);
+    btn.disabled = false;
+    btn.textContent = '📧 Seçilenlere Gönder';
+    loadRFQTeklifleri(seId, f['SE No']||'');
+  } catch(e) {
+    document.getElementById('rfq-send-result').innerHTML =
+      `<div style="background:#fee2e2;color:#991b1b;padding:10px 12px;border-radius:8px;font-size:12px;">Hata: ${e.message}</div>`;
+    btn.disabled = false;
+    btn.textContent = '📧 Seçilenlere Gönder';
+  }
+}
+
+async function updateSEDurum(id, durum) {
+  try {
+    await api('PATCH', TABLES.satisEmirleri, {fields: {'Durum': durum}}, id);
+    const s = siparisler.find(r => r.id === id);
+    if (s) s.fields['Durum'] = durum;
+    renderSiparisList();
+    toast(`Durum: ${durum}`);
+  } catch(e) {
+    toast('Hata: ' + e.message, 'error');
+  }
+}
+
+// ── CREATE NEW ──
+async function createNewQuote() {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const res = await api('POST', TABLES.teklifler, {
+      fields: {
+        'Teklif Tarihi': today,
+        'Durum': 'Taslak',
+        'Para Birimi': 'TL',
+      }
+    });
+    await loadAll();
+    await loadDetail(res.id);
+    toast('Yeni teklif oluşturuldu', 'info');
+  } catch(e) {
+    toast('Oluşturma hatası: ' + e.message, 'error');
+  }
+}
+
+// ── DELETE ──
+async function deleteQuote(id) {
+  if (!confirm('Bu teklifi silmek istediğinizden emin misiniz?')) return;
+  try {
+    await api('DELETE', TABLES.teklifler, null, id);
+    activeId = null;
+    document.getElementById('detail-content').innerHTML = `
+      <div class="empty-state">
+        <p>Teklif silindi. Yeni bir teklif seçin.</p>
+      </div>`;
+    await loadAll();
+    toast('Teklif silindi', 'info');
+  } catch(e) {
+    toast('Silme hatası: ' + e.message, 'error');
+  }
+}
+
+// ── PDF GENERATION ──
+// Turkish character fix for jsPDF (Helvetica doesn't support UTF-8 Turkish)
+function tr(s) {
+  if (!s) return '';
+  return String(s)
+    .replace(/Ğ/g,'G').replace(/ğ/g,'g')
+    .replace(/Ü/g,'U').replace(/ü/g,'u')
+    .replace(/Ş/g,'S').replace(/ş/g,'s')
+    .replace(/İ/g,'I').replace(/ı/g,'i')
+    .replace(/Ö/g,'O').replace(/ö/g,'o')
+    .replace(/Ç/g,'C').replace(/ç/g,'c');
+}
+
+async function generatePDF(id) {
+  toast('PDF hazırlanıyor...', 'info');
+  try {
+    // Load jsPDF dynamically
+    if (!window.jspdf) {
+      await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+      await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js');
+    }
+
+    const q = quotes.find(r => r.id === id);
+    const f = q.fields;
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const W = 210, M = 14;
+    let y = 14;
+
+    // ── FONT & COLORS ──
+    const C_DARK   = [30, 27, 75];   // #1e1b4b
+    const C_ACC    = [124, 58, 237]; // accent purple
+    const C_GRAY   = [90, 97, 112];
+    const C_LGRAY  = [240, 242, 245];
+    const C_BORDER = [226, 229, 234];
+    const C_TEXT   = [26, 29, 35];
+    const C_WHITE  = [255, 255, 255];
+
+    // ── HEADER BAR ──
+    doc.setFillColor(...C_DARK);
+    doc.rect(0, 0, W, 22, 'F');
+
+    // Logo placeholder (circle + text)
+    doc.setFillColor(255,255,255);
+    doc.circle(M + 5, 11, 5, 'F');
+    doc.setTextColor(...C_DARK);
+    doc.setFontSize(7); doc.setFont('helvetica','bold');
+    doc.text('MES', M + 2.5, 12.5);
+
+    doc.setTextColor(255,255,255);
+    doc.setFontSize(13); doc.setFont('helvetica','bold');
+    doc.text('ERSAN ENDUSTRIYEL', M + 14, 10);
+    doc.setFontSize(7); doc.setFont('helvetica','normal');
+    doc.setTextColor(165, 180, 252);
+    doc.text('Makine ve Makine Parcalari Imalati | Basiskele, Kocaeli', M + 14, 16);
+
+    // PRO FORMA label right
+    doc.setFillColor(...C_ACC);
+    doc.roundedRect(W - M - 32, 4, 32, 13, 2, 2, 'F');
+    doc.setTextColor(255,255,255);
+    doc.setFontSize(9); doc.setFont('helvetica','bold');
+    doc.text('TEKLIF', W - M - 24, 9.5);
+    doc.setFontSize(6.5);
+    doc.text('PROFORMA', W - M - 26, 14);
+
+    y = 30;
+
+    // ── TEKLIF NO STRIP ──
+    doc.setFillColor(...C_LGRAY);
+    doc.rect(M, y, W - 2*M, 8, 'F');
+    doc.setTextColor(...C_DARK);
+    doc.setFontSize(10); doc.setFont('helvetica','bold');
+    doc.text(tr(f['Teklif No'] || '—'), M + 3, y + 5.5);
+
+    const durum = f['Durum'] || 'Taslak';
+    const durumColors = {
+      'Taslak': [107,114,128], 'Gonderildi': [37,99,235],
+      'Onaylandi': [5,150,105], 'Reddedildi': [220,38,38]
+    };
+    const dc = durumColors[tr(durum)] || durumColors[durum] || [107,114,128];
+    doc.setFillColor(...dc);
+    doc.roundedRect(W - M - 28, y + 1.5, 28, 5, 1.5, 1.5, 'F');
+    doc.setTextColor(255,255,255);
+    doc.setFontSize(7); doc.setFont('helvetica','bold');
+    doc.text(tr(durum), W - M - 14, y + 5, {align:'center'});
+
+    y += 12;
+
+    // ── TWO COLUMN INFO ──
+    const col1x = M, col2x = W/2 + 2, colW = W/2 - M - 2;
+
+    // Left: Teklif Veren
+    doc.setFillColor(...C_LGRAY);
+    doc.rect(col1x, y, colW, 5, 'F');
+    doc.setTextColor(...C_GRAY);
+    doc.setFontSize(7); doc.setFont('helvetica','bold');
+    doc.text('TEKLIF VEREN', col1x + 2, y + 3.5);
+    y += 6;
+
+    const hazirlayanId = f['Hazırlayan']?.[0];
+    const haz = personel.find(p => p.id === hazirlayanId);
+    doc.setTextColor(...C_TEXT);
+    doc.setFontSize(9); doc.setFont('helvetica','bold');
+    doc.text('Ersan Endustriyel Makine San. Tic. Ltd. Sti.', col1x, y + 4);
+    doc.setFontSize(7.5); doc.setFont('helvetica','normal');
+    doc.setTextColor(...C_GRAY);
+    doc.text('Basiskele Sanayi Sitesi 12.Blok No:2', col1x, y + 9);
+    doc.text('Basiskele / Kocaeli', col1x, y + 13.5);
+    if (haz) {
+      doc.setTextColor(...C_TEXT);
+      doc.setFont('helvetica','bold');
+      doc.text(tr(haz.fields['Ad Soyad'] || ''), col1x, y + 19);
+      doc.setFont('helvetica','normal');
+      doc.setTextColor(...C_GRAY);
+      if (haz.fields['E-posta']) doc.text(haz.fields['E-posta'], col1x, y + 23.5);
+      if (haz.fields['Telefon']) doc.text(tr(haz.fields['Telefon']||''), col1x, y + 28);
+    }
+
+    // Right: Teklif Alan
+    const saveY = y;
+    doc.setFillColor(...C_LGRAY);
+    doc.rect(col2x, saveY - 6, colW, 5, 'F');
+    doc.setTextColor(...C_GRAY);
+    doc.setFontSize(7); doc.setFont('helvetica','bold');
+    doc.text('TEKLIF ALAN', col2x + 2, saveY - 2.5);
+
+    const musteriId = f['Müşteri']?.[0];
+    const mus = musteriler.find(m => m.id === musteriId);
+    doc.setTextColor(...C_TEXT);
+    doc.setFontSize(9); doc.setFont('helvetica','bold');
+    doc.text(tr(mus ? mus.fields['Müşteri Adı'] : '—'), col2x, saveY + 4);
+    doc.setFontSize(7.5); doc.setFont('helvetica','normal');
+    doc.setTextColor(...C_GRAY);
+    if (mus) {
+      const yc = mus.fields['Yetkili Kişi'];
+      const em = mus.fields['E-posta'] || f['Müşteri Email']?.[0];
+      const ph = mus.fields['Telefon'] || f['Müşteri Telefon']?.[0];
+      if (yc) { doc.setTextColor(...C_TEXT); doc.setFont('helvetica','bold'); doc.text(tr(yc), col2x, saveY + 9); doc.setFont('helvetica','normal'); doc.setTextColor(...C_GRAY); }
+      if (em) doc.text(em, col2x, saveY + 13.5);
+      if (ph) doc.text(tr(ph||''), col2x, saveY + 18);
+    }
+
+    y += 32;
+
+    // ── DATE ROW ──
+    doc.setDrawColor(...C_BORDER);
+    doc.setLineWidth(0.3);
+    doc.line(M, y, W-M, y);
+    y += 4;
+
+    const dateFields = [
+      ['Teklif No', f['Teklif No']||'—'],
+      ['Teklif Tarihi', fmtDate(f['Teklif Tarihi'])],
+      ['Gecerlilik', fmtDate(f['Geçerlilik Tarihi'])],
+      ['Vade (Gun)', f['Vade Süresi (Gün)'] ? String(f['Vade Süresi (Gün)']) : '—'],
+      ['Para Birimi', f['Para Birimi']||'TL'],
+    ];
+    const dw = (W - 2*M) / dateFields.length;
+    dateFields.forEach(([label, val], i) => {
+      const dx = M + i * dw;
+      doc.setFontSize(6.5); doc.setFont('helvetica','normal'); doc.setTextColor(...C_GRAY);
+      doc.text(label, dx, y + 1);
+      doc.setFontSize(8); doc.setFont('helvetica','bold'); doc.setTextColor(...C_TEXT);
+      doc.text(tr(String(val||'—')), dx, y + 6);
+    });
+    y += 11;
+
+    if (f['Teklif Notu']) {
+      doc.setFontSize(7); doc.setFont('helvetica','normal'); doc.setTextColor(...C_GRAY);
+      doc.text('Musteri Talep / Proje No: ' + tr(f['Teklif Notu']), M, y);
+      y += 5;
+    }
+
+    doc.line(M, y, W-M, y);
+    y += 6;
+
+    // ── ITEMS TABLE ──
+    const para = f['Para Birimi'] || 'TL';
+    const tableData = currentItems.map((item, i) => [
+      String(i+1),
+      tr(item.stokKodu || '—'),
+      tr(item.parcaAdi || '—'),
+      item.miktar ? String(item.miktar) : '0',
+      tr(item.birim || 'Adet'),
+      item.birimFiyat ? fmt(item.birimFiyat) : '0,00',
+      item.iskonto ? '%' + item.iskonto : '—',
+      fmt(calcItemTotal(item)),
+      tr(item.teslim || '—'),
+    ]);
+
+    doc.autoTable({
+      startY: y,
+      head: [['#', 'Stok Kodu', 'Parca Adi / Aciklama', 'Miktar', 'Birim', 'Birim Fiyat', 'Iskonto', `Toplam (${para})`, 'Teslim']],
+      body: tableData,
+      theme: 'grid',
+      headStyles: {
+        fillColor: C_DARK, textColor: 255,
+        fontSize: 7, fontStyle: 'bold',
+        halign: 'center', cellPadding: 3,
+      },
+      bodyStyles: { fontSize: 7.5, cellPadding: 2.5, textColor: C_TEXT },
+      columnStyles: {
+        0: { halign:'center', cellWidth: 8 },
+        1: { cellWidth: 22 },
+        2: { cellWidth: 50 },
+        3: { halign:'right', cellWidth: 14 },
+        4: { halign:'center', cellWidth: 14 },
+        5: { halign:'right', cellWidth: 22 },
+        6: { halign:'center', cellWidth: 16 },
+        7: { halign:'right', cellWidth: 24, fontStyle:'bold' },
+        8: { halign:'center', cellWidth: 22 },
+      },
+      alternateRowStyles: { fillColor: [249, 250, 251] },
+      margin: { left: M, right: M },
+    });
+
+    y = doc.lastAutoTable.finalY + 6;
+
+    // ── TOTALS ──
+    const kdv = parseFloat(f['KDV Oranı']||0)||0;
+    const ara = currentItems.reduce((s,i) => s + calcItemTotal(i), 0);
+    const kdvT = ara * kdv / 100;
+    const genel = ara + kdvT;
+
+    const totW = 80, totX = W - M - totW;
+    const totals = [
+      ['Ara Toplam', fmt(ara) + ' ' + para],
+      ...(kdv ? [['KDV (%' + kdv + ')', fmt(kdvT) + ' ' + para]] : []),
+      ['GENEL TOPLAM', fmt(genel) + ' ' + para],
+    ];
+    totals.forEach(([label, val], i) => {
+      const isLast = i === totals.length - 1;
+      if (isLast) {
+        doc.setFillColor(...C_DARK);
+        doc.rect(totX, y - 1, totW, 8, 'F');
+        doc.setTextColor(255,255,255);
+      } else {
+        doc.setFillColor(...C_LGRAY);
+        doc.rect(totX, y - 1, totW, 7, 'F');
+        doc.setTextColor(...C_TEXT);
+      }
+      doc.setFontSize(isLast ? 9 : 7.5);
+      doc.setFont('helvetica', isLast ? 'bold' : 'normal');
+      doc.text(label, totX + 3, y + (isLast ? 4.5 : 4));
+      doc.setFont('helvetica','bold');
+      doc.text(val, totX + totW - 3, y + (isLast ? 4.5 : 4), {align:'right'});
+      y += isLast ? 9 : 8;
+    });
+
+    y += 8;
+
+    // ── NOTLAR & SARTLAR ──
+    const notlar = f['Notlar'] || '';
+    const sarlar = `- Fiyatlarimiza K.D.V dahil degildir.\n- Fatura tarihindeki TCMB doviz satis kuru uzerinden fiyatlandirilacaktir.\n- Zamaninda odenmeyen faturalara aylik %3 gecikme faizi uygulanir.\n- Teklifimiz bir butundur. Bolunmesi halinde yeniden fiyatlandirilir.`;
+
+    if (y > 230) { doc.addPage(); y = 14; }
+
+    if (notlar) {
+      doc.setFillColor(...C_LGRAY);
+      doc.rect(M, y, W-2*M, 5, 'F');
+      doc.setTextColor(...C_GRAY); doc.setFontSize(7); doc.setFont('helvetica','bold');
+      doc.text('NOTLAR', M+2, y+3.5);
+      y += 7;
+      doc.setTextColor(...C_TEXT); doc.setFontSize(7.5); doc.setFont('helvetica','normal');
+      const notLines = doc.splitTextToSize(tr(notlar), W-2*M);
+      doc.text(notLines, M, y);
+      y += notLines.length * 4 + 4;
+    }
+
+    doc.setFillColor(...C_LGRAY);
+    doc.rect(M, y, W-2*M, 5, 'F');
+    doc.setTextColor(...C_GRAY); doc.setFontSize(7); doc.setFont('helvetica','bold');
+    doc.text('GENEL SARTLAR', M+2, y+3.5);
+    y += 7;
+    doc.setTextColor(...C_TEXT); doc.setFontSize(7); doc.setFont('helvetica','normal');
+    sarlar.split('\n').forEach(line => {
+      doc.text(line, M, y); y += 4.5;
+    });
+
+    // ── FOOTER ──
+    const pageH = doc.internal.pageSize.height;
+    doc.setFillColor(...C_DARK);
+    doc.rect(0, pageH - 14, W, 14, 'F');
+    doc.setTextColor(165, 180, 252);
+    doc.setFontSize(6.5); doc.setFont('helvetica','normal');
+    doc.text('Ersan Endustriyel Makine San. Tic. Ltd. Sti.  |  Basiskele Sanayi Sitesi 12.Blok No:2 Basiskele Kocaeli', W/2, pageH - 8, {align:'center'});
+    doc.text('Kalite Sorumlusu: Erdem Kucukates  |  AS9100 Rev.D Kapsaminda Uretim', W/2, pageH - 4, {align:'center'});
+
+    // Save
+    const fname = `${f['Teklif No']||'Teklif'}_${tr(getMusteriName(f['Müşteri']?.[0]||'')).replace(/\s+/g,'_')}.pdf`;
+    doc.save(fname);
+    toast('PDF indirildi ✓');
+  } catch(e) {
+    toast('PDF hatasi: ' + e.message, 'error');
+    console.error(e);
+  }
+}
+
+function loadScript(src) {
+  return new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = src; s.onload = res; s.onerror = rej;
+    document.head.appendChild(s);
+  });
+}
+
+// ── INIT ──
+// Hesaplama sayfasından aktarım kontrolü
+(function checkImport() {
+  try {
+    const data = sessionStorage.getItem('hesaplama_export');
+    if (data) {
+      sessionStorage.removeItem('hesaplama_export');
+      const d = JSON.parse(data);
+      if (Date.now() - d.timestamp < 60000) {
+        // Yeni teklif açıldığında otomatik kalem ekle
+        window._pendingImport = d;
+        toast(`"${d.parcaAdi}" hesaplanmış kalem aktarılmaya hazır — teklif seçin veya yeni oluşturun`, 'info');
+      }
+    }
+  } catch(e) {}
+})();
+
+loadAll();
+</script>
+</body>
+</html>
