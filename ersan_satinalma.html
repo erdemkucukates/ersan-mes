@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — Satınalma</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f0f2f5;--surface:#fff;--surface2:#f7f8fa;--border:#e2e5ea;--border2:#c8cdd6;
+  --text:#1a1d23;--text2:#5a6170;--text3:#9aa0ad;
+  --accent:#7c3aed;--accent-light:#ede9fe;--accent-hover:#6d28d9;
+  --green:#059669;--green-light:#d1fae5;--red:#dc2626;--red-light:#fee2e2;
+  --orange:#d97706;--orange-light:#fef3c7;--blue:#2563eb;--blue-light:#dbeafe;
+  --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;--radius:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);height:100vh;overflow:hidden;font-size:13px;}
+
+.header{height:52px;background:#1e1b4b;display:flex;align-items:center;padding:0 20px;gap:16px;position:fixed;top:0;left:0;right:0;z-index:100;}
+.logo-badge{width:28px;height:28px;border-radius:6px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:white;font-family:var(--mono);}
+.header-title{color:white;font-size:14px;font-weight:600;}
+.header-sub{color:rgba(255,255,255,.5);font-size:11px;}
+.header-sep{width:1px;height:28px;background:rgba(255,255,255,.2);}
+.header-nav a{color:rgba(255,255,255,.6);font-size:13px;font-weight:500;text-decoration:none;padding:6px 12px;border-radius:6px;transition:all .15s;}
+.header-nav a:hover{background:rgba(255,255,255,.1);color:white;}
+.header-nav a.active{background:rgba(255,255,255,.15);color:white;}
+.header-nav{display:flex;gap:4px;}
+
+.layout{display:flex;height:calc(100vh - 52px);margin-top:52px;}
+
+/* LIST */
+.list-panel{width:300px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;}
+.list-header{padding:12px 16px 8px;border-bottom:1px solid var(--border);}
+.list-header h2{font-size:13px;font-weight:600;}
+.list-count{font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:2px;}
+.list-search{padding:8px 12px;border-bottom:1px solid var(--border);}
+.list-search input{width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:var(--sans);background:var(--surface2);outline:none;}
+.list-search input:focus{border-color:var(--accent);}
+.filter-row{padding:6px 12px 8px;border-bottom:1px solid var(--border);display:flex;gap:4px;flex-wrap:wrap;}
+.fc{padding:3px 10px;border-radius:10px;font-size:10px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text3);}
+.fc.on{background:var(--accent-light);color:var(--accent);border-color:var(--accent);}
+.list-scroll{flex:1;overflow-y:auto;}
+
+.stl-item{padding:10px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s;}
+.stl-item:hover{background:var(--surface2);}
+.stl-item.active{background:var(--accent-light);border-left:3px solid var(--accent);}
+.stl-no{font-family:var(--mono);font-size:11px;font-weight:500;color:var(--accent);}
+.stl-parca{font-size:12px;font-weight:500;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.stl-meta{font-size:11px;color:var(--text3);}
+
+/* DETAIL */
+.detail-panel{flex:1;overflow:hidden;display:flex;flex-direction:column;}
+.detail-toolbar{height:52px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:10px;flex-shrink:0;}
+.detail-scroll{flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:12px;}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.card-header{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;}
+.card-body{padding:14px;}
+.card-dot{width:6px;height:6px;border-radius:50%;}
+
+.btn{display:flex;align-items:center;gap:5px;padding:6px 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;background:var(--surface);color:var(--text2);font-family:var(--sans);transition:all .15s;white-space:nowrap;}
+.btn:hover{border-color:var(--accent);color:var(--accent);}
+.btn.primary{background:var(--accent);color:white;border-color:var(--accent);}
+.btn.primary:hover{background:var(--accent-hover);}
+.btn.success{background:var(--green);color:white;border-color:var(--green);}
+.btn.warn{background:var(--orange);color:white;border-color:var(--orange);}
+
+.badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;}
+.b-Taslak{background:#f3f4f6;color:#6b7280;}
+.b-Gönderildi{background:var(--blue-light);color:var(--blue);}
+.b-Teklif\ Alındı{background:var(--orange-light);color:var(--orange);}
+.b-Onaylandı{background:var(--green-light);color:var(--green);}
+.b-İptal{background:var(--red-light);color:var(--red);}
+.b-Hammadde{background:var(--blue-light);color:var(--blue);}
+.b-Fason{background:var(--orange-light);color:var(--orange);}
+
+.fg{display:flex;flex-direction:column;gap:4px;}
+.fl{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;}
+.fi{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:12px;font-family:var(--sans);color:var(--text);outline:none;width:100%;}
+.fi:focus{border-color:var(--accent);}
+.fi:disabled{opacity:.6;}
+
+.stl-table{width:100%;border-collapse:collapse;}
+.stl-table th{padding:7px 10px;text-align:left;font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;background:var(--surface2);border-bottom:1px solid var(--border);}
+.stl-table td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:middle;font-size:12px;}
+.stl-table tr:last-child td{border-bottom:none;}
+.stl-table tr:hover td{background:var(--surface2);}
+
+/* Karşılaştırma tablosu */
+.rfq-compare-table{width:100%;border-collapse:collapse;}
+.rfq-compare-table th{padding:7px 10px;text-align:left;font-size:10px;font-weight:600;color:var(--text3);background:var(--surface2);border-bottom:1px solid var(--border);}
+.rfq-compare-table td{padding:8px 10px;border-bottom:1px solid var(--border);font-size:12px;}
+.rfq-compare-table .best{background:var(--green-light);}
+.rfq-compare-table tr:last-child td{border-bottom:none;}
+
+.toast-wrap{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;}
+.toast{padding:10px 16px;border-radius:8px;font-size:12px;font-weight:500;color:white;animation:fadeIn .2s;}
+.toast.ok{background:var(--green);}
+.toast.err{background:var(--red);}
+.toast.inf{background:var(--accent);}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;display:flex;align-items:center;justify-content:center;}
+.modal-box{background:white;border-radius:12px;width:520px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;}
+.modal-head{background:#1e1b4b;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;}
+.modal-head-title{color:white;font-weight:600;font-size:14px;}
+.modal-body{padding:16px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:12px;}
+.modal-foot{padding:12px 16px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;}
+.btn-x{background:transparent;border:none;color:white;font-size:20px;cursor:pointer;line-height:1;}
+
+.empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text3);gap:12px;padding:40px;text-align:center;}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div class="logo-badge">MES</div>
+    <div><div class="header-title">Ersan MES</div><div class="header-sub">Satınalma</div></div>
+  </div>
+  <div class="header-sep"></div>
+  <nav class="header-nav">
+    <a href="ersan_teklif.html">Teklifler</a>
+    <a href="ersan_planlama.html">Planlama</a>
+    <a href="ersan_satinalma.html" class="active">Satınalma</a>
+    <a href="ersan_isemirleri.html">İş Emirleri</a>
+  </nav>
+</header>
+
+<div class="layout">
+
+  <!-- LIST -->
+  <div class="list-panel">
+    <div class="list-header">
+      <h2>Satınalma Talepleri</h2>
+      <div class="list-count" id="stl-count">Yükleniyor...</div>
+    </div>
+    <div class="list-search">
+      <input type="text" id="stl-search" placeholder="SE no, malzeme ara..." oninput="filterSTL()">
+    </div>
+    <div class="filter-row">
+      <div class="fc on" data-f="Tümü" onclick="setFilter(this)">Tümü</div>
+      <div class="fc" data-f="Taslak" onclick="setFilter(this)">Taslak</div>
+      <div class="fc" data-f="Gönderildi" onclick="setFilter(this)">Gönderildi</div>
+      <div class="fc" data-f="Teklif Alındı" onclick="setFilter(this)">Teklif Alındı</div>
+      <div class="fc" data-f="Onaylandı" onclick="setFilter(this)">Onaylandı</div>
+    </div>
+    <div class="list-scroll" id="stl-list">
+      <div style="padding:20px;text-align:center;color:var(--text3);">Yükleniyor...</div>
+    </div>
+  </div>
+
+  <!-- DETAIL -->
+  <div class="detail-panel">
+    <div id="detail-content">
+      <div class="empty">
+        <svg width="64" height="64" viewBox="0 0 64 64" fill="none" style="opacity:.2"><rect x="8" y="8" width="48" height="48" rx="6" stroke="currentColor" stroke-width="2"/><path d="M20 24h24M20 32h24M20 40h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <p style="font-size:14px;font-weight:500;">Listeden bir talep seçin</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<script>
+const BASE = 'app5LDgJMgocw79Ix';
+const T = {
+  stl:      'tblHmfCvNZq0qNtb1',
+  se:       'tbl56Oj1nPaqefI60',
+  tedarikci:'tblEI6683Im5AXj36',
+  rfq:      'RFQ_TABLE_PLACEHOLDER',
+};
+
+let stlList = [], filtered = [], seList = [], tedarikci = [];
+let activeId = null, activeFilter = 'Tümü';
+
+// ── API ──
+const apiGet = async (table, params='') => {
+  const res = await fetch('/.netlify/functions/airtable', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({method:'GET', path:`/v0/${BASE}/${table}?${params}`})
+  });
+  return res.json();
+};
+const apiFn = async (method, table, body, id='') => {
+  const res = await fetch('/.netlify/functions/airtable', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({method, path:`/v0/${BASE}/${table}${id?'/'+id:''}`, body})
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+};
+
+// ── HELPERS ──
+const fmtDate = d => { try{ return new Date(d).toLocaleDateString('tr-TR'); }catch{ return d||''; } };
+const fmt = n => n ? Number(n).toLocaleString('tr-TR',{minimumFractionDigits:2}) : '—';
+function toast(msg, type='ok') {
+  const el = document.createElement('div');
+  el.className = `toast ${type}`; el.textContent = msg;
+  document.getElementById('toast-wrap').appendChild(el);
+  setTimeout(()=>el.remove(), 3500);
+}
+const getSENo = id => seList.find(r=>r.id===id)?.fields?.['SE No'] || '—';
+
+// ── LOAD ──
+async function loadAll() {
+  try {
+    let all = [], offset = '';
+    do {
+      const d = await apiGet(T.stl, `sort[0][field]=Talep%20No&sort[0][direction]=desc${offset?'&offset='+offset:''}`);
+      all = all.concat(d.records||[]);
+      offset = d.offset||'';
+    } while(offset);
+    stlList = all;
+
+    const [se, td] = await Promise.all([
+      apiGet(T.se, 'fields[]=SE%20No&fields[]=Parça%20Adı'),
+      apiGet(T.tedarikci, 'fields[]=Tedarikçi%20Adı&fields[]=E-posta'),
+    ]);
+    seList = se.records||[];
+    tedarikci = td.records||[];
+    filterAndRender();
+  } catch(e) {
+    document.getElementById('stl-list').innerHTML = `<div style="padding:16px;color:var(--red);font-size:12px;">Hata: ${e.message}</div>`;
+  }
+}
+
+function filterAndRender() {
+  const q = document.getElementById('stl-search').value.toLowerCase();
+  filtered = stlList.filter(r => {
+    const f = r.fields;
+    const mFilter = activeFilter === 'Tümü' || f['Durum'] === activeFilter;
+    const mSearch = !q ||
+      (f['Talep No']||'').toLowerCase().includes(q) ||
+      (f['Malzeme İşlem']||'').toLowerCase().includes(q) ||
+      (f['Kalem Adı']||'').toLowerCase().includes(q) ||
+      (getSENo(f['SE No']?.[0])).toLowerCase().includes(q);
+    return mFilter && mSearch;
+  });
+  document.getElementById('stl-count').textContent = `${filtered.length} talep`;
+  renderList();
+}
+
+function renderList() {
+  const el = document.getElementById('stl-list');
+  if (!filtered.length) {
+    el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:12px;">Talep bulunamadı</div>';
+    return;
+  }
+
+  // SE bazında grupla
+  const grups = {};
+  filtered.forEach(r => {
+    const seId = r.fields['SE No']?.[0] || 'noSE';
+    if (!grups[seId]) grups[seId] = [];
+    grups[seId].push(r);
+  });
+
+  el.innerHTML = Object.entries(grups).map(([seId, records]) => {
+    const seNo = getSENo(seId);
+    const tumDurum = records.every(r=>r.fields['Durum']==='Onaylandı') ? 'Onaylandı' :
+                     records.some(r=>r.fields['Durum']==='Teklif Alındı') ? 'Teklif Alındı' :
+                     records.some(r=>r.fields['Durum']==='Gönderildi') ? 'Gönderildi' : 'Taslak';
+    return `<div style="border-bottom:1px solid var(--border);">
+      <div style="padding:8px 14px;background:var(--surface2);cursor:pointer;display:flex;align-items:center;justify-content:space-between;"
+        onclick="showSEGroup('${seId}')">
+        <div>
+          <div class="stl-no">${seNo}</div>
+          <div class="stl-meta">${records.length} talep satırı</div>
+        </div>
+        <span class="badge b-${tumDurum}">${tumDurum}</span>
+      </div>
+      ${records.map(r => {
+        const f = r.fields;
+        const durum = f['Durum']||'Taslak';
+        return `<div class="stl-item${r.id===activeId?' active':''}" onclick="showDetail('${r.id}')">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="badge b-${f['Talep Tipi']||'Hammadde'}" style="font-size:9px;">${f['Talep Tipi']||'—'}</span>
+            <span class="badge b-${durum}" style="font-size:9px;">${durum}</span>
+          </div>
+          <div class="stl-parca" style="margin-top:4px;">${f['Malzeme İşlem']||'—'}</div>
+          <div class="stl-meta">${f['Ölçü']||''} · ${f['Miktar']||0} ${f['Birim']||''}</div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  }).join('');
+}
+
+function setFilter(el) {
+  document.querySelectorAll('.fc').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on');
+  activeFilter = el.dataset.f;
+  filterAndRender();
+}
+function filterSTL() { filterAndRender(); }
+
+// ── SHOW SE GROUP ──
+function showSEGroup(seId) {
+  const records = stlList.filter(r => (r.fields['SE No']?.[0]||'noSE') === seId);
+  const seNo = getSENo(seId);
+  const tumOnay = records.every(r=>r.fields['Durum']==='Onaylandı');
+
+  document.getElementById('detail-content').innerHTML = `
+    <div class="detail-toolbar">
+      <div style="font-size:15px;font-weight:700;font-family:var(--mono);">${seNo}</div>
+      <span style="font-size:12px;color:var(--text2);">${records.length} talep satırı</span>
+      <div style="flex:1;"></div>
+      ${!tumOnay ? `<button class="btn warn" onclick="sendRFQGroup('${seId}')">📧 Tedarikçiye Gönder</button>` : ''}
+      ${tumOnay ? `<span class="badge b-Onaylandı" style="font-size:12px;padding:4px 12px;">✓ Tüm Talepler Onaylandı</span>` : ''}
+    </div>
+    <div class="detail-scroll">
+      <div class="card">
+        <div class="card-header"><div class="card-dot" style="background:#f59e0b;"></div>Talep Satırları</div>
+        <div class="card-body" style="padding:0;">
+          <table class="stl-table">
+            <thead><tr>
+              <th>#</th><th>Tip</th><th>Malzeme / İşlem</th><th>Ölçü</th>
+              <th>Miktar</th><th>Kalem</th><th>~kg</th><th>Durum</th><th></th>
+            </tr></thead>
+            <tbody>
+              ${records.map((r,i) => {
+                const f = r.fields;
+                const d = f['Durum']||'Taslak';
+                return `<tr onclick="showDetail('${r.id}')" style="cursor:pointer;">
+                  <td style="font-family:var(--mono);color:var(--text3);">${i+1}</td>
+                  <td><span class="badge b-${f['Talep Tipi']||'Hammadde'}">${f['Talep Tipi']||'—'}</span></td>
+                  <td style="font-weight:500;">${f['Malzeme İşlem']||'—'}</td>
+                  <td style="color:var(--text2);">${f['Ölçü']||'—'}</td>
+                  <td style="font-family:var(--mono);">${f['Miktar']||0} ${f['Birim']||''}</td>
+                  <td style="color:var(--text2);">${f['Kalem Adı']||'—'}</td>
+                  <td style="font-family:var(--mono);color:var(--blue);">${f['Tahmini kg']?f['Tahmini kg']+' kg':'—'}</td>
+                  <td><span class="badge b-${d}">${d}</span></td>
+                  <td>
+                    <div style="display:flex;gap:4px;">
+                      <button class="btn" style="padding:2px 7px;font-size:10px;" onclick="event.stopPropagation();openDurumModal('${r.id}','${seId}')">✏️</button>
+                      <button class="btn" style="padding:2px 7px;font-size:10px;" onclick="event.stopPropagation();openRFQSingle('${r.id}','${seId}')">📧</button>
+                    </div>
+                  </td>
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Tedarikçi teklifleri karşılaştırma -->
+      <div class="card" id="rfq-compare-card">
+        <div class="card-header"><div class="card-dot" style="background:#6366f1;"></div>Gelen Teklifler</div>
+        <div class="card-body" style="text-align:center;color:var(--text3);font-size:12px;padding:20px;">
+          Karşılaştırma için bir talep satırına tıklayın
+        </div>
+      </div>
+    </div>`;
+}
+
+// ── SHOW SINGLE DETAIL ──
+async function showDetail(id) {
+  activeId = id;
+  renderList();
+  const r = stlList.find(x=>x.id===id);
+  const f = r?.fields||{};
+  const seId = f['SE No']?.[0];
+  const seNo = getSENo(seId);
+
+  // RFQ tekliflerini yükle
+  let rfqRecords = [];
+  if (T.rfq !== 'RFQ_TABLE_PLACEHOLDER') {
+    try {
+      const d = await apiGet(T.rfq, `filterByFormula=${encodeURIComponent(`{SE No}="${seNo}"`)}&sort[0][field]=Teklif%20Fiyatı&sort[0][direction]=asc`);
+      rfqRecords = d.records||[];
+    } catch(e) { console.warn('RFQ load:', e); }
+  }
+
+  document.getElementById('detail-content').innerHTML = `
+    <div class="detail-toolbar">
+      <div style="font-size:14px;font-weight:600;font-family:var(--mono);">${f['Talep No']||'—'}</div>
+      <span class="badge b-${f['Talep Tipi']||'Hammadde'}">${f['Talep Tipi']||'—'}</span>
+      <span class="badge b-${f['Durum']||'Taslak'}">${f['Durum']||'Taslak'}</span>
+      <div style="flex:1;"></div>
+      <button class="btn warn" onclick="openRFQSingle('${id}','${seId}')">📧 RFQ Gönder</button>
+      <button class="btn" onclick="openDurumModal('${id}','${seId}')">✏️ Durum Güncelle</button>
+    </div>
+    <div class="detail-scroll">
+
+      <!-- Talep detayı -->
+      <div class="card">
+        <div class="card-header"><div class="card-dot" style="background:#f59e0b;"></div>Talep Detayı</div>
+        <div class="card-body">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;">
+            <div class="fg"><div class="fl">SE No</div><input class="fi" value="${seNo}" disabled style="font-family:var(--mono);"></div>
+            <div class="fg"><div class="fl">Kalem Adı</div><input class="fi" value="${f['Kalem Adı']||'—'}" disabled></div>
+            <div class="fg"><div class="fl">Talep Tipi</div><input class="fi" value="${f['Talep Tipi']||'—'}" disabled></div>
+            <div class="fg"><div class="fl">Durum</div><input class="fi" value="${f['Durum']||'—'}" disabled></div>
+            <div class="fg"><div class="fl">Malzeme / İşlem</div><input class="fi" value="${f['Malzeme İşlem']||'—'}" disabled></div>
+            <div class="fg"><div class="fl">Ölçü / Spec</div><input class="fi" value="${f['Ölçü']||'—'}" disabled></div>
+            <div class="fg"><div class="fl">Miktar</div><input class="fi" value="${f['Miktar']||0} ${f['Birim']||''}" disabled></div>
+            <div class="fg"><div class="fl">Tahmini kg</div><input class="fi" value="${f['Tahmini kg']?f['Tahmini kg']+' kg':'—'}" disabled style="font-family:var(--mono);color:var(--blue);"></div>
+          </div>
+          ${f['Seçilen Tedarikçi'] ? `<div style="margin-top:10px;padding:8px 12px;background:var(--green-light);border-radius:6px;font-size:12px;color:var(--green);">
+            ✓ Seçilen Tedarikçi: <strong>${f['Seçilen Tedarikçi']}</strong> · ${f['Onay Fiyatı']?fmt(f['Onay Fiyatı'])+' TL':'—'}
+          </div>` : ''}
+        </div>
+      </div>
+
+      <!-- Gelen RFQ teklifleri -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-dot" style="background:#6366f1;"></div>
+          Gelen Tedarikçi Teklifleri
+          <button onclick="loadRFQForSTL('${id}','${seNo}')" style="margin-left:auto;background:transparent;border:1px solid var(--border);border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer;color:var(--text2);">Yenile</button>
+        </div>
+        <div class="card-body" id="rfq-detail-${id}">
+          ${rfqRecords.length === 0
+            ? '<div style="text-align:center;padding:20px;color:var(--text3);font-size:12px;">Henüz teklif gelmedi. RFQ gönderin.</div>'
+            : renderRFQTable(rfqRecords, id)}
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderRFQTable(records, stlId) {
+  const yanit = records.filter(r=>['Yanıtlandı','Seçildi'].includes(r.fields['Durum']));
+  if (!yanit.length) return '<div style="text-align:center;padding:20px;color:var(--text3);font-size:12px;">Henüz yanıt gelmedi.</div>';
+
+  // AI skor
+  const skorlar = yanit.map(r => ({
+    id: r.id,
+    fiyat: r.fields['Teklif Fiyatı']||999999,
+    teslim: r.fields['Teslim Süresi Gün']||999
+  }));
+  const minF = Math.min(...skorlar.map(s=>s.fiyat));
+  const maxF = Math.max(...skorlar.map(s=>s.fiyat));
+  const minT = Math.min(...skorlar.map(s=>s.teslim));
+  const maxT = Math.max(...skorlar.map(s=>s.teslim));
+  let bestId = null, bestScore = -1;
+  skorlar.forEach(s => {
+    const fs = maxF===minF?1:1-(s.fiyat-minF)/(maxF-minF);
+    const ts = maxT===minT?1:1-(s.teslim-minT)/(maxT-minT);
+    const total = fs*0.6+ts*0.4;
+    if (total>bestScore) { bestScore=total; bestId=s.id; }
+  });
+
+  return `<div style="overflow-x:auto;">
+    <table class="rfq-compare-table">
+      <thead><tr>
+        <th>Tedarikçi</th><th>Birim Fiyat</th><th>Malzeme Durumu</th>
+        <th>Ölçü (tedarikçi)</th><th>Teslim (gün)</th><th>Geçerlilik</th><th>Not</th><th></th>
+      </tr></thead>
+      <tbody>
+        ${yanit.map(r => {
+          const f = r.fields;
+          const isBest = r.id === bestId;
+          return `<tr class="${isBest?'best':''}">
+            <td>
+              <div style="font-weight:500;">${f['Tedarikçi Adı']||'—'}</div>
+              ${isBest?'<div style="font-size:10px;color:var(--green);font-weight:600;">⭐ AI Tavsiye</div>':''}
+            </td>
+            <td style="font-family:var(--mono);font-weight:600;color:var(--accent);">${f['Teklif Fiyatı']?fmt(f['Teklif Fiyatı'])+' '+f['Fiyat Birimi']:'—'}</td>
+            <td>${f['Malzeme Durumu']||'—'}</td>
+            <td style="font-size:11px;color:var(--text2);">${f['Tedarikçi Ölçüleri']||'—'}</td>
+            <td style="font-family:var(--mono);">${f['Teslim Süresi Gün']||'—'} gün</td>
+            <td style="font-size:11px;">${fmtDate(f['Geçerlilik Tarihi'])}</td>
+            <td style="font-size:11px;color:var(--text2);">${f['Tedarikçi Notu']||'—'}</td>
+            <td>
+              <button class="btn success" style="padding:2px 8px;font-size:10px;" onclick="seciTedarikci('${r.id}','${stlId}','${f['Tedarikçi Adı']||''}',${f['Teklif Fiyatı']||0})">Seç</button>
+            </td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+  </div>`;
+}
+
+async function loadRFQForSTL(stlId, seNo) {
+  if (T.rfq === 'RFQ_TABLE_PLACEHOLDER') return;
+  try {
+    const d = await apiGet(T.rfq, `filterByFormula=${encodeURIComponent(`{SE No}="${seNo}"`)}&sort[0][field]=Teklif%20Fiyatı&sort[0][direction]=asc`);
+    const el = document.getElementById(`rfq-detail-${stlId}`);
+    if (el) el.innerHTML = renderRFQTable(d.records||[], stlId);
+  } catch(e) { toast('RFQ yüklenemedi: '+e.message, 'err'); }
+}
+
+// ── TEDARİKÇİ SEÇ ──
+async function seciTedarikci(rfqId, stlId, tedarikciAd, fiyat) {
+  try {
+    await apiFn('PATCH', T.rfq, {fields:{'Durum':'Seçildi'}}, rfqId);
+    await apiFn('PATCH', T.stl, {fields:{
+      'Durum':'Onaylandı',
+      'Seçilen Tedarikçi': tedarikciAd,
+      'Onay Fiyatı': fiyat,
+    }}, stlId);
+    const r = stlList.find(x=>x.id===stlId);
+    if (r) { r.fields['Durum']='Onaylandı'; r.fields['Seçilen Tedarikçi']=tedarikciAd; r.fields['Onay Fiyatı']=fiyat; }
+    filterAndRender();
+    showDetail(stlId);
+    toast(`${tedarikciAd} seçildi ✓`);
+  } catch(e) { toast('Hata: '+e.message, 'err'); }
+}
+
+// ── DURUM GÜNCELLE ──
+function openDurumModal(stlId, seId) {
+  const modal = document.createElement('div');
+  modal.className = 'modal-bg'; modal.id = 'durum-modal';
+  modal.innerHTML = `
+    <div class="modal-box" style="width:360px;">
+      <div class="modal-head"><div class="modal-head-title">Durum Güncelle</div><button class="btn-x" onclick="this.closest('.modal-bg').remove()">×</button></div>
+      <div class="modal-body">
+        <div class="fg"><div class="fl">Yeni Durum</div>
+          <select class="fi" id="new-durum">
+            ${['Taslak','Gönderildi','Teklif Alındı','Onaylandı','İptal'].map(d=>`<option>${d}</option>`).join('')}
+          </select>
+        </div>
+        <div class="fg"><div class="fl">Seçilen Tedarikçi</div>
+          <select class="fi" id="new-tedarikci">
+            <option value="">— Seçin —</option>
+            ${tedarikci.map(t=>`<option value="${t.fields['Tedarikçi Adı']||''}">${t.fields['Tedarikçi Adı']||''}</option>`).join('')}
+          </select>
+        </div>
+        <div class="fg"><div class="fl">Onay Fiyatı (TL)</div><input type="number" class="fi" id="new-fiyat" placeholder="0.00"></div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn" onclick="this.closest('.modal-bg').remove()">İptal</button>
+        <button class="btn primary" onclick="saveDurum('${stlId}','${seId}')">Güncelle</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+async function saveDurum(stlId, seId) {
+  const durum = document.getElementById('new-durum').value;
+  const tad = document.getElementById('new-tedarikci').value;
+  const fiyat = parseFloat(document.getElementById('new-fiyat').value)||null;
+  try {
+    await apiFn('PATCH', T.stl, {fields:{'Durum':durum, 'Seçilen Tedarikçi':tad||null, 'Onay Fiyatı':fiyat}}, stlId);
+    const r = stlList.find(x=>x.id===stlId);
+    if (r) { r.fields['Durum']=durum; r.fields['Seçilen Tedarikçi']=tad; r.fields['Onay Fiyatı']=fiyat; }
+    document.querySelector('.modal-bg')?.remove();
+    filterAndRender();
+    showDetail(stlId);
+    toast('Durum güncellendi ✓');
+  } catch(e) { toast('Hata: '+e.message, 'err'); }
+}
+
+// ── RFQ GÖNDER ──
+function openRFQSingle(stlId, seId) {
+  const r = stlList.find(x=>x.id===stlId);
+  const f = r?.fields||{};
+  const seNo = getSENo(seId);
+  const seRec = seList.find(x=>x.id===seId);
+  const sf = seRec?.fields||{};
+
+  const modal = document.createElement('div');
+  modal.className = 'modal-bg'; modal.id = 'rfq-modal';
+  modal.innerHTML = `
+    <div class="modal-box">
+      <div class="modal-head"><div class="modal-head-title">📧 RFQ Gönder — ${seNo}</div><button class="btn-x" onclick="this.closest('.modal-bg').remove()">×</button></div>
+      <div class="modal-body">
+        <div style="background:var(--surface2);border-radius:6px;padding:10px 12px;font-size:12px;">
+          <div><strong>${f['Malzeme İşlem']||'—'}</strong></div>
+          <div style="color:var(--text2);">${f['Ölçü']||''} · ${f['Miktar']||0} ${f['Birim']||''}</div>
+        </div>
+        <div style="font-size:11px;font-weight:600;color:var(--text3);margin-bottom:6px;">Tedarikçi Seçin</div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          ${tedarikci.map(t => {
+            const email = t.fields['E-posta']||'';
+            return `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;">
+              <input type="checkbox" data-adi="${(t.fields['Tedarikçi Adı']||'').replace(/"/g,'')}" data-email="${email}"
+                style="width:15px;height:15px;" ${!email?'disabled title="E-posta yok"':''}>
+              <div style="flex:1;">
+                <div style="font-size:12px;font-weight:500;">${t.fields['Tedarikçi Adı']||'—'}</div>
+                <div style="font-size:11px;color:var(--text3);">${email||'⚠️ E-posta yok'}</div>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+        <div id="rfq-result" style="margin-top:8px;"></div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn" onclick="this.closest('.modal-bg').remove()">İptal</button>
+        <button class="btn primary" onclick="sendRFQ('${stlId}','${seId}')">📧 Gönder</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+async function sendRFQ(stlId, seId) {
+  const checkboxes = document.querySelectorAll('#rfq-modal input[type=checkbox]:checked');
+  if (!checkboxes.length) { toast('Tedarikçi seçin', 'err'); return; }
+
+  const seRec = seList.find(x=>x.id===seId);
+  const sf = seRec?.fields||{};
+  const r = stlList.find(x=>x.id===stlId);
+  const f = r?.fields||{};
+
+  const tedarikciler = Array.from(checkboxes).map(cb=>({adi:cb.dataset.adi, email:cb.dataset.email}));
+  try {
+    const res = await fetch('/.netlify/functions/send-rfq', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        seNo: getSENo(seId),
+        parcaAdi: sf['Parça Adı']||f['Kalem Adı']||'',
+        parcaNo: sf['Parça No']||'',
+        miktar: f['Miktar']||0,
+        birim: f['Birim']||'Adet',
+        malzeme: f['Malzeme İşlem']||'',
+        olcu: f['Ölçü']||'',
+        tedarikciler,
+      })
+    });
+    const data = await res.json();
+    const sent = (data.results||[]).filter(x=>x.status==='sent'||x.status==='saved').length;
+    const savedOnly = (data.results||[]).filter(x=>x.status==='saved').length;
+    const sentMsg = savedOnly > 0
+      ? `${sent} tedarikçiye kaydedildi (RESEND_API_KEY eklenmeden mail gönderilmez)`
+      : `${sent} tedarikçiye gönderildi`;
+    document.getElementById('rfq-result').innerHTML =
+      `<div style="background:var(--green-light);color:var(--green);padding:8px 12px;border-radius:6px;font-size:12px;">✓ ${sentMsg}</div>`;
+    await apiFn('PATCH', T.stl, {fields:{'Durum':'Gönderildi'}}, stlId);
+    const x = stlList.find(x=>x.id===stlId);
+    if (x) x.fields['Durum']='Gönderildi';
+    filterAndRender();
+    toast(sentMsg + ' ✓');
+    setTimeout(()=>document.querySelector('.modal-bg')?.remove(), 2000);
+  } catch(e) { toast('Hata: '+e.message, 'err'); }
+}
+
+async function sendRFQGroup(seId) {
+  const records = stlList.filter(r=>(r.fields['SE No']?.[0]||'noSE')===seId && r.fields['Durum']==='Taslak');
+  if (!records.length) { toast('Gönderilecek taslak talep yok', 'err'); return; }
+  openRFQSingle(records[0].id, seId);
+}
+
+// ── INIT ──
+loadAll();
+</script>
+</body>
+</html>
