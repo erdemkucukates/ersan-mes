@@ -3,7 +3,7 @@
 
 const ERSAN_MODULES = [
   { id: 'teklif',    label: 'Teklif Yönetimi',         icon: '📋', url: 'ersan_teklif.html',      status: 'active' },
-  { id: 'siparis',   label: 'Sipariş Yönetimi',         icon: '📦', url: 'ersan_teklif.html#siparisler', status: 'active' },
+  { id: 'siparis',   label: 'Sipariş Yönetimi',         icon: '📦', url: 'ersan_siparisler.html', status: 'active' },
   { id: 'satinalma', label: 'Satınalma',                icon: '🛒', url: 'ersan_satinalma.html',   status: 'active' },
   { id: 'isemri',    label: 'İş Emirleri',              icon: '⚙️', url: 'ersan_isemirleri.html',  status: 'active' },
   { id: 'uretim',    label: 'Üretim / Atölye',          icon: '🏭', url: 'ersan_uretim.html',      status: 'soon' },
