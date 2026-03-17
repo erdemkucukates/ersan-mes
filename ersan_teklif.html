@@ -1301,9 +1301,12 @@ async function confirmSEOlustur(teklifId) {
         try {
           const file = window._trFiles[i];
           const dataUrl = await fileToBase64(file);
-          await api('PATCH', TABLES.satisEmirleri, {fields: {
-            'PDF Data': JSON.stringify({filename: file.name, data: dataUrl, size: file.size})
-          }}, res.id);
+          const upRes = await fetch('/.netlify/functions/upload-pdf', {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({filename: file.name, data: dataUrl, recordId: res.id})
+          });
+          const upData = await upRes.json();
+          if (!upData.success) throw new Error(upData.error||'Upload failed');
         } catch(e2) {
           toast('PDF kaydedilemedi (siparis olusturuldu)', 'info');
         }
