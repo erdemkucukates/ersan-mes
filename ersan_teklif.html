@@ -1306,7 +1306,9 @@ async function confirmSEOlustur(teklifId) {
             body: JSON.stringify({filename: file.name, data: dataUrl, recordId: res.id})
           });
           const upData = await upRes.json();
+          console.log('upload result:', JSON.stringify(upData));
           if (!upData.success) throw new Error(upData.error||'Upload failed');
+          toast('PDF kaydedildi ✓', 'success');
         } catch(e2) {
           toast('PDF kaydedilemedi (siparis olusturuldu)', 'info');
         }
