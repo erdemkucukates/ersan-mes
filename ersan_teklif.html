@@ -1295,6 +1295,7 @@ async function confirmSEOlustur(teklifId) {
       if (f['Geçerlilik Tarihi']) seFields['Termin Tarihi'] = f['Geçerlilik Tarihi'];
       if (f['Teklif Notu']) seFields['Müşteri PO No'] = f['Teklif Notu'];
       const res = await api('POST', TABLES.satisEmirleri, {fields: seFields});
+      console.log('SE olusturuldu:', res.id, JSON.stringify(res).substring(0,100));
       seIds.push(res.id);
       // PDF Data olarak kalici kaydet
       if (window._trFiles && window._trFiles[i]) {
