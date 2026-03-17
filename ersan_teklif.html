@@ -1272,14 +1272,17 @@ async function confirmSEOlustur(teklifId) {
     const { seciliItems, musteriId, f } = window._seCreateData || {};
     if (!seciliItems?.length) return;
     const existing = await apiGet(TABLES.satisEmirleri, 'fields[]=SE%20No&sort[0][field]=SE%20No&sort[0][direction]=desc&maxRecords=1');
-    const lastSE = existing.records?.[0]?.fields?.['SE No'] || ('SE-' + new Date().getFullYear() + '-000');
-    const lastNum = parseInt(lastSE.split('-').pop()) || 0;
+    const lastSE = existing.records?.[0]?.fields?.['SE No'] || ('SP-' + new Date().getFullYear() + '-000-00');
+    const parts = lastSE.split('-');
+    const lastNum = parseInt(parts[2]) || 0;
     const seIds = [];
     for (let i = 0; i < seciliItems.length; i++) {
       const item = seciliItems[i];
       // SP-2026-001-01 formatinda numaralandirma (SE No formula ile uretilecek)
       const spNo = 'SP-' + new Date().getFullYear() + '-' + String(lastNum + 1).padStart(3,'0');
+      const spKalemNo = spNo + '-' + String(i + 1).padStart(2,'0');
       const seFields = {
+        'SE No': spKalemNo,
         'Kalem Sıra': i + 1,
         'Parça No': item.stokKodu || item.malzemeNo || null,
         'Parça Adı': item.parcaAdi || '',
