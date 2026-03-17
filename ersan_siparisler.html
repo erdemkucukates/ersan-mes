@@ -97,7 +97,7 @@ function pill(s) {
   return '<span class="s-pill ' + statusClass(s||'Beklemede') + '">' + (s||'Beklemede') + '</span>';
 }
 
-async function apiGet(table, params) {
+async function apiGet(table, params) { /* GET format */
   var path = '/v0/' + BASE + '/' + encodeURIComponent(table) + (params ? '?' + params : '');
   var r = await fetch('/.netlify/functions/airtable', {
     method: 'POST',
