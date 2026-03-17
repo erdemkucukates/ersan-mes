@@ -1219,13 +1219,8 @@ function showTeknikResimModal(teklifId, seciliItems, musteriId, f) {
     const kalemHtml = seciliItems.map((item, i) => `
       <div style="border:1px solid #e2e5ea;border-radius:8px;padding:12px;">
         <div style="font-size:12px;font-weight:600;margin-bottom:8px;">${i+1}. ${item.parcaAdi||'—'} <span style="font-size:10px;color:#9aa0ad;font-weight:400;">${item.stokKodu||''} · ${item.miktar||0} ${item.birim||'Adet'}</span></div>
-        <div id="tr-zone-${i}" style="border:2px dashed #e2e5ea;border-radius:6px;padding:10px;text-align:center;cursor:pointer;"
-          ondragover="event.preventDefault();this.style.borderColor='#7c3aed'"
-          ondragleave="this.style.borderColor='#e2e5ea'"
-          ondrop="handleTRDropKalem(event,${i})"
-          onclick="document.getElementById('tr-input-${i}').click()">
-          <div id="tr-preview-${i}" style="font-size:11px;color:#9aa0ad;">📎 Teknik resim yükle (PDF/JPG/PNG) — opsiyonel</div>
-          <input type="file" id="tr-input-${i}" accept=".pdf,image/*" style="display:none;" onchange="handleTRFileKalem(this.files[0],${i})">
+        <div style="font-size:11px;color:#9aa0ad;padding:6px;background:#f7f8fa;border-radius:6px;text-align:center;">
+          📎 Teknik resim sipariş oluştuktan sonra Sipariş Yönetimi'nden yüklenebilir.
         </div>
       </div>`).join('');
     modal.innerHTML = `
