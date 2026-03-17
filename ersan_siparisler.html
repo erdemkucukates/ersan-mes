@@ -96,8 +96,8 @@ function pill(s) {
   return '<span class="s-pill ' + statusClass(s||'Beklemede') + '">' + (s||'Beklemede') + '</span>';
 }
 
-async function at(path) {
-  var r = await fetch('/.netlify/functions/airtable' + path);
+async function at(path) { /* fixed */
+  var r = await fetch('/.netlify/functions/airtable' + path.replace('table=Sat%C4%B1%C5%9F%20Emirleri','table=Sat%C4%B1%C5%9F+Emirleri'));
   return r.json();
 }
 
