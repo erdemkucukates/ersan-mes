@@ -24,7 +24,7 @@ exports.handler = async (event) => {
       }
 
       if (p.method && p.path) {
-        const r = await fetch('https://api.airtable.com/v0' + p.path, {
+        const r = await fetch('https://api.airtable.com' + p.path, {
           method:  p.method,
           headers: ATH,
           body:    (p.body && p.method !== 'GET') ? JSON.stringify(p.body) : undefined,
