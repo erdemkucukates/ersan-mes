@@ -29,7 +29,7 @@ exports.handler = async (event) => {
     const timestamp = Math.floor(Date.now()/1000);
     const publicId = 'teknik-resim/' + recordId + '_' + filename.replace(/\s/g,'_');
     const crypto = require('crypto');
-    const sigStr = `public_id=${publicId}&timestamp=${timestamp}&upload_preset=ml_default${SEC}`;
+    const sigStr = `public_id=${publicId}&timestamp=${timestamp}${SEC}`;
     const signature = crypto.createHash('sha256').update(sigStr).digest('hex');
 
     const fd = new URLSearchParams();
