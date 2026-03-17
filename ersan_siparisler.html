@@ -106,15 +106,10 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; b
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
 var BASE = 'app5LDgJMgocw79Ix';
-var TABLES = {
-  satisEmirleri: 'tbl56Oj1nPaqefI60',
-  teklifKalemleri: 'tblqRGCv8yu6zQXZ4',
-  teklifler: 'tblBvcPQjPDdg6N52',
-};
+var TABLES = { se: 'tbl56Oj1nPaqefI60', ie: 'tbl58qL39I2tv8hK4' };
 
-var records = [], filtered = [], currentFilter = 'Tümü', selectedSE = null, selectedKalem = null;
-var pdfDoc = null, pdfPage = 1, pdfZoom = 1.2, pdfRotation = 0;
-var pdfCurrentUrl = null, pdfCurrentFilename = null;
+var records = [], currentFilter = 'Tümü', selectedSP = null, selectedKalemIdx = null;
+var pdfDoc = null, pdfZoom = 1.2, pdfRotation = 0, pdfCurrentUrl = null;
 
 function toast(msg) {
   var t = document.getElementById('toast');
@@ -123,48 +118,44 @@ function toast(msg) {
 }
 
 function pillClass(s) {
-  if (s==='Üretimde') return 'pill-ure';
-  if (s==='Tamamlandı') return 'pill-tam';
-  if (s==='İptal') return 'pill-ips';
-  return 'pill-bek';
+  if (s==='Üretimde') return 'pu'; if (s==='Tamamlandı') return 'pt'; if (s==='İptal') return 'pi'; return 'pb';
 }
 
-function isBizGunu(date) {
-  var d = date.getDay();
-  return d !== 0 && d !== 6;
+function fmtDate(d) { if(!d) return '—'; try { return new Date(d).toLocaleDateString('tr-TR'); } catch(e){ return d; } }
+
+// SP-2026-001-01 → SP-2026-001
+function spParent(seNo) {
+  if (!seNo) return seNo;
+  var p = seNo.split('-');
+  if (p.length === 4 && p[0] === 'SP') return p.slice(0,3).join('-');
+  return seNo;
 }
 
-function addIsBiz(startDate, gunSayisi) {
-  var d = new Date(startDate);
-  var added = 0;
-  while (added < gunSayisi) {
-    d.setDate(d.getDate() + 1);
-    if (isBizGunu(d)) added++;
-  }
-  return d;
-}
-
-function formatDate(d) {
-  if (!d) return '—';
-  try {
-    var dt = new Date(d);
-    return dt.toLocaleDateString('tr-TR');
-  } catch(e) { return d; }
-}
-
-function terminHesapla(siparisTarihi, isBizGunu) {
-  if (!siparisTarihi || !isBizGunu) return null;
-  return addIsBiz(new Date(siparisTarihi), isBizGunu);
+// Group records by SP parent
+function buildGroups(recs) {
+  var map = {}, order = [];
+  recs.forEach(function(r) {
+    var f = r.fields;
+    var parent = spParent(f['SE No'] || r.id);
+    if (!map[parent]) { map[parent] = []; order.push(parent); }
+    map[parent].push(r);
+  });
+  return order.map(function(p) {
+    var kalemler = map[p];
+    var durum = kalemler[0].fields['Durum'] || 'Beklemede';
+    var parcalar = kalemler.map(function(r){ return r.fields['Parça Adı']||''; }).filter(Boolean);
+    return { spNo: p, kalemler: kalemler, durum: durum, parcalar: parcalar };
+  });
 }
 
 async function apiGet(table, params) {
   var r = await fetch('/.netlify/functions/airtable?table=' + encodeURIComponent(table) + (params ? '&' + params : ''));
-  return r.json();
+  var d = await r.json(); if (d.error) throw new Error(d.error); return d;
 }
 
 async function apiPatch(table, id, fields) {
   var r = await fetch('/.netlify/functions/airtable', {
-    method: 'PATCH', headers: {'Content-Type':'application/json'},
+    method:'PATCH', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({table, id, fields})
   });
   return r.json();
@@ -172,7 +163,7 @@ async function apiPatch(table, id, fields) {
 
 async function apiDelete(table, id) {
   var r = await fetch('/.netlify/functions/airtable', {
-    method: 'DELETE', headers: {'Content-Type':'application/json'},
+    method:'DELETE', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({table, id})
   });
   return r.json();
@@ -182,7 +173,6 @@ async function loadList() {
   try {
     var d = await apiGet('Satış Emirleri', 'pageSize=100&sort[0][field]=SE+No&sort[0][direction]=desc');
     records = d.records || [];
-    document.getElementById('sb-count').textContent = records.length + ' sipariş';
     filterList();
   } catch(e) {
     document.getElementById('sb-list').innerHTML = '<div style="padding:1rem;color:#dc2626;font-size:12px;">Hata: '+e.message+'</div>';
@@ -192,349 +182,403 @@ async function loadList() {
 function setFilter(el, f) {
   currentFilter = f;
   document.querySelectorAll('.ft').forEach(function(t){ t.classList.remove('on'); });
-  el.classList.add('on');
-  filterList();
+  el.classList.add('on'); filterList();
 }
 
 function filterList() {
   var q = (document.getElementById('search').value||'').toLowerCase();
-  filtered = records.filter(function(r) {
+  var filtered = records.filter(function(r) {
     var f = r.fields;
     var mf = currentFilter==='Tümü' || (f['Durum']||'Beklemede')===currentFilter;
     var mq = !q || (f['SE No']||'').toLowerCase().includes(q) || (f['Parça Adı']||'').toLowerCase().includes(q) || (f['Parça No']||'').toLowerCase().includes(q);
     return mf && mq;
   });
 
-  var html = filtered.length === 0
-    ? '<div style="padding:1rem;text-align:center;color:#9aa0ad;font-size:12px;">Kayıt bulunamadı</div>'
-    : filtered.map(function(r) {
-        var f = r.fields, no = f['SE No']||r.id.slice(-6);
-        var durum = f['Durum']||'Beklemede';
-        var kalemSayisi = (f['Teklif Kalemleri']||[]).length || 1;
-        return '<div class="si'+(r.id===selectedSE?' active':'')+'" onclick="selectSE(\''+r.id+'\')">'+
-          '<div class="si-top">'+
-          '<span class="si-no">'+no+'</span>'+
-          '<span class="si-kalem">'+kalemSayisi+' kalem</span>'+
-          '<span class="si-pill '+pillClass(durum)+'">'+durum+'</span>'+
-          '</div>'+
-          '<div class="si-name">'+(f['Parça Adı']||'—')+'</div>'+
-          '</div>';
-      }).join('');
-  document.getElementById('sb-list').innerHTML = html;
+  var groups = buildGroups(filtered);
+  document.getElementById('sb-count').textContent = groups.length + ' sipariş';
+
+  if (!groups.length) {
+    document.getElementById('sb-list').innerHTML = '<div style="padding:1rem;text-align:center;color:#9aa0ad;font-size:12px;">Kayıt bulunamadı</div>';
+    return;
+  }
+
+  document.getElementById('sb-list').innerHTML = groups.map(function(g) {
+    var isActive = g.spNo === selectedSP;
+    return '<div class="si'+(isActive?' active':'')+'" onclick="selectGroup(this.dataset.sp)" data-sp="'+g.spNo+'">'+
+      '<div class="si-top">'+
+      '<span class="si-no">'+g.spNo+'</span>'+
+      '<span class="si-kalem">'+g.kalemler.length+' kalem</span>'+
+      '<span class="si-pill '+pillClass(g.durum)+'">'+g.durum+'</span>'+
+      '</div>'+
+      '<div class="si-name">'+g.parcalar.slice(0,2).join(', ').substring(0,45)+'</div>'+
+      '</div>';
+  }).join('');
 }
 
-async function selectSE(id) {
-  selectedSE = id;
-  selectedKalem = null;
+function selectGroup(spNo) {
+  selectedSP = spNo;
+  selectedKalemIdx = null;
   filterList();
 
-  var r = records.find(function(x){ return x.id===id; });
-  if (!r) return;
-  var f = r.fields;
-  var no = f['SE No']||id.slice(-6);
-  var durum = f['Durum']||'Beklemede';
+  var filtered = records.filter(function(r){ return (document.getElementById('search').value||'') ? true : true; });
+  var groups = buildGroups(filtered);
+  var g = groups.find(function(x){ return x.spNo === spNo; });
+  if (!g) return;
 
-  // Termin hesapla
-  var isBizGunuVal = f['Teslim Süresi İş Günü'];
-  var sipTarihi = f['Sipariş Tarihi'] || f['Oluşturma Tarihi'] || null;
-  var terminTarihi = null;
-  if (isBizGunuVal && sipTarihi) {
-    terminTarihi = terminHesapla(sipTarihi, isBizGunuVal);
-  } else if (f['Termin Tarihi']) {
-    terminTarihi = new Date(f['Termin Tarihi']);
-  }
-  var terminStr = terminTarihi ? formatDate(terminTarihi) + (isBizGunuVal ? ' · '+isBizGunuVal+' iş günü' : '') : '—';
-  var isLate = terminTarihi && terminTarihi < new Date();
+  renderMain(g);
+}
 
-  // Kalemler
-  var kalemler = [];
-  var teklifKalemIds = f['Teklif Kalemleri'] || [];
-  if (teklifKalemIds.length > 0) {
-    try {
-      var filter = 'OR(' + teklifKalemIds.map(function(kid){ return 'RECORD_ID()=\''+kid+'\''; }).join(',') + ')';
-      var kd = await apiGet('Teklif Kalemleri', 'filterByFormula='+encodeURIComponent(filter));
-      kalemler = kd.records || [];
-    } catch(e) {}
-  }
-  if (kalemler.length === 0) {
-    kalemler = [{id: id+'_main', fields: {
-      'Parça Adı': f['Parça Adı']||'—',
-      'Parça No': f['Parça No']||'—',
-      'Revizyon': f['Revizyon']||'—',
-      'Miktar': f['Miktar']||0,
-      'Birim': f['Birim']||'Adet',
-      'Birim Fiyat': f['Birim Fiyat']||null,
-      '_isSE': true
-    }}];
-  }
-
+function renderMain(g) {
   var main = document.getElementById('main');
+  var firstDurum = g.durum;
+
   main.innerHTML =
     '<div class="top-bar">'+
-    '<div class="tb-no">'+no+'</div>'+
-    '<span class="tb-kalem">'+kalemler.length+' kalem</span>'+
-    '<span class="si-pill '+pillClass(durum)+'" style="font-size:11px;padding:3px 10px;">'+durum+'</span>'+
-    (terminStr!=='—' ? '<span class="termin-badge'+(isLate?' late':'')+'">Termin: '+terminStr+'</span>' : '')+
+    '<div class="tb-no">'+g.spNo+'</div>'+
+    '<span class="tb-kalem">'+g.kalemler.length+' kalem</span>'+
+    '<span class="si-pill '+pillClass(firstDurum)+'" style="font-size:11px;padding:3px 10px;">'+firstDurum+'</span>'+
     '<div class="tb-right">'+
-    '<button class="btn btn-amber" id="stl-btn-'+id+'">&#128203; Satınalma Talebi</button>'+
-    '<button class="btn btn-blue" onclick="window.location=\'ersan_isemirleri.html\'">İş Emri Aç</button>'+
-    '<select id="durum-sel" onchange="updateDurum(\''+id+'\',this.value)" style="padding:5px 8px;border:1px solid #e2e5ea;border-radius:7px;font-size:12px;">'+
-    ['Beklemede','Üretimde','Tamamlandı','Kısmi Sevk','İptal'].map(function(d){ return '<option'+(d===durum?' selected':'')+'>'+d+'</option>'; }).join('')+
+    '<button class="btn btn-amber" id="stl-btn">📋 Satınalma Talebi</button>'+
+    '<button class="btn btn-blue" onclick="window.location=\'ersan_isemirleri.html\'">⚙ İş Emri Aç</button>'+
+    '<select id="durum-sel" style="padding:5px 8px;border:1px solid #e2e5ea;border-radius:7px;font-size:12px;" onchange="updateAllDurum(this.value)">'+
+    ['Beklemede','Üretimde','Tamamlandı','Kısmi Sevk','İptal'].map(function(d){ return '<option'+(d===firstDurum?' selected':'')+'>'+d+'</option>'; }).join('')+
     '</select>'+
-    '<button class="btn" style="background:#059669;color:#fff;border-color:#059669;" id="save-btn-'+id+'">&#128190; Kaydet</button>'+
-    '<button class="btn btn-red" onclick="deleteSE(\''+id+'\',\''+no+'\')">Sil</button>'+
+    '<button class="btn btn-red" id="del-btn">🗑 Sil</button>'+
     '</div></div>'+
-    '<div class="body-area" id="body-area">'+
-    '<div class="kalem-head">'+
-    '<span>Parça adı</span><span>Parça no</span><span>Revizyon</span><span>Miktar</span><span>Termin</span><span>Teknik resim</span>'+
-    '</div>'+
+    '<div class="body-area">'+
+    '<div class="kalem-head"><span>No</span><span>Parça adı</span><span>Parça no</span><span>Revizyon</span><span>Miktar</span><span>Termin</span><span>Teknik resim</span></div>'+
     '<div class="kalem-list" id="kalem-list"></div>'+
     '<div class="pdf-pane" id="pdf-pane">'+
     '<div class="pdf-bar">'+
-    '<div class="pdf-filename" id="pdf-filename">Kalem seçin</div>'+
-    '<button class="zoom-btn" id="btn-zoom-out" onclick="zoomOut()">−</button>'+
-    '<div class="zoom-val" id="zoom-val">120%</div>'+
-    '<button class="zoom-btn" id="btn-zoom-in" onclick="zoomIn()">+</button>'+
-    '<button class="zoom-fit" onclick="zoomFit()">Sığdır</button>'+
-    '<button class="zoom-fit" onclick="rotatePDF()" title="90° döndür">↻</button>'+
+    '<div class="pdf-fn" id="pdf-filename">Kalem seçin</div>'+
+    '<button class="zb" onclick="zoomOut()">−</button>'+
+    '<div class="zv" id="zoom-val">120%</div>'+
+    '<button class="zb" onclick="zoomIn()">+</button>'+
+    '<button class="zfit" onclick="zoomFit()">Sığdır</button>'+
+    '<button class="zfit" onclick="rotatePDF()" title="Döndür">↻</button>'+
     '</div>'+
-    '<div id="pdf-canvas-area" class="pdf-empty">'+
-    '<div class="pdf-empty-icon">PDF</div>'+
-    '<p>Kalem seçilince teknik resim burada görünür</p>'+
+    '<div id="pdf-canvas-area" class="pdf-empty-area">'+
+    '<div class="pdf-icon">PDF</div>'+
+    '<div class="pdf-msg">Kalem seçince teknik resim burada görünür</div>'+
     '</div>'+
-    '</div>'+
-    '</div>';
+    '</div></div>';
 
-  // Attach satinalma button click after render
+  window._currentGroup = g;
+  renderKalemler(g.kalemler, null);
+
   setTimeout(function() {
-    var stlBtn = document.getElementById('stl-btn-' + id);
-    if (stlBtn) {
-      stlBtn.onclick = function() {
-        openSTLModal(id, no, f['Parça Adı']||'', f['Miktar']||0, f['Birim']||'Adet');
-      };
-    }
-    var saveBtn = document.getElementById('save-btn-' + id);
-    if (saveBtn) {
-      saveBtn.onclick = function() { saveSE(id); };
-    }
-  }, 50);
-  window._seKalemler = kalemler;
-  window._seId = id;
-  window._seFields = f;
-  renderKalemler(kalemler, null, terminTarihi, isBizGunuVal);
+    var stlBtn = document.getElementById('stl-btn');
+    if (stlBtn) stlBtn.onclick = function() { openSTLModal(g); };
+    var delBtn = document.getElementById('del-btn');
+    if (delBtn) delBtn.onclick = function() { deleteGroup(g.spNo); };
+  }, 0);
 }
 
-function renderKalemler(kalemler, selectedIdx, terminTarihi, isBizGunuVal) {
-  var html = kalemler.map(function(k, i) {
-    var f = k.fields;
-    var isSelected = i === selectedIdx;
-    var isDimmed = selectedIdx !== null && !isSelected;
-    var terminStr = terminTarihi ? formatDate(terminTarihi) : (window._seFields['Termin Tarihi'] ? formatDate(window._seFields['Termin Tarihi']) : '—');
-    var hasPDF = f['Teknik Resim'] && f['Teknik Resim'].length > 0;
-    var seHasPDF = !f['_isSE'] ? false : (window._seFields['Teknik Resim'] && window._seFields['Teknik Resim'].length > 0);
+function renderKalemler(kalemler, selIdx) {
+  var html = kalemler.map(function(r, i) {
+    var f = r.fields;
+    var isSel = i === selIdx;
+    var isDim = selIdx !== null && !isSel;
+    var hasPDF = f['_localPDF'] || (f['Teknik Resim'] && f['Teknik Resim'].length > 0);
+    var seNo = f['SE No'] || (i+1);
+    var kalemNo = seNo.split('-').pop() || (i+1);
 
-    var summary = '<div class="kalem-summary" style="grid-template-columns:2fr 110px 80px 90px 110px 120px">'+
-      '<span style="font-weight:500'+(isSelected?';color:#1d4ed8':'')+'">'+((f['Parça Adı']||'—'))+'</span>'+
+    var row = '<div class="kalem-row">'+
+      '<span style="font-family:monospace;font-size:11px;color:#7c3aed;">'+kalemNo+'</span>'+
+      '<span style="font-weight:500'+(isSel?';color:#1d4ed8':'')+'">'+( f['Parça Adı']||'—')+'</span>'+
       '<span style="font-family:monospace;font-size:11px">'+(f['Parça No']||'—')+'</span>'+
       '<span>'+(f['Revizyon']||'—')+'</span>'+
       '<span>'+(f['Miktar']||0)+' '+(f['Birim']||'Adet')+'</span>'+
-      '<span style="font-size:11px;'+(terminTarihi&&terminTarihi<new Date()?'color:#dc2626;font-weight:600':'')+'">'+terminStr+'</span>'+
-      '<label class="upbtn'+(hasPDF||seHasPDF?' has':'')+'">'+
-      (hasPDF||seHasPDF ? 'PDF mevcut' : '+ PDF yükle')+
-      '<input type="file" accept=".pdf,image/*" onchange="uploadPDF(this,\''+k.id+'\','+i+')">'+
+      '<span style="font-size:11px">'+(f['Termin Tarihi']?fmtDate(f['Termin Tarihi']):'—')+'</span>'+
+      '<label class="upbtn'+(hasPDF?' has':'')+'">'+
+      (hasPDF?'PDF mevcut':'+ PDF yükle')+
+      '<input type="file" accept=".pdf,image/*" data-recid="'+r.id+'" data-idx="'+i+'" onchange="uploadPDF(this)">'+
       '</label>'+
       '</div>';
 
-    var detail = '';
-    if (isSelected) {
-      detail = '<div class="kalem-detail">'+
-        '<div class="det-f"><label>Parça adı</label><div class="v">'+(f['Parça Adı']||'—')+'</div></div>'+
-        '<div class="det-f"><label>Parça no</label><div class="v" style="font-family:monospace">'+(f['Parça No']||'—')+'</div></div>'+
-        '<div class="det-f"><label>Revizyon</label><div class="v">'+(f['Revizyon']||'—')+'</div></div>'+
-        '<div class="det-f"><label>Miktar</label><div class="v">'+(f['Miktar']||0)+' '+(f['Birim']||'Adet')+'</div></div>'+
-        '<div class="det-f"><label>Birim fiyat</label><div class="v">'+(f['Birim Fiyat']?Number(f['Birim Fiyat']).toLocaleString('tr-TR')+ ' TL':'—')+'</div></div>'+
-        '<div class="det-f"><label>İskonto</label><div class="v">'+(f['İskonto']?'%'+f['İskonto']:'—')+'</div></div>'+
-        '<div class="det-f"><label>Toplam</label><div class="v" style="color:#059669">'+(f['Birim Fiyat']&&f['Miktar']?Number(f['Birim Fiyat']*f['Miktar']*(1-(f['İskonto']||0)/100)).toLocaleString('tr-TR')+' TL':'—')+'</div></div>'+
-        '<div class="det-f"><label>Stok kodu</label><div class="v">'+(f['Stok Kodu']||'—')+'</div></div>'+
-        '<div class="det-f"><label>Teslim süresi</label><div class="v">'+(f['Teklif Süresi (Gün)']||isBizGunuVal||'—')+(isBizGunuVal?' iş günü':'')+'</div></div>'+
-        '<div class="det-f"><label>Açıklama</label><div class="v">'+(f['Notlar']||'—')+'</div></div>'+
-        '</div>';
-    }
+    var detail = isSel ? '<div class="kalem-detail">'+
+      '<div class="det-f"><label>Parça adı</label><div class="v">'+(f['Parça Adı']||'—')+'</div></div>'+
+      '<div class="det-f"><label>Parça no</label><div class="v" style="font-family:monospace">'+(f['Parça No']||'—')+'</div></div>'+
+      '<div class="det-f"><label>Revizyon</label><div class="v">'+(f['Revizyon']||'—')+'</div></div>'+
+      '<div class="det-f"><label>Miktar</label><div class="v">'+(f['Miktar']||0)+' '+(f['Birim']||'Adet')+'</div></div>'+
+      '<div class="det-f"><label>Termin</label><div class="v" style="color:#b45309">'+(f['Termin Tarihi']?fmtDate(f['Termin Tarihi']):'—')+'</div></div>'+
+      '</div>' : '';
 
-    return '<div class="kalem-item'+(isSelected?' selected':'')+(isDimmed?' dimmed':'')+'" onclick="selectKalem('+i+')" id="kalem-'+i+'">'+summary+detail+'</div>';
+    return '<div class="kalem-item'+(isSel?' selected':'')+(isDim?' dimmed':'')+'" id="kalem-'+i+'" onclick="selectKalem('+i+')">'+row+detail+'</div>';
   }).join('');
   document.getElementById('kalem-list').innerHTML = html;
 }
 
 function selectKalem(idx) {
-  if (!window._seKalemler) return;
-  selectedKalem = idx;
-  var terminTarihi = null;
-  var isBizGunuVal = window._seFields['Teslim Süresi İş Günü'];
-  var sipTarihi = window._seFields['Sipariş Tarihi'] || null;
-  if (isBizGunuVal && sipTarihi) terminTarihi = terminHesapla(sipTarihi, isBizGunuVal);
-  else if (window._seFields['Termin Tarihi']) terminTarihi = new Date(window._seFields['Termin Tarihi']);
+  if (!window._currentGroup) return;
+  selectedKalemIdx = idx;
+  renderKalemler(window._currentGroup.kalemler, idx);
 
-  renderKalemler(window._seKalemler, idx, terminTarihi, isBizGunuVal);
+  var r = window._currentGroup.kalemler[idx];
+  var f = r.fields;
+  var localPDF = f['_localPDF'];
+  var pdfArr = f['Teknik Resim'];
+  var url = localPDF ? localPDF.url : (pdfArr && pdfArr.length ? pdfArr[0].url : null);
+  var name = localPDF ? localPDF.filename : (pdfArr && pdfArr.length ? (pdfArr[0].filename||'teknik.pdf') : null);
 
-  // PDF yükle - sadece farklı PDF ise yeniden yükle
-  var kalem = window._seKalemler[idx];
-  var localPDF = kalem.fields['_localPDF'] || (kalem.fields['_isSE'] ? window._seFields['_localPDF'] : null);
-  var pdfArr = kalem.fields['Teknik Resim'] || (kalem.fields['_isSE'] ? window._seFields['Teknik Resim'] : null);
-  var newUrl = localPDF ? localPDF.url : (pdfArr && pdfArr.length > 0 ? pdfArr[0].url : null);
-  var newName = localPDF ? (localPDF.filename||'teknik-resim.pdf') : (pdfArr && pdfArr.length > 0 ? (pdfArr[0].filename||'teknik-resim.pdf') : null);
-  if (newUrl && newUrl !== pdfCurrentUrl) {
-    loadPDF(newUrl, newName);
-  } else if (!newUrl) {
-    clearPDF('PDF yüklü değil — yüklemek için "PDF yükle" butonuna tıklayın');
-  } else {
-    // Same PDF - just update filename display, keep zoom
-    var fn = document.getElementById('pdf-filename');
-    if (fn) fn.textContent = newName;
-  }
+  if (url && url !== pdfCurrentUrl) loadPDF(url, name);
+  else if (!url) clearPDF();
+  else { var fn = document.getElementById('pdf-filename'); if(fn) fn.textContent = name; }
 }
 
-function clearPDF(msg) {
-  document.getElementById('pdf-filename').textContent = msg || 'Kalem seçin';
-  document.getElementById('pdf-canvas-area').className = 'pdf-empty';
-  document.getElementById('pdf-canvas-area').innerHTML = '<div class="pdf-empty-icon">PDF</div><p>'+(msg||'Teknik resim yüklü değil')+'</p>';
+function clearPDF() {
+  var el = document.getElementById('pdf-filename'); if(el) el.textContent = 'PDF yüklü değil';
+  var area = document.getElementById('pdf-canvas-area');
+  if (area) { area.className = 'pdf-empty-area'; area.innerHTML = '<div class="pdf-icon">PDF</div><div class="pdf-msg">PDF yüklü değil — yüklemek için butona tıklayın</div>'; }
 }
 
 async function loadPDF(url, filename) {
-  var fnEl = document.getElementById('pdf-filename');
-  if (fnEl) fnEl.textContent = filename || 'teknik-resim.pdf';
+  pdfCurrentUrl = url;
+  var fn = document.getElementById('pdf-filename'); if(fn) fn.textContent = filename||'teknik.pdf';
   var area = document.getElementById('pdf-canvas-area');
   if (!area) return;
-  area.className = 'pdf-canvas-wrap';
-  area.innerHTML = '<p style="color:rgba(255,255,255,.6);font-size:12px;">Yükleniyor...</p>';
+  area.className = 'pdf-canvas-wrap'; area.innerHTML = '<p style="color:rgba(255,255,255,.6);font-size:12px;padding:1rem;">Yükleniyor...</p>';
   try {
-    pdfCurrentUrl = url; pdfCurrentFilename = filename;
     pdfDoc = await pdfjsLib.getDocument(url).promise;
-    pdfPage = 1;
     pdfRotation = 0;
-    // Auto-fit on first load
     var page = await pdfDoc.getPage(1);
-    var vp0 = page.getViewport({scale:1, rotation:0});
-    pdfZoom = Math.max(0.5, Math.min(2, (area.clientWidth - 32) / vp0.width));
+    var vp0 = page.getViewport({scale:1});
+    pdfZoom = Math.max(0.5, Math.min(2, (area.clientWidth-32)/vp0.width));
     renderPDFPage();
-  } catch(e) {
-    if (area) area.innerHTML = '<p style="color:rgba(255,255,255,.6);font-size:12px;">PDF yüklenemedi: '+e.message+'</p>';
-  }
+  } catch(e) { area.innerHTML = '<p style="color:rgba(255,255,255,.6);font-size:12px;padding:1rem;">PDF yüklenemedi: '+e.message+'</p>'; }
 }
 
 async function renderPDFPage() {
   if (!pdfDoc) return;
   var area = document.getElementById('pdf-canvas-area');
+  if (!area) return;
   area.className = 'pdf-canvas-wrap';
   try {
-    var page = await pdfDoc.getPage(pdfPage);
-    var vp = page.getViewport({scale: pdfZoom, rotation: pdfRotation});
+    var page = await pdfDoc.getPage(1);
+    var vp = page.getViewport({scale:pdfZoom, rotation:pdfRotation});
     var canvas = document.createElement('canvas');
     canvas.width = vp.width; canvas.height = vp.height;
-    area.innerHTML = '';
-    area.appendChild(canvas);
-    await page.render({canvasContext: canvas.getContext('2d'), viewport: vp}).promise;
-    var zv = document.getElementById('zoom-val');
-    if (zv) zv.textContent = Math.round(pdfZoom*100)+'%';
-  } catch(e) {
-    area.innerHTML = '<p style="color:rgba(255,255,255,.6);font-size:12px;">Render hatası: '+e.message+'</p>';
-  }
+    area.innerHTML = ''; area.appendChild(canvas);
+    await page.render({canvasContext:canvas.getContext('2d'), viewport:vp}).promise;
+    var zv = document.getElementById('zoom-val'); if(zv) zv.textContent = Math.round(pdfZoom*100)+'%';
+  } catch(e) {}
 }
 
-function zoomIn() { if (!pdfDoc) return; pdfZoom = Math.min(pdfZoom + 0.25, 4); renderPDFPage(); }
-function zoomOut() { if (!pdfDoc) return; pdfZoom = Math.max(pdfZoom - 0.25, 0.5); renderPDFPage(); }
-function rotatePDF() { if (!pdfDoc) return; pdfRotation = (pdfRotation + 90) % 360; renderPDFPage(); }
+function zoomIn() { if(!pdfDoc) return; pdfZoom = Math.min(pdfZoom+0.25,4); renderPDFPage(); }
+function zoomOut() { if(!pdfDoc) return; pdfZoom = Math.max(pdfZoom-0.25,0.5); renderPDFPage(); }
+function rotatePDF() { if(!pdfDoc) return; pdfRotation=(pdfRotation+90)%360; renderPDFPage(); }
 function zoomFit() {
-  if (!pdfDoc) return;
-  pdfDoc.getPage(pdfPage).then(function(page) {
-    var vp = page.getViewport({scale:1, rotation: pdfRotation});
+  if(!pdfDoc) return;
+  pdfDoc.getPage(1).then(function(page) {
+    var vp = page.getViewport({scale:1,rotation:pdfRotation});
     var area = document.getElementById('pdf-canvas-area');
-    if (!area) return;
-    var w = pdfRotation===90||pdfRotation===270 ? vp.height : vp.width;
-    pdfZoom = Math.max(0.3, (area.clientWidth - 32) / w);
+    if(!area) return;
+    pdfZoom = Math.max(0.3,(area.clientWidth-32)/vp.width);
     renderPDFPage();
   });
 }
 
-function uploadPDF(input, kalemId, idx) {
+function uploadPDF(input) {
+  var recordId = input.dataset.recid;
+  var idx = parseInt(input.dataset.idx);
   var file = input.files[0];
   if (!file) return;
-  if (file.size > 10 * 1024 * 1024) { toast('Max 10MB'); return; }
+  if (file.size > 10*1024*1024) { toast('Max 10MB'); return; }
   var objectUrl = URL.createObjectURL(file);
-  var pdfObj = {url: objectUrl, filename: file.name};
-  if (kalemId.endsWith('_main')) {
-    window._seFields['_localPDF'] = pdfObj;
-  } else {
-    if (!window._seKalemler[idx]) return;
-    window._seKalemler[idx].fields['_localPDF'] = pdfObj;
-  }
+  var r = window._currentGroup.kalemler[idx];
+  r.fields['_localPDF'] = {url: objectUrl, filename: file.name};
+  renderKalemler(window._currentGroup.kalemler, selectedKalemIdx);
   loadPDF(objectUrl, file.name);
-  var btn = document.querySelector('#kalem-'+idx+' .upbtn');
-  if (btn) { btn.className = 'upbtn has'; btn.childNodes[0].textContent = 'PDF mevcut'; }
-  // Netlify Blobs kalici kayit
-  var targetId = kalemId.endsWith('_main') ? window._seId : kalemId;
+  toast('PDF görüntüleniyor, kaydediliyor...');
+  // İş Emirleri tablosuna kaydet
   var reader = new FileReader();
   reader.onload = async function(e) {
     try {
       var upRes = await fetch('/.netlify/functions/upload-pdf', {
-        method: 'POST', headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({filename: file.name, data: e.target.result, recordId: targetId})
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({filename:file.name, data:e.target.result, recordId:recordId, table:'İş Emirleri'})
       });
       var upData = await upRes.json();
-      if (upData.success) toast('PDF kalici kaydedildi ✓');
-      else toast('Goruntuleme OK, kayit hatasi: ' + (upData.error||'?'));
-    } catch(e2) { toast('Goruntuleme OK, kayit hatasi: ' + e2.message); }
+      if (upData.success) toast('PDF Is Emirlerine kaydedildi ✓');
+      else toast('Görüntüleme OK, kayıt hatası: '+(upData.error||'?'));
+    } catch(e2) { toast('Görüntüleme OK, kayıt hatası: '+e2.message); }
   };
   reader.readAsDataURL(file);
 }
 
-async function updateDurum(id, durum) {
+async function updateAllDurum(durum) {
+  var g = window._currentGroup; if (!g) return;
   try {
-    await apiPatch('Satış Emirleri', id, {'Durum': durum});
-    var r = records.find(function(x){ return x.id===id; });
-    if (r) r.fields['Durum'] = durum;
-    filterList();
-    toast('Durum: '+durum);
-  } catch(e) { toast('Hata: '+e.message); }
-}
-
-async function deleteSE(id, no) {
-  if (!confirm('Sipariş '+no+' silinsin mi?')) return;
-  try {
-    var d = await apiDelete('Satış Emirleri', id);
-    if (d.deleted) {
-      records = records.filter(function(x){ return x.id!==id; });
-      selectedSE = null;
-      filterList();
-      document.getElementById('main').innerHTML = '<div class="empty-main">Sipariş silindi.</div>';
-      document.getElementById('sb-count').textContent = records.length+' sipariş';
-      toast('Silindi');
+    for (var i=0; i<g.kalemler.length; i++) {
+      await apiPatch('Satış Emirleri', g.kalemler[i].id, {'Durum':durum});
+      g.kalemler[i].fields['Durum'] = durum;
+      records.find(function(r){ return r.id===g.kalemler[i].id; }).fields['Durum'] = durum;
     }
+    g.durum = durum; filterList(); toast('Durum: '+durum);
   } catch(e) { toast('Hata: '+e.message); }
 }
 
-
-function openSTLModal(seId, seNo, parcaAdi, miktar, birim) {
-  window.location.href = 'ersan_satinalma.html';
-}
-
-
-
-async function saveSE(id) {
-  var terminInput = document.getElementById('termin-input-' + id);
-  var notlarInput = document.getElementById('notlar-input-' + id);
-  var fields = {};
-  if (terminInput) fields['Termin Tarihi'] = terminInput.value || null;
-  if (notlarInput) fields['Notlar'] = notlarInput.value || null;
-  if (!Object.keys(fields).length) { toast('Kaydedilecek değişiklik yok'); return; }
+async function deleteGroup(spNo) {
+  if (!confirm(spNo+' siparişi ve tüm kalemleri silinsin mi?')) return;
+  var g = window._currentGroup; if (!g) return;
   try {
-    await apiPatch('Satış Emirleri', id, fields);
-    var r = records.find(function(x){ return x.id===id; });
-    if (r) Object.assign(r.fields, fields);
-    toast('Kaydedildi ✓');
-  } catch(e) { toast('Hata: ' + e.message); }
+    for (var i=0; i<g.kalemler.length; i++) {
+      await apiDelete('Satış Emirleri', g.kalemler[i].id);
+    }
+    records = records.filter(function(r){ return spParent(r.fields['SE No']||r.id) !== spNo; });
+    selectedSP = null; filterList();
+    document.getElementById('main').innerHTML = '<div class="empty-main">Sipariş silindi.</div>';
+    toast('Silindi');
+  } catch(e) { toast('Hata: '+e.message); }
 }
 
+// ── SATINALMA TALEBİ MODAL ──────────────────────────────────────────────────
+function openSTLModal(g) {
+  var existing = document.getElementById('stl-modal'); if(existing) existing.remove();
+  var YOGUNLUK = {Çelik:7.85,Paslanmaz:7.93,Alüminyum:2.70,Titanyum:4.51,Bronz:8.89};
+  window._stlRows = g.kalemler.map(function(r) {
+    return {tip:'Hammadde',malzemeTipi:'Mil',malzemeCinsi:'',yogunluk:'Çelik',cap:'',boy:'',ic_cap:'',miktar:r.fields['Miktar']||0,birim:r.fields['Birim']||'Adet',parcaAdi:r.fields['Parça Adı']||'',seId:r.id};
+  });
+
+  var modal = document.createElement('div');
+  modal.id = 'stl-modal';
+  modal.className = 'modal-bg';
+  modal.innerHTML = '<div class="modal-box">'+
+    '<div class="modal-head">'+
+    '<div><div class="modal-title">📋 Satınalma Talebi — '+g.spNo+'</div>'+
+    '<div class="modal-sub">'+g.kalemler.length+' kalem</div></div>'+
+    '<button id="stl-close" style="background:transparent;border:none;color:#fff;font-size:20px;cursor:pointer;">×</button>'+
+    '</div>'+
+    '<div class="modal-body" id="stl-body"></div>'+
+    '<div class="modal-foot">'+
+    '<button id="stl-cancel" class="btn">İptal</button>'+
+    '<button onclick="saveSTL()" class="btn btn-amber">💾 Talebi Kaydet</button>'+
+    '</div></div>';
+  document.body.appendChild(modal);
+  document.getElementById('stl-close').onclick = function() { modal.remove(); };
+  document.getElementById('stl-cancel').onclick = function() { modal.remove(); };
+  renderSTL();
+}
+
+function stlChange(el) {
+  var idx = parseInt(el.dataset.stlIdx);
+  var field = el.dataset.stlField;
+  window._stlRows[idx][field] = el.value;
+  if (field === 'tip') window._stlRows[idx].malzemeTipi = el.value === 'Fason' ? 'Fason' : 'Mil';
+  renderSTL();
+}
+
+function stlInput(el) {
+  var idx = parseInt(el.dataset.stlIdx);
+  var field = el.dataset.stlField;
+  window._stlRows[idx][field] = el.value;
+  if (['cap','boy','ic_cap'].includes(field)) renderSTL();
+}
+
+
+function renderSTL() {
+  var body = document.getElementById('stl-body');
+  body.innerHTML = '';
+  window._stlRows.forEach(function(s, i) {
+    var YOGUNLUK = {Çelik:7.85,Paslanmaz:7.93,Alüminyum:2.70,Titanyum:4.51,Bronz:8.89};
+    var rho = YOGUNLUK[s.yogunluk]||7.85, kg=0;
+    if (s.malzemeTipi==='Mil'){var r=(parseFloat(s.cap)||0)/2/10,h=(parseFloat(s.boy)||0)/10;kg=Math.PI*r*r*h*rho*(s.miktar||1);}
+    else if(s.malzemeTipi==='Boru'){var rd=(parseFloat(s.cap)||0)/2/10,ri=(parseFloat(s.ic_cap)||0)/2/10,h=(parseFloat(s.boy)||0)/10;kg=Math.PI*(rd*rd-ri*ri)*h*rho*(s.miktar||1);}
+
+    var div = document.createElement('div');
+    div.style.cssText = 'border:1px solid #e2e5ea;border-radius:8px;padding:10px;margin-bottom:8px;';
+
+    var header = '<div style="font-size:11px;font-weight:600;color:#7c3aed;margin-bottom:8px;">'+(i+1)+'. '+s.parcaAdi+'</div>';
+    var grid = '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">';
+
+    // Tip select
+    grid += '<div><div style="font-size:10px;color:#9aa0ad;margin-bottom:2px">TİP</div>'+
+      '<select id="stl-tip-'+i+'" style="width:100%;padding:4px;border:1px solid #e2e5ea;border-radius:6px;font-size:11px;">'+
+      '<option'+(s.tip==='Hammadde'?' selected':'')+'>Hammadde</option>'+
+      '<option'+(s.tip==='Fason'?' selected':'')+'>Fason</option>'+
+      '</select></div>';
+
+    if (s.tip === 'Hammadde') {
+      grid += '<div><div style="font-size:10px;color:#9aa0ad;margin-bottom:2px">MALZEME TİPİ</div>'+
+        '<select id="stl-mtyp-'+i+'" style="width:100%;padding:4px;border:1px solid #e2e5ea;border-radius:6px;font-size:11px;">'+
+        ['Mil','Boru','Lama','Sac'].map(function(t){ return '<option'+(s.malzemeTipi===t?' selected':'')+'>'+t+'</option>'; }).join('')+
+        '</select></div>';
+      grid += '<div><div style="font-size:10px;color:#9aa0ad;margin-bottom:2px">MALZEMECİNSİ</div>'+
+        '<input id="stl-mc-'+i+'" style="width:100%;padding:4px;border:1px solid #e2e5ea;border-radius:6px;font-size:11px;" value="'+(s.malzemeCinsi||'')+'" placeholder="AISI 4140"></div>';
+      grid += '<div><div style="font-size:10px;color:#9aa0ad;margin-bottom:2px">'+(s.malzemeTipi==='Boru'?'DIŞ ':'')+'ÇAP (mm)</div>'+
+        '<input id="stl-cap-'+i+'" type="number" style="width:100%;padding:4px;border:1px solid #e2e5ea;border-radius:6px;font-size:11px;" value="'+(s.cap||'')+'" placeholder="150"></div>';
+      if (s.malzemeTipi === 'Boru') {
+        grid += '<div><div style="font-size:10px;color:#9aa0ad;margin-bottom:2px">İÇ ÇAP (mm)</div>'+
+          '<input id="stl-ic-'+i+'" type="number" style="width:100%;padding:4px;border:1px solid #e2e5ea;border-radius:6px;font-size:11px;" value="'+(s.ic_cap||'')+'"></div>';
+      }
+      grid += '<div><div style="font-size:10px;color:#9aa0ad;margin-bottom:2px">BOY (mm)</div>'+
+        '<input id="stl-boy-'+i+'" type="number" style="width:100%;padding:4px;border:1px solid #e2e5ea;border-radius:6px;font-size:11px;" value="'+(s.boy||'')+'" placeholder="200"></div>';
+      if (kg > 0) {
+        grid += '<div style="grid-column:1/-1;background:#d1fae5;border-radius:6px;padding:4px 8px;font-size:11px;color:#059669;font-weight:600;">Tahmini: '+kg.toFixed(2)+' kg</div>';
+      }
+    } else {
+      grid += '<div><div style="font-size:10px;color:#9aa0ad;margin-bottom:2px">İŞLEM</div>'+
+        '<input id="stl-mc-'+i+'" style="width:100%;padding:4px;border:1px solid #e2e5ea;border-radius:6px;font-size:11px;" value="'+(s.malzemeCinsi||'')+'" placeholder="Isil Islem..."></div>';
+      grid += '<div><div style="font-size:10px;color:#9aa0ad;margin-bottom:2px">ŞARTNAME</div>'+
+        '<input id="stl-spec-'+i+'" style="width:100%;padding:4px;border:1px solid #e2e5ea;border-radius:6px;font-size:11px;" value="'+(s.spec||'')+'" placeholder="58-60 HRC"></div>';
+    }
+    grid += '</div>';
+    div.innerHTML = header + grid;
+    body.appendChild(div);
+
+    // Event listeners
+    setTimeout(function(idx) {
+      var tipSel = document.getElementById('stl-tip-'+idx);
+      if (tipSel) tipSel.onchange = function() {
+        window._stlRows[idx].tip = this.value;
+        window._stlRows[idx].malzemeTipi = this.value === 'Fason' ? 'Fason' : 'Mil';
+        renderSTL();
+      };
+      var mtypSel = document.getElementById('stl-mtyp-'+idx);
+      if (mtypSel) mtypSel.onchange = function() { window._stlRows[idx].malzemeTipi = this.value; renderSTL(); };
+      var mcIn = document.getElementById('stl-mc-'+idx);
+      if (mcIn) mcIn.oninput = function() { window._stlRows[idx].malzemeCinsi = this.value; };
+      var capIn = document.getElementById('stl-cap-'+idx);
+      if (capIn) capIn.oninput = function() { window._stlRows[idx].cap = this.value; renderSTL(); };
+      var icIn = document.getElementById('stl-ic-'+idx);
+      if (icIn) icIn.oninput = function() { window._stlRows[idx].ic_cap = this.value; renderSTL(); };
+      var boyIn = document.getElementById('stl-boy-'+idx);
+      if (boyIn) boyIn.oninput = function() { window._stlRows[idx].boy = this.value; renderSTL(); };
+      var specIn = document.getElementById('stl-spec-'+idx);
+      if (specIn) specIn.oninput = function() { window._stlRows[idx].spec = this.value; };
+    }, 0, i);
+  });
+}
+
+async function saveSTL() {
+  var STL = 'tblHmfCvNZq0qNtb1';
+  var YOGUNLUK = {Çelik:7.85,Paslanmaz:7.93,Alüminyum:2.70,Titanyum:4.51,Bronz:8.89};
+  try {
+    for (var i=0; i<window._stlRows.length; i++) {
+      var s = window._stlRows[i];
+      var rho = YOGUNLUK[s.yogunluk]||7.85, kg=0;
+      if (s.malzemeTipi==='Mil'){var r=(parseFloat(s.cap)||0)/2/10,h=(parseFloat(s.boy)||0)/10;kg=Math.PI*r*r*h*rho*(s.miktar||1);}
+      else if(s.malzemeTipi==='Boru'){var rd=(parseFloat(s.cap)||0)/2/10,ri=(parseFloat(s.ic_cap)||0)/2/10,h=(parseFloat(s.boy)||0)/10;kg=Math.PI*(rd*rd-ri*ri)*h*rho*(s.miktar||1);}
+      var olcu = s.malzemeTipi==='Mil'?'Ø'+s.cap+'×'+s.boy+'mm':s.malzemeTipi==='Boru'?'Ø'+s.cap+'/'+s.ic_cap+'×'+s.boy+'mm':'';
+      await fetch('/.netlify/functions/airtable',{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({method:'POST',path:'/v0/'+BASE+'/'+encodeURIComponent('Satınalma Talepleri'),body:{fields:{
+          'SE No': s.seId ? [s.seId] : null,
+          'Kalem Adı': s.parcaAdi,
+          'Talep Tipi': s.tip,
+          'Malzeme İşlem': s.tip==='Fason'?(s.malzemeCinsi||''):(s.malzemeTipi+' - '+(s.malzemeCinsi||'')),
+          'Miktar': s.miktar||0,
+          'Birim': s.birim||'Adet',
+          'Ölçü': olcu||null,
+          'Tahmini kg': kg>0?parseFloat(kg.toFixed(3)):null,
+          'Durum':'Taslak'
+        }}})
+      });
+    }
+    document.getElementById('stl-modal').remove();
+    toast(window._stlRows.length+' satınalma talebi oluşturuldu ✓');
+  } catch(e) { toast('Hata: '+e.message); }
+}
 
 loadList();
 </script>
