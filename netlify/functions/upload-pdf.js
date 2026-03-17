@@ -59,7 +59,8 @@ exports.handler = async (event) => {
        body:JSON.stringify({fields:{'Teknik Resim':[{url, filename}]}})}
     );
     const atd = await at.json();
-    console.log('Airtable response:', JSON.stringify(atd).substring(0,300));
+    console.log('Airtable response:', JSON.stringify(atd).substring(0,500));
+    if (atd.fields && atd.fields['Teknik Resim']) console.log('PDF URL:', atd.fields['Teknik Resim'][0]?.url);
     if (atd.error) throw new Error('Airtable: '+JSON.stringify(atd.error));
 
     return {statusCode:200,headers:CORS,body:JSON.stringify({success:true,url})};
