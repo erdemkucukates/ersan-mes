@@ -1231,7 +1231,7 @@ function showTeknikResimModal(teklifId, seciliItems, musteriId, f) {
     modal.innerHTML = `
       <div style="background:white;border-radius:12px;width:560px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3);">
         <div style="background:#1e1b4b;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;">
-          <div style="color:white;font-weight:600;font-size:14px;">Satış Emri Oluştur — ${seciliItems.length} Kalem</div>
+          <div style="color:white;font-weight:600;font-size:14px;">Sipariş Oluştur — ${seciliItems.length} Kalem</div>
           <button onclick="document.getElementById('teknik-resim-modal').remove()" style="background:transparent;border:none;color:white;font-size:20px;cursor:pointer;">×</button>
         </div>
         <div style="padding:16px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:10px;">
@@ -1241,7 +1241,7 @@ function showTeknikResimModal(teklifId, seciliItems, musteriId, f) {
         </div>
         <div style="padding:12px 20px;border-top:1px solid #e2e5ea;display:flex;justify-content:flex-end;gap:8px;flex-shrink:0;">
           <button onclick="document.getElementById('teknik-resim-modal').remove()" style="padding:8px 16px;border-radius:6px;border:1px solid #e2e5ea;background:transparent;font-size:12px;cursor:pointer;font-family:var(--sans);">İptal</button>
-          <button id="btn-se-olustur" onclick="confirmSEOlustur('${teklifId}')" style="padding:8px 20px;border-radius:6px;border:none;background:#7c3aed;color:white;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);">✓ Satış Emirlerini Oluştur</button>
+          <button id="btn-se-olustur" onclick="confirmSEOlustur('${teklifId}')" style="padding:8px 20px;border-radius:6px;border:none;background:#7c3aed;color:white;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);">✓ Siparişi Oluştur</button>
         </div>
       </div>`;
     document.body.appendChild(modal);
@@ -1277,9 +1277,10 @@ async function confirmSEOlustur(teklifId) {
     const seIds = [];
     for (let i = 0; i < seciliItems.length; i++) {
       const item = seciliItems[i];
-      const seNoStr = 'SE-' + new Date().getFullYear() + '-' + String(lastNum + i + 1).padStart(3,'0');
+      // SP-2026-001-01 formatinda numaralandirma (SE No formula ile uretilecek)
+      const spNo = 'SP-' + new Date().getFullYear() + '-' + String(lastNum + 1).padStart(3,'0');
       const seFields = {
-        'SE No': seNoStr,
+        'Kalem Sıra': i + 1,
         'Parça No': item.stokKodu || item.malzemeNo || null,
         'Parça Adı': item.parcaAdi || '',
         'Miktar': item.miktar || 0,
@@ -1292,26 +1293,28 @@ async function confirmSEOlustur(teklifId) {
       if (f['Teklif Notu']) seFields['Müşteri PO No'] = f['Teklif Notu'];
       const res = await api('POST', TABLES.satisEmirleri, {fields: seFields});
       seIds.push(res.id);
-      // Teknik resim varsa ayrıca yükle
+      // PDF Data olarak kalici kaydet
       if (window._trFiles && window._trFiles[i]) {
         try {
           const file = window._trFiles[i];
-          const b64 = await fileToBase64(file);
-          await api('PATCH', TABLES.satisEmirleri, {fields: {'Teknik Resim': [{url: b64, filename: file.name}]}}, res.id);
+          const dataUrl = await fileToBase64(file);
+          await api('PATCH', TABLES.satisEmirleri, {fields: {
+            'PDF Data': JSON.stringify({filename: file.name, data: dataUrl, size: file.size})
+          }}, res.id);
         } catch(e2) {
-          toast(seNoStr + ': Teknik resim kaydedilemedi (SE oluşturuldu)', 'info');
+          toast('PDF kaydedilemedi (siparis olusturuldu)', 'info');
         }
       }
     }
     document.getElementById('teknik-resim-modal')?.remove();
     window._trFiles = {};
-    toast(seIds.length + ' adet Satış Emri oluşturuldu ✓', 'success');
+    toast(seciliItems.length + ' kalem sipariş oluşturuldu (' + spNo + ') ✓', 'success');
     await loadAll();
     await loadDetail(teklifId);
   } catch(e) {
     const errEl = document.getElementById('tr-error');
     if (errEl) { errEl.textContent = 'Hata: ' + e.message; errEl.style.display = 'block'; }
-    if (btn) { btn.disabled = false; btn.textContent = '✓ Satış Emirlerini Oluştur'; }
+    if (btn) { btn.disabled = false; btn.textContent = '✓ Siparişi Oluştur'; }
   }
 }
 
