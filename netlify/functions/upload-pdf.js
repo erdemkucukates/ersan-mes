@@ -9,6 +9,7 @@ exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') return {statusCode:200,headers:CORS,body:''};
   if (event.httpMethod !== 'POST') return {statusCode:405,headers:CORS,body:JSON.stringify({error:'POST only'})};
   try {
+    console.log('upload-pdf called, recordId:', JSON.parse(event.body||'{}').recordId);
     const {filename, data, recordId} = JSON.parse(event.body||'{}');
     if (!filename||!data||!recordId) return {statusCode:400,headers:CORS,body:JSON.stringify({error:'eksik parametre'})};
 
@@ -44,6 +45,7 @@ exports.handler = async (event) => {
       {method:'POST', body: fd}
     );
     const upData = await upRes.json();
+    console.log('Cloudinary response:', JSON.stringify(upData).substring(0,200));
     if (upData.error) throw new Error('Cloudinary: ' + upData.error.message);
 
     const url = upData.secure_url;
@@ -61,6 +63,7 @@ exports.handler = async (event) => {
 
     return {statusCode:200,headers:CORS,body:JSON.stringify({success:true,url})};
   } catch(e) {
+    console.log('ERROR:', e.message);
     return {statusCode:500,headers:CORS,body:JSON.stringify({error:e.message})};
   }
 };
