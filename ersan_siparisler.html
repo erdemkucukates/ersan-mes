@@ -459,46 +459,33 @@ function zoomFit() {
 function uploadPDF(input, kalemId, idx) {
   var file = input.files[0];
   if (!file) return;
-  
-  // Dosyayı yerel olarak oku ve hemen göster
-  var reader = new FileReader();
-  reader.onload = function(e) {
-    var dataUrl = e.target.result;
-    var objectUrl = URL.createObjectURL(file);
-    
-    // Lokal önbellekte sakla
-    if (kalemId.endsWith('_main')) {
-      window._seFields['_localPDF'] = {url: objectUrl, filename: file.name, dataUrl: dataUrl};
-    } else {
-      window._seKalemler[idx].fields['_localPDF'] = {url: objectUrl, filename: file.name, dataUrl: dataUrl};
-    }
-    
-    // PDF viewer'ı hemen güncelle
-    loadPDF(objectUrl, file.name);
-    
-    // Butonu güncelle
-    var btn = document.querySelector('#kalem-'+idx+' .upbtn');
-    if (btn) { btn.className = 'upbtn has'; btn.childNodes[0].textContent = 'PDF mevcut'; }
-    
-    toast('PDF yüklendi ve gösteriliyor');
-  };
-  reader.readAsArrayBuffer(file);
-  
-  // ObjectURL için ayrıca oku
-  var reader2 = new FileReader();
-  reader2.onload = function() {};
-  // Blob URL kullan
+  if (file.size > 10 * 1024 * 1024) { toast('Max 10MB'); return; }
   var objectUrl = URL.createObjectURL(file);
+  var pdfObj = {url: objectUrl, filename: file.name};
   if (kalemId.endsWith('_main')) {
-    window._seFields['_localPDF'] = {url: objectUrl, filename: file.name};
+    window._seFields['_localPDF'] = pdfObj;
   } else {
     if (!window._seKalemler[idx]) return;
-    window._seKalemler[idx].fields['_localPDF'] = {url: objectUrl, filename: file.name};
+    window._seKalemler[idx].fields['_localPDF'] = pdfObj;
   }
   loadPDF(objectUrl, file.name);
   var btn = document.querySelector('#kalem-'+idx+' .upbtn');
   if (btn) { btn.className = 'upbtn has'; btn.childNodes[0].textContent = 'PDF mevcut'; }
-  toast('PDF yüklendi');
+  // Netlify Blobs kalici kayit
+  var targetId = kalemId.endsWith('_main') ? window._seId : kalemId;
+  var reader = new FileReader();
+  reader.onload = async function(e) {
+    try {
+      var upRes = await fetch('/.netlify/functions/upload-pdf', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({filename: file.name, data: e.target.result, recordId: targetId})
+      });
+      var upData = await upRes.json();
+      if (upData.success) toast('PDF kalici kaydedildi ✓');
+      else toast('Goruntuleme OK, kayit hatasi: ' + (upData.error||'?'));
+    } catch(e2) { toast('Goruntuleme OK, kayit hatasi: ' + e2.message); }
+  };
+  reader.readAsDataURL(file);
 }
 
 async function updateDurum(id, durum) {
