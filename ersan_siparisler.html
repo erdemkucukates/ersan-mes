@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — Sipariş Yönetimi</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f0f2f5; }
+.layout { display: flex; height: calc(100vh - 48px); }
+.sidebar { width: 240px; border-right: 1px solid #e2e5ea; background: #fff; display: flex; flex-direction: column; flex-shrink: 0; }
+.sidebar-header { padding: 14px 16px 10px; border-bottom: 1px solid #e2e5ea; display: flex; align-items: center; justify-content: space-between; }
+.sidebar-title { font-size: 13px; font-weight: 600; color: #1a1d23; }
+.sidebar-count { font-size: 11px; color: #9aa0ad; margin-top: 1px; }
+.btn-new { background: #7c3aed; color: white; border: none; border-radius: 6px; padding: 5px 12px; font-size: 11px; font-weight: 600; cursor: pointer; }
+.search { margin: 8px 10px; padding: 7px 10px; border: 1px solid #e2e5ea; border-radius: 7px; font-size: 12px; width: calc(100% - 20px); outline: none; }
+.search:focus { border-color: #7c3aed; }
+.filter-tabs { display: flex; gap: 4px; padding: 0 10px 8px; flex-wrap: wrap; }
+.ftab { padding: 3px 10px; border-radius: 20px; font-size: 11px; border: 1px solid #e2e5ea; cursor: pointer; color: #5a6170; background: #fff; }
+.ftab.active { background: #1a1d23; color: #fff; border-color: #1a1d23; }
+.list { flex: 1; overflow-y: auto; }
+.list-item { padding: 10px 14px; border-bottom: 1px solid #f0f2f5; cursor: pointer; }
+.list-item:hover { background: #f7f8fa; }
+.list-item.active { background: #ede9fe; border-left: 3px solid #7c3aed; }
+.item-no { font-size: 11px; font-weight: 600; color: #7c3aed; font-family: monospace; }
+.item-name { font-size: 12px; color: #1a1d23; margin-top: 2px; font-weight: 500; }
+.item-meta { font-size: 11px; color: #9aa0ad; margin-top: 2px; display: flex; justify-content: space-between; }
+.s-pill { font-size: 10px; padding: 2px 7px; border-radius: 10px; font-weight: 600; }
+.s-Beklemede { background: #f3f4f6; color: #6b7280; }
+.s-Uretimde { background: #dbeafe; color: #2563eb; }
+.s-Tamamlandi { background: #d1fae5; color: #059669; }
+.s-Iptal { background: #fee2e2; color: #dc2626; }
+.detail { flex: 1; overflow-y: auto; padding: 1.5rem; background: #f0f2f5; }
+.empty { display: flex; align-items: center; justify-content: center; height: 100%; color: #9aa0ad; font-size: 14px; }
+.card { background: #fff; border: 1px solid #e2e5ea; border-radius: 10px; padding: 1rem 1.25rem; margin-bottom: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+.card-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: #9aa0ad; margin-bottom: .875rem; }
+.det-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 1.25rem; }
+.det-title { font-size: 20px; font-weight: 700; color: #1a1d23; font-family: monospace; }
+.btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.btn { padding: 6px 14px; border-radius: 7px; font-size: 12px; font-weight: 500; border: 1px solid #e2e5ea; cursor: pointer; background: #fff; color: #5a6170; }
+.btn:hover { background: #f7f8fa; }
+.btn-danger { border-color: #fca5a5; color: #dc2626; }
+.btn-danger:hover { background: #fee2e2; }
+.btn-blue { background: #2563eb; color: #fff; border-color: #2563eb; }
+.btn-purple { background: #7c3aed; color: #fff; border-color: #7c3aed; }
+.btn-amber { background: #f59e0b; color: #fff; border-color: #f59e0b; }
+.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: .75rem; }
+.grid4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: .75rem; }
+.field label { font-size: 10px; color: #9aa0ad; font-weight: 600; text-transform: uppercase; display: block; margin-bottom: 3px; }
+.field .val { font-size: 13px; color: #1a1d23; font-weight: 500; }
+.toast { position: fixed; bottom: 20px; right: 20px; background: #1a1d23; color: #fff; padding: 10px 18px; border-radius: 8px; font-size: 13px; z-index: 9999; opacity: 0; transition: opacity .3s; }
+.toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+<script src="ersan_nav.js"></script>
+<div class="toast" id="toast"></div>
+<div class="layout">
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <div>
+        <div class="sidebar-title">Siparişler</div>
+        <div class="sidebar-count" id="count">yükleniyor...</div>
+      </div>
+    </div>
+    <input class="search" id="search" placeholder="SE no veya parça ara..." oninput="filterList()">
+    <div class="filter-tabs">
+      <button class="ftab active" onclick="setFilter(this,'Tümü')">Tümü</button>
+      <button class="ftab" onclick="setFilter(this,'Beklemede')">Beklemede</button>
+      <button class="ftab" onclick="setFilter(this,'Üretimde')">Üretimde</button>
+      <button class="ftab" onclick="setFilter(this,'Tamamlandı')">Tamamlandı</button>
+    </div>
+    <div class="list" id="list"><div style="padding:1rem;font-size:12px;color:#9aa0ad;">Yükleniyor...</div></div>
+  </div>
+  <div class="detail" id="detail">
+    <div class="empty">Soldaki listeden bir sipariş seçin.</div>
+  </div>
+</div>
+<script>
+var records = [], currentFilter = 'Tümü', selectedId = null;
+var BASE = 'app5LDgJMgocw79Ix';
+
+function toast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); }, 2500);
+}
+
+function statusClass(s) {
+  if (s === 'Üretimde')   return 's-Uretimde';
+  if (s === 'Tamamlandı') return 's-Tamamlandi';
+  if (s === 'İptal')      return 's-Iptal';
+  return 's-Beklemede';
+}
+
+function pill(s) {
+  return '<span class="s-pill ' + statusClass(s||'Beklemede') + '">' + (s||'Beklemede') + '</span>';
+}
+
+async function apiGet(table, params) {
+  var path = '/v0/' + BASE + '/' + encodeURIComponent(table) + (params ? '?' + params : '');
+  var r = await fetch('/.netlify/functions/airtable', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({method: 'GET', path: path})
+  });
+  return r.json();
+}
+
+async function apiPatch(table, id, fields) {
+  var r = await fetch('/.netlify/functions/airtable', {
+    method: 'PATCH',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({table: table, id: id, fields: fields})
+  });
+  return r.json();
+}
+
+async function apiDelete(table, id) {
+  var r = await fetch('/.netlify/functions/airtable', {
+    method: 'DELETE',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({table: table, id: id})
+  });
+  return r.json();
+}
+
+async function loadList() {
+  try {
+    var d = await apiGet('Satış Emirleri', 'pageSize=100&sort[0][field]=SE+No&sort[0][direction]=desc');
+    records = d.records || [];
+    document.getElementById('count').textContent = records.length + ' sipariş';
+    filterList();
+  } catch(e) {
+    document.getElementById('list').innerHTML = '<div style="padding:1rem;font-size:12px;color:#dc2626;">Hata: '+e.message+'</div>';
+  }
+}
+
+function setFilter(el, f) {
+  currentFilter = f;
+  document.querySelectorAll('.ftab').forEach(function(t){ t.classList.remove('active'); });
+  el.classList.add('active');
+  filterList();
+}
+
+function filterList() {
+  var q = (document.getElementById('search').value || '').toLowerCase();
+  var filtered = records.filter(function(r) {
+    var f = r.fields;
+    var matchFilter = currentFilter === 'Tümü' || (f['Durum']||'Beklemede') === currentFilter;
+    var matchQ = !q || (f['SE No']||'').toLowerCase().includes(q) || (f['Parça Adı']||'').toLowerCase().includes(q) || (f['Parça No']||'').toLowerCase().includes(q);
+    return matchFilter && matchQ;
+  });
+  var html = filtered.length === 0
+    ? '<div style="padding:1rem;font-size:12px;color:#9aa0ad;text-align:center;">Kayıt bulunamadı</div>'
+    : filtered.map(function(r) {
+        var f = r.fields;
+        var no = f['SE No'] || r.id.slice(-6);
+        return '<div class="list-item' + (r.id===selectedId?' active':'') + '" onclick="selectRecord(''+r.id+'')">'+
+          '<div style="display:flex;justify-content:space-between;align-items:center;">'+
+          '<span class="item-no">'+no+'</span>'+pill(f['Durum'])+'</div>'+
+          '<div class="item-name">'+(f['Parça Adı']||'—')+'</div>'+
+          '<div class="item-meta"><span>'+(f['Parça No']||'—')+'</span><span>'+(f['Miktar']||0)+' '+(f['Birim']||'Adet')+'</span></div>'+
+          '</div>';
+      }).join('');
+  document.getElementById('list').innerHTML = html;
+}
+
+function selectRecord(id) {
+  selectedId = id;
+  filterList();
+  var r = records.find(function(x){ return x.id===id; });
+  if (!r) return;
+  var f = r.fields;
+  var no = f['SE No'] || id.slice(-6);
+  document.getElementById('detail').innerHTML =
+    '<div class="det-header">'+
+    '<div><div class="det-title">'+no+'</div>'+
+    '<div style="margin-top:6px;">'+pill(f['Durum'])+'</div></div>'+
+    '<div class="btn-row">'+
+    '<button class="btn btn-amber" onclick="window.location='ersan_satinalma.html'">📋 Satınalma Talebi</button>'+
+    '<button class="btn btn-blue" onclick="window.location='ersan_isemirleri.html'">⚙ İş Emri Aç</button>'+
+    '<select onchange="updateDurum(''+id+'',this.value)" style="padding:6px 10px;border:1px solid #e2e5ea;border-radius:7px;font-size:12px;cursor:pointer;">'+
+    ['Beklemede','Üretimde','Tamamlandı','Kısmi Sevk','İptal'].map(function(d){ return '<option'+(d===(f['Durum']||'Beklemede')?' selected':'')+'>'+d+'</option>'; }).join('')+
+    '</select>'+
+    '<button class="btn btn-danger" onclick="deleteSiparis(''+id+'',''+no+'')">🗑 Sil</button>'+
+    '</div></div>'+
+    '<div class="card"><div class="card-title">Sipariş Detayı</div>'+
+    '<div class="grid4">'+
+    field('SE No', no)+field('Parça Adı', f['Parça Adı'])+field('Parça No', f['Parça No'])+field('Revizyon', f['Revizyon'])+
+    field('Miktar', (f['Miktar']||0)+' '+(f['Birim']||'Adet'))+field('Termin', f['Termin Tarihi'])+field('Durum', f['Durum'])+field('Müşteri PO', f['Müşteri PO No'])+
+    '</div></div>'+
+    (f['Notlar']?'<div class="card"><div class="card-title">Notlar</div><div style="font-size:13px;color:#5a6170;line-height:1.6">'+(f['Notlar']||'—')+'</div></div>':'');
+}
+
+function field(label, val) {
+  return '<div class="field"><label>'+label+'</label><div class="val">'+(val||'—')+'</div></div>';
+}
+
+async function updateDurum(id, durum) {
+  try {
+    await apiPatch('Satış Emirleri', id, {'Durum': durum});
+    var r = records.find(function(x){ return x.id===id; });
+    if (r) r.fields['Durum'] = durum;
+    filterList();
+    toast('Durum güncellendi: '+durum);
+  } catch(e) { toast('Hata: '+e.message); }
+}
+
+async function deleteSiparis(id, no) {
+  if (!confirm('Sipariş '+no+' silinsin mi?')) return;
+  try {
+    var d = await apiDelete('Satış Emirleri', id);
+    if (d.deleted) {
+      records = records.filter(function(x){ return x.id!==id; });
+      selectedId = null;
+      filterList();
+      document.getElementById('detail').innerHTML = '<div class="empty">Sipariş silindi.</div>';
+      document.getElementById('count').textContent = records.length + ' sipariş';
+      toast('Silindi');
+    } else { toast('Silinemedi'); }
+  } catch(e) { toast('Hata: '+e.message); }
+}
+
+loadList();
+</script>
+</body>
+</html>
