@@ -1297,7 +1297,21 @@ async function confirmSEOlustur(teklifId) {
       const res = await api('POST', TABLES.satisEmirleri, {fields: seFields});
       console.log('SE olusturuldu:', res.id, JSON.stringify(res).substring(0,100));
       seIds.push(res.id);
-
+      if (window._trFiles && window._trFiles[i]) {
+        try {
+          const file = window._trFiles[i];
+          const dataUrl = await fileToBase64(file);
+          const upRes = await fetch('/.netlify/functions/upload-pdf', {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({filename: file.name, data: dataUrl, recordId: res.id})
+          });
+          const upData = await upRes.json();
+          if (!upData.success) throw new Error(upData.error||'Upload failed');
+          toast('PDF kaydedildi ✓', 'success');
+        } catch(e2) {
+          toast('PDF kaydedilemedi: ' + e2.message, 'info');
+        }
+      }
     }
     document.getElementById('teknik-resim-modal')?.remove();
     window._trFiles = {};
