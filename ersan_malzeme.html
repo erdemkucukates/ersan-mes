@@ -979,23 +979,24 @@ async function saveNewEntry() {
   btn.textContent = 'Kaydediliyor...';
 
   const fields = {
-    'Tedarikçiler (OTL)': [tedarikciId],
-    'İrsaliye No': irsaliye,
     'Malzeme Adı': malzemeAdi,
-    'Birim': birim,
     'Toplam Miktar': miktar,
+    'Birim': birim,
     'Giriş Tarihi': tarih || new Date().toISOString().split('T')[0],
     'Statü': 'Karantinada',
-    'Gözle Muayene': 'Bekliyor',
-    'Sertifika Durumu': 'Bekliyor'
   };
+  // Link alanı — sadece geçerli record ID varsa
+  if (tedarikciId && tedarikciId.startsWith('rec')) fields['Tedarikçiler (OTL)'] = [tedarikciId];
   if (standart) fields['Malzeme Standardı'] = standart;
-  // STL bilgisi Notlar alanına referans olarak yazılır (link alanı tabloda yok)
+  // Notlar — irsaliye ve STL referansı
+  var notParts = [];
+  if (irsaliye) notParts.push('İrsaliye: ' + irsaliye);
   if (stlId) {
     var stlRec = stlList.find(function(x){ return x.id === stlId; });
-    var stlRef = stlRec ? (stlRec.fields['Talep No'] || stlId) : stlId;
-    fields['Notlar'] = 'Satınalma Talebi: ' + stlRef;
+    notParts.push('Satınalma Talebi: ' + (stlRec ? (stlRec.fields['Talep No'] || stlId) : stlId));
   }
+  if (notParts.length) fields['Notlar'] = notParts.join(' | ');
+  console.log('[MAT-NEW] fields:', JSON.stringify(fields));
 
   try {
     const res = await apiFn('POST', T.malzeme, { fields });
