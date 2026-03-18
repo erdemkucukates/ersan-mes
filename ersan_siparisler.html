@@ -422,7 +422,10 @@ async function loadPDF(url, filename) {
     var vp0 = page.getViewport({scale:1});
     pdfZoom = Math.max(0.5, Math.min(2, (area.clientWidth-32)/vp0.width));
     renderPDFPage();
-  } catch(e) { area.innerHTML = '<p style="color:rgba(255,255,255,.6);font-size:12px;padding:1rem;">PDF yüklenemedi: '+e.message+'</p>'; }
+  } catch(e) {
+    console.error('[PDF-VIEW] loadPDF HATA:', e.message, 'URL:', url);
+    area.innerHTML = '<p style="color:rgba(255,255,255,.6);font-size:12px;padding:1rem;">PDF yüklenemedi: '+e.message+'</p>';
+  }
 }
 
 async function renderPDFPage() {
