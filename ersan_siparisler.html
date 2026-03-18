@@ -187,9 +187,13 @@ async function apiDelete(table, id) {
 
 async function loadList() {
   try {
+    // PDF Data haric tum alanlari cek (buyuk base64 response'u onle)
+    var listFields = ['SE No','Kalem Sıra','Parça No','Parça Adı','Revizyon','Miktar','Birim',
+      'Termin Tarihi','Müşteri PO No','Durum','Notlar','Teknik Resim','Sevkiyat Tipi'];
+    var fieldParams = listFields.map(function(f){ return 'fields%5B%5D=' + encodeURIComponent(f); }).join('&');
     var all = [], pageOffset = '';
     do {
-      var params = 'sort%5B0%5D%5Bfield%5D=SE%20No&sort%5B0%5D%5Bdirection%5D=desc' + (pageOffset ? '&offset=' + pageOffset : '');
+      var params = fieldParams + '&sort%5B0%5D%5Bfield%5D=SE%20No&sort%5B0%5D%5Bdirection%5D=desc' + (pageOffset ? '&offset=' + pageOffset : '');
       var d = await apiGet('Satış Emirleri', params);
       all = all.concat(d.records || []);
       pageOffset = d.offset || '';
@@ -353,7 +357,7 @@ function base64ToBlobUrl(base64str) {
   return URL.createObjectURL(blob);
 }
 
-function selectKalem(idx) {
+async function selectKalem(idx) {
   if (!window._currentGroup) return;
   selectedKalemIdx = idx;
   renderKalemler(window._currentGroup.kalemler, idx);
@@ -362,15 +366,36 @@ function selectKalem(idx) {
   var f = r.fields;
   var localPDF = f['_localPDF'];
   var pdfArr = f['Teknik Resim'];
-  var pdfData = f['PDF Data'];
 
   var url = null, name = null;
+
+  // 1) Lokal yüklenen PDF (henüz kaydedilmemiş)
   if (localPDF) {
     url = localPDF.url; name = localPDF.filename;
-  } else if (pdfData) {
-    url = base64ToBlobUrl(pdfData); name = 'teknik-resim.pdf';
-  } else if (pdfArr && pdfArr.length) {
+  }
+  // 2) Airtable attachment (Cloudinary URL)
+  else if (pdfArr && pdfArr.length) {
     url = pdfArr[0].url; name = pdfArr[0].filename || 'teknik.pdf';
+  }
+  // 3) PDF Data (base64) — tek kayıt olarak lazy-fetch
+  else {
+    try {
+      console.log('[PDF-VIEW] PDF Data lazy-fetch, recordId:', r.id);
+      var recData = await apiGet('Satış Emirleri', 'filterByFormula=RECORD_ID()%3D%22' + r.id + '%22&fields%5B%5D=PDF%20Data');
+      var rec = (recData.records || [])[0];
+      var pdfData = rec && rec.fields && rec.fields['PDF Data'];
+      if (pdfData) {
+        console.log('[PDF-VIEW] PDF Data bulundu, uzunluk:', pdfData.length);
+        url = base64ToBlobUrl(pdfData);
+        name = 'teknik-resim.pdf';
+        // Cache'le, tekrar fetch etmesin
+        r.fields['PDF Data'] = pdfData;
+      } else {
+        console.log('[PDF-VIEW] PDF Data boş — bu kalemde PDF yok');
+      }
+    } catch(e) {
+      console.error('[PDF-VIEW] PDF Data fetch hatası:', e);
+    }
   }
 
   if (url && url !== pdfCurrentUrl) loadPDF(url, name);
