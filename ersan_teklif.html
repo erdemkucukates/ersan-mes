@@ -1299,17 +1299,23 @@ async function confirmSEOlustur(teklifId) {
       seIds.push(res.id);
       if (window._trFiles && window._trFiles[i]) {
         const file = window._trFiles[i];
-        const objectUrl = URL.createObjectURL(file);
-        if (!window._seLocalPDFs) window._seLocalPDFs = {};
-        window._seLocalPDFs[res.id] = {url: objectUrl, filename: file.name};
-        fileToBase64(file).then(function(dataUrl) {
-          fetch('/.netlify/functions/upload-pdf', {
+        try {
+          const dataUrl = await fileToBase64(file);
+          const upRes = await fetch('/.netlify/functions/upload-pdf', {
             method: 'POST', headers: {'Content-Type':'application/json'},
             body: JSON.stringify({filename: file.name, data: dataUrl, recordId: res.id})
-          }).then(r=>r.json()).then(function(d) {
-            if (d.success) toast('PDF kaydedildi ✓', 'success');
-          }).catch(function(){});
-        });
+          });
+          const upData = await upRes.json();
+          if (upData.success) {
+            toast('PDF kaydedildi ✓ (' + file.name + ')', 'success');
+          } else {
+            console.error('PDF upload hatası:', upData);
+            toast('PDF yüklenemedi: ' + (upData.error || 'bilinmeyen hata'), 'error');
+          }
+        } catch(upErr) {
+          console.error('PDF upload exception:', upErr);
+          toast('PDF yüklenemedi: ' + upErr.message, 'error');
+        }
       }
     }
     document.getElementById('teknik-resim-modal')?.remove();
