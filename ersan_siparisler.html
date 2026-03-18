@@ -196,18 +196,18 @@ async function apiDelete(table, id) {
 
 async function loadList() {
   try {
-    console.log('[LOAD] loadList başladı');
+    // PDF Data haric - buyuk response onle
+    var fields = ['SE No','Kalem Sıra','Parça No','Parça Adı','Revizyon','Miktar','Birim',
+      'Termin Tarihi','Müşteri PO No','Durum','Notlar','Sevkiyat Tipi','Teslim Süresi İş Günü'];
+    var fieldStr = fields.map(function(f){ return 'fields[]=' + encodeURIComponent(f); }).join('&');
     var all = [], pageOffset = '';
     do {
-      var params = 'sort%5B0%5D%5Bfield%5D=SE%20No&sort%5B0%5D%5Bdirection%5D=desc' + (pageOffset ? '&offset=' + pageOffset : '');
-      console.log('[LOAD] fetch params:', params.substring(0, 80));
+      var params = fieldStr + '&sort[0][field]=SE No&sort[0][direction]=desc' + (pageOffset ? '&offset=' + pageOffset : '');
       var d = await apiGet('Satış Emirleri', params);
-      console.log('[LOAD] page records:', (d.records||[]).length, 'offset:', d.offset||'yok');
       all = all.concat(d.records || []);
       pageOffset = d.offset || '';
     } while (pageOffset);
     records = all;
-    console.log('[LOAD] toplam:', records.length);
     filterList();
   } catch(e) {
     var errMsg = e.message || JSON.stringify(e);
