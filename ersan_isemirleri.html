@@ -701,7 +701,7 @@ async function saveWO(id) {
       'Revizyon': document.getElementById('f-rev').value || null,
       'Miktar': parseFloat(document.getElementById('f-miktar').value) || null,
       'Termin Tarihi': document.getElementById('f-termin').value || null,
-      'Notlar': document.getElementById('f-notlar').value || null,
+      'Özel Notlar': document.getElementById('f-notlar').value || null,
       'Durum': document.getElementById('f-durum').value,
     };
     await apiFn('PATCH', TABLES.isEmirleri, {fields: woFields}, id);
