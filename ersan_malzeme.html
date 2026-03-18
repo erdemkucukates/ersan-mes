@@ -93,7 +93,7 @@ textarea.fi { resize:vertical; min-height:60px; }
 
 /* BADGES */
 .badge { font-size:10px; font-weight:600; padding:2px 8px; border-radius:10px; }
-.b-Karantinada { background:var(--orange-light); color:var(--orange); }
+.b-Karantina { background:var(--orange-light); color:var(--orange); }
 .b-Serbest { background:var(--green-light); color:var(--green); }
 .b-Koşullu\ Serbest { background:var(--blue-light); color:var(--blue); }
 .b-Reddedildi { background:var(--red-light); color:var(--red); }
@@ -360,9 +360,9 @@ function badgeHtml(status) {
 function badgeEl(status) {
   const s = document.createElement('span');
   s.className = `badge`;
-  if (status === 'Karantinada') { s.style.background='var(--orange-light)'; s.style.color='var(--orange)'; }
+  if (status === 'Karantina') { s.style.background='var(--orange-light)'; s.style.color='var(--orange)'; }
   else if (status === 'Serbest') { s.style.background='var(--green-light)'; s.style.color='var(--green)'; }
-  else if (status === 'Koşullu Serbest') { s.style.background='var(--blue-light)'; s.style.color='var(--blue)'; }
+  else if (status === 'Muayenede') { s.style.background='var(--blue-light)'; s.style.color='var(--blue)'; }
   else if (status === 'Reddedildi') { s.style.background='var(--red-light)'; s.style.color='var(--red)'; }
   s.textContent = status || '—';
   return s;
@@ -399,13 +399,7 @@ async function loadAll() {
 }
 
 async function loadMalzeme() {
-  const fields = [
-    'Malzeme ID','Malzeme Adı','Tedarikçiler (OTL)','İrsaliye No',
-    'Giriş Tarihi','Statü','Gözle Muayene','Ölçüm Notu',
-    'Isı / Lot No','Sertifika No','Sertifika Durumu',
-    'Malzeme Standardı','Toplam Miktar','Birim','Sertifika (PDF)'
-  ].map(f => 'fields[]=' + encodeURIComponent(f)).join('&');
-  malzemeList = await apiGetAll(T.malzeme, fields + '&sort[0][field]=Giri%C5%9F%20Tarihi&sort[0][direction]=desc');
+  malzemeList = await apiGetAll(T.malzeme, 'sort[0][field]=Giri%C5%9F%20Tarihi&sort[0][direction]=desc');
   renderList();
 }
 
@@ -428,11 +422,11 @@ function filterForTab(rec) {
   const f = rec.fields;
   const status = f['Statü'] || '';
   const certStatus = f['Sertifika Durumu'] || '';
-  if (currentTab === 'bekleyenler') return status === 'Karantinada';
+  if (currentTab === 'bekleyenler') return status === 'Karantina';
   if (currentTab === 'eksik') {
     return ['Eksik-Sonradan Gelecek','Bekliyor'].includes(certStatus) && status !== 'Reddedildi';
   }
-  if (currentTab === 'tamamlananlar') return ['Serbest','Koşullu Serbest'].includes(status);
+  if (currentTab === 'tamamlananlar') return ['Serbest','Muayenede'].includes(status);
   return true;
 }
 
@@ -465,7 +459,7 @@ function renderList() {
   filtered.forEach(rec => {
     const f = rec.fields;
     const matId = f['Malzeme ID'] || '';
-    const status = f['Statü'] || 'Karantinada';
+    const status = f['Statü'] || 'Karantina';
     const isActive = currentRecord && currentRecord.id === rec.id;
 
     const div = document.createElement('div');
@@ -488,9 +482,9 @@ function renderList() {
 }
 
 function badgeStyle(status) {
-  if (status === 'Karantinada') return 'background:var(--orange-light);color:var(--orange);font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;';
+  if (status === 'Karantina') return 'background:var(--orange-light);color:var(--orange);font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;';
   if (status === 'Serbest') return 'background:var(--green-light);color:var(--green);font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;';
-  if (status === 'Koşullu Serbest') return 'background:var(--blue-light);color:var(--blue);font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;';
+  if (status === 'Muayenede') return 'background:var(--blue-light);color:var(--blue);font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;';
   if (status === 'Reddedildi') return 'background:var(--red-light);color:var(--red);font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;';
   return 'background:var(--surface2);color:var(--text2);font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;';
 }
@@ -505,9 +499,9 @@ function selectRecord(rec) {
 // ─── RENDER DETAIL ────────────────────────────────────────────────────────────
 function renderDetail(rec) {
   const f = rec.fields;
-  const status = f['Statü'] || 'Karantinada';
+  const status = f['Statü'] || 'Karantina';
   const matId = f['Malzeme ID'] || '';
-  const isKarantina = status === 'Karantinada';
+  const isKarantina = status === 'Karantina';
 
   // Toolbar
   document.getElementById('toolbar-id').textContent = matId || 'Yeni Giriş';
@@ -526,7 +520,7 @@ function renderDetail(rec) {
     const btnSartli = document.createElement('button');
     btnSartli.className = 'btn warn';
     btnSartli.innerHTML = '⚠️ Şartlı Kabul';
-    btnSartli.onclick = () => acceptRecord(rec, 'Koşullu Serbest');
+    btnSartli.onclick = () => acceptRecord(rec, 'Muayenede');
 
     const btnRed = document.createElement('button');
     btnRed.className = 'btn danger';
@@ -1033,7 +1027,7 @@ async function saveNewEntry() {
     'Toplam Miktar': miktar,
     'Birim': birim,
     'Giriş Tarihi': tarih || new Date().toISOString().split('T')[0],
-    'Statü': 'Karantinada',
+    'Statü': 'Karantina',
   };
   if (tedarikciId && tedarikciId.startsWith('rec')) fields['Tedarikçiler (OTL)'] = [tedarikciId];
   if (standart) fields['Malzeme Standardı'] = standart;
