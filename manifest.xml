@@ -2,7 +2,7 @@
 <OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
            xsi:type="MailApp">
-  <Id>ersan-mes-outlook-addin-001</Id>
+  <Id>a4f2e8c1-3b7d-4e9a-8f5c-2d1e6b0a9c3f</Id>
   <Version>1.0.0</Version>
   <ProviderName>Ersan Endustriyel</ProviderName>
   <DefaultLocale>tr-TR</DefaultLocale>
