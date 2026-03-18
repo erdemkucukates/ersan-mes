@@ -4,38 +4,74 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ersan MES — Kalite Kontrol</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8fafc; min-height: 100vh; }
-.container { max-width: 960px; margin: 0 auto; padding: 3rem 1.5rem; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: calc(100vh - 48px); }
-.icon { font-size: 56px; margin-bottom: 1.5rem; }
-h1 { font-size: 24px; font-weight: 600; color: #1e293b; margin-bottom: .5rem; }
-.std { font-size: 11px; font-weight: 500; background: #ede9fe; color: #5b21b6; padding: 3px 10px; border-radius: 20px; margin-bottom: 1.25rem; display: inline-block; }
-p { font-size: 14px; color: #64748b; text-align: center; max-width: 420px; line-height: 1.7; margin-bottom: 2rem; }
-.wip { background: #fff; border: 0.5px solid #e2e8f0; border-radius: 12px; padding: 1.25rem 1.5rem; max-width: 480px; width: 100%; }
-.wip-title { font-size: 11px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: .06em; margin-bottom: .875rem; }
-.wip-item { display: flex; align-items: center; gap: 10px; padding: .5rem 0; border-top: 0.5px solid #f1f5f9; font-size: 13px; color: #475569; }
-.wip-item::before { content: "○"; color: #cbd5e1; font-size: 10px; }
-.back { margin-top: 1.5rem; font-size: 13px; color: #3b82f6; text-decoration: none; }
-.back:hover { text-decoration: underline; }
+body { font-family: 'IBM Plex Sans', sans-serif; background: #f0f2f5; min-height: 100vh; color: #1a1d23; }
+.container { max-width: 900px; margin: 0 auto; padding: 40px 20px; }
+.page-header { text-align: center; margin-bottom: 40px; }
+.page-icon { font-size: 48px; margin-bottom: 12px; }
+.page-title { font-size: 24px; font-weight: 700; margin-bottom: 6px; }
+.page-std { font-size: 11px; font-weight: 600; background: #ede9fe; color: #5b21b6; padding: 3px 12px; border-radius: 20px; display: inline-block; margin-bottom: 8px; }
+.page-desc { font-size: 14px; color: #5a6170; max-width: 500px; margin: 0 auto; line-height: 1.6; }
+
+.cards { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media(max-width:640px) { .cards { grid-template-columns: 1fr; } }
+
+.card {
+  background: #fff; border: 1px solid #e2e5ea; border-radius: 12px;
+  padding: 24px; transition: all .15s; position: relative; overflow: hidden;
+}
+.card.active { cursor: pointer; }
+.card.active:hover { border-color: #7c3aed; box-shadow: 0 4px 16px rgba(124,58,237,.1); transform: translateY(-2px); }
+.card-icon { font-size: 32px; margin-bottom: 12px; }
+.card-title { font-size: 16px; font-weight: 600; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+.card-desc { font-size: 13px; color: #5a6170; line-height: 1.5; }
+.badge-active { font-size: 9px; font-weight: 700; background: #d1fae5; color: #059669; padding: 2px 8px; border-radius: 10px; }
+.badge-soon { font-size: 9px; font-weight: 700; background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 10px; }
+.card-arrow { position: absolute; top: 24px; right: 20px; font-size: 18px; color: #e2e5ea; }
+.card.active .card-arrow { color: #7c3aed; }
 </style>
 </head>
 <body>
 <script src="ersan_nav.js"></script>
 <div class="container">
-  <div class="icon">✅</div>
-  <h1>Kalite Kontrol</h1>
-  <span class="std">AS9100 §8.6</span>
-  <p>Gelen malzeme muayenesi, proses kontrol, final muayene, FAI. Bu modül geliştirme aşamasındadır.</p>
-  <div class="wip">
-    <div class="wip-title">Planlanacak özellikler</div>
-    <div class="wip-item">Airtable tablo bağlantısı</div>
-    <div class="wip-item">Liste ve detay görünümü</div>
-    <div class="wip-item">Form ve kayıt yönetimi</div>
-    <div class="wip-item">PDF / rapor çıktısı</div>
-    <div class="wip-item">Diğer modüllerle entegrasyon</div>
+  <div class="page-header">
+    <div class="page-icon">✅</div>
+    <div class="page-title">Kalite Kontrol</div>
+    <div class="page-std">AS9100 §8.5 · §8.6 · §10.2</div>
+    <div class="page-desc">Gelen malzeme muayenesi, üretim kalite kontrol, uygunsuzluk yönetimi ve düzeltici faaliyetler.</div>
   </div>
-  <a href="index.html" class="back">← Ana sayfaya dön</a>
+
+  <div class="cards">
+
+    <div class="card active" onclick="window.location='ersan_girdi_kalite.html'">
+      <div class="card-arrow">→</div>
+      <div class="card-icon">🔬</div>
+      <div class="card-title">Girdi Kalite Kontrol <span class="badge-active">Aktif</span></div>
+      <div class="card-desc">Gelen malzeme muayenesi, kabul/red kararı, MAT ID oluşturma, QR etiket yazdırma. AS9100 §8.4 uyumlu.</div>
+    </div>
+
+    <div class="card">
+      <div class="card-icon">⚙️</div>
+      <div class="card-title">Üretim Muayenesi <span class="badge-soon">Yakında</span></div>
+      <div class="card-desc">Operasyon bazlı muayene, self-check, kaliteci muayene, CMM ölçüm, FAI raporu, CoC oluşturma.</div>
+    </div>
+
+    <div class="card">
+      <div class="card-icon">⚠️</div>
+      <div class="card-title">NCR Yönetimi <span class="badge-soon">Yakında</span></div>
+      <div class="card-desc">Uygunsuzluk raporları (NCR), kök neden analizi, karar (kullan/düzelt/hurda), izlenebilirlik.</div>
+    </div>
+
+    <div class="card active" onclick="window.location='ersan_duzeltici.html'">
+      <div class="card-arrow">→</div>
+      <div class="card-icon">🔧</div>
+      <div class="card-title">CAPA <span class="badge-soon">Yakında</span></div>
+      <div class="card-desc">Düzeltici ve önleyici faaliyetler, 8D raporu, etkinlik doğrulama. AS9100 §10.2 uyumlu.</div>
+    </div>
+
+  </div>
 </div>
 </body>
 </html>
