@@ -1300,20 +1300,30 @@ async function confirmSEOlustur(teklifId) {
       if (window._trFiles && window._trFiles[i]) {
         const file = window._trFiles[i];
         try {
+          console.log('[PDF-DEBUG] Dosya:', file.name, 'Boyut:', file.size, 'Tip:', file.type, 'RecordId:', res.id);
           const dataUrl = await fileToBase64(file);
+          console.log('[PDF-DEBUG] Base64 uzunluk:', dataUrl.length, 'Baş:', dataUrl.substring(0, 50));
+          const payload = {filename: file.name, data: dataUrl, recordId: res.id};
+          console.log('[PDF-DEBUG] upload-pdf çağrılıyor...');
           const upRes = await fetch('/.netlify/functions/upload-pdf', {
             method: 'POST', headers: {'Content-Type':'application/json'},
-            body: JSON.stringify({filename: file.name, data: dataUrl, recordId: res.id})
+            body: JSON.stringify(payload)
           });
-          const upData = await upRes.json();
+          console.log('[PDF-DEBUG] HTTP status:', upRes.status, upRes.statusText);
+          const upText = await upRes.text();
+          console.log('[PDF-DEBUG] Ham yanıt:', upText);
+          let upData;
+          try { upData = JSON.parse(upText); } catch(pe) { upData = {error: 'JSON parse hatası: ' + upText.substring(0, 200)}; }
+          console.log('[PDF-DEBUG] Parsed yanıt:', JSON.stringify(upData));
           if (upData.success) {
+            console.log('[PDF-DEBUG] BAŞARILI — URL:', upData.url);
             toast('PDF kaydedildi ✓ (' + file.name + ')', 'success');
           } else {
-            console.error('PDF upload hatası:', upData);
-            toast('PDF yüklenemedi: ' + (upData.error || 'bilinmeyen hata'), 'error');
+            console.error('[PDF-DEBUG] HATA:', JSON.stringify(upData));
+            toast('PDF yüklenemedi: ' + (upData.error || JSON.stringify(upData)), 'error');
           }
         } catch(upErr) {
-          console.error('PDF upload exception:', upErr);
+          console.error('[PDF-DEBUG] Exception:', upErr);
           toast('PDF yüklenemedi: ' + upErr.message, 'error');
         }
       }
