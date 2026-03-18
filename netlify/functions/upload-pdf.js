@@ -1,3 +1,5 @@
+const { getStore } = require('@netlify/blobs');
+
 const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'Content-Type',
@@ -13,47 +15,34 @@ exports.handler = async (event) => {
     console.log('[upload-pdf] START recordId:', recordId, 'filename:', filename, 'dataLen:', (data||'').length);
     if (!filename||!data||!recordId) return {statusCode:400,headers:CORS,body:JSON.stringify({error:'eksik parametre'})};
 
+    // ── ADIM 1: Base64 → Buffer ──
+    const base64Data = data.includes(',') ? data.split(',')[1] : data;
+    const buffer = Buffer.from(base64Data, 'base64');
+    console.log('[upload-pdf] Buffer:', buffer.length, 'bytes');
+
+    // ── ADIM 2: Netlify Blobs'a kaydet ──
+    const blobKey = recordId + '_' + filename.replace(/\s/g, '_');
+    const siteID = process.env.SITE_ID;
+    const token = process.env.NETLIFY_AUTH_TOKEN;
+    console.log('[upload-pdf] Blob key:', blobKey, 'siteID:', siteID ? 'OK' : 'YOK', 'token:', token ? 'OK' : 'YOK');
+
+    const store = getStore({ name: 'teknik-resimler', siteID, token });
+    await store.set(blobKey, buffer, { metadata: { filename, contentType: 'application/pdf' } });
+    console.log('[upload-pdf] Blob kaydedildi');
+
+    // ── ADIM 3: Serve URL'yi Airtable PDF Data alanina kaydet ──
+    const serveUrl = '/.netlify/functions/serve-pdf?key=' + encodeURIComponent(blobKey);
     const BASE  = process.env.AIRTABLE_BASE_ID || 'app5LDgJMgocw79Ix';
-    const TOKEN = process.env.AIRTABLE_TOKEN;
-    const CLOUD = process.env.CLOUDINARY_CLOUD_NAME;
-    const KEY   = process.env.CLOUDINARY_API_KEY;
-    const SEC   = process.env.CLOUDINARY_API_SECRET;
-    const base64 = data.includes(',') ? data : 'data:application/pdf;base64,' + data;
-
-    // ── ADIM 1: Cloudinary'ye yukle ──
-    console.log('[upload-pdf] ADIM 1: Cloudinary yukleniyor...');
-    const timestamp = Math.floor(Date.now()/1000);
-    const publicId = 'teknik-resim/' + recordId + '_' + filename.replace(/\s/g,'_');
-    const crypto = require('crypto');
-    const signature = crypto.createHash('sha256').update(`public_id=${publicId}&timestamp=${timestamp}${SEC}`).digest('hex');
-
-    const fd = new URLSearchParams();
-    fd.append('file', base64);
-    fd.append('api_key', KEY);
-    fd.append('timestamp', String(timestamp));
-    fd.append('public_id', publicId);
-    fd.append('signature', signature);
-
-    const upRes = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD}/raw/upload`, {method:'POST', body: fd});
-    const upData = await upRes.json();
-    console.log('[upload-pdf] Cloudinary status:', upRes.status, JSON.stringify(upData).substring(0,300));
-    if (upData.error) throw new Error('Cloudinary: ' + upData.error.message);
-
-    const cloudinaryUrl = upData.secure_url;
-    console.log('[upload-pdf] Cloudinary URL:', cloudinaryUrl);
-
-    // ── ADIM 2: serve-pdf proxy URL'yi PDF Data alanina kaydet ──
-    const serveUrl = '/.netlify/functions/serve-pdf?url=' + encodeURIComponent(cloudinaryUrl);
-    console.log('[upload-pdf] ADIM 2: Airtable PDF Data kaydediliyor:', serveUrl);
+    const TOKEN_AT = process.env.AIRTABLE_TOKEN;
 
     const patchRes = await fetch(
       `https://api.airtable.com/v0/${BASE}/${encodeURIComponent('Satış Emirleri')}/${recordId}`,
-      {method:'PATCH', headers:{'Authorization':`Bearer ${TOKEN}`,'Content-Type':'application/json'},
+      {method:'PATCH', headers:{'Authorization':`Bearer ${TOKEN_AT}`,'Content-Type':'application/json'},
        body:JSON.stringify({fields:{'PDF Data': serveUrl}})}
     );
     const patchData = await patchRes.json();
     if (patchData.error) throw new Error('Airtable: ' + JSON.stringify(patchData.error));
-    console.log('[upload-pdf] BASARILI');
+    console.log('[upload-pdf] BASARILI:', serveUrl);
 
     return {statusCode:200,headers:CORS,body:JSON.stringify({success:true, url:serveUrl})};
   } catch(e) {
