@@ -486,12 +486,12 @@ async function loadDetail(id) {
               <input type="date" class="field-input" id="f-termin" value="${f['Termin Tarihi']||''}">
             </div>
             <div class="field-group">
-              <label class="field-label">Malzeme Lotu</label>
-              <input class="field-input" id="f-lot" value="${f['Malzeme Lotu']||''}" placeholder="Tedarikçi lot no">
+              <label class="field-label">Malzeme ID</label>
+              <input class="field-input" id="f-lot" value="${f['Malzeme Lotu']||''}" disabled style="background:#f7f8fa;" placeholder="Malzeme girişinden otomatik gelir">
             </div>
             <div class="field-group">
               <label class="field-label">Heat No</label>
-              <input class="field-input" id="f-heat" value="${f['Heat No']||''}" placeholder="Eriyik / ısıl lot">
+              <input class="field-input" id="f-heat" value="${f['Heat No']||''}" disabled style="background:#f7f8fa;" placeholder="Malzeme girişinden otomatik gelir">
             </div>
             <div class="field-group form-full">
               <label class="field-label">Notlar</label>

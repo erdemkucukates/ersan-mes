@@ -304,27 +304,14 @@ function renderForm() {
             <input type="text" class="field-input" id="f-malzeme" placeholder="ör: ST37, AISI 4140, AL 6061">
           </div>
 
-          <!-- TEDARİKÇİ ÖLÇÜLERİ — Bizim talep altında -->
+          <!-- TEDARİKÇİ ÖLÇÜLERİ — Malzeme tipine gore dinamik -->
           <div class="field-group form-full">
             <label class="field-label">Temin Edeceğiniz Ölçüler</label>
             <div style="background:#f7f8fa;border:1px solid #e2e5ea;border-radius:8px;padding:10px;margin-bottom:6px;">
               <div style="font-size:10px;color:#9aa0ad;text-transform:uppercase;margin-bottom:4px;">Bizim Talebimiz</div>
-              <div style="font-size:13px;font-weight:600;color:#5b21b6;">${f['Ölçü'] || '—'} · ${f['Miktar'] || 0} ${f['Birim'] || 'Adet'} · ${f['Tahmini kg'] ? f['Tahmini kg'] + ' kg' : ''}</div>
+              <div style="font-size:13px;font-weight:600;color:#5b21b6;">${f['Malzeme İşlem'] || '—'} · ${f['Ölçü'] || '—'} · ${f['Miktar'] || 0} ${f['Birim'] || 'Adet'} ${f['Tahmini kg'] ? '· ~' + f['Tahmini kg'] + ' kg' : ''}</div>
             </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">
-              <div>
-                <div style="font-size:10px;color:#9aa0ad;margin-bottom:2px;">Dış Çap (mm)</div>
-                <input type="number" class="field-input" id="f-olcu-cap" placeholder="150" step="0.1">
-              </div>
-              <div>
-                <div style="font-size:10px;color:#9aa0ad;margin-bottom:2px;">İç Çap (mm)</div>
-                <input type="number" class="field-input" id="f-olcu-ic" placeholder="—" step="0.1">
-              </div>
-              <div>
-                <div style="font-size:10px;color:#9aa0ad;margin-bottom:2px;">Boy (mm)</div>
-                <input type="number" class="field-input" id="f-olcu-boy" placeholder="200" step="0.1">
-              </div>
-            </div>
+            <div id="olcu-fields"></div>
             <div id="ted-kg" style="margin-top:6px;font-size:11px;color:#059669;font-weight:600;display:none;"></div>
           </div>
 
@@ -358,34 +345,84 @@ function renderForm() {
     </p>
   `;
 
+  // Ölçü alanlarını malzeme tipine göre oluştur
+  renderOlcuFields();
+
   // Geçerlilik tarihi: bugün + 20 gün
   var gecDate = new Date();
   gecDate.setDate(gecDate.getDate() + 20);
   var gecEl = document.getElementById('f-gecerlilik');
   if (gecEl) { gecEl.value = gecDate.toISOString().split('T')[0]; gecEl.min = new Date().toISOString().split('T')[0]; }
 
-  // Tedarikçi ölçü → kg hesaplama
-  ['f-olcu-cap','f-olcu-ic','f-olcu-boy'].forEach(function(id) {
+}
+
+function renderOlcuFields() {
+  var container = document.getElementById('olcu-fields');
+  if (!container) return;
+  // Malzeme tipini talep bilgisinden anla
+  var malzemeIslem = (rfqData && rfqData['Malzeme İşlem']) || '';
+  var tip = 'Mil'; // varsayılan
+  if (malzemeIslem.toLowerCase().indexOf('boru') >= 0) tip = 'Boru';
+  else if (malzemeIslem.toLowerCase().indexOf('lama') >= 0) tip = 'Lama';
+  else if (malzemeIslem.toLowerCase().indexOf('sac') >= 0) tip = 'Sac';
+  window._rfqMalzemeTip = tip;
+
+  var html = '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">';
+  if (tip === 'Mil') {
+    html += '<div><div style="font-size:10px;color:#9aa0ad;margin-bottom:2px;">Çap (mm)</div><input type="number" class="field-input" id="f-olcu-cap" placeholder="150" step="0.1"></div>';
+    html += '<div><div style="font-size:10px;color:#9aa0ad;margin-bottom:2px;">Boy (mm)</div><input type="number" class="field-input" id="f-olcu-boy" placeholder="200" step="0.1"></div>';
+    html += '<div></div>';
+  } else if (tip === 'Boru') {
+    html += '<div><div style="font-size:10px;color:#9aa0ad;margin-bottom:2px;">Dış Çap (mm)</div><input type="number" class="field-input" id="f-olcu-cap" placeholder="150" step="0.1"></div>';
+    html += '<div><div style="font-size:10px;color:#9aa0ad;margin-bottom:2px;">İç Çap (mm)</div><input type="number" class="field-input" id="f-olcu-ic" placeholder="90" step="0.1"></div>';
+    html += '<div><div style="font-size:10px;color:#9aa0ad;margin-bottom:2px;">Boy (mm)</div><input type="number" class="field-input" id="f-olcu-boy" placeholder="200" step="0.1"></div>';
+  } else if (tip === 'Lama') {
+    html += '<div><div style="font-size:10px;color:#9aa0ad;margin-bottom:2px;">En (mm)</div><input type="number" class="field-input" id="f-olcu-en" placeholder="80" step="0.1"></div>';
+    html += '<div><div style="font-size:10px;color:#9aa0ad;margin-bottom:2px;">Kalınlık (mm)</div><input type="number" class="field-input" id="f-olcu-kal" placeholder="20" step="0.1"></div>';
+    html += '<div><div style="font-size:10px;color:#9aa0ad;margin-bottom:2px;">Boy (mm)</div><input type="number" class="field-input" id="f-olcu-boy" placeholder="300" step="0.1"></div>';
+  } else if (tip === 'Sac') {
+    html += '<div><div style="font-size:10px;color:#9aa0ad;margin-bottom:2px;">En (mm)</div><input type="number" class="field-input" id="f-olcu-en" placeholder="500" step="0.1"></div>';
+    html += '<div><div style="font-size:10px;color:#9aa0ad;margin-bottom:2px;">Boy (mm)</div><input type="number" class="field-input" id="f-olcu-boy" placeholder="500" step="0.1"></div>';
+    html += '<div><div style="font-size:10px;color:#9aa0ad;margin-bottom:2px;">Kalınlık (mm)</div><input type="number" class="field-input" id="f-olcu-kal" placeholder="5" step="0.1"></div>';
+  }
+  html += '</div>';
+  container.innerHTML = html;
+  // Event listeners
+  ['f-olcu-cap','f-olcu-ic','f-olcu-boy','f-olcu-en','f-olcu-kal'].forEach(function(id) {
     var el = document.getElementById(id);
     if (el) el.addEventListener('input', calcTedKg);
   });
 }
 
 function calcTedKg() {
-  var cap = parseFloat(document.getElementById('f-olcu-cap')?.value) || 0;
-  var ic = parseFloat(document.getElementById('f-olcu-ic')?.value) || 0;
-  var boy = parseFloat(document.getElementById('f-olcu-boy')?.value) || 0;
+  var tip = window._rfqMalzemeTip || 'Mil';
   var miktar = rfqData ? (rfqData['Miktar'] || 1) : 1;
-  var rho = 7.85; // default çelik
+  var rho = 7.85;
   var kg = 0;
-  if (cap > 0 && boy > 0) {
-    var rd = cap/2/10, ri = ic/2/10, h = boy/10;
-    kg = ic > 0 ? Math.PI*(rd*rd-ri*ri)*h*rho*miktar : Math.PI*rd*rd*h*rho*miktar;
+  if (tip === 'Mil') {
+    var cap = parseFloat(document.getElementById('f-olcu-cap')?.value) || 0;
+    var boy = parseFloat(document.getElementById('f-olcu-boy')?.value) || 0;
+    if (cap > 0 && boy > 0) { var r = cap/2/10, h = boy/10; kg = Math.PI*r*r*h*rho*miktar; }
+  } else if (tip === 'Boru') {
+    var cap = parseFloat(document.getElementById('f-olcu-cap')?.value) || 0;
+    var ic = parseFloat(document.getElementById('f-olcu-ic')?.value) || 0;
+    var boy = parseFloat(document.getElementById('f-olcu-boy')?.value) || 0;
+    if (cap > 0 && boy > 0) { var rd = cap/2/10, ri = ic/2/10, h = boy/10; kg = Math.PI*(rd*rd-ri*ri)*h*rho*miktar; }
+  } else if (tip === 'Lama') {
+    var en = parseFloat(document.getElementById('f-olcu-en')?.value) || 0;
+    var kal = parseFloat(document.getElementById('f-olcu-kal')?.value) || 0;
+    var boy = parseFloat(document.getElementById('f-olcu-boy')?.value) || 0;
+    if (en > 0 && kal > 0 && boy > 0) { kg = (en/10)*(kal/10)*(boy/10)*rho*miktar; }
+  } else if (tip === 'Sac') {
+    var en = parseFloat(document.getElementById('f-olcu-en')?.value) || 0;
+    var boy = parseFloat(document.getElementById('f-olcu-boy')?.value) || 0;
+    var kal = parseFloat(document.getElementById('f-olcu-kal')?.value) || 0;
+    if (en > 0 && boy > 0 && kal > 0) { kg = (en/10)*(boy/10)*(kal/10)*rho*miktar; }
   }
   var kgEl = document.getElementById('ted-kg');
   var kgIn = document.getElementById('f-ted-kg');
   if (kg > 0) {
-    if (kgEl) { kgEl.style.display = 'block'; kgEl.textContent = 'Hesaplanan: ' + kg.toFixed(2) + ' kg ('+miktar+' adet)'; }
+    if (kgEl) { kgEl.style.display = 'block'; kgEl.textContent = 'Hesaplanan: ' + kg.toFixed(2) + ' kg (' + miktar + ' adet)'; }
     if (kgIn) kgIn.value = kg.toFixed(2);
   } else {
     if (kgEl) kgEl.style.display = 'none';
@@ -402,10 +439,17 @@ async function submitRFQ() {
   const vade = document.getElementById('f-vade').value;
   const gecerlilik = document.getElementById('f-gecerlilik').value;
   const malzeme = document.getElementById('f-malzeme').value;
+  const tip = window._rfqMalzemeTip || 'Mil';
   const cap = document.getElementById('f-olcu-cap')?.value || '';
   const ic = document.getElementById('f-olcu-ic')?.value || '';
   const boy = document.getElementById('f-olcu-boy')?.value || '';
-  const olcular = (cap ? 'Ø'+cap : '') + (ic ? '/'+ic : '') + (boy ? '×'+boy+'mm' : '');
+  const en = document.getElementById('f-olcu-en')?.value || '';
+  const kal = document.getElementById('f-olcu-kal')?.value || '';
+  var olcular = '';
+  if (tip==='Mil') olcular = cap?'Ø'+cap+'×'+boy+'mm':'';
+  else if (tip==='Boru') olcular = cap?'Ø'+cap+(ic?'/'+ic:'')+'×'+boy+'mm':'';
+  else if (tip==='Lama') olcular = en?en+'×'+kal+'×'+boy+'mm':'';
+  else if (tip==='Sac') olcular = en?en+'×'+boy+'×'+kal+'mm':'';
   const tedKg = document.getElementById('f-ted-kg')?.value || '';
   const not = document.getElementById('f-not').value;
   const alertEl = document.getElementById('submit-alert');
