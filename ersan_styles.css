@@ -1,6 +1,6 @@
 /* Ersan MES — Global Stiller */
 
-/* Scrollbar */
+/* Scrollbar Görünüm */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -25,38 +25,49 @@
   scrollbar-color: #7c3aed #1a1d23;
 }
 
-/* Horizontal + Vertical scroll her yerde */
+/* Horizontal scroll — body ve tüm ana container'lar */
 body {
-  overflow-x: auto !important;
-  overflow-y: auto !important;
+  overflow: auto !important;
 }
-
 .layout,
+.main,
+.body-area,
 .detail-panel,
 .detail-scroll,
 .list-panel,
-.list-scroll,
-.sb-list,
-.main,
-.body-area,
-.modal-body,
-.card-body,
-.stl-table,
-.rfq-compare-table,
-table {
-  overflow-x: auto;
+.sidebar,
+.pdf-pane,
+.td-layout {
+  overflow: auto !important;
 }
 
-/* Tablo horizontal scroll wrapper */
+/* Tablolar — horizontal scroll */
+table,
 .stl-table,
-.rfq-compare-table,
-table {
+.rfq-compare-table {
   display: block;
-  overflow-x: auto;
+  overflow-x: auto !important;
   -webkit-overflow-scrolling: touch;
+  max-width: 100%;
 }
 
-/* Minimum genişlik — dar ekranda horizontal scroll aktif olsun */
-.layout {
-  min-width: 0;
+/* Text overflow olan elemanlar dokunulmaz */
+.si-name,
+.stl-parca,
+.pdf-filename,
+.wo-parca {
+  overflow: hidden !important;
+  text-overflow: ellipsis;
+}
+
+/* Modal ve card — sadece y scroll, x taşmasın */
+.modal-box,
+.card {
+  overflow: hidden;
+  overflow-y: auto;
+}
+.modal-body,
+.card-body {
+  overflow-x: auto;
+  overflow-y: auto;
 }
