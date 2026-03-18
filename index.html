@@ -47,6 +47,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
     <div class="hstat"><div class="hstat-num" id="stat-siparis">—</div><div class="hstat-label">Aktif Sipariş</div></div>
     <div class="hstat"><div class="hstat-num" id="stat-ie">—</div><div class="hstat-label">İş Emri</div></div>
     <div class="hstat"><div class="hstat-num" id="stat-stl">—</div><div class="hstat-label">Bekleyen Satınalma</div></div>
+    <div class="hstat"><div class="hstat-num" id="stat-ncr">—</div><div class="hstat-label">Açık NCR</div></div>
+    <div class="hstat"><div class="hstat-num" id="stat-mal">—</div><div class="hstat-label">Karantina Malzeme</div></div>
   </div>
 </div>
 
@@ -68,28 +70,32 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 const MODULES_DEF = [
   // Satış & Üretim
   { group:'uretim', icon:'📋', name:'Teklif Yönetimi', desc:'Teknik resim bazlı AI maliyet hesaplama, teklif oluşturma, PDF gönderme', url:'ersan_teklif.html', status:'active', std:['AS9100 §8.2'] },
-  { group:'uretim', icon:'📦', name:'Sipariş Yönetimi', desc:'Onaylanan tekliften sipariş, dosya no, müşteri şartları gözden geçirme', url:'ersan_teklif.html#siparisler', status:'active', std:['AS9100 §8.2'] },
-  { group:'uretim', icon:'🛒', name:'Satınalma', desc:'Hammadde & fason talebi, RFQ, tedarikçi teklif karşılaştırma, müzakere', url:'ersan_satinalma.html', status:'active', std:['AS9100 §8.4','ISO §8.4'] },
+  { group:'uretim', icon:'📦', name:'Sipariş Yönetimi', desc:'Onaylanan tekliften sipariş, SP gruplama, PDF viewer, teknik resim', url:'ersan_siparisler.html', status:'active', std:['AS9100 §8.2'] },
+  { group:'uretim', icon:'🛒', name:'Satınalma', desc:'AI müzakere paketi, RFQ, tedarikçi teklif karşılaştırma, tasarruf raporu', url:'ersan_satinalma.html', status:'active', std:['AS9100 §8.4','ISO §8.4'] },
+  { group:'uretim', icon:'📋', name:'Ön Kabul', desc:'Malzeme ön kabul formu, tedarikçi satınalma sipariş eşleştirme', url:'ersan_on_kabul.html', status:'active', std:['AS9100 §8.4'] },
+  { group:'uretim', icon:'🔬', name:'Girdi Kalite', desc:'Malzeme muayenesi, MAT ID, QR etiket, kabul/red kararı', url:'ersan_girdi_kalite.html', status:'active', std:['AS9100 §8.4'] },
   { group:'uretim', icon:'⚙️', name:'İş Emirleri', desc:'WO oluşturma, lot numarası, traveler, operasyon rotası, tezgah atama', url:'ersan_isemirleri.html', status:'active', std:['AS9100 §8.5'] },
-  { group:'uretim', icon:'🏭', name:'Üretim / Atölye', desc:'Operatör ekranı, QR okutma, operasyon onay, süre takibi', url:'ersan_uretim.html', status:'soon', std:['AS9100 §8.5'] },
-  { group:'uretim', icon:'🚚', name:'Sevkiyat', desc:'Ambalaj, etiket, irsaliye, teslimat kaydı, müşteri teslim onayı', url:'ersan_sevkiyat.html', status:'soon', std:['AS9100 §8.5.4'] },
+  { group:'uretim', icon:'🏭', name:'Üretim / Atölye', desc:'Operasyon rotası, traveller takibi, QR tarama, tezgah durumu', url:'ersan_uretim.html', status:'active', std:['AS9100 §8.5'] },
+  { group:'uretim', icon:'🚚', name:'Sevkiyat', desc:'8 madde sevk kontrol, CoC oluşturma, irsaliye, kalite onay', url:'ersan_sevkiyat.html', status:'active', std:['AS9100 §8.5.4'] },
 
   // Kalite
-  { group:'kalite', icon:'✅', name:'Kalite Kontrol', desc:'Gelen malzeme muayenesi, proses kontrol, final muayene, ölçüm kaydı', url:'ersan_kalite.html', status:'soon', std:['AS9100 §8.6','ISO §8.6'] },
-  { group:'kalite', icon:'❌', name:'Düzeltici Faaliyet', desc:'NCR, kök neden analizi (8D/5Why), düzeltici aksiyon, kapanış takibi', url:'ersan_duzeltici.html', status:'soon', std:['AS9100 §10.2','ISO §10.2'] },
-  { group:'kalite', icon:'🔍', name:'İç Denetim', desc:'Denetim planı, soru listesi, bulgu kaydı, kapanış takibi', url:'ersan_denetim.html', status:'soon', std:['AS9100 §9.2','ISO §9.2'] },
-  { group:'kalite', icon:'💬', name:'Müşteri Geri Bildirimi', desc:'Müşteri şikayeti, garanti, iade, memnuniyet takibi', url:'ersan_musteri.html', status:'soon', std:['AS9100 §8.5.5'] },
+  { group:'kalite', icon:'✅', name:'Kalite Kontrol', desc:'Girdi kalite, üretim muayenesi, NCR, CAPA hub sayfası', url:'ersan_kalite.html', status:'active', std:['AS9100 §8.6','ISO §8.6'] },
+  { group:'kalite', icon:'⚠️', name:'NCR Yönetimi', desc:'Uygunsuzluk raporu, AI kök neden, ıskarta/yeniden işle/sapma kararı', url:'ersan_ncr.html', status:'active', std:['AS9100 §8.7'] },
+  { group:'kalite', icon:'🔧', name:'CAPA', desc:'Düzeltici faaliyet, 5-Why AI analizi, önleyici aksiyon, kapanış', url:'ersan_duzeltici.html', status:'active', std:['AS9100 §10.2','ISO §10.2'] },
+  { group:'kalite', icon:'🔍', name:'İç Denetim', desc:'Denetim planı, AI kontrol listesi, bulgu kaydı, kapanış takibi', url:'ersan_denetim.html', status:'active', std:['AS9100 §9.2','ISO §9.2'] },
+  { group:'kalite', icon:'💬', name:'Müşteri Yönetimi', desc:'Müşteri bilgileri, sipariş geçmişi, şikayet, AI 8D raporu', url:'ersan_musteri.html', status:'active', std:['AS9100 §8.5.5'] },
 
   // Destek
-  { group:'destek', icon:'🔩', name:'Ekipman & Bakım', desc:'Tezgah bakım planı, kalibrasyon takibi, arıza kaydı, ppk', url:'ersan_bakim.html', status:'soon', std:['AS9100 §7.1.3'] },
-  { group:'destek', icon:'📁', name:'Doküman Yönetimi', desc:'Prosedürler, talimatlar, formlar, revizyon takibi, dağıtım kontrolü', url:'ersan_dokuman.html', status:'soon', std:['AS9100 §7.5','ISO §7.5'] },
-  { group:'destek', icon:'👥', name:'Personel Yönetimi', desc:'Personel kartı, yetkinlik matrisi, görev tanımı, izin takibi', url:'ersan_personel.html', status:'soon', std:['ISO §7.1.2','OHSAS §4.4'] },
-  { group:'destek', icon:'🎓', name:'Eğitim', desc:'Eğitim planı, sertifika takibi, etkinlik değerlendirme', url:'ersan_egitim.html', status:'soon', std:['AS9100 §7.2','ISO §7.2'] },
-  { group:'destek', icon:'🦺', name:'İSG / Güvenlik', desc:'Tehlike kaydı, kaza/ramak kala bildirimi, KKD takibi, acil eylem', url:'ersan_isg.html', status:'soon', std:['OHSAS 18001 §4'] },
+  { group:'destek', icon:'🔩', name:'Ekipman & Bakım', desc:'Bakım/kalibrasyon takibi, arıza kaydı, durum güncelleme', url:'ersan_bakim.html', status:'active', std:['AS9100 §7.1.3'] },
+  { group:'destek', icon:'📁', name:'Doküman Yönetimi', desc:'Prosedür, talimat, form, revizyon takibi, gözden geçirme uyarısı', url:'ersan_dokuman.html', status:'active', std:['AS9100 §7.5','ISO §7.5'] },
+  { group:'destek', icon:'👥', name:'Personel Yönetimi', desc:'Personel kartı, yetkinlik matrisi, tezgah bazlı yetki', url:'ersan_personel.html', status:'active', std:['ISO §7.1.2'] },
+  { group:'destek', icon:'🦺', name:'İSG / Güvenlik', desc:'Tehlike kaydı, olay/kaza bildirimi, risk skoru, önlem takibi', url:'ersan_isg.html', status:'active', std:['OHSAS 18001 §4'] },
+  { group:'destek', icon:'📜', name:'Sistem Logu', desc:'Tüm işlemlerin audit kaydı, kim ne zaman ne yaptı', url:'ersan_sistem_logu.html', status:'active', std:['AS9100 §7.5'] },
 
   // Yönetim
-  { group:'yonetim', icon:'⚠️', name:'Risk Yönetimi', desc:'FMEA, proses risk değerlendirmesi, fırsat kaydı, aksiyon takibi', url:'ersan_risk.html', status:'soon', std:['AS9100 §6.1','ISO §6.1'] },
-  { group:'yonetim', icon:'📊', name:'Yönetim Gözden Geçirme', desc:'Dönemsel toplantı girdileri, hedef takibi, yönetim kararları', url:'ersan_ygg.html', status:'soon', std:['AS9100 §9.3','ISO §9.3'] },
+  { group:'yonetim', icon:'⚠️', name:'Risk Yönetimi', desc:'Olasılık×Etki skoru, AI risk değerlendirme, önlem takibi', url:'ersan_risk.html', status:'active', std:['AS9100 §6.1','ISO §6.1'] },
+  { group:'yonetim', icon:'📊', name:'Yönetim Gözden Geçirme', desc:'KPI dashboard, Chart.js grafik, AI yönetim raporu', url:'ersan_ygg.html', status:'active', std:['AS9100 §9.3','ISO §9.3'] },
+  { group:'yonetim', icon:'🏭', name:'Akıllı Fabrika', desc:'Canlı dashboard, tezgah durumu, AI günlük özet, termin takvimi', url:'ersan_akilli_fabrika.html', status:'active', std:['AS9100 §8.5'] },
 ];
 
 function renderModules() {
@@ -125,16 +131,20 @@ async function airtableGet(table, filter) {
   } catch { return '—'; }
 }
 async function loadStats() {
-  const [t, s, ie, stl] = await Promise.all([
+  const [t, s, ie, stl, ncr, mal] = await Promise.all([
     airtableGet('Teklifler', 'AND({Durum}!="Onaylandı",{Durum}!="Reddedildi")'),
     airtableGet('Satış Emirleri', '{Durum}!="Tamamlandı"'),
     airtableGet('İş Emirleri', '{Durum}!="Tamamlandı"'),
     airtableGet('Satınalma Talepleri', '{Durum}="Taslak"'),
+    airtableGet('NCR Kayıtları', '{Statü}!="Kapalı"'),
+    airtableGet('Malzeme Girişleri', '{Statü}="Karantina"'),
   ]);
   document.getElementById('stat-teklif').textContent = t;
   document.getElementById('stat-siparis').textContent = s;
   document.getElementById('stat-ie').textContent = ie;
   document.getElementById('stat-stl').textContent = stl;
+  document.getElementById('stat-ncr').textContent = ncr;
+  document.getElementById('stat-mal').textContent = mal;
 }
 
 renderModules();
