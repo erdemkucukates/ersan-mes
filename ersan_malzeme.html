@@ -990,7 +990,12 @@ async function saveNewEntry() {
     'Sertifika Durumu': 'Bekliyor'
   };
   if (standart) fields['Malzeme Standardı'] = standart;
-  if (stlId) fields['Satınalma Talebi'] = [stlId];
+  // STL bilgisi Notlar alanına referans olarak yazılır (link alanı tabloda yok)
+  if (stlId) {
+    var stlRec = stlList.find(function(x){ return x.id === stlId; });
+    var stlRef = stlRec ? (stlRec.fields['Talep No'] || stlId) : stlId;
+    fields['Notlar'] = 'Satınalma Talebi: ' + stlRef;
+  }
 
   try {
     const res = await apiFn('POST', T.malzeme, { fields });
