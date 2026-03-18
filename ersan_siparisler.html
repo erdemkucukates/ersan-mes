@@ -120,6 +120,7 @@ var TABLES = { se: 'tbl56Oj1nPaqefI60', ie: 'tbl58qL39I2tv8hK4' };
 var records = [], currentFilter = 'Tümü', selectedSP = null, selectedKalemIdx = null;
 var pdfDoc = null, pdfZoom = 1.2, pdfRotation = 0, pdfCurrentUrl = null;
 var pdfRotationCache = JSON.parse(sessionStorage.getItem('pdfRotationCache') || '{}');
+var YOGUNLUK = {'Çelik':7.85,'Paslanmaz':7.93,'Alüminyum':2.70,'Titanyum':4.51,'Bronz':8.89,'Pirinç':8.50,'Bakır':8.96};
 
 function toast(msg) {
   var t = document.getElementById('toast');
