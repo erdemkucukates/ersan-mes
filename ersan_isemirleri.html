@@ -692,14 +692,11 @@ async function saveWO(id) {
   try {
     // 1. WO fields güncelle
     const woFields = {
-      'Satış Emirleri': document.getElementById('f-seno').value ? [document.getElementById('f-seno').value] : null,
       'Parça Adı': document.getElementById('f-parca-adi').value || '',
       'Parça No': document.getElementById('f-parca-no').value || null,
       'Revizyon': document.getElementById('f-rev').value || null,
       'Miktar': parseFloat(document.getElementById('f-miktar').value) || null,
       'Termin Tarihi': document.getElementById('f-termin').value || null,
-      'Malzeme Lotu': document.getElementById('f-lot').value || null,
-      'Heat No': document.getElementById('f-heat').value || null,
       'Notlar': document.getElementById('f-notlar').value || null,
       'Durum': document.getElementById('f-durum').value,
     };

@@ -587,6 +587,11 @@ function selectStl(stlId) {
     const opt = Array.from(birimEl.options).find(o=>o.value===f['Birim']);
     if(opt) birimEl.value = f['Birim'];
   }
+
+  // Seçildikten sonra diğer STL kartlarını gizle, sadece seçili kalsın
+  document.querySelectorAll('.stl-card').forEach(c => {
+    if(c.id !== 'stlc-'+stlId) c.style.display = 'none';
+  });
 }
 
 /* ─── UPLOAD ──────────────────────────────────────── */
@@ -602,11 +607,18 @@ async function handleFileSelect(e) {
   document.getElementById('upload-filename').style.color = 'var(--text3)';
 
   try {
-    const recId = currentRec ? currentRec.id : '';
+    const recId = currentRec ? currentRec.id : 'temp_' + Date.now();
     const dataUrl = await fileToBase64(file);
+    // Kayıt yoksa dosyayı hafızada tut, kayıt sonrası yüklenecek
+    if (!currentRec) {
+      window._pendingCertFile = {filename:file.name, data:dataUrl};
+      document.getElementById('upload-filename').textContent = '✓ '+file.name+' (kayıt sonrası yüklenecek)';
+      document.getElementById('upload-filename').style.color = 'var(--orange)';
+      return;
+    }
     const res = await fetch('/.netlify/functions/upload-pdf', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({filename:file.name, data:dataUrl, recordId:recId, table:'Malzeme Girişleri', field:'Notlar'})
+      body: JSON.stringify({filename:file.name, data:dataUrl, recordId:recId, table:'tblSj5Ep6F9Ir1NGu', field:'Notlar'})
     });
     if(res.ok) {
       document.getElementById('upload-filename').textContent = '✓ '+file.name;
