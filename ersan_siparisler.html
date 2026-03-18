@@ -440,7 +440,7 @@ async function renderPDFPage() {
     area.innerHTML = ''; area.appendChild(canvas);
     await page.render({canvasContext:canvas.getContext('2d'), viewport:vp}).promise;
     var zv = document.getElementById('zoom-val'); if(zv) zv.textContent = Math.round(pdfZoom*100)+'%';
-  } catch(e) {}
+  } catch(e) { console.error('[ZOOM] renderPDFPage HATA:', e); }
 }
 
 function zoomIn() { console.log('[ZOOM] in, pdfDoc:', !!pdfDoc, 'zoom:', pdfZoom); if(!pdfDoc) return; pdfZoom = Math.min(pdfZoom+0.25,4); renderPDFPage(); }
