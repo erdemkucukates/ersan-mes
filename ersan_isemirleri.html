@@ -722,7 +722,7 @@ async function saveWO(id) {
         'Durum': op.durum,
         'İş Emirleri': [id],
       };
-      if (op.tezgahId) opFields['Tezgah'] = [op.tezgahId];
+      if (op.tezgahId) opFields['Tezgahlar'] = [op.tezgahId];
 
       if (op._id) {
         await apiFn('PATCH', TABLES.opRotalari, {fields: opFields}, op._id);
