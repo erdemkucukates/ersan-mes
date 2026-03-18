@@ -461,7 +461,7 @@ async function loadDetail(id) {
             <div class="field-group">
               <label class="field-label">Durum</label>
               <select class="field-input" id="f-durum">
-                ${['Beklemede','Üretimde','Tamamlandı','İptal'].map(d=>`<option ${(f['Durum']||'Beklemede')===d?'selected':''}>${d}</option>`).join('')}
+                ${['Taslak','Aktif','Üretimde','Muayenede','Tamamlandı','İptal'].map(d=>`<option ${(f['Durum']||'Taslak')===d?'selected':''}>${d}</option>`).join('')}
               </select>
             </div>
             <div class="field-group" style="grid-column:span 2;">
@@ -644,7 +644,7 @@ function renderOps() {
         <select style="border:1px solid transparent;border-radius:5px;padding:4px 6px;font-size:11px;font-family:var(--sans);width:100%;outline:none;color:${durumColor};font-weight:600;background:transparent;"
           onchange="updateOp(${i},'durum',this.value)"
           onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='transparent'">
-          ${['Beklemede','Devam','Tamamlandı','Reddedildi'].map(d=>`<option ${op.durum===d?'selected':''}>${d}</option>`).join('')}
+          ${['Bekliyor','İşlemde','Muayene Bekliyor','Tamamlandı','Atlandı'].map(d=>`<option ${op.durum===d?'selected':''}>${d}</option>`).join('')}
         </select>
       </td>
       <td><button class="btn-del-op" onclick="removeOp(${i})">×</button></td>
@@ -663,7 +663,7 @@ function addOp() {
     _id: null, _local: true,
     sira: currentOps.length + 1,
     tip: 'Tornalama', aciklama: '', fason: false,
-    fasonFirma: '', sure: 0, setup: 0, durum: 'Beklemede',
+    fasonFirma: '', sure: 0, setup: 0, durum: 'Bekliyor',
     tezgahId: '', personelId: ''
   });
   renderOps();
