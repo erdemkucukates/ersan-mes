@@ -789,13 +789,15 @@ async function confirmSiparis(stlId) {
     // Tedarikçi kaydını bul
     const tedRec = tedarikci.find(t => (t.fields['Tedarikçi Adı']||'') === (f['Seçilen Tedarikçi']||'') || (t.fields['E-posta']||'') === tedEmail);
 
-    await apiFn('PATCH', T.stl, {fields:{
+    var patchFields = {
       'Durum': 'Onaylandı',
       'Onay Fiyatı': fiyat,
-      'Seçilen Tedarikçi': tedRec ? tedRec.fields['Tedarikçi Adı'] : (f['Seçilen Tedarikçi']||''),
       'Vade Talebi (gün)': vade,
       'Vade Onaylandı': true,
-    }}, stlId);
+    };
+    // Seçilen Tedarikçi = multipleRecordLinks, record ID lazım
+    if (tedRec) patchFields['Seçilen Tedarikçi'] = [tedRec.id];
+    await apiFn('PATCH', T.stl, {fields: patchFields}, stlId);
 
     if (r) {
       r.fields['Durum'] = 'Onaylandı';
