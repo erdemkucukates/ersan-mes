@@ -386,7 +386,12 @@ async function selectKalem(idx) {
       var pdfData = rec && rec.fields && rec.fields['PDF Data'];
       if (pdfData) {
         console.log('[PDF-VIEW] PDF Data bulundu:', pdfData);
-        url = pdfData;
+        // Eski kayitlarda direkt Cloudinary URL olabilir, proxy'ye yonlendir
+        if (pdfData.startsWith('https://res.cloudinary.com/')) {
+          url = '/.netlify/functions/serve-pdf?url=' + encodeURIComponent(pdfData);
+        } else {
+          url = pdfData;
+        }
         name = 'teknik-resim.pdf';
         r.fields['PDF Data'] = pdfData;
       } else {
