@@ -65,8 +65,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; b
 .zoom-val { font-size: 11px; color: #5a6170; min-width: 38px; text-align: center; }
 .zoom-fit { font-size: 11px; padding: 0 10px; height: 28px; border: 1px solid #e2e5ea; border-radius: 6px; background: #fff; cursor: pointer; color: #5a6170; }
 .zoom-fit:hover { background: #f0f2f5; }
-.pdf-canvas-wrap { flex: 1; overflow: auto; display: flex; justify-content: center; padding: 16px; background: #6b7280; }
-.pdf-canvas-wrap canvas { display: block; box-shadow: 0 4px 16px rgba(0,0,0,.3); }
+.pdf-canvas-wrap { flex: 1; overflow: auto; padding: 16px; background: #6b7280; text-align: center; }
+.pdf-canvas-wrap canvas { display: inline-block; box-shadow: 0 4px 16px rgba(0,0,0,.3); flex-shrink: 0; }
 .pdf-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: #9aa0ad; background: #6b7280; }
 .pdf-empty-icon { width: 56px; height: 68px; border: 2px solid rgba(255,255,255,.3); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: rgba(255,255,255,.6); }
 .pdf-empty p { font-size: 12px; color: rgba(255,255,255,.6); }
@@ -428,28 +428,23 @@ async function loadPDF(url, filename) {
 }
 
 async function renderPDFPage() {
-  console.log('[ZOOM] renderPDFPage CALLED, pdfDoc:', !!pdfDoc);
-  if (!pdfDoc) { console.log('[ZOOM] renderPDFPage: pdfDoc yok'); return; }
+  if (!pdfDoc) return;
   var area = document.getElementById('pdf-canvas-area');
-  console.log('[ZOOM] area element:', area, 'getElementById result:', !!area);
-  if (!area) { console.log('[ZOOM] renderPDFPage: area yok!'); return; }
+  if (!area) return;
   area.className = 'pdf-canvas-wrap';
   try {
     var page = await pdfDoc.getPage(1);
     var vp = page.getViewport({scale:pdfZoom, rotation:pdfRotation});
     var canvas = document.createElement('canvas');
     canvas.width = vp.width; canvas.height = vp.height;
-    console.log('[ZOOM] canvas:', canvas.width+'x'+canvas.height, 'zoom:', Math.round(pdfZoom*100)+'%');
     area.innerHTML = ''; area.appendChild(canvas);
     await page.render({canvasContext:canvas.getContext('2d'), viewport:vp}).promise;
-    var zv = document.getElementById('zoom-val');
-    console.log('[ZOOM] zoom-val element:', !!zv);
-    if(zv) zv.textContent = Math.round(pdfZoom*100)+'%';
-  } catch(e) { console.error('[ZOOM] renderPDFPage HATA:', e); }
+    var zv = document.getElementById('zoom-val'); if(zv) zv.textContent = Math.round(pdfZoom*100)+'%';
+  } catch(e) { console.error('[PDF] render hatası:', e); }
 }
 
-function zoomIn() { console.log('[ZOOM] in, pdfDoc:', !!pdfDoc, 'zoom:', pdfZoom); if(!pdfDoc) return; pdfZoom = Math.min(pdfZoom+0.25,4); renderPDFPage(); }
-function zoomOut() { console.log('[ZOOM] out, pdfDoc:', !!pdfDoc, 'zoom:', pdfZoom); if(!pdfDoc) return; pdfZoom = Math.max(pdfZoom-0.25,0.5); renderPDFPage(); }
+function zoomIn() { if(!pdfDoc) return; pdfZoom = Math.min(pdfZoom+0.25,4); renderPDFPage(); }
+function zoomOut() { if(!pdfDoc) return; pdfZoom = Math.max(pdfZoom-0.25,0.5); renderPDFPage(); }
 function rotatePDF() { if(!pdfDoc) return; pdfRotation=(pdfRotation+90)%360; if(pdfCurrentUrl) pdfRotationCache[pdfCurrentUrl]=pdfRotation; renderPDFPage(); }
 function zoomFit() {
   if(!pdfDoc) return;
