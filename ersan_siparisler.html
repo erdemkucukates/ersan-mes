@@ -428,18 +428,21 @@ async function loadPDF(url, filename) {
 }
 
 async function renderPDFPage() {
-  if (!pdfDoc) return;
+  if (!pdfDoc) { console.log('[ZOOM] renderPDFPage: pdfDoc yok'); return; }
   var area = document.getElementById('pdf-canvas-area');
-  if (!area) return;
+  if (!area) { console.log('[ZOOM] renderPDFPage: area yok'); return; }
   area.className = 'pdf-canvas-wrap';
   try {
     var page = await pdfDoc.getPage(1);
     var vp = page.getViewport({scale:pdfZoom, rotation:pdfRotation});
     var canvas = document.createElement('canvas');
     canvas.width = vp.width; canvas.height = vp.height;
+    console.log('[ZOOM] canvas:', canvas.width+'x'+canvas.height, 'zoom:', Math.round(pdfZoom*100)+'%');
     area.innerHTML = ''; area.appendChild(canvas);
     await page.render({canvasContext:canvas.getContext('2d'), viewport:vp}).promise;
-    var zv = document.getElementById('zoom-val'); if(zv) zv.textContent = Math.round(pdfZoom*100)+'%';
+    var zv = document.getElementById('zoom-val');
+    console.log('[ZOOM] zoom-val element:', !!zv);
+    if(zv) zv.textContent = Math.round(pdfZoom*100)+'%';
   } catch(e) { console.error('[ZOOM] renderPDFPage HATA:', e); }
 }
 
