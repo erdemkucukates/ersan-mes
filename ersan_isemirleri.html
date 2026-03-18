@@ -316,7 +316,9 @@ const apiGetFn = async (table, params='') => {
     method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({method:'GET', path})
   });
-  return res.json();
+  const data = await res.json();
+  if (data.error) console.error('[API-GET-ERR]', table, params.substring(0,80), JSON.stringify(data.error));
+  return data;
 };
 
 // ── HELPERS ──
@@ -341,7 +343,7 @@ async function loadAll() {
     workOrders = all;
 
     const [tz, ps, se] = await Promise.all([
-      apiGetFn(TABLES.tezgahlar, 'fields[]=Tezgah%20Adı&fields[]=Tezgah%20No'),
+      apiGetFn(TABLES.tezgahlar, 'fields[]=Tezgah%20Adı&fields[]=Tezgah%20Kodu'),
       apiGetFn(TABLES.personel, 'fields[]=Ad%20Soyad'),
       apiGetFn(TABLES.satisEmirleri, 'fields[]=SE%20No&fields[]=Parça%20Adı&fields[]=Parça%20No&fields[]=Miktar&fields[]=Birim&sort[0][field]=SE%20No&sort[0][direction]=desc'),
     ]);
