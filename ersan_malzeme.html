@@ -194,46 +194,55 @@ textarea.fi { resize:vertical; min-height:60px; }
     </div>
     <div class="modal-body">
       <div class="modal-body-grid">
+        <!-- 1. TEDARİKÇİ SEÇİMİ -->
         <div class="fg full">
-          <label class="fl">Tedarikçi *</label>
-          <select class="fi" id="nm-tedarikci">
+          <label class="fl">1. Tedarikçi Seçin *</label>
+          <select class="fi" id="nm-tedarikci" onchange="onTedarikciChange()">
             <option value="">Seçiniz...</option>
           </select>
         </div>
-        <div class="fg">
-          <label class="fl">İrsaliye No *</label>
-          <input type="text" class="fi" id="nm-irsaliye" placeholder="İRS-2024-001">
+
+        <!-- 2. TEDARİKÇİYE AİT SİPARİŞLER -->
+        <div class="fg full" id="nm-stl-wrap" style="display:none;">
+          <label class="fl">2. Satınalma Siparişi Seçin</label>
+          <div id="nm-stl-list" style="max-height:180px;overflow-y:auto;border:1px solid var(--border);border-radius:6px;"></div>
         </div>
-        <div class="fg">
-          <label class="fl">Giriş Tarihi</label>
-          <input type="date" class="fi" id="nm-tarih">
+
+        <!-- 3. MALZEME BİLGİLERİ -->
+        <div class="fg full" id="nm-bilgi-wrap" style="display:none;border-top:1px solid var(--border);padding-top:12px;margin-top:4px;">
+          <label class="fl" style="margin-bottom:8px;">3. Malzeme Bilgileri</label>
+          <div class="modal-body-grid">
+            <div class="fg">
+              <label class="fl">İrsaliye No *</label>
+              <input type="text" class="fi" id="nm-irsaliye" placeholder="İRS-2024-001">
+            </div>
+            <div class="fg">
+              <label class="fl">Giriş Tarihi</label>
+              <input type="date" class="fi" id="nm-tarih">
+            </div>
+            <div class="fg full">
+              <label class="fl">Malzeme Adı *</label>
+              <input type="text" class="fi" id="nm-malzeme-adi" placeholder="Yuvarlak Çubuk, Sac, Boru...">
+            </div>
+            <div class="fg full">
+              <label class="fl">Malzeme Standardı</label>
+              <input type="text" class="fi" id="nm-standart" placeholder="1040, AISI 4140, S235JR">
+            </div>
+            <div class="fg">
+              <label class="fl">Toplam Miktar *</label>
+              <input type="number" class="fi" id="nm-miktar" placeholder="0" min="0" step="0.01">
+            </div>
+            <div class="fg">
+              <label class="fl">Birim *</label>
+              <select class="fi" id="nm-birim">
+                <option value="Adet">Adet</option>
+                <option value="Kg">Kg</option>
+                <option value="Mt">Mt</option>
+              </select>
+            </div>
+          </div>
         </div>
-        <div class="fg full">
-          <label class="fl">Malzeme Adı *</label>
-          <input type="text" class="fi" id="nm-malzeme-adi" placeholder="Yuvarlak Çubuk, Sac, Boru...">
-        </div>
-        <div class="fg full">
-          <label class="fl">Malzeme Standardı</label>
-          <input type="text" class="fi" id="nm-standart" placeholder="1040, AISI 4140, S235JR">
-        </div>
-        <div class="fg">
-          <label class="fl">Toplam Miktar *</label>
-          <input type="number" class="fi" id="nm-miktar" placeholder="0" min="0" step="0.01">
-        </div>
-        <div class="fg">
-          <label class="fl">Birim *</label>
-          <select class="fi" id="nm-birim">
-            <option value="Adet">Adet</option>
-            <option value="Kg">Kg</option>
-            <option value="Mt">Mt</option>
-          </select>
-        </div>
-        <div class="fg full">
-          <label class="fl">Bağlı Satınalma Talebi (opsiyonel)</label>
-          <select class="fi" id="nm-stl">
-            <option value="">— Yok —</option>
-          </select>
-        </div>
+        <input type="hidden" id="nm-stl" value="">
       </div>
     </div>
     <div class="modal-foot">
@@ -889,62 +898,100 @@ function populateTedarikciDropdown() {
 }
 
 function populateSTLDropdown() {
-  const sel = document.getElementById('nm-stl');
-  stlList.forEach(s => {
-    const f = s.fields;
-    const opt = document.createElement('option');
-    opt.value = s.id;
-    const no = f['Talep No'] || s.id;
-    const kalem = f['Kalem Adı'] || f['Malzeme İşlem'] || '';
-    const ted = f['Seçilen Tedarikçi'] || '';
-    opt.textContent = no + (kalem ? ' — ' + kalem : '') + (ted ? ' (' + ted + ')' : '');
-    sel.appendChild(opt);
-  });
-  sel.onchange = function() { autoFillFromSTL(this.value); };
+  // Artık kullanılmıyor — onTedarikciChange ile dinamik gösteriliyor
 }
 
-function autoFillFromSTL(stlId) {
-  if (!stlId) return;
-  const s = stlList.find(x => x.id === stlId);
-  if (!s) return;
-  const f = s.fields;
+function onTedarikciChange() {
+  var tedId = document.getElementById('nm-tedarikci').value;
+  var stlWrap = document.getElementById('nm-stl-wrap');
+  var bilgiWrap = document.getElementById('nm-bilgi-wrap');
+  var stlListEl = document.getElementById('nm-stl-list');
 
-  // Tedarikçi eşleştir (isme göre)
-  const tedAdi = f['Seçilen Tedarikçi'] || '';
-  if (tedAdi) {
-    const tedRec = tedarikciList.find(t => (t.fields['Tedarikçi Adı']||'') === tedAdi);
-    if (tedRec) document.getElementById('nm-tedarikci').value = tedRec.id;
+  if (!tedId) {
+    stlWrap.style.display = 'none';
+    bilgiWrap.style.display = 'none';
+    return;
   }
 
-  // Malzeme Adı
-  const malzAdi = f['Kalem Adı'] || f['Malzeme İşlem'] || '';
-  if (malzAdi) document.getElementById('nm-malzeme-adi').value = malzAdi;
+  // Tedarikçi adını bul
+  var tedRec = tedarikciList.find(function(t){ return t.id === tedId; });
+  var tedAdi = tedRec ? (tedRec.fields['Tedarikçi Adı']||'') : '';
 
-  // Malzeme Standardı = Malzeme İşlem veya Ölçü
-  const standart = f['Malzeme İşlem'] || '';
-  if (standart) document.getElementById('nm-standart').value = standart;
+  // Bu tedarikçiye ait onaylı satınalma taleplerini filtrele
+  var tedSTL = stlList.filter(function(s) {
+    var f = s.fields;
+    // Seçilen Tedarikçi string veya link olabilir — her ikisini de kontrol et
+    var secTed = f['Seçilen Tedarikçi'];
+    if (typeof secTed === 'string') return secTed === tedAdi;
+    if (Array.isArray(secTed)) return secTed.includes(tedId);
+    // E-posta ile eşleştir
+    var tedEmail = tedRec ? (tedRec.fields['E-posta']||'') : '';
+    return tedEmail && (f['Tedarikçi Email']||'').includes(tedEmail);
+  });
 
-  // Miktar ve Birim
-  if (f['Miktar']) document.getElementById('nm-miktar').value = f['Miktar'];
+  stlWrap.style.display = 'block';
+
+  if (!tedSTL.length) {
+    stlListEl.innerHTML = '<div style="padding:12px;text-align:center;color:var(--text3);font-size:12px;">Bu tedarikçiye ait onaylı sipariş yok.<br>Manuel bilgi girerek devam edebilirsiniz.</div>';
+    bilgiWrap.style.display = 'block';
+    document.getElementById('nm-stl').value = '';
+    return;
+  }
+
+  stlListEl.innerHTML = tedSTL.map(function(s) {
+    var f = s.fields;
+    var fiyatStr = f['Teklif Fiyatı'] ? Number(f['Teklif Fiyatı']).toLocaleString('tr-TR',{minimumFractionDigits:2}) + ' ' + (f['Fiyat Birimi']||'TL') : '';
+    return '<div onclick="selectSTLForEntry(\''+s.id+'\')" style="padding:10px 12px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s;" onmouseover="this.style.background=\'var(--accent-light)\'" onmouseout="this.style.background=\'\'">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;">'+
+      '<span style="font-size:12px;font-weight:600;color:var(--accent);font-family:var(--mono);">'+(f['Talep No']||'—')+'</span>'+
+      (fiyatStr ? '<span style="font-size:11px;font-weight:600;color:var(--green);">'+fiyatStr+'</span>' : '')+
+      '</div>'+
+      '<div style="font-size:12px;font-weight:500;margin-top:2px;">'+(f['Kalem Adı']||f['Malzeme İşlem']||'—')+'</div>'+
+      '<div style="font-size:11px;color:var(--text3);margin-top:2px;">'+(f['Ölçü']||'')+ ' · '+(f['Miktar']||0)+' '+(f['Birim']||'')+'</div>'+
+      '</div>';
+  }).join('') + '<div onclick="selectSTLForEntry(\'\')" style="padding:8px 12px;text-align:center;color:var(--text3);font-size:11px;cursor:pointer;border-top:1px dashed var(--border);" onmouseover="this.style.background=\'#f7f8fa\'" onmouseout="this.style.background=\'\'">Manuel giriş (sipariş bağlamadan)</div>';
+}
+
+function selectSTLForEntry(stlId) {
+  var bilgiWrap = document.getElementById('nm-bilgi-wrap');
+  bilgiWrap.style.display = 'block';
+  document.getElementById('nm-stl').value = stlId;
+
+  // Seçili satırı vurgula
+  var items = document.querySelectorAll('#nm-stl-list > div');
+  items.forEach(function(el){ el.style.background = ''; el.style.borderLeft = ''; });
+
+  if (!stlId) {
+    // Manuel giriş — alanları temizle
+    document.getElementById('nm-malzeme-adi').value = '';
+    document.getElementById('nm-standart').value = '';
+    document.getElementById('nm-miktar').value = '';
+    document.getElementById('nm-birim').value = 'Adet';
+    return;
+  }
+
+  // Seçili satırı işaretle
+  var s = stlList.find(function(x){ return x.id === stlId; });
+  if (!s) return;
+  var f = s.fields;
+
+  // Otomatik doldur
+  document.getElementById('nm-malzeme-adi').value = f['Kalem Adı'] || f['Malzeme İşlem'] || '';
+  document.getElementById('nm-standart').value = f['Malzeme İşlem'] || f['Ölçü'] || '';
+  document.getElementById('nm-miktar').value = f['Miktar'] || '';
   if (f['Birim']) document.getElementById('nm-birim').value = f['Birim'];
 
-  // Bilgi notu göster
-  var info = document.getElementById('nm-stl-info');
-  if (!info) {
-    info = document.createElement('div');
-    info.id = 'nm-stl-info';
-    info.style.cssText = 'grid-column:1/-1;background:var(--accent-light);border-radius:6px;padding:8px 12px;font-size:11px;color:var(--accent);';
-    document.getElementById('nm-stl').parentElement.after(info);
-  }
-  var fiyatStr = f['Teklif Fiyatı'] ? Number(f['Teklif Fiyatı']).toLocaleString('tr-TR',{minimumFractionDigits:2}) + ' ' + (f['Fiyat Birimi']||'TL') : '';
-  info.innerHTML = '<strong>Talep:</strong> ' + (f['Kalem Adı']||'') + ' · ' + (f['Ölçü']||'') + ' · ' + (f['Miktar']||0) + ' ' + (f['Birim']||'') + (fiyatStr ? ' · <strong>Onay Fiyatı:</strong> ' + fiyatStr : '');
+  // Tıklanan satırı vurgula
+  items.forEach(function(el){
+    if (el.onclick && el.onclick.toString().includes(stlId)) {
+      el.style.background = 'var(--accent-light)';
+      el.style.borderLeft = '3px solid var(--accent)';
+    }
+  });
 }
 
 function openNewModal() {
-  // Set today's date
-  const today = new Date().toISOString().split('T')[0];
-  document.getElementById('nm-tarih').value = today;
-  // Reset fields
+  document.getElementById('nm-tarih').value = new Date().toISOString().split('T')[0];
   document.getElementById('nm-tedarikci').value = '';
   document.getElementById('nm-irsaliye').value = '';
   document.getElementById('nm-malzeme-adi').value = '';
@@ -952,6 +999,9 @@ function openNewModal() {
   document.getElementById('nm-miktar').value = '';
   document.getElementById('nm-birim').value = 'Adet';
   document.getElementById('nm-stl').value = '';
+  document.getElementById('nm-stl-wrap').style.display = 'none';
+  document.getElementById('nm-bilgi-wrap').style.display = 'none';
+  document.getElementById('nm-stl-list').innerHTML = '';
   document.getElementById('new-modal').classList.remove('hidden');
 }
 
