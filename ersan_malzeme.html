@@ -370,7 +370,7 @@ function fmtDate(d) {
 async function loadAll() {
   try {
     // Load tedarikci
-    const td = await apiGetAll(T.tedarikci, 'fields[]=Tedarikçi%20Adı&fields[]=id');
+    const td = await apiGetAll(T.tedarikci, 'fields[]=Tedarikçi%20Adı&fields[]=E-posta');
     tedarikciList = td;
 
     // Load STL (Onaylandı only)
