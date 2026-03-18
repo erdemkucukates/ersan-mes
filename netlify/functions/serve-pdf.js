@@ -1,3 +1,5 @@
+const { getStore } = require('@netlify/blobs');
+
 exports.handler = async (event) => {
   const CORS = {
     'Access-Control-Allow-Origin': '*',
@@ -5,24 +7,21 @@ exports.handler = async (event) => {
   };
   if (event.httpMethod === 'OPTIONS') return {statusCode:200,headers:CORS,body:''};
 
-  const url = (event.queryStringParameters || {}).url;
-  if (!url || !url.startsWith('https://res.cloudinary.com/')) {
-    return {statusCode:400,headers:{...CORS,'Content-Type':'application/json'},body:JSON.stringify({error:'geçersiz URL'})};
-  }
+  const key = (event.queryStringParameters || {}).key;
+  if (!key) return {statusCode:400,headers:{...CORS,'Content-Type':'application/json'},body:JSON.stringify({error:'key parametresi gerekli'})};
 
   try {
-    const res = await fetch(url);
-    if (!res.ok) throw new Error('Cloudinary ' + res.status + ': ' + res.statusText);
+    const store = getStore('teknik-resimler');
+    const blob = await store.get(key, { type: 'arrayBuffer' });
+    if (!blob) return {statusCode:404,headers:{...CORS,'Content-Type':'application/json'},body:JSON.stringify({error:'PDF bulunamadı'})};
 
-    const buffer = Buffer.from(await res.arrayBuffer());
-    const contentType = res.headers.get('content-type') || 'application/pdf';
-
+    const buffer = Buffer.from(blob);
     return {
       statusCode: 200,
       headers: {
         ...CORS,
-        'Content-Type': contentType,
-        'Content-Disposition': 'inline; filename="teknik-resim.pdf"',
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': 'inline; filename="' + key.split('/').pop() + '"',
         'Cache-Control': 'public, max-age=86400',
       },
       body: buffer.toString('base64'),
@@ -30,6 +29,6 @@ exports.handler = async (event) => {
     };
   } catch(e) {
     console.log('[serve-pdf] ERROR:', e.message);
-    return {statusCode:502,headers:{...CORS,'Content-Type':'application/json'},body:JSON.stringify({error:e.message})};
+    return {statusCode:500,headers:{...CORS,'Content-Type':'application/json'},body:JSON.stringify({error:e.message})};
   }
 };
