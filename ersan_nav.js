@@ -22,6 +22,7 @@ var ERSAN_MODULES = [
   { id: 'risk',         label: 'Risk Yönetimi',           icon: '⚠️', url: 'ersan_risk.html',          status: 'soon' },
   { id: 'isg',          label: 'İSG / Güvenlik',          icon: '🦺', url: 'ersan_isg.html',           status: 'soon' },
   { id: 'ygg',          label: 'Yönetim Gözden Geçirme', icon: '📊', url: 'ersan_ygg.html',           status: 'soon' },
+  { id: 'sistemlogu',   label: 'Sistem Logu',             icon: '📜', url: 'ersan_sistem_logu.html',  status: 'active' },
 ];
 
 function injectNav() {
