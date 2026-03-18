@@ -8,8 +8,8 @@
   <DefaultLocale>tr-TR</DefaultLocale>
   <DisplayName DefaultValue="Ersan MES" />
   <Description DefaultValue="Teklif talebi degerlendirme paneli - Gelen mailleri analiz eder, ret veya olumlu akis baslatir." />
-  <IconUrl DefaultValue="https://ersan-mes.netlify.app/favicon.ico" />
-  <HighResolutionIconUrl DefaultValue="https://ersan-mes.netlify.app/favicon.ico" />
+  <IconUrl DefaultValue="https://ersan-mes.netlify.app/icon-32.png" />
+  <HighResolutionIconUrl DefaultValue="https://ersan-mes.netlify.app/icon-64.png" />
   <SupportUrl DefaultValue="https://ersan-mes.netlify.app" />
 
   <Hosts>
