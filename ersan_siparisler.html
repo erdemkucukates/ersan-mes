@@ -443,8 +443,8 @@ async function renderPDFPage() {
   } catch(e) {}
 }
 
-function zoomIn() { if(!pdfDoc) return; pdfZoom = Math.min(pdfZoom+0.25,4); renderPDFPage(); }
-function zoomOut() { if(!pdfDoc) return; pdfZoom = Math.max(pdfZoom-0.25,0.5); renderPDFPage(); }
+function zoomIn() { console.log('[ZOOM] in, pdfDoc:', !!pdfDoc, 'zoom:', pdfZoom); if(!pdfDoc) return; pdfZoom = Math.min(pdfZoom+0.25,4); renderPDFPage(); }
+function zoomOut() { console.log('[ZOOM] out, pdfDoc:', !!pdfDoc, 'zoom:', pdfZoom); if(!pdfDoc) return; pdfZoom = Math.max(pdfZoom-0.25,0.5); renderPDFPage(); }
 function rotatePDF() { if(!pdfDoc) return; pdfRotation=(pdfRotation+90)%360; if(pdfCurrentUrl) pdfRotationCache[pdfCurrentUrl]=pdfRotation; renderPDFPage(); }
 function zoomFit() {
   if(!pdfDoc) return;
