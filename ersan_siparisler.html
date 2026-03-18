@@ -570,12 +570,19 @@ function openSTLModal(g) {
     '</div>'+
     '<div class="modal-body" id="stl-body"></div>'+
     '<div class="modal-foot">'+
+    '<button onclick="addSTLRow()" class="btn" style="margin-right:auto;">+ Satır Ekle</button>'+
     '<button id="stl-cancel" class="btn">İptal</button>'+
     '<button onclick="saveSTL()" class="btn btn-amber">💾 Talebi Kaydet</button>'+
     '</div></div>';
   document.body.appendChild(modal);
   document.getElementById('stl-close').onclick = function() { modal.remove(); };
   document.getElementById('stl-cancel').onclick = function() { modal.remove(); };
+  renderSTL();
+}
+
+function addSTLRow() {
+  var g = window._currentGroup; if (!g) return;
+  window._stlRows.push({tip:'Hammadde',malzemeTipi:'Mil',malzemeCinsi:'',yogunluk:'Çelik',cap:'',boy:'',ic_cap:'',miktar:1,birim:'Adet',parcaAdi:'Ek talep',seId:g.kalemler[0]?g.kalemler[0].id:null});
   renderSTL();
 }
 
@@ -632,9 +639,7 @@ function renderSTL() {
       }
       grid += '<div><div style="font-size:10px;color:#9aa0ad;margin-bottom:2px">BOY (mm)</div>'+
         '<input id="stl-boy-'+i+'" type="number" style="width:100%;padding:4px;border:1px solid #e2e5ea;border-radius:6px;font-size:11px;" value="'+(s.boy||'')+'" placeholder="200"></div>';
-      if (kg > 0) {
-        grid += '<div style="grid-column:1/-1;background:#d1fae5;border-radius:6px;padding:4px 8px;font-size:11px;color:#059669;font-weight:600;">Tahmini: '+kg.toFixed(2)+' kg</div>';
-      }
+      grid += '<div id="stl-kg-'+i+'" style="grid-column:1/-1;background:#d1fae5;border-radius:6px;padding:4px 8px;font-size:11px;color:#059669;font-weight:600;display:'+(kg>0?'block':'none')+';">'+(kg>0?'Tahmini: '+kg.toFixed(2)+' kg':'')+'</div>';
     } else {
       grid += '<div><div style="font-size:10px;color:#9aa0ad;margin-bottom:2px">İŞLEM</div>'+
         '<input id="stl-mc-'+i+'" style="width:100%;padding:4px;border:1px solid #e2e5ea;border-radius:6px;font-size:11px;" value="'+(s.malzemeCinsi||'')+'" placeholder="Isil Islem..."></div>';
@@ -645,7 +650,7 @@ function renderSTL() {
     div.innerHTML = header + grid;
     body.appendChild(div);
 
-    // Event listeners
+    // Event listeners — kg hesabini debounce ile yap (focus kaybetmesin)
     setTimeout(function(idx) {
       var tipSel = document.getElementById('stl-tip-'+idx);
       if (tipSel) tipSel.onchange = function() {
@@ -658,15 +663,31 @@ function renderSTL() {
       var mcIn = document.getElementById('stl-mc-'+idx);
       if (mcIn) mcIn.oninput = function() { window._stlRows[idx].malzemeCinsi = this.value; };
       var capIn = document.getElementById('stl-cap-'+idx);
-      if (capIn) capIn.oninput = function() { window._stlRows[idx].cap = this.value; renderSTL(); };
+      if (capIn) capIn.oninput = function() { window._stlRows[idx].cap = this.value; stlDebounceKg(idx); };
       var icIn = document.getElementById('stl-ic-'+idx);
-      if (icIn) icIn.oninput = function() { window._stlRows[idx].ic_cap = this.value; renderSTL(); };
+      if (icIn) icIn.oninput = function() { window._stlRows[idx].ic_cap = this.value; stlDebounceKg(idx); };
       var boyIn = document.getElementById('stl-boy-'+idx);
-      if (boyIn) boyIn.oninput = function() { window._stlRows[idx].boy = this.value; renderSTL(); };
+      if (boyIn) boyIn.oninput = function() { window._stlRows[idx].boy = this.value; stlDebounceKg(idx); };
       var specIn = document.getElementById('stl-spec-'+idx);
       if (specIn) specIn.oninput = function() { window._stlRows[idx].spec = this.value; };
     }, 0, i);
   });
+}
+
+var _stlKgTimer = null;
+function stlDebounceKg(idx) {
+  clearTimeout(_stlKgTimer);
+  _stlKgTimer = setTimeout(function() { updateKgDisplay(idx); }, 600);
+}
+
+function updateKgDisplay(idx) {
+  var s = window._stlRows[idx]; if (!s) return;
+  var YOGUNLUK = {Çelik:7.85,Paslanmaz:7.93,Alüminyum:2.70,Titanyum:4.51,Bronz:8.89};
+  var rho = YOGUNLUK[s.yogunluk]||7.85, kg=0;
+  if (s.malzemeTipi==='Mil'){var r=(parseFloat(s.cap)||0)/2/10,h=(parseFloat(s.boy)||0)/10;kg=Math.PI*r*r*h*rho*(s.miktar||1);}
+  else if(s.malzemeTipi==='Boru'){var rd=(parseFloat(s.cap)||0)/2/10,ri=(parseFloat(s.ic_cap)||0)/2/10,h=(parseFloat(s.boy)||0)/10;kg=Math.PI*(rd*rd-ri*ri)*h*rho*(s.miktar||1);}
+  var el = document.getElementById('stl-kg-'+idx);
+  if (el) { el.textContent = kg > 0 ? 'Tahmini: '+kg.toFixed(2)+' kg' : ''; el.style.display = kg > 0 ? 'block' : 'none'; }
 }
 
 async function saveSTL() {
@@ -722,7 +743,7 @@ function openIEModal(g) {
       '<input id="ie-mik-'+i+'" type="number" value="'+(f['Miktar']||0)+'" style="width:100%;padding:4px;border:1px solid #e2e5ea;border-radius:6px;font-size:11px;"></div>'+
       '<div><div style="font-size:10px;color:#9aa0ad;margin-bottom:2px">ÖNCELİK</div>'+
       '<select id="ie-onc-'+i+'" style="width:100%;padding:4px;border:1px solid #e2e5ea;border-radius:6px;font-size:11px;">'+
-      '<option>Normal</option><option>Yüksek</option><option>Acil</option></select></div>'+
+      '<option>Normal</option><option>Acil</option><option>Kritik</option></select></div>'+
       '<div><div style="font-size:10px;color:#9aa0ad;margin-bottom:2px">FAI GEREKLİ</div>'+
       '<label style="display:flex;align-items:center;gap:4px;font-size:11px;"><input type="checkbox" id="ie-fai-'+i+'"> Evet</label></div>'+
       '</div></div>';
@@ -768,7 +789,7 @@ async function saveIE(g) {
         'Açılış Tarihi': new Date().toISOString().split('T')[0],
         'Termin Tarihi': f['Termin Tarihi'] || null,
         'Öncelik': oncelik,
-        'Durum': 'Açık',
+        'Durum': 'Taslak',
         'FAI Gerekli mi?': fai
       };
 
