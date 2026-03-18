@@ -18,7 +18,7 @@ exports.handler = async (event) => {
 
   try {
     const body = JSON.parse(event.body || '{}');
-    const { token, recordId, birimFiyat, fiyatBirimi, teslimSuresi, malzemeCinsi, tedarikciOlculeri, gecerlilikTarihi, tedarikciNotu, vadeTeklifi } = body;
+    const { token, recordId, teklifFiyati, fiyatBirimi, teslimSuresi, malzemeCinsi, tedarikciOlculeri, gecerlilikTarihi, tedarikciNotu, tedarikciVade, tedarikciKg } = body;
 
     if (!token || !recordId) {
       return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: 'token ve recordId gerekli' }) };
@@ -46,16 +46,17 @@ exports.handler = async (event) => {
         },
         body: JSON.stringify({
           fields: {
-            'Teklif Fiyatı':      parseFloat(birimFiyat)  || null,
-            'Fiyat Birimi':       fiyatBirimi             || 'TL/adet',
-            'Teslim Süresi Gün':  parseInt(teslimSuresi)  || null,
-            'Malzeme Cinsi':      malzemeCinsi            || null,
-            'Tedarikçi Ölçüleri': tedarikciOlculeri       || null,
-            'Geçerlilik Tarihi':  gecerlilikTarihi        || null,
-            'Tedarikçi Notu':     tedarikciNotu           || null,
-            'Vade Teklifi':       parseInt(vadeTeklifi)   || null,
-            'Yanıt Tarihi':       new Date().toISOString().split('T')[0],
-            'Durum':              'Yanıtlandı',
+            'Teklif Fiyatı':          parseFloat(teklifFiyati)  || null,
+            'Fiyat Birimi':           fiyatBirimi               || 'TL/kg',
+            'Teslim Süresi Gün':      parseInt(teslimSuresi)    || null,
+            'Malzeme Cinsi':          malzemeCinsi              || null,
+            'Tedarikçi Ölçüleri':     tedarikciOlculeri         || null,
+            'Geçerlilik Tarihi':      gecerlilikTarihi          || null,
+            'Tedarikçi Notu':         tedarikciNotu             || null,
+            'Tedarikçi Vade Önerisi': parseInt(tedarikciVade)   || null,
+            'Tedarikçi Kg':           parseFloat(tedarikciKg)   || null,
+            'Yanıt Tarihi':           new Date().toISOString().split('T')[0],
+            'Durum':                  'Yanıtlandı',
           },
         }),
       }

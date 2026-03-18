@@ -66,9 +66,15 @@ body { font-family: var(--sans); background: var(--bg); color: var(--text); heig
 .wo-meta { font-size: 11px; color: var(--text3); }
 .status-badge { font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 10px; }
 .s-Beklemede { background: #f3f4f6; color: #6b7280; }
+.s-Taslak { background: #f3f4f6; color: #6b7280; }
+.s-Aktif { background: var(--blue-light); color: var(--blue); }
 .s-Üretimde { background: var(--blue-light); color: var(--blue); }
+.s-Muayenede { background: var(--orange-light); color: var(--orange); }
 .s-Tamamlandı { background: var(--green-light); color: var(--green); }
 .s-İptal { background: var(--red-light); color: var(--red); }
+.p-Normal { }
+.p-Acil { border-left: 3px solid var(--orange); }
+.p-Kritik { border-left: 3px solid var(--red); background: #fff5f5; }
 .s-op-Beklemede { background: #f3f4f6; color: #6b7280; }
 .s-op-Devam { background: var(--blue-light); color: var(--blue); }
 .s-op-Tamamlandı { background: var(--green-light); color: var(--green); }
@@ -368,15 +374,19 @@ function renderList() {
   }
   el.innerHTML = filteredWOs.map(wo => {
     const f = wo.fields;
-    const durum = f['Durum'] || 'Beklemede';
+    const durum = f['Durum'] || 'Taslak';
+    const oncelik = f['Öncelik'] || 'Normal';
     const active = wo.id === activeWOId ? ' active' : '';
-    return `<div class="wo-item${active}" onclick="loadDetail('${wo.id}')">
+    return `<div class="wo-item${active} p-${oncelik}" onclick="loadDetail('${wo.id}')">
       <div class="wo-top">
         <div>
           <div class="wo-no">${f['IE No']||'—'}</div>
           <div class="wo-lot">${f['Lot No']||'—'}</div>
         </div>
-        <span class="status-badge s-${durum}">${durum}</span>
+        <div style="display:flex;gap:4px;align-items:center;">
+          ${oncelik!=='Normal'?'<span class="status-badge" style="background:'+(oncelik==='Kritik'?'var(--red-light);color:var(--red)':'var(--orange-light);color:var(--orange)')+'">'+oncelik+'</span>':''}
+          <span class="status-badge s-${durum}">${durum}</span>
+        </div>
       </div>
       <div class="wo-parca">${f['Parça Adı']||'—'}</div>
       <div class="wo-bottom">
@@ -420,6 +430,7 @@ async function loadDetail(id) {
       <button class="toolbar-btn" onclick="setWODurum('${id}','Üretimde')" style="background:var(--blue-light);color:var(--blue);border-color:var(--blue);">▶ Üretime Al</button>
       <button class="toolbar-btn success" onclick="setWODurum('${id}','Tamamlandı')">✓ Tamamla</button>
       <button class="toolbar-btn primary" onclick="saveWO('${id}')">💾 Kaydet</button>
+      <button class="toolbar-btn" style="border-color:var(--red);color:var(--red);" onclick="deleteWO('${id}')">🗑 Sil</button>
     </div>
     <div class="detail-scroll" id="wo-detail-scroll">
       <!-- Bilgiler -->
@@ -440,10 +451,7 @@ async function loadDetail(id) {
             </div>
             <div class="field-group">
               <label class="field-label">Satış Emri</label>
-              <select class="field-input" id="f-seno">
-                <option value="">— Seçin —</option>
-                ${satisEmirleri.map(r => `<option value="${r.id}" ${(f['Satış Emirleri']?.[0]===r.id)?'selected':''}>${r.fields['SE No']||r.id}</option>`).join('')}
-              </select>
+              <input class="field-input" value="${satisEmirleri.find(r=>r.id===f['SE No']?.[0])?.fields?.['SE No']||f['SE No']?.[0]||'—'}" disabled style="font-family:var(--mono);background:#f7f8fa;">
             </div>
             <div class="field-group">
               <label class="field-label">Durum</label>
@@ -1007,6 +1015,24 @@ async function printTraveler(woId) {
 
   doc.save(`Traveler_${tr(f['IE No']||'WO')}.pdf`);
   toast('Traveler PDF indiriliyor...');
+}
+
+// ── İŞ EMRİ SİL ──
+async function deleteWO(id) {
+  const wo = workOrders.find(r => r.id === id);
+  const ieNo = wo?.fields?.['IE No'] || id;
+  if (!confirm(ieNo + ' silinsin mi?')) return;
+  try {
+    await fetch('/.netlify/functions/airtable', {
+      method: 'DELETE', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({table:'İş Emirleri', id:id})
+    });
+    workOrders = workOrders.filter(r => r.id !== id);
+    activeWOId = null;
+    filterAndRender();
+    document.getElementById('detail-content').innerHTML = '<div class="empty-state"><p>İş emri silindi.</p></div>';
+    toast(ieNo + ' silindi');
+  } catch(e) { toast('Hata: ' + e.message); }
 }
 
 // ── INIT ──
