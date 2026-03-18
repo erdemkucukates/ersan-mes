@@ -645,7 +645,7 @@ async function deleteSTL(id, seId) {
     if (data.error) throw new Error(JSON.stringify(data.error));
     stlList = stlList.filter(function(x){ return x.id !== id; });
     activeId = null;
-    renderList();
+    filterAndRender();
     if (seId) showSEGroup(seId);
     else document.getElementById('detail-content').innerHTML = '<div style="padding:40px;text-align:center;color:var(--text3);">Talep silindi.</div>';
     toast('Talep silindi');
@@ -667,7 +667,7 @@ async function deleteSTLGroup(seId) {
     }
     stlList = stlList.filter(function(r){ return (r.fields['SE No']||[])[0] !== seId; });
     activeId = null;
-    renderList();
+    filterAndRender();
     document.getElementById('detail-content').innerHTML = '<div style="padding:40px;text-align:center;color:var(--text3);">' + seNo + ' talepleri silindi.</div>';
     toast(records.length + ' talep silindi');
   } catch(e) { toast('Hata: ' + e.message); }
