@@ -343,9 +343,9 @@ async function loadAll() {
     workOrders = all;
 
     const [tz, ps, se] = await Promise.all([
-      apiGetFn(TABLES.tezgahlar, 'fields[]=Tezgah%20Adı&fields[]=Tezgah%20Kodu'),
-      apiGetFn(TABLES.personel, 'fields[]=Ad%20Soyad'),
-      apiGetFn(TABLES.satisEmirleri, 'fields[]=SE%20No&fields[]=Parça%20Adı&fields[]=Parça%20No&fields[]=Miktar&fields[]=Birim&sort[0][field]=SE%20No&sort[0][direction]=desc'),
+      apiGetFn(TABLES.tezgahlar, ''),
+      apiGetFn(TABLES.personel, ''),
+      apiGetFn(TABLES.satisEmirleri, 'sort[0][field]=SE%20No&sort[0][direction]=desc'),
     ]);
     tezgahlar = tz.records || [];
     personel = ps.records || [];
