@@ -88,6 +88,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; b
 </head>
 <body>
 <script src="ersan_nav.js"></script>
+<script src="ersan_log.js"></script>
 <div class="toast" id="toast"></div>
 
 <div class="layout">
@@ -548,6 +549,7 @@ async function deleteGroup(spNo) {
     selectedSP = null; filterList();
     document.getElementById('main').innerHTML = '<div class="empty-main">Sipariş silindi.</div>';
     toast('Silindi');
+    logIslem('Silindi', 'Sipariş', null, spNo, null, null);
   } catch(e) { toast('Hata: '+e.message); }
 }
 
@@ -744,6 +746,7 @@ async function saveSTL() {
     }
     document.getElementById('stl-modal').remove();
     toast(count+' satınalma talebi oluşturuldu ✓');
+    logIslem('Oluşturuldu', 'Satınalma', null, window._currentGroup?.spNo, null, {adet:count});
   } catch(e) { toast('Hata: '+e.message); }
 }
 
@@ -832,6 +835,7 @@ async function saveIE(g) {
     }
     document.getElementById('ie-modal').remove();
     toast(count + ' iş emri oluşturuldu ✓');
+    logIslem('Oluşturuldu', 'İş Emri', null, g.spNo, null, {adet:count});
   } catch(e) {
     toast('Hata: ' + e.message);
     if (btn) { btn.disabled = false; btn.textContent = '⚙ İş Emirlerini Oluştur'; }

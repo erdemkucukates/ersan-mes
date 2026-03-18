@@ -160,6 +160,7 @@ select.field-input { cursor: pointer; }
 </head>
 <body>
 <script src="ersan_nav.js"></script>
+<script src="ersan_log.js"></script>
 
 <!-- HEADER -->
 <header class="header">
@@ -1032,6 +1033,7 @@ async function deleteWO(id) {
     filterAndRender();
     document.getElementById('detail-content').innerHTML = '<div class="empty-state"><p>İş emri silindi.</p></div>';
     toast(ieNo + ' silindi');
+    logIslem('Silindi', 'İş Emri', id, ieNo, null, null);
   } catch(e) { toast('Hata: ' + e.message); }
 }
 

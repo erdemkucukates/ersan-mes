@@ -154,6 +154,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);height:100vh
 </head>
 <body>
 <script src="ersan_nav.js"></script>
+<script src="ersan_log.js"></script>
 
 <header class="header">
   <div style="display:flex;align-items:center;gap:10px;">
@@ -809,6 +810,7 @@ async function confirmSiparis(stlId) {
     filterAndRender();
     showDetail(stlId);
     toast('Satınalma siparişi onaylandı ✓');
+    logIslem('Onaylandı', 'Satınalma', stlId, f['Kalem Adı']||'', {Durum:f['Durum']}, {Durum:'Onaylandı',Fiyat:fiyat});
   } catch(e) {
     toast('Hata: ' + e.message, 'err');
     if (btn) { btn.disabled = false; btn.textContent = '✅ Onayla ve Sipariş Oluştur'; }
@@ -840,6 +842,7 @@ async function deleteSTL(id, seId) {
     if (seId) showSEGroup(seId);
     else document.getElementById('detail-content').innerHTML = '<div style="padding:40px;text-align:center;color:var(--text3);">Talep silindi.</div>';
     toast('Talep silindi');
+    logIslem('Silindi', 'Satınalma', id, label, null, null);
   } catch(e) { toast('Hata: ' + e.message); }
 }
 

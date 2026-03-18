@@ -387,6 +387,7 @@
 </head>
 <body>
 <script src="ersan_nav.js"></script>
+<script src="ersan_log.js"></script>
 
 <!-- HEADER -->
 <header class="header">
@@ -1331,6 +1332,7 @@ async function confirmSEOlustur(teklifId) {
     window._trFiles = {};
     toast(seciliItems.length + ' kalem sipariş oluşturuldu (' + spNo + ') — yönlendiriliyor...', 'success');
     console.log('[SE] Sipariş oluşturuldu, yönlendirme başlıyor...');
+    logIslem('Oluşturuldu', 'Sipariş', null, spNo, null, {kalem:seciliItems.length});
     setTimeout(function() { window.location.href = 'ersan_siparisler.html'; }, 1500);
   } catch(e) {
     console.error('[SE] Sipariş oluşturma hatası:', e);
