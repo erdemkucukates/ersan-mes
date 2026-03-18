@@ -110,7 +110,8 @@ var BASE = 'app5LDgJMgocw79Ix';
 var TABLES = { se: 'tbl56Oj1nPaqefI60', ie: 'tbl58qL39I2tv8hK4' };
 
 var records = [], currentFilter = 'Tümü', selectedSP = null, selectedKalemIdx = null;
-var pdfDoc = null, pdfZoom = 1.2, pdfRotation = 0, pdfCurrentUrl = null, pdfRotationCache = {};
+var pdfDoc = null, pdfZoom = 1.2, pdfRotation = 0, pdfCurrentUrl = null;
+var pdfRotationCache = JSON.parse(sessionStorage.getItem('pdfRotationCache') || '{}');
 
 function toast(msg) {
   var t = document.getElementById('toast');
@@ -418,8 +419,8 @@ async function loadPDF(url, filename) {
     pdfDoc = await pdfjsLib.getDocument(url).promise;
     pdfRotation = pdfRotationCache[url] || 0;
     var page = await pdfDoc.getPage(1);
-    var vp0 = page.getViewport({scale:1});
-    pdfZoom = Math.max(0.5, Math.min(2, (area.clientWidth-32)/vp0.width));
+    var vp0 = page.getViewport({scale:1, rotation:pdfRotation});
+    pdfZoom = Math.max(0.3, (area.clientWidth-32)/vp0.width);
     renderPDFPage();
   } catch(e) {
     console.error('[PDF-VIEW] loadPDF HATA:', e.message, 'URL:', url);
@@ -445,7 +446,7 @@ async function renderPDFPage() {
 
 function zoomIn() { if(!pdfDoc) return; pdfZoom = Math.min(pdfZoom+0.25,4); renderPDFPage(); }
 function zoomOut() { if(!pdfDoc) return; pdfZoom = Math.max(pdfZoom-0.25,0.5); renderPDFPage(); }
-function rotatePDF() { if(!pdfDoc) return; pdfRotation=(pdfRotation+90)%360; if(pdfCurrentUrl) pdfRotationCache[pdfCurrentUrl]=pdfRotation; renderPDFPage(); }
+function rotatePDF() { if(!pdfDoc) return; pdfRotation=(pdfRotation+90)%360; if(pdfCurrentUrl){ pdfRotationCache[pdfCurrentUrl]=pdfRotation; sessionStorage.setItem('pdfRotationCache',JSON.stringify(pdfRotationCache)); } renderPDFPage(); }
 function zoomFit() {
   if(!pdfDoc) return;
   pdfDoc.getPage(1).then(function(page) {
