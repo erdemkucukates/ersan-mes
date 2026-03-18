@@ -637,7 +637,7 @@ async function deleteSTL(id, seId) {
   try {
     var res = await fetch('/.netlify/functions/airtable', {
       method: 'POST', headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({method:'DELETE', path:'/v0/app5LDgJMgocw79Ix/'+encodeURIComponent('Satınalma Talepleri')+'/'+id})
+      body: JSON.stringify({method:'DELETE', path:'/v0/app5LDgJMgocw79Ix/tblHmfCvNZq0qNtb1/'+id})
     });
     var data = await res.json();
     console.log('[DELETE-STL] response:', JSON.stringify(data));
