@@ -25,8 +25,38 @@
   scrollbar-color: #7c3aed #1a1d23;
 }
 
-/* Taşan içerik */
+/* Horizontal + Vertical scroll her yerde */
 body {
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+}
+
+.layout,
+.detail-panel,
+.detail-scroll,
+.list-panel,
+.list-scroll,
+.sb-list,
+.main,
+.body-area,
+.modal-body,
+.card-body,
+.stl-table,
+.rfq-compare-table,
+table {
   overflow-x: auto;
-  overflow-y: auto;
+}
+
+/* Tablo horizontal scroll wrapper */
+.stl-table,
+.rfq-compare-table,
+table {
+  display: block;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Minimum genişlik — dar ekranda horizontal scroll aktif olsun */
+.layout {
+  min-width: 0;
 }
