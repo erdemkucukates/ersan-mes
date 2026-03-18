@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — Malzeme Girişi & GKK</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+:root {
+  --bg:#f0f2f5; --surface:#fff; --surface2:#f7f8fa;
+  --border:#e2e5ea; --border2:#c8cdd6;
+  --text:#1a1d23; --text2:#5a6170; --text3:#9aa0ad;
+  --accent:#7c3aed; --accent-light:#ede9fe; --accent-hover:#6d28d9;
+  --green:#059669; --green-light:#d1fae5;
+  --red:#dc2626; --red-light:#fee2e2;
+  --orange:#d97706; --orange-light:#fef3c7;
+  --blue:#2563eb; --blue-light:#dbeafe;
+  --shadow:0 1px 3px rgba(0,0,0,.08);
+  --radius:8px; --mono:'IBM Plex Mono',monospace; --sans:'IBM Plex Sans',sans-serif;
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+body { font-family:var(--sans); background:var(--bg); color:var(--text); height:100vh; overflow:hidden; font-size:13px; }
+
+/* LAYOUT */
+.layout { display:flex; height:calc(100vh - 48px); margin-top:48px; overflow:hidden; }
+
+/* LIST PANEL */
+.list-panel { width:300px; flex-shrink:0; background:var(--surface); border-right:1px solid var(--border); display:flex; flex-direction:column; overflow:hidden; }
+.list-header { padding:12px 16px 8px; border-bottom:1px solid var(--border); flex-shrink:0; }
+.list-header h2 { font-size:13px; font-weight:600; }
+.list-count { font-size:11px; color:var(--text3); font-family:var(--mono); margin-top:2px; }
+.list-search { padding:8px 12px; border-bottom:1px solid var(--border); flex-shrink:0; }
+.list-search input { width:100%; padding:6px 10px; border:1px solid var(--border); border-radius:6px; font-size:12px; font-family:var(--sans); background:var(--surface2); outline:none; }
+.list-search input:focus { border-color:var(--accent); }
+.new-btn { margin:8px 12px 0; width:calc(100% - 24px); padding:8px 0; background:var(--accent); color:white; border:none; border-radius:6px; font-size:12px; font-weight:600; font-family:var(--sans); cursor:pointer; transition:background .15s; }
+.new-btn:hover { background:var(--accent-hover); }
+
+/* TABS (pill style) */
+.tab-bar { display:flex; gap:6px; padding:8px 10px; border-bottom:1px solid var(--border); flex-shrink:0; }
+.tab-btn { padding:5px 12px; border-radius:20px; font-size:11px; font-weight:600; cursor:pointer; border:1px solid var(--border); background:var(--surface2); color:var(--text2); font-family:var(--sans); transition:all .15s; white-space:nowrap; }
+.tab-btn:hover { border-color:var(--accent); color:var(--accent); }
+.tab-btn.active { background:var(--accent); color:white; border-color:var(--accent); }
+
+.list-scroll { flex:1; overflow-y:auto; }
+
+/* LIST ITEMS */
+.mat-item { padding:10px 14px; border-bottom:1px solid var(--border); cursor:pointer; transition:background .12s; }
+.mat-item:hover { background:var(--surface2); }
+.mat-item.active { background:var(--accent-light); border-left:3px solid var(--accent); }
+.mat-id { font-family:var(--mono); font-size:11px; font-weight:500; color:var(--accent); }
+.mat-name { font-size:12px; font-weight:500; margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.mat-meta { font-size:11px; color:var(--text3); margin-top:2px; display:flex; align-items:center; gap:6px; }
+
+/* DETAIL PANEL */
+.detail-panel { flex:1; overflow:hidden; display:flex; flex-direction:column; }
+.detail-toolbar { height:52px; background:var(--surface); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 20px; gap:10px; flex-shrink:0; }
+.toolbar-title { font-family:var(--mono); font-size:13px; font-weight:600; color:var(--text); }
+.toolbar-spacer { flex:1; }
+.detail-scroll { flex:1; overflow-y:auto; padding:16px 20px; display:flex; flex-direction:column; gap:12px; }
+
+/* DETAIL GRID */
+.detail-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+
+/* CARDS */
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
+.card-header { padding:10px 14px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:8px; font-size:11px; font-weight:600; color:var(--text2); text-transform:uppercase; letter-spacing:.5px; }
+.card-dot { width:6px; height:6px; border-radius:50%; }
+.card-body { padding:14px; }
+.card-body-grid { padding:14px; display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+
+/* FORM FIELDS */
+.fg { display:flex; flex-direction:column; gap:4px; }
+.fg.full { grid-column:1/-1; }
+.fl { font-size:10px; font-weight:600; color:var(--text3); text-transform:uppercase; letter-spacing:.5px; }
+.fi { background:var(--surface2); border:1px solid var(--border); border-radius:6px; padding:7px 10px; font-size:12px; font-family:var(--sans); color:var(--text); outline:none; width:100%; }
+.fi:focus { border-color:var(--accent); }
+.fi:disabled { opacity:.6; cursor:default; }
+textarea.fi { resize:vertical; min-height:60px; }
+
+/* BUTTONS */
+.btn { display:flex; align-items:center; gap:5px; padding:6px 12px; border:1px solid var(--border); border-radius:6px; font-size:12px; font-weight:500; cursor:pointer; background:var(--surface); color:var(--text2); font-family:var(--sans); transition:all .15s; white-space:nowrap; }
+.btn:hover { border-color:var(--accent); color:var(--accent); }
+.btn.primary { background:var(--accent); color:white; border-color:var(--accent); }
+.btn.primary:hover { background:var(--accent-hover); }
+.btn.success { background:var(--green); color:white; border-color:var(--green); }
+.btn.success:hover { background:#047857; }
+.btn.warn { background:var(--orange); color:white; border-color:var(--orange); }
+.btn.warn:hover { background:#b45309; }
+.btn.danger { background:var(--red); color:white; border-color:var(--red); }
+.btn.danger:hover { background:#b91c1c; }
+.btn:disabled { opacity:.5; cursor:not-allowed; }
+
+/* BADGES */
+.badge { font-size:10px; font-weight:600; padding:2px 8px; border-radius:10px; }
+.b-Karantinada { background:var(--orange-light); color:var(--orange); }
+.b-Serbest { background:var(--green-light); color:var(--green); }
+.b-Koşullu\ Serbest { background:var(--blue-light); color:var(--blue); }
+.b-Reddedildi { background:var(--red-light); color:var(--red); }
+
+/* TABLE */
+.mat-table { width:100%; border-collapse:collapse; }
+.mat-table th { padding:7px 10px; text-align:left; font-size:10px; font-weight:600; color:var(--text3); text-transform:uppercase; background:var(--surface2); border-bottom:1px solid var(--border); }
+.mat-table td { padding:8px 10px; border-bottom:1px solid var(--border); vertical-align:middle; font-size:12px; }
+.mat-table tr:last-child td { border-bottom:none; }
+.mat-table tr:hover td { background:var(--surface2); }
+.mat-table .empty-row td { text-align:center; color:var(--text3); padding:20px; }
+
+/* TOAST */
+.toast-wrap { position:fixed; bottom:20px; right:20px; z-index:9999; display:flex; flex-direction:column; gap:8px; }
+.toast { padding:10px 16px; border-radius:8px; font-size:12px; font-weight:500; color:white; animation:fadeIn .2s; }
+.toast.ok { background:var(--green); }
+.toast.err { background:var(--red); }
+.toast.inf { background:var(--accent); }
+@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+/* MODAL */
+.modal-bg { position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:999; display:flex; align-items:center; justify-content:center; }
+.modal-bg.hidden { display:none; }
+.modal-box { background:white; border-radius:12px; width:540px; max-height:88vh; overflow:hidden; display:flex; flex-direction:column; }
+.modal-head { background:#1e1b4b; padding:14px 20px; display:flex; justify-content:space-between; align-items:center; }
+.modal-head-title { color:white; font-weight:600; font-size:14px; }
+.modal-body { padding:16px; overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:10px; }
+.modal-body-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.modal-foot { padding:12px 16px; border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:8px; }
+.btn-x { background:transparent; border:none; color:white; font-size:20px; cursor:pointer; line-height:1; }
+
+/* EMPTY STATE */
+.empty { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--text3); gap:12px; padding:40px; text-align:center; }
+.empty-icon { font-size:40px; }
+
+/* FILE UPLOAD */
+.upload-area { border:2px dashed var(--border); border-radius:8px; padding:16px; text-align:center; background:var(--surface2); cursor:pointer; transition:border-color .15s; }
+.upload-area:hover { border-color:var(--accent); }
+.upload-area input[type=file] { display:none; }
+.upload-label { font-size:12px; color:var(--text2); cursor:pointer; }
+.upload-filename { font-size:11px; color:var(--accent); font-family:var(--mono); margin-top:6px; }
+
+/* QR SECTION */
+#qr-container { display:flex; justify-content:center; padding:10px 0; }
+#qr-container canvas, #qr-container img { border:1px solid var(--border); border-radius:4px; }
+
+/* PRINT */
+#print-label { display:none; }
+@media print {
+  body * { visibility:hidden; }
+  #print-label, #print-label * { visibility:visible; }
+  #print-label {
+    display:block !important;
+    position:fixed; top:0; left:0;
+    width:70mm; height:40mm;
+    padding:3mm;
+    background:white;
+    font-family:'IBM Plex Sans',sans-serif;
+  }
+  #print-label .pl-id { font-size:14pt; font-weight:700; font-family:'IBM Plex Mono',monospace; }
+  #print-label .pl-name { font-size:9pt; margin-top:2mm; }
+  #print-label .pl-meta { font-size:7pt; color:#666; margin-top:1mm; }
+  #print-label .pl-qr { position:absolute; top:3mm; right:3mm; width:32mm; height:32mm; }
+}
+
+/* MOBILE */
+@media (max-width:768px) {
+  .layout { flex-direction:column; }
+  .list-panel { width:100%; height:45vh; border-right:none; border-bottom:1px solid var(--border); }
+  .detail-panel { height:55vh; }
+  .detail-grid { grid-template-columns:1fr !important; }
+  .btn { min-height:44px; }
+  .modal-box { width:95vw; }
+  .modal-body-grid { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+<script src="ersan_nav.js"></script>
+
+<!-- PRINT LABEL (hidden, only for print) -->
+<div id="print-label">
+  <div class="pl-id" id="pl-id"></div>
+  <div class="pl-name" id="pl-name"></div>
+  <div class="pl-meta" id="pl-meta"></div>
+  <div class="pl-qr" id="pl-qr-print"></div>
+</div>
+
+<!-- TOAST -->
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<!-- NEW ENTRY MODAL -->
+<div class="modal-bg hidden" id="new-modal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <span class="modal-head-title">Yeni Malzeme Girişi</span>
+      <button class="btn-x" onclick="closeNewModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-body-grid">
+        <div class="fg full">
+          <label class="fl">Tedarikçi *</label>
+          <select class="fi" id="nm-tedarikci">
+            <option value="">Seçiniz...</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label class="fl">İrsaliye No *</label>
+          <input type="text" class="fi" id="nm-irsaliye" placeholder="İRS-2024-001">
+        </div>
+        <div class="fg">
+          <label class="fl">Giriş Tarihi</label>
+          <input type="date" class="fi" id="nm-tarih">
+        </div>
+        <div class="fg full">
+          <label class="fl">Malzeme Adı *</label>
+          <input type="text" class="fi" id="nm-malzeme-adi" placeholder="Yuvarlak Çubuk, Sac, Boru...">
+        </div>
+        <div class="fg full">
+          <label class="fl">Malzeme Standardı</label>
+          <input type="text" class="fi" id="nm-standart" placeholder="1040, AISI 4140, S235JR">
+        </div>
+        <div class="fg">
+          <label class="fl">Toplam Miktar *</label>
+          <input type="number" class="fi" id="nm-miktar" placeholder="0" min="0" step="0.01">
+        </div>
+        <div class="fg">
+          <label class="fl">Birim *</label>
+          <select class="fi" id="nm-birim">
+            <option value="Adet">Adet</option>
+            <option value="Kg">Kg</option>
+            <option value="Mt">Mt</option>
+          </select>
+        </div>
+        <div class="fg full">
+          <label class="fl">Bağlı Satınalma Talebi (opsiyonel)</label>
+          <select class="fi" id="nm-stl">
+            <option value="">— Yok —</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeNewModal()">İptal</button>
+      <button class="btn primary" id="nm-save-btn" onclick="saveNewEntry()">💾 Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN LAYOUT -->
+<div class="layout">
+
+  <!-- LEFT PANEL -->
+  <div class="list-panel">
+    <div class="list-header">
+      <h2>Malzeme Girişleri</h2>
+      <div class="list-count" id="mat-count">Yükleniyor...</div>
+    </div>
+    <div class="list-search">
+      <input type="text" id="mat-search" placeholder="ID, malzeme adı, tedarikçi ara..." oninput="filterList()">
+    </div>
+    <button class="new-btn" onclick="openNewModal()">+ Yeni Malzeme Girişi</button>
+    <div class="tab-bar" style="margin-top:8px;">
+      <button class="tab-btn active" id="tab-bekleyenler" onclick="switchTab('bekleyenler')">Bekleyenler</button>
+      <button class="tab-btn" id="tab-eksik" onclick="switchTab('eksik')">Eksik Belge</button>
+      <button class="tab-btn" id="tab-tamamlananlar" onclick="switchTab('tamamlananlar')">Tamamlananlar</button>
+    </div>
+    <div class="list-scroll" id="mat-list"></div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="detail-panel">
+    <div class="detail-toolbar" id="detail-toolbar">
+      <span class="toolbar-title" id="toolbar-id">—</span>
+      <span id="toolbar-badge"></span>
+      <div class="toolbar-spacer"></div>
+      <div id="toolbar-actions"></div>
+    </div>
+    <div class="detail-scroll" id="detail-scroll">
+      <div class="empty">
+        <div class="empty-icon">📦</div>
+        <div>Sol listeden bir kayıt seçin</div>
+        <div style="font-size:11px;">veya yeni malzeme girişi oluşturun</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ─── CONFIG ───────────────────────────────────────────────────────────────────
+const BASE = 'app5LDgJMgocw79Ix';
+const T = {
+  malzeme:   'tblSj5Ep6F9Ir1NGu',
+  tedarikci: 'tblEI6683Im5AXj36',
+  lotlar:    'tbljPBwL1AvdwWeOD',
+  stl:       'tblHmfCvNZq0qNtb1',
+  personel:  'tblwG9GqnLC9oFZzb'
+};
+
+// ─── API ──────────────────────────────────────────────────────────────────────
+const apiGet = async (table, params='') => {
+  const res = await fetch('/.netlify/functions/airtable', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({method:'GET', path:`/v0/${BASE}/${table}?${params}`})
+  });
+  return res.json();
+};
+
+const apiFn = async (method, table, body, id='') => {
+  const res = await fetch('/.netlify/functions/airtable', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({method, path:`/v0/${BASE}/${table}${id?'/'+id:''}`, body})
+  });
+  return res.json();
+};
+
+// Paginated fetch for all records
+const apiGetAll = async (table, params='') => {
+  let all = [], offset = null;
+  do {
+    const q = params + (offset ? `&offset=${offset}` : '');
+    const d = await apiGet(table, q);
+    if (d.records) all = all.concat(d.records);
+    offset = d.offset || null;
+  } while (offset);
+  return all;
+};
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let malzemeList = [];
+let tedarikciList = [];
+let stlList = [];
+let currentRecord = null;
+let currentTab = 'bekleyenler';
+let searchQ = '';
+
+// ─── TOAST ────────────────────────────────────────────────────────────────────
+function toast(msg, type='ok') {
+  const w = document.getElementById('toast-wrap');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.textContent = msg;
+  w.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+// ─── BADGE ────────────────────────────────────────────────────────────────────
+function badgeHtml(status) {
+  if (!status) return '';
+  const safe = status.replace(/\s/g, '\\ ');
+  return `<span class="badge b-${safe}">${status}</span>`;
+}
+
+function badgeEl(status) {
+  const s = document.createElement('span');
+  s.className = `badge`;
+  if (status === 'Karantinada') { s.style.background='var(--orange-light)'; s.style.color='var(--orange)'; }
+  else if (status === 'Serbest') { s.style.background='var(--green-light)'; s.style.color='var(--green)'; }
+  else if (status === 'Koşullu Serbest') { s.style.background='var(--blue-light)'; s.style.color='var(--blue)'; }
+  else if (status === 'Reddedildi') { s.style.background='var(--red-light)'; s.style.color='var(--red)'; }
+  s.textContent = status || '—';
+  return s;
+}
+
+// ─── FORMAT ──────────────────────────────────────────────────────────────────
+function fmtDate(d) {
+  if (!d) return '—';
+  const dt = new Date(d);
+  return dt.toLocaleDateString('tr-TR', {day:'2-digit',month:'2-digit',year:'numeric'});
+}
+
+// ─── LOAD DATA ────────────────────────────────────────────────────────────────
+async function loadAll() {
+  try {
+    // Load tedarikci
+    const td = await apiGetAll(T.tedarikci, 'fields[]=Tedarikçi%20Adı&fields[]=id');
+    tedarikciList = td;
+
+    // Load STL (Onaylandı only)
+    const stlRaw = await apiGetAll(T.stl, 'fields[]=STL%20No&fields[]=Malzeme%20Adı&filterByFormula=' + encodeURIComponent("{Durum}='Onaylandı'"));
+    stlList = stlRaw;
+
+    // Load malzeme
+    await loadMalzeme();
+
+    // Populate dropdowns
+    populateTedarikciDropdown();
+    populateSTLDropdown();
+  } catch(e) {
+    console.error(e);
+    toast('Veri yüklenemedi', 'err');
+  }
+}
+
+async function loadMalzeme() {
+  const fields = [
+    'Malzeme ID','Malzeme Adı','Tedarikçiler (OTL)','İrsaliye No',
+    'Giriş Tarihi','Statü','Gözle Muayene','Ölçüm Notu',
+    'Isı / Lot No','Sertifika No','Sertifika Durumu',
+    'Malzeme Standardı','Toplam Miktar','Birim','Sertifika (PDF)'
+  ].map(f => 'fields[]=' + encodeURIComponent(f)).join('&');
+  malzemeList = await apiGetAll(T.malzeme, fields + '&sort[0][field]=Giri%C5%9F%20Tarihi&sort[0][direction]=desc');
+  renderList();
+}
+
+function getTedarikciName(rec) {
+  const ids = rec.fields['Tedarikçiler (OTL)'];
+  if (!ids || !ids.length) return '—';
+  const td = tedarikciList.find(t => t.id === ids[0]);
+  return td ? (td.fields['Tedarikçi Adı'] || '—') : ids[0];
+}
+
+// ─── TABS ─────────────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  renderList();
+}
+
+function filterForTab(rec) {
+  const f = rec.fields;
+  const status = f['Statü'] || '';
+  const certStatus = f['Sertifika Durumu'] || '';
+  if (currentTab === 'bekleyenler') return status === 'Karantinada';
+  if (currentTab === 'eksik') {
+    return ['Eksik-Sonradan Gelecek','Bekliyor'].includes(certStatus) && status !== 'Reddedildi';
+  }
+  if (currentTab === 'tamamlananlar') return ['Serbest','Koşullu Serbest'].includes(status);
+  return true;
+}
+
+// ─── RENDER LIST ─────────────────────────────────────────────────────────────
+function filterList() {
+  searchQ = document.getElementById('mat-search').value.toLowerCase();
+  renderList();
+}
+
+function renderList() {
+  const el = document.getElementById('mat-list');
+  const filtered = malzemeList.filter(rec => {
+    if (!filterForTab(rec)) return false;
+    if (!searchQ) return true;
+    const f = rec.fields;
+    const id = (f['Malzeme ID'] || '').toLowerCase();
+    const name = (f['Malzeme Adı'] || '').toLowerCase();
+    const td = getTedarikciName(rec).toLowerCase();
+    return id.includes(searchQ) || name.includes(searchQ) || td.includes(searchQ);
+  });
+
+  document.getElementById('mat-count').textContent = filtered.length + ' kayıt';
+  el.innerHTML = '';
+
+  if (!filtered.length) {
+    el.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text3);font-size:12px;">Kayıt bulunamadı</div>';
+    return;
+  }
+
+  filtered.forEach(rec => {
+    const f = rec.fields;
+    const matId = f['Malzeme ID'] || '';
+    const status = f['Statü'] || 'Karantinada';
+    const isActive = currentRecord && currentRecord.id === rec.id;
+
+    const div = document.createElement('div');
+    div.className = 'mat-item' + (isActive ? ' active' : '');
+    div.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
+        <span class="mat-id">${matId || '⏳ Bekliyor'}</span>
+        <span class="badge" style="${badgeStyle(status)}">${status}</span>
+      </div>
+      <div class="mat-name">${f['Malzeme Adı'] || '—'}</div>
+      <div class="mat-meta">
+        <span>${getTedarikciName(rec)}</span>
+        <span>·</span>
+        <span>${fmtDate(f['Giriş Tarihi'])}</span>
+      </div>
+    `;
+    div.onclick = () => selectRecord(rec);
+    el.appendChild(div);
+  });
+}
+
+function badgeStyle(status) {
+  if (status === 'Karantinada') return 'background:var(--orange-light);color:var(--orange);font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;';
+  if (status === 'Serbest') return 'background:var(--green-light);color:var(--green);font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;';
+  if (status === 'Koşullu Serbest') return 'background:var(--blue-light);color:var(--blue);font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;';
+  if (status === 'Reddedildi') return 'background:var(--red-light);color:var(--red);font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;';
+  return 'background:var(--surface2);color:var(--text2);font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;';
+}
+
+// ─── SELECT RECORD ────────────────────────────────────────────────────────────
+function selectRecord(rec) {
+  currentRecord = rec;
+  renderList();
+  renderDetail(rec);
+}
+
+// ─── RENDER DETAIL ────────────────────────────────────────────────────────────
+function renderDetail(rec) {
+  const f = rec.fields;
+  const status = f['Statü'] || 'Karantinada';
+  const matId = f['Malzeme ID'] || '';
+  const isKarantina = status === 'Karantinada';
+
+  // Toolbar
+  document.getElementById('toolbar-id').textContent = matId || 'Yeni Giriş';
+  const tbBadge = document.getElementById('toolbar-badge');
+  tbBadge.innerHTML = '';
+  tbBadge.appendChild(badgeEl(status));
+
+  const actions = document.getElementById('toolbar-actions');
+  actions.innerHTML = '';
+  if (isKarantina) {
+    const btnKabul = document.createElement('button');
+    btnKabul.className = 'btn success';
+    btnKabul.innerHTML = '✅ Kabul';
+    btnKabul.onclick = () => acceptRecord(rec, 'Serbest');
+
+    const btnSartli = document.createElement('button');
+    btnSartli.className = 'btn warn';
+    btnSartli.innerHTML = '⚠️ Şartlı Kabul';
+    btnSartli.onclick = () => acceptRecord(rec, 'Koşullu Serbest');
+
+    const btnRed = document.createElement('button');
+    btnRed.className = 'btn danger';
+    btnRed.innerHTML = '❌ Red';
+    btnRed.onclick = () => rejectRecord(rec);
+
+    actions.appendChild(btnKabul);
+    actions.appendChild(btnSartli);
+    actions.appendChild(btnRed);
+  }
+
+  // Scroll content
+  const scroll = document.getElementById('detail-scroll');
+  scroll.innerHTML = '';
+
+  // Detail grid
+  const grid = document.createElement('div');
+  grid.className = 'detail-grid';
+
+  // Left: Malzeme Bilgileri
+  const leftCard = document.createElement('div');
+  leftCard.className = 'card';
+  leftCard.innerHTML = `
+    <div class="card-header">
+      <div class="card-dot" style="background:var(--accent)"></div>
+      Malzeme Bilgileri
+    </div>
+    <div class="card-body-grid">
+      <div class="fg full">
+        <label class="fl">Tedarikçi</label>
+        <input class="fi" disabled value="${getTedarikciName(rec)}">
+      </div>
+      <div class="fg">
+        <label class="fl">İrsaliye No</label>
+        <input class="fi" disabled value="${f['İrsaliye No'] || ''}">
+      </div>
+      <div class="fg">
+        <label class="fl">Giriş Tarihi</label>
+        <input class="fi" disabled value="${fmtDate(f['Giriş Tarihi'])}">
+      </div>
+      <div class="fg full">
+        <label class="fl">Malzeme Adı</label>
+        <input class="fi" disabled value="${f['Malzeme Adı'] || ''}">
+      </div>
+      <div class="fg full">
+        <label class="fl">Malzeme Standardı</label>
+        <input class="fi" disabled value="${f['Malzeme Standardı'] || ''}">
+      </div>
+      <div class="fg">
+        <label class="fl">Toplam Miktar</label>
+        <input class="fi" disabled value="${f['Toplam Miktar'] || ''}">
+      </div>
+      <div class="fg">
+        <label class="fl">Birim</label>
+        <input class="fi" disabled value="${f['Birim'] || ''}">
+      </div>
+    </div>
+  `;
+
+  // Right: Kalite Kontrol Formu
+  const rightCard = document.createElement('div');
+  rightCard.className = 'card';
+  rightCard.innerHTML = `
+    <div class="card-header">
+      <div class="card-dot" style="background:var(--green)"></div>
+      Kalite Kontrol Formu
+    </div>
+    <div class="card-body-grid">
+      <div class="fg full">
+        <label class="fl">Gözle Muayene</label>
+        <select class="fi" id="kk-gozle">
+          <option value="Bekliyor" ${f['Gözle Muayene']==='Bekliyor'?'selected':''}>Bekliyor</option>
+          <option value="Uygun" ${f['Gözle Muayene']==='Uygun'?'selected':''}>Uygun</option>
+          <option value="Uygun Değil" ${f['Gözle Muayene']==='Uygun Değil'?'selected':''}>Uygun Değil</option>
+          <option value="Şartlı" ${f['Gözle Muayene']==='Şartlı'?'selected':''}>Şartlı</option>
+        </select>
+      </div>
+      <div class="fg full">
+        <label class="fl">Ölçüm Notu</label>
+        <textarea class="fi" id="kk-olcum" rows="3">${f['Ölçüm Notu'] || ''}</textarea>
+      </div>
+      <div class="fg">
+        <label class="fl">Isı / Lot No</label>
+        <input type="text" class="fi" id="kk-lot" value="${f['Isı / Lot No'] || ''}">
+      </div>
+      <div class="fg">
+        <label class="fl">Sertifika No</label>
+        <input type="text" class="fi" id="kk-sertno" value="${f['Sertifika No'] || ''}">
+      </div>
+      <div class="fg full">
+        <label class="fl">Sertifika Durumu</label>
+        <select class="fi" id="kk-sertdurum">
+          <option value="Bekliyor" ${f['Sertifika Durumu']==='Bekliyor'?'selected':''}>Bekliyor</option>
+          <option value="Mevcut" ${f['Sertifika Durumu']==='Mevcut'?'selected':''}>Mevcut</option>
+          <option value="Eksik-Sonradan Gelecek" ${f['Sertifika Durumu']==='Eksik-Sonradan Gelecek'?'selected':''}>Eksik - Sonradan Gelecek</option>
+          <option value="Yok" ${f['Sertifika Durumu']==='Yok'?'selected':''}>Yok</option>
+        </select>
+      </div>
+      <div class="fg full" style="padding-top:4px;">
+        <button class="btn primary" style="width:100%;justify-content:center;" onclick="saveKKForm('${rec.id}')">💾 Kaydet</button>
+      </div>
+    </div>
+  `;
+
+  grid.appendChild(leftCard);
+  grid.appendChild(rightCard);
+  scroll.appendChild(grid);
+
+  // Sertifika Yükleme
+  const certCard = document.createElement('div');
+  const existingFile = f['Sertifika (PDF)'];
+  const existingName = existingFile && existingFile.length > 0 ? existingFile[0].filename : null;
+  certCard.className = 'card';
+  certCard.innerHTML = `
+    <div class="card-header">
+      <div class="card-dot" style="background:var(--blue)"></div>
+      Sertifika Yükleme
+    </div>
+    <div class="card-body">
+      <div class="upload-area" onclick="document.getElementById('cert-file-input').click()">
+        <label class="upload-label" for="cert-file-input">
+          📎 Sertifika veya belge seçin (PDF, resim)<br>
+          <small style="color:var(--text3)">Tıkla veya dosya sürükle</small>
+        </label>
+        <input type="file" id="cert-file-input" accept="image/*,application/pdf" capture="environment" onchange="uploadCert(event,'${rec.id}')">
+      </div>
+      <div class="upload-filename" id="cert-filename">
+        ${existingName ? '✅ ' + existingName : 'Yüklenmedi'}
+      </div>
+    </div>
+  `;
+  scroll.appendChild(certCard);
+
+  // Bağlı Lotlar
+  const lotCard = document.createElement('div');
+  lotCard.className = 'card';
+  lotCard.id = 'lot-card';
+  lotCard.innerHTML = `
+    <div class="card-header">
+      <div class="card-dot" style="background:var(--orange)"></div>
+      Bağlı Lotlar
+      <span style="margin-left:auto;font-size:10px;color:var(--text3);" id="lot-loading">Yükleniyor...</span>
+    </div>
+    <div class="card-body" style="padding:0;" id="lot-table-wrap">
+    </div>
+  `;
+  scroll.appendChild(lotCard);
+
+  // QR Kod
+  if (matId) {
+    const qrCard = document.createElement('div');
+    qrCard.className = 'card';
+    qrCard.innerHTML = `
+      <div class="card-header">
+        <div class="card-dot" style="background:var(--text2)"></div>
+        QR Kod
+      </div>
+      <div class="card-body" style="text-align:center;">
+        <div id="qr-container"></div>
+        <div style="margin-top:8px;font-family:var(--mono);font-size:13px;color:var(--text2);">${matId}</div>
+        <div style="margin-top:10px;">
+          <button class="btn" onclick="printLabel('${matId}','${(f['Malzeme Adı']||'').replace(/'/g,"\\'")}','${(getTedarikciName(rec)).replace(/'/g,"\\'")}')">🖨 QR Yazdır</button>
+        </div>
+      </div>
+    `;
+    scroll.appendChild(qrCard);
+    // Generate QR after DOM
+    setTimeout(() => {
+      const qrEl = document.getElementById('qr-container');
+      if (qrEl) {
+        qrEl.innerHTML = '';
+        try {
+          new QRCode(qrEl, {
+            text: matId,
+            width: 120,
+            height: 120,
+            colorDark: '#1a1d23',
+            colorLight: '#ffffff',
+            correctLevel: QRCode.CorrectLevel.M
+          });
+        } catch(e) { qrEl.textContent = 'QR oluşturulamadı'; }
+      }
+    }, 50);
+  }
+
+  // Load lots async
+  loadLots(rec.id);
+}
+
+// ─── LOAD LOTS ────────────────────────────────────────────────────────────────
+async function loadLots(malzemeRecId) {
+  const wrap = document.getElementById('lot-table-wrap');
+  const loading = document.getElementById('lot-loading');
+  if (!wrap) return;
+
+  try {
+    const filter = encodeURIComponent(`FIND("${malzemeRecId}", ARRAYJOIN({Malzeme Girişi}))`);
+    const lots = await apiGetAll(T.lotlar, `filterByFormula=${filter}&fields[]=Lot%20No&fields[]=Miktar&fields[]=Statü&fields[]=Mevcut%20Lokasyon&fields[]=İş%20Emri`);
+    if (loading) loading.textContent = lots.length + ' lot';
+
+    if (!lots.length) {
+      wrap.innerHTML = '<div style="padding:16px;text-align:center;color:var(--text3);font-size:12px;">Bağlı lot bulunamadı</div>';
+      return;
+    }
+
+    let html = `<table class="mat-table">
+      <thead><tr>
+        <th>Lot No</th>
+        <th>Miktar</th>
+        <th>Statü</th>
+        <th>Lokasyon</th>
+        <th>İş Emri</th>
+      </tr></thead>
+      <tbody>`;
+    lots.forEach(lot => {
+      const lf = lot.fields;
+      html += `<tr>
+        <td style="font-family:var(--mono);font-size:11px;">${lf['Lot No'] || '—'}</td>
+        <td>${lf['Miktar'] || '—'}</td>
+        <td>${lf['Statü'] || '—'}</td>
+        <td>${lf['Mevcut Lokasyon'] || '—'}</td>
+        <td style="font-family:var(--mono);font-size:11px;">${Array.isArray(lf['İş Emri']) ? lf['İş Emri'].join(', ') : (lf['İş Emri'] || '—')}</td>
+      </tr>`;
+    });
+    html += '</tbody></table>';
+    wrap.innerHTML = html;
+  } catch(e) {
+    if (loading) loading.textContent = 'Hata';
+    wrap.innerHTML = '<div style="padding:16px;text-align:center;color:var(--red);font-size:12px;">Lotlar yüklenemedi</div>';
+  }
+}
+
+// ─── SAVE KK FORM ─────────────────────────────────────────────────────────────
+async function saveKKForm(recId) {
+  const body = {
+    fields: {
+      'Gözle Muayene': document.getElementById('kk-gozle').value,
+      'Ölçüm Notu': document.getElementById('kk-olcum').value,
+      'Isı / Lot No': document.getElementById('kk-lot').value,
+      'Sertifika No': document.getElementById('kk-sertno').value,
+      'Sertifika Durumu': document.getElementById('kk-sertdurum').value
+    }
+  };
+  try {
+    const res = await apiFn('PATCH', T.malzeme, body, recId);
+    if (res.id) {
+      toast('Kalite kontrol formu kaydedildi');
+      // Update local record
+      const idx = malzemeList.findIndex(r => r.id === recId);
+      if (idx !== -1) {
+        Object.assign(malzemeList[idx].fields, body.fields);
+        currentRecord = malzemeList[idx];
+      }
+    } else {
+      toast('Kayıt hatası: ' + (res.error?.message || JSON.stringify(res)), 'err');
+    }
+  } catch(e) {
+    toast('Bağlantı hatası', 'err');
+  }
+}
+
+// ─── ACCEPT / REJECT ─────────────────────────────────────────────────────────
+async function acceptRecord(rec, newStatus) {
+  const btn = event.currentTarget;
+  btn.disabled = true;
+  btn.textContent = '...';
+  try {
+    const matId = await generateMATID();
+    const body = { fields: { 'Statü': newStatus, 'Malzeme ID': matId } };
+    const res = await apiFn('PATCH', T.malzeme, body, rec.id);
+    if (res.id) {
+      toast(`${newStatus} olarak işaretlendi — ${matId}`);
+      const idx = malzemeList.findIndex(r => r.id === rec.id);
+      if (idx !== -1) {
+        Object.assign(malzemeList[idx].fields, body.fields);
+        currentRecord = malzemeList[idx];
+        selectRecord(malzemeList[idx]);
+      }
+      renderList();
+    } else {
+      toast('İşlem hatası: ' + (res.error?.message || JSON.stringify(res)), 'err');
+      btn.disabled = false;
+    }
+  } catch(e) {
+    toast('Bağlantı hatası', 'err');
+    btn.disabled = false;
+  }
+}
+
+async function rejectRecord(rec) {
+  if (!confirm('Bu malzeme girişini reddetmek istediğinizden emin misiniz?')) return;
+  try {
+    const body = { fields: { 'Statü': 'Reddedildi' } };
+    const res = await apiFn('PATCH', T.malzeme, body, rec.id);
+    if (res.id) {
+      toast('Malzeme reddedildi', 'err');
+      const idx = malzemeList.findIndex(r => r.id === rec.id);
+      if (idx !== -1) {
+        Object.assign(malzemeList[idx].fields, body.fields);
+        currentRecord = malzemeList[idx];
+        selectRecord(malzemeList[idx]);
+      }
+      renderList();
+    } else {
+      toast('İşlem hatası: ' + (res.error?.message || JSON.stringify(res)), 'err');
+    }
+  } catch(e) {
+    toast('Bağlantı hatası', 'err');
+  }
+}
+
+// ─── GENERATE MAT ID ─────────────────────────────────────────────────────────
+async function generateMATID() {
+  const d = await apiGet(T.malzeme, 'fields[]=Malzeme%20ID&sort[0][field]=Malzeme%20ID&sort[0][direction]=desc&maxRecords=50');
+  const recs = d.records || [];
+  const year = new Date().getFullYear();
+  let maxNum = 0;
+  recs.forEach(r => {
+    const id = r.fields['Malzeme ID'] || '';
+    if (id.startsWith('MAT-' + year + '-')) {
+      const n = parseInt(id.split('-').pop()) || 0;
+      if (n > maxNum) maxNum = n;
+    }
+  });
+  return 'MAT-' + year + '-' + String(maxNum + 1).padStart(4, '0');
+}
+
+// ─── UPLOAD CERT ─────────────────────────────────────────────────────────────
+async function uploadCert(event, recId) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const fnEl = document.getElementById('cert-filename');
+  fnEl.textContent = '⏳ Yükleniyor...';
+
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('recordId', recId);
+    formData.append('table', T.malzeme);
+    formData.append('field', 'Sertifika (PDF)');
+
+    const res = await fetch('/.netlify/functions/upload-pdf', {
+      method: 'POST',
+      body: formData
+    });
+    const data = await res.json();
+    if (data.success || data.url) {
+      fnEl.textContent = '✅ ' + file.name;
+      toast('Sertifika yüklendi');
+    } else {
+      fnEl.textContent = '❌ Yükleme başarısız';
+      toast('Yükleme hatası: ' + (data.error || 'Bilinmeyen hata'), 'err');
+    }
+  } catch(e) {
+    fnEl.textContent = '❌ Bağlantı hatası';
+    toast('Yükleme başarısız', 'err');
+  }
+}
+
+// ─── NEW MODAL ────────────────────────────────────────────────────────────────
+function populateTedarikciDropdown() {
+  const sel = document.getElementById('nm-tedarikci');
+  tedarikciList.forEach(t => {
+    const opt = document.createElement('option');
+    opt.value = t.id;
+    opt.textContent = t.fields['Tedarikçi Adı'] || t.id;
+    sel.appendChild(opt);
+  });
+}
+
+function populateSTLDropdown() {
+  const sel = document.getElementById('nm-stl');
+  stlList.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s.id;
+    const no = s.fields['STL No'] || s.id;
+    const mat = s.fields['Malzeme Adı'] || '';
+    opt.textContent = no + (mat ? ' — ' + mat : '');
+    sel.appendChild(opt);
+  });
+}
+
+function openNewModal() {
+  // Set today's date
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('nm-tarih').value = today;
+  // Reset fields
+  document.getElementById('nm-tedarikci').value = '';
+  document.getElementById('nm-irsaliye').value = '';
+  document.getElementById('nm-malzeme-adi').value = '';
+  document.getElementById('nm-standart').value = '';
+  document.getElementById('nm-miktar').value = '';
+  document.getElementById('nm-birim').value = 'Adet';
+  document.getElementById('nm-stl').value = '';
+  document.getElementById('new-modal').classList.remove('hidden');
+}
+
+function closeNewModal() {
+  document.getElementById('new-modal').classList.add('hidden');
+}
+
+async function saveNewEntry() {
+  const tedarikciId = document.getElementById('nm-tedarikci').value;
+  const irsaliye = document.getElementById('nm-irsaliye').value.trim();
+  const malzemeAdi = document.getElementById('nm-malzeme-adi').value.trim();
+  const standart = document.getElementById('nm-standart').value.trim();
+  const miktar = parseFloat(document.getElementById('nm-miktar').value);
+  const birim = document.getElementById('nm-birim').value;
+  const tarih = document.getElementById('nm-tarih').value;
+  const stlId = document.getElementById('nm-stl').value;
+
+  if (!tedarikciId) { toast('Tedarikçi seçiniz', 'err'); return; }
+  if (!irsaliye) { toast('İrsaliye No giriniz', 'err'); return; }
+  if (!malzemeAdi) { toast('Malzeme Adı giriniz', 'err'); return; }
+  if (!miktar || miktar <= 0) { toast('Geçerli bir miktar giriniz', 'err'); return; }
+
+  const btn = document.getElementById('nm-save-btn');
+  btn.disabled = true;
+  btn.textContent = 'Kaydediliyor...';
+
+  const fields = {
+    'Tedarikçiler (OTL)': [tedarikciId],
+    'İrsaliye No': irsaliye,
+    'Malzeme Adı': malzemeAdi,
+    'Birim': birim,
+    'Toplam Miktar': miktar,
+    'Giriş Tarihi': tarih || new Date().toISOString().split('T')[0],
+    'Statü': 'Karantinada',
+    'Gözle Muayene': 'Bekliyor',
+    'Sertifika Durumu': 'Bekliyor'
+  };
+  if (standart) fields['Malzeme Standardı'] = standart;
+  if (stlId) fields['Satınalma Talebi'] = [stlId];
+
+  try {
+    const res = await apiFn('POST', T.malzeme, { fields });
+    if (res.id) {
+      toast('Malzeme girişi oluşturuldu');
+      closeNewModal();
+      // Add to local list and re-render
+      malzemeList.unshift(res);
+      // Switch to bekleyenler tab
+      currentTab = 'bekleyenler';
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('tab-bekleyenler').classList.add('active');
+      renderList();
+      selectRecord(res);
+    } else {
+      toast('Kayıt hatası: ' + (res.error?.message || JSON.stringify(res)), 'err');
+    }
+  } catch(e) {
+    toast('Bağlantı hatası', 'err');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '💾 Kaydet';
+  }
+}
+
+// Close modal on backdrop click
+document.getElementById('new-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeNewModal();
+});
+
+// ─── PRINT LABEL ─────────────────────────────────────────────────────────────
+function printLabel(matId, malzemeAdi, tedarikci) {
+  document.getElementById('pl-id').textContent = matId;
+  document.getElementById('pl-name').textContent = malzemeAdi;
+  document.getElementById('pl-meta').textContent = tedarikci + ' · ' + new Date().toLocaleDateString('tr-TR');
+
+  // Generate QR for print
+  const printQr = document.getElementById('pl-qr-print');
+  printQr.innerHTML = '';
+  try {
+    new QRCode(printQr, {
+      text: matId,
+      width: 90,
+      height: 90,
+      colorDark: '#000000',
+      colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M
+    });
+  } catch(e) {}
+
+  setTimeout(() => window.print(), 200);
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+loadAll();
+</script>
+</body>
+</html>

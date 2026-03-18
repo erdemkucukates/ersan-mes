@@ -2,6 +2,7 @@ var ERSAN_MODULES = [
   { id: 'teklif',       label: 'Teklif Yönetimi',        icon: '📋', url: 'ersan_teklif.html',       status: 'active' },
   { id: 'siparis',      label: 'Sipariş Yönetimi',        icon: '📦', url: 'ersan_siparisler.html',    status: 'active' },
   { id: 'satinalma',    label: 'Satınalma',               icon: '🛒', url: 'ersan_satinalma.html',     status: 'active' },
+  { id: 'malzeme',      label: 'Malzeme Girişi',          icon: '📥', url: 'ersan_malzeme.html',      status: 'active' },
   { id: 'isemri',       label: 'İş Emirleri',             icon: '⚙️', url: 'ersan_isemirleri.html',   status: 'active' },
   { id: 'planlama',     label: 'Planlama',                icon: '📅', url: 'ersan_planlama.html',      status: 'active' },
   { id: 'hesaplama',    label: 'Maliyet Hesaplama',       icon: '🧮', url: 'ersan_hesaplama.html',     status: 'active' },
