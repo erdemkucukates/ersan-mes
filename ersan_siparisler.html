@@ -110,7 +110,7 @@ var BASE = 'app5LDgJMgocw79Ix';
 var TABLES = { se: 'tbl56Oj1nPaqefI60', ie: 'tbl58qL39I2tv8hK4' };
 
 var records = [], currentFilter = 'Tümü', selectedSP = null, selectedKalemIdx = null;
-var pdfDoc = null, pdfZoom = 1.2, pdfRotation = 0, pdfCurrentUrl = null;
+var pdfDoc = null, pdfZoom = 1.2, pdfRotation = 0, pdfCurrentUrl = null, pdfRotationCache = {};
 
 function toast(msg) {
   var t = document.getElementById('toast');
@@ -416,7 +416,7 @@ async function loadPDF(url, filename) {
   area.className = 'pdf-canvas-wrap'; area.innerHTML = '<p style="color:rgba(255,255,255,.6);font-size:12px;padding:1rem;">Yükleniyor...</p>';
   try {
     pdfDoc = await pdfjsLib.getDocument(url).promise;
-    pdfRotation = 0;
+    pdfRotation = pdfRotationCache[url] || 0;
     var page = await pdfDoc.getPage(1);
     var vp0 = page.getViewport({scale:1});
     pdfZoom = Math.max(0.5, Math.min(2, (area.clientWidth-32)/vp0.width));
@@ -445,7 +445,7 @@ async function renderPDFPage() {
 
 function zoomIn() { if(!pdfDoc) return; pdfZoom = Math.min(pdfZoom+0.25,4); renderPDFPage(); }
 function zoomOut() { if(!pdfDoc) return; pdfZoom = Math.max(pdfZoom-0.25,0.5); renderPDFPage(); }
-function rotatePDF() { if(!pdfDoc) return; pdfRotation=(pdfRotation+90)%360; renderPDFPage(); }
+function rotatePDF() { if(!pdfDoc) return; pdfRotation=(pdfRotation+90)%360; if(pdfCurrentUrl) pdfRotationCache[pdfCurrentUrl]=pdfRotation; renderPDFPage(); }
 function zoomFit() {
   if(!pdfDoc) return;
   pdfDoc.getPage(1).then(function(page) {
