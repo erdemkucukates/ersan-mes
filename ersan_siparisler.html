@@ -303,7 +303,7 @@ function renderKalemler(kalemler, selIdx) {
     var f = r.fields;
     var isSel = i === selIdx;
     var isDim = selIdx !== null && !isSel;
-    var hasPDF = f['_localPDF'] || (f['Teknik Resim'] && f['Teknik Resim'].length > 0);
+    var hasPDF = f['_localPDF'] || f['PDF Data'] || (f['Teknik Resim'] && f['Teknik Resim'].length > 0);
     var seNo = f['SE No'] || '';
     var kalemNo = seNo.split('-').pop() || (i+1);
     var durum = f['Durum'] || 'Beklemede';
@@ -338,6 +338,21 @@ function renderKalemler(kalemler, selIdx) {
   document.getElementById('kalem-list').innerHTML = html;
 }
 
+function base64ToBlobUrl(base64str) {
+  var raw = base64str;
+  if (raw.indexOf(',') !== -1) raw = raw.split(',')[1];
+  var mime = 'application/pdf';
+  if (base64str.indexOf('data:') === 0) {
+    var m = base64str.match(/data:([^;]+)/);
+    if (m) mime = m[1];
+  }
+  var byteChars = atob(raw);
+  var byteArr = new Uint8Array(byteChars.length);
+  for (var j = 0; j < byteChars.length; j++) byteArr[j] = byteChars.charCodeAt(j);
+  var blob = new Blob([byteArr], {type: mime});
+  return URL.createObjectURL(blob);
+}
+
 function selectKalem(idx) {
   if (!window._currentGroup) return;
   selectedKalemIdx = idx;
@@ -347,8 +362,16 @@ function selectKalem(idx) {
   var f = r.fields;
   var localPDF = f['_localPDF'];
   var pdfArr = f['Teknik Resim'];
-  var url = localPDF ? localPDF.url : (pdfArr && pdfArr.length ? pdfArr[0].url : null);
-  var name = localPDF ? localPDF.filename : (pdfArr && pdfArr.length ? (pdfArr[0].filename||'teknik.pdf') : null);
+  var pdfData = f['PDF Data'];
+
+  var url = null, name = null;
+  if (localPDF) {
+    url = localPDF.url; name = localPDF.filename;
+  } else if (pdfData) {
+    url = base64ToBlobUrl(pdfData); name = 'teknik-resim.pdf';
+  } else if (pdfArr && pdfArr.length) {
+    url = pdfArr[0].url; name = pdfArr[0].filename || 'teknik.pdf';
+  }
 
   if (url && url !== pdfCurrentUrl) loadPDF(url, name);
   else if (!url) clearPDF();

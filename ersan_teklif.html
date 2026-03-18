@@ -1316,7 +1316,7 @@ async function confirmSEOlustur(teklifId) {
           try { upData = JSON.parse(upText); } catch(pe) { upData = {error: 'JSON parse hatası: ' + upText.substring(0, 200)}; }
           console.log('[PDF-DEBUG] Parsed yanıt:', JSON.stringify(upData));
           if (upData.success) {
-            console.log('[PDF-DEBUG] BAŞARILI — URL:', upData.url);
+            console.log('[PDF-DEBUG] BAŞARILI — URL:', upData.url, 'pdfData:', upData.pdfDataSaved, 'attachment:', upData.attachmentSaved);
             toast('PDF kaydedildi ✓ (' + file.name + ')', 'success');
           } else {
             console.error('[PDF-DEBUG] HATA:', JSON.stringify(upData));
