@@ -635,10 +635,13 @@ async function deleteSTL(id, seId) {
   var label = r ? (r.fields['Talep No']||r.fields['Kalem Adı']||id) : id;
   if (!confirm(label + ' silinsin mi?')) return;
   try {
-    await fetch('/.netlify/functions/airtable', {
-      method: 'DELETE', headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({table:'Satınalma Talepleri', id:id})
+    var res = await fetch('/.netlify/functions/airtable', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({method:'DELETE', path:'/v0/app5LDgJMgocw79Ix/'+encodeURIComponent('Satınalma Talepleri')+'/'+id})
     });
+    var data = await res.json();
+    console.log('[DELETE-STL] response:', JSON.stringify(data));
+    if (data.error) throw new Error(JSON.stringify(data.error));
     stlList = stlList.filter(function(x){ return x.id !== id; });
     activeId = null;
     renderList();

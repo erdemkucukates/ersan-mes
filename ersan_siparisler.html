@@ -196,18 +196,18 @@ async function apiDelete(table, id) {
 
 async function loadList() {
   try {
-    // PDF Data haric tum alanlari cek (buyuk base64 response'u onle)
-    var listFields = ['SE No','Kalem Sıra','Parça No','Parça Adı','Revizyon','Miktar','Birim',
-      'Termin Tarihi','Müşteri PO No','Durum','Notlar','Teknik Resim','Sevkiyat Tipi'];
-    var fieldParams = listFields.map(function(f){ return 'fields%5B%5D=' + encodeURIComponent(f); }).join('&');
+    console.log('[LOAD] loadList başladı');
     var all = [], pageOffset = '';
     do {
-      var params = fieldParams + '&sort%5B0%5D%5Bfield%5D=SE%20No&sort%5B0%5D%5Bdirection%5D=desc' + (pageOffset ? '&offset=' + pageOffset : '');
+      var params = 'sort%5B0%5D%5Bfield%5D=SE%20No&sort%5B0%5D%5Bdirection%5D=desc' + (pageOffset ? '&offset=' + pageOffset : '');
+      console.log('[LOAD] fetch params:', params.substring(0, 80));
       var d = await apiGet('Satış Emirleri', params);
+      console.log('[LOAD] page records:', (d.records||[]).length, 'offset:', d.offset||'yok');
       all = all.concat(d.records || []);
       pageOffset = d.offset || '';
     } while (pageOffset);
     records = all;
+    console.log('[LOAD] toplam:', records.length);
     filterList();
   } catch(e) {
     var errMsg = e.message || JSON.stringify(e);
