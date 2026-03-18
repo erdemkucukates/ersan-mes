@@ -377,7 +377,7 @@ async function selectKalem(idx) {
   else if (pdfArr && pdfArr.length) {
     url = pdfArr[0].url; name = pdfArr[0].filename || 'teknik.pdf';
   }
-  // 3) PDF Data (base64) — tek kayıt olarak lazy-fetch
+  // 3) PDF Data (Cloudinary URL) — tek kayıt olarak lazy-fetch
   else {
     try {
       console.log('[PDF-VIEW] PDF Data lazy-fetch, recordId:', r.id);
@@ -385,10 +385,9 @@ async function selectKalem(idx) {
       var rec = (recData.records || [])[0];
       var pdfData = rec && rec.fields && rec.fields['PDF Data'];
       if (pdfData) {
-        console.log('[PDF-VIEW] PDF Data bulundu, uzunluk:', pdfData.length);
-        url = base64ToBlobUrl(pdfData);
+        console.log('[PDF-VIEW] PDF Data bulundu:', pdfData);
+        url = pdfData;
         name = 'teknik-resim.pdf';
-        // Cache'le, tekrar fetch etmesin
         r.fields['PDF Data'] = pdfData;
       } else {
         console.log('[PDF-VIEW] PDF Data boş — bu kalemde PDF yok');
