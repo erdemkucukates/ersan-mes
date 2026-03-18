@@ -338,6 +338,7 @@ function showSEGroup(seId) {
                     <div style="display:flex;gap:4px;">
                       <button class="btn" style="padding:2px 7px;font-size:10px;" onclick="event.stopPropagation();openDurumModal('${r.id}','${seId}')">✏️</button>
                       <button class="btn" style="padding:2px 7px;font-size:10px;" onclick="event.stopPropagation();openRFQSingle('${r.id}','${seId}')">📧</button>
+                      <button class="btn" style="padding:2px 7px;font-size:10px;color:#dc2626;border-color:#fca5a5;" onclick="event.stopPropagation();deleteSTL('${r.id}','${seId}')">🗑</button>
                     </div>
                   </td>
                 </tr>`;
@@ -383,6 +384,7 @@ async function showDetail(id) {
       <div style="flex:1;"></div>
       <button class="btn warn" onclick="openRFQSingle('${id}','${seId}')">📧 RFQ Gönder</button>
       <button class="btn" onclick="openDurumModal('${id}','${seId}')">✏️ Durum Güncelle</button>
+      <button class="btn" style="color:#dc2626;border-color:#fca5a5;" onclick="deleteSTL('${id}','${seId}')">🗑 Sil</button>
     </div>
     <div class="detail-scroll">
 
@@ -625,6 +627,25 @@ async function sendRFQGroup(seId) {
   const records = stlList.filter(r=>(r.fields['SE No']?.[0]||'noSE')===seId && r.fields['Durum']==='Taslak');
   if (!records.length) { toast('Gönderilecek taslak talep yok', 'err'); return; }
   openRFQSingle(records[0].id, seId);
+}
+
+// ── TALEP SİL ──
+async function deleteSTL(id, seId) {
+  var r = stlList.find(function(x){ return x.id === id; });
+  var label = r ? (r.fields['Talep No']||r.fields['Kalem Adı']||id) : id;
+  if (!confirm(label + ' silinsin mi?')) return;
+  try {
+    await fetch('/.netlify/functions/airtable', {
+      method: 'DELETE', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({table:'Satınalma Talepleri', id:id})
+    });
+    stlList = stlList.filter(function(x){ return x.id !== id; });
+    activeId = null;
+    renderList();
+    if (seId) showSEGroup(seId);
+    else document.getElementById('detail-content').innerHTML = '<div style="padding:40px;text-align:center;color:var(--text3);">Talep silindi.</div>';
+    toast('Talep silindi');
+  } catch(e) { toast('Hata: ' + e.message); }
 }
 
 // ── INIT ──
