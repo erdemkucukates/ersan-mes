@@ -984,18 +984,16 @@ async function saveNewEntry() {
     'Birim': birim,
     'Giriş Tarihi': tarih || new Date().toISOString().split('T')[0],
     'Statü': 'Karantinada',
+    'İrsaliye No': irsaliye || '',
+    'Gözle Muayene': 'Bekliyor',
+    'Sertifika Durumu': 'Bekliyor',
   };
-  // Link alanı — sadece geçerli record ID varsa
   if (tedarikciId && tedarikciId.startsWith('rec')) fields['Tedarikçiler (OTL)'] = [tedarikciId];
   if (standart) fields['Malzeme Standardı'] = standart;
-  // Notlar — irsaliye ve STL referansı
-  var notParts = [];
-  if (irsaliye) notParts.push('İrsaliye: ' + irsaliye);
   if (stlId) {
     var stlRec = stlList.find(function(x){ return x.id === stlId; });
-    notParts.push('Satınalma Talebi: ' + (stlRec ? (stlRec.fields['Talep No'] || stlId) : stlId));
+    fields['Notlar'] = 'Satınalma Talebi: ' + (stlRec ? (stlRec.fields['Talep No'] || stlId) : stlId);
   }
-  if (notParts.length) fields['Notlar'] = notParts.join(' | ');
   console.log('[MAT-NEW] fields:', JSON.stringify(fields));
 
   try {
