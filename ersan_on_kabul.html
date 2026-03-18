@@ -620,12 +620,14 @@ async function handleFileSelect(e) {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({filename:file.name, data:dataUrl, recordId:recId, table:'tblSj5Ep6F9Ir1NGu', field:'skip'})
     });
-    if(res.ok) {
+    const resData = await res.json();
+    console.log('[UPLOAD] status:', res.status, 'response:', JSON.stringify(resData));
+    if(res.ok && resData.success) {
       document.getElementById('upload-filename').textContent = '✓ '+file.name;
       document.getElementById('upload-filename').style.color = 'var(--green)';
       toast('Sertifika yüklendi ✓');
     } else {
-      throw new Error('Yükleme başarısız');
+      throw new Error(resData.error || 'Yükleme başarısız');
     }
   } catch(err) {
     document.getElementById('upload-filename').textContent = '✗ Yükleme başarısız';
