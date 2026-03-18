@@ -320,7 +320,7 @@ function showSEGroup(seId) {
           <table class="stl-table">
             <thead><tr>
               <th>#</th><th>Tip</th><th>Malzeme / İşlem</th><th>Ölçü</th>
-              <th>Miktar</th><th>Kalem</th><th>~kg</th><th>Durum</th><th></th>
+              <th>Miktar</th><th>Kalem</th><th>~kg</th><th>Teklif</th><th>Durum</th><th></th>
             </tr></thead>
             <tbody>
               ${records.map((r,i) => {
@@ -334,6 +334,7 @@ function showSEGroup(seId) {
                   <td style="font-family:var(--mono);">${f['Miktar']||0} ${f['Birim']||''}</td>
                   <td style="color:var(--text2);">${f['Kalem Adı']||'—'}</td>
                   <td style="font-family:var(--mono);color:var(--blue);">${f['Tahmini kg']?f['Tahmini kg']+' kg':'—'}</td>
+                  <td style="font-family:var(--mono);font-weight:600;color:var(--accent);">${f['Teklif Fiyatı']?fmt(f['Teklif Fiyatı'])+' '+(f['Fiyat Birimi']||''):'—'}</td>
                   <td><span class="badge b-${d}">${d}</span></td>
                   <td>
                     <div style="display:flex;gap:4px;">
@@ -368,14 +369,7 @@ async function showDetail(id) {
   const seId = f['SE No']?.[0];
   const seNo = getSENo(seId);
 
-  // RFQ tekliflerini yükle
-  let rfqRecords = [];
-  if (T.rfq !== 'RFQ_TABLE_PLACEHOLDER') {
-    try {
-      const d = await apiGet(T.rfq, `filterByFormula=${encodeURIComponent(`{SE No}="${seNo}"`)}&sort[0][field]=Teklif%20Fiyatı&sort[0][direction]=asc`);
-      rfqRecords = d.records||[];
-    } catch(e) { console.warn('RFQ load:', e); }
-  }
+  // Tedarikçi yanıtı doğrudan bu kaydın alanlarında (ayrı fetch gerekmez)
 
   document.getElementById('detail-content').innerHTML = `
     <div class="detail-toolbar">
@@ -409,19 +403,35 @@ async function showDetail(id) {
         </div>
       </div>
 
-      <!-- Gelen RFQ teklifleri -->
-      <div class="card">
+      <!-- Tedarikçi Yanıtı (doğrudan bu kaydın alanlarından) -->
+      ${f['Durum']==='Yanıtlandı' || f['Teklif Fiyatı'] ? `<div class="card">
         <div class="card-header">
-          <div class="card-dot" style="background:#6366f1;"></div>
-          Gelen Tedarikçi Teklifleri
-          <button onclick="loadRFQForSTL('${id}','${seNo}')" style="margin-left:auto;background:transparent;border:1px solid var(--border);border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer;color:var(--text2);">Yenile</button>
+          <div class="card-dot" style="background:#10b981;"></div>
+          Tedarikçi Yanıtı
+          <span class="badge b-Yanıtlandı" style="margin-left:8px;">Yanıtlandı</span>
         </div>
-        <div class="card-body" id="rfq-detail-${id}">
-          ${rfqRecords.length === 0
-            ? '<div style="text-align:center;padding:20px;color:var(--text3);font-size:12px;">Henüz teklif gelmedi. RFQ gönderin.</div>'
-            : renderRFQTable(rfqRecords, id)}
+        <div class="card-body">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;">
+            <div class="fg"><div class="fl">Teklif Fiyatı</div><div style="font-size:16px;font-weight:700;color:var(--accent);font-family:var(--mono);">${f['Teklif Fiyatı']?fmt(f['Teklif Fiyatı'])+' '+(f['Fiyat Birimi']||'TL/kg'):'—'}</div></div>
+            <div class="fg"><div class="fl">Teslim Süresi</div><div style="font-size:14px;font-weight:600;">${f['Teslim Süresi Gün']||'—'} gün</div></div>
+            <div class="fg"><div class="fl">Tedarikçi Vadesi</div><div style="font-size:14px;font-weight:600;">${f['Tedarikçi Vade Önerisi']||'—'} gün</div></div>
+            <div class="fg"><div class="fl">Geçerlilik</div><div style="font-size:12px;">${fmtDate(f['Geçerlilik Tarihi'])}</div></div>
+            <div class="fg"><div class="fl">Malzeme Cinsi</div><div style="font-size:12px;">${f['Malzeme Cinsi']||'—'}</div></div>
+            <div class="fg"><div class="fl">Tedarikçi Ölçüleri</div><div style="font-size:12px;">${f['Tedarikçi Ölçüleri']||'—'}</div></div>
+            <div class="fg"><div class="fl">Tedarikçi Kg</div><div style="font-size:12px;font-family:var(--mono);">${f['Tedarikçi Kg']?f['Tedarikçi Kg']+' kg':'—'}</div></div>
+            <div class="fg"><div class="fl">Yanıt Tarihi</div><div style="font-size:12px;">${fmtDate(f['Yanıt Tarihi'])}</div></div>
+          </div>
+          ${f['Tedarikçi Notu']?'<div style="margin-top:8px;padding:8px 12px;background:#f7f8fa;border-radius:6px;font-size:12px;color:var(--text2);"><strong>Not:</strong> '+f['Tedarikçi Notu']+'</div>':''}
         </div>
-      </div>
+      </div>` : `<div class="card">
+        <div class="card-header">
+          <div class="card-dot" style="background:#e2e5ea;"></div>
+          Tedarikçi Yanıtı
+        </div>
+        <div class="card-body" style="text-align:center;padding:20px;color:var(--text3);font-size:12px;">
+          Henüz yanıt gelmedi. RFQ gönderin.
+        </div>
+      </div>`}
     </div>`;
 }
 
