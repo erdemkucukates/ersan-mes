@@ -856,15 +856,17 @@ async function uploadCert(event, recId) {
   fnEl.textContent = '⏳ Yükleniyor...';
 
   try {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('recordId', recId);
-    formData.append('table', T.malzeme);
-    formData.append('field', 'Sertifika (PDF)');
+    const dataUrl = await new Promise((res, rej) => {
+      const reader = new FileReader();
+      reader.onload = e => res(e.target.result);
+      reader.onerror = rej;
+      reader.readAsDataURL(file);
+    });
 
     const res = await fetch('/.netlify/functions/upload-pdf', {
       method: 'POST',
-      body: formData
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({filename: file.name, data: dataUrl, recordId: recId, table: 'Malzeme Girişleri', field: 'Notlar'})
     });
     const data = await res.json();
     if (data.success || data.url) {

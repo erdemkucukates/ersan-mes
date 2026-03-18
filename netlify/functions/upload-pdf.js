@@ -11,8 +11,8 @@ exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') return {statusCode:200,headers:CORS,body:''};
   if (event.httpMethod !== 'POST') return {statusCode:405,headers:CORS,body:JSON.stringify({error:'POST only'})};
   try {
-    const {filename, data, recordId} = JSON.parse(event.body||'{}');
-    console.log('[upload-pdf] START recordId:', recordId, 'filename:', filename, 'dataLen:', (data||'').length);
+    const {filename, data, recordId, table, field} = JSON.parse(event.body||'{}');
+    console.log('[upload-pdf] START recordId:', recordId, 'filename:', filename, 'table:', table||'Satış Emirleri', 'dataLen:', (data||'').length);
     if (!filename||!data||!recordId) return {statusCode:400,headers:CORS,body:JSON.stringify({error:'eksik parametre'})};
 
     // ── ADIM 1: Base64 → Buffer ──
@@ -30,15 +30,17 @@ exports.handler = async (event) => {
     await store.set(blobKey, buffer, { metadata: { filename, contentType: 'application/pdf' } });
     console.log('[upload-pdf] Blob kaydedildi');
 
-    // ── ADIM 3: Serve URL'yi Airtable PDF Data alanina kaydet ──
+    // ── ADIM 3: Serve URL'yi Airtable'a kaydet ──
     const serveUrl = '/.netlify/functions/serve-pdf?key=' + encodeURIComponent(blobKey);
     const BASE  = process.env.AIRTABLE_BASE_ID || 'app5LDgJMgocw79Ix';
     const TOKEN_AT = process.env.AIRTABLE_TOKEN;
+    const targetTable = table || 'Satış Emirleri';
+    const targetField = field || 'PDF Data';
 
     const patchRes = await fetch(
-      `https://api.airtable.com/v0/${BASE}/${encodeURIComponent('Satış Emirleri')}/${recordId}`,
+      `https://api.airtable.com/v0/${BASE}/${encodeURIComponent(targetTable)}/${recordId}`,
       {method:'PATCH', headers:{'Authorization':`Bearer ${TOKEN_AT}`,'Content-Type':'application/json'},
-       body:JSON.stringify({fields:{'PDF Data': serveUrl}})}
+       body:JSON.stringify({fields:{[targetField]: serveUrl}})}
     );
     const patchData = await patchRes.json();
     if (patchData.error) throw new Error('Airtable: ' + JSON.stringify(patchData.error));
