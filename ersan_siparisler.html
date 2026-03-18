@@ -156,7 +156,12 @@ function buildGroups(recs) {
 
 async function apiGet(table, params) {
   var r = await fetch('/.netlify/functions/airtable?table=' + encodeURIComponent(table) + (params ? '&' + params : ''));
-  var d = await r.json(); if (d.error) throw new Error(d.error); return d;
+  var d = await r.json();
+  if (d.error) {
+    var msg = typeof d.error === 'string' ? d.error : (d.error.message || d.error.type || JSON.stringify(d.error));
+    throw new Error(msg);
+  }
+  return d;
 }
 
 async function apiPatch(table, id, fields) {
@@ -181,7 +186,9 @@ async function loadList() {
     records = d.records || [];
     filterList();
   } catch(e) {
-    document.getElementById('sb-list').innerHTML = '<div style="padding:1rem;color:#dc2626;font-size:12px;">Hata: '+e.message+'</div>';
+    var errMsg = e.message || JSON.stringify(e);
+    console.error('loadList hatası:', e);
+    document.getElementById('sb-list').innerHTML = '<div style="padding:1rem;color:#dc2626;font-size:12px;">Hata: '+errMsg+'</div>';
   }
 }
 
