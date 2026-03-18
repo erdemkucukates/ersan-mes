@@ -76,6 +76,13 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; b
 .upbtn input { display: none; }
 .empty-main { flex: 1; display: flex; align-items: center; justify-content: center; color: #9aa0ad; font-size: 14px; }
 .toast { position: fixed; bottom: 20px; right: 20px; background: #1a1d23; color: #fff; padding: 10px 18px; border-radius: 8px; font-size: 13px; z-index: 9999; opacity: 0; transition: opacity .3s; pointer-events: none; }
+.modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 9998; display: flex; align-items: center; justify-content: center; padding: 16px; }
+.modal-box { background: #fff; border-radius: 12px; width: 580px; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,.3); }
+.modal-head { background: #1a1d23; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; }
+.modal-title { color: #fff; font-weight: 600; font-size: 14px; }
+.modal-sub { color: #9aa0ad; font-size: 11px; margin-top: 2px; }
+.modal-body { padding: 16px; overflow-y: auto; flex: 1; }
+.modal-foot { padding: 12px 20px; border-top: 1px solid #e2e5ea; display: flex; justify-content: flex-end; gap: 8px; }
 .toast.show { opacity: 1; }
 </style>
 </head>
@@ -269,7 +276,7 @@ function renderMain(g) {
     '<span class="si-pill '+pillClass(firstDurum)+'" style="font-size:11px;padding:3px 10px;">'+firstDurum+'</span>'+
     '<div class="tb-right">'+
     '<button class="btn btn-amber" id="stl-btn">📋 Satınalma Talebi</button>'+
-    '<button class="btn btn-blue" onclick="window.location=\'ersan_isemirleri.html\'">⚙ İş Emri Aç</button>'+
+    '<button class="btn btn-blue" id="ie-btn">⚙ İş Emri Aç</button>'+
     '<select id="durum-sel" style="padding:5px 8px;border:1px solid #e2e5ea;border-radius:7px;font-size:12px;" onchange="updateAllDurum(this.value)">'+
     ['Beklemede','Üretimde','Tamamlandı','Kısmi Sevk','İptal'].map(function(d){ return '<option'+(d===firstDurum?' selected':'')+'>'+d+'</option>'; }).join('')+
     '</select>'+
@@ -299,6 +306,8 @@ function renderMain(g) {
   setTimeout(function() {
     var stlBtn = document.getElementById('stl-btn');
     if (stlBtn) stlBtn.onclick = function() { openSTLModal(g); };
+    var ieBtn = document.getElementById('ie-btn');
+    if (ieBtn) ieBtn.onclick = function() { openIEModal(g); };
     var delBtn = document.getElementById('del-btn');
     if (delBtn) delBtn.onclick = function() { deleteGroup(g.spNo); };
   }, 0);
@@ -688,6 +697,93 @@ async function saveSTL() {
     document.getElementById('stl-modal').remove();
     toast(window._stlRows.length+' satınalma talebi oluşturuldu ✓');
   } catch(e) { toast('Hata: '+e.message); }
+}
+
+// ── İŞ EMRİ MODAL ──────────────────────────────────────────────────────────
+function openIEModal(g) {
+  var existing = document.getElementById('ie-modal'); if(existing) existing.remove();
+  var modal = document.createElement('div');
+  modal.id = 'ie-modal';
+  modal.className = 'modal-bg';
+
+  var kalemRows = g.kalemler.map(function(r, i) {
+    var f = r.fields;
+    var seNo = f['SE No'] || '';
+    var kalemNo = seNo.split('-').pop() || (i+1);
+    return '<div style="border:1px solid #e2e5ea;border-radius:8px;padding:10px;margin-bottom:8px;">'+
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">'+
+      '<input type="checkbox" id="ie-chk-'+i+'" checked style="width:16px;height:16px;">'+
+      '<span style="font-size:11px;font-weight:600;color:#7c3aed;">Kalem '+kalemNo+'</span>'+
+      '<span style="font-size:12px;font-weight:500;">'+( f['Parça Adı']||'—')+'</span>'+
+      '<span style="font-size:11px;color:#9aa0ad;font-family:monospace;">'+(f['Parça No']||'')+'</span>'+
+      '</div>'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">'+
+      '<div><div style="font-size:10px;color:#9aa0ad;margin-bottom:2px">MİKTAR</div>'+
+      '<input id="ie-mik-'+i+'" type="number" value="'+(f['Miktar']||0)+'" style="width:100%;padding:4px;border:1px solid #e2e5ea;border-radius:6px;font-size:11px;"></div>'+
+      '<div><div style="font-size:10px;color:#9aa0ad;margin-bottom:2px">ÖNCELİK</div>'+
+      '<select id="ie-onc-'+i+'" style="width:100%;padding:4px;border:1px solid #e2e5ea;border-radius:6px;font-size:11px;">'+
+      '<option>Normal</option><option>Yüksek</option><option>Acil</option></select></div>'+
+      '<div><div style="font-size:10px;color:#9aa0ad;margin-bottom:2px">FAI GEREKLİ</div>'+
+      '<label style="display:flex;align-items:center;gap:4px;font-size:11px;"><input type="checkbox" id="ie-fai-'+i+'"> Evet</label></div>'+
+      '</div></div>';
+  }).join('');
+
+  modal.innerHTML = '<div class="modal-box">'+
+    '<div class="modal-head">'+
+    '<div><div class="modal-title">⚙ İş Emri Aç — '+g.spNo+'</div>'+
+    '<div class="modal-sub">'+g.kalemler.length+' kalem · Seçili kalemler için iş emri oluşturulacak</div></div>'+
+    '<button onclick="document.getElementById(\'ie-modal\').remove()" style="background:transparent;border:none;color:#fff;font-size:20px;cursor:pointer;">×</button>'+
+    '</div>'+
+    '<div class="modal-body">'+kalemRows+'</div>'+
+    '<div class="modal-foot">'+
+    '<button onclick="document.getElementById(\'ie-modal\').remove()" class="btn">İptal</button>'+
+    '<button id="ie-save-btn" class="btn btn-blue">⚙ İş Emirlerini Oluştur</button>'+
+    '</div></div>';
+  document.body.appendChild(modal);
+
+  document.getElementById('ie-save-btn').onclick = function() { saveIE(g); };
+}
+
+async function saveIE(g) {
+  var btn = document.getElementById('ie-save-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Oluşturuluyor...'; }
+  try {
+    var count = 0;
+    for (var i = 0; i < g.kalemler.length; i++) {
+      var chk = document.getElementById('ie-chk-'+i);
+      if (!chk || !chk.checked) continue;
+      var r = g.kalemler[i];
+      var f = r.fields;
+      var miktar = parseInt(document.getElementById('ie-mik-'+i).value) || f['Miktar'] || 0;
+      var oncelik = document.getElementById('ie-onc-'+i).value || 'Normal';
+      var fai = document.getElementById('ie-fai-'+i).checked;
+
+      var ieFields = {
+        'SE No': [r.id],
+        'Parça No': f['Parça No'] || '',
+        'Parça Adı': f['Parça Adı'] || '',
+        'Revizyon': f['Revizyon'] || '',
+        'Miktar': miktar,
+        'Birim': f['Birim'] || 'Adet',
+        'Açılış Tarihi': new Date().toISOString().split('T')[0],
+        'Termin Tarihi': f['Termin Tarihi'] || null,
+        'Öncelik': oncelik,
+        'Durum': 'Açık',
+        'FAI Gerekli mi?': fai
+      };
+
+      await fetch('/.netlify/functions/airtable', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({method:'POST', path:'/v0/'+BASE+'/'+encodeURIComponent('İş Emirleri'), body:{fields:ieFields}})
+      });
+      count++;
+    }
+    document.getElementById('ie-modal').remove();
+    toast(count + ' iş emri oluşturuldu ✓');
+  } catch(e) {
+    toast('Hata: ' + e.message);
+    if (btn) { btn.disabled = false; btn.textContent = '⚙ İş Emirlerini Oluştur'; }
+  }
 }
 
 loadList();
