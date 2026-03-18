@@ -303,8 +303,12 @@ const apiFn = async (method, table, body, id='') => {
     method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({method, path, body})
   });
-  if (!res.ok) throw new Error(`${res.status}`);
-  return res.json();
+  const data = await res.json();
+  if (!res.ok || data.error) {
+    console.error('[API-ERR]', method, table, id, 'status:', res.status, 'body:', JSON.stringify(body)?.substring(0,300), 'response:', JSON.stringify(data));
+    throw new Error(data.error?.message || data.error?.type || JSON.stringify(data.error) || res.status);
+  }
+  return data;
 };
 const apiGetFn = async (table, params='') => {
   const path = `/v0/${BASE}/${table}?${params}`;
