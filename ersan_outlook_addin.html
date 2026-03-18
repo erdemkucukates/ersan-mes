@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ersan MES – Teklif Talebi</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://ersan-mes.netlify.app/ersan_log.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #1a1d23;
+      --surface:  #22262e;
+      --border:   #2e333d;
+      --purple:   #7c3aed;
+      --purple-h: #6d28d9;
+      --green:    #059669;
+      --green-h:  #047857;
+      --red:      #dc2626;
+      --red-h:    #b91c1c;
+      --text:     #e2e8f0;
+      --muted:    #94a3b8;
+      --label:    #cbd5e1;
+      --radius:   6px;
+    }
+
+    body {
+      font-family: 'IBM Plex Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      width: 320px;
+      min-height: 100vh;
+      font-size: 13px;
+      overflow-x: hidden;
+    }
+
+    /* ── TOP BAR ─────────────────────────────────────── */
+    #top-bar {
+      padding: 10px 12px 10px 14px;
+      border-left: 3px solid var(--purple);
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+    #top-bar h1 {
+      font-size: 15px;
+      font-weight: 600;
+      color: #fff;
+      letter-spacing: .3px;
+    }
+    #sender-info {
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.4;
+    }
+    #sender-info strong { color: var(--label); font-weight: 500; }
+
+    /* ── MAIN CONTENT ────────────────────────────────── */
+    #panel {
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* ── BACK LINK ───────────────────────────────────── */
+    .back-link {
+      display: none;
+      font-size: 11px;
+      color: var(--purple);
+      cursor: pointer;
+      text-decoration: underline;
+      margin-bottom: 2px;
+    }
+    .back-link:hover { color: #a78bfa; }
+
+    /* ── DECISION BUTTONS ────────────────────────────── */
+    #decision-section { display: flex; gap: 8px; }
+
+    .btn-decision {
+      flex: 1;
+      padding: 11px 4px;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: .4px;
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .btn-olumlu  { background: var(--green); color: #fff; }
+    .btn-olumlu:hover  { background: var(--green-h); }
+    .btn-olumsuz { background: var(--red);   color: #fff; }
+    .btn-olumsuz:hover { background: var(--red-h); }
+
+    /* ── FLOWS ───────────────────────────────────────── */
+    #olumsuz-flow, #olumlu-flow { display: none; }
+
+    /* ── RADIO GROUP ─────────────────────────────────── */
+    .radio-group { display: flex; flex-direction: column; gap: 6px; }
+    .radio-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 8px 10px;
+      cursor: pointer;
+      transition: border-color .15s;
+    }
+    .radio-item:hover { border-color: var(--red); }
+    .radio-item input[type="radio"] {
+      margin-top: 1px;
+      accent-color: var(--red);
+      flex-shrink: 0;
+      width: 15px; height: 15px;
+    }
+    .radio-item label {
+      cursor: pointer;
+      line-height: 1.4;
+      color: var(--label);
+      font-size: 12px;
+    }
+    .radio-item.checked {
+      border-color: var(--red);
+      background: rgba(220,38,38,.08);
+    }
+
+    #diger-textarea {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 12px;
+      padding: 8px;
+      resize: vertical;
+      min-height: 70px;
+      display: none;
+    }
+    #diger-textarea:focus { outline: none; border-color: var(--red); }
+
+    /* ── SECTION TITLE ───────────────────────────────── */
+    .section-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      margin-bottom: 2px;
+    }
+
+    /* ── BUTTONS ─────────────────────────────────────── */
+    .btn {
+      width: 100%;
+      padding: 10px;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: background .15s, opacity .15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .btn:disabled { opacity: .5; cursor: not-allowed; }
+    .btn-red    { background: var(--red);    color: #fff; }
+    .btn-red:hover:not(:disabled)    { background: var(--red-h); }
+    .btn-purple { background: var(--purple); color: #fff; }
+    .btn-purple:hover:not(:disabled) { background: var(--purple-h); }
+    .btn-green  { background: var(--green);  color: #fff; }
+    .btn-green:hover:not(:disabled)  { background: var(--green-h); }
+
+    /* ── SPINNER ─────────────────────────────────────── */
+    .spinner {
+      width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .6s linear infinite;
+      display: none;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── FORM FIELDS ─────────────────────────────────── */
+    .field { display: flex; flex-direction: column; gap: 3px; }
+    .field label {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--muted);
+    }
+    .field label span { color: var(--red); margin-left: 1px; }
+    .field .hint {
+      font-size: 10px;
+      color: #64748b;
+      margin-top: 1px;
+    }
+    .field input, .field textarea, .field select {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 12px;
+      padding: 7px 9px;
+      width: 100%;
+      transition: border-color .15s;
+    }
+    .field input:focus,
+    .field textarea:focus { outline: none; border-color: var(--purple); }
+    .field textarea { resize: vertical; min-height: 60px; }
+
+    /* ── STEP INDICATOR ──────────────────────────────── */
+    .step-bar {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 2px;
+    }
+    .step-dot {
+      height: 3px;
+      flex: 1;
+      border-radius: 2px;
+      background: var(--border);
+      transition: background .3s;
+    }
+    .step-dot.active { background: var(--purple); }
+
+    /* ── FILE UPLOAD ─────────────────────────────────── */
+    .file-zone {
+      border: 1.5px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 12px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color .15s;
+      background: var(--surface);
+    }
+    .file-zone:hover { border-color: var(--purple); }
+    .file-zone p { color: var(--muted); font-size: 11px; margin-top: 4px; }
+    #file-input { display: none; }
+    #file-status {
+      display: none;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--green);
+      background: rgba(5,150,105,.1);
+      border: 1px solid rgba(5,150,105,.3);
+      border-radius: var(--radius);
+      padding: 6px 9px;
+    }
+    #file-status.uploading { color: var(--muted); background: var(--surface); border-color: var(--border); }
+
+    /* ── CHECKBOX ────────────────────────────────────── */
+    .check-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 8px 10px;
+      cursor: pointer;
+    }
+    .check-row input[type="checkbox"] {
+      accent-color: var(--purple);
+      width: 14px; height: 14px;
+      flex-shrink: 0;
+    }
+    .check-row label { font-size: 12px; color: var(--label); cursor: pointer; }
+
+    /* ── DIVIDER ─────────────────────────────────────── */
+    hr { border: none; border-top: 1px solid var(--border); }
+
+    /* ── TOAST ───────────────────────────────────────── */
+    #toast {
+      position: fixed;
+      bottom: 14px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #1e2330;
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 12px;
+      padding: 8px 16px;
+      border-radius: 20px;
+      white-space: nowrap;
+      opacity: 0;
+      transition: opacity .25s, transform .25s;
+      z-index: 9999;
+      pointer-events: none;
+      box-shadow: 0 4px 20px rgba(0,0,0,.4);
+    }
+    #toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+    #toast.success { border-color: var(--green); color: var(--green); }
+    #toast.error   { border-color: var(--red);   color: #f87171; }
+
+    /* ── ERROR / INFO BOX ────────────────────────────── */
+    .info-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .info-box.warn { border-color: #d97706; color: #fbbf24; }
+    .info-box.err  { border-color: var(--red); color: #fca5a5; }
+
+    /* ── AI BADGE ────────────────────────────────────── */
+    .ai-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 10px;
+      font-weight: 600;
+      color: #a78bfa;
+      background: rgba(124,58,237,.15);
+      border: 1px solid rgba(124,58,237,.3);
+      border-radius: 4px;
+      padding: 2px 6px;
+      letter-spacing: .3px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div id="top-bar">
+  <h1>Ersan MES</h1>
+  <div id="sender-info">Yükleniyor…</div>
+</div>
+
+<!-- MAIN PANEL -->
+<div id="panel">
+
+  <!-- OFFICE NOT AVAILABLE -->
+  <div id="no-office-msg" style="display:none">
+    <div class="info-box warn">
+      Bu sayfa Outlook Add-in olarak çalışır.<br>
+      Tarayıcıda açıldığında Microsoft 365 bağlantısı olmadığından işlevler devre dışıdır.
+    </div>
+  </div>
+
+  <!-- DECISION BUTTONS -->
+  <div id="decision-section">
+    <button class="btn-decision btn-olumlu"  onclick="chooseOlumlu()">✅ OLUMLU</button>
+    <button class="btn-decision btn-olumsuz" onclick="chooseOlumsuz()">❌ OLUMSUZ</button>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════
+       OLUMSUZ FLOW
+  ════════════════════════════════════════════════════ -->
+  <div id="olumsuz-flow">
+    <span class="back-link" id="back-olumsuz" onclick="goBack()">← Karar butonlarına dön</span>
+
+    <div class="section-title">Ret Nedeni</div>
+
+    <div class="radio-group" id="ret-reasons">
+      <div class="radio-item" onclick="selectReason(0)">
+        <input type="radio" name="ret" id="r0" value="0" />
+        <label for="r0">Ürün gamımız dışındadır</label>
+      </div>
+      <div class="radio-item" onclick="selectReason(1)">
+        <input type="radio" name="ret" id="r1" value="1" />
+        <label for="r1">Şu an kapasitemiz dolu</label>
+      </div>
+      <div class="radio-item" onclick="selectReason(2)">
+        <input type="radio" name="ret" id="r2" value="2" />
+        <label for="r2">Teknik bilgi / resim eksik</label>
+      </div>
+      <div class="radio-item" onclick="selectReason(3)">
+        <input type="radio" name="ret" id="r3" value="3" />
+        <label for="r3">Teklif vermek istemiyoruz</label>
+      </div>
+      <div class="radio-item" onclick="selectReason(4)">
+        <input type="radio" name="ret" id="r4" value="4" />
+        <label for="r4">Diğer</label>
+      </div>
+    </div>
+
+    <textarea id="diger-textarea" placeholder="Ret gerekçenizi yazınız…"></textarea>
+
+    <button class="btn btn-red" onclick="sendRetMail()" id="btn-ret">
+      ✉ Ret Maili Gönder
+    </button>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════
+       OLUMLU FLOW
+  ════════════════════════════════════════════════════ -->
+  <div id="olumlu-flow">
+    <span class="back-link" id="back-olumlu" onclick="goBack()">← Karar butonlarına dön</span>
+
+    <!-- Step bar -->
+    <div class="step-bar">
+      <div class="step-dot active" id="sd1"></div>
+      <div class="step-dot" id="sd2"></div>
+      <div class="step-dot" id="sd3"></div>
+    </div>
+
+    <!-- STEP 1: AI Analiz -->
+    <div id="step-ai">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div class="section-title" style="margin:0">AI Analiz</div>
+        <span class="ai-badge">✦ Claude</span>
+      </div>
+      <div class="info-box" style="margin-bottom:8px;font-size:11px">
+        Mail içeriği otomatik analiz edilip form doldurulacak.
+      </div>
+      <button class="btn btn-purple" onclick="runAiAnalysis()" id="btn-ai">
+        <div class="spinner" id="ai-spinner"></div>
+        <span id="ai-btn-text">✦ AI Analiz Et</span>
+      </button>
+    </div>
+
+    <hr id="hr-form" style="display:none" />
+
+    <!-- STEP 2: Form -->
+    <div id="step-form" style="display:none">
+      <div class="section-title" style="margin-bottom:6px">Teklif Bilgileri</div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div class="field">
+          <label>Talep Adı <span>*</span></label>
+          <input type="text" id="f-talepAdi" placeholder="örn. CNC Freze Parça Talebi" />
+        </div>
+        <div class="field">
+          <label>Firma Adı <span>*</span></label>
+          <input type="text" id="f-firmaAdi" placeholder="Müşteri firma adı" />
+          <span class="hint">Mevcut değilse otomatik oluşturulur</span>
+        </div>
+        <div class="field">
+          <label>Yetkili Kişi</label>
+          <input type="text" id="f-yetkiliAd" placeholder="Ad Soyad" />
+        </div>
+        <div class="field">
+          <label>Malzeme No</label>
+          <input type="text" id="f-malzemeNo" placeholder="Teknik çizim numarası" />
+        </div>
+        <div class="field">
+          <label>Malzeme Cinsi</label>
+          <input type="text" id="f-malzemeCinsi" placeholder="örn. AISI 304, ST52" />
+        </div>
+        <div class="field">
+          <label>Miktar</label>
+          <input type="text" id="f-miktar" placeholder="örn. 50 adet" />
+        </div>
+        <div class="field">
+          <label>Termin Talebi</label>
+          <input type="text" id="f-termin" placeholder="örn. 2 hafta" />
+        </div>
+        <div class="field">
+          <label>Notlar</label>
+          <textarea id="f-notlar" rows="3" placeholder="Ek bilgi, özel gereksinimler…"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <hr id="hr-file" style="display:none" />
+
+    <!-- STEP 3: Teknik Resim -->
+    <div id="step-file" style="display:none">
+      <div class="section-title" style="margin-bottom:6px">Teknik Resim</div>
+
+      <div class="file-zone" onclick="document.getElementById('file-input').click()">
+        <div style="font-size:20px">📎</div>
+        <p>PDF, JPG, PNG veya WEBP seçin</p>
+        <p style="margin-top:2px;font-size:10px">(Görseller otomatik PDF'e dönüştürülür)</p>
+      </div>
+      <input type="file" id="file-input" accept=".pdf,.jpg,.jpeg,.png,.webp" onchange="handleFileSelect(this)" />
+
+      <div id="file-status" style="margin-top:6px"></div>
+    </div>
+
+    <hr id="hr-submit" style="display:none" />
+
+    <!-- STEP 4: Submit -->
+    <div id="step-submit" style="display:none">
+      <label class="check-row" style="margin-bottom:8px">
+        <input type="checkbox" id="chk-alindi" checked />
+        <label for="chk-alindi">Alındı maili gönder</label>
+      </label>
+      <button class="btn btn-purple" onclick="submitTeklif()" id="btn-submit">
+        <div class="spinner" id="submit-spinner"></div>
+        <span id="submit-btn-text">📥 Müşteri Taleplerine Ekle</span>
+      </button>
+    </div>
+
+  </div><!-- /olumlu-flow -->
+
+</div><!-- /panel -->
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+'use strict';
+
+/* ══════════════════════════════════════════════════════
+   GLOBAL STATE
+══════════════════════════════════════════════════════ */
+let subject = '', body = '', senderName = '', senderEmail = '';
+let attachments = [];
+let selectedReason = -1;
+let uploadedFileData = null; // { filename, base64 }
+let uploadedUrl = '';
+let officeReady = false;
+
+const BASE     = 'app5LDgJMgocw79Ix';
+const API_BASE = 'https://ersan-mes.netlify.app';
+
+/* ══════════════════════════════════════════════════════
+   OFFICE INIT
+══════════════════════════════════════════════════════ */
+if (typeof Office !== 'undefined' && Office.onReady) {
+  Office.onReady(() => {
+    officeReady = true;
+    try {
+      const item = Office.context.mailbox.item;
+
+      item.subject.getAsync(r => {
+        if (r.status === Office.AsyncResultStatus.Succeeded) {
+          subject = r.value || '';
+          renderHeader();
+        }
+      });
+
+      item.body.getAsync('text', r => {
+        if (r.status === Office.AsyncResultStatus.Succeeded) {
+          body = r.value || '';
+        }
+      });
+
+      item.from.getAsync(r => {
+        if (r.status === Office.AsyncResultStatus.Succeeded) {
+          senderName  = r.value.displayName  || '';
+          senderEmail = r.value.emailAddress || '';
+          renderHeader();
+        }
+      });
+
+      attachments = item.attachments || [];
+
+    } catch (e) {
+      console.error('Office init error:', e);
+      showNoOffice();
+    }
+  });
+} else {
+  // Not in Outlook
+  document.addEventListener('DOMContentLoaded', showNoOffice);
+}
+
+function showNoOffice() {
+  document.getElementById('no-office-msg').style.display = 'block';
+  document.getElementById('decision-section').style.display = 'none';
+  document.getElementById('sender-info').textContent = 'Office.js bağlantısı yok';
+}
+
+/* ── Render top bar ───────────────────────────────── */
+function renderHeader() {
+  const el = document.getElementById('sender-info');
+  if (senderName || senderEmail) {
+    el.innerHTML = `<strong>${esc(senderName)}</strong><br>${esc(senderEmail)}`;
+  } else if (subject) {
+    el.textContent = esc(subject);
+  }
+}
+
+/* ══════════════════════════════════════════════════════
+   NAVIGATION
+══════════════════════════════════════════════════════ */
+function chooseOlumsuz() {
+  document.getElementById('decision-section').style.display = 'none';
+  document.getElementById('olumsuz-flow').style.display = 'flex';
+  document.getElementById('olumsuz-flow').style.flexDirection = 'column';
+  document.getElementById('olumsuz-flow').style.gap = '8px';
+  document.getElementById('back-olumsuz').style.display = 'block';
+}
+
+function chooseOlumlu() {
+  document.getElementById('decision-section').style.display = 'none';
+  document.getElementById('olumlu-flow').style.display = 'flex';
+  document.getElementById('olumlu-flow').style.flexDirection = 'column';
+  document.getElementById('olumlu-flow').style.gap = '8px';
+  document.getElementById('back-olumlu').style.display = 'block';
+}
+
+function goBack() {
+  document.getElementById('decision-section').style.display = 'flex';
+  document.getElementById('olumsuz-flow').style.display = 'none';
+  document.getElementById('olumlu-flow').style.display = 'none';
+  // reset olumlu steps
+  hideEl('hr-form'); hideEl('step-form');
+  hideEl('hr-file'); hideEl('step-file');
+  hideEl('hr-submit'); hideEl('step-submit');
+  setStepDots(1);
+}
+
+/* ══════════════════════════════════════════════════════
+   OLUMSUZ FLOW
+══════════════════════════════════════════════════════ */
+function selectReason(idx) {
+  selectedReason = idx;
+  document.querySelectorAll('.radio-item').forEach((el, i) => {
+    el.classList.toggle('checked', i === idx);
+    el.querySelector('input[type="radio"]').checked = (i === idx);
+  });
+  document.getElementById('diger-textarea').style.display = (idx === 4) ? 'block' : 'none';
+}
+
+const retTemplates = [
+  /* 0 – Ürün gamı */
+  (firma) => `
+<p>Sayın ${firma},</p>
+<p>Teklif talebiniz için teşekkür eder, çalışmalarınızda başarılar dileriz.</p>
+<p>Talep ettiğiniz ürün/hizmet, mevcut üretim gamımız dışında kalmaktadır. Bu nedenle, söz konusu talep için teklif sunmamız mümkün bulunmamaktadır.</p>
+<p>Farklı ihtiyaçlarınızda yeniden değerlendirmekten memnuniyet duyarız.</p>
+<p>Saygılarımızla,<br>Ersan Endüstriyel Makine San. Tic. Ltd. Şti.</p>`,
+
+  /* 1 – Kapasite */
+  (firma) => `
+<p>Sayın ${firma},</p>
+<p>Teklif talebiniz için teşekkür eder, çalışmalarınızda başarılar dileriz.</p>
+<p>Mevcut üretim programımızın yoğunluğu nedeniyle, belirttiğiniz termin tarihine yetişmemiz mümkün olmayacaktır. Bu sebeple talebinizi karşılayabilecek durumda değiliz.</p>
+<p>İleri bir tarihte yeniden talep iletmeniz durumunda değerlendirme yapmaktan memnuniyet duyarız.</p>
+<p>Saygılarımızla,<br>Ersan Endüstriyel Makine San. Tic. Ltd. Şti.</p>`,
+
+  /* 2 – Eksik bilgi */
+  (firma) => `
+<p>Sayın ${firma},</p>
+<p>Teklif talebiniz için teşekkür eder, çalışmalarınızda başarılar dileriz.</p>
+<p>Sağlıklı bir teklif hazırlayabilmemiz için teknik resim, malzeme standardı, yüzey işlem detayı, adet ve termin bilgilerine ihtiyaç duymaktayız. Söz konusu bilgi ve belgeler tarafımıza iletildiğinde talebi yeniden değerlendireceğiz.</p>
+<p>Saygılarımızla,<br>Ersan Endüstriyel Makine San. Tic. Ltd. Şti.</p>`,
+
+  /* 3 – İstemiyoruz */
+  (firma) => `
+<p>Sayın ${firma},</p>
+<p>Teklif talebiniz için teşekkür eder, çalışmalarınızda başarılar dileriz.</p>
+<p>Değerlendirmemiz sonucunda, bu talep için teklif sunamayacağımızı bildirmek isteriz. Anlayışınız için teşekkür ederiz.</p>
+<p>Saygılarımızla,<br>Ersan Endüstriyel Makine San. Tic. Ltd. Şti.</p>`,
+
+  /* 4 – Diğer (custom) */
+  (firma, custom) => `
+<p>Sayın ${firma},</p>
+<p>Teklif talebiniz için teşekkür eder, çalışmalarınızda başarılar dileriz.</p>
+<p>${custom}</p>
+<p>Saygılarımızla,<br>Ersan Endüstriyel Makine San. Tic. Ltd. Şti.</p>`,
+];
+
+async function sendRetMail() {
+  if (selectedReason < 0) {
+    showToast('Lütfen bir ret nedeni seçin', 'error'); return;
+  }
+  if (selectedReason === 4) {
+    const t = document.getElementById('diger-textarea').value.trim();
+    if (!t) { showToast('Lütfen ret gerekçesini yazın', 'error'); return; }
+  }
+
+  const firma   = senderName || 'İlgili Yetkili';
+  const custom  = document.getElementById('diger-textarea').value.trim();
+  const htmlBody = retTemplates[selectedReason](firma, custom);
+
+  try {
+    if (!officeReady) throw new Error('Office yok');
+    Office.context.mailbox.item.displayReplyForm({ htmlBody });
+  } catch(e) {
+    console.warn('displayReplyForm hatası:', e);
+  }
+
+  // Log
+  const reasonLabels = [
+    'Ürün gamı dışı','Kapasite dolu','Teknik bilgi eksik',
+    'Teklif verilmeyecek','Diğer'
+  ];
+  await logEvent('ret_maili', {
+    reason: reasonLabels[selectedReason],
+    sender: senderEmail,
+    subject
+  });
+
+  showToast('Ret maili hazırlandı ✓', 'success');
+  setBtnLoading('btn-ret', false);
+}
+
+/* ══════════════════════════════════════════════════════
+   OLUMLU FLOW — STEP 1: AI ANALİZ
+══════════════════════════════════════════════════════ */
+async function runAiAnalysis() {
+  setBtnLoading('btn-ai', true, 'ai-spinner');
+
+  const attachNames = attachments.map(a => a.name || a.id).join(', ') || 'Yok';
+
+  const prompt = `Aşağıdaki teklif talebi mailini analiz et. Sadece JSON döndür, başka hiçbir şey yazma:
+{"firmaAdi":"","yetkiliAd":"","talepAdi":"","malzemeNo":"","malzemeCinsi":"","miktar":"","terminTalebi":"","ozelNotlar":""}
+
+Konu: ${subject}
+Gönderen: ${senderName} <${senderEmail}>
+Mail:
+${body}
+Ekler: ${attachNames}
+
+Sadece JSON döndür.`;
+
+  try {
+    const res = await fetch(API_BASE + '/.netlify/functions/claude', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+
+    let jsonStr = '';
+    // Extract text from Claude response
+    if (data.content && data.content[0] && data.content[0].text) {
+      jsonStr = data.content[0].text.trim();
+    } else if (typeof data === 'object') {
+      jsonStr = JSON.stringify(data);
+    }
+
+    // Strip markdown code fences if present
+    jsonStr = jsonStr.replace(/^```json?\s*/i,'').replace(/```\s*$/,'').trim();
+
+    let parsed = {};
+    try { parsed = JSON.parse(jsonStr); } catch(e) { console.warn('JSON parse hatası:', e, jsonStr); }
+
+    fillForm(parsed);
+    showToast('AI analiz tamamlandı ✓', 'success');
+
+  } catch(e) {
+    console.error('AI analiz hatası:', e);
+    showToast('AI analiz başarısız, formu manuel doldurun', 'error');
+    fillForm({});
+  }
+
+  setBtnLoading('btn-ai', false, 'ai-spinner', '✦ AI Analiz Et');
+
+  // Show form & next steps
+  showEl('hr-form'); showEl('step-form');
+  showEl('hr-file'); showEl('step-file');
+  showEl('hr-submit'); showEl('step-submit');
+  setStepDots(2);
+}
+
+function fillForm(d) {
+  setVal('f-talepAdi',     d.talepAdi      || subject || '');
+  setVal('f-firmaAdi',     d.firmaAdi      || senderName || '');
+  setVal('f-yetkiliAd',    d.yetkiliAd     || senderName || '');
+  setVal('f-malzemeNo',    d.malzemeNo     || '');
+  setVal('f-malzemeCinsi', d.malzemeCinsi  || '');
+  setVal('f-miktar',       d.miktar        || '');
+  setVal('f-termin',       d.terminTalebi  || '');
+  setVal('f-notlar',       d.ozelNotlar    || '');
+}
+
+/* ══════════════════════════════════════════════════════
+   OLUMLU FLOW — STEP 3: DOSYA YÜKLEME
+══════════════════════════════════════════════════════ */
+async function handleFileSelect(input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  const statusEl = document.getElementById('file-status');
+  statusEl.style.display = 'flex';
+  statusEl.className = 'uploading';
+  statusEl.innerHTML = `<span style="font-size:14px">⏳</span> ${esc(file.name)} yükleniyor…`;
+
+  try {
+    let base64 = '';
+    let filename = file.name;
+
+    const isImage = file.type.startsWith('image/');
+
+    if (isImage) {
+      // Convert image to PDF via jsPDF
+      base64 = await imageToBase64(file);
+      const pdfBase64 = await imageToPdf(base64, file.type);
+      filename = file.name.replace(/\.[^.]+$/, '') + '.pdf';
+      base64 = pdfBase64;
+    } else {
+      // Read as base64 directly
+      base64 = await fileToBase64(file);
+      // Strip data URL prefix
+      base64 = base64.split(',')[1];
+    }
+
+    uploadedFileData = { filename, base64 };
+
+    // Upload to server
+    const res = await fetch(API_BASE + '/.netlify/functions/upload-pdf', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        filename,
+        data: base64,
+        recordId: 'temp',
+        table: 'Teklifler',
+        field: 'Notlar'
+      })
+    });
+
+    if (!res.ok) throw new Error(`Upload HTTP ${res.status}`);
+    const result = await res.json();
+    uploadedUrl = result.url || '';
+
+    statusEl.className = '';
+    statusEl.innerHTML = `<span style="font-size:14px">✅</span> <span>${esc(filename)} yüklendi</span>`;
+
+  } catch(e) {
+    console.error('Dosya yükleme hatası:', e);
+    statusEl.className = '';
+    statusEl.style.color = 'var(--red)';
+    statusEl.style.borderColor = 'rgba(220,38,38,.3)';
+    statusEl.innerHTML = `<span>⚠ Yükleme başarısız: ${esc(e.message)}</span>`;
+    uploadedFileData = null;
+  }
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload  = e => resolve(e.target.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function imageToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload  = e => resolve(e.target.result); // data URL
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function imageToPdf(dataUrl, mimeType) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+
+  // Load image to get dimensions
+  const img = new Image();
+  await new Promise((res, rej) => {
+    img.onload = res; img.onerror = rej;
+    img.src = dataUrl;
+  });
+
+  const pageW = 210, pageH = 297;
+  const ratio = Math.min(pageW / img.width, pageH / img.height);
+  const w = img.width * ratio;
+  const h = img.height * ratio;
+  const x = (pageW - w) / 2;
+  const y = (pageH - h) / 2;
+
+  const fmt = mimeType.includes('png') ? 'PNG' : 'JPEG';
+  doc.addImage(dataUrl, fmt, x, y, w, h);
+
+  // Return base64 (without data URL prefix)
+  return doc.output('datauristring').split(',')[1];
+}
+
+/* ══════════════════════════════════════════════════════
+   OLUMLU FLOW — STEP 4: SUBMIT
+══════════════════════════════════════════════════════ */
+async function submitTeklif() {
+  const talepAdi    = getVal('f-talepAdi').trim();
+  const firmaAdi    = getVal('f-firmaAdi').trim();
+  const yetkiliAd   = getVal('f-yetkiliAd').trim();
+  const malzemeNo   = getVal('f-malzemeNo').trim();
+  const malzemeCinsi= getVal('f-malzemeCinsi').trim();
+  const miktar      = getVal('f-miktar').trim();
+  const termin      = getVal('f-termin').trim();
+  const notlar      = getVal('f-notlar').trim();
+
+  if (!talepAdi) { showToast('Talep Adı zorunludur', 'error'); return; }
+  if (!firmaAdi) { showToast('Firma Adı zorunludur', 'error'); return; }
+
+  if (!uploadedFileData) {
+    const ok = confirm('Teknik resim eklenmedi. Yine de devam edilsin mi?');
+    if (!ok) return;
+  }
+
+  setBtnLoading('btn-submit', true, 'submit-spinner');
+
+  try {
+    // 1. Find or create müşteri
+    let musteriId = null;
+
+    const musteriSearch = await apiGet(
+      'tblPxhjJDEx0fyUQx',
+      'filterByFormula=' + encodeURIComponent(`{Müşteri Adı}="${firmaAdi}"`)
+    );
+
+    if (musteriSearch.records && musteriSearch.records.length > 0) {
+      musteriId = musteriSearch.records[0].id;
+    } else {
+      const newMusteri = await apiFn('POST', 'tblPxhjJDEx0fyUQx', {
+        fields: {
+          'Müşteri Adı': firmaAdi,
+          'Yetkili Kişi': yetkiliAd,
+          'E-posta': senderEmail
+        }
+      });
+      musteriId = newMusteri.id;
+    }
+
+    if (!musteriId) throw new Error('Müşteri oluşturulamadı');
+
+    // 2. Build notes
+    const fullNotes = [
+      'Kaynak: Outlook Add-in',
+      notlar,
+      malzemeNo     ? `Malzeme No: ${malzemeNo}`     : '',
+      malzemeCinsi  ? `Malzeme Cinsi: ${malzemeCinsi}`: '',
+      miktar        ? `Miktar: ${miktar}`             : '',
+      termin        ? `Termin Talebi: ${termin}`      : '',
+    ].filter(Boolean).join('\n');
+
+    // 3. Create teklif record
+    const tFields = {
+      'Dosya No':      talepAdi,
+      'Müşteri':       [musteriId],
+      'Teklif Tarihi': new Date().toISOString().split('T')[0],
+      'Durum':         'Taslak',
+      'Notlar':        fullNotes
+    };
+
+    const teklif = await apiFn('POST', 'tblBvcPQjPDdg6N52', { fields: tFields });
+    if (!teklif.id) throw new Error('Teklif kaydı oluşturulamadı');
+
+    // 4. Log
+    await logEvent('teklif_olusturuldu', {
+      teklifId: teklif.id,
+      talepAdi,
+      firmaAdi,
+      sender: senderEmail
+    });
+
+    // 5. Alındı maili
+    if (document.getElementById('chk-alindi').checked) {
+      const alinaTemplate = `
+<p>Sayın ${esc(senderName || firmaAdi)},</p>
+<p>Teklif talebiniz tarafımıza ulaşmış olup kayıt altına alınmıştır. En kısa sürede değerlendirme yapılarak tarafınıza dönüş yapılacaktır.</p>
+<p>İlginiz için teşekkür ederiz.</p>
+<p>Saygılarımızla,<br>Ersan Endüstriyel Makine San. Tic. Ltd. Şti.</p>`;
+      try {
+        if (officeReady) {
+          Office.context.mailbox.item.displayReplyForm({ htmlBody: alinaTemplate });
+        }
+      } catch(e) { console.warn('Alındı maili gönderilemedi:', e); }
+    }
+
+    showToast(`"${talepAdi}" kaydedildi ✓`, 'success');
+    setBtnLoading('btn-submit', false, 'submit-spinner', '📥 Müşteri Taleplerine Ekle');
+
+    // Disable submit to prevent double submit
+    document.getElementById('btn-submit').disabled = true;
+    document.getElementById('btn-submit').querySelector('#submit-btn-text').textContent = '✓ Kaydedildi';
+
+  } catch(e) {
+    console.error('Submit hatası:', e);
+    showToast('Kayıt başarısız: ' + e.message, 'error');
+    setBtnLoading('btn-submit', false, 'submit-spinner', '📥 Müşteri Taleplerine Ekle');
+  }
+}
+
+/* ══════════════════════════════════════════════════════
+   API HELPERS
+══════════════════════════════════════════════════════ */
+async function apiGet(table, params = '') {
+  const res = await fetch(API_BASE + '/.netlify/functions/airtable', {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({ method: 'GET', path: `/v0/${BASE}/${table}?${params}` })
+  });
+  return res.json();
+}
+
+async function apiFn(method, table, body, id = '') {
+  const res = await fetch(API_BASE + '/.netlify/functions/airtable', {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({
+      method,
+      path: `/v0/${BASE}/${table}${id ? '/' + id : ''}`,
+      body
+    })
+  });
+  return res.json();
+}
+
+async function logEvent(event, data) {
+  try {
+    await fetch(API_BASE + '/.netlify/functions/log', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ event, data, ts: new Date().toISOString() })
+    });
+  } catch(e) { console.warn('Log hatası:', e); }
+}
+
+/* ══════════════════════════════════════════════════════
+   UI HELPERS
+══════════════════════════════════════════════════════ */
+function showToast(msg, type = '') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'show ' + type;
+  clearTimeout(el._timer);
+  el._timer = setTimeout(() => { el.className = type; }, 3000);
+}
+
+function setBtnLoading(btnId, loading, spinnerId, idleText) {
+  const btn = document.getElementById(btnId);
+  if (!btn) return;
+  btn.disabled = loading;
+  if (spinnerId) {
+    document.getElementById(spinnerId).style.display = loading ? 'block' : 'none';
+  }
+  const textEl = btn.querySelector('span[id]');
+  if (textEl && !loading && idleText) textEl.textContent = idleText;
+}
+
+function setStepDots(active) {
+  for (let i = 1; i <= 3; i++) {
+    const el = document.getElementById('sd' + i);
+    if (el) el.classList.toggle('active', i <= active);
+  }
+}
+
+function showEl(id) { const el = document.getElementById(id); if (el) el.style.display = 'block'; }
+function hideEl(id) { const el = document.getElementById(id); if (el) el.style.display = 'none'; }
+function getVal(id) { const el = document.getElementById(id); return el ? el.value : ''; }
+function setVal(id, val) { const el = document.getElementById(id); if (el) el.value = val; }
+function esc(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
