@@ -386,7 +386,8 @@ async function selectKalem(idx) {
       var pdfData = rec && rec.fields && rec.fields['PDF Data'];
       if (pdfData) {
         console.log('[PDF-VIEW] PDF Data bulundu:', pdfData);
-        url = pdfData;
+        // Cloudinary URL'yi proxy uzerinden yukle (CORS/untrusted sorunu icin)
+        url = pdfData.startsWith('http') ? '/.netlify/functions/serve-pdf?url=' + encodeURIComponent(pdfData) : pdfData;
         name = 'teknik-resim.pdf';
         r.fields['PDF Data'] = pdfData;
       } else {
