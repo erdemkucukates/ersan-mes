@@ -374,7 +374,7 @@ async function loadAll() {
     tedarikciList = td;
 
     // Load STL (Onaylandı only)
-    const stlRaw = await apiGetAll(T.stl, 'fields[]=STL%20No&fields[]=Malzeme%20Adı&filterByFormula=' + encodeURIComponent("{Durum}='Onaylandı'"));
+    const stlRaw = await apiGetAll(T.stl, 'fields[]=Talep%20No&fields[]=Kalem%20Adı&fields[]=Malzeme%20İşlem&fields[]=Miktar&fields[]=Birim&fields[]=Ölçü&fields[]=Seçilen%20Tedarikçi&fields[]=Teklif%20Fiyatı&fields[]=Fiyat%20Birimi&fields[]=SE%20No&filterByFormula=' + encodeURIComponent("{Durum}='Onaylandı'"));
     stlList = stlRaw;
 
     // Load malzeme
@@ -891,13 +891,53 @@ function populateTedarikciDropdown() {
 function populateSTLDropdown() {
   const sel = document.getElementById('nm-stl');
   stlList.forEach(s => {
+    const f = s.fields;
     const opt = document.createElement('option');
     opt.value = s.id;
-    const no = s.fields['STL No'] || s.id;
-    const mat = s.fields['Malzeme Adı'] || '';
-    opt.textContent = no + (mat ? ' — ' + mat : '');
+    const no = f['Talep No'] || s.id;
+    const kalem = f['Kalem Adı'] || f['Malzeme İşlem'] || '';
+    const ted = f['Seçilen Tedarikçi'] || '';
+    opt.textContent = no + (kalem ? ' — ' + kalem : '') + (ted ? ' (' + ted + ')' : '');
     sel.appendChild(opt);
   });
+  sel.onchange = function() { autoFillFromSTL(this.value); };
+}
+
+function autoFillFromSTL(stlId) {
+  if (!stlId) return;
+  const s = stlList.find(x => x.id === stlId);
+  if (!s) return;
+  const f = s.fields;
+
+  // Tedarikçi eşleştir (isme göre)
+  const tedAdi = f['Seçilen Tedarikçi'] || '';
+  if (tedAdi) {
+    const tedRec = tedarikciList.find(t => (t.fields['Tedarikçi Adı']||'') === tedAdi);
+    if (tedRec) document.getElementById('nm-tedarikci').value = tedRec.id;
+  }
+
+  // Malzeme Adı
+  const malzAdi = f['Kalem Adı'] || f['Malzeme İşlem'] || '';
+  if (malzAdi) document.getElementById('nm-malzeme-adi').value = malzAdi;
+
+  // Malzeme Standardı = Malzeme İşlem veya Ölçü
+  const standart = f['Malzeme İşlem'] || '';
+  if (standart) document.getElementById('nm-standart').value = standart;
+
+  // Miktar ve Birim
+  if (f['Miktar']) document.getElementById('nm-miktar').value = f['Miktar'];
+  if (f['Birim']) document.getElementById('nm-birim').value = f['Birim'];
+
+  // Bilgi notu göster
+  var info = document.getElementById('nm-stl-info');
+  if (!info) {
+    info = document.createElement('div');
+    info.id = 'nm-stl-info';
+    info.style.cssText = 'grid-column:1/-1;background:var(--accent-light);border-radius:6px;padding:8px 12px;font-size:11px;color:var(--accent);';
+    document.getElementById('nm-stl').parentElement.after(info);
+  }
+  var fiyatStr = f['Teklif Fiyatı'] ? Number(f['Teklif Fiyatı']).toLocaleString('tr-TR',{minimumFractionDigits:2}) + ' ' + (f['Fiyat Birimi']||'TL') : '';
+  info.innerHTML = '<strong>Talep:</strong> ' + (f['Kalem Adı']||'') + ' · ' + (f['Ölçü']||'') + ' · ' + (f['Miktar']||0) + ' ' + (f['Birim']||'') + (fiyatStr ? ' · <strong>Onay Fiyatı:</strong> ' + fiyatStr : '');
 }
 
 function openNewModal() {

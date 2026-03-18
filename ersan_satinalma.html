@@ -529,6 +529,10 @@ async function showDetail(id) {
             <div class="fg"><div class="fl">Yanıt Tarihi</div><div style="font-size:12px;">${fmtDate(f['Yanıt Tarihi'])}</div></div>
           </div>
           ${f['Tedarikçi Notu']?'<div style="margin-top:8px;padding:8px 12px;background:#f7f8fa;border-radius:6px;font-size:12px;color:var(--text2);"><strong>Not:</strong> '+f['Tedarikçi Notu']+'</div>':''}
+          ${f['Durum']!=='Onaylandı'?`<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:center;">
+            <button class="btn success" onclick="onaylaSiparis('${id}','${f['Tedarikçi Email']||''}',${f['Teklif Fiyatı']||0},'${(f['Fiyat Birimi']||'TL/kg').replace(/'/g,'\\u0027')}',${f['Tedarikçi Vade Önerisi']||30})">✅ Sipariş Onayla</button>
+            <span style="font-size:11px;color:var(--text3);">Fiyatı ve vadeyi onaylayarak satınalma siparişi oluştur</span>
+          </div>`:'<div style="margin-top:12px;padding:8px 12px;background:var(--green-light);border-radius:6px;font-size:12px;color:var(--green);font-weight:600;">✅ Satınalma siparişi onaylandı</div>'}
         </div>
       </div>` : `<div class="card">
         <div class="card-header">
@@ -737,6 +741,76 @@ async function sendRFQ(stlId, seId) {
     toast(`${secilen.length} tedarikçiye RFQ gönderildi ✓`);
     setTimeout(()=>{ document.querySelector('.modal-bg')?.remove(); loadAll(); }, 2000);
   } catch(e) { toast('Hata: '+e.message, 'err'); }
+}
+
+// ── SİPARİŞ ONAYLA ──
+async function onaylaSiparis(stlId, tedEmail, fiyat, birim, vade) {
+  const r = stlList.find(x=>x.id===stlId);
+  const f = r?.fields||{};
+  const kalem = f['Kalem Adı'] || f['Malzeme İşlem'] || '—';
+
+  const modal = document.createElement('div');
+  modal.className = 'modal-bg'; modal.id = 'onay-modal';
+  modal.innerHTML = `
+    <div class="modal-box" style="width:480px;">
+      <div class="modal-head"><div class="modal-head-title">✅ Satınalma Siparişi Onayı</div><button class="btn-x" onclick="this.closest('.modal-bg').remove()">&times;</button></div>
+      <div class="modal-body">
+        <div style="background:var(--surface2);border-radius:8px;padding:12px;margin-bottom:12px;">
+          <div style="font-size:13px;font-weight:600;">${kalem}</div>
+          <div style="font-size:12px;color:var(--text2);margin-top:4px;">${f['Ölçü']||''} · ${f['Miktar']||0} ${f['Birim']||''}</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div class="fg"><div class="fl">Onay Fiyatı</div><input type="number" class="fi" id="onay-fiyat" value="${fiyat}" step="0.01"></div>
+          <div class="fg"><div class="fl">Fiyat Birimi</div><input class="fi" id="onay-birim" value="${birim}" readonly style="background:var(--surface2);"></div>
+          <div class="fg"><div class="fl">Ödeme Vadesi (gün)</div><input type="number" class="fi" id="onay-vade" value="${vade}"></div>
+          <div class="fg"><div class="fl">Tedarikçi</div><input class="fi" value="${tedEmail||f['Seçilen Tedarikçi']||'—'}" disabled style="background:var(--surface2);"></div>
+        </div>
+        <div class="fg" style="margin-top:10px;"><div class="fl">Sipariş Notu</div><textarea class="fi" id="onay-not" rows="2" placeholder="Opsiyonel not..."></textarea></div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn" onclick="this.closest('.modal-bg').remove()">İptal</button>
+        <button class="btn success" id="onay-btn" onclick="confirmSiparis('${stlId}')">✅ Onayla ve Sipariş Oluştur</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+async function confirmSiparis(stlId) {
+  const btn = document.getElementById('onay-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Onaylanıyor...'; }
+  const fiyat = parseFloat(document.getElementById('onay-fiyat').value) || 0;
+  const vade = parseInt(document.getElementById('onay-vade').value) || 30;
+  const not = document.getElementById('onay-not').value || '';
+
+  try {
+    const r = stlList.find(x=>x.id===stlId);
+    const f = r?.fields||{};
+    const tedEmail = f['Tedarikçi Email'] || '';
+    // Tedarikçi kaydını bul
+    const tedRec = tedarikci.find(t => (t.fields['Tedarikçi Adı']||'') === (f['Seçilen Tedarikçi']||'') || (t.fields['E-posta']||'') === tedEmail);
+
+    await apiFn('PATCH', T.stl, {fields:{
+      'Durum': 'Onaylandı',
+      'Onay Fiyatı': fiyat,
+      'Seçilen Tedarikçi': tedRec ? tedRec.fields['Tedarikçi Adı'] : (f['Seçilen Tedarikçi']||''),
+      'Vade Talebi (gün)': vade,
+      'Vade Onaylandı': true,
+    }}, stlId);
+
+    if (r) {
+      r.fields['Durum'] = 'Onaylandı';
+      r.fields['Onay Fiyatı'] = fiyat;
+      r.fields['Vade Onaylandı'] = true;
+    }
+
+    document.getElementById('onay-modal')?.remove();
+    filterAndRender();
+    showDetail(stlId);
+    toast('Satınalma siparişi onaylandı ✓');
+  } catch(e) {
+    toast('Hata: ' + e.message, 'err');
+    if (btn) { btn.disabled = false; btn.textContent = '✅ Onayla ve Sipariş Oluştur'; }
+  }
 }
 
 async function sendRFQGroup(seId) {
