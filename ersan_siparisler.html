@@ -32,6 +32,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; b
 .pill-ure { background: #dbeafe; color: #2563eb; }
 .pill-tam { background: #d1fae5; color: #059669; }
 .pill-ips { background: #fee2e2; color: #dc2626; }
+.pill-ksv { background: #fef3c7; color: #92400e; }
 .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
 .top-bar { background: #fff; border-bottom: 1px solid #e2e5ea; padding: 10px 16px; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 .tb-no { font-size: 16px; font-weight: 700; font-family: monospace; color: #1a1d23; }
@@ -46,14 +47,14 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; b
 .btn-red { border-color: #fca5a5; color: #dc2626; }
 .btn-red:hover { background: #fee2e2; }
 .body-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-.kalem-head { display: grid; grid-template-columns: 2fr 110px 80px 90px 110px 120px; gap: 8px; padding: 6px 16px; background: #f7f8fa; font-size: 10px; font-weight: 600; color: #9aa0ad; text-transform: uppercase; letter-spacing: .04em; border-bottom: 1px solid #e2e5ea; flex-shrink: 0; }
+.kalem-head { display: grid; grid-template-columns: 40px 2fr 110px 60px 80px 90px 100px; gap: 8px; padding: 6px 16px; background: #f7f8fa; font-size: 10px; font-weight: 600; color: #9aa0ad; text-transform: uppercase; letter-spacing: .04em; border-bottom: 1px solid #e2e5ea; flex-shrink: 0; }
 .kalem-list { flex-shrink: 0; }
 .kalem-item { border-bottom: 1px solid #e2e5ea; cursor: pointer; transition: all .15s; }
 .kalem-item.dimmed { opacity: 0.4; }
 .kalem-item.selected { border-left: 3px solid #2563eb; background: #eff6ff; }
-.kalem-summary { display: grid; grid-template-columns: 2fr 110px 80px 90px 110px 120px; gap: 8px; padding: 8px 16px; font-size: 12px; align-items: center; }
+.kalem-summary { display: grid; grid-template-columns: 40px 2fr 110px 60px 80px 90px 100px; gap: 8px; padding: 8px 16px; font-size: 12px; align-items: center; }
 
-.kalem-detail { padding: 10px 16px 12px 16px; border-top: 1px dashed #e2e5ea; background: rgba(37,99,235,0.03); display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+.kalem-detail { padding: 10px 16px 12px 16px; border-top: 1px dashed #e2e5ea; background: rgba(37,99,235,0.03); display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
 .det-f label { font-size: 10px; color: #9aa0ad; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; display: block; margin-bottom: 3px; }
 .det-f .v { font-size: 12px; font-weight: 600; color: #1a1d23; }
 .pdf-pane { flex: 1; display: flex; flex-direction: column; background: #f0f2f5; overflow: hidden; min-height: 200px; }
@@ -118,7 +119,7 @@ function toast(msg) {
 }
 
 function pillClass(s) {
-  if (s==='Üretimde') return 'pu'; if (s==='Tamamlandı') return 'pt'; if (s==='İptal') return 'pi'; return 'pb';
+  if (s==='Üretimde') return 'pill-ure'; if (s==='Tamamlandı') return 'pill-tam'; if (s==='İptal') return 'pill-ips'; if (s==='Kısmi Sevk') return 'pill-ksv'; return 'pill-bek';
 }
 
 function fmtDate(d) { if(!d) return '—'; try { return new Date(d).toLocaleDateString('tr-TR'); } catch(e){ return d; } }
@@ -142,7 +143,12 @@ function buildGroups(recs) {
   });
   return order.map(function(p) {
     var kalemler = map[p];
-    var durum = kalemler[0].fields['Durum'] || 'Beklemede';
+    // Kalem sırasına göre sırala
+    kalemler.sort(function(a,b){ return (a.fields['Kalem Sıra']||0) - (b.fields['Kalem Sıra']||0); });
+    // Grup durumu: en yüksek öncelikli durumu al
+    var durumOncelik = {'İptal':0,'Beklemede':1,'Üretimde':2,'Kısmi Sevk':3,'Tamamlandı':4};
+    var durumlar = kalemler.map(function(r){ return r.fields['Durum']||'Beklemede'; });
+    var durum = durumlar.reduce(function(a,b){ return (durumOncelik[a]||1) <= (durumOncelik[b]||1) ? a : b; });
     var parcalar = kalemler.map(function(r){ return r.fields['Parça Adı']||''; }).filter(Boolean);
     return { spNo: p, kalemler: kalemler, durum: durum, parcalar: parcalar };
   });
@@ -220,9 +226,9 @@ function selectGroup(spNo) {
   selectedKalemIdx = null;
   filterList();
 
-  var filtered = records.filter(function(r){ return (document.getElementById('search').value||'') ? true : true; });
-  var groups = buildGroups(filtered);
-  var g = groups.find(function(x){ return x.spNo === spNo; });
+  // Tüm kayıtlardan bu SP grubunu bul (filtre ne olursa olsun)
+  var allGroups = buildGroups(records);
+  var g = allGroups.find(function(x){ return x.spNo === spNo; });
   if (!g) return;
 
   renderMain(g);
@@ -246,7 +252,7 @@ function renderMain(g) {
     '<button class="btn btn-red" id="del-btn">🗑 Sil</button>'+
     '</div></div>'+
     '<div class="body-area">'+
-    '<div class="kalem-head"><span>No</span><span>Parça adı</span><span>Parça no</span><span>Revizyon</span><span>Miktar</span><span>Termin</span><span>Teknik resim</span></div>'+
+    '<div class="kalem-head"><span>Kalem</span><span>Parça adı</span><span>Parça no</span><span>Rev</span><span>Miktar</span><span>Termin</span><span>Teknik resim</span></div>'+
     '<div class="kalem-list" id="kalem-list"></div>'+
     '<div class="pdf-pane" id="pdf-pane">'+
     '<div class="pdf-bar">'+
@@ -280,28 +286,33 @@ function renderKalemler(kalemler, selIdx) {
     var isSel = i === selIdx;
     var isDim = selIdx !== null && !isSel;
     var hasPDF = f['_localPDF'] || (f['Teknik Resim'] && f['Teknik Resim'].length > 0);
-    var seNo = f['SE No'] || (i+1);
+    var seNo = f['SE No'] || '';
     var kalemNo = seNo.split('-').pop() || (i+1);
+    var durum = f['Durum'] || 'Beklemede';
 
-    var row = '<div class="kalem-row">'+
-      '<span style="font-family:monospace;font-size:11px;color:#7c3aed;">'+kalemNo+'</span>'+
+    var row = '<div class="kalem-summary">'+
+      '<span style="font-family:monospace;font-size:11px;color:#7c3aed;font-weight:600;">'+kalemNo+'</span>'+
       '<span style="font-weight:500'+(isSel?';color:#1d4ed8':'')+'">'+( f['Parça Adı']||'—')+'</span>'+
       '<span style="font-family:monospace;font-size:11px">'+(f['Parça No']||'—')+'</span>'+
       '<span>'+(f['Revizyon']||'—')+'</span>'+
       '<span>'+(f['Miktar']||0)+' '+(f['Birim']||'Adet')+'</span>'+
       '<span style="font-size:11px">'+(f['Termin Tarihi']?fmtDate(f['Termin Tarihi']):'—')+'</span>'+
-      '<label class="upbtn'+(hasPDF?' has':'')+'">'+
+      '<label class="upbtn'+(hasPDF?' has':'')+'" onclick="event.stopPropagation()">'+
       (hasPDF?'PDF mevcut':'+ PDF yükle')+
       '<input type="file" accept=".pdf,image/*" data-recid="'+r.id+'" data-idx="'+i+'" onchange="uploadPDF(this)">'+
       '</label>'+
       '</div>';
 
     var detail = isSel ? '<div class="kalem-detail">'+
+      '<div class="det-f"><label>SE No</label><div class="v" style="font-family:monospace">'+(f['SE No']||'—')+'</div></div>'+
       '<div class="det-f"><label>Parça adı</label><div class="v">'+(f['Parça Adı']||'—')+'</div></div>'+
       '<div class="det-f"><label>Parça no</label><div class="v" style="font-family:monospace">'+(f['Parça No']||'—')+'</div></div>'+
       '<div class="det-f"><label>Revizyon</label><div class="v">'+(f['Revizyon']||'—')+'</div></div>'+
       '<div class="det-f"><label>Miktar</label><div class="v">'+(f['Miktar']||0)+' '+(f['Birim']||'Adet')+'</div></div>'+
       '<div class="det-f"><label>Termin</label><div class="v" style="color:#b45309">'+(f['Termin Tarihi']?fmtDate(f['Termin Tarihi']):'—')+'</div></div>'+
+      '<div class="det-f"><label>Durum</label><div class="v"><span class="si-pill '+pillClass(durum)+'" style="font-size:10px;padding:2px 8px;">'+durum+'</span></div></div>'+
+      '<div class="det-f"><label>Müşteri PO</label><div class="v">'+(f['Müşteri PO No']||'—')+'</div></div>'+
+      '<div class="det-f"><label>Notlar</label><div class="v" style="font-weight:400">'+(f['Notlar']||'—')+'</div></div>'+
       '</div>' : '';
 
     return '<div class="kalem-item'+(isSel?' selected':'')+(isDim?' dimmed':'')+'" id="kalem-'+i+'" onclick="selectKalem('+i+')">'+row+detail+'</div>';
