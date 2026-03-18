@@ -1,0 +1,40 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'FILE=\"$CLAUDE_FILE_PATH\"; if [[ \"$FILE\" == *.html ]]; then node --check \"$FILE\" 2>&1 || echo \"SYNTAX ERROR: $FILE dosyasında syntax hatası var!\"; fi'",
+            "description": "HTML dosyası değiştirilince node --check ile syntax kontrolü"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'FILE=\"$CLAUDE_FILE_PATH\"; if [[ \"$FILE\" == *.env* ]] || [[ \"$FILE\" == *token* ]] || [[ \"$FILE\" == *credential* ]] || [[ \"$FILE\" == *secret* ]]; then echo \"ENGELLENDI: $FILE hassas dosya — düzenleme izni yok\" && exit 2; fi'",
+            "description": ".env veya token iceren dosyalara dokunmayi engelle"
+          }
+        ]
+      }
+    ],
+    "PrePush": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'echo \"Push oncesi HTML syntax kontrolu...\"; ERRORS=0; for f in $(find . -maxdepth 1 -name \"*.html\" -o -name \"*.js\" -path \"./netlify/functions/*\"); do node --check \"$f\" 2>&1 || ERRORS=$((ERRORS+1)); done; if [ $ERRORS -gt 0 ]; then echo \"$ERRORS dosyada syntax hatasi var! Push engellendi.\"; exit 1; fi; echo \"Tum dosyalar temiz.\"'",
+            "description": "git push oncesi tum HTML dosyalarinda node --check calistir"
+          }
+        ]
+      }
+    ]
+  }
+}
