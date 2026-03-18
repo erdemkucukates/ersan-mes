@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — Ön Kabul</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f0f2f5;--surface:#fff;--surface2:#f7f8fa;--border:#e2e5ea;--border2:#c8cdd6;
+  --text:#1a1d23;--text2:#5a6170;--text3:#9aa0ad;
+  --accent:#7c3aed;--accent-light:#ede9fe;--accent-hover:#6d28d9;
+  --green:#059669;--green-light:#d1fae5;--red:#dc2626;--red-light:#fee2e2;
+  --orange:#d97706;--orange-light:#fef3c7;--blue:#2563eb;--blue-light:#dbeafe;
+  --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;--radius:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);height:100vh;overflow:hidden;font-size:13px;}
+
+.header{height:52px;background:#1e1b4b;display:flex;align-items:center;padding:0 20px;gap:16px;position:fixed;top:0;left:0;right:0;z-index:100;}
+.logo-badge{width:28px;height:28px;border-radius:6px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:white;font-family:var(--mono);}
+.header-title{color:white;font-size:14px;font-weight:600;}
+.header-sub{color:rgba(255,255,255,.5);font-size:11px;}
+.header-sep{width:1px;height:28px;background:rgba(255,255,255,.2);}
+.header-nav a{color:rgba(255,255,255,.6);font-size:13px;font-weight:500;text-decoration:none;padding:6px 12px;border-radius:6px;transition:all .15s;}
+.header-nav a:hover{background:rgba(255,255,255,.1);color:white;}
+.header-nav a.active{background:rgba(255,255,255,.15);color:white;}
+.header-nav{display:flex;gap:4px;}
+
+.layout-wrapper{display:flex;height:calc(100vh - 52px);margin-top:52px;}
+
+/* LEFT PANEL */
+.list-panel{width:220px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;}
+.list-header{padding:12px 14px 8px;border-bottom:1px solid var(--border);}
+.list-header h2{font-size:12px;font-weight:600;}
+.list-count{font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:2px;}
+.new-btn{margin:10px 12px 0;padding:7px 10px;background:var(--accent);color:white;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);width:calc(100% - 24px);display:flex;align-items:center;justify-content:center;gap:5px;transition:background .15s;}
+.new-btn:hover{background:var(--accent-hover);}
+.list-search{padding:8px 10px 6px;border-bottom:1px solid var(--border);}
+.list-search input{width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:var(--sans);background:var(--surface2);outline:none;}
+.list-search input:focus{border-color:var(--accent);}
+.filter-row{padding:6px 10px 8px;border-bottom:1px solid var(--border);display:flex;gap:4px;flex-wrap:wrap;}
+.fc{padding:3px 8px;border-radius:10px;font-size:10px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text3);}
+.fc.on{background:var(--accent-light);color:var(--accent);border-color:var(--accent);}
+.list-scroll{flex:1;overflow-y:auto;}
+
+.ok-item{padding:10px 12px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s;}
+.ok-item:hover{background:var(--surface2);}
+.ok-item.active{background:var(--accent-light);border-left:3px solid var(--accent);}
+.ok-irsaliye{font-family:var(--mono);font-size:11px;font-weight:500;color:var(--accent);}
+.ok-malzeme{font-size:12px;font-weight:500;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ok-tedarikci{font-size:10px;color:var(--text3);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ok-meta{font-size:10px;color:var(--text3);margin-top:2px;display:flex;align-items:center;justify-content:space-between;}
+
+/* RIGHT PANEL */
+.detail-panel{flex:1;overflow:hidden;display:flex;flex-direction:column;}
+.detail-toolbar{height:52px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:10px;flex-shrink:0;}
+.toolbar-title{font-size:14px;font-weight:600;flex:1;}
+.detail-scroll{flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:12px;}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.card-header{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;}
+.card-body{padding:14px;}
+.card-dot{width:6px;height:6px;border-radius:50%;}
+
+.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;background:var(--surface);color:var(--text2);font-family:var(--sans);transition:all .15s;white-space:nowrap;}
+.btn:hover{border-color:var(--accent);color:var(--accent);}
+.btn.primary{background:var(--accent);color:white;border-color:var(--accent);}
+.btn.primary:hover{background:var(--accent-hover);}
+.btn.danger{background:var(--red);color:white;border-color:var(--red);}
+.btn.danger:hover{background:#b91c1c;}
+.btn.edit-btn{background:var(--blue-light);color:var(--blue);border-color:var(--blue);}
+.btn:disabled{opacity:.5;cursor:not-allowed;}
+
+.badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;}
+.b-Karantina{background:var(--orange-light);color:var(--orange);}
+.b-Muayenede{background:var(--blue-light);color:var(--blue);}
+.b-Serbest{background:var(--green-light);color:var(--green);}
+.b-Reddedildi{background:var(--red-light);color:var(--red);}
+.b-Tükendi{background:#f3f4f6;color:#6b7280;}
+.b-Koşullu\ Serbest{background:var(--orange-light);color:var(--orange);}
+
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+.fg{display:flex;flex-direction:column;gap:4px;}
+.fl{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;}
+.fi{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:12px;font-family:var(--sans);color:var(--text);outline:none;width:100%;}
+.fi:focus{border-color:var(--accent);}
+.fi:disabled{opacity:.65;cursor:default;}
+.fi[readonly]{opacity:.65;cursor:default;}
+textarea.fi{resize:vertical;min-height:80px;}
+
+.stl-cards{display:flex;flex-direction:column;gap:6px;margin-top:8px;}
+.stl-card{padding:8px 12px;border:1px solid var(--border);border-radius:6px;cursor:pointer;background:var(--surface2);transition:all .12s;}
+.stl-card:hover{border-color:var(--accent);background:var(--accent-light);}
+.stl-card.selected{border-color:var(--accent);background:var(--accent-light);}
+.stl-card-no{font-family:var(--mono);font-size:10px;color:var(--accent);font-weight:500;}
+.stl-card-name{font-size:12px;font-weight:500;margin-top:2px;}
+.stl-card-meta{font-size:11px;color:var(--text3);margin-top:2px;}
+
+.upload-area{border:2px dashed var(--border);border-radius:6px;padding:12px;text-align:center;cursor:pointer;transition:all .15s;font-size:12px;color:var(--text3);}
+.upload-area:hover{border-color:var(--accent);color:var(--accent);}
+.upload-filename{font-size:11px;color:var(--green);font-family:var(--mono);margin-top:4px;}
+
+.action-row{display:flex;justify-content:flex-end;gap:8px;padding-top:4px;}
+
+.empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text3);gap:12px;padding:40px;text-align:center;}
+.empty-icon{font-size:40px;opacity:.4;}
+
+.toast-wrap{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;}
+.toast{padding:10px 16px;border-radius:8px;font-size:12px;font-weight:500;color:white;animation:fadeIn .2s;}
+.toast.ok{background:var(--green);}
+.toast.err{background:var(--red);}
+.toast.inf{background:var(--accent);}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+@media(max-width:768px){
+  .layout-wrapper{flex-direction:column;height:auto;overflow:auto;}
+  .list-panel{width:100%;height:auto;border-right:none;border-bottom:1px solid var(--border);}
+  .list-scroll{max-height:300px;}
+  .detail-panel{min-height:400px;}
+  .form-grid{grid-template-columns:1fr;}
+  .form-grid-3{grid-template-columns:1fr 1fr;}
+  .header-nav{display:none;}
+}
+</style>
+</head>
+<body>
+<script src="ersan_nav.js"></script>
+
+<header class="header">
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div class="logo-badge">MES</div>
+    <div><div class="header-title">Ersan MES</div><div class="header-sub">Ön Kabul</div></div>
+  </div>
+  <div class="header-sep"></div>
+  <nav class="header-nav">
+    <a href="ersan_teklif.html">Teklifler</a>
+    <a href="ersan_planlama.html">Planlama</a>
+    <a href="ersan_satinalma.html">Satınalma</a>
+    <a href="ersan_on_kabul.html" class="active">Ön Kabul</a>
+    <a href="ersan_isemirleri.html">İş Emirleri</a>
+  </nav>
+</header>
+
+<div class="layout-wrapper">
+
+  <!-- LEFT PANEL -->
+  <div class="list-panel">
+    <div class="list-header">
+      <h2>Ön Kabul Formları</h2>
+      <div class="list-count" id="ok-count">Yükleniyor...</div>
+    </div>
+    <button class="new-btn" onclick="openNew()">+ Yeni Ön Kabul</button>
+    <div class="list-search" style="margin-top:8px;">
+      <input type="text" id="ok-search" placeholder="İrsaliye, malzeme ara..." oninput="renderList()">
+    </div>
+    <div class="filter-row">
+      <div class="fc on" data-f="Tümü" onclick="setFilter(this)">Tümü</div>
+      <div class="fc" data-f="Kalite Bekliyor" onclick="setFilter(this)">Kalite Bekliyor</div>
+      <div class="fc" data-f="Tamamlandı" onclick="setFilter(this)">Tamamlandı</div>
+    </div>
+    <div class="list-scroll" id="ok-list"></div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="detail-panel">
+    <div class="detail-toolbar">
+      <span class="toolbar-title" id="toolbar-title">Ön Kabul Formları</span>
+      <span id="toolbar-badge"></span>
+      <button class="btn edit-btn" id="btn-edit" onclick="toggleEdit()" style="display:none;">✏️ Düzenle</button>
+      <button class="btn danger" id="btn-del" onclick="deleteRecord()" style="display:none;">🗑 Sil</button>
+    </div>
+    <div class="detail-scroll" id="detail-body">
+      <div class="empty">
+        <div class="empty-icon">📋</div>
+        <div>Listeden bir kayıt seçin veya yeni ön kabul formu oluşturun.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<script>
+/* ─── CONFIG ─────────────────────────────────────── */
+const BASE = 'app5LDgJMgocw79Ix';
+const T = {
+  malzeme: 'tblSj5Ep6F9Ir1NGu',
+  tedarikci: 'tblEI6683Im5AXj36',
+  stl: 'tblHmfCvNZq0qNtb1',
+};
+
+/* ─── API ─────────────────────────────────────────── */
+const apiGet = async (table, params='') => {
+  const res = await fetch('/.netlify/functions/airtable', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({method:'GET', path:`/v0/${BASE}/${table}?${params}`})
+  });
+  return res.json();
+};
+
+const apiFn = async (method, table, body, id='') => {
+  const res = await fetch('/.netlify/functions/airtable', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({method, path:`/v0/${BASE}/${table}${id?'/'+id:''}`, body})
+  });
+  return res.json();
+};
+
+async function apiGetAll(table, params='') {
+  let all=[], offset='';
+  do {
+    const d = await apiGet(table, params+(offset?'&offset='+offset:''));
+    all = all.concat(d.records||[]);
+    offset = d.offset||'';
+  } while(offset);
+  return all;
+}
+
+/* ─── STATE ───────────────────────────────────────── */
+let malzemeList = [];
+let tedarikciList = [];
+let stlList = [];
+let activeFilter = 'Tümü';
+let currentRec = null; // null = new
+let editMode = false;
+let certFilename = '';
+
+/* ─── LOAD ────────────────────────────────────────── */
+async function loadAll() {
+  try {
+    malzemeList = await apiGetAll(T.malzeme, 'sort[0][field]=Giri%C5%9F%20Tarihi&sort[0][direction]=desc');
+    const td = await apiGet(T.tedarikci, 'fields[]=Tedarik%C3%A7i%20Ad%C4%B1&fields[]=E-posta');
+    tedarikciList = td.records || [];
+    const stlRaw = await apiGetAll(T.stl,
+      'fields[]=Talep%20No&fields[]=Kalem%20Ad%C4%B1&fields[]=Malzeme%20%C4%B0%C5%9Flem&fields[]=Miktar&fields[]=Birim&fields[]=%C3%96l%C3%A7%C3%BC&fields[]=Se%C3%A7ilen%20Tedarik%C3%A7i&fields[]=Teklif%20Fiyat%C4%B1&fields[]=Fiyat%20Birimi&filterByFormula='+encodeURIComponent("{Durum}='Onaylandı'")
+    );
+    stlList = stlRaw;
+    renderList();
+  } catch(e) {
+    toast('Veriler yüklenemedi: '+e.message, 'err');
+  }
+}
+
+/* ─── HELPERS ─────────────────────────────────────── */
+function fmtDate(d) {
+  if(!d) return '';
+  const dt = new Date(d);
+  return dt.toLocaleDateString('tr-TR',{day:'2-digit',month:'2-digit',year:'numeric'});
+}
+
+function todayISO() {
+  return new Date().toISOString().slice(0,10);
+}
+
+function getIrsaliye(rec) {
+  const f = rec.fields || {};
+  if(f['İrsaliye No']) return f['İrsaliye No'];
+  const notlar = f['Notlar'] || '';
+  const m = notlar.match(/İrsaliye[:\s]+([^\s,\n]+)/i);
+  return m ? m[1] : '—';
+}
+
+function getTedarikciName(rec) {
+  const f = rec.fields || {};
+  const link = f['Tedarikçiler (OTL)'];
+  if(!link || !link.length) return '';
+  const id = link[0];
+  const td = tedarikciList.find(t=>t.id===id);
+  return td ? (td.fields['Tedarikçi Adı']||'') : '';
+}
+
+function badgeHtml(statu) {
+  if(!statu) return '';
+  const cls = 'b-'+statu;
+  return `<span class="badge ${cls}">${statu}</span>`;
+}
+
+function fileToBase64(file) {
+  return new Promise((res,rej)=>{
+    const r = new FileReader();
+    r.onload = ()=>res(r.result);
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+}
+
+/* ─── TOAST ───────────────────────────────────────── */
+function toast(msg, type='ok') {
+  const w = document.getElementById('toast-wrap');
+  const el = document.createElement('div');
+  el.className = 'toast '+type;
+  el.textContent = msg;
+  w.appendChild(el);
+  setTimeout(()=>el.remove(), 3200);
+}
+
+/* ─── FILTER / LIST ───────────────────────────────── */
+function setFilter(el) {
+  document.querySelectorAll('.fc').forEach(e=>e.classList.remove('on'));
+  el.classList.add('on');
+  activeFilter = el.dataset.f;
+  renderList();
+}
+
+function renderList() {
+  const q = (document.getElementById('ok-search').value||'').toLowerCase();
+  let items = malzemeList;
+
+  if(activeFilter === 'Kalite Bekliyor') {
+    items = items.filter(r=>(r.fields['Statü']||'')==='Karantina');
+  } else if(activeFilter === 'Tamamlandı') {
+    items = items.filter(r=>['Serbest','Muayenede','Reddedildi'].includes(r.fields['Statü']||''));
+  }
+
+  if(q) {
+    items = items.filter(r=>{
+      const f = r.fields||{};
+      return (getIrsaliye(r)+' '+(f['Malzeme Adı']||'')+' '+getTedarikciName(r)).toLowerCase().includes(q);
+    });
+  }
+
+  document.getElementById('ok-count').textContent = items.length + ' form';
+
+  const ul = document.getElementById('ok-list');
+  if(!items.length) {
+    ul.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:12px;">Kayıt yok</div>';
+    return;
+  }
+
+  ul.innerHTML = items.map(r=>{
+    const f = r.fields||{};
+    const irsaliye = getIrsaliye(r);
+    const statu = f['Statü']||'';
+    const isActive = currentRec && currentRec.id === r.id;
+    return `<div class="ok-item${isActive?' active':''}" onclick="openRec('${r.id}')">
+      <div class="ok-irsaliye">${irsaliye}</div>
+      <div class="ok-malzeme">${f['Malzeme Adı']||'—'}</div>
+      <div class="ok-tedarikci">${getTedarikciName(r)||'—'}</div>
+      <div class="ok-meta">
+        <span>${fmtDate(f['Giriş Tarihi'])}</span>
+        ${badgeHtml(statu)}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ─── OPEN RECORD ─────────────────────────────────── */
+function openRec(id) {
+  currentRec = malzemeList.find(r=>r.id===id) || null;
+  editMode = false;
+  certFilename = '';
+  renderDetail();
+  renderList();
+}
+
+function openNew() {
+  currentRec = null;
+  editMode = true;
+  certFilename = '';
+  renderDetail();
+}
+
+function toggleEdit() {
+  editMode = !editMode;
+  renderDetail();
+}
+
+/* ─── RENDER DETAIL ───────────────────────────────── */
+function renderDetail() {
+  const f = currentRec ? (currentRec.fields||{}) : {};
+  const isNew = !currentRec;
+  const statu = f['Statü'] || (isNew ? 'Karantina' : '');
+  const canEdit = isNew || editMode;
+  const isKarantina = statu === 'Karantina' || isNew;
+
+  // Toolbar
+  document.getElementById('toolbar-title').textContent = isNew ? 'Yeni Ön Kabul' : (getIrsaliye(currentRec)||'Ön Kabul');
+  document.getElementById('toolbar-badge').innerHTML = isNew ? '' : badgeHtml(statu);
+
+  const btnEdit = document.getElementById('btn-edit');
+  const btnDel = document.getElementById('btn-del');
+
+  if(isNew) {
+    btnEdit.style.display = 'none';
+    btnDel.style.display = 'none';
+  } else {
+    if(isKarantina) {
+      btnEdit.style.display = '';
+      btnEdit.textContent = editMode ? '✖ İptal' : '✏️ Düzenle';
+      btnDel.style.display = '';
+    } else {
+      btnEdit.style.display = 'none';
+      btnDel.style.display = 'none';
+    }
+  }
+
+  // Tedarikçi options
+  const tdOptions = tedarikciList.map(t=>{
+    const adı = t.fields['Tedarikçi Adı']||'';
+    const sel = f['Tedarikçiler (OTL)'] && f['Tedarikçiler (OTL)'][0]===t.id ? 'selected' : '';
+    return `<option value="${t.id}" ${sel}>${adı}</option>`;
+  }).join('');
+
+  // Current tedarikçi id for STL filter
+  const currentTdId = f['Tedarikçiler (OTL)'] ? f['Tedarikçiler (OTL)'][0] : '';
+
+  // STL cards for this tedarikçi
+  const relStlHtml = buildStlCards(currentTdId, canEdit);
+
+  // Values
+  const girisTarihi = f['Giriş Tarihi'] || todayISO();
+  const irsaliyeNo = f['İrsaliye No'] || '';
+  const malzemeAdi = f['Malzeme Adı'] || '';
+  const malzemeStd = f['Malzeme Standardı'] || '';
+  const toplamMiktar = f['Toplam Miktar'] || '';
+  const birim = f['Birim'] || 'Adet';
+  const sertDurum = f['Sertifika Durumu'] || 'Mevcut';
+  const sertNo = f['Sertifika No'] || '';
+  const notlar = f['Notlar'] || '';
+
+  const dis = canEdit ? '' : 'disabled';
+
+  const birimOpts = ['Adet','Kg','Mt','Boy'].map(b=>`<option${b===birim?' selected':''}>${b}</option>`).join('');
+  const sertOpts = ['Mevcut','Eksik - Sonradan Gelecek','Yok'].map(s=>`<option${s===sertDurum?' selected':''}>${s}</option>`).join('');
+
+  document.getElementById('detail-body').innerHTML = `
+  <!-- Card 1: Giriş Bilgileri -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-dot" style="background:var(--accent)"></div>
+      Giriş Bilgileri
+    </div>
+    <div class="card-body">
+      <div class="form-grid">
+        <div class="fg">
+          <label class="fl">Giriş Tarihi</label>
+          <input class="fi" type="date" id="f-tarih" value="${girisTarihi}" ${dis}>
+        </div>
+        <div class="fg">
+          <label class="fl">İrsaliye No *</label>
+          <input class="fi" type="text" id="f-irsaliye" value="${escHtml(irsaliyeNo)}" placeholder="İRS-2024-001" ${dis}>
+        </div>
+      </div>
+      <div class="fg" style="margin-top:10px;">
+        <label class="fl">Tedarikçi</label>
+        <select class="fi" id="f-tedarikci" ${dis} onchange="onTedarikciChange()">
+          <option value="">— Seçiniz —</option>
+          ${tdOptions}
+        </select>
+      </div>
+      <div id="stl-section" style="margin-top:10px;">
+        ${currentTdId ? `<div class="fl" style="margin-bottom:6px;">Bağlı Satınalma Talebi (Onaylandı)</div>${relStlHtml}` : ''}
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 2: Malzeme Detayı -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-dot" style="background:var(--blue)"></div>
+      Malzeme Detayı
+    </div>
+    <div class="card-body">
+      <div class="fg" style="margin-bottom:10px;">
+        <label class="fl">Malzeme Adı *</label>
+        <input class="fi" type="text" id="f-malzeme" value="${escHtml(malzemeAdi)}" placeholder="Ör: St37 Sac" ${dis}>
+      </div>
+      <div class="form-grid">
+        <div class="fg">
+          <label class="fl">Malzeme Standardı</label>
+          <input class="fi" type="text" id="f-std" value="${escHtml(malzemeStd)}" placeholder="Ör: DIN 10025" ${dis}>
+        </div>
+        <div class="fg">
+          <label class="fl">Toplam Miktar</label>
+          <input class="fi" type="number" id="f-miktar" value="${toplamMiktar}" placeholder="0" ${dis}>
+        </div>
+      </div>
+      <div class="fg" style="margin-top:10px;">
+        <label class="fl">Birim</label>
+        <select class="fi" id="f-birim" ${dis}>${birimOpts}</select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 3: Sertifika Durumu -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-dot" style="background:var(--green)"></div>
+      Sertifika Durumu
+    </div>
+    <div class="card-body">
+      <div class="form-grid" style="margin-bottom:10px;">
+        <div class="fg">
+          <label class="fl">Sertifika Durumu</label>
+          <select class="fi" id="f-sert-durum" ${dis}>${sertOpts}</select>
+        </div>
+        <div class="fg">
+          <label class="fl">Sertifika No</label>
+          <input class="fi" type="text" id="f-sert-no" value="${escHtml(sertNo)}" placeholder="Ör: CERT-2024-001" ${dis}>
+        </div>
+      </div>
+      ${canEdit ? `
+      <div class="fg">
+        <label class="fl">Sertifika Dosyası</label>
+        <div class="upload-area" onclick="triggerUpload()" id="upload-area">
+          📎 PDF yüklemek için tıklayın
+        </div>
+        <input type="file" id="cert-file-input" accept=".pdf,.PDF" style="display:none" onchange="handleFileSelect(event)">
+        <div class="upload-filename" id="upload-filename">${certFilename ? '✓ '+escHtml(certFilename) : ''}</div>
+      </div>` : (f['Notlar'] && f['Notlar'].includes('cert:') ? `<div style="font-size:11px;color:var(--text3);">Sertifika yüklü</div>` : '')}
+    </div>
+  </div>
+
+  <!-- Card 4: Notlar -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-dot" style="background:var(--text3)"></div>
+      Notlar
+    </div>
+    <div class="card-body">
+      <div class="fg">
+        <textarea class="fi" id="f-notlar" placeholder="Ek notlar..." ${dis}>${escHtml(notlar)}</textarea>
+      </div>
+    </div>
+  </div>
+
+  ${canEdit ? `
+  <div class="action-row">
+    ${!isNew ? `<button class="btn" onclick="toggleEdit()">✖ İptal</button>` : ''}
+    <button class="btn primary" onclick="saveRecord()">
+      ${isNew ? '💾 Kaydet' : '💾 Güncelle'}
+    </button>
+  </div>` : ''}
+  `;
+}
+
+/* ─── STL CARDS ───────────────────────────────────── */
+function buildStlCards(tdId, canEdit) {
+  if(!tdId) return '';
+  const related = stlList.filter(r=>{
+    const sel = r.fields['Seçilen Tedarikçi'];
+    if(!sel) return false;
+    if(Array.isArray(sel)) return sel.includes(tdId);
+    return sel === tdId;
+  });
+  if(!related.length) return '<div style="font-size:11px;color:var(--text3);padding:6px 0;">Bu tedarikçiye ait onaylı talep bulunamadı.</div>';
+  return '<div class="stl-cards">' + related.map(r=>{
+    const f = r.fields||{};
+    return `<div class="stl-card" onclick="${canEdit?`selectStl('${r.id}')`:''}" id="stlc-${r.id}">
+      <div class="stl-card-no">${f['Talep No']||r.id}</div>
+      <div class="stl-card-name">${escHtml(f['Kalem Adı']||'')}</div>
+      <div class="stl-card-meta">${f['Ölçü']||''} ${f['Miktar']?'• Miktar: '+f['Miktar']:''} ${f['Birim']?f['Birim']:''}</div>
+    </div>`;
+  }).join('') + '</div>';
+}
+
+function onTedarikciChange() {
+  const tdId = document.getElementById('f-tedarikci').value;
+  const sec = document.getElementById('stl-section');
+  if(!tdId) { sec.innerHTML = ''; return; }
+  sec.innerHTML = `<div class="fl" style="margin-bottom:6px;">Bağlı Satınalma Talebi (Onaylandı)</div>${buildStlCards(tdId, true)}`;
+}
+
+function selectStl(stlId) {
+  // Deselect all
+  document.querySelectorAll('.stl-card').forEach(c=>c.classList.remove('selected'));
+  const card = document.getElementById('stlc-'+stlId);
+  if(card) card.classList.add('selected');
+
+  const rec = stlList.find(r=>r.id===stlId);
+  if(!rec) return;
+  const f = rec.fields||{};
+
+  // Auto-fill malzeme fields
+  const mEl = document.getElementById('f-malzeme');
+  const stdEl = document.getElementById('f-std');
+  const mktEl = document.getElementById('f-miktar');
+  const birimEl = document.getElementById('f-birim');
+
+  if(mEl && f['Kalem Adı']) mEl.value = f['Kalem Adı'];
+  if(stdEl && f['Ölçü']) stdEl.value = f['Ölçü'];
+  if(mktEl && f['Miktar']) mktEl.value = f['Miktar'];
+  if(birimEl && f['Birim']) {
+    const opt = Array.from(birimEl.options).find(o=>o.value===f['Birim']);
+    if(opt) birimEl.value = f['Birim'];
+  }
+}
+
+/* ─── UPLOAD ──────────────────────────────────────── */
+function triggerUpload() {
+  document.getElementById('cert-file-input').click();
+}
+
+async function handleFileSelect(e) {
+  const file = e.target.files[0];
+  if(!file) return;
+  certFilename = file.name;
+  document.getElementById('upload-filename').textContent = '⏳ Yükleniyor...';
+  document.getElementById('upload-filename').style.color = 'var(--text3)';
+
+  try {
+    const recId = currentRec ? currentRec.id : '';
+    const dataUrl = await fileToBase64(file);
+    const res = await fetch('/.netlify/functions/upload-pdf', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({filename:file.name, data:dataUrl, recordId:recId, table:'Malzeme Girişleri', field:'Notlar'})
+    });
+    if(res.ok) {
+      document.getElementById('upload-filename').textContent = '✓ '+file.name;
+      document.getElementById('upload-filename').style.color = 'var(--green)';
+      toast('Sertifika yüklendi ✓');
+    } else {
+      throw new Error('Yükleme başarısız');
+    }
+  } catch(err) {
+    document.getElementById('upload-filename').textContent = '✗ Yükleme başarısız';
+    document.getElementById('upload-filename').style.color = 'var(--red)';
+    toast('Sertifika yüklenemedi: '+err.message, 'err');
+  }
+}
+
+/* ─── SAVE ────────────────────────────────────────── */
+async function saveRecord() {
+  const irsaliye = (document.getElementById('f-irsaliye').value||'').trim();
+  const malzeme = (document.getElementById('f-malzeme').value||'').trim();
+  if(!irsaliye){ toast('İrsaliye No zorunludur', 'err'); return; }
+  if(!malzeme){ toast('Malzeme Adı zorunludur', 'err'); return; }
+
+  const tarih = document.getElementById('f-tarih').value;
+  const tdId = document.getElementById('f-tedarikci').value;
+  const std = document.getElementById('f-std').value;
+  const miktar = parseFloat(document.getElementById('f-miktar').value)||null;
+  const birim = document.getElementById('f-birim').value;
+  const sertDurum = document.getElementById('f-sert-durum').value;
+  const sertNo = document.getElementById('f-sert-no').value;
+  const notlar = document.getElementById('f-notlar').value;
+
+  const fields = {
+    'Malzeme Adı': malzeme,
+    'Malzeme Standardı': std,
+    'Giriş Tarihi': tarih,
+    'Statü': 'Karantina',
+    'İrsaliye No': irsaliye,
+    'Sertifika Durumu': sertDurum || undefined,
+    'Sertifika No': sertNo,
+    'Notlar': notlar,
+    'Birim': birim || undefined,
+  };
+  if(miktar !== null) fields['Toplam Miktar'] = miktar;
+  if(tdId) fields['Tedarikçiler (OTL)'] = [tdId];
+
+  // Remove undefined
+  Object.keys(fields).forEach(k=>{ if(fields[k]===undefined || fields[k]==='') delete fields[k]; });
+
+  try {
+    let saved;
+    if(!currentRec) {
+      saved = await apiFn('POST', T.malzeme, {fields});
+    } else {
+      saved = await apiFn('PATCH', T.malzeme, {fields}, currentRec.id);
+    }
+    if(saved.error || saved.id === undefined) throw new Error(saved.error?.message || JSON.stringify(saved));
+    toast('Ön kabul kaydedildi ✓');
+    // Refresh list
+    await loadAll();
+    currentRec = malzemeList.find(r=>r.id===saved.id) || null;
+    editMode = false;
+    renderDetail();
+    renderList();
+  } catch(err) {
+    toast('Kayıt hatası: '+err.message, 'err');
+  }
+}
+
+/* ─── DELETE ──────────────────────────────────────── */
+async function deleteRecord() {
+  if(!currentRec) return;
+  if(!confirm('Bu ön kabul formu silinecek. Emin misiniz?')) return;
+  try {
+    const res = await fetch('/.netlify/functions/airtable', {
+      method:'DELETE', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({table: T.malzeme, id: currentRec.id})
+    });
+    const data = await res.json();
+    if(!data.deleted && !data.id) throw new Error(JSON.stringify(data));
+    toast('Kayıt silindi');
+    currentRec = null;
+    await loadAll();
+    renderDetail();
+    renderList();
+  } catch(err) {
+    toast('Silme hatası: '+err.message, 'err');
+  }
+}
+
+/* ─── UTIL ────────────────────────────────────────── */
+function escHtml(s) {
+  if(!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ─── INIT ────────────────────────────────────────── */
+loadAll();
+</script>
+</body>
+</html>
