@@ -196,13 +196,9 @@ async function apiDelete(table, id) {
 
 async function loadList() {
   try {
-    // PDF Data haric - buyuk response onle
-    var fields = ['SE No','Kalem Sıra','Parça No','Parça Adı','Revizyon','Miktar','Birim',
-      'Termin Tarihi','Müşteri PO No','Durum','Notlar','Sevkiyat Tipi','Teslim Süresi İş Günü'];
-    var fieldStr = fields.map(function(f){ return 'fields[]=' + encodeURIComponent(f); }).join('&');
     var all = [], pageOffset = '';
     do {
-      var params = fieldStr + '&sort[0][field]=SE No&sort[0][direction]=desc' + (pageOffset ? '&offset=' + pageOffset : '');
+      var params = 'sort%5B0%5D%5Bfield%5D=SE%20No&sort%5B0%5D%5Bdirection%5D=desc' + (pageOffset ? '&offset=' + pageOffset : '');
       var d = await apiGet('Satış Emirleri', params);
       all = all.concat(d.records || []);
       pageOffset = d.offset || '';
@@ -589,7 +585,6 @@ function addSTLRow(kalemIdx) {
 }
 
 function removeSTLRow(kalemIdx, rowIdx) {
-  if (window._stlKalemler[kalemIdx].rows.length <= 1) return;
   window._stlKalemler[kalemIdx].rows.splice(rowIdx, 1);
   renderSTL();
 }
@@ -666,7 +661,7 @@ function renderSTL() {
       rowsHtml += '<div style="position:relative;background:#fafbfc;border:1px solid #f0f2f5;border-radius:6px;padding:8px;margin-bottom:6px;">'+
         '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">'+
         '<span style="font-size:10px;font-weight:600;color:#5a6170;">'+(ri+1)+'. '+(row.tip==='Fason'?'Fason':'Hammadde')+'</span>'+
-        (kalem.rows.length>1?'<button onclick="removeSTLRow('+ki+','+ri+')" style="background:transparent;border:none;color:#dc2626;font-size:12px;cursor:pointer;">✕ Sil</button>':'')+
+        '<button onclick="removeSTLRow('+ki+','+ri+')" style="background:transparent;border:none;color:#dc2626;font-size:12px;cursor:pointer;">✕ Sil</button>'+
         '</div>'+
         renderSTLRow(row, uid)+
         '</div>';
