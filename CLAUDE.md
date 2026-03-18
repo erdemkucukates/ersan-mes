@@ -1,11 +1,31 @@
 # Ersan MES - Kodlama Kuralları (ZORUNLU)
 
-## Kesin Kurallar
-- **IE No**, **Sıra No**, **Teklif No** alanlarına ASLA yazma — Airtable bunları otomatik üretiyor (formula/autoNumber)
-- Token veya API key HTML dosyasına ASLA yazma — sadece Netlify Functions üzerinden erişilir
-- Push öncesi `git pull --rebase origin main` yap
-- Her değişiklikten önce `node --check` ile syntax kontrol et
-- `.env`, credential, token içeren dosyalara dokunma
+## Rules
+
+### R1: Test olmadan commit yok
+Her dosya değişikliğinden sonra `node --check <dosya>` ile syntax kontrolü zorunludur. Syntax hatası varsa commit yapma, önce düzelt.
+
+### R2: Airtable read-only alanlarına yazma yasağı
+Şu alanlara ASLA değer yazma — Airtable bunları otomatik üretiyor:
+- `IE No` → formula (İş Emirleri tablosu)
+- `Sıra No` → autoNumber (İş Emirleri tablosu)
+- `Teklif No` → formula (Teklifler tablosu)
+- `No` → autoNumber (Teklif Kalemleri tablosu)
+
+Bu alanları POST/PATCH body'sine ekleme. Sadece okuma (GET) için kullan.
+
+### R3: HTML dosyasına token/secret yazma yasağı
+Token, API key, secret veya credential bilgisi HTML/JS dosyasına ASLA yazılmaz. Tüm hassas bilgiler Netlify Functions üzerinden erişilir. Doğrudan `api.airtable.com` veya `api.anthropic.com` çağrısı yasaktır — her şey `/.netlify/functions/` proxy'si üzerinden.
+
+### R4: Push öncesi rebase zorunlu
+`git push` öncesi mutlaka `git pull --rebase origin main` çalıştır. Conflict varsa önce çöz, sonra push et.
+
+### R5: Hassas dosyalara dokunma
+`.env`, `credential`, `token`, `secret` içeren dosyalara dokunma. Bu dosyalar hooks tarafından da korunuyor.
+
+## Slash Komutları
+- `/deploy` — Syntax kontrol + rebase + push (tam deploy akışı)
+- `/fix <dosya>` — Dosyayı oku, sorunları analiz et, düzelt, syntax kontrol et
 
 ---
 
