@@ -3,39 +3,612 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ersan MES — ISG Güvenlik</title>
+<title>Ersan MES — İş Sağlığı & Güvenliği</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8fafc; min-height: 100vh; }
-.container { max-width: 960px; margin: 0 auto; padding: 3rem 1.5rem; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: calc(100vh - 48px); }
-.icon { font-size: 56px; margin-bottom: 1.5rem; }
-h1 { font-size: 24px; font-weight: 600; color: #1e293b; margin-bottom: .5rem; }
-.std { font-size: 11px; font-weight: 500; background: #ede9fe; color: #5b21b6; padding: 3px 10px; border-radius: 20px; margin-bottom: 1.25rem; display: inline-block; }
-p { font-size: 14px; color: #64748b; text-align: center; max-width: 420px; line-height: 1.7; margin-bottom: 2rem; }
-.wip { background: #fff; border: 0.5px solid #e2e8f0; border-radius: 12px; padding: 1.25rem 1.5rem; max-width: 480px; width: 100%; }
-.wip-title { font-size: 11px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: .06em; margin-bottom: .875rem; }
-.wip-item { display: flex; align-items: center; gap: 10px; padding: .5rem 0; border-top: 0.5px solid #f1f5f9; font-size: 13px; color: #475569; }
-.wip-item::before { content: "○"; color: #cbd5e1; font-size: 10px; }
-.back { margin-top: 1.5rem; font-size: 13px; color: #3b82f6; text-decoration: none; }
-.back:hover { text-decoration: underline; }
+:root{
+  --bg:#f0f2f5;--surface:#fff;--surface2:#f7f8fa;--border:#e2e5ea;--border2:#c8cdd6;
+  --text:#1a1d23;--text2:#5a6170;--text3:#9aa0ad;
+  --accent:#7c3aed;--accent-light:#ede9fe;--accent-hover:#6d28d9;
+  --green:#059669;--green-light:#d1fae5;--red:#dc2626;--red-light:#fee2e2;
+  --orange:#d97706;--orange-light:#fef3c7;--blue:#2563eb;--blue-light:#dbeafe;
+  --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;--radius:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);height:100vh;overflow:hidden;font-size:13px;}
+
+.header{height:52px;background:#1e1b4b;display:flex;align-items:center;padding:0 20px;gap:16px;position:fixed;top:0;left:0;right:0;z-index:100;}
+.logo-badge{width:28px;height:28px;border-radius:6px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:white;font-family:var(--mono);}
+.header-title{color:white;font-size:14px;font-weight:600;}
+.header-sub{color:rgba(255,255,255,.5);font-size:11px;}
+.header-sep{width:1px;height:28px;background:rgba(255,255,255,.2);}
+.header-badge{font-size:10px;background:rgba(124,58,237,.4);color:#c4b5fd;padding:3px 8px;border-radius:10px;font-weight:600;}
+
+.layout-wrapper{display:flex;height:calc(100vh - 52px);margin-top:52px;overflow:hidden;}
+
+/* LEFT */
+.list-panel{width:220px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;}
+.list-count{font-size:10px;color:var(--text3);font-family:var(--mono);margin:4px 12px 0;}
+.tab-row{display:flex;border-bottom:1px solid var(--border);}
+.tab-btn{flex:1;padding:8px 6px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:var(--surface2);color:var(--text3);font-family:var(--sans);border-bottom:2px solid transparent;transition:all .15s;}
+.tab-btn.on{background:var(--surface);color:var(--accent);border-bottom-color:var(--accent);}
+.list-scroll{flex:1;overflow-y:auto;}
+.new-btn-wrap{padding:10px;}
+
+.isg-item{padding:9px 12px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s;}
+.isg-item:hover{background:var(--surface2);}
+.isg-item.active{background:var(--accent-light);border-left:3px solid var(--accent);}
+.isg-no{font-family:var(--mono);font-size:10px;font-weight:500;color:var(--accent);}
+.isg-lok{font-size:11px;font-weight:500;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.isg-meta{font-size:10px;color:var(--text3);margin-top:3px;display:flex;gap:5px;align-items:center;flex-wrap:wrap;}
+
+/* RIGHT */
+.detail-panel{flex:1;overflow:hidden;display:flex;flex-direction:column;}
+.detail-scroll{flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:12px;}
+.toolbar{display:flex;align-items:center;gap:8px;padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.card-header{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;}
+.card-body{padding:14px;}
+.card-dot{width:6px;height:6px;border-radius:50%;}
+
+/* BUTTONS */
+.btn{display:flex;align-items:center;gap:5px;padding:6px 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;background:var(--surface);color:var(--text2);font-family:var(--sans);transition:all .15s;white-space:nowrap;}
+.btn:hover{border-color:var(--accent);color:var(--accent);}
+.btn.primary{background:var(--accent);color:white;border-color:var(--accent);}
+.btn.primary:hover{background:var(--accent-hover);}
+.btn.success{background:var(--green);color:white;border-color:var(--green);}
+.btn.success:hover{opacity:.9;}
+.btn:disabled{opacity:.5;cursor:not-allowed;}
+
+/* FORM */
+.fg{display:flex;flex-direction:column;gap:4px;}
+.fl{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;}
+.fi{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:12px;font-family:var(--sans);color:var(--text);outline:none;width:100%;}
+.fi:focus{border-color:var(--accent);}
+.fi:disabled{opacity:.6;cursor:not-allowed;}
+textarea.fi{resize:vertical;min-height:72px;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+
+/* SCORE */
+.score-block{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;padding:14px;border-radius:8px;font-family:var(--mono);}
+.score-num{font-size:32px;font-weight:700;line-height:1;}
+.score-label{font-size:10px;font-weight:600;text-transform:uppercase;}
+.score-low{background:var(--green-light);color:var(--green);}
+.score-mid{background:var(--orange-light);color:var(--orange);}
+.score-high{background:var(--red-light);color:var(--red);}
+
+/* CHECKBOX */
+.check-row{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;}
+.check-row input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent);cursor:pointer;}
+.check-row label{font-size:12px;font-weight:500;color:var(--text);cursor:pointer;}
+
+/* BADGE */
+.badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;}
+.b-Tehlike{background:var(--orange-light);color:var(--orange);}
+.b-Olay{background:var(--blue-light);color:var(--blue);}
+.b-Kaza{background:var(--red-light);color:var(--red);}
+.b-Açık{background:var(--orange-light);color:var(--orange);}
+.b-Kapalı{background:var(--green-light);color:var(--green);}
+
+/* TOAST */
+.toast-wrap{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;}
+.toast{padding:10px 16px;border-radius:8px;font-size:12px;font-weight:500;color:white;animation:fadeIn .2s;}
+.toast.ok{background:var(--green);}
+.toast.err{background:var(--red);}
+.toast.inf{background:var(--accent);}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+.empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text3);gap:12px;padding:40px;text-align:center;}
+
+@media(max-width:700px){
+  body{overflow:auto;}
+  .layout-wrapper{flex-direction:column;height:auto;}
+  .list-panel{width:100%;height:auto;border-right:none;border-bottom:1px solid var(--border);}
+  .detail-panel{height:auto;}
+  .detail-scroll{padding:12px;}
+  .form-grid,.form-grid-3{grid-template-columns:1fr;}
+}
 </style>
 </head>
 <body>
 <script src="ersan_nav.js"></script>
-<div class="container">
-  <div class="icon">🦺</div>
-  <h1>ISG Güvenlik</h1>
-  <span class="std">OHSAS 18001 §4</span>
-  <p>Tehlike kaydı, kaza bildirimi, KKD takibi, acil eylem planı. Bu modül geliştirme aşamasındadır.</p>
-  <div class="wip">
-    <div class="wip-title">Planlanacak özellikler</div>
-    <div class="wip-item">Airtable tablo bağlantısı</div>
-    <div class="wip-item">Liste ve detay görünümü</div>
-    <div class="wip-item">Form ve kayıt yönetimi</div>
-    <div class="wip-item">PDF / rapor çıktısı</div>
-    <div class="wip-item">Diğer modüllerle entegrasyon</div>
+<script src="ersan_log.js"></script>
+
+<header class="header">
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div class="logo-badge">MES</div>
+    <div><div class="header-title">Ersan MES</div><div class="header-sub">İş Sağlığı &amp; Güvenliği</div></div>
   </div>
-  <a href="index.html" class="back">← Ana sayfaya dön</a>
+  <div class="header-sep"></div>
+  <span class="header-badge">AS9100 / OHSAS</span>
+</header>
+
+<div class="layout-wrapper">
+
+  <!-- LEFT PANEL -->
+  <div class="list-panel">
+    <div class="new-btn-wrap">
+      <button class="btn primary" style="width:100%;justify-content:center;" onclick="newKayit()">+ Yeni Kayıt</button>
+    </div>
+    <div class="list-count" id="isg-count">Yükleniyor...</div>
+    <div class="tab-row">
+      <button class="tab-btn on" data-t="Tehlike" onclick="setTab(this)">Tehlike</button>
+      <button class="tab-btn" data-t="Olay-Kaza" onclick="setTab(this)">Olay/Kaza</button>
+    </div>
+    <div class="list-scroll" id="isg-list">
+      <div style="padding:20px;text-align:center;color:var(--text3);font-size:12px;">Yükleniyor...</div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="detail-panel">
+    <div id="detail-content" style="flex:1;overflow:hidden;display:flex;flex-direction:column;">
+      <div class="empty">
+        <svg width="56" height="56" viewBox="0 0 56 56" fill="none" style="opacity:.2"><rect x="10" y="6" width="36" height="44" rx="4" stroke="currentColor" stroke-width="2"/><path d="M18 16h20M18 24h20M18 32h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="40" cy="40" r="8" fill="var(--red)" opacity=".4"/><path d="M40 37v3l2 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <p style="font-size:14px;font-weight:500;">Listeden bir kayıt seçin veya yeni oluşturun</p>
+      </div>
+    </div>
+  </div>
+
 </div>
+
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<script>
+const BASE = 'app5LDgJMgocw79Ix';
+const T = {
+  isg: 'İSG Kayıtları',
+  personel: 'tblwG9GqnLC9oFZzb'
+};
+
+let isgList = [], personelList = [];
+let activeTab = 'Tehlike';
+let selectedKayit = null;
+let isNewMode = false;
+
+// ── API ──
+const apiPost = async (method, path, body) => {
+  const res = await fetch('/.netlify/functions/airtable', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({method, path, body})
+  });
+  return res.json();
+};
+
+const apiGet = async (table, params='') => apiPost('GET', `/v0/${BASE}/${encodeURIComponent(table)}?${params}`);
+const apiFn = async (method, table, body, id='') => apiPost(method, `/v0/${BASE}/${encodeURIComponent(table)}${id?'/'+id:''}`, body);
+
+const apiGetAll = async (table, params='') => {
+  let all = [], offset = '';
+  do {
+    const sep = params ? '&' : '';
+    const p = params + (offset ? sep + 'offset=' + offset : '');
+    const d = await apiGet(table, p);
+    all = all.concat(d.records || []);
+    offset = d.offset || '';
+  } while (offset);
+  return all;
+};
+
+// ── TOAST ──
+function toast(msg, type='ok') {
+  const w = document.getElementById('toast-wrap');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.textContent = msg;
+  w.appendChild(t);
+  setTimeout(() => t.remove(), 3200);
+}
+
+// ── HELPERS ──
+function today() { return new Date().toISOString().slice(0,10); }
+function fmtDate(d) { return d ? d.slice(0,10).split('-').reverse().join('.') : '—'; }
+
+function scoreClass(s) {
+  if (!s) return 'score-low';
+  if (s <= 4) return 'score-low';
+  if (s <= 9) return 'score-mid';
+  return 'score-high';
+}
+function scoreLabel(s) {
+  if (!s) return '—';
+  if (s <= 4) return 'Düşük';
+  if (s <= 9) return 'Orta';
+  return 'Yüksek';
+}
+
+function generateNo(tip) {
+  const year = new Date().getFullYear();
+  const prefix = (tip === 'Tehlike' ? 'TEH' : 'OLY') + `-${year}-`;
+  const tipList = isgList.filter(r => {
+    const t = r.fields['Tip'] || '';
+    if (tip === 'Tehlike') return t === 'Tehlike';
+    return t === 'Olay' || t === 'Kaza';
+  });
+  const existing = tipList
+    .map(r => r.fields['Kayıt No'] || '')
+    .filter(n => n.startsWith(prefix))
+    .map(n => parseInt(n.slice(prefix.length)) || 0);
+  const max = existing.length ? Math.max(...existing) : 0;
+  return prefix + String(max + 1).padStart(3,'0');
+}
+
+// ── TAB ──
+function setTab(el) {
+  document.querySelectorAll('.tab-btn').forEach(e => e.classList.remove('on'));
+  el.classList.add('on');
+  activeTab = el.dataset.t;
+  renderList();
+}
+
+// ── LOAD ──
+async function loadAll() {
+  try {
+    const [kayitlar, pers] = await Promise.all([
+      apiGetAll(T.isg, 'sort[0][field]=Tarih&sort[0][direction]=desc'),
+      apiGetAll('tblwG9GqnLC9oFZzb', 'fields[]=Ad Soyad')
+    ]);
+    isgList = kayitlar;
+    personelList = pers;
+    renderList();
+  } catch(e) {
+    document.getElementById('isg-list').innerHTML = `<div style="padding:20px;text-align:center;color:var(--red);font-size:12px;">Yükleme hatası: ${e.message}</div>`;
+  }
+}
+
+// ── RENDER LIST ──
+function renderList() {
+  const filtered = isgList.filter(r => {
+    const tip = r.fields['Tip'] || '';
+    if (activeTab === 'Tehlike') return tip === 'Tehlike';
+    return tip === 'Olay' || tip === 'Kaza';
+  });
+  document.getElementById('isg-count').textContent = `${filtered.length} / ${isgList.length} kayıt`;
+  if (!filtered.length) {
+    document.getElementById('isg-list').innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:12px;">Kayıt bulunamadı</div>';
+    return;
+  }
+  document.getElementById('isg-list').innerHTML = filtered.map(r => {
+    const f = r.fields;
+    const tip = f['Tip'] || '';
+    const tipCls = tip === 'Tehlike' ? 'b-Tehlike' : tip === 'Olay' ? 'b-Olay' : 'b-Kaza';
+    const isActive = selectedKayit && selectedKayit.id === r.id;
+    const statuCls = (f['Statü'] || '') === 'Kapalı' ? 'b-Kapalı' : 'b-Açık';
+    return `<div class="isg-item${isActive?' active':''}" onclick="selectKayit('${r.id}')">
+      <div class="isg-no">${f['Kayıt No'] || '—'}</div>
+      <div class="isg-lok">${f['Lokasyon'] || '—'}</div>
+      <div class="isg-meta">
+        <span class="badge ${tipCls}">${tip || '—'}</span>
+        ${f['Statü'] ? `<span class="badge ${statuCls}">${f['Statü']}</span>` : ''}
+        <span>${fmtDate(f['Tarih'])}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── SELECT / NEW ──
+function selectKayit(id) {
+  selectedKayit = isgList.find(r => r.id === id) || null;
+  isNewMode = false;
+  renderList();
+  renderDetail();
+}
+
+function newKayit() {
+  selectedKayit = null;
+  isNewMode = true;
+  renderList();
+  renderDetail();
+}
+
+// ── OPTIONS ──
+function buildPersonelOptions(selected='') {
+  return `<option value="">— Seçiniz —</option>` + personelList.map(r => {
+    const label = r.fields['Ad Soyad'] || r.id;
+    return `<option value="${r.id}" ${r.id===selected?'selected':''}>${label}</option>`;
+  }).join('');
+}
+
+function buildNumOptions(selected, max=5) {
+  let html = `<option value="">—</option>`;
+  for (let i=1; i<=max; i++) html += `<option value="${i}" ${String(selected)===String(i)?'selected':''}>${i}</option>`;
+  return html;
+}
+
+// ── RENDER DETAIL ──
+function renderDetail() {
+  const panel = document.getElementById('detail-content');
+  if (!isNewMode && !selectedKayit) {
+    panel.innerHTML = `<div class="empty">
+      <svg width="56" height="56" viewBox="0 0 56 56" fill="none" style="opacity:.2"><rect x="10" y="6" width="36" height="44" rx="4" stroke="currentColor" stroke-width="2"/><path d="M18 16h20M18 24h20M18 32h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <p style="font-size:14px;font-weight:500;">Listeden bir kayıt seçin veya yeni oluşturun</p>
+    </div>`;
+    return;
+  }
+
+  const f = selectedKayit ? selectedKayit.fields : {};
+  const tip = f['Tip'] || (activeTab === 'Tehlike' ? 'Tehlike' : 'Olay');
+  const kayitNo = isNewMode ? generateNo(tip) : (f['Kayıt No'] || '');
+  const statu = f['Statü'] || 'Açık';
+  const olasilik = f['Olasılık'] || '';
+  const siddet = f['Şiddet'] || '';
+  const score = (parseInt(olasilik)||0) * (parseInt(siddet)||0);
+  const etkilenenId = f['Etkilenen Kişi']?.[0] || '';
+  const sorumluId = f['Sorumlu']?.[0] || '';
+  const isOlayKaza = tip === 'Olay' || tip === 'Kaza';
+  const yaralanma = f['Yaralanma'] || false;
+
+  panel.innerHTML = `
+    <div class="toolbar">
+      <span style="font-family:var(--mono);font-size:13px;font-weight:600;color:var(--accent);">${isNewMode ? 'Yeni Kayıt' : kayitNo}</span>
+      ${!isNewMode ? `<span class="badge b-${tip}">${tip}</span><span class="badge b-${statu}">${statu}</span>` : ''}
+      <div style="flex:1;"></div>
+    </div>
+    <div class="detail-scroll">
+
+      <!-- CARD 1: Kayıt Bilgileri -->
+      <div class="card">
+        <div class="card-header"><div class="card-dot" style="background:var(--accent);"></div>Kayıt Bilgileri</div>
+        <div class="card-body">
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div class="form-grid">
+              <div class="fg">
+                <label class="fl">Kayıt No</label>
+                <input id="f-kayitno" class="fi" value="${kayitNo}" readonly style="font-family:var(--mono);font-weight:600;color:var(--accent);">
+              </div>
+              <div class="fg">
+                <label class="fl">Tarih</label>
+                <input id="f-tarih" type="date" class="fi" value="${f['Tarih'] || today()}">
+              </div>
+            </div>
+            <div class="form-grid">
+              <div class="fg">
+                <label class="fl">Tip <span style="color:var(--red);">*</span></label>
+                <select id="f-tip" class="fi" onchange="onTipChange(this)">
+                  <option value="Tehlike" ${tip==='Tehlike'?'selected':''}>Tehlike</option>
+                  <option value="Olay" ${tip==='Olay'?'selected':''}>Olay</option>
+                  <option value="Kaza" ${tip==='Kaza'?'selected':''}>Kaza</option>
+                </select>
+              </div>
+              <div class="fg">
+                <label class="fl">Lokasyon</label>
+                <input id="f-lokasyon" class="fi" value="${f['Lokasyon'] || ''}" placeholder="Bölüm / Alan">
+              </div>
+            </div>
+            <div class="fg">
+              <label class="fl">Açıklama <span style="color:var(--red);">*</span></label>
+              <textarea id="f-aciklama" class="fi" rows="3" placeholder="Tehlike / olayı açıklayınız...">${f['Açıklama'] || ''}</textarea>
+            </div>
+            <div class="form-grid">
+              <div class="fg">
+                <label class="fl">Statü</label>
+                <select id="f-statu" class="fi">
+                  <option value="Açık" ${statu==='Açık'?'selected':''}>Açık</option>
+                  <option value="Kapalı" ${statu==='Kapalı'?'selected':''}>Kapalı</option>
+                </select>
+              </div>
+              <div class="fg">
+                <label class="fl">Sorumlu</label>
+                <select id="f-sorumlu" class="fi">
+                  ${buildPersonelOptions(sorumluId)}
+                </select>
+              </div>
+            </div>
+            <div style="display:flex;justify-content:flex-end;">
+              <button class="btn primary" onclick="saveCard1()">Kaydet</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      ${!isNewMode ? `
+      <!-- CARD 2: Risk Değerlendirme -->
+      <div class="card">
+        <div class="card-header"><div class="card-dot" style="background:var(--orange);"></div>Risk Değerlendirme</div>
+        <div class="card-body">
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div class="form-grid">
+              <div class="fg">
+                <label class="fl">Olasılık (1-5)</label>
+                <select id="f-olasilik" class="fi" onchange="updateRiskScore()">
+                  ${buildNumOptions(olasilik)}
+                </select>
+              </div>
+              <div class="fg">
+                <label class="fl">Şiddet (1-5)</label>
+                <select id="f-siddet" class="fi" onchange="updateRiskScore()">
+                  ${buildNumOptions(siddet)}
+                </select>
+              </div>
+            </div>
+            <div id="isg-score-wrap" class="score-block ${score ? scoreClass(score) : ''}" style="${!score?'background:var(--surface2);color:var(--text3);':''}">
+              <div class="score-num" id="isg-score-val">${score || '—'}</div>
+              <div class="score-label" id="isg-score-lbl">${score ? scoreLabel(score) + ' Risk' : 'Risk Skoru'}</div>
+              <div style="font-size:10px;opacity:.7;">Olasılık × Şiddet</div>
+            </div>
+            <div style="display:flex;justify-content:flex-end;">
+              <button class="btn primary" onclick="saveCard2()">Kaydet</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      ${isOlayKaza ? `
+      <!-- CARD 3: Kaza Detayı -->
+      <div class="card">
+        <div class="card-header"><div class="card-dot" style="background:var(--red);"></div>Kaza / Olay Detayı</div>
+        <div class="card-body">
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div class="fg">
+              <label class="fl">Etkilenen Kişi</label>
+              <select id="f-etkilenen" class="fi">
+                ${buildPersonelOptions(etkilenenId)}
+              </select>
+            </div>
+            <div class="check-row">
+              <input type="checkbox" id="f-yaralanma" ${yaralanma?'checked':''}>
+              <label for="f-yaralanma">Yaralanma meydana geldi</label>
+            </div>
+            <div class="fg">
+              <label class="fl">İlk Müdahale</label>
+              <textarea id="f-ilk-mudahale" class="fi" rows="2" placeholder="Yapılan ilk müdahaleyi açıklayınız...">${f['İlk Müdahale'] || ''}</textarea>
+            </div>
+            <div style="display:flex;justify-content:flex-end;">
+              <button class="btn primary" onclick="saveCard3()">Kaydet</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      ` : ''}
+
+      <!-- CARD 4: Kök Neden & Önlem -->
+      <div class="card">
+        <div class="card-header"><div class="card-dot" style="background:var(--green);"></div>Kök Neden &amp; Önlem</div>
+        <div class="card-body">
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div class="fg">
+              <label class="fl">Kök Neden</label>
+              <textarea id="f-kok-neden" class="fi" rows="2" placeholder="Kök nedeni açıklayınız...">${f['Kök Neden'] || ''}</textarea>
+            </div>
+            <div class="fg">
+              <label class="fl">Önlem</label>
+              <textarea id="f-onlem" class="fi" rows="2" placeholder="Alınan / alınacak önlemleri yazınız...">${f['Önlem'] || ''}</textarea>
+            </div>
+            <div style="display:flex;justify-content:flex-end;">
+              <button class="btn success" onclick="saveCard4()">Kaydet</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      ` : ''}
+
+    </div>
+  `;
+}
+
+// ── TIP CHANGE ──
+function onTipChange(sel) {
+  const tip = sel.value;
+  const noEl = document.getElementById('f-kayitno');
+  if (noEl && isNewMode) noEl.value = generateNo(tip);
+}
+
+// ── UPDATE RISK SCORE ──
+function updateRiskScore() {
+  const o = parseInt(document.getElementById('f-olasilik')?.value) || 0;
+  const s = parseInt(document.getElementById('f-siddet')?.value) || 0;
+  const score = o * s;
+  const valEl = document.getElementById('isg-score-val');
+  const lblEl = document.getElementById('isg-score-lbl');
+  const wrap = document.getElementById('isg-score-wrap');
+  if (!valEl || !lblEl || !wrap) return;
+  valEl.textContent = score || '—';
+  lblEl.textContent = score ? scoreLabel(score) + ' Risk' : 'Risk Skoru';
+  wrap.className = 'score-block ' + (score ? scoreClass(score) : '');
+  if (!score) wrap.style.cssText = 'background:var(--surface2);color:var(--text3);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;padding:14px;border-radius:8px;font-family:var(--mono);';
+  else wrap.style.cssText = '';
+}
+
+// ── SAVE CARD 1 ──
+async function saveCard1() {
+  const aciklama = document.getElementById('f-aciklama').value.trim();
+  if (!aciklama) { toast('Açıklama zorunludur', 'err'); return; }
+  const tip = document.getElementById('f-tip').value;
+  const tarih = document.getElementById('f-tarih').value;
+  const lokasyon = document.getElementById('f-lokasyon').value;
+  const statu = document.getElementById('f-statu').value;
+  const sorumluId = document.getElementById('f-sorumlu').value;
+  const kayitNo = document.getElementById('f-kayitno').value;
+  const fields = {
+    'Kayıt No': kayitNo,
+    'Tip': tip,
+    'Tarih': tarih || today(),
+    'Açıklama': aciklama,
+    'Statü': statu
+  };
+  if (lokasyon) fields['Lokasyon'] = lokasyon;
+  if (sorumluId) fields['Sorumlu'] = [sorumluId];
+  try {
+    let result;
+    if (isNewMode) {
+      result = await apiFn('POST', T.isg, {fields});
+      if (result.error) throw new Error(result.error.message || JSON.stringify(result.error));
+      await logIslem('Oluşturuldu', 'İSG', result.id, kayitNo, null, fields);
+      toast('Kayıt oluşturuldu', 'ok');
+      await loadAll();
+      selectKayit(result.id);
+    } else {
+      result = await apiFn('PATCH', T.isg, {fields}, selectedKayit.id);
+      if (result.error) throw new Error(result.error.message || JSON.stringify(result.error));
+      await logIslem('Güncellendi', 'İSG', selectedKayit.id, kayitNo, selectedKayit.fields, fields);
+      toast('Kaydedildi', 'ok');
+      selectedKayit = result;
+      await loadAll();
+      selectedKayit = isgList.find(r => r.id === result.id) || result;
+      renderList();
+      renderDetail();
+    }
+  } catch(e) { toast('Hata: ' + e.message, 'err'); }
+}
+
+// ── SAVE CARD 2 ──
+async function saveCard2() {
+  if (!selectedKayit) return;
+  const olasilik = parseInt(document.getElementById('f-olasilik').value) || null;
+  const siddet = parseInt(document.getElementById('f-siddet').value) || null;
+  if (!olasilik || !siddet) { toast('Olasılık ve Şiddet seçiniz', 'err'); return; }
+  const fields = {'Olasılık': olasilik, 'Şiddet': siddet};
+  try {
+    const result = await apiFn('PATCH', T.isg, {fields}, selectedKayit.id);
+    if (result.error) throw new Error(result.error.message || JSON.stringify(result.error));
+    await logIslem('Risk Güncellendi', 'İSG', selectedKayit.id, selectedKayit.fields['Kayıt No'], null, fields);
+    toast('Risk kaydedildi', 'ok');
+    selectedKayit = result;
+    isgList = isgList.map(r => r.id === result.id ? result : r);
+  } catch(e) { toast('Hata: ' + e.message, 'err'); }
+}
+
+// ── SAVE CARD 3 ──
+async function saveCard3() {
+  if (!selectedKayit) return;
+  const etkilenenId = document.getElementById('f-etkilenen')?.value;
+  const yaralanma = document.getElementById('f-yaralanma')?.checked || false;
+  const ilkMudahale = document.getElementById('f-ilk-mudahale')?.value || '';
+  const fields = {'Yaralanma': yaralanma, 'İlk Müdahale': ilkMudahale};
+  if (etkilenenId) fields['Etkilenen Kişi'] = [etkilenenId];
+  try {
+    const result = await apiFn('PATCH', T.isg, {fields}, selectedKayit.id);
+    if (result.error) throw new Error(result.error.message || JSON.stringify(result.error));
+    await logIslem('Kaza Detay Güncellendi', 'İSG', selectedKayit.id, selectedKayit.fields['Kayıt No'], null, fields);
+    toast('Kaydedildi', 'ok');
+    selectedKayit = result;
+    isgList = isgList.map(r => r.id === result.id ? result : r);
+  } catch(e) { toast('Hata: ' + e.message, 'err'); }
+}
+
+// ── SAVE CARD 4 ──
+async function saveCard4() {
+  if (!selectedKayit) return;
+  const kokNeden = document.getElementById('f-kok-neden').value;
+  const onlem = document.getElementById('f-onlem').value;
+  const fields = {'Kök Neden': kokNeden, 'Önlem': onlem};
+  try {
+    const result = await apiFn('PATCH', T.isg, {fields}, selectedKayit.id);
+    if (result.error) throw new Error(result.error.message || JSON.stringify(result.error));
+    await logIslem('Önlem Güncellendi', 'İSG', selectedKayit.id, selectedKayit.fields['Kayıt No'], null, fields);
+    toast('Kaydedildi', 'ok');
+    selectedKayit = result;
+    isgList = isgList.map(r => r.id === result.id ? result : r);
+  } catch(e) { toast('Hata: ' + e.message, 'err'); }
+}
+
+// ── INIT ──
+window.addEventListener('DOMContentLoaded', () => {
+  loadAll();
+});
+</script>
 </body>
 </html>

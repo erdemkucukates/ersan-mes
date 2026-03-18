@@ -4,38 +4,667 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ersan MES — Ekipman & Bakım</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
+:root {
+  --bg: #f0f2f5; --surface: #fff; --surface2: #f7f8fa;
+  --border: #e2e5ea; --border2: #c8cdd6;
+  --text: #1a1d23; --text2: #5a6170; --text3: #9aa0ad;
+  --accent: #7c3aed; --accent-light: #ede9fe; --accent-hover: #6d28d9;
+  --green: #059669; --green-light: #d1fae5;
+  --red: #dc2626; --red-light: #fee2e2;
+  --orange: #d97706; --orange-light: #fef3c7;
+  --blue: #2563eb; --blue-light: #dbeafe;
+  --gray: #6b7280; --gray-light: #f3f4f6;
+  --shadow: 0 1px 3px rgba(0,0,0,.08);
+  --radius: 8px; --mono: 'IBM Plex Mono',monospace; --sans: 'IBM Plex Sans',sans-serif;
+}
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8fafc; min-height: 100vh; }
-.container { max-width: 960px; margin: 0 auto; padding: 3rem 1.5rem; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: calc(100vh - 48px); }
-.icon { font-size: 56px; margin-bottom: 1.5rem; }
-h1 { font-size: 24px; font-weight: 600; color: #1e293b; margin-bottom: .5rem; }
-.std { font-size: 11px; font-weight: 500; background: #ede9fe; color: #5b21b6; padding: 3px 10px; border-radius: 20px; margin-bottom: 1.25rem; display: inline-block; }
-p { font-size: 14px; color: #64748b; text-align: center; max-width: 420px; line-height: 1.7; margin-bottom: 2rem; }
-.wip { background: #fff; border: 0.5px solid #e2e8f0; border-radius: 12px; padding: 1.25rem 1.5rem; max-width: 480px; width: 100%; }
-.wip-title { font-size: 11px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: .06em; margin-bottom: .875rem; }
-.wip-item { display: flex; align-items: center; gap: 10px; padding: .5rem 0; border-top: 0.5px solid #f1f5f9; font-size: 13px; color: #475569; }
-.wip-item::before { content: "○"; color: #cbd5e1; font-size: 10px; }
-.back { margin-top: 1.5rem; font-size: 13px; color: #3b82f6; text-decoration: none; }
-.back:hover { text-decoration: underline; }
+body { font-family: var(--sans); background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; font-size: 13px; }
+
+/* HEADER */
+.header { height: 52px; background: #1e1b4b; display: flex; align-items: center; padding: 0 20px; gap: 16px; position: fixed; top: 0; left: 0; right: 0; z-index: 100; }
+.header-logo { display: flex; align-items: center; gap: 10px; }
+.header-logo-badge { width: 28px; height: 28px; border-radius: 6px; background: rgba(255,255,255,.15); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: white; font-family: var(--mono); }
+.header-title { color: white; font-size: 14px; font-weight: 600; }
+.header-sub { color: rgba(255,255,255,.5); font-size: 11px; }
+.header-sep { width: 1px; height: 28px; background: rgba(255,255,255,.2); }
+.header-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.header-badge { font-size: 10px; font-weight: 600; background: rgba(124,58,237,.4); color: #c4b5fd; padding: 3px 10px; border-radius: 10px; border: 1px solid rgba(124,58,237,.5); }
+
+/* LAYOUT */
+.layout { display: flex; height: calc(100vh - 52px); margin-top: 52px; }
+
+/* LEFT PANEL */
+.list-panel { width: 220px; flex-shrink: 0; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
+.list-header { padding: 12px 14px 10px; border-bottom: 1px solid var(--border); }
+.list-header h2 { font-size: 13px; font-weight: 600; }
+.list-count { font-size: 10px; color: var(--text3); font-family: var(--mono); margin-top: 2px; }
+.list-search { padding: 8px 10px; border-bottom: 1px solid var(--border); }
+.list-search input { width: 100%; padding: 5px 9px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; font-family: var(--sans); color: var(--text); background: var(--surface2); outline: none; }
+.list-search input:focus { border-color: var(--accent); }
+.list-scroll { flex: 1; overflow-y: auto; }
+
+.eq-item { padding: 10px 12px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background .12s; }
+.eq-item:hover { background: var(--surface2); }
+.eq-item.active { background: var(--accent-light); border-left: 3px solid var(--accent); }
+.eq-name { font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.eq-code { font-family: var(--mono); font-size: 10px; color: var(--text3); margin-top: 1px; }
+.eq-row { display: flex; align-items: center; justify-content: space-between; margin-top: 5px; }
+.eq-next { font-size: 10px; color: var(--text3); }
+.eq-next.urgent { color: var(--red); font-weight: 600; }
+
+/* STATUS BADGES */
+.badge { font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 10px; white-space: nowrap; }
+.badge-Çalışıyor { background: var(--green-light); color: var(--green); }
+.badge-Duruyor { background: var(--gray-light); color: var(--gray); }
+.badge-Bakımda { background: var(--orange-light); color: var(--orange); }
+.badge-Arıza { background: var(--red-light); color: var(--red); }
+
+/* RIGHT PANEL */
+.detail-panel { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+.detail-toolbar { height: 44px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 18px; gap: 8px; flex-shrink: 0; }
+.detail-toolbar-left { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; }
+.detail-title { font-size: 15px; font-weight: 700; font-family: var(--mono); color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.detail-code { font-size: 10px; font-family: var(--mono); color: var(--text3); background: var(--surface2); padding: 2px 8px; border-radius: 5px; border: 1px solid var(--border); white-space: nowrap; }
+.detail-scroll { flex: 1; overflow-y: auto; padding: 14px 18px; display: flex; flex-direction: column; gap: 12px; }
+
+/* CARDS */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+.card-header { padding: 9px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; font-size: 10px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; }
+.card-header-icon { font-size: 13px; }
+.card-body { padding: 14px; }
+
+/* FORM GRID */
+.form-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.form-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.form-full { grid-column: 1/-1; }
+.field-group { display: flex; flex-direction: column; gap: 4px; }
+.field-label { font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .5px; }
+.field-value { font-size: 12px; color: var(--text); padding: 6px 0; }
+.field-input { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; font-size: 12px; font-family: var(--sans); color: var(--text); outline: none; transition: border-color .15s; width: 100%; }
+.field-input:focus { border-color: var(--accent); }
+.field-input:disabled { opacity: .6; cursor: not-allowed; }
+select.field-input { cursor: pointer; }
+textarea.field-input { resize: vertical; min-height: 60px; }
+
+/* DATE PAIR */
+.date-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: start; }
+.date-pair-arrow { display: flex; align-items: center; justify-content: center; color: var(--text3); font-size: 16px; padding-top: 22px; }
+
+/* ACTION BUTTONS */
+.action-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.btn { display: inline-flex; align-items: center; gap: 5px; padding: 7px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: var(--sans); transition: all .15s; border: none; }
+.btn-primary { background: var(--accent); color: white; }
+.btn-primary:hover { background: var(--accent-hover); }
+.btn-success { background: var(--green); color: white; }
+.btn-success:hover { background: #047857; }
+.btn-orange { background: var(--orange); color: white; }
+.btn-orange:hover { background: #b45309; }
+.btn-red { background: var(--red); color: white; }
+.btn-red:hover { background: #b91c1c; }
+.btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text2); }
+.btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+
+/* DURUM CARD */
+.durum-row { display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; }
+.durum-row .field-group { flex: 1; min-width: 140px; }
+.durum-not { flex: 2; min-width: 180px; }
+
+/* TOOLBAR BTN */
+.toolbar-btn { display: flex; align-items: center; gap: 5px; padding: 5px 11px; border: 1px solid var(--border); border-radius: 6px; font-size: 11px; font-weight: 500; cursor: pointer; background: var(--surface); color: var(--text2); font-family: var(--sans); transition: all .15s; white-space: nowrap; }
+.toolbar-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* EMPTY / LOADING */
+.empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text3); gap: 12px; }
+.empty-state-icon { font-size: 40px; }
+.empty-state p { font-size: 13px; }
+.loading-shimmer { height: 48px; background: linear-gradient(90deg, var(--border) 25%, #eef0f3 50%, var(--border) 75%); background-size: 200% 100%; animation: shimmer 1.2s infinite; border-radius: 6px; margin: 4px 10px; }
+@keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+/* TOAST */
+.toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+.toast { padding: 10px 16px; border-radius: 8px; font-size: 12px; font-weight: 500; color: white; box-shadow: 0 4px 12px rgba(0,0,0,.2); animation: toastIn .2s ease; }
+.toast.success { background: var(--green); }
+.toast.error { background: var(--red); }
+.toast.info { background: var(--accent); }
+@keyframes toastIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+@keyframes toastOut { from{opacity:1} to{opacity:0} }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner { width: 14px; height: 14px; border: 2px solid rgba(255,255,255,.3); border-top-color: white; border-radius: 50%; animation: spin .6s linear infinite; display: inline-block; }
+
+/* QR LINK */
+.qr-link { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: var(--blue); text-decoration: none; word-break: break-all; }
+.qr-link:hover { text-decoration: underline; }
+
+/* MOBILE */
+@media (max-width: 640px) {
+  .list-panel { width: 100%; position: fixed; top: 52px; left: 0; right: 0; bottom: 0; z-index: 50; display: none; }
+  .list-panel.mob-open { display: flex; }
+  .detail-panel { width: 100%; }
+  .layout { flex-direction: column; }
+  .form-grid { grid-template-columns: 1fr 1fr; }
+  .date-pair { grid-template-columns: 1fr; }
+  .header-badge { display: none; }
+  .mob-list-btn { display: flex !important; }
+}
+.mob-list-btn { display: none; }
 </style>
 </head>
 <body>
 <script src="ersan_nav.js"></script>
-<div class="container">
-  <div class="icon">🔩</div>
-  <h1>Ekipman & Bakım</h1>
-  <span class="std">AS9100 §7.1.3</span>
-  <p>Tezgah bakım planı, kalibrasyon takibi, arıza kaydı. Bu modül geliştirme aşamasındadır.</p>
-  <div class="wip">
-    <div class="wip-title">Planlanacak özellikler</div>
-    <div class="wip-item">Airtable tablo bağlantısı</div>
-    <div class="wip-item">Liste ve detay görünümü</div>
-    <div class="wip-item">Form ve kayıt yönetimi</div>
-    <div class="wip-item">PDF / rapor çıktısı</div>
-    <div class="wip-item">Diğer modüllerle entegrasyon</div>
+<script src="ersan_log.js"></script>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-logo">
+    <div class="header-logo-badge">MES</div>
+    <div>
+      <div class="header-title">Ersan MES</div>
+      <div class="header-sub">Ekipman & Bakım</div>
+    </div>
   </div>
-  <a href="index.html" class="back">← Ana sayfaya dön</a>
+  <div class="header-sep"></div>
+  <div class="header-right">
+    <span class="header-badge">AS9100 §7.1.3</span>
+  </div>
+</header>
+
+<!-- LAYOUT -->
+<div class="layout">
+
+  <!-- LEFT PANEL -->
+  <aside class="list-panel" id="listPanel">
+    <div class="list-header">
+      <h2>Ekipman & Bakım</h2>
+      <div class="list-count" id="listCount">Yükleniyor…</div>
+    </div>
+    <div class="list-search">
+      <input type="text" id="searchInput" placeholder="Tezgah ara…">
+    </div>
+    <div class="list-scroll" id="listScroll">
+      <div class="loading-shimmer"></div>
+      <div class="loading-shimmer"></div>
+      <div class="loading-shimmer"></div>
+      <div class="loading-shimmer"></div>
+      <div class="loading-shimmer"></div>
+    </div>
+  </aside>
+
+  <!-- RIGHT PANEL -->
+  <section class="detail-panel" id="detailPanel">
+    <div class="detail-toolbar">
+      <button class="toolbar-btn mob-list-btn" id="mobListBtn">☰ Liste</button>
+      <div class="detail-toolbar-left" id="toolbarTitle">
+        <span style="color:var(--text3);font-size:12px;">Sol panelden bir tezgah seçin</span>
+      </div>
+    </div>
+
+    <!-- EMPTY STATE -->
+    <div id="emptyState" class="empty-state">
+      <div class="empty-state-icon">🔩</div>
+      <p>Detay görüntülemek için bir tezgah seçin</p>
+    </div>
+
+    <!-- DETAIL SCROLL -->
+    <div class="detail-scroll" id="detailScroll" style="display:none;">
+
+      <!-- CARD 1: BİLGİLER -->
+      <div class="card">
+        <div class="card-header"><span class="card-header-icon">ℹ️</span> Tezgah Bilgileri</div>
+        <div class="card-body">
+          <div class="form-grid">
+            <div class="field-group">
+              <div class="field-label">Tezgah Adı</div>
+              <div class="field-value" id="d-ad">—</div>
+            </div>
+            <div class="field-group">
+              <div class="field-label">Tezgah Kodu</div>
+              <div class="field-value" id="d-kod" style="font-family:var(--mono);">—</div>
+            </div>
+            <div class="field-group">
+              <div class="field-label">Tezgah Tipi</div>
+              <div class="field-value" id="d-tip">—</div>
+            </div>
+            <div class="field-group">
+              <div class="field-label">Marka / Model</div>
+              <div class="field-value" id="d-marka">—</div>
+            </div>
+            <div class="field-group">
+              <div class="field-label">Sorumlu Operatör</div>
+              <div class="field-value" id="d-sorumlu">—</div>
+            </div>
+            <div class="field-group">
+              <div class="field-label">Durum</div>
+              <select class="field-input" id="d-durum-select">
+                <option>Çalışıyor</option>
+                <option>Duruyor</option>
+                <option>Bakımda</option>
+                <option>Arıza</option>
+              </select>
+            </div>
+            <div class="field-group form-full">
+              <div class="field-label">Notlar</div>
+              <textarea class="field-input" id="d-notlar" rows="2"></textarea>
+            </div>
+          </div>
+          <div class="action-row">
+            <button class="btn btn-primary" id="btnBilgiKaydet">💾 Kaydet</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- CARD 2: BAKIM -->
+      <div class="card">
+        <div class="card-header"><span class="card-header-icon">🔧</span> Bakım Takibi</div>
+        <div class="card-body">
+          <div class="date-pair">
+            <div class="field-group">
+              <div class="field-label">Son Bakım Tarihi</div>
+              <div class="field-value" id="d-son-bakim">—</div>
+            </div>
+            <div class="field-group">
+              <div class="field-label">Sonraki Bakım Tarihi</div>
+              <div class="field-value" id="d-sonraki-bakim">—</div>
+            </div>
+          </div>
+          <div class="action-row">
+            <button class="btn btn-success" id="btnBakimYapildi">✅ Bakım Yapıldı</button>
+            <span style="font-size:11px;color:var(--text3);">Son = Bugün · Sonraki = Bugün +90 gün</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- CARD 3: KALİBRASYON -->
+      <div class="card">
+        <div class="card-header"><span class="card-header-icon">📐</span> Kalibrasyon Takibi</div>
+        <div class="card-body">
+          <div class="date-pair">
+            <div class="field-group">
+              <div class="field-label">Kalibrasyon Tarihi</div>
+              <div class="field-value" id="d-son-kal">—</div>
+            </div>
+            <div class="field-group">
+              <div class="field-label">Sonraki Kalibrasyon</div>
+              <div class="field-value" id="d-sonraki-kal">—</div>
+            </div>
+          </div>
+          <div class="action-row">
+            <button class="btn btn-orange" id="btnKalYapildi">📐 Kalibrasyon Yapıldı</button>
+            <span style="font-size:11px;color:var(--text3);">Son = Bugün · Sonraki = Bugün +365 gün</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- CARD 4: DURUM GÜNCELLE -->
+      <div class="card">
+        <div class="card-header"><span class="card-header-icon">🔴</span> Durum Güncelle</div>
+        <div class="card-body">
+          <div class="durum-row">
+            <div class="field-group">
+              <div class="field-label">Yeni Durum</div>
+              <select class="field-input" id="d-yeni-durum">
+                <option value="">— Seç —</option>
+                <option>Çalışıyor</option>
+                <option>Duruyor</option>
+                <option>Bakımda</option>
+                <option>Arıza</option>
+              </select>
+            </div>
+            <div class="field-group durum-not">
+              <div class="field-label">Not</div>
+              <input type="text" class="field-input" id="d-durum-not" placeholder="İsteğe bağlı not…">
+            </div>
+          </div>
+          <div class="action-row">
+            <button class="btn btn-red" id="btnDurumGuncelle">⚡ Durum Güncelle &amp; Logla</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- QR LINK -->
+      <div class="card">
+        <div class="card-header"><span class="card-header-icon">🔗</span> QR / Bağlantı</div>
+        <div class="card-body">
+          <div class="field-group">
+            <div class="field-label">QR Link (Airtable Formula)</div>
+            <div id="d-qr-link" style="font-size:12px;color:var(--text3);">—</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /detail-scroll -->
+  </section>
 </div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ─── CONFIG ───────────────────────────────────────────────
+const BASE = 'app5LDgJMgocw79Ix';
+const T = {
+  tezgah:   'tblsBXDsWACBAFEJ5',
+  personel: 'tblwG9GqnLC9oFZzb'
+};
+const PROXY = '/.netlify/functions/airtable';
+
+// ─── STATE ────────────────────────────────────────────────
+let allTezgahlar = [];
+let currentRec   = null;
+
+// ─── UTILS ────────────────────────────────────────────────
+function today() {
+  return new Date().toISOString().slice(0,10);
+}
+function addDays(d, n) {
+  const dt = new Date(d);
+  dt.setDate(dt.getDate() + n);
+  return dt.toISOString().slice(0,10);
+}
+function fmtDate(d) {
+  if (!d) return '—';
+  const [y,m,day] = d.split('-');
+  return `${day}.${m}.${y}`;
+}
+function daysUntil(d) {
+  if (!d) return null;
+  const diff = (new Date(d) - new Date(today())) / 86400000;
+  return Math.ceil(diff);
+}
+function toast(msg, type='info', dur=3000) {
+  const c = document.getElementById('toastContainer');
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  c.appendChild(el);
+  setTimeout(() => { el.style.animation = 'toastOut .3s ease forwards'; setTimeout(()=>el.remove(), 300); }, dur);
+}
+function badgeHtml(durum) {
+  const cls = `badge badge-${durum || 'Bilinmiyor'}`;
+  return `<span class="${cls}">${durum || '?'}</span>`;
+}
+
+// ─── API ──────────────────────────────────────────────────
+async function apiGet(table, params='') {
+  const url = `${PROXY}?base=${BASE}&table=${table}${params ? '&' + params : ''}`;
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  return r.json();
+}
+async function apiPatch(table, recId, fields) {
+  const url = `${PROXY}?base=${BASE}&table=${table}`;
+  const r = await fetch(url, {
+    method: 'PATCH',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ id: recId, fields })
+  });
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  return r.json();
+}
+
+// ─── LOAD LIST ────────────────────────────────────────────
+async function loadTezgahlar() {
+  try {
+    let records = [];
+    let offset = '';
+    do {
+      const params = 'sort[0][field]=Tezgah%20Ad%C4%B1&sort[0][direction]=asc' + (offset ? `&offset=${offset}` : '');
+      const data = await apiGet(T.tezgah, params);
+      records = records.concat(data.records || []);
+      offset = data.offset || '';
+    } while (offset);
+    allTezgahlar = records;
+    renderList(records);
+  } catch(e) {
+    document.getElementById('listScroll').innerHTML = `<div style="padding:16px;font-size:12px;color:var(--red);">Yüklenemedi: ${e.message}</div>`;
+    document.getElementById('listCount').textContent = 'Hata';
+  }
+}
+
+function renderList(records) {
+  const scroll = document.getElementById('listScroll');
+  document.getElementById('listCount').textContent = `${records.length} ekipman`;
+  if (!records.length) {
+    scroll.innerHTML = '<div style="padding:16px;font-size:12px;color:var(--text3);">Kayıt bulunamadı.</div>';
+    return;
+  }
+  scroll.innerHTML = records.map(r => {
+    const f = r.fields;
+    const durum = f['Durum'] || '';
+    const sonraki = f['Sonraki Bakım Tarihi'] || '';
+    const days = daysUntil(sonraki);
+    const urgentClass = (days !== null && days <= 7) ? 'urgent' : '';
+    const sonrakiTxt = sonraki ? fmtDate(sonraki) : '—';
+    const isActive = currentRec && currentRec.id === r.id;
+    return `<div class="eq-item${isActive?' active':''}" data-id="${r.id}" onclick="selectTezgah('${r.id}')">
+      <div class="eq-name">${escHtml(f['Tezgah Adı'] || '—')}</div>
+      <div class="eq-code">${escHtml(f['Tezgah Kodu'] || '')}</div>
+      <div class="eq-row">
+        ${badgeHtml(durum)}
+        <span class="eq-next ${urgentClass}">🔧 ${sonrakiTxt}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ─── SEARCH ───────────────────────────────────────────────
+document.getElementById('searchInput').addEventListener('input', function() {
+  const q = this.value.trim().toLowerCase();
+  const filtered = q
+    ? allTezgahlar.filter(r => {
+        const f = r.fields;
+        return (f['Tezgah Adı']||'').toLowerCase().includes(q)
+          || (f['Tezgah Kodu']||'').toLowerCase().includes(q)
+          || (f['Tezgah Tipi']||'').toLowerCase().includes(q);
+      })
+    : allTezgahlar;
+  renderList(filtered);
+});
+
+// ─── SELECT TEZGAH ────────────────────────────────────────
+function selectTezgah(id) {
+  const rec = allTezgahlar.find(r => r.id === id);
+  if (!rec) return;
+  currentRec = rec;
+  renderList(allTezgahlar.filter(r => {
+    const q = document.getElementById('searchInput').value.trim().toLowerCase();
+    if (!q) return true;
+    const f = r.fields;
+    return (f['Tezgah Adı']||'').toLowerCase().includes(q)
+      || (f['Tezgah Kodu']||'').toLowerCase().includes(q)
+      || (f['Tezgah Tipi']||'').toLowerCase().includes(q);
+  }));
+  populateDetail(rec);
+  // mobile: close list
+  document.getElementById('listPanel').classList.remove('mob-open');
+}
+
+function populateDetail(rec) {
+  const f = rec.fields;
+  // toolbar
+  const tb = document.getElementById('toolbarTitle');
+  tb.innerHTML = `<span class="detail-title">${escHtml(f['Tezgah Adı']||'—')}</span>
+    <span class="detail-code">${escHtml(f['Tezgah Kodu']||'')}</span>
+    ${badgeHtml(f['Durum'])}`;
+
+  // card 1
+  document.getElementById('d-ad').textContent      = f['Tezgah Adı']     || '—';
+  document.getElementById('d-kod').textContent     = f['Tezgah Kodu']    || '—';
+  document.getElementById('d-tip').textContent     = f['Tezgah Tipi']    || '—';
+  document.getElementById('d-marka').textContent   = f['Marka/Model']    || '—';
+  document.getElementById('d-sorumlu').textContent = f['Sorumlu Operatör']|| '—';
+  document.getElementById('d-notlar').value        = f['Notlar']         || '';
+  setSelectVal('d-durum-select', f['Durum']);
+
+  // card 2
+  document.getElementById('d-son-bakim').textContent     = fmtDate(f['Son Bakım Tarihi']);
+  document.getElementById('d-sonraki-bakim').textContent = fmtDate(f['Sonraki Bakım Tarihi']);
+
+  // card 3
+  document.getElementById('d-son-kal').textContent     = fmtDate(f['Kalibrasyon Tarihi']);
+  document.getElementById('d-sonraki-kal').textContent = fmtDate(f['Sonraki Kalibrasyon']);
+
+  // card 4 reset
+  document.getElementById('d-yeni-durum').value = '';
+  document.getElementById('d-durum-not').value  = '';
+
+  // QR link
+  const qrVal = f['QR Link'];
+  const qrEl = document.getElementById('d-qr-link');
+  if (qrVal) {
+    qrEl.innerHTML = `<a href="${escHtml(qrVal)}" target="_blank" class="qr-link">🔗 ${escHtml(qrVal)}</a>`;
+  } else {
+    qrEl.textContent = '—';
+  }
+
+  document.getElementById('emptyState').style.display  = 'none';
+  document.getElementById('detailScroll').style.display = 'flex';
+}
+
+function setSelectVal(id, val) {
+  const sel = document.getElementById(id);
+  if (!sel || !val) return;
+  for (let i = 0; i < sel.options.length; i++) {
+    if (sel.options[i].value === val) { sel.selectedIndex = i; return; }
+  }
+}
+
+// ─── CARD 1: BİLGİ KAYDET ────────────────────────────────
+document.getElementById('btnBilgiKaydet').addEventListener('click', async function() {
+  if (!currentRec) return;
+  const btn = this;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>';
+  try {
+    const eskiDurum = currentRec.fields['Durum'];
+    const yeniDurum = document.getElementById('d-durum-select').value;
+    const fields = {
+      'Durum':  yeniDurum,
+      'Notlar': document.getElementById('d-notlar').value
+    };
+    await apiPatch(T.tezgah, currentRec.id, fields);
+    currentRec.fields['Durum']  = yeniDurum;
+    currentRec.fields['Notlar'] = fields['Notlar'];
+    await logIslem('Güncellendi', 'Ekipman & Bakım', currentRec.id,
+      currentRec.fields['Tezgah Adı'], {Durum: eskiDurum}, {Durum: yeniDurum});
+    toast('Bilgiler kaydedildi', 'success');
+    populateDetail(currentRec);
+    renderList(allTezgahlar.filter(()=>true));
+  } catch(e) {
+    toast('Kayıt hatası: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '💾 Kaydet';
+  }
+});
+
+// ─── CARD 2: BAKIM YAPILDI ────────────────────────────────
+document.getElementById('btnBakimYapildi').addEventListener('click', async function() {
+  if (!currentRec) return;
+  const btn = this;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>';
+  try {
+    const sonBakim     = today();
+    const sonrakiBakim = addDays(today(), 90);
+    const eskiFields = {
+      'Son Bakım Tarihi':    currentRec.fields['Son Bakım Tarihi'],
+      'Sonraki Bakım Tarihi':currentRec.fields['Sonraki Bakım Tarihi']
+    };
+    const fields = {
+      'Son Bakım Tarihi':     sonBakim,
+      'Sonraki Bakım Tarihi': sonrakiBakim
+    };
+    await apiPatch(T.tezgah, currentRec.id, fields);
+    Object.assign(currentRec.fields, fields);
+    await logIslem('Bakım Yapıldı', 'Ekipman & Bakım', currentRec.id,
+      currentRec.fields['Tezgah Adı'], eskiFields, fields);
+    toast('Bakım kaydedildi — Sonraki: ' + fmtDate(sonrakiBakim), 'success');
+    populateDetail(currentRec);
+    renderList(allTezgahlar.filter(()=>true));
+  } catch(e) {
+    toast('Hata: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '✅ Bakım Yapıldı';
+  }
+});
+
+// ─── CARD 3: KALİBRASYON YAPILDI ─────────────────────────
+document.getElementById('btnKalYapildi').addEventListener('click', async function() {
+  if (!currentRec) return;
+  const btn = this;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>';
+  try {
+    const sonKal     = today();
+    const sonrakiKal = addDays(today(), 365);
+    const eskiFields = {
+      'Kalibrasyon Tarihi':  currentRec.fields['Kalibrasyon Tarihi'],
+      'Sonraki Kalibrasyon': currentRec.fields['Sonraki Kalibrasyon']
+    };
+    const fields = {
+      'Kalibrasyon Tarihi':  sonKal,
+      'Sonraki Kalibrasyon': sonrakiKal
+    };
+    await apiPatch(T.tezgah, currentRec.id, fields);
+    Object.assign(currentRec.fields, fields);
+    await logIslem('Kalibrasyon Yapıldı', 'Ekipman & Bakım', currentRec.id,
+      currentRec.fields['Tezgah Adı'], eskiFields, fields);
+    toast('Kalibrasyon kaydedildi — Sonraki: ' + fmtDate(sonrakiKal), 'success');
+    populateDetail(currentRec);
+    renderList(allTezgahlar.filter(()=>true));
+  } catch(e) {
+    toast('Hata: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '📐 Kalibrasyon Yapıldı';
+  }
+});
+
+// ─── CARD 4: DURUM GÜNCELLE ───────────────────────────────
+document.getElementById('btnDurumGuncelle').addEventListener('click', async function() {
+  if (!currentRec) return;
+  const yeniDurum = document.getElementById('d-yeni-durum').value;
+  if (!yeniDurum) { toast('Lütfen bir durum seçin', 'error'); return; }
+  const btn = this;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>';
+  try {
+    const eskiDurum = currentRec.fields['Durum'];
+    const not = document.getElementById('d-durum-not').value.trim();
+    const fields = { 'Durum': yeniDurum };
+    if (not) fields['Notlar'] = not;
+    await apiPatch(T.tezgah, currentRec.id, fields);
+    const oldFields = { 'Durum': eskiDurum };
+    Object.assign(currentRec.fields, fields);
+    await logIslem('Durum Değiştirildi', 'Ekipman & Bakım', currentRec.id,
+      currentRec.fields['Tezgah Adı'], oldFields, {Durum: yeniDurum, Not: not || undefined});
+    toast(`Durum güncellendi: ${eskiDurum} → ${yeniDurum}`, 'success');
+    populateDetail(currentRec);
+    renderList(allTezgahlar.filter(()=>true));
+  } catch(e) {
+    toast('Hata: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '⚡ Durum Güncelle &amp; Logla';
+  }
+});
+
+// ─── MOBILE LIST TOGGLE ───────────────────────────────────
+document.getElementById('mobListBtn').addEventListener('click', function() {
+  document.getElementById('listPanel').classList.toggle('mob-open');
+});
+
+// ─── INIT ─────────────────────────────────────────────────
+loadTezgahlar();
+</script>
 </body>
 </html>

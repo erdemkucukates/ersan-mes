@@ -3,39 +3,586 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ersan MES — Personel Yönetimi</title>
+<title>Ersan MES — Personel & Yetkinlik Yönetimi</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8fafc; min-height: 100vh; }
-.container { max-width: 960px; margin: 0 auto; padding: 3rem 1.5rem; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: calc(100vh - 48px); }
-.icon { font-size: 56px; margin-bottom: 1.5rem; }
-h1 { font-size: 24px; font-weight: 600; color: #1e293b; margin-bottom: .5rem; }
-.std { font-size: 11px; font-weight: 500; background: #ede9fe; color: #5b21b6; padding: 3px 10px; border-radius: 20px; margin-bottom: 1.25rem; display: inline-block; }
-p { font-size: 14px; color: #64748b; text-align: center; max-width: 420px; line-height: 1.7; margin-bottom: 2rem; }
-.wip { background: #fff; border: 0.5px solid #e2e8f0; border-radius: 12px; padding: 1.25rem 1.5rem; max-width: 480px; width: 100%; }
-.wip-title { font-size: 11px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: .06em; margin-bottom: .875rem; }
-.wip-item { display: flex; align-items: center; gap: 10px; padding: .5rem 0; border-top: 0.5px solid #f1f5f9; font-size: 13px; color: #475569; }
-.wip-item::before { content: "○"; color: #cbd5e1; font-size: 10px; }
-.back { margin-top: 1.5rem; font-size: 13px; color: #3b82f6; text-decoration: none; }
-.back:hover { text-decoration: underline; }
+:root{
+  --bg:#f0f2f5;--surface:#fff;--surface2:#f7f8fa;--border:#e2e5ea;--border2:#c8cdd6;
+  --text:#1a1d23;--text2:#5a6170;--text3:#9aa0ad;
+  --accent:#7c3aed;--accent-light:#ede9fe;--accent-hover:#6d28d9;
+  --green:#059669;--green-light:#d1fae5;--red:#dc2626;--red-light:#fee2e2;
+  --orange:#d97706;--orange-light:#fef3c7;--blue:#2563eb;--blue-light:#dbeafe;
+  --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;--radius:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);height:100vh;overflow:hidden;font-size:13px;}
+
+/* HEADER */
+.header{height:52px;background:#1e1b4b;display:flex;align-items:center;padding:0 20px;gap:16px;position:fixed;top:0;left:0;right:0;z-index:100;}
+.logo-badge{width:28px;height:28px;border-radius:6px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:white;font-family:var(--mono);}
+.header-title{color:white;font-size:14px;font-weight:600;}
+.header-sub{color:rgba(255,255,255,.5);font-size:11px;}
+.header-sep{width:1px;height:28px;background:rgba(255,255,255,.2);}
+.std-badge{font-size:10px;font-weight:600;background:rgba(124,58,237,.3);color:#c4b5fd;padding:3px 10px;border-radius:20px;border:1px solid rgba(124,58,237,.4);}
+
+/* LAYOUT */
+.layout-wrapper{display:flex;height:calc(100vh - 52px);margin-top:52px;}
+
+/* LEFT PANEL */
+.list-panel{width:220px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;}
+.list-header{padding:12px 14px 8px;border-bottom:1px solid var(--border);}
+.list-header h2{font-size:13px;font-weight:600;color:var(--text);}
+.list-count{font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:2px;}
+.list-search{padding:8px 10px;border-bottom:1px solid var(--border);}
+.list-search input{width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:var(--sans);background:var(--surface2);outline:none;color:var(--text);}
+.list-search input:focus{border-color:var(--accent);}
+.list-scroll{flex:1;overflow-y:auto;}
+.p-item{padding:10px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s;}
+.p-item:hover{background:var(--surface2);}
+.p-item.active{background:var(--accent-light);border-left:3px solid var(--accent);}
+.p-name{font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.p-gorev{font-size:11px;color:var(--text3);margin-top:2px;}
+.p-badges{display:flex;gap:4px;margin-top:4px;flex-wrap:wrap;}
+.badge-aktif{font-size:9px;font-weight:700;padding:1px 7px;border-radius:10px;background:var(--green-light);color:var(--green);}
+.badge-pasif{font-size:9px;font-weight:700;padding:1px 7px;border-radius:10px;background:#f3f4f6;color:#9ca3af;}
+.list-empty{padding:32px 16px;text-align:center;color:var(--text3);font-size:12px;}
+
+/* RIGHT PANEL */
+.detail-panel{flex:1;overflow:hidden;display:flex;flex-direction:column;background:var(--bg);}
+.detail-toolbar{height:48px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:10px;flex-shrink:0;}
+.detail-name{font-size:14px;font-weight:600;color:var(--text);flex:1;}
+.detail-scroll{flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:12px;}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.card-header{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;}
+.card-dot{width:6px;height:6px;border-radius:50%;}
+.card-body{padding:14px;}
+
+/* FORM GRID */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+.fg{display:flex;flex-direction:column;gap:4px;}
+.fg.full{grid-column:1/-1;}
+.fl{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;}
+.fi{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:12px;font-family:var(--sans);color:var(--text);outline:none;width:100%;}
+.fi:focus{border-color:var(--accent);}
+.fi:disabled{opacity:.6;cursor:not-allowed;}
+.fi-static{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:12px;color:var(--text);min-height:32px;}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;background:var(--surface);color:var(--text2);font-family:var(--sans);transition:all .15s;white-space:nowrap;}
+.btn:hover{border-color:var(--accent);color:var(--accent);}
+.btn.primary{background:var(--accent);color:white;border-color:var(--accent);}
+.btn.primary:hover{background:var(--accent-hover);}
+.btn:disabled{opacity:.5;cursor:not-allowed;}
+
+/* YETKINLIK MATRISI */
+.yk-table{width:100%;border-collapse:collapse;}
+.yk-table th{padding:7px 10px;text-align:left;font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;background:var(--surface2);border-bottom:1px solid var(--border);}
+.yk-table td{padding:6px 10px;border-bottom:1px solid var(--border);vertical-align:middle;font-size:12px;}
+.yk-table tr:last-child td{border-bottom:none;}
+.yk-table tr:hover td{background:var(--surface2);}
+.yk-select{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:12px;font-family:var(--sans);color:var(--text);outline:none;width:100%;}
+.yk-select:focus{border-color:var(--accent);}
+.yk-usta{background:#fef3c7;color:#92400e;}
+.yk-yeterli{background:var(--green-light);color:#065f46;}
+.yk-aday{background:var(--blue-light);color:#1e40af;}
+.yk-yetkisiz{background:#f3f4f6;color:#6b7280;}
+
+/* AKTIVITE CARD */
+.akt-box{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:16px;text-align:center;}
+.akt-box p{font-size:13px;color:var(--text2);line-height:1.7;}
+.akt-box a{color:var(--accent);text-decoration:none;font-weight:500;}
+.akt-box a:hover{text-decoration:underline;}
+
+/* EMPTY STATE */
+.empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text3);gap:12px;padding:40px;text-align:center;}
+.empty-icon{font-size:40px;opacity:.4;}
+
+/* TOAST */
+.toast-wrap{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;}
+.toast{padding:10px 16px;border-radius:8px;font-size:12px;font-weight:500;color:white;animation:fadeIn .2s;}
+.toast.ok{background:var(--green);}
+.toast.err{background:var(--red);}
+.toast.inf{background:var(--accent);}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* SPINNER */
+.spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;display:inline-block;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-row{display:flex;align-items:center;justify-content:center;padding:32px;gap:12px;color:var(--text3);font-size:13px;}
+
+/* SAVE ROW */
+.save-row{display:flex;align-items:center;justify-content:flex-end;gap:8px;padding-top:10px;border-top:1px solid var(--border);margin-top:10px;}
+.save-status{font-size:11px;color:var(--text3);}
+
+/* CHECKBOX */
+.aktif-row{display:flex;align-items:center;gap:8px;}
+.aktif-row input[type=checkbox]{width:15px;height:15px;accent-color:var(--accent);cursor:pointer;}
+.aktif-row label{font-size:12px;color:var(--text2);}
+
+/* MOBILE */
+@media(max-width:768px){
+  .list-panel{width:100%;max-width:100%;position:fixed;bottom:0;left:0;right:0;top:auto;height:50vh;z-index:50;border-top:2px solid var(--border);border-right:none;}
+  .detail-panel{margin-bottom:50vh;}
+  .form-grid{grid-template-columns:1fr;}
+  .form-grid-3{grid-template-columns:1fr 1fr;}
+}
 </style>
 </head>
 <body>
 <script src="ersan_nav.js"></script>
-<div class="container">
-  <div class="icon">👥</div>
-  <h1>Personel Yönetimi</h1>
-  <span class="std">ISO 9001 §7.1.2</span>
-  <p>Personel kartı, yetkinlik matrisi, görev tanımı, izin takibi. Bu modül geliştirme aşamasındadır.</p>
-  <div class="wip">
-    <div class="wip-title">Planlanacak özellikler</div>
-    <div class="wip-item">Airtable tablo bağlantısı</div>
-    <div class="wip-item">Liste ve detay görünümü</div>
-    <div class="wip-item">Form ve kayıt yönetimi</div>
-    <div class="wip-item">PDF / rapor çıktısı</div>
-    <div class="wip-item">Diğer modüllerle entegrasyon</div>
+<script src="ersan_log.js"></script>
+
+<header class="header">
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div class="logo-badge">MES</div>
+    <div><div class="header-title">Ersan MES</div><div class="header-sub">Personel & Yetkinlik Yönetimi</div></div>
   </div>
-  <a href="index.html" class="back">← Ana sayfaya dön</a>
+  <div class="header-sep"></div>
+  <span class="std-badge">ISO 9001 §7.1.2</span>
+</header>
+
+<div class="layout-wrapper">
+
+  <!-- LEFT: Personel Listesi -->
+  <div class="list-panel">
+    <div class="list-header">
+      <h2>Personel</h2>
+      <div class="list-count" id="listCount">Yükleniyor…</div>
+    </div>
+    <div class="list-search">
+      <input type="text" id="searchInput" placeholder="Ara…" oninput="filterList()">
+    </div>
+    <div class="list-scroll" id="listScroll">
+      <div class="loading-row"><div class="spinner"></div> Yükleniyor…</div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Detay Paneli -->
+  <div class="detail-panel">
+    <div class="detail-toolbar" id="detailToolbar">
+      <span class="detail-name" id="detailName" style="color:var(--text3);">Bir personel seçin</span>
+    </div>
+    <div class="detail-scroll" id="detailScroll">
+      <div class="empty">
+        <div class="empty-icon">👥</div>
+        <div style="font-size:13px;font-weight:500;">Personel Seçin</div>
+        <div style="font-size:12px;">Sol listeden bir personel seçerek detaylarını görüntüleyin.</div>
+      </div>
+    </div>
+  </div>
+
 </div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+// ── CONFIG ──────────────────────────────────────────────────────────────
+const BASE = 'app5LDgJMgocw79Ix';
+const T = {
+  personel: 'tblwG9GqnLC9oFZzb',
+  tezgah:   'tblsBXDsWACBAFEJ5'
+};
+const PROXY = '/.netlify/functions/airtable';
+
+// ── STATE ────────────────────────────────────────────────────────────────
+let allPersonel = [];
+let allTezgahlar = [];
+let selectedId = null;
+let tezgahlarLoaded = false;
+
+// ── API HELPERS ──────────────────────────────────────────────────────────
+async function atGet(table, filter, sort, dir) {
+  const p = new URLSearchParams({ table });
+  if (filter) p.append('filter', filter);
+  if (sort)   p.append('sort', sort);
+  if (dir)    p.append('dir', dir);
+  const r = await fetch(`${PROXY}?${p}`);
+  if (!r.ok) throw new Error('API hatası: ' + r.status);
+  return r.json();
+}
+
+async function atGetAll(table, sort, dir) {
+  let records = [], offset = null;
+  do {
+    const p = new URLSearchParams({ table });
+    if (sort)   p.append('sort', sort);
+    if (dir)    p.append('dir', dir);
+    if (offset) p.append('offset', offset);
+    const r = await fetch(`${PROXY}?${p}`);
+    const d = await r.json();
+    if (d.records) records = records.concat(d.records);
+    offset = d.offset || null;
+  } while (offset);
+  return records;
+}
+
+async function atPatch(table, id, fields) {
+  const r = await fetch(PROXY, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ table, id, fields })
+  });
+  if (!r.ok) throw new Error('Kayıt hatası: ' + r.status);
+  return r.json();
+}
+
+// ── TOAST ────────────────────────────────────────────────────────────────
+function toast(msg, type='ok') {
+  const w = document.getElementById('toastWrap');
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.textContent = msg;
+  w.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+// ── LOAD PERSONEL ────────────────────────────────────────────────────────
+async function loadPersonel() {
+  try {
+    const records = await atGetAll(T.personel, 'Ad Soyad', 'asc');
+    allPersonel = records;
+    renderList(allPersonel);
+  } catch(e) {
+    document.getElementById('listScroll').innerHTML =
+      '<div class="list-empty">Yüklenemedi: ' + e.message + '</div>';
+  }
+}
+
+function renderList(list) {
+  const el = document.getElementById('listScroll');
+  const cnt = document.getElementById('listCount');
+  cnt.textContent = list.length + ' personel';
+  if (!list.length) {
+    el.innerHTML = '<div class="list-empty">Kayıt bulunamadı.</div>';
+    return;
+  }
+  el.innerHTML = list.map(r => {
+    const f = r.fields;
+    const aktif = f['Aktif mi?'] === true;
+    const gorev = f['Görevi'] || '';
+    return `<div class="p-item${r.id===selectedId?' active':''}" onclick="selectPersonel('${r.id}')">
+      <div class="p-name">${esc(f['Ad Soyad'] || '—')}</div>
+      ${gorev ? `<div class="p-gorev">${esc(gorev)}</div>` : ''}
+      <div class="p-badges">
+        <span class="${aktif?'badge-aktif':'badge-pasif'}">${aktif?'Aktif':'Pasif'}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterList() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  if (!q) { renderList(allPersonel); return; }
+  renderList(allPersonel.filter(r => {
+    const f = r.fields;
+    return (f['Ad Soyad']||'').toLowerCase().includes(q)
+        || (f['Görevi']||'').toLowerCase().includes(q)
+        || (f['Personel Kodu']||'').toLowerCase().includes(q);
+  }));
+}
+
+// ── SELECT PERSONEL ──────────────────────────────────────────────────────
+async function selectPersonel(id) {
+  selectedId = id;
+  const rec = allPersonel.find(r => r.id === id);
+  if (!rec) return;
+  renderList(document.getElementById('searchInput').value.toLowerCase()
+    ? allPersonel.filter(r => {
+        const q = document.getElementById('searchInput').value.toLowerCase();
+        const f = r.fields;
+        return (f['Ad Soyad']||'').toLowerCase().includes(q)
+            || (f['Görevi']||'').toLowerCase().includes(q)
+            || (f['Personel Kodu']||'').toLowerCase().includes(q);
+      })
+    : allPersonel);
+
+  const f = rec.fields;
+  document.getElementById('detailName').textContent = f['Ad Soyad'] || '—';
+  document.getElementById('detailName').style.color = '';
+
+  const ds = document.getElementById('detailScroll');
+  ds.innerHTML = renderDetailCards(rec);
+
+  if (!tezgahlarLoaded) {
+    await loadTezgahlar();
+  }
+  renderYetkinlikMatrisi(rec);
+}
+
+function renderDetailCards(rec) {
+  const f = rec.fields;
+  const aktif = f['Aktif mi?'] === true;
+  const girisTarihi = f['İşe Giriş Tarihi'] || '';
+
+  return `
+  <!-- Card 1: Kişisel Bilgiler -->
+  <div class="card" id="card-kisel">
+    <div class="card-header">
+      <div class="card-dot" style="background:var(--accent)"></div>
+      Kişisel Bilgiler
+    </div>
+    <div class="card-body">
+      <div class="form-grid">
+        <div class="fg">
+          <div class="fl">Ad Soyad</div>
+          <input class="fi" id="f-adSoyad" type="text" value="${esc(f['Ad Soyad']||'')}">
+        </div>
+        <div class="fg">
+          <div class="fl">Personel Kodu</div>
+          <input class="fi" id="f-personelKodu" type="text" value="${esc(f['Personel Kodu']||'')}">
+        </div>
+        <div class="fg">
+          <div class="fl">Görevi</div>
+          <select class="fi" id="f-gorevi">
+            <option value="">— Seçiniz —</option>
+            ${['Operatör','Teknisyen','Mühendis','Kalite','Yönetici','Diğer'].map(g =>
+              `<option value="${g}"${f['Görevi']===g?' selected':''}>${g}</option>`
+            ).join('')}
+          </select>
+        </div>
+        <div class="fg">
+          <div class="fl">Telefon</div>
+          <input class="fi" id="f-telefon" type="tel" value="${esc(f['Telefon']||'')}">
+        </div>
+        <div class="fg">
+          <div class="fl">E-posta</div>
+          <input class="fi" id="f-eposta" type="email" value="${esc(f['E-posta']||'')}">
+        </div>
+        <div class="fg">
+          <div class="fl">İşe Giriş Tarihi</div>
+          <input class="fi" id="f-girisTarihi" type="date" value="${girisTarihi}">
+        </div>
+        <div class="fg full">
+          <div class="fl">Durum</div>
+          <div class="aktif-row">
+            <input type="checkbox" id="f-aktif" ${aktif?'checked':''}>
+            <label for="f-aktif">Aktif personel</label>
+          </div>
+        </div>
+      </div>
+      <div class="save-row">
+        <span class="save-status" id="saveStatus1"></span>
+        <button class="btn primary" onclick="saveKisel('${rec.id}')">Kaydet</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 2: Yetkinlik Matrisi -->
+  <div class="card" id="card-yetkinlik">
+    <div class="card-header">
+      <div class="card-dot" style="background:var(--orange)"></div>
+      Yetkinlik Matrisi
+      <span style="margin-left:auto;font-size:11px;color:var(--text3);font-family:var(--mono);">Tezgah Bazlı</span>
+    </div>
+    <div class="card-body" id="yetkinlikBody">
+      <div class="loading-row"><div class="spinner"></div> Tezgahlar yükleniyor…</div>
+    </div>
+  </div>
+
+  <!-- Card 3: Aktivite -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-dot" style="background:var(--blue)"></div>
+      Aktivite
+    </div>
+    <div class="card-body">
+      <div class="akt-box">
+        <p>Bu personelin sistem aktiviteleri ve değişiklik logları<br>
+        <a href="ersan_sistem_logu.html">Sistem Logu</a> sayfasından görüntülenebilir.</p>
+      </div>
+    </div>
+  </div>
+  `;
+}
+
+// ── KAYDET: KİŞİSEL ─────────────────────────────────────────────────────
+async function saveKisel(id) {
+  const btn = document.querySelector('[onclick="saveKisel(\'' + id + '\')"]');
+  const status = document.getElementById('saveStatus1');
+  const rec = allPersonel.find(r => r.id === id);
+  if (!rec) return;
+
+  const oldFields = {
+    'Ad Soyad': rec.fields['Ad Soyad'] || '',
+    'Personel Kodu': rec.fields['Personel Kodu'] || '',
+    'Görevi': rec.fields['Görevi'] || '',
+    'Telefon': rec.fields['Telefon'] || '',
+    'E-posta': rec.fields['E-posta'] || '',
+    'İşe Giriş Tarihi': rec.fields['İşe Giriş Tarihi'] || '',
+    'Aktif mi?': rec.fields['Aktif mi?'] || false,
+  };
+
+  const fields = {};
+  const adSoyad = document.getElementById('f-adSoyad').value.trim();
+  const personelKodu = document.getElementById('f-personelKodu').value.trim();
+  const gorevi = document.getElementById('f-gorevi').value;
+  const telefon = document.getElementById('f-telefon').value.trim();
+  const eposta = document.getElementById('f-eposta').value.trim();
+  const girisTarihi = document.getElementById('f-girisTarihi').value;
+  const aktif = document.getElementById('f-aktif').checked;
+
+  if (adSoyad)       fields['Ad Soyad'] = adSoyad;
+  if (personelKodu)  fields['Personel Kodu'] = personelKodu;
+  if (gorevi)        fields['Görevi'] = gorevi;
+  if (telefon)       fields['Telefon'] = telefon;
+  if (eposta)        fields['E-posta'] = eposta;
+  if (girisTarihi)   fields['İşe Giriş Tarihi'] = girisTarihi;
+  fields['Aktif mi?'] = aktif;
+
+  btn.disabled = true;
+  status.textContent = 'Kaydediliyor…';
+  try {
+    const updated = await atPatch(T.personel, id, fields);
+    // Update local cache
+    rec.fields = Object.assign(rec.fields, updated.fields || fields);
+    document.getElementById('detailName').textContent = rec.fields['Ad Soyad'] || '—';
+    renderList(document.getElementById('searchInput').value.toLowerCase()
+      ? allPersonel.filter(r => {
+          const q = document.getElementById('searchInput').value.toLowerCase();
+          const ff = r.fields;
+          return (ff['Ad Soyad']||'').toLowerCase().includes(q)
+              || (ff['Görevi']||'').toLowerCase().includes(q)
+              || (ff['Personel Kodu']||'').toLowerCase().includes(q);
+        })
+      : allPersonel);
+    status.textContent = 'Kaydedildi ✓';
+    setTimeout(() => { status.textContent = ''; }, 2500);
+    toast('Kişisel bilgiler güncellendi.');
+    await logIslem('Güncellendi', 'Personel', id, rec.fields['Ad Soyad'] || id, oldFields, fields);
+  } catch(e) {
+    status.textContent = 'Hata!';
+    toast('Kayıt başarısız: ' + e.message, 'err');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// ── LOAD TEZGAHLAR ───────────────────────────────────────────────────────
+async function loadTezgahlar() {
+  try {
+    allTezgahlar = await atGetAll(T.tezgah, 'Tezgah Adı', 'asc');
+    tezgahlarLoaded = true;
+  } catch(e) {
+    allTezgahlar = [];
+    tezgahlarLoaded = true;
+  }
+}
+
+// ── YETKINLIK MATRİSİ ────────────────────────────────────────────────────
+// Saved as JSON in "Notlar" field: { "tezgahId": "Usta", ... }
+function renderYetkinlikMatrisi(rec) {
+  const body = document.getElementById('yetkinlikBody');
+  if (!body) return;
+
+  let matris = {};
+  try {
+    const raw = rec.fields['Notlar'] || '';
+    // Try to find JSON in the Notlar field
+    const m = raw.match(/\[\[YK\]\]([\s\S]*?)\[\[\/YK\]\]/);
+    if (m) matris = JSON.parse(m[1]);
+  } catch(e) { matris = {}; }
+
+  if (!allTezgahlar.length) {
+    body.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:8px 0;">Tezgah verisi bulunamadı.</div>';
+    return;
+  }
+
+  const seviyeler = ['Usta', 'Yeterli', 'Aday', 'Yetkisiz'];
+  const seviyeClass = { 'Usta': 'yk-usta', 'Yeterli': 'yk-yeterli', 'Aday': 'yk-aday', 'Yetkisiz': 'yk-yetkisiz' };
+
+  body.innerHTML = `
+    <table class="yk-table">
+      <thead>
+        <tr>
+          <th style="width:55%">Tezgah / Ekipman</th>
+          <th>Yetkinlik Seviyesi</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${allTezgahlar.map(t => {
+          const tid = t.id;
+          const adField = t.fields['Tezgah Adı'] || t.fields['Ad'] || t.fields['İsim'] || t.fields['Name'] || Object.values(t.fields)[0] || tid;
+          const mevcut = matris[tid] || 'Yetkisiz';
+          return `<tr>
+            <td style="font-weight:500;">${esc(String(adField))}</td>
+            <td>
+              <select class="yk-select" id="yk-${tid}" onchange="updateYkBadge('${tid}',this.value)">
+                ${seviyeler.map(s =>
+                  `<option value="${s}"${mevcut===s?' selected':''}>${s}</option>`
+                ).join('')}
+              </select>
+            </td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+    <div class="save-row">
+      <span class="save-status" id="saveStatusYK"></span>
+      <button class="btn primary" onclick="saveYetkinlik('${rec.id}')">Yetkinlikleri Kaydet</button>
+    </div>
+  `;
+}
+
+function updateYkBadge(tid, val) {
+  // Visual feedback only — save happens on button click
+}
+
+async function saveYetkinlik(id) {
+  const rec = allPersonel.find(r => r.id === id);
+  if (!rec) return;
+
+  const matris = {};
+  allTezgahlar.forEach(t => {
+    const sel = document.getElementById('yk-' + t.id);
+    if (sel) matris[t.id] = sel.value;
+  });
+
+  const matrisJson = JSON.stringify(matris);
+  const oldNotlar = rec.fields['Notlar'] || '';
+  let newNotlar;
+
+  // Embed the matris JSON as a tagged block in Notlar
+  const tag = /\[\[YK\]\][\s\S]*?\[\[\/YK\]\]/;
+  const block = `[[YK]]${matrisJson}[[/YK]]`;
+  if (tag.test(oldNotlar)) {
+    newNotlar = oldNotlar.replace(tag, block);
+  } else {
+    newNotlar = oldNotlar ? (oldNotlar + '\n' + block) : block;
+  }
+
+  const btn = document.querySelector('[onclick="saveYetkinlik(\'' + id + '\')"]');
+  const status = document.getElementById('saveStatusYK');
+  if (btn) btn.disabled = true;
+  if (status) status.textContent = 'Kaydediliyor…';
+
+  try {
+    await atPatch(T.personel, id, { 'Notlar': newNotlar });
+    rec.fields['Notlar'] = newNotlar;
+    if (status) { status.textContent = 'Kaydedildi ✓'; setTimeout(()=>{ status.textContent=''; }, 2500); }
+    toast('Yetkinlik matrisi güncellendi.');
+    await logIslem('Güncellendi', 'Personel Yetkinlik', id, rec.fields['Ad Soyad'] || id, null, matris);
+  } catch(e) {
+    if (status) status.textContent = 'Hata!';
+    toast('Kayıt başarısız: ' + e.message, 'err');
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+// ── UTILS ────────────────────────────────────────────────────────────────
+function esc(s) {
+  return String(s)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+
+// ── INIT ─────────────────────────────────────────────────────────────────
+loadPersonel();
+</script>
 </body>
 </html>

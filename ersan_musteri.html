@@ -3,39 +3,1129 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ersan MES — Müşteri Geri Bildirimi</title>
+<title>Ersan MES — Müşteri Yönetimi</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
+:root {
+  --bg: #f0f2f5;
+  --surface: #ffffff;
+  --surface2: #f7f8fa;
+  --border: #e2e5ea;
+  --border2: #c8cdd6;
+  --text: #1a1d23;
+  --text2: #5a6170;
+  --text3: #9aa0ad;
+  --accent: #7c3aed;
+  --accent-light: #ede9fe;
+  --accent-hover: #6d28d9;
+  --green: #059669;
+  --green-light: #d1fae5;
+  --red: #dc2626;
+  --red-light: #fee2e2;
+  --orange: #d97706;
+  --orange-light: #fef3c7;
+  --blue: #2563eb;
+  --blue-light: #dbeafe;
+  --gray: #6b7280;
+  --gray-light: #f3f4f6;
+  --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+  --shadow-lg: 0 4px 16px rgba(0,0,0,.10);
+  --radius: 8px;
+  --mono: 'IBM Plex Mono', monospace;
+  --sans: 'IBM Plex Sans', sans-serif;
+}
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8fafc; min-height: 100vh; }
-.container { max-width: 960px; margin: 0 auto; padding: 3rem 1.5rem; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: calc(100vh - 48px); }
-.icon { font-size: 56px; margin-bottom: 1.5rem; }
-h1 { font-size: 24px; font-weight: 600; color: #1e293b; margin-bottom: .5rem; }
-.std { font-size: 11px; font-weight: 500; background: #ede9fe; color: #5b21b6; padding: 3px 10px; border-radius: 20px; margin-bottom: 1.25rem; display: inline-block; }
-p { font-size: 14px; color: #64748b; text-align: center; max-width: 420px; line-height: 1.7; margin-bottom: 2rem; }
-.wip { background: #fff; border: 0.5px solid #e2e8f0; border-radius: 12px; padding: 1.25rem 1.5rem; max-width: 480px; width: 100%; }
-.wip-title { font-size: 11px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: .06em; margin-bottom: .875rem; }
-.wip-item { display: flex; align-items: center; gap: 10px; padding: .5rem 0; border-top: 0.5px solid #f1f5f9; font-size: 13px; color: #475569; }
-.wip-item::before { content: "○"; color: #cbd5e1; font-size: 10px; }
-.back { margin-top: 1.5rem; font-size: 13px; color: #3b82f6; text-decoration: none; }
-.back:hover { text-decoration: underline; }
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  height: 100vh;
+  overflow: hidden;
+  font-size: 13px;
+}
+
+/* ── LAYOUT ── */
+.layout {
+  display: flex;
+  height: calc(100vh - 48px);
+  margin-top: 48px;
+}
+
+/* ── LEFT PANEL ── */
+.list-panel {
+  width: 220px;
+  flex-shrink: 0;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.list-header {
+  padding: 14px 14px 10px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface2);
+}
+.list-header h2 { font-size: 13px; font-weight: 600; color: var(--text); }
+.list-count { font-size: 11px; color: var(--text3); font-family: var(--mono); margin-top: 2px; }
+.list-search {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+}
+.list-search input {
+  width: 100%; padding: 6px 10px;
+  border: 1px solid var(--border); border-radius: 6px;
+  font-size: 12px; font-family: var(--sans); color: var(--text);
+  background: var(--surface2); outline: none;
+  transition: border-color .15s;
+}
+.list-search input:focus { border-color: var(--accent); }
+.list-scroll { flex: 1; overflow-y: auto; }
+.list-scroll::-webkit-scrollbar { width: 4px; }
+.list-scroll::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+.musteri-item {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background .12s;
+}
+.musteri-item:hover { background: var(--surface2); }
+.musteri-item.active { background: var(--accent-light); border-left: 3px solid var(--accent); }
+.mi-name { font-size: 12px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mi-bottom { display: flex; justify-content: space-between; align-items: center; margin-top: 4px; }
+.mi-kod { font-size: 10px; font-family: var(--mono); color: var(--text3); }
+.mi-aktif { font-size: 9px; font-weight: 700; padding: 1px 6px; border-radius: 8px; }
+.mi-aktif.evet { background: var(--green-light); color: var(--green); }
+.mi-aktif.hayir { background: var(--gray-light); color: var(--gray); }
+
+/* ── RIGHT PANEL ── */
+.detail-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.detail-toolbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.detail-title { font-size: 15px; font-weight: 700; color: var(--text); }
+.detail-sub { font-size: 11px; color: var(--text3); font-family: var(--mono); }
+
+/* ── TABS ── */
+.tabs {
+  display: flex; gap: 0;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 20px;
+  flex-shrink: 0;
+}
+.tab-btn {
+  padding: 10px 16px;
+  font-size: 12px; font-weight: 500;
+  color: var(--text2);
+  background: transparent; border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer; font-family: var(--sans);
+  transition: all .15s; white-space: nowrap;
+}
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+
+.tab-content {
+  flex: 1; overflow-y: auto; padding: 20px;
+  display: none;
+}
+.tab-content.active { display: block; }
+.tab-content::-webkit-scrollbar { width: 5px; }
+.tab-content::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+/* ── CARD ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  margin-bottom: 16px;
+}
+.card-header {
+  padding: 10px 16px;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  font-size: 11px; font-weight: 600; color: var(--text2);
+  text-transform: uppercase; letter-spacing: .6px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.card-body { padding: 16px; }
+
+/* ── FORM ── */
+.form-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.form-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+.form-full { grid-column: 1 / -1; }
+.field-group { display: flex; flex-direction: column; gap: 4px; }
+.field-label { font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .5px; }
+.field-input {
+  border: 1px solid var(--border); border-radius: 6px;
+  padding: 7px 10px; font-size: 12px; font-family: var(--sans);
+  color: var(--text); background: var(--surface);
+  outline: none; transition: border-color .15s, box-shadow .15s; width: 100%;
+}
+.field-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(124,58,237,.08); }
+select.field-input { cursor: pointer; }
+textarea.field-input { resize: vertical; min-height: 70px; }
+.field-check { display: flex; align-items: center; gap: 8px; padding-top: 8px; }
+.field-check input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; }
+.field-check label { font-size: 12px; color: var(--text2); cursor: pointer; }
+
+/* ── BUTTONS ── */
+.btn {
+  padding: 7px 16px; border-radius: 6px; font-size: 12px;
+  font-weight: 600; cursor: pointer; border: 1px solid var(--border);
+  font-family: var(--sans); transition: all .15s; display: inline-flex;
+  align-items: center; gap: 5px; background: var(--surface); color: var(--text);
+}
+.btn:hover { background: var(--surface2); }
+.btn.primary { background: var(--accent); color: white; border-color: var(--accent); }
+.btn.primary:hover { background: var(--accent-hover); }
+.btn.success { background: var(--green); color: white; border-color: var(--green); }
+.btn.success:hover { background: #047857; }
+.btn.danger { background: var(--red); color: white; border-color: var(--red); }
+.btn.sm { padding: 4px 10px; font-size: 11px; }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+
+/* ── TABLE ── */
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table th {
+  background: var(--surface2); padding: 8px 12px;
+  font-size: 10px; font-weight: 600; color: var(--text3);
+  text-transform: uppercase; letter-spacing: .5px;
+  text-align: left; border-bottom: 2px solid var(--border);
+  white-space: nowrap;
+}
+.data-table td {
+  padding: 8px 12px; border-bottom: 1px solid var(--border);
+  font-size: 12px; color: var(--text);
+}
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:hover td { background: var(--surface2); }
+
+/* ── STAT CARDS ── */
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; }
+.stat-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px 18px;
+  box-shadow: var(--shadow);
+}
+.stat-label { font-size: 11px; color: var(--text3); font-weight: 500; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; }
+.stat-value { font-size: 28px; font-weight: 700; color: var(--text); font-family: var(--mono); line-height: 1; }
+.stat-sub { font-size: 11px; color: var(--text2); margin-top: 6px; }
+.stat-card.accent { border-top: 3px solid var(--accent); }
+.stat-card.green { border-top: 3px solid var(--green); }
+.stat-card.blue { border-top: 3px solid var(--blue); }
+.stat-card.orange { border-top: 3px solid var(--orange); }
+
+/* ── BADGE ── */
+.badge {
+  display: inline-flex; align-items: center;
+  padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600;
+}
+.badge-green { background: var(--green-light); color: var(--green); }
+.badge-red { background: var(--red-light); color: var(--red); }
+.badge-orange { background: var(--orange-light); color: var(--orange); }
+.badge-blue { background: var(--blue-light); color: var(--blue); }
+.badge-gray { background: var(--gray-light); color: var(--gray); }
+.badge-purple { background: var(--accent-light); color: var(--accent); }
+
+/* ── SIKAYET CARD ── */
+.sikayet-item {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 14px 16px;
+  margin-bottom: 10px; box-shadow: var(--shadow);
+}
+.si-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+.si-no { font-family: var(--mono); font-size: 11px; color: var(--accent); font-weight: 500; }
+.si-konu { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+.si-aciklama { font-size: 12px; color: var(--text2); line-height: 1.5; }
+.si-footer { display: flex; gap: 8px; align-items: center; margin-top: 10px; flex-wrap: wrap; }
+.si-tarih { font-size: 10px; color: var(--text3); font-family: var(--mono); }
+
+/* ── MODAL ── */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.45);
+  z-index: 1000;
+  display: none; align-items: center; justify-content: center;
+  padding: 20px;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--surface); border-radius: 12px;
+  box-shadow: var(--shadow-lg);
+  width: 100%; max-width: 560px;
+  max-height: 90vh; overflow-y: auto;
+}
+.modal-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.modal-header h3 { font-size: 14px; font-weight: 700; color: var(--text); }
+.modal-close {
+  width: 28px; height: 28px; border-radius: 6px;
+  border: 1px solid var(--border); background: var(--surface);
+  cursor: pointer; display: flex; align-items: center;
+  justify-content: center; font-size: 16px; color: var(--text2);
+  transition: all .12s;
+}
+.modal-close:hover { background: var(--red-light); color: var(--red); border-color: var(--red); }
+.modal-body { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+.modal-footer { padding: 14px 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; }
+
+/* ── AI OUTPUT ── */
+.ai-output {
+  background: #0f172a; color: #e2e8f0;
+  border-radius: var(--radius); padding: 16px;
+  font-size: 12px; line-height: 1.7;
+  font-family: var(--mono); white-space: pre-wrap;
+  max-height: 400px; overflow-y: auto;
+  margin-top: 10px;
+}
+.ai-loading {
+  display: flex; align-items: center; gap: 8px;
+  color: var(--text2); font-size: 12px; padding: 12px 0;
+}
+.spinner {
+  width: 16px; height: 16px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── EMPTY STATE ── */
+.empty-state {
+  text-align: center; padding: 40px 20px; color: var(--text3);
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+}
+.empty-state-icon { font-size: 36px; opacity: .5; }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed; bottom: 20px; right: 20px;
+  padding: 10px 18px; border-radius: 8px;
+  font-size: 12px; font-weight: 500; color: white;
+  box-shadow: var(--shadow-lg); z-index: 9999;
+  transition: opacity .3s; pointer-events: none;
+}
+.toast.success { background: var(--green); }
+.toast.error { background: var(--red); }
+.toast.info { background: var(--blue); }
+
+/* ── NO SELECTION ── */
+.no-selection {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  color: var(--text3); gap: 12px; padding: 40px;
+}
+.no-selection-icon { font-size: 48px; opacity: .3; }
+.no-selection p { font-size: 13px; text-align: center; max-width: 260px; line-height: 1.6; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  .layout { flex-direction: column; height: auto; overflow: auto; }
+  .list-panel { width: 100%; height: 200px; flex-shrink: 0; }
+  .detail-panel { height: auto; }
+  .tab-content { overflow: visible; }
+  .form-grid { grid-template-columns: repeat(2, 1fr); }
+  body { overflow: auto; height: auto; }
+}
+@media (max-width: 480px) {
+  .form-grid { grid-template-columns: 1fr; }
+  .form-grid-2 { grid-template-columns: 1fr; }
+  .stat-grid { grid-template-columns: repeat(2, 1fr); }
+}
 </style>
 </head>
 <body>
 <script src="ersan_nav.js"></script>
-<div class="container">
-  <div class="icon">💬</div>
-  <h1>Müşteri Geri Bildirimi</h1>
-  <span class="std">AS9100 §8.5.5</span>
-  <p>Müşteri şikayeti, garanti, iade, memnuniyet takibi. Bu modül geliştirme aşamasındadır.</p>
-  <div class="wip">
-    <div class="wip-title">Planlanacak özellikler</div>
-    <div class="wip-item">Airtable tablo bağlantısı</div>
-    <div class="wip-item">Liste ve detay görünümü</div>
-    <div class="wip-item">Form ve kayıt yönetimi</div>
-    <div class="wip-item">PDF / rapor çıktısı</div>
-    <div class="wip-item">Diğer modüllerle entegrasyon</div>
+<script src="ersan_log.js"></script>
+
+<div class="layout">
+
+  <!-- ════ LEFT PANEL ════ -->
+  <div class="list-panel">
+    <div class="list-header">
+      <h2>Müşteriler</h2>
+      <div class="list-count" id="listCount">Yükleniyor…</div>
+    </div>
+    <div class="list-search">
+      <input type="text" id="searchInput" placeholder="Ad, kod, yetkili ara…" oninput="filterList()">
+    </div>
+    <div class="list-scroll" id="listScroll">
+      <div class="empty-state"><div class="spinner"></div></div>
+    </div>
   </div>
-  <a href="index.html" class="back">← Ana sayfaya dön</a>
+
+  <!-- ════ RIGHT PANEL ════ -->
+  <div class="detail-panel" id="detailPanel">
+
+    <!-- No selection state -->
+    <div class="no-selection" id="noSelection">
+      <div class="no-selection-icon">💬</div>
+      <p>Sol listeden bir müşteri seçin</p>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="detail-toolbar" id="detailToolbar" style="display:none">
+      <div style="flex:1">
+        <div class="detail-title" id="detailTitle">—</div>
+        <div class="detail-sub" id="detailSub">—</div>
+      </div>
+    </div>
+
+    <!-- Tabs bar -->
+    <div class="tabs" id="tabsBar" style="display:none">
+      <button class="tab-btn active" onclick="switchTab('bilgiler')">Bilgiler</button>
+      <button class="tab-btn" onclick="switchTab('siparisler')">Sipariş Geçmişi</button>
+      <button class="tab-btn" onclick="switchTab('sikayetler')">Şikayetler</button>
+      <button class="tab-btn" onclick="switchTab('performans')">Performans</button>
+    </div>
+
+    <!-- ── Tab 1: Bilgiler ── -->
+    <div class="tab-content" id="tab-bilgiler" style="display:none">
+      <div class="card">
+        <div class="card-header">Müşteri Bilgileri</div>
+        <div class="card-body">
+          <div class="form-grid">
+            <div class="field-group">
+              <label class="field-label">Müşteri Adı *</label>
+              <input type="text" id="f_musteri_adi" class="field-input" placeholder="Müşteri Adı">
+            </div>
+            <div class="field-group">
+              <label class="field-label">Müşteri Kodu</label>
+              <input type="text" id="f_musteri_kodu" class="field-input" placeholder="MST-001">
+            </div>
+            <div class="field-group">
+              <label class="field-label">Yetkili Kişi</label>
+              <input type="text" id="f_yetkili" class="field-input" placeholder="Ad Soyad">
+            </div>
+            <div class="field-group">
+              <label class="field-label">E-posta</label>
+              <input type="email" id="f_eposta" class="field-input" placeholder="ornek@firma.com">
+            </div>
+            <div class="field-group">
+              <label class="field-label">Telefon</label>
+              <input type="text" id="f_telefon" class="field-input" placeholder="+90 5xx xxx xx xx">
+            </div>
+            <div class="field-group">
+              <label class="field-label">Ülke</label>
+              <select id="f_ulke" class="field-input">
+                <option value="">— Seçin —</option>
+                <option value="Türkiye">Türkiye</option>
+                <option value="ABD">ABD</option>
+                <option value="Almanya">Almanya</option>
+                <option value="İngiltere">İngiltere</option>
+                <option value="Diğer">Diğer</option>
+              </select>
+            </div>
+            <div class="field-group form-full">
+              <label class="field-label">Notlar</label>
+              <textarea id="f_notlar" class="field-input" rows="3" placeholder="Müşteriyle ilgili notlar…"></textarea>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Durum</label>
+              <div class="field-check">
+                <input type="checkbox" id="f_aktif" checked>
+                <label for="f_aktif">Aktif Müşteri</label>
+              </div>
+            </div>
+          </div>
+          <div style="margin-top:16px; display:flex; gap:8px; justify-content:flex-end; border-top:1px solid var(--border); padding-top:14px">
+            <button class="btn" onclick="resetForm()">Sıfırla</button>
+            <button class="btn primary" id="saveBtn" onclick="saveMusteriRecord()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              Kaydet / Güncelle
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Tab 2: Siparişler ── -->
+    <div class="tab-content" id="tab-siparisler" style="display:none">
+      <div class="card">
+        <div class="card-header">
+          <span>Satış Emirleri</span>
+          <span id="seCount" class="badge badge-purple">—</span>
+        </div>
+        <div class="card-body" style="padding:0" id="seListContainer">
+          <div class="empty-state"><div class="spinner"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Tab 3: Şikayetler ── -->
+    <div class="tab-content" id="tab-sikayetler" style="display:none">
+      <div style="display:flex; justify-content:flex-end; margin-bottom:14px">
+        <button class="btn primary" onclick="openSikayetModal()">+ Yeni Şikayet</button>
+      </div>
+      <div id="sikayetListContainer">
+        <div class="empty-state"><div class="spinner"></div></div>
+      </div>
+    </div>
+
+    <!-- ── Tab 4: Performans ── -->
+    <div class="tab-content" id="tab-performans" style="display:none">
+      <div class="stat-grid">
+        <div class="stat-card accent">
+          <div class="stat-label">Toplam Sipariş</div>
+          <div class="stat-value" id="perf_toplam">—</div>
+          <div class="stat-sub">tüm satış emirleri</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-label">OTD %</div>
+          <div class="stat-value" id="perf_otd">—</div>
+          <div class="stat-sub">zamanında teslimat</div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-label">Açık Siparişler</div>
+          <div class="stat-value" id="perf_acik">—</div>
+          <div class="stat-sub">devam eden</div>
+        </div>
+        <div class="stat-card orange">
+          <div class="stat-label">Açık Şikayetler</div>
+          <div class="stat-value" id="perf_sikayet">—</div>
+          <div class="stat-sub">çözüm bekleyen</div>
+        </div>
+      </div>
+      <div id="perfNote" style="margin-top:16px; font-size:11px; color:var(--text3); text-align:center; padding:10px 0"></div>
+    </div>
+
+  </div>
 </div>
+
+<!-- ════ SIKAYET MODAL ════ -->
+<div class="modal-overlay" id="sikayetModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Yeni Şikayet / Geri Bildirim</h3>
+      <button class="modal-close" onclick="closeSikayetModal()">&#215;</button>
+    </div>
+    <div class="modal-body">
+      <div class="field-group">
+        <label class="field-label">Konu *</label>
+        <input type="text" id="sm_konu" class="field-input" placeholder="Şikayet konusu">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Açıklama *</label>
+        <textarea id="sm_aciklama" class="field-input" rows="4" placeholder="Detaylı açıklama…"></textarea>
+      </div>
+      <div class="form-grid-2">
+        <div class="field-group">
+          <label class="field-label">Öncelik</label>
+          <select id="sm_oncelik" class="field-input">
+            <option value="Düşük">Düşük</option>
+            <option value="Orta" selected>Orta</option>
+            <option value="Yüksek">Yüksek</option>
+            <option value="Kritik">Kritik</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Bağlı İş Emri (opsiyonel)</label>
+          <input type="text" id="sm_isemri" class="field-input" placeholder="IE-2026-001">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeSikayetModal()">İptal</button>
+      <button class="btn primary" id="sikayetSaveBtn" onclick="saveSikayet()">Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ AI 8D MODAL ════ -->
+<div class="modal-overlay" id="aiModal">
+  <div class="modal" style="max-width:680px">
+    <div class="modal-header">
+      <h3>AI — 8D Raporu Taslağı</h3>
+      <button class="modal-close" onclick="closeAiModal()">&#215;</button>
+    </div>
+    <div class="modal-body" id="aiModalContent">
+      <div class="ai-loading"><div class="spinner"></div> Claude ile 8D taslağı oluşturuluyor…</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeAiModal()">Kapat</button>
+      <button class="btn primary" onclick="copyAiOutput()">Kopyala</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+//  CONFIG
+// ═══════════════════════════════════════
+const BASE = 'app5LDgJMgocw79Ix';
+const T = {
+  musteri:  'tblPxhjJDEx0fyUQx',
+  se:       'tbl56Oj1nPaqefI60',
+  ie:       'tbl58qL39I2tv8hK4',
+  sikayet:  'Müşteri Şikayetleri',
+  personel: 'tblwG9GqnLC9oFZzb'
+};
+const PROXY = '/.netlify/functions/airtable';
+
+// ═══════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════
+let allMusteriler = [];
+let filteredMusteriler = [];
+let selectedMusteri = null;
+let currentTab = 'bilgiler';
+let seCache = [];
+let sikayetCache = [];
+
+// ═══════════════════════════════════════
+//  UTILS
+// ═══════════════════════════════════════
+function showToast(msg, type = 'success') {
+  const el = document.createElement('div');
+  el.className = 'toast ' + type;
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }, 3000);
+}
+
+function todayStr() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function formatDate(d) {
+  if (!d) return '—';
+  return String(d).slice(0, 10);
+}
+
+function genSikayetNo() {
+  const year = new Date().getFullYear();
+  const seq = String(Math.floor(Math.random() * 900) + 100);
+  return 'SKA-' + year + '-' + seq;
+}
+
+function oncelikBadge(o) {
+  const map = { 'Kritik': 'badge-red', 'Yüksek': 'badge-orange', 'Orta': 'badge-blue', 'Düşük': 'badge-gray' };
+  return '<span class="badge ' + (map[o] || 'badge-gray') + '">' + o + '</span>';
+}
+
+function statuBadge(s) {
+  const map = {
+    'Açık': 'badge-orange',
+    'İnceleniyor': 'badge-blue',
+    'Devam Ediyor': 'badge-blue',
+    'Tamamlandı': 'badge-green',
+    'Teslim Edildi': 'badge-green',
+    'Kapatıldı': 'badge-gray',
+    'Çözüldü': 'badge-green',
+    'İptal': 'badge-gray'
+  };
+  const key = s || '—';
+  return '<span class="badge ' + (map[key] || 'badge-gray') + '">' + key + '</span>';
+}
+
+// ═══════════════════════════════════════
+//  API
+// ═══════════════════════════════════════
+async function apiCall(method, table, id, body) {
+  let url = PROXY + '?base=' + BASE + '&table=' + encodeURIComponent(table);
+  if (id) url += '&id=' + encodeURIComponent(id);
+  const opts = { method: method, headers: { 'Content-Type': 'application/json' } };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(url, opts);
+  if (!res.ok) {
+    const txt = await res.text();
+    throw new Error(txt || res.statusText);
+  }
+  return res.json();
+}
+
+async function apiList(table, filterFormula) {
+  let url = PROXY + '?base=' + BASE + '&table=' + encodeURIComponent(table) + '&action=list';
+  if (filterFormula) url += '&filterByFormula=' + encodeURIComponent(filterFormula);
+  const res = await fetch(url);
+  if (!res.ok) {
+    const txt = await res.text();
+    throw new Error(txt || res.statusText);
+  }
+  const data = await res.json();
+  return data.records || [];
+}
+
+// ═══════════════════════════════════════
+//  LOAD MUSTERILER
+// ═══════════════════════════════════════
+async function loadMusteriler() {
+  try {
+    const records = await apiList(T.musteri);
+    allMusteriler = records.map(r => Object.assign({ id: r.id }, r.fields));
+    filteredMusteriler = allMusteriler.slice();
+    renderList();
+    document.getElementById('listCount').textContent = allMusteriler.length + ' müşteri';
+  } catch (e) {
+    document.getElementById('listScroll').innerHTML =
+      '<div class="empty-state"><p style="color:var(--red);font-size:12px">Hata: ' + e.message + '</p></div>';
+    document.getElementById('listCount').textContent = 'Hata';
+  }
+}
+
+// ═══════════════════════════════════════
+//  RENDER LIST
+// ═══════════════════════════════════════
+function renderList() {
+  const scroll = document.getElementById('listScroll');
+  if (!filteredMusteriler.length) {
+    scroll.innerHTML = '<div class="empty-state"><div class="empty-state-icon">&#128101;</div><p style="font-size:12px">Müşteri bulunamadı</p></div>';
+    return;
+  }
+  scroll.innerHTML = filteredMusteriler.map(function(m) {
+    const aktif = m['Aktif mi?'];
+    const kod = m['Müşteri Kodu'] || '—';
+    const ad = m['Müşteri Adı'] || '(isimsiz)';
+    const isActive = selectedMusteri && selectedMusteri.id === m.id ? ' active' : '';
+    return '<div class="musteri-item' + isActive + '" onclick="selectMusteri(\'' + m.id + '\')">'
+      + '<div class="mi-name">' + ad + '</div>'
+      + '<div class="mi-bottom">'
+      + '<span class="mi-kod">' + kod + '</span>'
+      + '<span class="mi-aktif ' + (aktif ? 'evet' : 'hayir') + '">' + (aktif ? 'Aktif' : 'Pasif') + '</span>'
+      + '</div></div>';
+  }).join('');
+}
+
+// ═══════════════════════════════════════
+//  FILTER
+// ═══════════════════════════════════════
+function filterList() {
+  const q = document.getElementById('searchInput').value.toLowerCase().trim();
+  if (!q) {
+    filteredMusteriler = allMusteriler.slice();
+  } else {
+    filteredMusteriler = allMusteriler.filter(function(m) {
+      return (m['Müşteri Adı'] || '').toLowerCase().indexOf(q) !== -1
+        || (m['Müşteri Kodu'] || '').toLowerCase().indexOf(q) !== -1
+        || (m['Yetkili Kişi'] || '').toLowerCase().indexOf(q) !== -1;
+    });
+  }
+  renderList();
+}
+
+// ═══════════════════════════════════════
+//  SELECT MUSTERI
+// ═══════════════════════════════════════
+function selectMusteri(id) {
+  selectedMusteri = allMusteriler.find(function(m) { return m.id === id; });
+  if (!selectedMusteri) return;
+
+  // Reset tab caches
+  seCache = [];
+  sikayetCache = [];
+
+  // Show panels
+  document.getElementById('noSelection').style.display = 'none';
+  document.getElementById('detailToolbar').style.display = 'flex';
+  document.getElementById('tabsBar').style.display = 'flex';
+
+  // Update toolbar
+  document.getElementById('detailTitle').textContent = selectedMusteri['Müşteri Adı'] || '—';
+  document.getElementById('detailSub').textContent = selectedMusteri['Müşteri Kodu'] || '';
+
+  // Highlight in list
+  renderList();
+
+  // Fill form
+  fillForm(selectedMusteri);
+
+  // Switch to bilgiler tab
+  switchTab('bilgiler');
+}
+
+// ═══════════════════════════════════════
+//  FILL FORM
+// ═══════════════════════════════════════
+function fillForm(m) {
+  document.getElementById('f_musteri_adi').value = m['Müşteri Adı'] || '';
+  document.getElementById('f_musteri_kodu').value = m['Müşteri Kodu'] || '';
+  document.getElementById('f_yetkili').value = m['Yetkili Kişi'] || '';
+  document.getElementById('f_eposta').value = m['E-posta'] || '';
+  document.getElementById('f_telefon').value = m['Telefon'] || '';
+  document.getElementById('f_ulke').value = m['Ülke'] || '';
+  document.getElementById('f_notlar').value = m['Notlar'] || '';
+  document.getElementById('f_aktif').checked = !!m['Aktif mi?'];
+}
+
+function resetForm() {
+  if (selectedMusteri) fillForm(selectedMusteri);
+}
+
+// ═══════════════════════════════════════
+//  SWITCH TAB
+// ═══════════════════════════════════════
+function switchTab(tab) {
+  currentTab = tab;
+  var tabNames = ['bilgiler', 'siparisler', 'sikayetler', 'performans'];
+  var btns = document.querySelectorAll('.tab-btn');
+  btns.forEach(function(b, i) {
+    b.classList.toggle('active', tabNames[i] === tab);
+  });
+  tabNames.forEach(function(t) {
+    document.getElementById('tab-' + t).style.display = t === tab ? 'block' : 'none';
+  });
+  if (tab === 'siparisler') loadSiparisler();
+  if (tab === 'sikayetler') loadSikayetler();
+  if (tab === 'performans') loadPerformans();
+}
+
+// ═══════════════════════════════════════
+//  SAVE MUSTERI (PATCH)
+// ═══════════════════════════════════════
+async function saveMusteriRecord() {
+  if (!selectedMusteri) { showToast('Lütfen önce bir müşteri seçin', 'error'); return; }
+  const btn = document.getElementById('saveBtn');
+  btn.disabled = true;
+  btn.textContent = 'Kaydediliyor…';
+
+  const fields = {
+    'Müşteri Adı':  document.getElementById('f_musteri_adi').value.trim(),
+    'Müşteri Kodu': document.getElementById('f_musteri_kodu').value.trim(),
+    'Yetkili Kişi': document.getElementById('f_yetkili').value.trim(),
+    'E-posta':      document.getElementById('f_eposta').value.trim(),
+    'Telefon':      document.getElementById('f_telefon').value.trim(),
+    'Ülke':         document.getElementById('f_ulke').value,
+    'Notlar':       document.getElementById('f_notlar').value.trim(),
+    'Aktif mi?':    document.getElementById('f_aktif').checked
+  };
+
+  try {
+    const oldFields = Object.assign({}, selectedMusteri);
+    await apiCall('PATCH', T.musteri, selectedMusteri.id, { fields: fields });
+    Object.assign(selectedMusteri, fields);
+    var idx = allMusteriler.findIndex(function(m) { return m.id === selectedMusteri.id; });
+    if (idx !== -1) Object.assign(allMusteriler[idx], fields);
+    renderList();
+    document.getElementById('detailTitle').textContent = fields['Müşteri Adı'] || '—';
+    document.getElementById('detailSub').textContent = fields['Müşteri Kodu'] || '';
+    await logIslem('Güncellendi', 'Müşteri', selectedMusteri.id, fields['Müşteri Adı'], oldFields, fields);
+    showToast('Müşteri güncellendi', 'success');
+  } catch (e) {
+    showToast('Hata: ' + e.message, 'error');
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Kaydet / Güncelle';
+}
+
+// ═══════════════════════════════════════
+//  LOAD SİPARİŞLER
+// ═══════════════════════════════════════
+async function loadSiparisler() {
+  const cont = document.getElementById('seListContainer');
+  if (!selectedMusteri) return;
+  if (seCache.length > 0) { renderSiparisler(seCache); return; }
+
+  cont.innerHTML = '<div class="empty-state"><div class="spinner"></div></div>';
+
+  try {
+    const musteriAdi = selectedMusteri['Müşteri Adı'] || '';
+    const linkedIds = selectedMusteri['Satış Emirler'] || selectedMusteri['Satış Emirleri'] || [];
+    var records = [];
+
+    if (linkedIds.length > 0) {
+      const formula = 'OR(' + linkedIds.map(function(id) { return "RECORD_ID()='" + id + "'"; }).join(',') + ')';
+      records = await apiList(T.se, formula);
+    } else {
+      const formula = "{Müşteri}='" + musteriAdi.replace(/'/g, "\\'") + "'";
+      records = await apiList(T.se, formula);
+    }
+
+    seCache = records;
+    renderSiparisler(records);
+  } catch (e) {
+    cont.innerHTML = '<div class="empty-state"><p style="color:var(--red);font-size:12px">Hata: ' + e.message + '</p></div>';
+  }
+}
+
+function renderSiparisler(records) {
+  const cont = document.getElementById('seListContainer');
+  document.getElementById('seCount').textContent = records.length;
+
+  if (!records.length) {
+    cont.innerHTML = '<div class="empty-state"><div class="empty-state-icon">&#128230;</div><p style="font-size:12px">Bu müşteriye ait sipariş bulunamadı</p></div>';
+    return;
+  }
+
+  var rows = records.map(function(r) {
+    var f = r.fields;
+    var seNo    = f['SE No'] || f['Sipariş No'] || f['No'] || r.id;
+    var parca   = Array.isArray(f['Parça']) ? f['Parça'].join(', ') : (f['Parça'] || f['Ürün'] || '—');
+    var miktar  = f['Miktar'] || f['Adet'] || '—';
+    var durum   = f['Durum'] || f['Statü'] || '—';
+    var termin  = formatDate(f['Termin'] || f['Termin Tarihi'] || f['Teslim Tarihi']);
+    return '<tr>'
+      + '<td style="font-family:var(--mono);font-size:11px;color:var(--accent)">' + seNo + '</td>'
+      + '<td>' + parca + '</td>'
+      + '<td style="text-align:center;font-family:var(--mono)">' + miktar + '</td>'
+      + '<td>' + statuBadge(durum) + '</td>'
+      + '<td style="font-family:var(--mono);font-size:11px">' + termin + '</td>'
+      + '</tr>';
+  }).join('');
+
+  cont.innerHTML = '<table class="data-table">'
+    + '<thead><tr>'
+    + '<th>SE No</th><th>Parça</th><th style="text-align:center">Miktar</th><th>Durum</th><th>Termin</th>'
+    + '</tr></thead>'
+    + '<tbody>' + rows + '</tbody>'
+    + '</table>'
+    + '<div style="padding:10px 16px;font-size:11px;color:var(--text3);text-align:right;border-top:1px solid var(--border)">'
+    + 'Toplam <strong>' + records.length + '</strong> sipariş</div>';
+}
+
+// ═══════════════════════════════════════
+//  LOAD SİKAYETLER
+// ═══════════════════════════════════════
+async function loadSikayetler() {
+  const cont = document.getElementById('sikayetListContainer');
+  if (!selectedMusteri) return;
+
+  cont.innerHTML = '<div class="empty-state"><div class="spinner"></div></div>';
+
+  try {
+    const musteriAdi = selectedMusteri['Müşteri Adı'] || '';
+    const formula = "{Müşteri}='" + musteriAdi.replace(/'/g, "\\'") + "'";
+    const records = await apiList(T.sikayet, formula);
+    sikayetCache = records;
+    renderSikayetler(records);
+  } catch (e) {
+    sikayetCache = [];
+    cont.innerHTML = '<div class="empty-state">'
+      + '<div class="empty-state-icon">&#9989;</div>'
+      + '<p style="font-size:12px;color:var(--text2)">Şikayet tablosu henüz oluşturulmamış veya erişilemiyor.<br>'
+      + '<span style="font-size:11px;color:var(--text3)">Airtable\'da "Müşteri Şikayetleri" tablosunu oluşturun.</span></p></div>';
+  }
+}
+
+function renderSikayetler(records) {
+  const cont = document.getElementById('sikayetListContainer');
+  if (!records.length) {
+    cont.innerHTML = '<div class="empty-state"><div class="empty-state-icon">&#9989;</div><p style="font-size:12px">Bu müşteriye ait şikayet kaydı yok</p></div>';
+    return;
+  }
+  cont.innerHTML = records.map(function(r) {
+    var f = r.fields;
+    var no       = f['Şikayet No'] || r.id;
+    var konu     = f['Konu'] || '—';
+    var aciklama = f['Açıklama'] || '';
+    var oncelik  = f['Öncelik'] || 'Orta';
+    var statu    = f['Statü'] || 'Açık';
+    var tarih    = formatDate(f['Tarih']);
+    // Encode aciklama for onclick attr
+    var acEnc = aciklama.substring(0, 500).replace(/'/g, '&#39;').replace(/"/g, '&quot;').replace(/\n/g, ' ');
+    var konuEnc = konu.replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+    return '<div class="sikayet-item">'
+      + '<div class="si-header">'
+      + '<span class="si-no">' + no + '</span>'
+      + '<div style="display:flex;gap:6px;align-items:center">' + oncelikBadge(oncelik) + statuBadge(statu) + '</div>'
+      + '</div>'
+      + '<div class="si-konu">' + konu + '</div>'
+      + (aciklama ? '<div class="si-aciklama">' + aciklama + '</div>' : '')
+      + '<div class="si-footer">'
+      + '<span class="si-tarih">' + tarih + '</span>'
+      + '<button class="btn sm" onclick="openAiModal(\'' + r.id + '\',\'' + acEnc + '\',\'' + konuEnc + '\')">AI 8D Taslağı</button>'
+      + '</div></div>';
+  }).join('');
+}
+
+// ═══════════════════════════════════════
+//  LOAD PERFORMANS
+// ═══════════════════════════════════════
+async function loadPerformans() {
+  if (!selectedMusteri) return;
+
+  // Ensure SE data loaded
+  if (!seCache.length) {
+    try { await loadSiparisler(); } catch(e) {}
+  }
+  // Ensure sikayet data loaded
+  if (!sikayetCache.length) {
+    try { await loadSikayetler(); } catch(e) {}
+  }
+
+  var records = seCache;
+  var toplam = records.length;
+  document.getElementById('perf_toplam').textContent = toplam || '0';
+
+  var todayDate = new Date();
+  todayDate.setHours(0, 0, 0, 0);
+
+  var onTime = 0, acik = 0, completed = 0;
+  records.forEach(function(r) {
+    var f = r.fields;
+    var durum = f['Durum'] || f['Statü'] || '';
+    var terminStr = f['Termin'] || f['Termin Tarihi'] || f['Teslim Tarihi'];
+    var isCompleted = /tamamlan|kapatıl|teslim edildi/i.test(durum);
+    if (!isCompleted) {
+      acik++;
+    } else {
+      completed++;
+      if (terminStr) {
+        var termin = new Date(terminStr);
+        termin.setHours(0,0,0,0);
+        if (termin >= todayDate) onTime++;
+      }
+    }
+  });
+
+  var otd = completed > 0 ? Math.round((onTime / completed) * 100) + '%' : (toplam === 0 ? '—' : 'N/A');
+  document.getElementById('perf_otd').textContent = otd;
+  document.getElementById('perf_acik').textContent = acik;
+
+  var openSikayet = sikayetCache.filter(function(r) {
+    return (r.fields['Statü'] || 'Açık') === 'Açık';
+  }).length;
+  document.getElementById('perf_sikayet').textContent = openSikayet;
+
+  document.getElementById('perfNote').textContent =
+    'Son güncelleme: ' + new Date().toLocaleTimeString('tr-TR')
+    + ' · OTD: tamamlanan siparişlerde termin = bugün veya ileri tarih';
+}
+
+// ═══════════════════════════════════════
+//  SIKAYET MODAL
+// ═══════════════════════════════════════
+function openSikayetModal() {
+  if (!selectedMusteri) { showToast('Önce bir müşteri seçin', 'error'); return; }
+  document.getElementById('sm_konu').value = '';
+  document.getElementById('sm_aciklama').value = '';
+  document.getElementById('sm_oncelik').value = 'Orta';
+  document.getElementById('sm_isemri').value = '';
+  document.getElementById('sikayetModal').classList.add('open');
+  setTimeout(function() { document.getElementById('sm_konu').focus(); }, 100);
+}
+
+function closeSikayetModal() {
+  document.getElementById('sikayetModal').classList.remove('open');
+}
+
+async function saveSikayet() {
+  var konu     = document.getElementById('sm_konu').value.trim();
+  var aciklama = document.getElementById('sm_aciklama').value.trim();
+  var oncelik  = document.getElementById('sm_oncelik').value;
+  var isemri   = document.getElementById('sm_isemri').value.trim();
+
+  if (!konu)     { showToast('Konu zorunludur', 'error'); return; }
+  if (!aciklama) { showToast('Açıklama zorunludur', 'error'); return; }
+
+  var btn = document.getElementById('sikayetSaveBtn');
+  btn.disabled = true;
+  btn.textContent = 'Kaydediliyor…';
+
+  var sikayetNo = genSikayetNo();
+  var fields = {
+    'Şikayet No': sikayetNo,
+    'Müşteri':    selectedMusteri['Müşteri Adı'],
+    'Konu':       konu,
+    'Açıklama':   aciklama,
+    'Öncelik':    oncelik,
+    'Tarih':      todayStr(),
+    'Statü':      'Açık'
+  };
+  if (isemri) fields['Bağlı İş Emri'] = isemri;
+
+  try {
+    var res = await apiCall('POST', T.sikayet, null, { fields: fields });
+    await logIslem('Oluşturuldu', 'Müşteri Şikayetleri', res.id, sikayetNo, null, fields);
+    showToast('Şikayet kaydedildi: ' + sikayetNo, 'success');
+    closeSikayetModal();
+    sikayetCache = [];
+    await loadSikayetler();
+  } catch (e) {
+    showToast('Hata: ' + e.message, 'error');
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Kaydet';
+}
+
+// ═══════════════════════════════════════
+//  AI 8D MODAL
+// ═══════════════════════════════════════
+function openAiModal(recId, aciklama, konu) {
+  document.getElementById('aiModal').classList.add('open');
+  document.getElementById('aiModalContent').innerHTML =
+    '<div class="ai-loading"><div class="spinner"></div> Claude ile 8D taslağı oluşturuluyor…</div>';
+  generate8D(aciklama, konu);
+}
+
+function closeAiModal() {
+  document.getElementById('aiModal').classList.remove('open');
+}
+
+function copyAiOutput() {
+  var el = document.getElementById('ai-output-text');
+  if (el) {
+    navigator.clipboard.writeText(el.textContent)
+      .then(function() { showToast('Kopyalandı', 'info'); })
+      .catch(function() { showToast('Kopyalama başarısız', 'error'); });
+  }
+}
+
+async function generate8D(aciklama, konu) {
+  var prompt = 'Bu müşteri şikayeti için 8D raporu taslağı yaz:\n\nKonu: ' + konu + '\n\nAçıklama: ' + aciklama + '\n\nTürkçe olarak, D1\'den D8\'e kadar her disiplini başlık ve içerikle yaz.';
+  try {
+    var res = await fetch('/.netlify/functions/claude', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1500,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    if (!res.ok) throw new Error(await res.text());
+    var data = await res.json();
+    var text = (data.content && data.content[0] && data.content[0].text)
+      || (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content)
+      || JSON.stringify(data, null, 2);
+    document.getElementById('aiModalContent').innerHTML =
+      '<pre class="ai-output" id="ai-output-text">' + text.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</pre>';
+  } catch (e) {
+    document.getElementById('aiModalContent').innerHTML =
+      '<div style="color:var(--red);font-size:12px;padding:12px 0">Hata: ' + e.message + '</div>';
+  }
+}
+
+// ═══════════════════════════════════════
+//  CLOSE MODALS ON OVERLAY CLICK
+// ═══════════════════════════════════════
+document.getElementById('sikayetModal').addEventListener('click', function(e) {
+  if (e.target === this) closeSikayetModal();
+});
+document.getElementById('aiModal').addEventListener('click', function(e) {
+  if (e.target === this) closeAiModal();
+});
+
+// ═══════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════
+loadMusteriler();
+</script>
 </body>
 </html>

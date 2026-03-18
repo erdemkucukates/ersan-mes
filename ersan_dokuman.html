@@ -4,38 +4,620 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ersan MES — Doküman Yönetimi</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8fafc; min-height: 100vh; }
-.container { max-width: 960px; margin: 0 auto; padding: 3rem 1.5rem; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: calc(100vh - 48px); }
-.icon { font-size: 56px; margin-bottom: 1.5rem; }
-h1 { font-size: 24px; font-weight: 600; color: #1e293b; margin-bottom: .5rem; }
-.std { font-size: 11px; font-weight: 500; background: #ede9fe; color: #5b21b6; padding: 3px 10px; border-radius: 20px; margin-bottom: 1.25rem; display: inline-block; }
-p { font-size: 14px; color: #64748b; text-align: center; max-width: 420px; line-height: 1.7; margin-bottom: 2rem; }
-.wip { background: #fff; border: 0.5px solid #e2e8f0; border-radius: 12px; padding: 1.25rem 1.5rem; max-width: 480px; width: 100%; }
-.wip-title { font-size: 11px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: .06em; margin-bottom: .875rem; }
-.wip-item { display: flex; align-items: center; gap: 10px; padding: .5rem 0; border-top: 0.5px solid #f1f5f9; font-size: 13px; color: #475569; }
-.wip-item::before { content: "○"; color: #cbd5e1; font-size: 10px; }
-.back { margin-top: 1.5rem; font-size: 13px; color: #3b82f6; text-decoration: none; }
-.back:hover { text-decoration: underline; }
+:root{
+  --bg:#f0f2f5;--surface:#fff;--surface2:#f7f8fa;--border:#e2e5ea;--border2:#c8cdd6;
+  --text:#1a1d23;--text2:#5a6170;--text3:#9aa0ad;
+  --accent:#7c3aed;--accent-light:#ede9fe;--accent-hover:#6d28d9;
+  --green:#059669;--green-light:#d1fae5;--red:#dc2626;--red-light:#fee2e2;
+  --orange:#d97706;--orange-light:#fef3c7;--blue:#2563eb;--blue-light:#dbeafe;
+  --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;--radius:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);height:100vh;overflow:hidden;font-size:13px;}
+
+.header{height:52px;background:#1e1b4b;display:flex;align-items:center;padding:0 20px;gap:16px;position:fixed;top:0;left:0;right:0;z-index:100;}
+.logo-badge{width:28px;height:28px;border-radius:6px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:white;font-family:var(--mono);}
+.header-title{color:white;font-size:14px;font-weight:600;}
+.header-sub{color:rgba(255,255,255,.5);font-size:11px;}
+.header-sep{width:1px;height:28px;background:rgba(255,255,255,.2);}
+.header-badge{font-size:10px;background:rgba(124,58,237,.4);color:#c4b5fd;padding:3px 8px;border-radius:10px;font-weight:600;}
+
+.layout-wrapper{display:flex;height:calc(100vh - 52px);margin-top:52px;overflow:hidden;}
+
+/* LEFT */
+.list-panel{width:220px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;}
+.list-count{font-size:10px;color:var(--text3);font-family:var(--mono);padding:4px 12px 0;}
+.filter-row{padding:4px 8px 8px;border-bottom:1px solid var(--border);display:flex;gap:4px;flex-wrap:wrap;}
+.fc{padding:3px 8px;border-radius:10px;font-size:10px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text3);}
+.fc.on{background:var(--accent-light);color:var(--accent);border-color:var(--accent);}
+.list-scroll{flex:1;overflow-y:auto;}
+.new-btn-wrap{padding:10px;}
+
+.dok-item{padding:9px 12px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s;position:relative;}
+.dok-item:hover{background:var(--surface2);}
+.dok-item.active{background:var(--accent-light);border-left:3px solid var(--accent);}
+.dok-no{font-family:var(--mono);font-size:10px;font-weight:500;color:var(--accent);}
+.dok-baslik{font-size:11px;font-weight:500;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.dok-meta{font-size:10px;color:var(--text3);margin-top:3px;display:flex;gap:5px;align-items:center;flex-wrap:wrap;}
+.alert-icon{position:absolute;top:8px;right:8px;width:16px;height:16px;background:var(--orange);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;color:white;font-weight:700;}
+
+/* RIGHT */
+.detail-panel{flex:1;overflow:hidden;display:flex;flex-direction:column;}
+.detail-scroll{flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:12px;}
+.toolbar{display:flex;align-items:center;gap:8px;padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.card-header{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;}
+.card-body{padding:14px;}
+.card-dot{width:6px;height:6px;border-radius:50%;}
+
+/* BUTTONS */
+.btn{display:flex;align-items:center;gap:5px;padding:6px 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;background:var(--surface);color:var(--text2);font-family:var(--sans);transition:all .15s;white-space:nowrap;}
+.btn:hover{border-color:var(--accent);color:var(--accent);}
+.btn.primary{background:var(--accent);color:white;border-color:var(--accent);}
+.btn.primary:hover{background:var(--accent-hover);}
+.btn.success{background:var(--green);color:white;border-color:var(--green);}
+.btn.success:hover{opacity:.9;}
+.btn.warn{background:var(--orange);color:white;border-color:var(--orange);}
+.btn.warn:hover{opacity:.9;}
+.btn:disabled{opacity:.5;cursor:not-allowed;}
+
+/* FORM */
+.fg{display:flex;flex-direction:column;gap:4px;}
+.fl{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;}
+.fi{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:12px;font-family:var(--sans);color:var(--text);outline:none;width:100%;}
+.fi:focus{border-color:var(--accent);}
+.fi:disabled{opacity:.6;cursor:not-allowed;}
+textarea.fi{resize:vertical;min-height:60px;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+
+/* BADGE */
+.badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;}
+.b-Aktif{background:var(--green-light);color:var(--green);}
+.b-Revize{background:var(--orange-light);color:var(--orange);}
+.b-Arşiv{background:#f3f4f6;color:#6b7280;}
+.b-Prosedür{background:var(--blue-light);color:var(--blue);}
+.b-Talimat{background:var(--accent-light);color:var(--accent);}
+.b-Form{background:var(--green-light);color:var(--green);}
+.b-Şartname{background:var(--orange-light);color:var(--orange);}
+.b-DışKaynaklı{background:#f3f4f6;color:#6b7280;}
+
+/* PDF UPLOAD */
+.upload-zone{border:2px dashed var(--border);border-radius:8px;padding:20px;text-align:center;cursor:pointer;transition:all .2s;}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--accent);background:var(--accent-light);}
+.upload-zone input[type=file]{display:none;}
+.upload-zone-label{font-size:12px;color:var(--text3);}
+.pdf-link{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;margin-top:10px;}
+.pdf-link a{color:var(--accent);font-size:12px;font-weight:500;text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;}
+.pdf-link a:hover{text-decoration:underline;}
+
+/* TOAST */
+.toast-wrap{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;}
+.toast{padding:10px 16px;border-radius:8px;font-size:12px;font-weight:500;color:white;animation:fadeIn .2s;}
+.toast.ok{background:var(--green);}
+.toast.err{background:var(--red);}
+.toast.inf{background:var(--accent);}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+.empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text3);gap:12px;padding:40px;text-align:center;}
+
+.review-alert{background:var(--orange-light);border:1px solid var(--orange);border-radius:6px;padding:8px 12px;font-size:11px;color:var(--orange);font-weight:500;display:flex;align-items:center;gap:6px;}
+
+@media(max-width:700px){
+  body{overflow:auto;}
+  .layout-wrapper{flex-direction:column;height:auto;}
+  .list-panel{width:100%;height:auto;border-right:none;border-bottom:1px solid var(--border);}
+  .detail-panel{height:auto;}
+  .detail-scroll{padding:12px;}
+  .form-grid,.form-grid-3{grid-template-columns:1fr;}
+}
 </style>
 </head>
 <body>
 <script src="ersan_nav.js"></script>
-<div class="container">
-  <div class="icon">📁</div>
-  <h1>Doküman Yönetimi</h1>
-  <span class="std">AS9100 §7.5</span>
-  <p>Prosedürler, talimatlar, formlar, revizyon ve dağıtım kontrolü. Bu modül geliştirme aşamasındadır.</p>
-  <div class="wip">
-    <div class="wip-title">Planlanacak özellikler</div>
-    <div class="wip-item">Airtable tablo bağlantısı</div>
-    <div class="wip-item">Liste ve detay görünümü</div>
-    <div class="wip-item">Form ve kayıt yönetimi</div>
-    <div class="wip-item">PDF / rapor çıktısı</div>
-    <div class="wip-item">Diğer modüllerle entegrasyon</div>
+<script src="ersan_log.js"></script>
+
+<header class="header">
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div class="logo-badge">MES</div>
+    <div><div class="header-title">Ersan MES</div><div class="header-sub">Doküman Yönetimi</div></div>
   </div>
-  <a href="index.html" class="back">← Ana sayfaya dön</a>
+  <div class="header-sep"></div>
+  <span class="header-badge">AS9100 §7.5</span>
+</header>
+
+<div class="layout-wrapper">
+
+  <!-- LEFT PANEL -->
+  <div class="list-panel">
+    <div class="new-btn-wrap">
+      <button class="btn primary" style="width:100%;justify-content:center;" onclick="newDokuman()">+ Yeni Doküman</button>
+    </div>
+    <div class="list-count" id="dok-count">Yükleniyor...</div>
+    <div class="filter-row">
+      <div class="fc on" data-f="Tümü" onclick="setFilter(this)">Tümü</div>
+      <div class="fc" data-f="Aktif" onclick="setFilter(this)">Aktif</div>
+      <div class="fc" data-f="Revize" onclick="setFilter(this)">Revize</div>
+      <div class="fc" data-f="Arşiv" onclick="setFilter(this)">Arşiv</div>
+    </div>
+    <div class="list-scroll" id="dok-list">
+      <div style="padding:20px;text-align:center;color:var(--text3);font-size:12px;">Yükleniyor...</div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="detail-panel">
+    <div id="detail-content" style="flex:1;overflow:hidden;display:flex;flex-direction:column;">
+      <div class="empty">
+        <svg width="56" height="56" viewBox="0 0 56 56" fill="none" style="opacity:.2"><rect x="10" y="6" width="36" height="44" rx="4" stroke="currentColor" stroke-width="2"/><path d="M18 18h20M18 26h20M18 34h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <p style="font-size:14px;font-weight:500;">Listeden bir doküman seçin veya yeni oluşturun</p>
+      </div>
+    </div>
+  </div>
+
 </div>
+
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<script>
+const BASE = 'app5LDgJMgocw79Ix';
+const T = {
+  dok: 'Dokümanlar',
+  personel: 'tblwG9GqnLC9oFZzb'
+};
+
+let dokList = [], personelList = [];
+let activeFilter = 'Tümü';
+let selectedDok = null;
+let isNewMode = false;
+let _uploadingPdf = false;
+
+// ── API ──
+const apiPost = async (method, path, body) => {
+  const res = await fetch('/.netlify/functions/airtable', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({method, path, body})
+  });
+  return res.json();
+};
+
+const apiGet = async (table, params='') => apiPost('GET', `/v0/${BASE}/${encodeURIComponent(table)}?${params}`);
+const apiFn = async (method, table, body, id='') => apiPost(method, `/v0/${BASE}/${encodeURIComponent(table)}${id?'/'+id:''}`, body);
+
+const apiGetAll = async (table, params='') => {
+  let all = [], offset = '';
+  do {
+    const sep = params ? '&' : '';
+    const p = params + (offset ? sep + 'offset=' + offset : '');
+    const d = await apiGet(table, p);
+    all = all.concat(d.records || []);
+    offset = d.offset || '';
+  } while (offset);
+  return all;
+};
+
+// ── TOAST ──
+function toast(msg, type='ok') {
+  const w = document.getElementById('toast-wrap');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.textContent = msg;
+  w.appendChild(t);
+  setTimeout(() => t.remove(), 3200);
+}
+
+// ── HELPERS ──
+function today() { return new Date().toISOString().slice(0,10); }
+function fmtDate(d) { return d ? d.slice(0,10).split('-').reverse().join('.') : '—'; }
+
+function isReviewSoon(dateStr) {
+  if (!dateStr) return false;
+  const diff = new Date(dateStr) - new Date();
+  return diff > 0 && diff < 30 * 24 * 60 * 60 * 1000;
+}
+
+function isReviewOverdue(dateStr) {
+  if (!dateStr) return false;
+  return new Date(dateStr) < new Date();
+}
+
+function generateDokNo() {
+  const year = new Date().getFullYear();
+  const prefix = `DOK-${year}-`;
+  const existing = dokList
+    .map(r => r.fields['Doküman No'] || '')
+    .filter(n => n.startsWith(prefix))
+    .map(n => parseInt(n.slice(prefix.length)) || 0);
+  const max = existing.length ? Math.max(...existing) : 0;
+  return prefix + String(max + 1).padStart(3,'0');
+}
+
+function incRevNo(rev) {
+  if (!rev) return 'B';
+  // If it's a letter
+  if (/^[A-Z]$/.test(rev)) return String.fromCharCode(rev.charCodeAt(0) + 1);
+  // If it's a number
+  const n = parseInt(rev);
+  if (!isNaN(n)) return String(n + 1);
+  return rev + '.1';
+}
+
+// ── FILTER ──
+function setFilter(el) {
+  document.querySelectorAll('.fc').forEach(e => e.classList.remove('on'));
+  el.classList.add('on');
+  activeFilter = el.dataset.f;
+  renderList();
+}
+
+// ── LOAD ──
+async function loadAll() {
+  try {
+    const [doks, pers] = await Promise.all([
+      apiGetAll(T.dok, 'sort[0][field]=Revizyon Tarihi&sort[0][direction]=desc'),
+      apiGetAll('tblwG9GqnLC9oFZzb', 'fields[]=Ad Soyad')
+    ]);
+    dokList = doks;
+    personelList = pers;
+    renderList();
+  } catch(e) {
+    document.getElementById('dok-list').innerHTML = `<div style="padding:20px;text-align:center;color:var(--red);font-size:12px;">Yükleme hatası: ${e.message}</div>`;
+  }
+}
+
+// ── RENDER LIST ──
+function renderList() {
+  const filtered = dokList.filter(r => {
+    if (activeFilter === 'Tümü') return true;
+    return (r.fields['Statü'] || '') === activeFilter;
+  });
+  document.getElementById('dok-count').textContent = `${filtered.length} / ${dokList.length} doküman`;
+  if (!filtered.length) {
+    document.getElementById('dok-list').innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:12px;">Kayıt bulunamadı</div>';
+    return;
+  }
+  document.getElementById('dok-list').innerHTML = filtered.map(r => {
+    const f = r.fields;
+    const isActive = selectedDok && selectedDok.id === r.id;
+    const tip = f['Tip'] || '';
+    const statu = f['Statü'] || '';
+    const reviewSoon = isReviewSoon(f['Sonraki Gözden Geçirme']);
+    const reviewOverdue = isReviewOverdue(f['Sonraki Gözden Geçirme']);
+    const statuCls = statu === 'Aktif' ? 'b-Aktif' : statu === 'Revize' ? 'b-Revize' : 'b-Arşiv';
+    const tipCls = 'b-' + (tip || '').replace(/\s+/g,'');
+    return `<div class="dok-item${isActive?' active':''}" onclick="selectDok('${r.id}')">
+      ${reviewSoon || reviewOverdue ? `<div class="alert-icon" title="${reviewOverdue?'Gecikmiş':'30 gün içinde'}">!</div>` : ''}
+      <div class="dok-no">${f['Doküman No'] || '—'}</div>
+      <div class="dok-baslik">${f['Başlık'] || '—'}</div>
+      <div class="dok-meta">
+        ${tip ? `<span class="badge ${tipCls}">${tip}</span>` : ''}
+        ${statu ? `<span class="badge ${statuCls}">${statu}</span>` : ''}
+        ${f['Revizyon No'] ? `<span style="font-family:var(--mono);font-size:10px;">Rev.${f['Revizyon No']}</span>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── SELECT / NEW ──
+function selectDok(id) {
+  selectedDok = dokList.find(r => r.id === id) || null;
+  isNewMode = false;
+  renderList();
+  renderDetail();
+}
+
+function newDokuman() {
+  selectedDok = null;
+  isNewMode = true;
+  renderList();
+  renderDetail();
+}
+
+// ── OPTIONS ──
+function buildPersonelOptions(selected='') {
+  return `<option value="">— Seçiniz —</option>` + personelList.map(r => {
+    const label = r.fields['Ad Soyad'] || r.id;
+    return `<option value="${r.id}" ${r.id===selected?'selected':''}>${label}</option>`;
+  }).join('');
+}
+
+// ── RENDER DETAIL ──
+function renderDetail() {
+  const panel = document.getElementById('detail-content');
+  if (!isNewMode && !selectedDok) {
+    panel.innerHTML = `<div class="empty">
+      <svg width="56" height="56" viewBox="0 0 56 56" fill="none" style="opacity:.2"><rect x="10" y="6" width="36" height="44" rx="4" stroke="currentColor" stroke-width="2"/><path d="M18 18h20M18 26h20M18 34h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <p style="font-size:14px;font-weight:500;">Listeden bir doküman seçin veya yeni oluşturun</p>
+    </div>`;
+    return;
+  }
+
+  const f = selectedDok ? selectedDok.fields : {};
+  const dokNo = isNewMode ? generateDokNo() : (f['Doküman No'] || '');
+  const statu = f['Statü'] || 'Aktif';
+  const tip = f['Tip'] || '';
+  const hazirlayanId = f['Hazırlayan']?.[0] || '';
+  const onaylayanId = f['Onaylayan']?.[0] || '';
+  const pdfUrl = f['Dosya'] || '';
+  const reviewSoon = isReviewSoon(f['Sonraki Gözden Geçirme']);
+  const reviewOverdue = isReviewOverdue(f['Sonraki Gözden Geçirme']);
+
+  panel.innerHTML = `
+    <div class="toolbar">
+      <span style="font-family:var(--mono);font-size:13px;font-weight:600;color:var(--accent);">${isNewMode ? 'Yeni Doküman' : dokNo}</span>
+      ${!isNewMode ? `<span class="badge b-${statu}">${statu}</span>${tip ? `<span class="badge b-${tip.replace(/\s/g,'')}">${tip}</span>` : ''}` : ''}
+      <div style="flex:1;"></div>
+    </div>
+    <div class="detail-scroll">
+
+      ${(reviewSoon || reviewOverdue) && !isNewMode ? `
+      <div class="review-alert">
+        ⚠ Sonraki Gözden Geçirme: ${fmtDate(f['Sonraki Gözden Geçirme'])} — ${reviewOverdue ? 'TARİH GEÇTİ' : '30 gün içinde'}
+      </div>` : ''}
+
+      <!-- CARD 1: Bilgiler -->
+      <div class="card">
+        <div class="card-header"><div class="card-dot" style="background:var(--accent);"></div>Doküman Bilgileri</div>
+        <div class="card-body">
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div class="form-grid">
+              <div class="fg">
+                <label class="fl">Doküman No</label>
+                <input id="f-dokno" class="fi" value="${dokNo}" readonly style="font-family:var(--mono);font-weight:600;color:var(--accent);">
+              </div>
+              <div class="fg">
+                <label class="fl">Revizyon No</label>
+                <input id="f-revno" class="fi" value="${f['Revizyon No'] || 'A'}" placeholder="A">
+              </div>
+            </div>
+            <div class="fg">
+              <label class="fl">Başlık <span style="color:var(--red);">*</span></label>
+              <input id="f-baslik" class="fi" value="${f['Başlık'] || ''}" placeholder="Doküman başlığı">
+            </div>
+            <div class="form-grid">
+              <div class="fg">
+                <label class="fl">Tip</label>
+                <select id="f-tip" class="fi">
+                  <option value="">— Seçiniz —</option>
+                  ${['Prosedür','Talimat','Form','Şartname','Dış Kaynaklı'].map(t => `<option value="${t}" ${tip===t?'selected':''}>${t}</option>`).join('')}
+                </select>
+              </div>
+              <div class="fg">
+                <label class="fl">Revizyon Tarihi</label>
+                <input id="f-rev-tarih" type="date" class="fi" value="${f['Revizyon Tarihi'] || today()}">
+              </div>
+            </div>
+            <div class="form-grid">
+              <div class="fg">
+                <label class="fl">Hazırlayan</label>
+                <select id="f-hazirlayan" class="fi">
+                  ${buildPersonelOptions(hazirlayanId)}
+                </select>
+              </div>
+              <div class="fg">
+                <label class="fl">Onaylayan</label>
+                <select id="f-onaylayan" class="fi">
+                  ${buildPersonelOptions(onaylayanId)}
+                </select>
+              </div>
+            </div>
+            <div class="form-grid">
+              <div class="fg">
+                <label class="fl">Sonraki Gözden Geçirme</label>
+                <input id="f-review-tarih" type="date" class="fi" value="${f['Sonraki Gözden Geçirme'] || ''}">
+              </div>
+              <div class="fg">
+                <label class="fl">Statü</label>
+                <select id="f-statu" class="fi">
+                  <option value="Aktif" ${statu==='Aktif'?'selected':''}>Aktif</option>
+                  <option value="Revize" ${statu==='Revize'?'selected':''}>Revize</option>
+                  <option value="Arşiv" ${statu==='Arşiv'?'selected':''}>Arşiv</option>
+                </select>
+              </div>
+            </div>
+            <div class="fg">
+              <label class="fl">Notlar</label>
+              <textarea id="f-notlar" class="fi" rows="2" placeholder="Ek notlar...">${f['Notlar'] || ''}</textarea>
+            </div>
+            <div style="display:flex;justify-content:flex-end;">
+              <button class="btn primary" onclick="saveCard1()">Kaydet</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      ${!isNewMode ? `
+      <!-- CARD 2: Dosya -->
+      <div class="card">
+        <div class="card-header"><div class="card-dot" style="background:var(--blue);"></div>Doküman Dosyası (PDF)</div>
+        <div class="card-body">
+          <div id="pdf-section">
+            ${pdfUrl ? `
+            <div class="pdf-link">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              <a href="${pdfUrl}" target="_blank">${dokNo}.pdf</a>
+            </div>
+            <div style="margin-top:10px;">
+              <label class="fl" style="margin-bottom:6px;display:block;">Yeni dosya yükle (mevcut değiştirilir)</label>
+            </div>` : `<div style="font-size:12px;color:var(--text3);margin-bottom:10px;">Henüz dosya yüklenmemiş.</div>`}
+            <div class="upload-zone" id="upload-zone" onclick="document.getElementById('pdf-input').click()" ondrop="handleDrop(event)" ondragover="event.preventDefault();this.classList.add('drag')" ondragleave="this.classList.remove('drag')">
+              <input type="file" id="pdf-input" accept=".pdf" onchange="uploadPDF(this.files[0])">
+              <div class="upload-zone-label">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="display:block;margin:0 auto 6px;"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+                PDF sürükle veya <strong>tıkla</strong> (max 10MB)
+              </div>
+            </div>
+            <div id="upload-progress" style="display:none;margin-top:8px;font-size:12px;color:var(--accent);">Yükleniyor...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CARD 3: Yeni Revizyon -->
+      <div class="card">
+        <div class="card-header"><div class="card-dot" style="background:var(--orange);"></div>Revizyon Yönetimi</div>
+        <div class="card-body">
+          <div style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.6;">
+            Mevcut doküman <strong style="font-family:var(--mono);">${dokNo}</strong> Rev.<strong>${f['Revizyon No'] || 'A'}</strong> statüsü <strong>Arşiv</strong> olarak işaretlenir ve yeni Rev.<strong>${incRevNo(f['Revizyon No'] || 'A')}</strong> kaydı oluşturulur.
+          </div>
+          <button class="btn warn" onclick="yeniRevizyon()">Yeni Revizyon Oluştur</button>
+        </div>
+      </div>
+      ` : ''}
+
+    </div>
+  `;
+}
+
+// ── SAVE CARD 1 ──
+async function saveCard1() {
+  const baslik = document.getElementById('f-baslik').value.trim();
+  if (!baslik) { toast('Başlık zorunludur', 'err'); return; }
+  const revNo = document.getElementById('f-revno').value.trim() || 'A';
+  const tip = document.getElementById('f-tip').value;
+  const revTarih = document.getElementById('f-rev-tarih').value;
+  const hazirlayanId = document.getElementById('f-hazirlayan').value;
+  const onaylayanId = document.getElementById('f-onaylayan').value;
+  const reviewTarih = document.getElementById('f-review-tarih').value;
+  const statu = document.getElementById('f-statu').value;
+  const notlar = document.getElementById('f-notlar').value;
+  const dokNo = document.getElementById('f-dokno').value;
+
+  const fields = {
+    'Doküman No': dokNo,
+    'Başlık': baslik,
+    'Revizyon No': revNo,
+    'Statü': statu,
+    'Revizyon Tarihi': revTarih || today()
+  };
+  if (tip) fields['Tip'] = tip;
+  if (hazirlayanId) fields['Hazırlayan'] = [hazirlayanId];
+  if (onaylayanId) fields['Onaylayan'] = [onaylayanId];
+  if (reviewTarih) fields['Sonraki Gözden Geçirme'] = reviewTarih;
+  if (notlar) fields['Notlar'] = notlar;
+
+  try {
+    let result;
+    if (isNewMode) {
+      result = await apiFn('POST', T.dok, {fields});
+      if (result.error) throw new Error(result.error.message || JSON.stringify(result.error));
+      await logIslem('Oluşturuldu', 'Doküman Yönetimi', result.id, dokNo, null, fields);
+      toast('Doküman oluşturuldu', 'ok');
+      await loadAll();
+      selectDok(result.id);
+    } else {
+      result = await apiFn('PATCH', T.dok, {fields}, selectedDok.id);
+      if (result.error) throw new Error(result.error.message || JSON.stringify(result.error));
+      await logIslem('Güncellendi', 'Doküman Yönetimi', selectedDok.id, dokNo, selectedDok.fields, fields);
+      toast('Kaydedildi', 'ok');
+      selectedDok = result;
+      await loadAll();
+      selectedDok = dokList.find(r => r.id === result.id) || result;
+      renderList();
+      renderDetail();
+    }
+  } catch(e) { toast('Hata: ' + e.message, 'err'); }
+}
+
+// ── UPLOAD PDF ──
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('upload-zone').classList.remove('drag');
+  const file = e.dataTransfer.files?.[0];
+  if (file) uploadPDF(file);
+}
+
+async function uploadPDF(file) {
+  if (!file || !selectedDok) return;
+  if (file.type !== 'application/pdf') { toast('Sadece PDF dosyası yüklenebilir', 'err'); return; }
+  if (file.size > 10 * 1024 * 1024) { toast('Dosya 10MB sınırını aşıyor', 'err'); return; }
+  if (_uploadingPdf) return;
+  _uploadingPdf = true;
+
+  const progEl = document.getElementById('upload-progress');
+  if (progEl) { progEl.style.display = 'block'; progEl.textContent = 'Yükleniyor...'; }
+
+  try {
+    const reader = new FileReader();
+    const base64 = await new Promise((res, rej) => {
+      reader.onload = e => res(e.target.result);
+      reader.onerror = rej;
+      reader.readAsDataURL(file);
+    });
+
+    const uploadRes = await fetch('/.netlify/functions/upload-pdf', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        filename: file.name,
+        data: base64,
+        recordId: selectedDok.id,
+        table: T.dok,
+        field: 'Dosya'
+      })
+    });
+    const uploadData = await uploadRes.json();
+    if (!uploadData.success) throw new Error(uploadData.error || 'Yükleme başarısız');
+
+    await logIslem('Dosya Yüklendi', 'Doküman Yönetimi', selectedDok.id, selectedDok.fields['Doküman No'], null, {dosya: file.name});
+    toast('Dosya yüklendi', 'ok');
+    if (progEl) progEl.style.display = 'none';
+    await loadAll();
+    selectedDok = dokList.find(r => r.id === selectedDok.id) || selectedDok;
+    renderDetail();
+  } catch(e) {
+    if (progEl) { progEl.textContent = 'Hata: ' + e.message; progEl.style.color = 'var(--red)'; }
+    toast('Yükleme hatası: ' + e.message, 'err');
+  } finally {
+    _uploadingPdf = false;
+  }
+}
+
+// ── YENİ REVİZYON ──
+async function yeniRevizyon() {
+  if (!selectedDok) return;
+  if (!confirm('Mevcut doküman Arşiv olarak işaretlenecek ve yeni revizyon kaydı oluşturulacak. Devam edilsin mi?')) return;
+
+  const f = selectedDok.fields;
+  const eskiRevNo = f['Revizyon No'] || 'A';
+  const yeniRevNo = incRevNo(eskiRevNo);
+  const dokNo = f['Doküman No'] || '';
+
+  try {
+    // 1. Eski kaydı Arşiv yap
+    const archiveResult = await apiFn('PATCH', T.dok, {fields: {'Statü': 'Arşiv'}}, selectedDok.id);
+    if (archiveResult.error) throw new Error(archiveResult.error.message || JSON.stringify(archiveResult.error));
+    await logIslem('Arşivlendi', 'Doküman Yönetimi', selectedDok.id, dokNo, {Statü: f['Statü']}, {Statü: 'Arşiv'});
+
+    // 2. Yeni kayıt oluştur
+    const newFields = {
+      'Doküman No': dokNo,
+      'Başlık': f['Başlık'] || '',
+      'Tip': f['Tip'] || '',
+      'Revizyon No': yeniRevNo,
+      'Revizyon Tarihi': today(),
+      'Statü': 'Revize',
+      'Notlar': `Önceki Rev: ${eskiRevNo} (Arşiv)`
+    };
+    if (f['Hazırlayan']) newFields['Hazırlayan'] = f['Hazırlayan'];
+    if (f['Onaylayan']) newFields['Onaylayan'] = f['Onaylayan'];
+    if (f['Sonraki Gözden Geçirme']) newFields['Sonraki Gözden Geçirme'] = f['Sonraki Gözden Geçirme'];
+
+    const newResult = await apiFn('POST', T.dok, {fields: newFields});
+    if (newResult.error) throw new Error(newResult.error.message || JSON.stringify(newResult.error));
+    await logIslem('Yeni Revizyon', 'Doküman Yönetimi', newResult.id, `${dokNo} Rev.${yeniRevNo}`, null, newFields);
+    toast(`Yeni revizyon oluşturuldu: Rev.${yeniRevNo}`, 'ok');
+    await loadAll();
+    selectDok(newResult.id);
+  } catch(e) { toast('Hata: ' + e.message, 'err'); }
+}
+
+// ── INIT ──
+window.addEventListener('DOMContentLoaded', () => {
+  loadAll();
+});
+</script>
 </body>
 </html>

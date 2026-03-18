@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — NCR Yönetimi</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f0f2f5;--surface:#fff;--surface2:#f7f8fa;--border:#e2e5ea;--border2:#c8cdd6;
+  --text:#1a1d23;--text2:#5a6170;--text3:#9aa0ad;
+  --accent:#7c3aed;--accent-light:#ede9fe;--accent-hover:#6d28d9;
+  --green:#059669;--green-light:#d1fae5;--red:#dc2626;--red-light:#fee2e2;
+  --orange:#d97706;--orange-light:#fef3c7;--blue:#2563eb;--blue-light:#dbeafe;
+  --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;--radius:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);height:100vh;overflow:hidden;font-size:13px;}
+
+.header{height:52px;background:#1e1b4b;display:flex;align-items:center;padding:0 20px;gap:16px;position:fixed;top:0;left:0;right:0;z-index:100;}
+.logo-badge{width:28px;height:28px;border-radius:6px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:white;font-family:var(--mono);}
+.header-title{color:white;font-size:14px;font-weight:600;}
+.header-sub{color:rgba(255,255,255,.5);font-size:11px;}
+.header-sep{width:1px;height:28px;background:rgba(255,255,255,.2);}
+.header-nav a{color:rgba(255,255,255,.6);font-size:13px;font-weight:500;text-decoration:none;padding:6px 12px;border-radius:6px;transition:all .15s;}
+.header-nav a:hover{background:rgba(255,255,255,.1);color:white;}
+.header-nav a.active{background:rgba(255,255,255,.15);color:white;}
+.header-nav{display:flex;gap:4px;}
+
+.layout-wrapper{display:flex;height:calc(100vh - 52px);margin-top:52px;overflow:hidden;}
+
+/* LEFT PANEL */
+.list-panel{width:220px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;}
+.list-header{padding:12px 14px 8px;border-bottom:1px solid var(--border);}
+.list-header h2{font-size:13px;font-weight:600;}
+.list-count{font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:2px;}
+.filter-row{padding:6px 10px 8px;border-bottom:1px solid var(--border);display:flex;gap:4px;flex-wrap:wrap;}
+.fc{padding:3px 9px;border-radius:10px;font-size:10px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text3);}
+.fc.on{background:var(--accent-light);color:var(--accent);border-color:var(--accent);}
+.list-scroll{flex:1;overflow-y:auto;}
+.new-btn-wrap{padding:10px;}
+.ncr-item{padding:10px 12px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s;}
+.ncr-item:hover{background:var(--surface2);}
+.ncr-item.active{background:var(--accent-light);border-left:3px solid var(--accent);}
+.ncr-no{font-family:var(--mono);font-size:11px;font-weight:500;color:var(--accent);}
+.ncr-ie{font-size:11px;font-weight:500;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text);}
+.ncr-meta{font-size:10px;color:var(--text3);margin-top:3px;display:flex;gap:5px;flex-wrap:wrap;align-items:center;}
+
+/* RIGHT PANEL */
+.detail-panel{flex:1;overflow:hidden;display:flex;flex-direction:column;}
+.detail-scroll{flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:12px;}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.card-header{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;}
+.card-body{padding:14px;}
+.card-dot{width:6px;height:6px;border-radius:50%;}
+
+/* BUTTONS */
+.btn{display:flex;align-items:center;gap:5px;padding:6px 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;background:var(--surface);color:var(--text2);font-family:var(--sans);transition:all .15s;white-space:nowrap;}
+.btn:hover{border-color:var(--accent);color:var(--accent);}
+.btn.primary{background:var(--accent);color:white;border-color:var(--accent);}
+.btn.primary:hover{background:var(--accent-hover);}
+.btn.success{background:var(--green);color:white;border-color:var(--green);}
+.btn.success:hover{opacity:.9;}
+.btn.danger{background:var(--red);color:white;border-color:var(--red);}
+.btn.danger:hover{opacity:.9;}
+.btn.warn{background:var(--orange);color:white;border-color:var(--orange);}
+.btn.warn:hover{opacity:.9;}
+.btn.blue{background:var(--blue);color:white;border-color:var(--blue);}
+.btn.blue:hover{opacity:.9;}
+.btn:disabled{opacity:.5;cursor:not-allowed;}
+
+/* BADGES */
+.badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;}
+.b-Açık{background:var(--orange-light);color:var(--orange);}
+.b-Kapalı{background:var(--green-light);color:var(--green);}
+.b-İncelemede{background:var(--blue-light);color:var(--blue);}
+.b-İptal{background:#f3f4f6;color:#6b7280;}
+.b-Iskarta{background:var(--red-light);color:var(--red);}
+.b-\"Yeniden\ İşle\"{background:var(--orange-light);color:var(--orange);}
+.b-\"Sapma\ Onayı\"{background:var(--blue-light);color:var(--blue);}
+.b-Dahili{background:var(--blue-light);color:var(--blue);}
+.b-Harici{background:var(--orange-light);color:var(--orange);}
+.b-Tedarikçi{background:#f3e8ff;color:#7c3aed;}
+.b-Proses{background:var(--green-light);color:var(--green);}
+.b-Tasarım{background:var(--red-light);color:var(--red);}
+
+/* FORM */
+.fg{display:flex;flex-direction:column;gap:4px;}
+.fl{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;}
+.fi{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:12px;font-family:var(--sans);color:var(--text);outline:none;width:100%;}
+.fi:focus{border-color:var(--accent);}
+.fi:disabled{opacity:.6;cursor:not-allowed;}
+textarea.fi{resize:vertical;min-height:72px;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+
+/* KARAR BUTTONS */
+.karar-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+.karar-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:18px 10px;border-radius:8px;border:2px solid var(--border);cursor:pointer;font-family:var(--sans);font-size:11px;font-weight:600;transition:all .15s;background:var(--surface2);color:var(--text2);}
+.karar-btn .kico{font-size:24px;}
+.karar-btn:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.1);}
+.karar-btn.danger{border-color:var(--red);background:var(--red-light);color:var(--red);}
+.karar-btn.warn{border-color:var(--orange);background:var(--orange-light);color:var(--orange);}
+.karar-btn.blue{border-color:var(--blue);background:var(--blue-light);color:var(--blue);}
+.karar-btn.active-karar{box-shadow:0 0 0 3px rgba(124,58,237,.25);}
+
+/* AI */
+.ai-card{background:var(--surface);border:2px solid transparent;border-radius:var(--radius);overflow:hidden;background-clip:padding-box;position:relative;}
+.ai-card::before{content:'';position:absolute;inset:0;border-radius:var(--radius);padding:2px;background:linear-gradient(135deg,#7c3aed,#2563eb,#059669);-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;}
+.ai-card-header{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;font-size:11px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.5px;background:linear-gradient(135deg,rgba(124,58,237,.06),rgba(37,99,235,.06));}
+.ai-card-body{padding:14px;font-size:12px;line-height:1.7;color:var(--text);white-space:pre-wrap;}
+.ai-loading{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;gap:12px;color:var(--text2);font-size:13px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;}
+
+/* TOAST */
+.toast-wrap{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;}
+.toast{padding:10px 16px;border-radius:8px;font-size:12px;font-weight:500;color:white;animation:fadeIn .2s;}
+.toast.ok{background:var(--green);}
+.toast.err{background:var(--red);}
+.toast.inf{background:var(--accent);}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+.empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text3);gap:12px;padding:40px;text-align:center;}
+.toolbar{display:flex;align-items:center;gap:8px;padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;}
+</style>
+</head>
+<body>
+<script src="ersan_nav.js"></script>
+<script src="ersan_log.js"></script>
+
+<header class="header">
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div class="logo-badge">MES</div>
+    <div><div class="header-title">Ersan MES</div><div class="header-sub">NCR Yönetimi</div></div>
+  </div>
+  <div class="header-sep"></div>
+  <nav class="header-nav">
+    <a href="ersan_kalite.html">Kalite Kontrol</a>
+    <a href="ersan_isemirleri.html">İş Emirleri</a>
+    <a href="ersan_ncr.html" class="active">NCR</a>
+    <a href="ersan_duzeltici.html">Düzeltici</a>
+  </nav>
+</header>
+
+<div class="layout-wrapper">
+
+  <!-- LEFT PANEL -->
+  <div class="list-panel">
+    <div class="new-btn-wrap">
+      <button class="btn primary" style="width:100%;justify-content:center;" onclick="newNCR()">+ Yeni NCR</button>
+    </div>
+    <div style="padding:0 10px 8px;border-bottom:1px solid var(--border);">
+      <div class="list-count" id="ncr-count">Yükleniyor...</div>
+    </div>
+    <div class="filter-row">
+      <div class="fc on" data-f="Tümü" onclick="setFilter(this)">Tümü</div>
+      <div class="fc" data-f="Açık" onclick="setFilter(this)">Açık</div>
+      <div class="fc" data-f="Kapalı" onclick="setFilter(this)">Kapalı</div>
+    </div>
+    <div class="list-scroll" id="ncr-list">
+      <div style="padding:20px;text-align:center;color:var(--text3);font-size:12px;">Yükleniyor...</div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="detail-panel">
+    <div id="detail-content" style="flex:1;overflow:hidden;display:flex;flex-direction:column;">
+      <div class="empty">
+        <svg width="64" height="64" viewBox="0 0 64 64" fill="none" style="opacity:.2"><rect x="8" y="8" width="48" height="48" rx="6" stroke="currentColor" stroke-width="2"/><path d="M20 24h24M20 32h16M20 40h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="44" cy="40" r="8" stroke="currentColor" stroke-width="2"/><path d="M40 40h8M44 36v8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <p style="font-size:14px;font-weight:500;">Listeden bir NCR seçin veya yeni oluşturun</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<script>
+const BASE = 'app5LDgJMgocw79Ix';
+const T = {
+  ncr: 'tblreW3hJTIxwXb0K',
+  ie: 'tbl58qL39I2tv8hK4',
+  personel: 'tblwG9GqnLC9oFZzb',
+  traveller: 'tbljfjpefe5Z03S0a'
+};
+
+let ncrList = [], ieList = [], personelList = [], travellerList = [];
+let activeFilter = 'Tümü';
+let selectedNCR = null;
+let isNewMode = false;
+
+// ── API ──
+const apiGet = async (table, params='') => {
+  const res = await fetch('/.netlify/functions/airtable', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({method:'GET', path:`/v0/${BASE}/${table}?${params}`})
+  });
+  return res.json();
+};
+
+const apiFn = async (method, table, body, id='') => {
+  const res = await fetch('/.netlify/functions/airtable', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({method, path:`/v0/${BASE}/${table}${id?'/'+id:''}`, body})
+  });
+  return res.json();
+};
+
+const apiGetAll = async (table, params='') => {
+  let all = [], offset = '';
+  do {
+    const p = params + (offset ? (params.includes('?') ? '&' : '?') + 'offset=' + offset : '');
+    const d = await apiGet(table, p);
+    all = all.concat(d.records || []);
+    offset = d.offset || '';
+  } while (offset);
+  return all;
+};
+
+// ── TOAST ──
+function toast(msg, type='ok') {
+  const w = document.getElementById('toast-wrap');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.textContent = msg;
+  w.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+// ── DATE ──
+function today() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function fmtDate(d) {
+  if (!d) return '—';
+  return d.slice(0, 10).split('-').reverse().join('.');
+}
+
+// ── BADGE ──
+function badgeHtml(val, cls='') {
+  if (!val) return '';
+  const c = cls || val.replace(/\s+/g,'\ ');
+  return `<span class="badge b-${c}">${val}</span>`;
+}
+
+// ── FILTER ──
+function setFilter(el) {
+  document.querySelectorAll('.fc').forEach(e => e.classList.remove('on'));
+  el.classList.add('on');
+  activeFilter = el.dataset.f;
+  renderList();
+}
+
+// ── AUTO-GENERATE NCR NO ──
+function generateNCRNo() {
+  const year = new Date().getFullYear();
+  const prefix = `NCR-${year}-`;
+  const existing = ncrList
+    .map(r => r.fields['NCR No'] || '')
+    .filter(n => n.startsWith(prefix))
+    .map(n => parseInt(n.slice(prefix.length)) || 0);
+  const max = existing.length ? Math.max(...existing) : 0;
+  return prefix + String(max + 1).padStart(3, '0');
+}
+
+// ── LOAD DATA ──
+async function loadAll() {
+  try {
+    const [ncrs, ies, pers, travs] = await Promise.all([
+      apiGetAll(T.ncr, 'sort[0][field]=Açılış Tarihi&sort[0][direction]=desc'),
+      apiGetAll(T.ie, 'fields[]=İş Emri No&fields[]=Parça Adı'),
+      apiGetAll(T.personel, 'fields[]=Ad Soyad&fields[]=Unvan'),
+      apiGetAll(T.traveller, 'fields[]=Traveller No&fields[]=Parça Adı')
+    ]);
+    ncrList = ncrs;
+    ieList = ies;
+    personelList = pers;
+    travellerList = travs;
+    renderList();
+  } catch(e) {
+    document.getElementById('ncr-list').innerHTML = `<div style="padding:20px;text-align:center;color:var(--red);font-size:12px;">Yükleme hatası: ${e.message}</div>`;
+  }
+}
+
+// ── RENDER LIST ──
+function renderList() {
+  const filtered = ncrList.filter(r => {
+    if (activeFilter === 'Tümü') return true;
+    const s = r.fields['Statü'] || '';
+    if (activeFilter === 'Açık') return s !== 'Kapalı' && s !== 'İptal';
+    if (activeFilter === 'Kapalı') return s === 'Kapalı';
+    return true;
+  });
+  document.getElementById('ncr-count').textContent = `${filtered.length} / ${ncrList.length} kayıt`;
+  if (!filtered.length) {
+    document.getElementById('ncr-list').innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:12px;">Kayıt bulunamadı</div>';
+    return;
+  }
+  document.getElementById('ncr-list').innerHTML = filtered.map(r => {
+    const f = r.fields;
+    const ieId = f['İş Emri']?.[0];
+    const ieRec = ieId ? ieList.find(x => x.id === ieId) : null;
+    const ieLabel = ieRec ? (ieRec.fields['İş Emri No'] || ieRec.fields['Parça Adı'] || '—') : '—';
+    const isActive = selectedNCR && selectedNCR.id === r.id;
+    return `<div class="ncr-item${isActive?' active':''}" onclick="selectNCR('${r.id}')">
+      <div class="ncr-no">${f['NCR No'] || '—'}</div>
+      <div class="ncr-ie">${ieLabel}</div>
+      <div class="ncr-meta">
+        ${f['NCR Tipi'] ? badgeHtml(f['NCR Tipi']) : ''}
+        ${f['Statü'] ? badgeHtml(f['Statü']) : ''}
+        <span>${fmtDate(f['Açılış Tarihi'])}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── SELECT NCR ──
+function selectNCR(id) {
+  selectedNCR = ncrList.find(r => r.id === id) || null;
+  isNewMode = false;
+  renderList();
+  renderDetail();
+}
+
+// ── NEW NCR ──
+function newNCR() {
+  selectedNCR = null;
+  isNewMode = true;
+  renderList();
+  renderDetail();
+}
+
+// ── IE SELECT OPTIONS ──
+function buildIEOptions(selected='') {
+  return ieList.map(r => {
+    const label = r.fields['İş Emri No'] || r.fields['Parça Adı'] || r.id;
+    return `<option value="${r.id}" ${r.id===selected?'selected':''}>${label}</option>`;
+  }).join('');
+}
+
+function buildPersonelOptions(selected='') {
+  return personelList.map(r => {
+    const label = r.fields['Ad Soyad'] || r.id;
+    return `<option value="${r.id}" ${r.id===selected?'selected':''}>${label}</option>`;
+  }).join('');
+}
+
+function buildTravellerOptions(selected='') {
+  return `<option value="">— Seçiniz (opsiyonel) —</option>` + travellerList.map(r => {
+    const label = r.fields['Traveller No'] || r.fields['Parça Adı'] || r.id;
+    return `<option value="${r.id}" ${r.id===selected?'selected':''}>${label}</option>`;
+  }).join('');
+}
+
+// ── RENDER DETAIL ──
+function renderDetail() {
+  const panel = document.getElementById('detail-content');
+
+  if (!isNewMode && !selectedNCR) {
+    panel.innerHTML = `<div class="empty">
+      <svg width="64" height="64" viewBox="0 0 64 64" fill="none" style="opacity:.2"><rect x="8" y="8" width="48" height="48" rx="6" stroke="currentColor" stroke-width="2"/><path d="M20 24h24M20 32h16M20 40h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <p style="font-size:14px;font-weight:500;">Listeden bir NCR seçin veya yeni oluşturun</p>
+    </div>`;
+    return;
+  }
+
+  const f = selectedNCR ? selectedNCR.fields : {};
+  const ncrNo = isNewMode ? generateNCRNo() : (f['NCR No'] || '');
+  const ieId = f['İş Emri']?.[0] || '';
+  const travId = f['Traveller']?.[0] || '';
+  const acanId = f['Açan']?.[0] || '';
+  const onaylayanId = f['Onaylayan']?.[0] || '';
+  const karar = f['Karar'] || '';
+  const statu = f['Statü'] || 'Açık';
+
+  panel.innerHTML = `
+    <div class="toolbar">
+      <span style="font-family:var(--mono);font-size:13px;font-weight:600;color:var(--accent);">${isNewMode ? 'Yeni NCR' : ncrNo}</span>
+      ${!isNewMode ? `<span class="badge b-${statu.replace(/\s/g,'_')}" style="background-color:var(--${statu==='Kapalı'?'green-light':statu==='Açık'?'orange-light':'blue-light'});color:var(--${statu==='Kapalı'?'green':statu==='Açık'?'orange':'blue'});">${statu}</span>` : ''}
+      <div style="flex:1;"></div>
+    </div>
+    <div class="detail-scroll">
+
+      <!-- CARD 1: NCR Bilgileri -->
+      <div class="card">
+        <div class="card-header"><div class="card-dot" style="background:var(--accent);"></div>NCR Bilgileri</div>
+        <div class="card-body">
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div class="form-grid">
+              <div class="fg">
+                <label class="fl">NCR No</label>
+                <input id="f-ncrno" class="fi" value="${ncrNo}" readonly style="font-family:var(--mono);font-weight:600;color:var(--accent);">
+              </div>
+              <div class="fg">
+                <label class="fl">Açılış Tarihi</label>
+                <input id="f-acilis" type="date" class="fi" value="${f['Açılış Tarihi'] || today()}">
+              </div>
+            </div>
+            <div class="fg">
+              <label class="fl">İş Emri <span style="color:var(--red);">*</span></label>
+              <select id="f-ie" class="fi">
+                <option value="">— Seçiniz —</option>
+                ${buildIEOptions(ieId)}
+              </select>
+            </div>
+            <div class="fg">
+              <label class="fl">Traveller (opsiyonel)</label>
+              <select id="f-traveller" class="fi">
+                ${buildTravellerOptions(travId)}
+              </select>
+            </div>
+            <div class="form-grid">
+              <div class="fg">
+                <label class="fl">NCR Tipi</label>
+                <select id="f-tip" class="fi">
+                  <option value="">— Seçiniz —</option>
+                  <option value="Dahili" ${f['NCR Tipi']==='Dahili'?'selected':''}>Dahili</option>
+                  <option value="Harici" ${f['NCR Tipi']==='Harici'?'selected':''}>Harici</option>
+                  <option value="Tedarikçi" ${f['NCR Tipi']==='Tedarikçi'?'selected':''}>Tedarikçi</option>
+                  <option value="Proses" ${f['NCR Tipi']==='Proses'?'selected':''}>Proses</option>
+                  <option value="Tasarım" ${f['NCR Tipi']==='Tasarım'?'selected':''}>Tasarım</option>
+                </select>
+              </div>
+              <div class="fg">
+                <label class="fl">Açan (Personel)</label>
+                <select id="f-acan" class="fi">
+                  <option value="">— Seçiniz —</option>
+                  ${buildPersonelOptions(acanId)}
+                </select>
+              </div>
+            </div>
+            <div class="fg">
+              <label class="fl">Açıklama <span style="color:var(--red);">*</span></label>
+              <textarea id="f-aciklama" class="fi" rows="3" placeholder="Uygunsuzluğu açıklayınız...">${f['Açıklama'] || ''}</textarea>
+            </div>
+            <div style="display:flex;justify-content:flex-end;">
+              <button class="btn primary" onclick="saveCard1()">Kaydet</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      ${!isNewMode ? `
+      <!-- CARD 2: Karar -->
+      <div class="card">
+        <div class="card-header"><div class="card-dot" style="background:var(--red);"></div>Karar</div>
+        <div class="card-body">
+          <div class="karar-row">
+            <button class="karar-btn danger ${karar==='Iskarta'?'active-karar':''}" onclick="setKarar('Iskarta', this)">
+              <span class="kico">🗑</span>ISKARTA
+            </button>
+            <button class="karar-btn warn ${karar==='Yeniden İşle'?'active-karar':''}" onclick="setKarar('Yeniden İşle', this)">
+              <span class="kico">🔄</span>YENİDEN İŞLE
+            </button>
+            <button class="karar-btn blue ${karar==='Sapma Onayı'?'active-karar':''}" onclick="setKarar('Sapma Onayı', this)">
+              <span class="kico">📋</span>SAPMA ONAYI
+            </button>
+          </div>
+          ${karar ? `<div style="margin-top:10px;padding:8px 12px;background:var(--surface2);border-radius:6px;font-size:12px;font-weight:600;color:var(--text2);">Mevcut Karar: <span style="color:var(--accent);">${karar}</span></div>` : ''}
+        </div>
+      </div>
+
+      <!-- CARD 3: Kök Neden -->
+      <div class="card">
+        <div class="card-header"><div class="card-dot" style="background:var(--orange);"></div>Kök Neden Analizi</div>
+        <div class="card-body">
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div class="fg">
+              <label class="fl">Kök Neden</label>
+              <textarea id="f-kokneden" class="fi" rows="3" placeholder="Kök neden açıklayınız...">${f['Kök Neden'] || ''}</textarea>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <button class="btn" style="gap:6px;" onclick="aiKokNeden()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                AI Kök Neden Analizi
+              </button>
+              <button class="btn primary" onclick="saveKokNeden()">Kaydet</button>
+            </div>
+            <div id="ai-result-wrap" style="display:none;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CARD 4: Düzeltici Aksiyon -->
+      <div class="card">
+        <div class="card-header"><div class="card-dot" style="background:var(--green);"></div>Düzeltici Aksiyon & Kapanış</div>
+        <div class="card-body">
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div class="fg">
+              <label class="fl">Düzeltici Aksiyon</label>
+              <textarea id="f-duzeltici" class="fi" rows="3" placeholder="Alınan düzeltici aksiyonları açıklayınız...">${f['Düzeltici Aksiyon'] || ''}</textarea>
+            </div>
+            <div class="form-grid">
+              <div class="fg">
+                <label class="fl">Kapanış Tarihi</label>
+                <input id="f-kapanis" type="date" class="fi" value="${f['Kapanış Tarihi'] || ''}">
+              </div>
+              <div class="fg">
+                <label class="fl">Onaylayan</label>
+                <select id="f-onaylayan" class="fi">
+                  <option value="">— Seçiniz —</option>
+                  ${buildPersonelOptions(onaylayanId)}
+                </select>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;justify-content:flex-end;">
+              <button class="btn" onclick="saveKapanis()">Kaydet</button>
+              <button class="btn success" onclick="ncrKapat()" ${statu==='Kapalı'?'disabled':''}>NCR Kapat</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      ` : ''}
+
+    </div>
+  `;
+
+  // Restore AI result if exists
+  if (!isNewMode && window._aiResult) {
+    showAIResult(window._aiResult);
+  }
+}
+
+// ── SAVE CARD 1 ──
+async function saveCard1() {
+  const ieId = document.getElementById('f-ie').value;
+  const aciklama = document.getElementById('f-aciklama').value.trim();
+  if (!ieId) { toast('İş Emri seçiniz', 'err'); return; }
+  if (!aciklama) { toast('Açıklama zorunludur', 'err'); return; }
+
+  const travId = document.getElementById('f-traveller').value;
+  const tip = document.getElementById('f-tip').value;
+  const acanId = document.getElementById('f-acan').value;
+  const acilisTarih = document.getElementById('f-acilis').value;
+  const ncrNo = document.getElementById('f-ncrno').value;
+
+  const fields = {
+    'NCR No': ncrNo,
+    'İş Emri': ieId ? [ieId] : [],
+    'Traveller': travId ? [travId] : [],
+    'Açıklama': aciklama,
+    'Açılış Tarihi': acilisTarih || today(),
+    'Statü': 'Açık'
+  };
+  if (tip) fields['NCR Tipi'] = tip;
+  if (acanId) fields['Açan'] = [acanId];
+
+  try {
+    let result;
+    if (isNewMode) {
+      result = await apiFn('POST', T.ncr, {fields});
+      if (result.error) throw new Error(result.error.message || JSON.stringify(result.error));
+      await logIslem('Oluşturuldu', 'NCR', result.id, ncrNo, null, fields);
+      toast('NCR oluşturuldu', 'ok');
+      // Reload and select
+      await loadAll();
+      selectNCR(result.id);
+    } else {
+      result = await apiFn('PATCH', T.ncr, {fields}, selectedNCR.id);
+      if (result.error) throw new Error(result.error.message || JSON.stringify(result.error));
+      await logIslem('Güncellendi', 'NCR', selectedNCR.id, ncrNo, selectedNCR.fields, fields);
+      toast('Kaydedildi', 'ok');
+      selectedNCR = result;
+      await loadAll();
+      selectedNCR = ncrList.find(r => r.id === result.id) || result;
+      renderList();
+    }
+  } catch(e) {
+    toast('Hata: ' + e.message, 'err');
+  }
+}
+
+// ── SET KARAR ──
+async function setKarar(karar, btn) {
+  if (!selectedNCR) return;
+  const ncrNo = selectedNCR.fields['NCR No'];
+  const statMap = {'Iskarta':'Kapalı','Yeniden İşle':'Açık','Sapma Onayı':'İncelemede'};
+  const newStatu = statMap[karar] || 'Açık';
+  try {
+    const result = await apiFn('PATCH', T.ncr, {fields:{'Karar':karar,'Statü':newStatu}}, selectedNCR.id);
+    if (result.error) throw new Error(result.error.message || JSON.stringify(result.error));
+    await logIslem('Karar Verildi', 'NCR', selectedNCR.id, ncrNo, {Karar: selectedNCR.fields['Karar']}, {Karar: karar, Statü: newStatu});
+    toast(`Karar: ${karar}`, 'ok');
+    await loadAll();
+    selectedNCR = ncrList.find(r => r.id === selectedNCR.id) || selectedNCR;
+    renderList();
+    renderDetail();
+  } catch(e) {
+    toast('Hata: ' + e.message, 'err');
+  }
+}
+
+// ── AI KÖK NEDEN ──
+async function aiKokNeden() {
+  const aciklama = document.getElementById('f-aciklama')?.value?.trim() || selectedNCR?.fields['Açıklama'] || '';
+  if (!aciklama) { toast('Önce açıklama giriniz', 'err'); return; }
+  const wrap = document.getElementById('ai-result-wrap');
+  wrap.style.display = 'block';
+  wrap.innerHTML = `<div class="ai-card"><div class="ai-card-header">✨ AI Analiz</div><div class="ai-loading"><div class="spinner"></div><span>5-Why analizi yapılıyor...</span></div></div>`;
+  try {
+    const res = await fetch('/.netlify/functions/claude', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        prompt: `Bu NCR için 5-Why analizi yap ve kök neden öner: ${aciklama}. Türkçe yanıt ver.`
+      })
+    });
+    const data = await res.json();
+    const text = data.content || data.text || data.result || data.response || JSON.stringify(data);
+    window._aiResult = text;
+    showAIResult(text);
+  } catch(e) {
+    wrap.innerHTML = `<div class="ai-card"><div class="ai-card-header">✨ AI Analiz</div><div class="ai-card-body" style="color:var(--red);">Hata: ${e.message}</div></div>`;
+  }
+}
+
+function showAIResult(text) {
+  const wrap = document.getElementById('ai-result-wrap');
+  if (!wrap) return;
+  wrap.style.display = 'block';
+  wrap.innerHTML = `<div class="ai-card">
+    <div class="ai-card-header">✨ AI Kök Neden Analizi</div>
+    <div class="ai-card-body">${text}</div>
+    <div style="padding:10px 14px;border-top:1px solid var(--border);">
+      <button class="btn" style="font-size:11px;" onclick="useAIResult()">Bu metni Kök Neden alanına kopyala</button>
+    </div>
+  </div>`;
+}
+
+function useAIResult() {
+  if (window._aiResult) {
+    const el = document.getElementById('f-kokneden');
+    if (el) el.value = window._aiResult;
+  }
+}
+
+// ── SAVE KÖK NEDEN ──
+async function saveKokNeden() {
+  if (!selectedNCR) return;
+  const val = document.getElementById('f-kokneden').value;
+  try {
+    const result = await apiFn('PATCH', T.ncr, {fields:{'Kök Neden': val}}, selectedNCR.id);
+    if (result.error) throw new Error(result.error.message || JSON.stringify(result.error));
+    await logIslem('Kök Neden Güncellendi', 'NCR', selectedNCR.id, selectedNCR.fields['NCR No'], null, {'Kök Neden': val});
+    toast('Kök neden kaydedildi', 'ok');
+    selectedNCR = result;
+    ncrList = ncrList.map(r => r.id === result.id ? result : r);
+    renderList();
+  } catch(e) {
+    toast('Hata: ' + e.message, 'err');
+  }
+}
+
+// ── SAVE KAPANIS ──
+async function saveKapanis() {
+  if (!selectedNCR) return;
+  const duzeltici = document.getElementById('f-duzeltici').value;
+  const kapanis = document.getElementById('f-kapanis').value;
+  const onaylayanId = document.getElementById('f-onaylayan').value;
+  const fields = {'Düzeltici Aksiyon': duzeltici};
+  if (kapanis) fields['Kapanış Tarihi'] = kapanis;
+  if (onaylayanId) fields['Onaylayan'] = [onaylayanId];
+  try {
+    const result = await apiFn('PATCH', T.ncr, {fields}, selectedNCR.id);
+    if (result.error) throw new Error(result.error.message || JSON.stringify(result.error));
+    await logIslem('Düzeltici Aksiyon Güncellendi', 'NCR', selectedNCR.id, selectedNCR.fields['NCR No'], null, fields);
+    toast('Kaydedildi', 'ok');
+    selectedNCR = result;
+    ncrList = ncrList.map(r => r.id === result.id ? result : r);
+    renderList();
+  } catch(e) {
+    toast('Hata: ' + e.message, 'err');
+  }
+}
+
+// ── NCR KAPAT ──
+async function ncrKapat() {
+  if (!selectedNCR) return;
+  if (!confirm('Bu NCR kapatılsın mı?')) return;
+  const kapanisTarih = document.getElementById('f-kapanis').value || today();
+  const duzeltici = document.getElementById('f-duzeltici').value;
+  const onaylayanId = document.getElementById('f-onaylayan').value;
+  const fields = {'Statü': 'Kapalı', 'Kapanış Tarihi': kapanisTarih};
+  if (duzeltici) fields['Düzeltici Aksiyon'] = duzeltici;
+  if (onaylayanId) fields['Onaylayan'] = [onaylayanId];
+  try {
+    const result = await apiFn('PATCH', T.ncr, {fields}, selectedNCR.id);
+    if (result.error) throw new Error(result.error.message || JSON.stringify(result.error));
+    await logIslem('Kapatıldı', 'NCR', selectedNCR.id, selectedNCR.fields['NCR No'], {Statü: selectedNCR.fields['Statü']}, {Statü: 'Kapalı', 'Kapanış Tarihi': kapanisTarih});
+    toast('NCR kapatıldı', 'ok');
+    window._aiResult = null;
+    await loadAll();
+    selectedNCR = ncrList.find(r => r.id === selectedNCR.id) || null;
+    renderList();
+    renderDetail();
+  } catch(e) {
+    toast('Hata: ' + e.message, 'err');
+  }
+}
+
+// ── INIT ──
+window.addEventListener('DOMContentLoaded', () => {
+  if (typeof injectNav === 'function') injectNav();
+  loadAll();
+});
+</script>
+</body>
+</html>

@@ -3,39 +3,913 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ersan MES — Düzeltici Faaliyet</title>
+<title>Ersan MES — Düzeltici Faaliyet (CAPA)</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8fafc; min-height: 100vh; }
-.container { max-width: 960px; margin: 0 auto; padding: 3rem 1.5rem; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: calc(100vh - 48px); }
-.icon { font-size: 56px; margin-bottom: 1.5rem; }
-h1 { font-size: 24px; font-weight: 600; color: #1e293b; margin-bottom: .5rem; }
-.std { font-size: 11px; font-weight: 500; background: #ede9fe; color: #5b21b6; padding: 3px 10px; border-radius: 20px; margin-bottom: 1.25rem; display: inline-block; }
-p { font-size: 14px; color: #64748b; text-align: center; max-width: 420px; line-height: 1.7; margin-bottom: 2rem; }
-.wip { background: #fff; border: 0.5px solid #e2e8f0; border-radius: 12px; padding: 1.25rem 1.5rem; max-width: 480px; width: 100%; }
-.wip-title { font-size: 11px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: .06em; margin-bottom: .875rem; }
-.wip-item { display: flex; align-items: center; gap: 10px; padding: .5rem 0; border-top: 0.5px solid #f1f5f9; font-size: 13px; color: #475569; }
-.wip-item::before { content: "○"; color: #cbd5e1; font-size: 10px; }
-.back { margin-top: 1.5rem; font-size: 13px; color: #3b82f6; text-decoration: none; }
-.back:hover { text-decoration: underline; }
+:root{
+  --bg:#f0f2f5;--surface:#fff;--surface2:#f7f8fa;--border:#e2e5ea;--border2:#c8cdd6;
+  --text:#1a1d23;--text2:#5a6170;--text3:#9aa0ad;
+  --accent:#7c3aed;--accent-light:#ede9fe;--accent-hover:#6d28d9;
+  --green:#059669;--green-light:#d1fae5;--red:#dc2626;--red-light:#fee2e2;
+  --orange:#d97706;--orange-light:#fef3c7;--blue:#2563eb;--blue-light:#dbeafe;
+  --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;--radius:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);height:100vh;overflow:hidden;font-size:13px;}
+
+.header{height:52px;background:#1e1b4b;display:flex;align-items:center;padding:0 20px;gap:16px;position:fixed;top:0;left:0;right:0;z-index:100;}
+.logo-badge{width:28px;height:28px;border-radius:6px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:white;font-family:var(--mono);}
+.header-title{color:white;font-size:14px;font-weight:600;}
+.header-sub{color:rgba(255,255,255,.5);font-size:11px;}
+.header-sep{width:1px;height:28px;background:rgba(255,255,255,.2);}
+
+.layout-wrapper{display:flex;height:calc(100vh - 52px);margin-top:52px;}
+
+/* LEFT PANEL */
+.list-panel{width:220px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;}
+.list-header{padding:12px 14px 8px;border-bottom:1px solid var(--border);}
+.list-header h2{font-size:12px;font-weight:600;}
+.list-count{font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:2px;}
+.new-btn{margin:8px 10px 0;padding:7px 12px;background:var(--accent);color:white;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);width:calc(100% - 20px);display:flex;align-items:center;justify-content:center;gap:5px;transition:background .15s;}
+.new-btn:hover{background:var(--accent-hover);}
+.filter-row{padding:8px 10px;border-bottom:1px solid var(--border);display:flex;gap:4px;flex-wrap:wrap;}
+.fc{padding:3px 8px;border-radius:10px;font-size:10px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text3);}
+.fc.on{background:var(--accent-light);color:var(--accent);border-color:var(--accent);}
+.list-scroll{flex:1;overflow-y:auto;}
+
+.capa-item{padding:10px 12px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s;}
+.capa-item:hover{background:var(--surface2);}
+.capa-item.active{background:var(--accent-light);border-left:3px solid var(--accent);}
+.capa-no{font-family:var(--mono);font-size:11px;font-weight:500;color:var(--accent);}
+.capa-meta{font-size:10px;color:var(--text3);margin-top:3px;display:flex;align-items:center;justify-content:space-between;gap:4px;flex-wrap:wrap;}
+
+/* RIGHT PANEL */
+.detail-panel{flex:1;overflow:hidden;display:flex;flex-direction:column;}
+.detail-toolbar{height:52px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:10px;flex-shrink:0;}
+.toolbar-title{font-size:14px;font-weight:600;font-family:var(--mono);flex:1;}
+.detail-scroll{flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:12px;}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.card-header{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;}
+.card-body{padding:14px;}
+.card-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+
+.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;background:var(--surface);color:var(--text2);font-family:var(--sans);transition:all .15s;white-space:nowrap;}
+.btn:hover{border-color:var(--accent);color:var(--accent);}
+.btn.primary{background:var(--accent);color:white;border-color:var(--accent);}
+.btn.primary:hover{background:var(--accent-hover);}
+.btn.success{background:var(--green);color:white;border-color:var(--green);}
+.btn.success:hover{opacity:.9;}
+.btn.warn{background:var(--orange);color:white;border-color:var(--orange);}
+.btn.ai-btn{background:#0f172a;color:white;border-color:#0f172a;}
+.btn.ai-btn:hover{background:#1e293b;}
+.btn:disabled{opacity:.5;cursor:not-allowed;}
+
+.badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;white-space:nowrap;}
+.b-Acik,.b-Açık{background:var(--blue-light);color:var(--blue);}
+.b-Incelemede,.b-İncelemede{background:var(--orange-light);color:var(--orange);}
+.b-Kapali,.b-Kapalı{background:var(--green-light);color:var(--green);}
+.b-NCR{background:var(--red-light);color:var(--red);}
+.b-Musteri,.b-Müşteri{background:var(--blue-light);color:var(--blue);}
+.b-Denetim{background:var(--accent-light);color:var(--accent);}
+.b-OEE{background:var(--orange-light);color:var(--orange);}
+.b-Diger,.b-Diğer{background:#f3f4f6;color:#6b7280;}
+
+.tetik-badge{font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;}
+.tetik-NCR,.tetik-NCR\.Raporu{background:var(--red-light);color:var(--red);}
+.tetik-Musteri,.tetik-Müşteri-Şikayeti{background:var(--blue-light);color:var(--blue);}
+.tetik-Ic,.tetik-İç-Denetim{background:var(--accent-light);color:var(--accent);}
+.tetik-OEE{background:var(--orange-light);color:var(--orange);}
+.tetik-Diger,.tetik-Diğer{background:#f3f4f6;color:#6b7280;}
+
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+.fg{display:flex;flex-direction:column;gap:4px;}
+.fl{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;}
+.fi{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:12px;font-family:var(--sans);color:var(--text);outline:none;width:100%;}
+.fi:focus{border-color:var(--accent);}
+.fi:disabled{opacity:.65;cursor:default;}
+.fi[readonly]{opacity:.65;cursor:default;}
+textarea.fi{resize:vertical;min-height:80px;}
+
+.why-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.why-label{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--accent);width:20px;flex-shrink:0;}
+
+.upload-area{border:2px dashed var(--border);border-radius:6px;padding:12px;text-align:center;cursor:pointer;transition:all .15s;font-size:12px;color:var(--text3);}
+.upload-area:hover{border-color:var(--accent);color:var(--accent);}
+.upload-filename{font-size:11px;color:var(--green);font-family:var(--mono);margin-top:4px;}
+
+.action-row{display:flex;justify-content:flex-end;gap:8px;padding-top:4px;}
+
+.empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text3);gap:12px;padding:40px;text-align:center;}
+.empty-icon{font-size:40px;opacity:.4;}
+
+.ai-result{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:10px 12px;font-size:12px;color:var(--text);line-height:1.6;margin-top:8px;white-space:pre-wrap;}
+.ai-spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.toast-wrap{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;}
+.toast{padding:10px 16px;border-radius:8px;font-size:12px;font-weight:500;color:white;animation:fadeIn .2s;max-width:320px;}
+.toast.ok{background:var(--green);}
+.toast.err{background:var(--red);}
+.toast.inf{background:var(--accent);}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;display:flex;align-items:center;justify-content:center;}
+.modal-box{background:var(--surface);border-radius:10px;padding:24px;width:420px;max-width:95vw;display:flex;flex-direction:column;gap:14px;}
+.modal-title{font-size:14px;font-weight:600;}
+.modal-footer{display:flex;justify-content:flex-end;gap:8px;}
+
+.divider{height:1px;background:var(--border);margin:8px 0;}
+
+@media(max-width:768px){
+  .layout-wrapper{flex-direction:column;height:auto;overflow:auto;}
+  .list-panel{width:100%;height:auto;border-right:none;border-bottom:1px solid var(--border);}
+  .list-scroll{max-height:260px;}
+  .detail-panel{min-height:400px;}
+  body{overflow:auto;height:auto;}
+  .form-grid{grid-template-columns:1fr;}
+  .form-grid-3{grid-template-columns:1fr 1fr;}
+}
 </style>
 </head>
 <body>
 <script src="ersan_nav.js"></script>
-<div class="container">
-  <div class="icon">🔧</div>
-  <h1>Düzeltici Faaliyet</h1>
-  <span class="std">AS9100 §10.2</span>
-  <p>NCR, kök neden analizi 8D/5Why, düzeltici aksiyon takibi. Bu modül geliştirme aşamasındadır.</p>
-  <div class="wip">
-    <div class="wip-title">Planlanacak özellikler</div>
-    <div class="wip-item">Airtable tablo bağlantısı</div>
-    <div class="wip-item">Liste ve detay görünümü</div>
-    <div class="wip-item">Form ve kayıt yönetimi</div>
-    <div class="wip-item">PDF / rapor çıktısı</div>
-    <div class="wip-item">Diğer modüllerle entegrasyon</div>
+<script src="ersan_log.js"></script>
+
+<header class="header">
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div class="logo-badge">MES</div>
+    <div><div class="header-title">Ersan MES</div><div class="header-sub">CAPA · AS9100 §10.2</div></div>
   </div>
-  <a href="index.html" class="back">← Ana sayfaya dön</a>
+  <div class="header-sep"></div>
+  <div style="color:rgba(255,255,255,.5);font-size:12px;margin-left:4px;">Düzeltici &amp; Önleyici Faaliyet</div>
+</header>
+
+<div class="layout-wrapper">
+
+  <!-- LEFT PANEL -->
+  <div class="list-panel">
+    <div class="list-header">
+      <h2>CAPA Kayıtları</h2>
+      <div class="list-count" id="capa-count">Yükleniyor...</div>
+    </div>
+    <button class="new-btn" onclick="newCapa()">+ Yeni CAPA</button>
+    <div class="filter-row">
+      <div class="fc on" data-f="Tümü" onclick="setFilter(this)">Tümü</div>
+      <div class="fc" data-f="Açık" onclick="setFilter(this)">Açık</div>
+      <div class="fc" data-f="İncelemede" onclick="setFilter(this)">İncelemede</div>
+      <div class="fc" data-f="Kapalı" onclick="setFilter(this)">Kapalı</div>
+    </div>
+    <div class="list-scroll" id="capa-list"></div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="detail-panel">
+    <div class="detail-toolbar">
+      <span class="toolbar-title" id="toolbar-title">Düzeltici Faaliyet (CAPA)</span>
+      <span id="toolbar-badge"></span>
+    </div>
+    <div class="detail-scroll" id="detail-body">
+      <div class="empty">
+        <div class="empty-icon">🔧</div>
+        <div>Listeden bir CAPA seçin veya yeni CAPA oluşturun.</div>
+      </div>
+    </div>
+  </div>
+
 </div>
+
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<div class="modal-overlay" id="modal-overlay" style="display:none;" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box">
+    <div class="modal-title" id="modal-title">Onay</div>
+    <div class="fg">
+      <label class="fl" id="modal-label">Not</label>
+      <textarea class="fi" id="modal-textarea" rows="3" placeholder=""></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal()">İptal</button>
+      <button class="btn primary" id="modal-confirm-btn" onclick="modalConfirm()">Onayla</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ─── CONFIG ─────────────────────────────────────── */
+const BASE = 'app5LDgJMgocw79Ix';
+const T = {
+  capa: 'CAPA',
+  ncr: 'tblreW3hJTIxwXb0K',
+  personel: 'tblwG9GqnLC9oFZzb',
+};
+
+/* ─── API HELPERS ─────────────────────────────────── */
+const apiGet = async (table, params = '') => {
+  const encodedTable = encodeURIComponent(table);
+  const res = await fetch('/.netlify/functions/airtable', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ method: 'GET', path: `/v0/${BASE}/${encodedTable}?${params}` })
+  });
+  return res.json();
+};
+
+const apiFn = async (method, table, body, id = '') => {
+  const encodedTable = encodeURIComponent(table);
+  const res = await fetch('/.netlify/functions/airtable', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ method, path: `/v0/${BASE}/${encodedTable}${id ? '/' + id : ''}`, body })
+  });
+  return res.json();
+};
+
+async function apiGetAll(table, params = '') {
+  let all = [], offset = '';
+  do {
+    const d = await apiGet(table, params + (offset ? '&offset=' + offset : ''));
+    all = all.concat(d.records || []);
+    offset = d.offset || '';
+  } while (offset);
+  return all;
+}
+
+/* ─── STATE ───────────────────────────────────────── */
+let capaList = [];
+let personelList = [];
+let currentRec = null;
+let currentFilter = 'Tümü';
+let isNew = false;
+let evidenceFilename = '';
+let modalCallback = null;
+
+/* ─── LOAD ────────────────────────────────────────── */
+async function loadAll() {
+  try {
+    const [capaData, personelData] = await Promise.all([
+      apiGetAll(T.capa, 'sort%5B0%5D%5Bfield%5D=Açılış%20Tarihi&sort%5B0%5D%5Bdirection%5D=desc'),
+      apiGet(T.personel, 'fields%5B%5D=Ad%20Soyad')
+    ]);
+    capaList = capaData;
+    personelList = personelData.records || [];
+    renderList();
+  } catch (e) {
+    toast('Veriler yüklenemedi: ' + e.message, 'err');
+  }
+}
+
+/* ─── HELPERS ─────────────────────────────────────── */
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function fmtDate(d) {
+  if (!d) return '';
+  return new Date(d).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+
+function todayISO() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function fileToBase64(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result);
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+}
+
+async function generateCapaNo() {
+  const year = new Date().getFullYear();
+  try {
+    const d = await apiGet(T.capa, 'fields%5B%5D=CAPA%20No&sort%5B0%5D%5Bfield%5D=CAPA%20No&sort%5B0%5D%5Bdirection%5D=desc&maxRecords=100');
+    const recs = d.records || [];
+    let maxNum = 0;
+    recs.forEach(r => {
+      const no = r.fields['CAPA No'] || '';
+      const m = no.match(/CAPA-(\d{4})-(\d+)/);
+      if (m && parseInt(m[1]) === year) {
+        const n = parseInt(m[2]);
+        if (n > maxNum) maxNum = n;
+      }
+    });
+    return `CAPA-${year}-${String(maxNum + 1).padStart(3, '0')}`;
+  } catch (e) {
+    return `CAPA-${year}-001`;
+  }
+}
+
+function badgeStatü(s) {
+  if (!s) return '';
+  const cls = s === 'Açık' ? 'b-Açık' : s === 'İncelemede' ? 'b-Incelemede' : s === 'Kapalı' ? 'b-Kapali' : '';
+  return `<span class="badge ${cls}">${esc(s)}</span>`;
+}
+
+function tetikClass(t) {
+  if (!t) return '';
+  if (t.includes('NCR')) return 'tetik-NCR';
+  if (t.includes('Müşteri')) return 'tetik-Musteri';
+  if (t.includes('Denetim')) return 'tetik-Ic';
+  if (t.includes('OEE')) return 'tetik-OEE';
+  return 'tetik-Diger';
+}
+
+function tetikBadge(t) {
+  if (!t) return '';
+  return `<span class="tetik-badge ${tetikClass(t)}">${esc(t)}</span>`;
+}
+
+function personelOpts(selectedIds) {
+  const ids = Array.isArray(selectedIds) ? selectedIds : [];
+  return personelList.map(p => {
+    const name = p.fields['Ad Soyad'] || '';
+    const sel = ids.includes(p.id) ? 'selected' : '';
+    return `<option value="${p.id}" ${sel}>${esc(name)}</option>`;
+  }).join('');
+}
+
+/* ─── TOAST ───────────────────────────────────────── */
+function toast(msg, type = 'ok') {
+  const w = document.getElementById('toast-wrap');
+  const el = document.createElement('div');
+  el.className = 'toast ' + type;
+  el.textContent = msg;
+  w.appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+
+/* ─── FILTER / LIST ───────────────────────────────── */
+function setFilter(el) {
+  document.querySelectorAll('.fc').forEach(e => e.classList.remove('on'));
+  el.classList.add('on');
+  currentFilter = el.dataset.f;
+  renderList();
+}
+
+function renderList() {
+  let items = capaList;
+  if (currentFilter !== 'Tümü') {
+    items = items.filter(r => (r.fields['Statü'] || '') === currentFilter);
+  }
+
+  document.getElementById('capa-count').textContent = items.length + ' kayıt';
+  const ul = document.getElementById('capa-list');
+
+  if (!items.length) {
+    ul.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:12px;">Kayıt yok</div>';
+    return;
+  }
+
+  ul.innerHTML = items.map(r => {
+    const f = r.fields || {};
+    const capaNo = f['CAPA No'] || r.id;
+    const tetik = f['Tetikleyici'] || '';
+    const statu = f['Statü'] || '';
+    const isActive = currentRec && currentRec.id === r.id;
+    return `<div class="capa-item${isActive ? ' active' : ''}" onclick="openRec('${r.id}')">
+      <div class="capa-no">${esc(capaNo)}</div>
+      <div style="font-size:11px;color:var(--text2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(f['Problem'] ? f['Problem'].substring(0, 40) + (f['Problem'].length > 40 ? '…' : '') : '—')}</div>
+      <div class="capa-meta">
+        ${tetikBadge(tetik)}
+        ${badgeStatü(statu)}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ─── OPEN REC ────────────────────────────────────── */
+function openRec(id) {
+  currentRec = capaList.find(r => r.id === id) || null;
+  isNew = false;
+  evidenceFilename = '';
+  renderDetail();
+  renderList();
+}
+
+/* ─── NEW CAPA ────────────────────────────────────── */
+async function newCapa() {
+  isNew = true;
+  currentRec = null;
+  evidenceFilename = '';
+  renderList();
+  const capaNo = await generateCapaNo();
+  renderNewForm(capaNo);
+}
+
+/* ─── RENDER NEW FORM ─────────────────────────────── */
+function renderNewForm(capaNo) {
+  document.getElementById('toolbar-title').textContent = 'Yeni CAPA';
+  document.getElementById('toolbar-badge').innerHTML = '<span class="badge b-Açık">Açık</span>';
+
+  const tetikOpts = ['', 'NCR', 'Müşteri Şikayeti', 'İç Denetim', 'OEE Düşüşü', 'Diğer']
+    .map(v => `<option value="${esc(v)}">${esc(v || '— Tetikleyici seçin —')}</option>`).join('');
+
+  const body = document.getElementById('detail-body');
+  body.innerHTML = `
+  <!-- Card 1: Bilgiler -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-dot" style="background:var(--accent)"></div>
+      Bilgiler
+    </div>
+    <div class="card-body">
+      <div class="form-grid" style="margin-bottom:10px;">
+        <div class="fg">
+          <label class="fl">CAPA No</label>
+          <input class="fi" type="text" id="f-capa-no" value="${esc(capaNo)}" readonly>
+        </div>
+        <div class="fg">
+          <label class="fl">Tetikleyici</label>
+          <select class="fi" id="f-tetikleyici">${tetikOpts}</select>
+        </div>
+      </div>
+      <div class="form-grid" style="margin-bottom:10px;">
+        <div class="fg">
+          <label class="fl">Bağlı Kayıt (NCR No vb.)</label>
+          <input class="fi" type="text" id="f-bagli-kayit" placeholder="Ör: NCR-2026-001">
+        </div>
+        <div class="fg">
+          <label class="fl">Sorumlu</label>
+          <select class="fi" id="f-sorumlu">
+            <option value="">— Seçiniz —</option>
+            ${personelOpts([])}
+          </select>
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="fg">
+          <label class="fl">Açılış Tarihi</label>
+          <input class="fi" type="date" id="f-acilis-tarihi" value="${todayISO()}">
+        </div>
+        <div class="fg">
+          <label class="fl">Hedef Tarih</label>
+          <input class="fi" type="date" id="f-hedef-tarihi">
+        </div>
+      </div>
+      <div class="action-row" style="margin-top:10px;">
+        <button class="btn primary" onclick="saveNew()">💾 CAPA Oluştur</button>
+      </div>
+    </div>
+  </div>
+  <div style="color:var(--text3);font-size:12px;text-align:center;padding:20px;">CAPA kaydedildikten sonra diğer alanlar görünecektir.</div>
+  `;
+}
+
+/* ─── SAVE NEW ────────────────────────────────────── */
+async function saveNew() {
+  const capaNo = document.getElementById('f-capa-no').value.trim();
+  const tetik = document.getElementById('f-tetikleyici').value;
+  const bagliKayit = document.getElementById('f-bagli-kayit').value.trim();
+  const sorumluId = document.getElementById('f-sorumlu').value;
+  const acilisTarihi = document.getElementById('f-acilis-tarihi').value;
+  const hedefTarihi = document.getElementById('f-hedef-tarihi').value;
+
+  if (!tetik) { toast('Tetikleyici seçiniz', 'err'); return; }
+
+  const fields = {
+    'CAPA No': capaNo,
+    'Tetikleyici': tetik,
+    'Statü': 'Açık',
+  };
+  if (bagliKayit) fields['Bağlı Kayıt'] = bagliKayit;
+  if (sorumluId) fields['Sorumlu'] = [sorumluId];
+  if (acilisTarihi) fields['Açılış Tarihi'] = acilisTarihi;
+  if (hedefTarihi) fields['Hedef Tarih'] = hedefTarihi;
+
+  try {
+    toast('Kaydediliyor...', 'inf');
+    const res = await apiFn('POST', T.capa, { fields });
+    if (res.error) throw new Error(res.error.message || JSON.stringify(res.error));
+    await logIslem('Oluşturuldu', 'CAPA', res.id, capaNo, null, fields);
+    toast('CAPA oluşturuldu: ' + capaNo);
+    isNew = false;
+    await loadAll();
+    currentRec = capaList.find(r => r.id === res.id) || null;
+    renderDetail();
+    renderList();
+  } catch (e) {
+    toast('Hata: ' + e.message, 'err');
+  }
+}
+
+/* ─── RENDER DETAIL ───────────────────────────────── */
+function renderDetail() {
+  if (!currentRec) {
+    document.getElementById('toolbar-title').textContent = 'Düzeltici Faaliyet (CAPA)';
+    document.getElementById('toolbar-badge').innerHTML = '';
+    document.getElementById('detail-body').innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">🔧</div>
+        <div>Listeden bir CAPA seçin veya yeni CAPA oluşturun.</div>
+      </div>`;
+    return;
+  }
+
+  const f = currentRec.fields || {};
+  const id = currentRec.id;
+  const capaNo = f['CAPA No'] || id;
+  const statu = f['Statü'] || 'Açık';
+  const isKapali = statu === 'Kapalı';
+
+  document.getElementById('toolbar-title').textContent = capaNo;
+  document.getElementById('toolbar-badge').innerHTML = badgeStatü(statu);
+
+  const tetikOpts = ['', 'NCR', 'Müşteri Şikayeti', 'İç Denetim', 'OEE Düşüşü', 'Diğer']
+    .map(v => `<option value="${esc(v)}"${f['Tetikleyici'] === v ? ' selected' : ''}>${esc(v || '— Tetikleyici seçin —')}</option>`).join('');
+
+  const statüOpts = ['Açık', 'İncelemede', 'Kapalı']
+    .map(v => `<option value="${esc(v)}"${statu === v ? ' selected' : ''}>${esc(v)}</option>`).join('');
+
+  // Sorumlu
+  const sorumluIds = Array.isArray(f['Sorumlu']) ? f['Sorumlu'] : [];
+  const sorumluSel = sorumluIds[0] || '';
+
+  // Onaylayan
+  const onaylayanIds = Array.isArray(f['Onaylayan']) ? f['Onaylayan'] : [];
+  const onaylayanSel = onaylayanIds[0] || '';
+
+  // 5-Why values
+  const whyVals = Array.isArray(f['Kök Neden']) ? [] : [];
+  const kokNeden = f['Kök Neden'] || '';
+  const why1 = f['Neden 1'] || '';
+  const why2 = f['Neden 2'] || '';
+  const why3 = f['Neden 3'] || '';
+  const why4 = f['Neden 4'] || '';
+  const why5 = f['Neden 5'] || '';
+
+  // Evidence
+  const kanit = f['Kanıt'] || '';
+  const kanitDosya = Array.isArray(f['Kanıt Dosyası']) ? f['Kanıt Dosyası'][0] : null;
+
+  const disabledAttr = isKapali ? 'disabled' : '';
+
+  const body = document.getElementById('detail-body');
+  body.innerHTML = `
+
+  <!-- Card 1: Bilgiler -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-dot" style="background:var(--accent)"></div>
+      Bilgiler
+    </div>
+    <div class="card-body">
+      <div class="form-grid" style="margin-bottom:10px;">
+        <div class="fg">
+          <label class="fl">CAPA No</label>
+          <input class="fi" type="text" id="f-capa-no" value="${esc(capaNo)}" readonly>
+        </div>
+        <div class="fg">
+          <label class="fl">Tetikleyici</label>
+          <select class="fi" id="f-tetikleyici" ${disabledAttr}>${tetikOpts}</select>
+        </div>
+      </div>
+      <div class="form-grid" style="margin-bottom:10px;">
+        <div class="fg">
+          <label class="fl">Bağlı Kayıt</label>
+          <input class="fi" type="text" id="f-bagli-kayit" value="${esc(f['Bağlı Kayıt'] || '')}" placeholder="NCR No, Şikayet No…" ${disabledAttr}>
+        </div>
+        <div class="fg">
+          <label class="fl">Sorumlu</label>
+          <select class="fi" id="f-sorumlu" ${disabledAttr}>
+            <option value="">— Seçiniz —</option>
+            ${personelList.map(p => `<option value="${p.id}"${p.id === sorumluSel ? ' selected' : ''}>${esc(p.fields['Ad Soyad'] || '')}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div class="form-grid" style="margin-bottom:10px;">
+        <div class="fg">
+          <label class="fl">Açılış Tarihi</label>
+          <input class="fi" type="date" id="f-acilis-tarihi" value="${f['Açılış Tarihi'] || ''}" ${disabledAttr}>
+        </div>
+        <div class="fg">
+          <label class="fl">Hedef Tarih</label>
+          <input class="fi" type="date" id="f-hedef-tarihi" value="${f['Hedef Tarih'] || ''}" ${disabledAttr}>
+        </div>
+      </div>
+      <div class="fg" style="margin-bottom:10px;">
+        <label class="fl">Statü</label>
+        <select class="fi" id="f-statu" ${disabledAttr}>${statüOpts}</select>
+      </div>
+      ${!isKapali ? `<div class="action-row">
+        <button class="btn primary" onclick="saveBilgiler('${id}')">💾 Kaydet</button>
+      </div>` : ''}
+    </div>
+  </div>
+
+  <!-- Card 2: Problem Tanımı -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-dot" style="background:var(--red)"></div>
+      Problem Tanımı
+    </div>
+    <div class="card-body">
+      <div class="fg">
+        <label class="fl">Problem Açıklaması</label>
+        <textarea class="fi" id="f-problem" rows="4" placeholder="Problemin ne olduğunu açıklayın…" ${disabledAttr}>${esc(f['Problem'] || '')}</textarea>
+      </div>
+      ${!isKapali ? `<div class="action-row" style="margin-top:8px;">
+        <button class="btn primary" onclick="saveProblem('${id}')">💾 Kaydet</button>
+      </div>` : ''}
+    </div>
+  </div>
+
+  <!-- Card 3: Kök Neden (5-Why) -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-dot" style="background:var(--orange)"></div>
+      Kök Neden Analizi — 5-Why
+    </div>
+    <div class="card-body">
+      <div style="margin-bottom:10px;">
+        <div class="why-row"><span class="why-label">W1</span><input class="fi" type="text" id="f-why1" value="${esc(why1)}" placeholder="Neden 1 — ilk neden" ${disabledAttr}></div>
+        <div class="why-row"><span class="why-label">W2</span><input class="fi" type="text" id="f-why2" value="${esc(why2)}" placeholder="Neden 2" ${disabledAttr}></div>
+        <div class="why-row"><span class="why-label">W3</span><input class="fi" type="text" id="f-why3" value="${esc(why3)}" placeholder="Neden 3" ${disabledAttr}></div>
+        <div class="why-row"><span class="why-label">W4</span><input class="fi" type="text" id="f-why4" value="${esc(why4)}" placeholder="Neden 4" ${disabledAttr}></div>
+        <div class="why-row"><span class="why-label">W5</span><input class="fi" type="text" id="f-why5" value="${esc(why5)}" placeholder="Neden 5 — kök neden" ${disabledAttr}></div>
+      </div>
+      <div class="fg" style="margin-bottom:10px;">
+        <label class="fl">Kök Neden Özeti</label>
+        <textarea class="fi" id="f-kok-neden" rows="3" placeholder="5-Why sonucunda tespit edilen kök neden…" ${disabledAttr}>${esc(kokNeden)}</textarea>
+      </div>
+      <div id="ai-result-container">${f['AI 5-Why'] ? `<div class="ai-result">${esc(f['AI 5-Why'])}</div>` : ''}</div>
+      ${!isKapali ? `<div class="action-row" style="margin-top:8px;gap:8px;">
+        <button class="btn ai-btn" id="ai-btn" onclick="runAI('${id}')">✦ AI 5-Why Analizi</button>
+        <button class="btn primary" onclick="saveKokNeden('${id}')">💾 Kaydet</button>
+      </div>` : ''}
+    </div>
+  </div>
+
+  <!-- Card 4: Aksiyonlar -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-dot" style="background:var(--blue)"></div>
+      Aksiyonlar
+    </div>
+    <div class="card-body">
+      <div class="fg" style="margin-bottom:10px;">
+        <label class="fl">Düzeltici Aksiyon</label>
+        <textarea class="fi" id="f-duzeltici" rows="4" placeholder="Uygunsuzluğu gideren aksiyon…" ${disabledAttr}>${esc(f['Düzeltici Aksiyon'] || '')}</textarea>
+      </div>
+      <div class="fg" style="margin-bottom:10px;">
+        <label class="fl">Önleyici Aksiyon</label>
+        <textarea class="fi" id="f-onleyici" rows="4" placeholder="Tekrarını önleyen aksiyon…" ${disabledAttr}>${esc(f['Önleyici Aksiyon'] || '')}</textarea>
+      </div>
+      ${!isKapali ? `<div class="action-row">
+        <button class="btn primary" onclick="saveAksiyonlar('${id}')">💾 Kaydet</button>
+      </div>` : ''}
+    </div>
+  </div>
+
+  <!-- Card 5: Kapanış -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-dot" style="background:var(--green)"></div>
+      Kapanış
+    </div>
+    <div class="card-body">
+      <div class="form-grid" style="margin-bottom:10px;">
+        <div class="fg">
+          <label class="fl">Onaylayan</label>
+          <select class="fi" id="f-onaylayan" ${isKapali ? 'disabled' : ''}>
+            <option value="">— Seçiniz —</option>
+            ${personelList.map(p => `<option value="${p.id}"${p.id === onaylayanSel ? ' selected' : ''}>${esc(p.fields['Ad Soyad'] || '')}</option>`).join('')}
+          </select>
+        </div>
+        <div class="fg">
+          <label class="fl">Kapanış Tarihi</label>
+          <input class="fi" type="date" id="f-kapanis-tarihi" value="${f['Kapanış Tarihi'] || ''}" ${isKapali ? 'disabled' : ''}>
+        </div>
+      </div>
+      <div class="fg" style="margin-bottom:10px;">
+        <label class="fl">Kanıt Dosyası</label>
+        ${kanitDosya ? `<div style="font-size:12px;color:var(--green);margin-bottom:4px;">✓ ${esc(kanitDosya.filename || 'Dosya mevcut')}</div>` : ''}
+        ${!isKapali ? `<div class="upload-area" onclick="triggerEvidenceUpload('${id}')">
+          📎 Kanıt PDF yüklemek için tıklayın
+        </div>
+        <input type="file" id="evidence-file-input" accept=".pdf,.PDF,.jpg,.jpeg,.png" style="display:none" onchange="handleEvidenceUpload(event,'${id}')">
+        <div class="upload-filename" id="evidence-filename">${evidenceFilename ? '✓ ' + esc(evidenceFilename) : ''}</div>` : ''}
+      </div>
+      ${!isKapali ? `<div class="action-row">
+        <button class="btn success" onclick="kapatCapa('${id}')">✓ CAPA Kapat</button>
+      </div>` : `<div style="padding:10px;background:var(--green-light);border:1px solid var(--green);border-radius:6px;font-size:12px;color:var(--green);font-weight:500;text-align:center;">
+        CAPA kapatıldı — ${fmtDate(f['Kapanış Tarihi'])}
+      </div>`}
+    </div>
+  </div>
+  `;
+}
+
+/* ─── SAVE BILGILER ───────────────────────────────── */
+async function saveBilgiler(id) {
+  const fields = {};
+  const tetik = document.getElementById('f-tetikleyici').value;
+  const bagliKayit = document.getElementById('f-bagli-kayit').value.trim();
+  const sorumluId = document.getElementById('f-sorumlu').value;
+  const acilis = document.getElementById('f-acilis-tarihi').value;
+  const hedef = document.getElementById('f-hedef-tarihi').value;
+  const statu = document.getElementById('f-statu').value;
+
+  if (tetik) fields['Tetikleyici'] = tetik;
+  fields['Bağlı Kayıt'] = bagliKayit;
+  if (sorumluId) fields['Sorumlu'] = [sorumluId]; else fields['Sorumlu'] = [];
+  if (acilis) fields['Açılış Tarihi'] = acilis;
+  if (hedef) fields['Hedef Tarih'] = hedef;
+  if (statu) fields['Statü'] = statu;
+
+  await patchAndRefresh(id, fields, 'Bilgiler kaydedildi');
+}
+
+/* ─── SAVE PROBLEM ────────────────────────────────── */
+async function saveProblem(id) {
+  const problem = document.getElementById('f-problem').value.trim();
+  await patchAndRefresh(id, { 'Problem': problem }, 'Problem kaydedildi');
+}
+
+/* ─── SAVE KÖK NEDEN ──────────────────────────────── */
+async function saveKokNeden(id) {
+  const fields = {
+    'Neden 1': document.getElementById('f-why1').value.trim(),
+    'Neden 2': document.getElementById('f-why2').value.trim(),
+    'Neden 3': document.getElementById('f-why3').value.trim(),
+    'Neden 4': document.getElementById('f-why4').value.trim(),
+    'Neden 5': document.getElementById('f-why5').value.trim(),
+    'Kök Neden': document.getElementById('f-kok-neden').value.trim(),
+  };
+  await patchAndRefresh(id, fields, 'Kök neden kaydedildi');
+}
+
+/* ─── SAVE AKSIYONLAR ─────────────────────────────── */
+async function saveAksiyonlar(id) {
+  const fields = {
+    'Düzeltici Aksiyon': document.getElementById('f-duzeltici').value.trim(),
+    'Önleyici Aksiyon': document.getElementById('f-onleyici').value.trim(),
+  };
+  await patchAndRefresh(id, fields, 'Aksiyonlar kaydedildi');
+}
+
+/* ─── PATCH & REFRESH ─────────────────────────────── */
+async function patchAndRefresh(id, fields, successMsg) {
+  try {
+    toast('Kaydediliyor...', 'inf');
+    const res = await apiFn('PATCH', T.capa, { fields }, id);
+    if (res.error) throw new Error(res.error.message || JSON.stringify(res.error));
+    const capaNo = (currentRec && currentRec.fields['CAPA No']) || id;
+    await logIslem('Güncellendi', 'CAPA', id, capaNo, null, fields);
+    toast(successMsg || 'Kaydedildi');
+    await refreshRec(id);
+  } catch (e) {
+    toast('Hata: ' + e.message, 'err');
+  }
+}
+
+/* ─── KAPAT CAPA ──────────────────────────────────── */
+async function kapatCapa(id) {
+  const onaylayanId = document.getElementById('f-onaylayan').value;
+  const kapanisTarihi = document.getElementById('f-kapanis-tarihi').value || todayISO();
+
+  if (!onaylayanId) { toast('Onaylayan seçiniz', 'err'); return; }
+
+  const fields = {
+    'Statü': 'Kapalı',
+    'Kapanış Tarihi': kapanisTarihi,
+    'Onaylayan': [onaylayanId],
+  };
+
+  try {
+    toast('CAPA kapatılıyor...', 'inf');
+    const res = await apiFn('PATCH', T.capa, { fields }, id);
+    if (res.error) throw new Error(res.error.message || JSON.stringify(res.error));
+    const capaNo = (currentRec && currentRec.fields['CAPA No']) || id;
+    await logIslem('Kapatıldı', 'CAPA', id, capaNo, null, fields);
+    toast('CAPA kapatıldı ✓');
+    await refreshRec(id);
+  } catch (e) {
+    toast('Hata: ' + e.message, 'err');
+  }
+}
+
+/* ─── EVIDENCE UPLOAD ─────────────────────────────── */
+function triggerEvidenceUpload(id) {
+  document.getElementById('evidence-file-input').click();
+}
+
+async function handleEvidenceUpload(e, recId) {
+  const file = e.target.files[0];
+  if (!file) return;
+  evidenceFilename = file.name;
+  const fnEl = document.getElementById('evidence-filename');
+  if (fnEl) { fnEl.textContent = '⏳ Yükleniyor...'; fnEl.style.color = 'var(--text3)'; }
+
+  try {
+    const dataUrl = await fileToBase64(file);
+    const res = await fetch('/.netlify/functions/upload-pdf', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ filename: file.name, data: dataUrl, recordId: recId, table: 'CAPA', field: 'Kanıt Dosyası' })
+    });
+    if (!res.ok) throw new Error('Yükleme başarısız (HTTP ' + res.status + ')');
+    if (fnEl) { fnEl.textContent = '✓ ' + file.name; fnEl.style.color = 'var(--green)'; }
+    toast('Kanıt dosyası yüklendi ✓');
+    const capaNo = (currentRec && currentRec.fields['CAPA No']) || recId;
+    await logIslem('Dosya Yüklendi', 'CAPA', recId, capaNo, null, { dosya: file.name });
+  } catch (err) {
+    if (fnEl) { fnEl.textContent = '✗ Yükleme başarısız'; fnEl.style.color = 'var(--red)'; }
+    toast('Dosya yüklenemedi: ' + err.message, 'err');
+  }
+}
+
+/* ─── AI 5-WHY ────────────────────────────────────── */
+async function runAI(id) {
+  const problem = (document.getElementById('f-problem') || {}).value || (currentRec && currentRec.fields['Problem']) || '';
+  if (!problem.trim()) {
+    toast('Önce problem açıklaması giriniz', 'err');
+    return;
+  }
+
+  const btn = document.getElementById('ai-btn');
+  if (btn) { btn.innerHTML = '<span class="ai-spinner"></span> Analiz ediliyor...'; btn.disabled = true; }
+
+  const container = document.getElementById('ai-result-container');
+  if (container) container.innerHTML = '';
+
+  try {
+    const res = await fetch('/.netlify/functions/claude', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1024,
+        messages: [{
+          role: 'user',
+          content: `Bu problem için 5-Why kök neden analizi yap: ${problem}. Türkçe.`
+        }]
+      })
+    });
+
+    if (!res.ok) throw new Error('AI yanıtı alınamadı (HTTP ' + res.status + ')');
+    const data = await res.json();
+    const text = (data.content && data.content[0] && data.content[0].text) || data.completion || JSON.stringify(data);
+
+    if (container) container.innerHTML = `<div class="ai-result">${esc(text)}</div>`;
+
+    // Auto-fill why fields from AI response
+    const lines = text.split('\n').filter(l => /neden\s*[1-5]/i.test(l) || /why\s*[1-5]/i.test(l) || /^\s*[1-5][\.\)]/i.test(l));
+    lines.forEach((line, idx) => {
+      const el = document.getElementById('f-why' + (idx + 1));
+      if (el && !el.value) {
+        const cleaned = line.replace(/^[^:：]+[::]\s*/,'').trim();
+        if (cleaned) el.value = cleaned;
+      }
+    });
+
+    // Save AI result
+    await apiFn('PATCH', T.capa, { fields: { 'AI 5-Why': text } }, id);
+    const capaNo = (currentRec && currentRec.fields['CAPA No']) || id;
+    await logIslem('AI Analiz', 'CAPA', id, capaNo, null, { ai: '5-Why' });
+    toast('AI analizi tamamlandı ✓');
+  } catch (e) {
+    toast('AI Hatası: ' + e.message, 'err');
+    if (container) container.innerHTML = `<div style="color:var(--red);font-size:12px;padding:8px;">AI analizi başarısız: ${esc(e.message)}</div>`;
+  } finally {
+    if (btn) { btn.innerHTML = '✦ AI 5-Why Analizi'; btn.disabled = false; }
+  }
+}
+
+/* ─── REFRESH REC ─────────────────────────────────── */
+async function refreshRec(id) {
+  await loadAll();
+  currentRec = capaList.find(r => r.id === id) || null;
+  renderDetail();
+  renderList();
+}
+
+/* ─── MODAL ───────────────────────────────────────── */
+function openModal(title, label, placeholder, cb) {
+  modalCallback = cb;
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-label').textContent = label;
+  document.getElementById('modal-textarea').placeholder = placeholder;
+  document.getElementById('modal-textarea').value = '';
+  document.getElementById('modal-overlay').style.display = 'flex';
+  setTimeout(() => document.getElementById('modal-textarea').focus(), 50);
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').style.display = 'none';
+  modalCallback = null;
+}
+
+async function modalConfirm() {
+  if (!modalCallback) return;
+  const val = document.getElementById('modal-textarea').value;
+  const ok = await modalCallback(val);
+  if (ok !== false) closeModal();
+}
+
+/* ─── INIT ────────────────────────────────────────── */
+loadAll();
+</script>
 </body>
 </html>

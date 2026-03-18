@@ -4,38 +4,621 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ersan MES — Üretim / Atölye</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8fafc; min-height: 100vh; }
-.container { max-width: 960px; margin: 0 auto; padding: 3rem 1.5rem; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: calc(100vh - 48px); }
-.icon { font-size: 56px; margin-bottom: 1.5rem; }
-h1 { font-size: 24px; font-weight: 600; color: #1e293b; margin-bottom: .5rem; }
-.std { font-size: 11px; font-weight: 500; background: #ede9fe; color: #5b21b6; padding: 3px 10px; border-radius: 20px; margin-bottom: 1.25rem; display: inline-block; }
-p { font-size: 14px; color: #64748b; text-align: center; max-width: 420px; line-height: 1.7; margin-bottom: 2rem; }
-.wip { background: #fff; border: 0.5px solid #e2e8f0; border-radius: 12px; padding: 1.25rem 1.5rem; max-width: 480px; width: 100%; }
-.wip-title { font-size: 11px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: .06em; margin-bottom: .875rem; }
-.wip-item { display: flex; align-items: center; gap: 10px; padding: .5rem 0; border-top: 0.5px solid #f1f5f9; font-size: 13px; color: #475569; }
-.wip-item::before { content: "○"; color: #cbd5e1; font-size: 10px; }
-.back { margin-top: 1.5rem; font-size: 13px; color: #3b82f6; text-decoration: none; }
-.back:hover { text-decoration: underline; }
+:root {
+  --bg:#f0f2f5; --surface:#fff; --surface2:#f7f8fa;
+  --border:#e2e5ea; --border2:#c8cdd6;
+  --text:#1a1d23; --text2:#5a6170; --text3:#9aa0ad;
+  --accent:#7c3aed; --accent-light:#ede9fe; --accent-hover:#6d28d9;
+  --green:#059669; --green-light:#d1fae5;
+  --red:#dc2626; --red-light:#fee2e2;
+  --orange:#d97706; --orange-light:#fef3c7;
+  --blue:#2563eb; --blue-light:#dbeafe;
+  --shadow:0 1px 3px rgba(0,0,0,.08);
+  --radius:8px; --mono:'IBM Plex Mono',monospace; --sans:'IBM Plex Sans',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);height:100vh;overflow:hidden;font-size:13px;}
+
+/* HEADER */
+.header{height:52px;background:#1e1b4b;display:flex;align-items:center;padding:0 20px;gap:16px;position:fixed;top:0;left:0;right:0;z-index:100;}
+.header-logo{display:flex;align-items:center;gap:10px;}
+.header-logo-badge{width:28px;height:28px;border-radius:6px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:white;font-family:var(--mono);}
+.header-title{color:white;font-size:14px;font-weight:600;}
+.header-sub{color:rgba(255,255,255,.5);font-size:11px;}
+.header-sep{width:1px;height:28px;background:rgba(255,255,255,.2);}
+.header-nav{display:flex;gap:4px;}
+.header-nav a{color:rgba(255,255,255,.6);font-size:13px;font-weight:500;text-decoration:none;padding:6px 12px;border-radius:6px;transition:all .15s;}
+.header-nav a:hover{background:rgba(255,255,255,.1);color:white;}
+.header-nav a.active{background:rgba(255,255,255,.15);color:white;}
+
+/* LAYOUT */
+.layout{display:flex;height:calc(100vh - 52px);margin-top:52px;}
+
+/* LEFT PANEL */
+.list-panel{width:220px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
+.list-header{padding:12px 14px 8px;border-bottom:1px solid var(--border);}
+.list-header h2{font-size:13px;font-weight:600;}
+.list-count{font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:2px;}
+.list-search{padding:8px 10px;border-bottom:1px solid var(--border);}
+.list-search input{width:100%;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:11px;font-family:var(--sans);background:var(--surface2);outline:none;color:var(--text);}
+.list-search input:focus{border-color:var(--accent);}
+.filter-row{padding:5px 10px 7px;border-bottom:1px solid var(--border);display:flex;gap:3px;flex-wrap:wrap;}
+.fc{padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text3);transition:all .12s;}
+.fc.on{background:var(--accent-light);color:var(--accent);border-color:var(--accent);}
+.list-scroll{flex:1;overflow-y:auto;}
+
+/* LIST ITEMS */
+.ie-item{padding:9px 12px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s;}
+.ie-item:hover{background:var(--surface2);}
+.ie-item.active{background:var(--accent-light);border-left:3px solid var(--accent);}
+.ie-no{font-family:var(--mono);font-size:10px;font-weight:500;color:var(--accent);}
+.ie-parca{font-size:11px;font-weight:500;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ie-meta{display:flex;justify-content:space-between;align-items:center;margin-top:3px;gap:4px;}
+.p-Kritik{border-left:3px solid var(--red);}
+.p-Acil{border-left:3px solid var(--orange);}
+
+/* BADGES */
+.badge{font-size:10px;font-weight:600;padding:2px 7px;border-radius:10px;white-space:nowrap;}
+.b-Normal{background:#f3f4f6;color:#6b7280;}
+.b-Acil{background:var(--orange-light);color:var(--orange);}
+.b-Kritik{background:var(--red-light);color:var(--red);}
+.b-Planlandı{background:#f3f4f6;color:#6b7280;}
+.b-Üretimde{background:var(--blue-light);color:var(--blue);}
+.b-Bekliyor{background:var(--orange-light);color:var(--orange);}
+.b-Tamamlandı{background:var(--green-light);color:var(--green);}
+.b-Beklemede{background:#f3f4f6;color:#6b7280;}
+.b-Devam{background:var(--blue-light);color:var(--blue);}
+.b-Devam\ Ediyor{background:var(--blue-light);color:var(--blue);}
+.b-İptal{background:var(--red-light);color:var(--red);}
+
+/* DETAIL PANEL */
+.detail-panel{flex:1;overflow:hidden;display:flex;flex-direction:column;}
+.detail-toolbar{height:48px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:10px;flex-shrink:0;}
+.detail-title{font-size:15px;font-weight:700;font-family:var(--mono);color:var(--text);}
+.detail-sub{font-size:11px;color:var(--text3);}
+.detail-scroll{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:12px;}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.card-header{padding:9px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;font-size:10px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;}
+.card-dot{width:6px;height:6px;border-radius:50%;}
+.card-body{padding:12px 14px;}
+
+/* FORM GRID */
+.form-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+.form-grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.fg{display:flex;flex-direction:column;gap:3px;}
+.fl{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;}
+.fi{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px 9px;font-size:12px;font-family:var(--sans);color:var(--text);outline:none;width:100%;}
+.fi:focus{border-color:var(--accent);}
+.fi:disabled,.fi[readonly]{opacity:.7;cursor:default;}
+select.fi{cursor:pointer;}
+
+/* TABLES */
+.stl-table{width:100%;border-collapse:collapse;}
+.stl-table th{padding:6px 9px;text-align:left;font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;background:var(--surface2);border-bottom:1px solid var(--border);}
+.stl-table td{padding:7px 9px;border-bottom:1px solid var(--border);vertical-align:middle;font-size:11px;}
+.stl-table tr:last-child td{border-bottom:none;}
+.stl-table tr:hover td{background:var(--surface2);}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border:1px solid var(--border);border-radius:6px;font-size:11px;font-weight:500;cursor:pointer;background:var(--surface);color:var(--text2);font-family:var(--sans);transition:all .15s;white-space:nowrap;}
+.btn:hover{border-color:var(--accent);color:var(--accent);}
+.btn.primary{background:var(--accent);color:white;border-color:var(--accent);}
+.btn.primary:hover{background:var(--accent-hover);}
+.btn.success{background:var(--green);color:white;border-color:var(--green);}
+.btn.warn{background:var(--orange);color:white;border-color:var(--orange);}
+.btn:disabled{opacity:.5;cursor:not-allowed;}
+
+/* QR SIMULATOR */
+.qr-scan-row{display:flex;gap:8px;align-items:center;}
+.qr-result{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-top:10px;font-size:12px;line-height:1.7;}
+.qr-result-title{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;margin-bottom:6px;}
+.qr-result-row{display:flex;gap:8px;margin-bottom:2px;}
+.qr-result-label{color:var(--text3);min-width:100px;}
+.qr-result-val{font-weight:500;font-family:var(--mono);color:var(--text);}
+
+/* EMPTY / LOADING */
+.empty-state{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text3);gap:12px;padding:40px;text-align:center;min-height:200px;}
+.empty-state p{font-size:13px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;display:inline-block;}
+.loading-row{display:flex;align-items:center;gap:8px;padding:16px;color:var(--text3);font-size:12px;}
+
+/* TOAST */
+.toast-wrap{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;}
+.toast{padding:10px 16px;border-radius:8px;font-size:12px;font-weight:500;color:white;box-shadow:0 4px 12px rgba(0,0,0,.15);animation:fadeIn .2s;}
+.toast.ok{background:var(--green);}
+.toast.err{background:var(--red);}
+.toast.inf{background:var(--accent);}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* MOBILE */
+@media(max-width:768px){
+  .layout{flex-direction:column;height:auto;overflow:auto;}
+  .list-panel{width:100%;height:auto;max-height:45vh;border-right:none;border-bottom:1px solid var(--border);}
+  .detail-panel{height:auto;overflow:auto;}
+  .detail-scroll{padding:10px;}
+  .form-grid{grid-template-columns:repeat(2,1fr);}
+  .form-grid-3{grid-template-columns:repeat(2,1fr);}
+  body{overflow:auto;}
+  .header{position:relative;}
+  .layout{margin-top:0;}
+}
 </style>
 </head>
 <body>
 <script src="ersan_nav.js"></script>
-<div class="container">
-  <div class="icon">🏭</div>
-  <h1>Üretim / Atölye</h1>
-  <span class="std">AS9100 §8.5</span>
-  <p>Operatör ekranı, QR okutma, operasyon onay ve süre takibi. Bu modül geliştirme aşamasındadır.</p>
-  <div class="wip">
-    <div class="wip-title">Planlanacak özellikler</div>
-    <div class="wip-item">Airtable tablo bağlantısı</div>
-    <div class="wip-item">Liste ve detay görünümü</div>
-    <div class="wip-item">Form ve kayıt yönetimi</div>
-    <div class="wip-item">PDF / rapor çıktısı</div>
-    <div class="wip-item">Diğer modüllerle entegrasyon</div>
+<script src="ersan_log.js"></script>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-logo">
+    <div class="header-logo-badge">MES</div>
+    <div>
+      <div class="header-title">Ersan MES</div>
+      <div class="header-sub">Üretim / Atölye</div>
+    </div>
   </div>
-  <a href="index.html" class="back">← Ana sayfaya dön</a>
+  <div class="header-sep"></div>
+  <nav class="header-nav">
+    <a href="ersan_isemirleri.html">İş Emirleri</a>
+    <a href="ersan_planlama.html">Planlama</a>
+    <a href="ersan_uretim.html" class="active">Üretim</a>
+    <a href="ersan_kalite.html">Kalite</a>
+  </nav>
+</header>
+
+<!-- LAYOUT -->
+<div class="layout">
+
+  <!-- LEFT PANEL -->
+  <div class="list-panel">
+    <div class="list-header">
+      <h2>Üretim / Atölye</h2>
+      <div class="list-count" id="ie-count">Yükleniyor...</div>
+    </div>
+    <div class="list-search">
+      <input type="text" id="ie-search" placeholder="IE no, parça ara..." oninput="filterList()">
+    </div>
+    <div class="filter-row">
+      <div class="fc on" data-f="Tümü" onclick="setFilter(this)">Tümü</div>
+      <div class="fc" data-f="Planlandı" onclick="setFilter(this)">Planlandı</div>
+      <div class="fc" data-f="Üretimde" onclick="setFilter(this)">Üretimde</div>
+      <div class="fc" data-f="Bekliyor" onclick="setFilter(this)">Bekliyor</div>
+      <div class="fc" data-f="Tamamlandı" onclick="setFilter(this)">Tamamlandı</div>
+    </div>
+    <div class="list-scroll" id="ie-list">
+      <div class="loading-row"><div class="spinner"></div> Yükleniyor...</div>
+    </div>
+  </div>
+
+  <!-- DETAIL PANEL -->
+  <div class="detail-panel">
+    <div class="detail-toolbar" id="detail-toolbar" style="display:none;">
+      <div style="flex:1;">
+        <div class="detail-title" id="dt-title">—</div>
+        <div class="detail-sub" id="dt-sub">—</div>
+      </div>
+      <span id="dt-onc-badge"></span>
+      <span id="dt-dur-badge"></span>
+    </div>
+    <div id="detail-content">
+      <div class="empty-state">
+        <svg width="56" height="56" viewBox="0 0 56 56" fill="none" style="opacity:.2"><rect x="6" y="6" width="44" height="44" rx="6" stroke="currentColor" stroke-width="2"/><path d="M16 20h24M16 28h24M16 36h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="42" cy="42" r="10" fill="currentColor"/><path d="M38 42h8M42 38v8" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+        <p>Listeden bir iş emri seçin</p>
+      </div>
+    </div>
+  </div>
+
 </div>
+
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<script>
+// ── CONFIG ──
+const BASE = 'app5LDgJMgocw79Ix';
+const T = {
+  ie:        'tbl58qL39I2tv8hK4',
+  op:        'tblVECelTUG33EYm8',
+  traveller: 'tbljfjpefe5Z03S0a',
+  tezgah:    'tblsBXDsWACBAFEJ5',
+  personel:  'tblwG9GqnLC9oFZzb',
+};
+const LOK_TABLE = 'tbltaEVWPLUwutn9D';
+
+let ieList = [], filteredList = [];
+let tezgahlar = [], personelList = [], lokasyonlar = [];
+let activeId = null, activeFilter = 'Tümü';
+
+// ── API via Netlify proxy ──
+const apiGet = async (table, params = '') => {
+  const res = await fetch('/.netlify/functions/airtable', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({method:'GET', path:`/v0/${BASE}/${table}?${params}`})
+  });
+  return res.json();
+};
+const apiFn = async (method, table, body, id = '') => {
+  const path = `/v0/${BASE}/${table}${id ? '/'+id : ''}`;
+  const res = await fetch('/.netlify/functions/airtable', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({method, path, body})
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+};
+
+// ── HELPERS ──
+const fmtDate = d => { try { return d ? new Date(d).toLocaleDateString('tr-TR') : '—'; } catch { return d || '—'; } };
+const fv = (f, k) => f?.[k] ?? '';
+function toast(msg, type = 'ok') {
+  const el = document.createElement('div');
+  el.className = `toast ${type}`; el.textContent = msg;
+  document.getElementById('toast-wrap').appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+function badgeHtml(text, cls) {
+  return `<span class="badge ${cls || 'b-'+text}">${text}</span>`;
+}
+function opBadgeCls(dur) {
+  if (!dur) return 'b-Beklemede';
+  const map = {'Beklemede':'b-Beklemede','Devam':'b-Devam','Devam Ediyor':'b-Devam\\ Ediyor','Tamamlandı':'b-Tamamlandı'};
+  return map[dur] || 'b-Beklemede';
+}
+
+// ── LOAD ──
+async function loadAll() {
+  try {
+    let all = [], offset = '';
+    do {
+      const d = await apiGet(T.ie, `sort[0][field]=Öncelik&sort[0][direction]=desc${offset ? '&offset='+offset : ''}`);
+      all = all.concat(d.records || []);
+      offset = d.offset || '';
+    } while (offset);
+    ieList = all;
+
+    const [tz, ps, lk] = await Promise.all([
+      apiGet(T.tezgah, 'fields[]=Tezgah%20Ad%C4%B1&fields[]=Tezgah%20No'),
+      apiGet(T.personel, 'fields[]=Ad%20Soyad'),
+      apiGet(LOK_TABLE, 'fields[]=Lokasyon%20Ad%C4%B1&fields[]=Lokasyon%20Kodu').catch(() => ({records:[]})),
+    ]);
+    tezgahlar   = tz.records || [];
+    personelList = ps.records || [];
+    lokasyonlar  = lk.records || [];
+
+    filterAndRender();
+  } catch(e) {
+    document.getElementById('ie-list').innerHTML = `<div style="padding:16px;color:var(--red);font-size:12px;">Hata: ${e.message}</div>`;
+  }
+}
+
+function filterAndRender() {
+  const q   = document.getElementById('ie-search').value.toLowerCase();
+  const fil = activeFilter;
+  filteredList = ieList.filter(r => {
+    const f = r.fields || {};
+    const dur = f['Durum'] || '';
+    if (fil !== 'Tümü' && dur !== fil) return false;
+    if (q) {
+      const hay = ((f['IE No']||'') + ' ' + (f['Parça Adı']||'') + ' ' + (f['Parça No']||'')).toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+  document.getElementById('ie-count').textContent = `${filteredList.length} kayıt`;
+  renderList();
+}
+
+function setFilter(el) {
+  document.querySelectorAll('.fc').forEach(e => e.classList.remove('on'));
+  el.classList.add('on');
+  activeFilter = el.dataset.f;
+  filterAndRender();
+}
+
+function filterList() { filterAndRender(); }
+
+function renderList() {
+  const el = document.getElementById('ie-list');
+  if (!filteredList.length) {
+    el.innerHTML = '<div class="empty-state"><p>Kayıt bulunamadı</p></div>';
+    return;
+  }
+  el.innerHTML = filteredList.map(r => {
+    const f = r.fields || {};
+    const ieNo  = f['IE No'] || r.id;
+    const parca = f['Parça Adı'] || '—';
+    const onc   = f['Öncelik'] || 'Normal';
+    const dur   = f['Durum'] || '—';
+    const oncCls = onc === 'Kritik' ? 'p-Kritik' : onc === 'Acil' ? 'p-Acil' : '';
+    return `<div class="ie-item ${oncCls}${r.id === activeId ? ' active' : ''}" onclick="selectIE('${r.id}')">
+      <div class="ie-no">${ieNo}</div>
+      <div class="ie-parca">${parca}</div>
+      <div class="ie-meta">
+        ${badgeHtml(onc, 'badge b-'+onc)}
+        ${badgeHtml(dur, 'badge b-'+dur.replace(/ /g,'_'))}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── SELECT IE ──
+async function selectIE(id) {
+  activeId = id;
+  renderList();
+  const r = ieList.find(x => x.id === id);
+  if (!r) return;
+  const f = r.fields || {};
+
+  // toolbar
+  document.getElementById('detail-toolbar').style.display = 'flex';
+  document.getElementById('dt-title').textContent = f['IE No'] || id;
+  document.getElementById('dt-sub').textContent   = f['Parça Adı'] || '';
+  document.getElementById('dt-onc-badge').innerHTML = badgeHtml(f['Öncelik'] || 'Normal', 'badge b-'+(f['Öncelik']||'Normal'));
+  document.getElementById('dt-dur-badge').innerHTML = badgeHtml(f['Durum'] || '—', 'badge b-'+(f['Durum']||'').replace(/ /g,'_'));
+
+  // render placeholder while loading
+  document.getElementById('detail-content').innerHTML = `
+    <div class="detail-scroll">
+      ${renderCard1(f)}
+      <div class="card"><div class="card-body loading-row"><div class="spinner"></div> Operasyonlar yükleniyor...</div></div>
+      <div class="card"><div class="card-body loading-row"><div class="spinner"></div> Traveller yükleniyor...</div></div>
+      ${renderCard4(f)}
+    </div>`;
+
+  // load ops & traveller in parallel
+  const [ops, traveller] = await Promise.all([
+    loadOps(id),
+    loadTraveller(id),
+  ]);
+
+  document.getElementById('detail-content').innerHTML = `
+    <div class="detail-scroll">
+      ${renderCard1(f)}
+      ${renderCard2(ops, f)}
+      ${renderCard3(traveller)}
+      ${renderCard4(f)}
+    </div>`;
+}
+
+// ── CARD 1: ÖZET ──
+function renderCard1(f) {
+  const row = (lbl, val) => `<div class="fg"><div class="fl">${lbl}</div><input class="fi" readonly value="${(val||'').toString().replace(/"/g,'&quot;')}"></div>`;
+  return `<div class="card">
+    <div class="card-header"><div class="card-dot" style="background:var(--accent)"></div>Özet Bilgiler</div>
+    <div class="card-body">
+      <div class="form-grid">
+        ${row('IE No', f['IE No'])}
+        ${row('Parça No', f['Parça No'])}
+        ${row('Parça Adı', f['Parça Adı'])}
+        ${row('Revizyon', f['Revizyon'])}
+        ${row('Müşteri Adı', f['Müşteri Adı Text'] || f['Müşteri Adı'] || f['Müsteri'])}
+        ${row('Miktar', (f['Miktar']||'') + (f['Birim'] ? ' '+f['Birim'] : ''))}
+        ${row('Termin Tarihi', fmtDate(f['Termin Tarihi']))}
+        ${row('Malzeme Lotu', f['Malzeme Lotu'] || f['Lot No'] || f['Lot'])}
+      </div>
+      <div class="form-grid-3" style="margin-top:8px;">
+        ${row('Heat No', f['Heat No'])}
+        ${row('Durum', f['Durum'])}
+        ${row('Öncelik', f['Öncelik'])}
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── LOAD OPS ──
+async function loadOps(ieId) {
+  try {
+    const d = await apiGet(T.op, `filterByFormula=SEARCH("${ieId}",ARRAYJOIN({İş Emirleri}))&sort[0][field]=Op%20No&sort[0][direction]=asc`);
+    return d.records || [];
+  } catch(e) { return []; }
+}
+
+// ── CARD 2: OPERASYON ROTASI ──
+function renderCard2(ops, ieF) {
+  const getTezgah = id => {
+    if (!id) return '—';
+    const ids = Array.isArray(id) ? id : [id];
+    return ids.map(i => tezgahlar.find(t => t.id === i)?.fields?.['Tezgah Adı'] || i).join(', ');
+  };
+  const rows = ops.map((r, idx) => {
+    const f = r.fields || {};
+    const dur = f['Durum'] || 'Beklemede';
+    const opNo = f['Op No'] || (idx+1);
+    const opAdi = f['Operasyon Adı'] || f['Operasyon'] || '—';
+    const tezgah = getTezgah(f['Tezgah'] || f['Tezgah ID']);
+    const setup  = f['Setup dk'] || f['Setup Süresi'] || '—';
+    const islem  = f['İşleme dk'] || f['İşleme Süresi'] || '—';
+    const canStart    = dur === 'Beklemede';
+    const canComplete = dur === 'Devam' || dur === 'Devam Ediyor';
+    return `<tr>
+      <td style="font-family:var(--mono);font-size:11px;font-weight:600;">${opNo}</td>
+      <td>${opAdi}</td>
+      <td>${tezgah}</td>
+      <td style="font-family:var(--mono);">${setup}</td>
+      <td style="font-family:var(--mono);">${islem}</td>
+      <td>${badgeHtml(dur, 'badge '+opBadgeCls(dur))}</td>
+      <td>
+        ${canStart ? `<button class="btn warn" onclick="updateOpDurum('${r.id}','Devam Ediyor','${f['Operasyon Adı']||''}','${ieF['IE No']||''}')">Başlat</button>` : ''}
+        ${canComplete ? `<button class="btn success" onclick="updateOpDurum('${r.id}','Tamamlandı','${f['Operasyon Adı']||''}','${ieF['IE No']||''}')">Tamamla</button>` : ''}
+        ${dur === 'Tamamlandı' ? '<span style="color:var(--green);font-size:11px;">&#10003; Tamam</span>' : ''}
+      </td>
+    </tr>`;
+  }).join('');
+
+  return `<div class="card">
+    <div class="card-header"><div class="card-dot" style="background:var(--blue)"></div>Operasyon Rotası<span style="margin-left:auto;font-size:10px;color:var(--text3);">${ops.length} operasyon</span></div>
+    <div class="card-body" style="padding:0;">
+      ${ops.length === 0
+        ? '<div class="empty-state" style="min-height:80px;"><p>Operasyon kaydı bulunamadı</p></div>'
+        : `<table class="stl-table">
+            <thead><tr>
+              <th>Op No</th><th>Operasyon Adı</th><th>Tezgah</th>
+              <th>Setup dk</th><th>İşleme dk</th><th>Durum</th><th>Aksiyon</th>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+          </table>`}
+    </div>
+  </div>`;
+}
+
+// ── UPDATE OP DURUM ──
+async function updateOpDurum(opId, newDurum, opAdi, ieNo) {
+  try {
+    const old = {}; // we don't cache old value here, pass null
+    await apiFn('PATCH', T.op, {fields: {Durum: newDurum}}, opId);
+    await logIslem('Durum Güncellendi', 'Üretim/Operasyon', opId, `${ieNo} > ${opAdi}`, null, {Durum: newDurum});
+    toast(`${opAdi}: ${newDurum}`, 'ok');
+    // reload detail
+    if (activeId) selectIE(activeId);
+  } catch(e) {
+    toast(`Hata: ${e.message}`, 'err');
+  }
+}
+
+// ── LOAD TRAVELLER ──
+async function loadTraveller(ieId) {
+  try {
+    const d = await apiGet(T.traveller, `filterByFormula=SEARCH("${ieId}",ARRAYJOIN({İş Emri}))&sort[0][field]=Başlangıç&sort[0][direction]=asc`);
+    return d.records || [];
+  } catch(e) { return []; }
+}
+
+// ── CARD 3: TRAVELLER ──
+function renderCard3(recs) {
+  const getPersonel = id => {
+    if (!id) return '—';
+    const ids = Array.isArray(id) ? id : [id];
+    return ids.map(i => personelList.find(p => p.id === i)?.fields?.['Ad Soyad'] || i).join(', ');
+  };
+  const rows = recs.map(r => {
+    const f = r.fields || {};
+    const sure = f['Süre dk'] || f['Sure dk'] || f['Süre'] || '—';
+    return `<tr>
+      <td>${f['Operasyon'] || f['Operasyon Adı'] || '—'}</td>
+      <td>${f['Tezgah'] || '—'}</td>
+      <td>${getPersonel(f['Operatör'] || f['Personel'])}</td>
+      <td>${f['Lokasyon'] || '—'}</td>
+      <td>${badgeHtml(f['Statü'] || f['Durum'] || '—', 'badge')}</td>
+      <td style="font-family:var(--mono);">${fmtDate(f['Başlangıç'])}</td>
+      <td style="font-family:var(--mono);">${fmtDate(f['Bitiş'])}</td>
+      <td style="font-family:var(--mono);">${sure}</td>
+    </tr>`;
+  }).join('');
+
+  return `<div class="card">
+    <div class="card-header"><div class="card-dot" style="background:var(--green)"></div>Traveller<span style="margin-left:auto;font-size:10px;color:var(--text3);">${recs.length} kayıt</span></div>
+    <div class="card-body" style="padding:0;">
+      ${recs.length === 0
+        ? '<div class="empty-state" style="min-height:80px;"><p>Traveller kaydı bulunamadı</p></div>'
+        : `<table class="stl-table">
+            <thead><tr>
+              <th>Operasyon</th><th>Tezgah</th><th>Operatör</th>
+              <th>Lokasyon</th><th>Statü</th><th>Başlangıç</th><th>Bitiş</th><th>Süre dk</th>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+          </table>`}
+    </div>
+  </div>`;
+}
+
+// ── CARD 4: QR TARAMA SİMÜLATÖRÜ ──
+function renderCard4(ieF) {
+  const lokOpts = lokasyonlar.map(r => {
+    const f = r.fields || {};
+    const lbl = f['Lokasyon Adı'] || f['Lokasyon Kodu'] || r.id;
+    return `<option value="${r.id}">${lbl}</option>`;
+  }).join('');
+
+  return `<div class="card">
+    <div class="card-header"><div class="card-dot" style="background:var(--orange)"></div>QR Tarama Simülatörü</div>
+    <div class="card-body">
+      <div class="qr-scan-row">
+        <input class="fi" id="qr-input" placeholder="IE No veya Lot No girin..." style="flex:1;" onkeydown="if(event.key==='Enter')qrTara()">
+        <button class="btn primary" onclick="qrTara()">Tara</button>
+      </div>
+      <div id="qr-result" style="margin-top:8px;"></div>
+      <div id="qr-konum" style="margin-top:8px;display:none;">
+        <div style="display:flex;gap:8px;align-items:center;">
+          <select class="fi" id="qr-lok-sel" style="flex:1;">
+            <option value="">— Lokasyon seçin —</option>
+            ${lokOpts || '<option value="">Lokasyon yükleniyor...</option>'}
+          </select>
+          <button class="btn success" onclick="konumGuncelle()">Konum Güncelle</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── QR TARA ──
+function qrTara() {
+  const q = (document.getElementById('qr-input').value || '').trim().toUpperCase();
+  if (!q) { toast('IE No veya Lot No girin', 'inf'); return; }
+
+  const found = ieList.find(r => {
+    const f = r.fields || {};
+    return (f['IE No'] || '').toUpperCase() === q
+        || (f['Lot No'] || f['Lot'] || f['Malzeme Lotu'] || '').toUpperCase() === q;
+  });
+
+  const resEl  = document.getElementById('qr-result');
+  const konEl  = document.getElementById('qr-konum');
+
+  if (!found) {
+    resEl.innerHTML = `<div style="color:var(--red);font-size:12px;padding:8px;">Kayıt bulunamadı: <strong>${q}</strong></div>`;
+    konEl.style.display = 'none';
+    return;
+  }
+
+  const f = found.fields || {};
+  resEl.innerHTML = `<div class="qr-result">
+    <div class="qr-result-title">Bulunan Kayıt</div>
+    <div class="qr-result-row"><span class="qr-result-label">IE No:</span><span class="qr-result-val">${f['IE No'] || '—'}</span></div>
+    <div class="qr-result-row"><span class="qr-result-label">Parça Adı:</span><span class="qr-result-val">${f['Parça Adı'] || '—'}</span></div>
+    <div class="qr-result-row"><span class="qr-result-label">Parça No:</span><span class="qr-result-val">${f['Parça No'] || '—'}</span></div>
+    <div class="qr-result-row"><span class="qr-result-label">Miktar:</span><span class="qr-result-val">${f['Miktar']||'—'} ${f['Birim']||''}</span></div>
+    <div class="qr-result-row"><span class="qr-result-label">Durum:</span><span class="qr-result-val">${f['Durum'] || '—'}</span></div>
+    <div class="qr-result-row"><span class="qr-result-label">Malzeme Lotu:</span><span class="qr-result-val">${f['Malzeme Lotu'] || f['Lot No'] || f['Lot'] || '—'}</span></div>
+  </div>`;
+
+  // store id for konum update
+  document.getElementById('qr-konum').dataset.ieId = found.id;
+  konEl.style.display = 'block';
+}
+
+// ── KONUM GÜNCELLE ──
+async function konumGuncelle() {
+  const sel  = document.getElementById('qr-lok-sel');
+  const konEl = document.getElementById('qr-konum');
+  const ieId = konEl.dataset.ieId;
+  const lokId = sel.value;
+  if (!lokId)  { toast('Lokasyon seçin', 'inf'); return; }
+  if (!ieId)   { toast('Önce bir kayıt tarayın', 'inf'); return; }
+
+  const lokLbl = sel.options[sel.selectedIndex]?.text || lokId;
+  try {
+    // Update Lokasyon field on the IE record — field may be linked or text; try linked first
+    await apiFn('PATCH', T.ie, {fields: {Lokasyon: [lokId]}}, ieId);
+    await logIslem('Konum Güncellendi', 'Üretim/QR', ieId, `Lokasyon → ${lokLbl}`, null, {Lokasyon: lokLbl});
+    toast(`Konum güncellendi: ${lokLbl}`, 'ok');
+  } catch(e) {
+    // fallback: try as text field
+    try {
+      await apiFn('PATCH', T.ie, {fields: {Lokasyon: lokLbl}}, ieId);
+      await logIslem('Konum Güncellendi', 'Üretim/QR', ieId, `Lokasyon → ${lokLbl}`, null, {Lokasyon: lokLbl});
+      toast(`Konum güncellendi: ${lokLbl}`, 'ok');
+    } catch(e2) {
+      toast(`Hata: ${e2.message}`, 'err');
+    }
+  }
+}
+
+// ── INIT ──
+loadAll();
+</script>
 </body>
 </html>

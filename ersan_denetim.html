@@ -4,38 +4,687 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ersan MES — İç Denetim</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8fafc; min-height: 100vh; }
-.container { max-width: 960px; margin: 0 auto; padding: 3rem 1.5rem; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: calc(100vh - 48px); }
-.icon { font-size: 56px; margin-bottom: 1.5rem; }
-h1 { font-size: 24px; font-weight: 600; color: #1e293b; margin-bottom: .5rem; }
-.std { font-size: 11px; font-weight: 500; background: #ede9fe; color: #5b21b6; padding: 3px 10px; border-radius: 20px; margin-bottom: 1.25rem; display: inline-block; }
-p { font-size: 14px; color: #64748b; text-align: center; max-width: 420px; line-height: 1.7; margin-bottom: 2rem; }
-.wip { background: #fff; border: 0.5px solid #e2e8f0; border-radius: 12px; padding: 1.25rem 1.5rem; max-width: 480px; width: 100%; }
-.wip-title { font-size: 11px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: .06em; margin-bottom: .875rem; }
-.wip-item { display: flex; align-items: center; gap: 10px; padding: .5rem 0; border-top: 0.5px solid #f1f5f9; font-size: 13px; color: #475569; }
-.wip-item::before { content: "○"; color: #cbd5e1; font-size: 10px; }
-.back { margin-top: 1.5rem; font-size: 13px; color: #3b82f6; text-decoration: none; }
-.back:hover { text-decoration: underline; }
+:root{
+  --bg:#f0f2f5;--surface:#fff;--surface2:#f7f8fa;--border:#e2e5ea;--border2:#c8cdd6;
+  --text:#1a1d23;--text2:#5a6170;--text3:#9aa0ad;
+  --accent:#7c3aed;--accent-light:#ede9fe;--accent-hover:#6d28d9;
+  --green:#059669;--green-light:#d1fae5;--red:#dc2626;--red-light:#fee2e2;
+  --orange:#d97706;--orange-light:#fef3c7;--blue:#2563eb;--blue-light:#dbeafe;
+  --yellow:#ca8a04;--yellow-light:#fef9c3;
+  --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;--radius:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);height:100vh;overflow:hidden;font-size:13px;}
+
+/* TOP HEADER */
+.header{height:52px;background:#1e1b4b;display:flex;align-items:center;padding:0 20px;gap:14px;position:fixed;top:48px;left:0;right:0;z-index:99;}
+.logo-badge{width:28px;height:28px;border-radius:6px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:14px;color:white;}
+.header-title{color:white;font-size:14px;font-weight:600;}
+.header-sub{color:rgba(255,255,255,.45);font-size:11px;}
+.header-sep{width:1px;height:28px;background:rgba(255,255,255,.18);}
+
+/* LAYOUT */
+.layout-wrapper{display:flex;height:calc(100vh - 48px - 52px);margin-top:calc(48px + 52px);}
+
+/* LEFT PANEL */
+.list-panel{width:220px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;}
+.list-header{padding:12px 14px 8px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.list-header h2{font-size:12px;font-weight:600;}
+.list-count{font-size:10px;color:var(--text3);font-family:var(--mono);}
+.list-new-btn{display:inline-flex;align-items:center;gap:4px;padding:4px 9px;background:var(--accent);color:white;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:var(--sans);}
+.list-new-btn:hover{background:var(--accent-hover);}
+.filter-row{padding:6px 10px 7px;border-bottom:1px solid var(--border);display:flex;gap:4px;flex-wrap:wrap;}
+.fc{padding:3px 7px;border-radius:10px;font-size:10px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text3);transition:all .12s;}
+.fc.on{background:var(--accent-light);color:var(--accent);border-color:var(--accent);}
+.list-scroll{flex:1;overflow-y:auto;}
+.list-empty{padding:20px 14px;text-align:center;color:var(--text3);font-size:12px;line-height:1.6;}
+.den-item{padding:10px 12px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s;}
+.den-item:hover{background:var(--surface2);}
+.den-item.active{background:var(--accent-light);border-left:3px solid var(--accent);}
+.den-no{font-family:var(--mono);font-size:11px;font-weight:500;color:var(--accent);}
+.den-tarih{font-size:10px;color:var(--text3);margin-top:1px;}
+.den-kapsam{font-size:11px;color:var(--text2);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.den-meta{display:flex;align-items:center;justify-content:space-between;margin-top:4px;}
+
+/* RIGHT PANEL */
+.detail-panel{flex:1;overflow:hidden;display:flex;flex-direction:column;}
+.detail-toolbar{height:52px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:10px;flex-shrink:0;}
+.toolbar-title{font-size:13px;font-weight:600;font-family:var(--mono);color:var(--accent);}
+.toolbar-spacer{flex:1;}
+.detail-scroll{flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:12px;}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.card-header{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;}
+.card-dot{width:6px;height:6px;border-radius:50%;}
+.card-body{padding:14px;}
+.card-header-right{margin-left:auto;display:flex;gap:6px;align-items:center;}
+
+/* FORM */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+.fg{display:flex;flex-direction:column;gap:4px;}
+.fg-full{grid-column:1/-1;}
+.fl{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;}
+.fi{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:12px;font-family:var(--sans);color:var(--text);outline:none;width:100%;}
+.fi:focus{border-color:var(--accent);background:var(--surface);}
+.fi:disabled{opacity:.6;cursor:default;}
+textarea.fi{resize:vertical;min-height:80px;}
+select.fi{cursor:pointer;}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;background:var(--surface);color:var(--text2);font-family:var(--sans);transition:all .15s;white-space:nowrap;}
+.btn:hover{border-color:var(--accent);color:var(--accent);}
+.btn.primary{background:var(--accent);color:white;border-color:var(--accent);}
+.btn.primary:hover{background:var(--accent-hover);}
+.btn.success{background:var(--green);color:white;border-color:var(--green);}
+.btn.danger{background:var(--red);color:white;border-color:var(--red);}
+.btn.sm{padding:4px 9px;font-size:11px;}
+.btn:disabled{opacity:.5;cursor:not-allowed;}
+
+/* BADGES */
+.badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;white-space:nowrap;}
+.b-Planlandı{background:var(--blue-light);color:var(--blue);}
+.b-Devam\ Ediyor{background:var(--orange-light);color:var(--orange);}
+.b-Tamamlandı{background:var(--green-light);color:var(--green);}
+.b-Majör{background:var(--red-light);color:var(--red);}
+.b-Minör{background:var(--orange-light);color:var(--orange);}
+.b-Gözlem{background:var(--yellow-light);color:var(--yellow);}
+
+/* BULGULAR CARD */
+.bulgu-list{display:flex;flex-direction:column;gap:8px;}
+.bulgu-card{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:10px 12px;position:relative;}
+.bulgu-card-head{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.bulgu-remove-btn{margin-left:auto;background:none;border:none;cursor:pointer;color:var(--text3);font-size:14px;padding:2px 5px;border-radius:4px;transition:color .12s;}
+.bulgu-remove-btn:hover{color:var(--red);}
+.bulgu-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+
+/* AI CARD */
+.ai-result{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:12px 14px;font-size:12px;line-height:1.75;color:var(--text);white-space:pre-wrap;max-height:400px;overflow-y:auto;}
+.ai-result.loading{color:var(--text3);font-style:italic;}
+.ai-result ol, .ai-result ul{padding-left:18px;}
+.ai-result li{margin-bottom:3px;}
+
+/* EMPTY STATE */
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--text3);gap:8px;}
+.empty-state .es-icon{font-size:40px;opacity:.4;}
+.empty-state .es-text{font-size:13px;}
+.empty-state .es-sub{font-size:11px;}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:#1e1b4b;color:white;padding:10px 18px;border-radius:8px;font-size:12px;font-weight:500;z-index:9999;opacity:0;transform:translateY(8px);transition:all .25s;pointer-events:none;}
+.toast.show{opacity:1;transform:translateY(0);}
+.toast.err{background:var(--red);}
+
+/* MOBILE */
+@media(max-width:640px){
+  .list-panel{width:100%;position:fixed;bottom:0;height:50vh;border-top:1px solid var(--border);border-right:none;z-index:50;}
+  .list-panel.hidden{display:none;}
+  .layout-wrapper{flex-direction:column;}
+  .detail-panel{height:50vh;}
+  .form-grid,.form-grid-3,.bulgu-grid{grid-template-columns:1fr;}
+}
 </style>
 </head>
 <body>
 <script src="ersan_nav.js"></script>
-<div class="container">
-  <div class="icon">🔍</div>
-  <h1>İç Denetim</h1>
-  <span class="std">AS9100 §9.2</span>
-  <p>Denetim planı, soru listesi, bulgu kaydı, kapanış takibi. Bu modül geliştirme aşamasındadır.</p>
-  <div class="wip">
-    <div class="wip-title">Planlanacak özellikler</div>
-    <div class="wip-item">Airtable tablo bağlantısı</div>
-    <div class="wip-item">Liste ve detay görünümü</div>
-    <div class="wip-item">Form ve kayıt yönetimi</div>
-    <div class="wip-item">PDF / rapor çıktısı</div>
-    <div class="wip-item">Diğer modüllerle entegrasyon</div>
+<script src="ersan_log.js"></script>
+
+<div class="header">
+  <div class="logo-badge">🔍</div>
+  <div>
+    <div class="header-title">İç Denetim</div>
+    <div class="header-sub">AS9100 Rev.D §9.2</div>
   </div>
-  <a href="index.html" class="back">← Ana sayfaya dön</a>
+  <div class="header-sep"></div>
+  <div class="header-sub" style="color:rgba(255,255,255,.5);font-size:11px;">Denetim planlama · Bulgu yönetimi · AI kontrol listesi</div>
 </div>
+
+<div class="layout-wrapper">
+  <!-- LEFT PANEL -->
+  <div class="list-panel" id="listPanel">
+    <div class="list-header">
+      <div>
+        <h2>İç Denetim</h2>
+        <div class="list-count" id="listCount">0 kayıt</div>
+      </div>
+      <button class="list-new-btn" onclick="newDenetim()">+ Yeni</button>
+    </div>
+    <div class="filter-row" id="filterRow">
+      <span class="fc on" data-filter="Tümü" onclick="setFilter(this,'Tümü')">Tümü</span>
+      <span class="fc" data-filter="Planlandı" onclick="setFilter(this,'Planlandı')">Planlandı</span>
+      <span class="fc" data-filter="Devam Ediyor" onclick="setFilter(this,'Devam Ediyor')">Devam</span>
+      <span class="fc" data-filter="Tamamlandı" onclick="setFilter(this,'Tamamlandı')">Tamam</span>
+    </div>
+    <div class="list-scroll" id="listScroll">
+      <div class="list-empty">Yükleniyor…</div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="detail-panel" id="detailPanel">
+    <div class="detail-toolbar" id="detailToolbar">
+      <div class="toolbar-title" id="toolbarTitle">—</div>
+      <div class="toolbar-spacer"></div>
+      <button class="btn sm" id="btnDelete" style="display:none" onclick="deleteDenetim()">Sil</button>
+    </div>
+    <div class="detail-scroll" id="detailScroll">
+      <div class="empty-state">
+        <div class="es-icon">🔍</div>
+        <div class="es-text">Bir denetim seçin veya yeni oluşturun</div>
+        <div class="es-sub">Sol panelden kayıt seçin ya da "+ Yeni" butonuna tıklayın</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===== CONFIG ===== */
+const BASE = 'app5LDgJMgocw79Ix';
+const T = {
+  denetim: 'İç Denetim',
+  personel: 'tblwG9GqnLC9oFZzb'
+};
+const PROXY = '/.netlify/functions/airtable';
+const AI_PROXY = '/.netlify/functions/claude';
+
+/* ===== STATE ===== */
+let allRecords = [];
+let currentFilter = 'Tümü';
+let currentRecordId = null;
+let isNew = false;
+let personelList = [];
+
+/* ===== INIT ===== */
+document.addEventListener('DOMContentLoaded', () => {
+  loadPersonel();
+  loadDenetimler();
+});
+
+/* ===== TOAST ===== */
+function toast(msg, err=false) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show' + (err ? ' err' : '');
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.className = 'toast', 2800);
+}
+
+/* ===== AIRTABLE PROXY ===== */
+async function atFetch(method, table, id='', body=null, params='') {
+  const url = `${PROXY}?base=${BASE}&table=${encodeURIComponent(table)}${id ? '&id='+id : ''}${params}`;
+  const opts = { method, headers: {'Content-Type':'application/json'} };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(url, opts);
+  if (!res.ok) { const e = await res.text(); throw new Error(e); }
+  return res.json();
+}
+
+/* ===== LOAD PERSONEL ===== */
+async function loadPersonel() {
+  try {
+    const data = await atFetch('GET', T.personel, '', null, '&maxRecords=100&fields[]=Ad Soyad');
+    personelList = (data.records || []).map(r => ({id: r.id, name: r.fields['Ad Soyad'] || r.id}));
+  } catch(e) {
+    personelList = [];
+  }
+}
+
+/* ===== LOAD DENETİMLER ===== */
+async function loadDenetimler() {
+  try {
+    const data = await atFetch('GET', T.denetim, '', null, '&maxRecords=200&sort[0][field]=Tarih&sort[0][direction]=desc');
+    allRecords = data.records || [];
+    renderList();
+  } catch(e) {
+    document.getElementById('listScroll').innerHTML = `<div class="list-empty">Hata: ${e.message}</div>`;
+  }
+}
+
+/* ===== RENDER LIST ===== */
+function renderList() {
+  const filtered = currentFilter === 'Tümü'
+    ? allRecords
+    : allRecords.filter(r => (r.fields['Statü'] || '') === currentFilter);
+
+  document.getElementById('listCount').textContent = filtered.length + ' kayıt';
+  const el = document.getElementById('listScroll');
+
+  if (!filtered.length) {
+    el.innerHTML = '<div class="list-empty">Kayıt bulunamadı</div>';
+    return;
+  }
+
+  el.innerHTML = filtered.map(r => {
+    const f = r.fields;
+    const no = f['Denetim No'] || '—';
+    const tarih = f['Tarih'] || '';
+    const kapsam = f['Kapsam'] || '';
+    const statu = f['Statü'] || '';
+    const active = r.id === currentRecordId ? ' active' : '';
+    return `<div class="den-item${active}" onclick="selectRecord('${r.id}')">
+      <div class="den-no">${escHtml(no)}</div>
+      <div class="den-tarih">${tarih ? formatTarih(tarih) : '—'}</div>
+      <div class="den-kapsam">${escHtml(kapsam.substring(0,60))}${kapsam.length>60?'…':''}</div>
+      <div class="den-meta">
+        <span class="badge b-${escClass(statu)}">${escHtml(statu||'—')}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ===== FILTER ===== */
+function setFilter(el, val) {
+  currentFilter = val;
+  document.querySelectorAll('.fc').forEach(e => e.classList.remove('on'));
+  el.classList.add('on');
+  renderList();
+}
+
+/* ===== SELECT RECORD ===== */
+function selectRecord(id) {
+  currentRecordId = id;
+  isNew = false;
+  renderList();
+  const rec = allRecords.find(r => r.id === id);
+  if (rec) renderDetail(rec);
+}
+
+/* ===== NEW DENETİM ===== */
+function newDenetim() {
+  currentRecordId = null;
+  isNew = true;
+  renderList();
+  renderDetail(null);
+}
+
+/* ===== AUTO NO ===== */
+function genDenetimNo() {
+  const year = new Date().getFullYear();
+  const existing = allRecords
+    .map(r => r.fields['Denetim No'] || '')
+    .filter(n => n.startsWith(`DEN-${year}-`))
+    .map(n => parseInt(n.split('-')[2]) || 0);
+  const max = existing.length ? Math.max(...existing) : 0;
+  return `DEN-${year}-${String(max + 1).padStart(3,'0')}`;
+}
+
+/* ===== RENDER DETAIL ===== */
+function renderDetail(rec) {
+  const f = rec ? rec.fields : {};
+  const id = rec ? rec.id : null;
+  const denetimNo = isNew ? genDenetimNo() : (f['Denetim No'] || '');
+  const tarih = f['Tarih'] || '';
+  const kapsam = f['Kapsam'] || '';
+  const statu = f['Statü'] || 'Planlandı';
+  const notlar = f['Notlar'] || '';
+
+  // Denetçi: multipleRecordLinks array of record IDs
+  const denetciIds = f['Denetçi'] || [];
+
+  // Bulgular: JSON string
+  let bulgular = [];
+  try { bulgular = JSON.parse(f['Bulgular'] || '[]'); } catch(e) { bulgular = []; }
+
+  // Toolbar
+  document.getElementById('toolbarTitle').textContent = isNew ? '+ Yeni Denetim' : denetimNo;
+  document.getElementById('btnDelete').style.display = (!isNew && id) ? '' : 'none';
+
+  const personelOptions = personelList.map(p =>
+    `<option value="${p.id}" ${denetciIds.includes(p.id)?'selected':''}>${escHtml(p.name)}</option>`
+  ).join('');
+
+  const statuOpts = ['Planlandı','Devam Ediyor','Tamamlandı'].map(s =>
+    `<option value="${s}" ${statu===s?'selected':''}>${s}</option>`
+  ).join('');
+
+  // Build bulgular HTML
+  const bulgularHtml = bulgular.map((b,i) => buildBulguCard(b, i)).join('');
+
+  document.getElementById('detailScroll').innerHTML = `
+
+    <!-- CARD 1: Denetim Planı -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-dot" style="background:var(--accent)"></div>
+        Denetim Planı
+        <div class="card-header-right">
+          <span class="badge b-${escClass(statu)}">${escHtml(statu)}</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="form-grid" style="margin-bottom:10px;">
+          <div class="fg">
+            <label class="fl">Denetim No</label>
+            <input class="fi" type="text" id="fDenetimNo" value="${escHtml(denetimNo)}" placeholder="DEN-2026-001" style="font-family:var(--mono);" readonly>
+          </div>
+          <div class="fg">
+            <label class="fl">Tarih</label>
+            <input class="fi" type="date" id="fTarih" value="${tarih}">
+          </div>
+        </div>
+        <div class="form-grid" style="margin-bottom:10px;">
+          <div class="fg">
+            <label class="fl">Denetçi (Personel)</label>
+            <select class="fi" id="fDenetci" multiple size="3" style="min-height:70px;">
+              ${personelOptions}
+            </select>
+            <small style="font-size:10px;color:var(--text3);margin-top:2px;">Ctrl/Cmd ile çoklu seçim</small>
+          </div>
+          <div class="fg">
+            <label class="fl">Statü</label>
+            <select class="fi" id="fStatu">${statuOpts}</select>
+          </div>
+        </div>
+        <div class="fg" style="margin-bottom:10px;">
+          <label class="fl">Kapsam (Hangi modüller / prosesler)</label>
+          <textarea class="fi" id="fKapsam" rows="3" placeholder="Örn: Satınalma prosesi, girdi kalite kontrolü, doküman yönetimi…">${escHtml(kapsam)}</textarea>
+        </div>
+        <div class="fg" style="margin-bottom:12px;">
+          <label class="fl">Notlar</label>
+          <textarea class="fi" id="fNotlar" rows="2" placeholder="Denetim öncesi notlar…">${escHtml(notlar)}</textarea>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;">
+          <button class="btn primary" onclick="saveDenetim()">💾 Kaydet</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CARD 2: Bulgular -->
+    <div class="card" id="bulgularCard" style="display:${isNew?'none':''};">
+      <div class="card-header">
+        <div class="card-dot" style="background:var(--red)"></div>
+        Bulgular
+        <div class="card-header-right">
+          <button class="btn sm" onclick="addBulgu()">+ Bulgu Ekle</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="bulgu-list" id="bulguList">
+          ${bulgularHtml || '<div style="color:var(--text3);font-size:12px;padding:4px 0;">Henüz bulgu eklenmedi.</div>'}
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;">
+          <button class="btn primary" onclick="saveBulgular()">💾 Bulguları Kaydet</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CARD 3: AI Kontrol Listesi -->
+    <div class="card" id="aiCard" style="display:${isNew?'none':''};">
+      <div class="card-header">
+        <div class="card-dot" style="background:var(--blue)"></div>
+        AI Kontrol Listesi
+        <div class="card-header-right">
+          <button class="btn sm primary" onclick="generateAI()">✨ AI Kontrol Listesi Oluştur</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div id="aiResult" style="color:var(--text3);font-size:12px;padding:4px 0;">
+          "AI Kontrol Listesi Oluştur" butonuna tıklayarak AS9100 Rev.D uyumlu denetim kontrol listesi oluşturun.
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Re-bind bulgu index references
+  window._bulgular = bulgular.slice();
+}
+
+/* ===== BUILD BULGU CARD HTML ===== */
+function buildBulguCard(b, i) {
+  const tipOpts = ['Majör','Minör','Gözlem'].map(t =>
+    `<option value="${t}" ${(b.tip||''===t)?'selected':''}>${t}</option>`
+  ).join('');
+  // Check selected properly
+  const tipler = ['Majör','Minör','Gözlem'];
+  const tipOptsCorrect = tipler.map(t =>
+    `<option value="${t}" ${b.tip===t?'selected':''}>${t}</option>`
+  ).join('');
+
+  return `<div class="bulgu-card" id="bulguCard${i}">
+    <div class="bulgu-card-head">
+      <span class="badge b-${escClass(b.tip||'Gözlem')}">${escHtml(b.tip||'Gözlem')}</span>
+      <span style="font-size:11px;color:var(--text3);">Bulgu #${i+1}</span>
+      <button class="bulgu-remove-btn" onclick="removeBulgu(${i})" title="Kaldır">✕</button>
+    </div>
+    <div class="bulgu-grid">
+      <div class="fg">
+        <label class="fl">Tipi</label>
+        <select class="fi" id="bTip${i}" onchange="updateBulguBadge(${i})">
+          ${tipOptsCorrect}
+        </select>
+      </div>
+      <div class="fg">
+        <label class="fl">AS9100 Maddesi</label>
+        <input class="fi" type="text" id="bMadde${i}" value="${escHtml(b.madde||'')}" placeholder="Örn: 8.4.1">
+      </div>
+      <div class="fg" style="grid-column:1/-1;">
+        <label class="fl">Açıklama</label>
+        <textarea class="fi" id="bAciklama${i}" rows="2" placeholder="Bulgu açıklaması…">${escHtml(b.aciklama||'')}</textarea>
+      </div>
+      <div class="fg" style="grid-column:1/-1;">
+        <label class="fl">Kapanış Hedef Tarihi</label>
+        <input class="fi" type="date" id="bKapanis${i}" value="${b.kapanis||''}">
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ===== ADD BULGU ===== */
+function addBulgu() {
+  window._bulgular = collectBulgular();
+  window._bulgular.push({tip:'Gözlem', madde:'', aciklama:'', kapanis:''});
+  const list = document.getElementById('bulguList');
+  list.innerHTML = window._bulgular.map((b,i) => buildBulguCard(b,i)).join('');
+}
+
+/* ===== REMOVE BULGU ===== */
+function removeBulgu(i) {
+  window._bulgular = collectBulgular();
+  window._bulgular.splice(i, 1);
+  const list = document.getElementById('bulguList');
+  if (window._bulgular.length === 0) {
+    list.innerHTML = '<div style="color:var(--text3);font-size:12px;padding:4px 0;">Henüz bulgu eklenmedi.</div>';
+  } else {
+    list.innerHTML = window._bulgular.map((b,i) => buildBulguCard(b,i)).join('');
+  }
+}
+
+/* ===== UPDATE BULGU BADGE ===== */
+function updateBulguBadge(i) {
+  const tip = document.getElementById('bTip'+i).value;
+  const card = document.getElementById('bulguCard'+i);
+  if (card) {
+    const badge = card.querySelector('.badge');
+    badge.className = `badge b-${escClass(tip)}`;
+    badge.textContent = tip;
+  }
+}
+
+/* ===== COLLECT BULGULAR ===== */
+function collectBulgular() {
+  const list = document.getElementById('bulguList');
+  if (!list) return [];
+  const cards = list.querySelectorAll('.bulgu-card');
+  const result = [];
+  cards.forEach((c, i) => {
+    result.push({
+      tip: (document.getElementById('bTip'+i)||{}).value || '',
+      madde: (document.getElementById('bMadde'+i)||{}).value || '',
+      aciklama: (document.getElementById('bAciklama'+i)||{}).value || '',
+      kapanis: (document.getElementById('bKapanis'+i)||{}).value || ''
+    });
+  });
+  return result;
+}
+
+/* ===== SAVE DENETİM ===== */
+async function saveDenetim() {
+  const no = document.getElementById('fDenetimNo').value.trim();
+  const tarih = document.getElementById('fTarih').value;
+  const kapsam = document.getElementById('fKapsam').value.trim();
+  const statu = document.getElementById('fStatu').value;
+  const notlar = document.getElementById('fNotlar').value.trim();
+
+  // Collect selected denetçi IDs
+  const denetciSel = document.getElementById('fDenetci');
+  const denetciIds = denetciSel
+    ? Array.from(denetciSel.selectedOptions).map(o => o.value)
+    : [];
+
+  if (!no) { toast('Denetim No gerekli', true); return; }
+  if (!tarih) { toast('Tarih gerekli', true); return; }
+
+  const fields = {
+    'Denetim No': no,
+    'Tarih': tarih,
+    'Kapsam': kapsam,
+    'Statü': statu,
+    'Notlar': notlar
+  };
+  if (denetciIds.length) fields['Denetçi'] = denetciIds;
+
+  try {
+    const btn = document.querySelector('[onclick="saveDenetim()"]');
+    btn.disabled = true; btn.textContent = 'Kaydediliyor…';
+
+    let savedId, savedRec;
+    if (isNew) {
+      const res = await atFetch('POST', T.denetim, '', {fields});
+      savedId = res.id;
+      savedRec = res;
+      allRecords.unshift(res);
+      await logIslem('Oluşturuldu', 'İç Denetim', savedId, no, null, fields);
+      toast('Denetim oluşturuldu: ' + no);
+    } else {
+      const res = await atFetch('PATCH', T.denetim, currentRecordId, {fields});
+      savedId = res.id;
+      savedRec = res;
+      const idx = allRecords.findIndex(r => r.id === currentRecordId);
+      if (idx !== -1) allRecords[idx] = res;
+      await logIslem('Güncellendi', 'İç Denetim', savedId, no, null, fields);
+      toast('Denetim güncellendi');
+    }
+
+    currentRecordId = savedId;
+    isNew = false;
+    renderList();
+    renderDetail(savedRec);
+  } catch(e) {
+    toast('Hata: ' + e.message, true);
+  } finally {
+    const btn = document.querySelector('[onclick="saveDenetim()"]');
+    if (btn) { btn.disabled = false; btn.textContent = '💾 Kaydet'; }
+  }
+}
+
+/* ===== SAVE BULGULAR ===== */
+async function saveBulgular() {
+  if (!currentRecordId) { toast('Önce denetimi kaydedin', true); return; }
+  const bulgular = collectBulgular();
+  const fields = { 'Bulgular': JSON.stringify(bulgular) };
+  try {
+    const btn = document.querySelector('[onclick="saveBulgular()"]');
+    btn.disabled = true; btn.textContent = 'Kaydediliyor…';
+    const res = await atFetch('PATCH', T.denetim, currentRecordId, {fields});
+    const idx = allRecords.findIndex(r => r.id === currentRecordId);
+    if (idx !== -1) allRecords[idx] = res;
+    await logIslem('Güncellendi', 'İç Denetim', currentRecordId, res.fields['Denetim No']||'', null, {bulgular: bulgular.length + ' bulgu'});
+    toast('Bulgular kaydedildi (' + bulgular.length + ' adet)');
+  } catch(e) {
+    toast('Hata: ' + e.message, true);
+  } finally {
+    const btn = document.querySelector('[onclick="saveBulgular()"]');
+    if (btn) { btn.disabled = false; btn.textContent = '💾 Bulguları Kaydet'; }
+  }
+}
+
+/* ===== DELETE ===== */
+async function deleteDenetim() {
+  if (!currentRecordId) return;
+  const rec = allRecords.find(r => r.id === currentRecordId);
+  const no = rec ? (rec.fields['Denetim No']||'') : '';
+  if (!confirm(`"${no}" denetimini silmek istediğinize emin misiniz?`)) return;
+  try {
+    await atFetch('DELETE', T.denetim, currentRecordId);
+    await logIslem('Silindi', 'İç Denetim', currentRecordId, no, null, null);
+    allRecords = allRecords.filter(r => r.id !== currentRecordId);
+    currentRecordId = null;
+    isNew = false;
+    renderList();
+    document.getElementById('detailScroll').innerHTML = `
+      <div class="empty-state">
+        <div class="es-icon">🗑️</div>
+        <div class="es-text">Denetim silindi</div>
+        <div class="es-sub">Sol panelden yeni bir kayıt seçin</div>
+      </div>`;
+    document.getElementById('toolbarTitle').textContent = '—';
+    document.getElementById('btnDelete').style.display = 'none';
+    toast('Denetim silindi: ' + no);
+  } catch(e) {
+    toast('Hata: ' + e.message, true);
+  }
+}
+
+/* ===== AI KONTROL LİSTESİ ===== */
+async function generateAI() {
+  const kapsam = (document.getElementById('fKapsam')||{}).value || '';
+  const aiResult = document.getElementById('aiResult');
+  if (!kapsam.trim()) {
+    toast('Önce Kapsam alanını doldurun', true);
+    return;
+  }
+
+  const btn = document.querySelector('[onclick="generateAI()"]');
+  btn.disabled = true;
+  btn.textContent = '⏳ Oluşturuluyor…';
+  aiResult.className = 'ai-result loading';
+  aiResult.textContent = 'AI kontrol listesi oluşturuluyor, lütfen bekleyin…';
+
+  const prompt = `AS9100 Rev.D için "${kapsam}" modülü denetim kontrol listesi hazırla. Türkçe, madde madde.`;
+
+  try {
+    const res = await fetch(AI_PROXY, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1024,
+        messages: [{role:'user', content: prompt}]
+      })
+    });
+    if (!res.ok) throw new Error(await res.text());
+    const data = await res.json();
+    const text = data?.content?.[0]?.text || data?.choices?.[0]?.message?.content || JSON.stringify(data);
+    aiResult.className = 'ai-result';
+    aiResult.textContent = text;
+    toast('AI kontrol listesi oluşturuldu');
+  } catch(e) {
+    aiResult.className = '';
+    aiResult.textContent = 'Hata: ' + e.message;
+    toast('AI hatası: ' + e.message, true);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '✨ AI Kontrol Listesi Oluştur';
+  }
+}
+
+/* ===== UTILS ===== */
+function escHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function escClass(s) {
+  return String(s||'').replace(/\s+/g,' ');
+}
+function formatTarih(d) {
+  if (!d) return '—';
+  const [y,m,gn] = d.split('-');
+  return `${gn}.${m}.${y}`;
+}
+</script>
 </body>
 </html>

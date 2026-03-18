@@ -4,38 +4,658 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ersan MES — Risk Yönetimi</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8fafc; min-height: 100vh; }
-.container { max-width: 960px; margin: 0 auto; padding: 3rem 1.5rem; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: calc(100vh - 48px); }
-.icon { font-size: 56px; margin-bottom: 1.5rem; }
-h1 { font-size: 24px; font-weight: 600; color: #1e293b; margin-bottom: .5rem; }
-.std { font-size: 11px; font-weight: 500; background: #ede9fe; color: #5b21b6; padding: 3px 10px; border-radius: 20px; margin-bottom: 1.25rem; display: inline-block; }
-p { font-size: 14px; color: #64748b; text-align: center; max-width: 420px; line-height: 1.7; margin-bottom: 2rem; }
-.wip { background: #fff; border: 0.5px solid #e2e8f0; border-radius: 12px; padding: 1.25rem 1.5rem; max-width: 480px; width: 100%; }
-.wip-title { font-size: 11px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: .06em; margin-bottom: .875rem; }
-.wip-item { display: flex; align-items: center; gap: 10px; padding: .5rem 0; border-top: 0.5px solid #f1f5f9; font-size: 13px; color: #475569; }
-.wip-item::before { content: "○"; color: #cbd5e1; font-size: 10px; }
-.back { margin-top: 1.5rem; font-size: 13px; color: #3b82f6; text-decoration: none; }
-.back:hover { text-decoration: underline; }
+:root{
+  --bg:#f0f2f5;--surface:#fff;--surface2:#f7f8fa;--border:#e2e5ea;--border2:#c8cdd6;
+  --text:#1a1d23;--text2:#5a6170;--text3:#9aa0ad;
+  --accent:#7c3aed;--accent-light:#ede9fe;--accent-hover:#6d28d9;
+  --green:#059669;--green-light:#d1fae5;--red:#dc2626;--red-light:#fee2e2;
+  --orange:#d97706;--orange-light:#fef3c7;--blue:#2563eb;--blue-light:#dbeafe;
+  --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;--radius:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);height:100vh;overflow:hidden;font-size:13px;}
+
+.header{height:52px;background:#1e1b4b;display:flex;align-items:center;padding:0 20px;gap:16px;position:fixed;top:0;left:0;right:0;z-index:100;}
+.logo-badge{width:28px;height:28px;border-radius:6px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:white;font-family:var(--mono);}
+.header-title{color:white;font-size:14px;font-weight:600;}
+.header-sub{color:rgba(255,255,255,.5);font-size:11px;}
+.header-sep{width:1px;height:28px;background:rgba(255,255,255,.2);}
+.header-badge{font-size:10px;background:rgba(124,58,237,.4);color:#c4b5fd;padding:3px 8px;border-radius:10px;font-weight:600;}
+
+.layout-wrapper{display:flex;height:calc(100vh - 52px);margin-top:52px;overflow:hidden;}
+
+/* LEFT */
+.list-panel{width:220px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;}
+.list-header{padding:10px 12px 6px;}
+.list-count{font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:2px;}
+.filter-row{padding:4px 8px 8px;border-bottom:1px solid var(--border);display:flex;gap:4px;flex-wrap:wrap;}
+.fc{padding:3px 8px;border-radius:10px;font-size:10px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text3);}
+.fc.on{background:var(--accent-light);color:var(--accent);border-color:var(--accent);}
+.list-scroll{flex:1;overflow-y:auto;}
+.new-btn-wrap{padding:10px;}
+
+.risk-item{padding:9px 12px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s;}
+.risk-item:hover{background:var(--surface2);}
+.risk-item.active{background:var(--accent-light);border-left:3px solid var(--accent);}
+.risk-no{font-family:var(--mono);font-size:10px;font-weight:500;color:var(--accent);}
+.risk-modul{font-size:11px;font-weight:500;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.risk-meta{font-size:10px;color:var(--text3);margin-top:3px;display:flex;gap:5px;align-items:center;flex-wrap:wrap;}
+
+/* RIGHT */
+.detail-panel{flex:1;overflow:hidden;display:flex;flex-direction:column;}
+.detail-scroll{flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:12px;}
+.toolbar{display:flex;align-items:center;gap:8px;padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.card-header{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;}
+.card-body{padding:14px;}
+.card-dot{width:6px;height:6px;border-radius:50%;}
+
+/* BUTTONS */
+.btn{display:flex;align-items:center;gap:5px;padding:6px 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;background:var(--surface);color:var(--text2);font-family:var(--sans);transition:all .15s;white-space:nowrap;}
+.btn:hover{border-color:var(--accent);color:var(--accent);}
+.btn.primary{background:var(--accent);color:white;border-color:var(--accent);}
+.btn.primary:hover{background:var(--accent-hover);}
+.btn.success{background:var(--green);color:white;border-color:var(--green);}
+.btn.success:hover{opacity:.9;}
+.btn:disabled{opacity:.5;cursor:not-allowed;}
+
+/* FORM */
+.fg{display:flex;flex-direction:column;gap:4px;}
+.fl{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;}
+.fi{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:12px;font-family:var(--sans);color:var(--text);outline:none;width:100%;}
+.fi:focus{border-color:var(--accent);}
+.fi:disabled{opacity:.6;cursor:not-allowed;}
+textarea.fi{resize:vertical;min-height:72px;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+
+/* RISK SCORE */
+.score-display{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;padding:16px;border-radius:8px;font-family:var(--mono);}
+.score-num{font-size:36px;font-weight:700;line-height:1;}
+.score-label{font-size:11px;font-weight:600;text-transform:uppercase;}
+.score-low{background:var(--green-light);color:var(--green);}
+.score-mid{background:var(--orange-light);color:var(--orange);}
+.score-high{background:var(--red-light);color:var(--red);}
+
+/* BADGE */
+.badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;}
+.b-Açık{background:var(--red-light);color:var(--red);}
+.b-İzleniyor{background:var(--orange-light);color:var(--orange);}
+.b-Kapalı{background:var(--green-light);color:var(--green);}
+.b-mod{background:var(--blue-light);color:var(--blue);}
+
+/* AI */
+.ai-card{background:var(--surface);border:2px solid transparent;border-radius:var(--radius);overflow:hidden;background-clip:padding-box;position:relative;}
+.ai-card::before{content:'';position:absolute;inset:0;border-radius:var(--radius);padding:2px;background:linear-gradient(135deg,#7c3aed,#2563eb,#059669);-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;}
+.ai-card-header{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;font-size:11px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.5px;background:linear-gradient(135deg,rgba(124,58,237,.06),rgba(37,99,235,.06));}
+.ai-card-body{padding:14px;font-size:12px;line-height:1.7;color:var(--text);white-space:pre-wrap;}
+.ai-loading{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;gap:12px;color:var(--text2);font-size:13px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;}
+
+/* TOAST */
+.toast-wrap{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;}
+.toast{padding:10px 16px;border-radius:8px;font-size:12px;font-weight:500;color:white;animation:fadeIn .2s;}
+.toast.ok{background:var(--green);}
+.toast.err{background:var(--red);}
+.toast.inf{background:var(--accent);}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+.empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text3);gap:12px;padding:40px;text-align:center;}
+
+/* MOBILE */
+@media(max-width:700px){
+  body{overflow:auto;}
+  .layout-wrapper{flex-direction:column;height:auto;}
+  .list-panel{width:100%;height:auto;border-right:none;border-bottom:1px solid var(--border);}
+  .detail-panel{height:auto;}
+  .detail-scroll{padding:12px;}
+  .form-grid,.form-grid-3{grid-template-columns:1fr;}
+}
 </style>
 </head>
 <body>
 <script src="ersan_nav.js"></script>
-<div class="container">
-  <div class="icon">⚠️</div>
-  <h1>Risk Yönetimi</h1>
-  <span class="std">AS9100 §6.1</span>
-  <p>FMEA, proses risk değerlendirmesi, fırsat kaydı. Bu modül geliştirme aşamasındadır.</p>
-  <div class="wip">
-    <div class="wip-title">Planlanacak özellikler</div>
-    <div class="wip-item">Airtable tablo bağlantısı</div>
-    <div class="wip-item">Liste ve detay görünümü</div>
-    <div class="wip-item">Form ve kayıt yönetimi</div>
-    <div class="wip-item">PDF / rapor çıktısı</div>
-    <div class="wip-item">Diğer modüllerle entegrasyon</div>
+<script src="ersan_log.js"></script>
+
+<header class="header">
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div class="logo-badge">MES</div>
+    <div><div class="header-title">Ersan MES</div><div class="header-sub">Risk Yönetimi</div></div>
   </div>
-  <a href="index.html" class="back">← Ana sayfaya dön</a>
+  <div class="header-sep"></div>
+  <span class="header-badge">AS9100 §6.1</span>
+</header>
+
+<div class="layout-wrapper">
+
+  <!-- LEFT PANEL -->
+  <div class="list-panel">
+    <div class="new-btn-wrap">
+      <button class="btn primary" style="width:100%;justify-content:center;" onclick="newRisk()">+ Yeni Risk</button>
+    </div>
+    <div style="padding:0 10px 6px;">
+      <div class="list-count" id="risk-count">Yükleniyor...</div>
+    </div>
+    <div class="filter-row">
+      <div class="fc on" data-f="Tümü" onclick="setFilter(this)">Tümü</div>
+      <div class="fc" data-f="Açık" onclick="setFilter(this)">Açık</div>
+      <div class="fc" data-f="İzleniyor" onclick="setFilter(this)">İzleniyor</div>
+      <div class="fc" data-f="Kapalı" onclick="setFilter(this)">Kapalı</div>
+    </div>
+    <div class="list-scroll" id="risk-list">
+      <div style="padding:20px;text-align:center;color:var(--text3);font-size:12px;">Yükleniyor...</div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="detail-panel">
+    <div id="detail-content" style="flex:1;overflow:hidden;display:flex;flex-direction:column;">
+      <div class="empty">
+        <svg width="56" height="56" viewBox="0 0 56 56" fill="none" style="opacity:.2"><path d="M28 8L4 44h48L28 8z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M28 22v10M28 36v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <p style="font-size:14px;font-weight:500;">Listeden bir risk seçin veya yeni oluşturun</p>
+      </div>
+    </div>
+  </div>
+
 </div>
+
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<script>
+const BASE = 'app5LDgJMgocw79Ix';
+const T = {
+  risk: 'Risk Kayıtları',
+  personel: 'tblwG9GqnLC9oFZzb'
+};
+
+let riskList = [], personelList = [];
+let activeFilter = 'Tümü';
+let selectedRisk = null;
+let isNewMode = false;
+let _aiResult = null;
+
+// ── API ──
+const apiPost = async (method, path, body) => {
+  const res = await fetch('/.netlify/functions/airtable', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({method, path, body})
+  });
+  return res.json();
+};
+
+const apiGet = async (table, params='') => {
+  return apiPost('GET', `/v0/${BASE}/${encodeURIComponent(table)}?${params}`);
+};
+
+const apiFn = async (method, table, body, id='') => {
+  return apiPost(method, `/v0/${BASE}/${encodeURIComponent(table)}${id?'/'+id:''}`, body);
+};
+
+const apiGetAll = async (table, params='') => {
+  let all = [], offset = '';
+  do {
+    const sep = params ? (params.includes('?') ? '&' : '?') : '?';
+    const p = params + (offset ? sep + 'offset=' + offset : '');
+    const d = await apiGet(table, p);
+    all = all.concat(d.records || []);
+    offset = d.offset || '';
+  } while (offset);
+  return all;
+};
+
+// ── TOAST ──
+function toast(msg, type='ok') {
+  const w = document.getElementById('toast-wrap');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.textContent = msg;
+  w.appendChild(t);
+  setTimeout(() => t.remove(), 3200);
+}
+
+// ── HELPERS ──
+function today() { return new Date().toISOString().slice(0,10); }
+function fmtDate(d) { return d ? d.slice(0,10).split('-').reverse().join('.') : '—'; }
+
+function scoreClass(s) {
+  if (!s) return '';
+  if (s <= 4) return 'score-low';
+  if (s <= 9) return 'score-mid';
+  return 'score-high';
+}
+function scoreBadgeStyle(s) {
+  if (!s) return '';
+  if (s <= 4) return `background:var(--green-light);color:var(--green);`;
+  if (s <= 9) return `background:var(--orange-light);color:var(--orange);`;
+  return `background:var(--red-light);color:var(--red);`;
+}
+function calcScore(olasilik, etki) {
+  const o = parseInt(olasilik) || 0;
+  const e = parseInt(etki) || 0;
+  return o && e ? o * e : 0;
+}
+
+function generateRiskNo() {
+  const year = new Date().getFullYear();
+  const prefix = `RSK-${year}-`;
+  const existing = riskList
+    .map(r => r.fields['Risk No'] || '')
+    .filter(n => n.startsWith(prefix))
+    .map(n => parseInt(n.slice(prefix.length)) || 0);
+  const max = existing.length ? Math.max(...existing) : 0;
+  return prefix + String(max + 1).padStart(3,'0');
+}
+
+function badgeHtml(val, cls) {
+  if (!val) return '';
+  const c = cls || 'b-' + val.replace(/\s+/g,'_');
+  return `<span class="badge ${c}">${val}</span>`;
+}
+
+// ── FILTER ──
+function setFilter(el) {
+  document.querySelectorAll('.fc').forEach(e => e.classList.remove('on'));
+  el.classList.add('on');
+  activeFilter = el.dataset.f;
+  renderList();
+}
+
+// ── LOAD ──
+async function loadAll() {
+  try {
+    const [risks, pers] = await Promise.all([
+      apiGetAll(T.risk, 'sort[0][field]=Tarih&sort[0][direction]=desc'),
+      apiGetAll('tblwG9GqnLC9oFZzb', 'fields[]=Ad Soyad')
+    ]);
+    riskList = risks;
+    personelList = pers;
+    renderList();
+  } catch(e) {
+    document.getElementById('risk-list').innerHTML = `<div style="padding:20px;text-align:center;color:var(--red);font-size:12px;">Yükleme hatası: ${e.message}</div>`;
+  }
+}
+
+// ── RENDER LIST ──
+function renderList() {
+  const filtered = riskList.filter(r => {
+    if (activeFilter === 'Tümü') return true;
+    return (r.fields['Statü'] || '') === activeFilter;
+  });
+  document.getElementById('risk-count').textContent = `${filtered.length} / ${riskList.length} kayıt`;
+  if (!filtered.length) {
+    document.getElementById('risk-list').innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:12px;">Kayıt bulunamadı</div>';
+    return;
+  }
+  document.getElementById('risk-list').innerHTML = filtered.map(r => {
+    const f = r.fields;
+    const score = f['Risk Skoru'] || calcScore(f['Olasılık'], f['Etki']);
+    const isActive = selectedRisk && selectedRisk.id === r.id;
+    const scoreStyle = scoreBadgeStyle(score);
+    return `<div class="risk-item${isActive?' active':''}" onclick="selectRisk('${r.id}')">
+      <div class="risk-no">${f['Risk No'] || '—'}</div>
+      <div class="risk-modul">${f['Modül'] || '—'}</div>
+      <div class="risk-meta">
+        ${score ? `<span class="badge" style="${scoreStyle}font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;">RPN:${score}</span>` : ''}
+        ${f['Statü'] ? `<span class="badge b-${f['Statü'].replace(/\s/g,'_')}">${f['Statü']}</span>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── SELECT / NEW ──
+function selectRisk(id) {
+  selectedRisk = riskList.find(r => r.id === id) || null;
+  isNewMode = false;
+  _aiResult = null;
+  renderList();
+  renderDetail();
+}
+
+function newRisk() {
+  selectedRisk = null;
+  isNewMode = true;
+  _aiResult = null;
+  renderList();
+  renderDetail();
+}
+
+// ── BUILD OPTIONS ──
+function buildPersonelOptions(selected='') {
+  return `<option value="">— Seçiniz —</option>` + personelList.map(r => {
+    const label = r.fields['Ad Soyad'] || r.id;
+    return `<option value="${r.id}" ${r.id===selected?'selected':''}>${label}</option>`;
+  }).join('');
+}
+
+function buildNumOptions(selected, max=5) {
+  let html = `<option value="">—</option>`;
+  for (let i=1; i<=max; i++) html += `<option value="${i}" ${String(selected)===String(i)?'selected':''}>${i}</option>`;
+  return html;
+}
+
+// ── RENDER DETAIL ──
+function renderDetail() {
+  const panel = document.getElementById('detail-content');
+  if (!isNewMode && !selectedRisk) {
+    panel.innerHTML = `<div class="empty">
+      <svg width="56" height="56" viewBox="0 0 56 56" fill="none" style="opacity:.2"><path d="M28 8L4 44h48L28 8z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M28 22v10M28 36v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <p style="font-size:14px;font-weight:500;">Listeden bir risk seçin veya yeni oluşturun</p>
+    </div>`;
+    return;
+  }
+
+  const f = selectedRisk ? selectedRisk.fields : {};
+  const riskNo = isNewMode ? generateRiskNo() : (f['Risk No'] || '');
+  const sorumluId = f['Sorumlu']?.[0] || '';
+  const statu = f['Statü'] || 'Açık';
+  const olasilik = f['Olasılık'] || '';
+  const etki = f['Etki'] || '';
+  const score = f['Risk Skoru'] || calcScore(olasilik, etki);
+  const scoreC = scoreClass(score);
+
+  panel.innerHTML = `
+    <div class="toolbar">
+      <span style="font-family:var(--mono);font-size:13px;font-weight:600;color:var(--accent);">${isNewMode ? 'Yeni Risk' : riskNo}</span>
+      ${!isNewMode ? `<span class="badge b-${statu.replace(/\s/g,'_')}">${statu}</span>` : ''}
+      <div style="flex:1;"></div>
+    </div>
+    <div class="detail-scroll">
+
+      <!-- CARD 1: Bilgiler -->
+      <div class="card">
+        <div class="card-header"><div class="card-dot" style="background:var(--accent);"></div>Risk Bilgileri</div>
+        <div class="card-body">
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div class="form-grid">
+              <div class="fg">
+                <label class="fl">Risk No</label>
+                <input id="f-riskno" class="fi" value="${riskNo}" readonly style="font-family:var(--mono);font-weight:600;color:var(--accent);">
+              </div>
+              <div class="fg">
+                <label class="fl">Tarih</label>
+                <input id="f-tarih" type="date" class="fi" value="${f['Tarih'] || today()}">
+              </div>
+            </div>
+            <div class="fg">
+              <label class="fl">Modül</label>
+              <select id="f-modul" class="fi">
+                <option value="">— Seçiniz —</option>
+                ${['Satınalma','Üretim','Kalite','Sevkiyat','Planlama','İnsan Kaynakları','Bakım','Çevre','Bilgi Teknolojileri','Genel'].map(m => `<option value="${m}" ${f['Modül']===m?'selected':''}>${m}</option>`).join('')}
+              </select>
+            </div>
+            <div class="fg">
+              <label class="fl">Açıklama <span style="color:var(--red);">*</span></label>
+              <textarea id="f-aciklama" class="fi" rows="3" placeholder="Riski açıklayınız...">${f['Açıklama'] || ''}</textarea>
+            </div>
+            <div style="display:flex;justify-content:flex-end;">
+              <button class="btn primary" onclick="saveCard1()">Kaydet</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      ${!isNewMode ? `
+      <!-- CARD 2: Değerlendirme -->
+      <div class="card">
+        <div class="card-header"><div class="card-dot" style="background:var(--orange);"></div>Risk Değerlendirme</div>
+        <div class="card-body">
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div class="form-grid">
+              <div class="fg">
+                <label class="fl">Olasılık (1-5)</label>
+                <select id="f-olasilik" class="fi" onchange="updateScoreDisplay()">
+                  ${buildNumOptions(olasilik)}
+                </select>
+              </div>
+              <div class="fg">
+                <label class="fl">Etki (1-5)</label>
+                <select id="f-etki" class="fi" onchange="updateScoreDisplay()">
+                  ${buildNumOptions(etki)}
+                </select>
+              </div>
+            </div>
+            <div id="score-wrap" class="score-display ${scoreC}" style="${!score?'background:var(--surface2);color:var(--text3);':''}">
+              <div class="score-num" id="score-val">${score || '—'}</div>
+              <div class="score-label" id="score-lbl">${score ? (score<=4?'Düşük Risk':score<=9?'Orta Risk':'Yüksek Risk') : 'Risk Skoru'}</div>
+              <div style="font-size:10px;opacity:.7;">Olasılık × Etki</div>
+            </div>
+            <div style="display:flex;justify-content:flex-end;">
+              <button class="btn primary" onclick="saveCard2()">Kaydet</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CARD 3: Önlem -->
+      <div class="card">
+        <div class="card-header"><div class="card-dot" style="background:var(--blue);"></div>Önlem & Sorumlu</div>
+        <div class="card-body">
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div class="fg">
+              <label class="fl">Önlem</label>
+              <textarea id="f-onlem" class="fi" rows="3" placeholder="Alınacak önlemleri açıklayınız...">${f['Önlem'] || ''}</textarea>
+            </div>
+            <div class="form-grid">
+              <div class="fg">
+                <label class="fl">Sorumlu</label>
+                <select id="f-sorumlu" class="fi">
+                  ${buildPersonelOptions(sorumluId)}
+                </select>
+              </div>
+              <div class="fg">
+                <label class="fl">Hedef Tarih</label>
+                <input id="f-hedef-tarih" type="date" class="fi" value="${f['Hedef Tarih'] || ''}">
+              </div>
+            </div>
+            <div class="form-grid">
+              <div class="fg">
+                <label class="fl">Statü</label>
+                <select id="f-statu" class="fi">
+                  <option value="Açık" ${statu==='Açık'?'selected':''}>Açık</option>
+                  <option value="İzleniyor" ${statu==='İzleniyor'?'selected':''}>İzleniyor</option>
+                  <option value="Kapalı" ${statu==='Kapalı'?'selected':''}>Kapalı</option>
+                </select>
+              </div>
+            </div>
+            <div style="display:flex;justify-content:flex-end;">
+              <button class="btn primary" onclick="saveCard3()">Kaydet</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CARD 4: AI -->
+      <div class="card ai-card">
+        <div class="ai-card-header">&#10024; AI Risk Değerlendirme</div>
+        <div class="card-body" style="padding:12px 14px;">
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;">
+            <button class="btn primary" onclick="aiRiskDegerlendirme()">Analiz Yap</button>
+            <span style="font-size:11px;color:var(--text3);">claude-sonnet-4-20250514 ile sonuç ve öneri üretir</span>
+          </div>
+          <div id="ai-risk-wrap"></div>
+        </div>
+      </div>
+
+      <!-- CARD 5: Artık Risk -->
+      <div class="card">
+        <div class="card-header"><div class="card-dot" style="background:var(--green);"></div>Artık Risk</div>
+        <div class="card-body">
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div class="fg">
+              <label class="fl">Önlem sonrası artık risk değerlendirmesi</label>
+              <textarea id="f-artik-risk" class="fi" rows="3" placeholder="Artık risk durumunu açıklayınız...">${f['Artık Risk'] || ''}</textarea>
+            </div>
+            <div style="display:flex;justify-content:flex-end;">
+              <button class="btn success" onclick="saveArtikRisk()">Kaydet</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      ` : ''}
+
+    </div>
+  `;
+
+  if (!isNewMode && _aiResult) showAIResult(_aiResult);
+}
+
+// ── UPDATE SCORE DISPLAY ──
+function updateScoreDisplay() {
+  const o = document.getElementById('f-olasilik')?.value;
+  const e = document.getElementById('f-etki')?.value;
+  const s = calcScore(o, e);
+  const wrap = document.getElementById('score-wrap');
+  const valEl = document.getElementById('score-val');
+  const lblEl = document.getElementById('score-lbl');
+  if (!wrap || !valEl || !lblEl) return;
+  valEl.textContent = s || '—';
+  lblEl.textContent = s ? (s<=4?'Düşük Risk':s<=9?'Orta Risk':'Yüksek Risk') : 'Risk Skoru';
+  wrap.className = 'score-display ' + (s ? scoreClass(s) : '');
+  if (!s) wrap.style.cssText = 'background:var(--surface2);color:var(--text3);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;padding:16px;border-radius:8px;font-family:var(--mono);';
+  else wrap.style.cssText = '';
+}
+
+// ── SAVE CARD 1 ──
+async function saveCard1() {
+  const aciklama = document.getElementById('f-aciklama').value.trim();
+  if (!aciklama) { toast('Açıklama zorunludur', 'err'); return; }
+  const modul = document.getElementById('f-modul').value;
+  const tarih = document.getElementById('f-tarih').value;
+  const riskNo = document.getElementById('f-riskno').value;
+  const fields = {
+    'Risk No': riskNo,
+    'Açıklama': aciklama,
+    'Tarih': tarih || today(),
+    'Statü': 'Açık'
+  };
+  if (modul) fields['Modül'] = modul;
+  try {
+    let result;
+    if (isNewMode) {
+      result = await apiFn('POST', T.risk, {fields});
+      if (result.error) throw new Error(result.error.message || JSON.stringify(result.error));
+      await logIslem('Oluşturuldu', 'Risk Yönetimi', result.id, riskNo, null, fields);
+      toast('Risk oluşturuldu', 'ok');
+      await loadAll();
+      selectRisk(result.id);
+    } else {
+      result = await apiFn('PATCH', T.risk, {fields}, selectedRisk.id);
+      if (result.error) throw new Error(result.error.message || JSON.stringify(result.error));
+      await logIslem('Güncellendi', 'Risk Yönetimi', selectedRisk.id, riskNo, selectedRisk.fields, fields);
+      toast('Kaydedildi', 'ok');
+      selectedRisk = result;
+      await loadAll();
+      selectedRisk = riskList.find(r => r.id === result.id) || result;
+      renderList();
+    }
+  } catch(e) { toast('Hata: ' + e.message, 'err'); }
+}
+
+// ── SAVE CARD 2 ──
+async function saveCard2() {
+  if (!selectedRisk) return;
+  const olasilik = parseInt(document.getElementById('f-olasilik').value) || null;
+  const etki = parseInt(document.getElementById('f-etki').value) || null;
+  if (!olasilik || !etki) { toast('Olasılık ve Etki seçiniz', 'err'); return; }
+  const score = olasilik * etki;
+  const fields = {'Olasılık': olasilik, 'Etki': etki};
+  try {
+    const result = await apiFn('PATCH', T.risk, {fields}, selectedRisk.id);
+    if (result.error) throw new Error(result.error.message || JSON.stringify(result.error));
+    await logIslem('Değerlendirme Güncellendi', 'Risk Yönetimi', selectedRisk.id, selectedRisk.fields['Risk No'], null, fields);
+    toast(`Risk Skoru: ${score}`, 'ok');
+    selectedRisk = result;
+    riskList = riskList.map(r => r.id === result.id ? result : r);
+    renderList();
+    updateScoreDisplay();
+  } catch(e) { toast('Hata: ' + e.message, 'err'); }
+}
+
+// ── SAVE CARD 3 ──
+async function saveCard3() {
+  if (!selectedRisk) return;
+  const onlem = document.getElementById('f-onlem').value;
+  const sorumluId = document.getElementById('f-sorumlu').value;
+  const hedefTarih = document.getElementById('f-hedef-tarih').value;
+  const statu = document.getElementById('f-statu').value;
+  const fields = {'Önlem': onlem, 'Statü': statu};
+  if (sorumluId) fields['Sorumlu'] = [sorumluId];
+  if (hedefTarih) fields['Hedef Tarih'] = hedefTarih;
+  try {
+    const result = await apiFn('PATCH', T.risk, {fields}, selectedRisk.id);
+    if (result.error) throw new Error(result.error.message || JSON.stringify(result.error));
+    await logIslem('Önlem Güncellendi', 'Risk Yönetimi', selectedRisk.id, selectedRisk.fields['Risk No'], null, fields);
+    toast('Kaydedildi', 'ok');
+    selectedRisk = result;
+    await loadAll();
+    selectedRisk = riskList.find(r => r.id === result.id) || result;
+    renderList();
+    renderDetail();
+  } catch(e) { toast('Hata: ' + e.message, 'err'); }
+}
+
+// ── SAVE ARTIK RISK ──
+async function saveArtikRisk() {
+  if (!selectedRisk) return;
+  const val = document.getElementById('f-artik-risk').value;
+  try {
+    const result = await apiFn('PATCH', T.risk, {fields:{'Artık Risk': val}}, selectedRisk.id);
+    if (result.error) throw new Error(result.error.message || JSON.stringify(result.error));
+    await logIslem('Artık Risk Güncellendi', 'Risk Yönetimi', selectedRisk.id, selectedRisk.fields['Risk No'], null, {'Artık Risk': val});
+    toast('Artık risk kaydedildi', 'ok');
+    selectedRisk = result;
+    riskList = riskList.map(r => r.id === result.id ? result : r);
+  } catch(e) { toast('Hata: ' + e.message, 'err'); }
+}
+
+// ── AI ──
+async function aiRiskDegerlendirme() {
+  const aciklama = document.getElementById('f-aciklama')?.value?.trim() || selectedRisk?.fields['Açıklama'] || '';
+  if (!aciklama) { toast('Önce açıklama giriniz', 'err'); return; }
+  const wrap = document.getElementById('ai-risk-wrap');
+  wrap.innerHTML = `<div class="ai-loading"><div class="spinner"></div><span>AI analiz yapılıyor...</span></div>`;
+  try {
+    const res = await fetch('/.netlify/functions/claude', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        prompt: `Bu risk için sonuçları ve önlemleri öner: ${aciklama}. Türkçe.`
+      })
+    });
+    const data = await res.json();
+    const text = data.content || data.text || data.result || data.response || JSON.stringify(data);
+    _aiResult = text;
+    showAIResult(text);
+  } catch(e) {
+    wrap.innerHTML = `<div style="color:var(--red);font-size:12px;padding:8px;">Hata: ${e.message}</div>`;
+  }
+}
+
+function showAIResult(text) {
+  const wrap = document.getElementById('ai-risk-wrap');
+  if (!wrap) return;
+  wrap.innerHTML = `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:12px;font-size:12px;line-height:1.7;white-space:pre-wrap;color:var(--text);">${text}</div>
+    <div style="margin-top:8px;">
+      <button class="btn" style="font-size:11px;" onclick="copyAIToOnlem()">Bu metni Önlem alanına kopyala</button>
+    </div>`;
+}
+
+function copyAIToOnlem() {
+  if (_aiResult) {
+    const el = document.getElementById('f-onlem');
+    if (el) { el.value = _aiResult; toast('Önlem alanına kopyalandı', 'inf'); }
+  }
+}
+
+// ── INIT ──
+window.addEventListener('DOMContentLoaded', () => {
+  loadAll();
+});
+</script>
 </body>
 </html>

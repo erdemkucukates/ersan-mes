@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — Akıllı Fabrika Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root {
+  --bg:#f0f2f5; --surface:#fff; --surface2:#f7f8fa;
+  --border:#e2e5ea; --border2:#c8cdd6;
+  --text:#1a1d23; --text2:#5a6170; --text3:#9aa0ad;
+  --accent:#7c3aed; --accent-light:#ede9fe; --accent-hover:#6d28d9;
+  --green:#059669; --green-light:#d1fae5;
+  --red:#dc2626; --red-light:#fee2e2;
+  --orange:#d97706; --orange-light:#fef3c7;
+  --blue:#2563eb; --blue-light:#dbeafe;
+  --gray:#6b7280; --gray-light:#f3f4f6;
+  --shadow:0 1px 3px rgba(0,0,0,.08);
+  --radius:8px; --mono:'IBM Plex Mono',monospace; --sans:'IBM Plex Sans',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:13px;overflow-x:hidden;}
+
+/* HEADER */
+.page-header{background:#1e1b4b;padding:0 20px;height:52px;display:flex;align-items:center;gap:14px;position:sticky;top:48px;z-index:90;border-bottom:1px solid rgba(255,255,255,.08);}
+.ph-badge{width:28px;height:28px;border-radius:6px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:white;font-family:var(--mono);}
+.ph-title{color:white;font-size:14px;font-weight:600;}
+.ph-sub{color:rgba(255,255,255,.45);font-size:11px;}
+.ph-sep{width:1px;height:26px;background:rgba(255,255,255,.15);}
+.ph-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
+.ph-time{font-family:var(--mono);font-size:11px;color:rgba(255,255,255,.5);}
+.ph-refresh-btn{display:flex;align-items:center;gap:5px;padding:5px 12px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:6px;color:rgba(255,255,255,.75);font-size:11px;font-weight:500;cursor:pointer;font-family:var(--sans);transition:all .15s;}
+.ph-refresh-btn:hover{background:rgba(255,255,255,.18);}
+
+/* MAIN CONTENT */
+.dash-wrap{max-width:1600px;margin:0 auto;padding:16px 18px 32px;}
+
+/* SECTION TITLE */
+.section-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--text3);margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.section-label::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* KPI ROW */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;display:flex;flex-direction:column;gap:6px;position:relative;overflow:hidden;box-shadow:var(--shadow);}
+.kpi-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;}
+.kpi-blue::before{background:var(--blue);}
+.kpi-green::before{background:var(--green);}
+.kpi-red::before{background:var(--red);}
+.kpi-orange::before{background:var(--orange);}
+.kpi-num{font-size:36px;font-weight:600;font-family:var(--mono);line-height:1;letter-spacing:-1px;}
+.kpi-label{font-size:11px;color:var(--text2);font-weight:500;margin-top:2px;}
+.kpi-trend{font-size:10px;color:var(--text3);display:flex;align-items:center;gap:4px;margin-top:4px;}
+.kpi-trend-up{color:var(--green);}
+.kpi-trend-dn{color:var(--red);}
+.kpi-loading{font-size:28px;color:var(--border2);}
+
+/* MIDDLE ROW */
+.mid-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;}
+
+/* BOTTOM ROW */
+.bot-grid{display:grid;grid-template-columns:2fr 1.5fr 1.5fr;gap:14px;margin-bottom:20px;}
+
+/* CARD */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);}
+.card-head{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;background:var(--surface);}
+.card-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.card-head-right{margin-left:auto;font-size:10px;font-weight:500;color:var(--text3);text-transform:none;letter-spacing:0;}
+.card-body{padding:14px;}
+.card-body-flush{padding:0;}
+
+/* TEZGAH GRID */
+.tezgah-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:12px;}
+.tz-card{border:1px solid var(--border);border-radius:6px;padding:11px 12px;cursor:pointer;transition:all .15s;background:var(--surface2);}
+.tz-card:hover{border-color:var(--accent);background:var(--accent-light);}
+.tz-name{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tz-code{font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:1px;}
+.tz-meta{display:flex;align-items:center;justify-content:space-between;margin-top:8px;}
+.tz-bakim{font-size:10px;color:var(--text3);margin-top:5px;}
+.tz-warn{color:var(--orange);font-weight:600;}
+
+/* BADGES */
+.badge{display:inline-block;font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;white-space:nowrap;}
+.b-Çalışıyor{background:var(--green-light);color:var(--green);}
+.b-Duruyor{background:var(--gray-light);color:var(--gray);}
+.b-Bakımda{background:var(--orange-light);color:var(--orange);}
+.b-Arıza{background:var(--red-light);color:var(--red);}
+.b-Açık{background:var(--orange-light);color:var(--orange);}
+.b-Kapalı{background:var(--green-light);color:var(--green);}
+.b-İncelemede{background:var(--blue-light);color:var(--blue);}
+.b-default{background:var(--gray-light);color:var(--gray);}
+
+/* AKIS TABLE */
+.akis-table{width:100%;border-collapse:collapse;}
+.akis-table th{padding:7px 10px;font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;background:var(--surface2);border-bottom:1px solid var(--border);text-align:left;}
+.akis-table td{padding:7px 10px;font-size:11px;border-bottom:1px solid var(--border);vertical-align:middle;}
+.akis-table tr:last-child td{border-bottom:none;}
+.akis-table tr:hover td{background:var(--surface2);}
+.akis-scroll{max-height:280px;overflow-y:auto;}
+
+/* AI CARD */
+.ai-card{border:2px solid transparent;background:linear-gradient(var(--surface),var(--surface)) padding-box,linear-gradient(135deg,#7c3aed,#2563eb,#059669) border-box;border-radius:var(--radius);}
+.ai-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 16px;background:linear-gradient(135deg,#7c3aed,#2563eb);color:white;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:opacity .15s;}
+.ai-btn:hover{opacity:.85;}
+.ai-btn:disabled{opacity:.5;cursor:not-allowed;}
+.ai-result{margin-top:12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:14px;font-size:12px;line-height:1.75;color:var(--text);white-space:pre-wrap;max-height:300px;overflow-y:auto;}
+
+/* TERMIN LIST */
+.termin-list{display:flex;flex-direction:column;gap:0;}
+.termin-item{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid var(--border);}
+.termin-item:last-child{border-bottom:none;}
+.termin-no{font-family:var(--mono);font-size:10px;font-weight:600;color:var(--accent);width:70px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.termin-parca{flex:1;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.termin-date{font-size:10px;font-family:var(--mono);color:var(--text3);flex-shrink:0;}
+.termin-days{font-size:11px;font-weight:700;padding:2px 7px;border-radius:10px;flex-shrink:0;white-space:nowrap;}
+.td-red{background:var(--red-light);color:var(--red);}
+.td-orange{background:var(--orange-light);color:var(--orange);}
+.td-green{background:var(--green-light);color:var(--green);}
+.termin-scroll{max-height:320px;overflow-y:auto;}
+
+/* LOG LIST */
+.log-list{display:flex;flex-direction:column;gap:0;}
+.log-item{padding:9px 14px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:3px;}
+.log-item:last-child{border-bottom:none;}
+.log-row1{display:flex;align-items:center;gap:6px;}
+.log-time{font-size:10px;font-family:var(--mono);color:var(--text3);flex-shrink:0;}
+.log-user{font-size:10px;font-weight:600;color:var(--text2);}
+.log-islem{font-size:9px;font-weight:700;padding:1px 6px;border-radius:8px;background:var(--accent-light);color:var(--accent);}
+.log-ozet{font-size:11px;color:var(--text);line-height:1.4;}
+.log-scroll{max-height:320px;overflow-y:auto;}
+
+/* UYARI BANNER */
+.uyari-section{margin-bottom:20px;}
+.uyari-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.uyari-card{border-radius:var(--radius);padding:14px 16px;border:1px solid transparent;}
+.uyari-red{background:var(--red-light);border-color:#fca5a5;}
+.uyari-yellow{background:#fefce8;border-color:#fde047;}
+.uyari-orange{background:var(--orange-light);border-color:#fcd34d;}
+.uyari-blue{background:var(--blue-light);border-color:#93c5fd;}
+.uyari-header{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;margin-bottom:8px;}
+.uyari-red .uyari-header{color:var(--red);}
+.uyari-yellow .uyari-header{color:#a16207;}
+.uyari-orange .uyari-header{color:var(--orange);}
+.uyari-blue .uyari-header{color:var(--blue);}
+.uyari-body{font-size:11px;line-height:1.6;}
+.uyari-red .uyari-body{color:#7f1d1d;}
+.uyari-yellow .uyari-body{color:#78350f;}
+.uyari-orange .uyari-body{color:#78350f;}
+.uyari-blue .uyari-body{color:#1e3a5f;}
+.uyari-count{font-size:22px;font-weight:700;font-family:var(--mono);line-height:1;}
+.uyari-detail{margin-top:6px;font-size:10px;opacity:.8;}
+
+/* EMPTY / LOADING */
+.empty{padding:24px;text-align:center;color:var(--text3);font-size:12px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{width:14px;height:14px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;display:inline-block;vertical-align:middle;}
+.loading-inline{display:flex;align-items:center;gap:8px;padding:16px;color:var(--text3);font-size:12px;}
+
+/* TOAST */
+.toast-wrap{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;}
+.toast{padding:10px 16px;border-radius:8px;font-size:12px;font-weight:500;color:white;box-shadow:0 4px 12px rgba(0,0,0,.15);animation:fadeIn .2s;}
+.toast.ok{background:var(--green);}
+.toast.err{background:var(--red);}
+.toast.inf{background:var(--accent);}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* POPUP OVERLAY */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:1000;display:flex;align-items:center;justify-content:center;}
+.popup{background:var(--surface);border-radius:10px;padding:22px 24px;width:400px;max-width:95vw;box-shadow:0 20px 60px rgba(0,0,0,.2);}
+.popup-title{font-size:14px;font-weight:700;font-family:var(--mono);margin-bottom:14px;color:var(--text);}
+.popup-row{display:flex;flex-direction:column;gap:3px;margin-bottom:10px;}
+.popup-label{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;}
+.popup-val{font-size:12px;color:var(--text);padding:5px 0;}
+.popup-close{margin-top:14px;padding:7px 16px;background:var(--accent);color:white;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);}
+
+/* RESPONSIVE */
+@media(max-width:1200px){
+  .bot-grid{grid-template-columns:1fr 1fr;}
+  .bot-grid .ai-card-wrap{grid-column:1/-1;}
+}
+@media(max-width:768px){
+  .kpi-grid{grid-template-columns:1fr 1fr;}
+  .mid-grid{grid-template-columns:1fr;}
+  .bot-grid{grid-template-columns:1fr;}
+  .bot-grid .ai-card-wrap{grid-column:auto;}
+  .uyari-grid{grid-template-columns:1fr 1fr;}
+  .tezgah-grid{grid-template-columns:1fr 1fr;}
+  .dash-wrap{padding:12px 10px 24px;}
+}
+@media(max-width:480px){
+  .kpi-grid{grid-template-columns:1fr;}
+  .uyari-grid{grid-template-columns:1fr;}
+  .tezgah-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+<script src="ersan_nav.js"></script>
+<script src="ersan_log.js"></script>
+
+<!-- PAGE HEADER -->
+<header class="page-header">
+  <div class="ph-badge">AF</div>
+  <div>
+    <div class="ph-title">Akıllı Fabrika Dashboard</div>
+    <div class="ph-sub">Gerçek zamanlı üretim izleme</div>
+  </div>
+  <div class="ph-sep"></div>
+  <div class="ph-right">
+    <span class="ph-time" id="ph-clock">—</span>
+    <button class="ph-refresh-btn" onclick="refreshAll()">&#8635; Yenile</button>
+  </div>
+</header>
+
+<!-- MAIN -->
+<div class="dash-wrap">
+
+  <!-- KPI ROW -->
+  <div class="section-label">Üretim Göstergeleri</div>
+  <div class="kpi-grid">
+    <div class="kpi-card kpi-blue">
+      <div class="kpi-num kpi-loading" id="kpi-ie">—</div>
+      <div class="kpi-label">Aktif İş Emri</div>
+      <div class="kpi-trend" id="kpi-ie-trend"><span class="spinner" style="width:10px;height:10px;"></span></div>
+    </div>
+    <div class="kpi-card kpi-green">
+      <div class="kpi-num kpi-loading" id="kpi-op">—</div>
+      <div class="kpi-label">Bugün Tamamlanan Op.</div>
+      <div class="kpi-trend" id="kpi-op-trend"><span class="spinner" style="width:10px;height:10px;"></span></div>
+    </div>
+    <div class="kpi-card kpi-red">
+      <div class="kpi-num kpi-loading" id="kpi-ncr">—</div>
+      <div class="kpi-label">Açık NCR</div>
+      <div class="kpi-trend" id="kpi-ncr-trend"><span class="spinner" style="width:10px;height:10px;"></span></div>
+    </div>
+    <div class="kpi-card kpi-orange">
+      <div class="kpi-num kpi-loading" id="kpi-malz">—</div>
+      <div class="kpi-label">Bekleyen Malzeme (Karantina)</div>
+      <div class="kpi-trend" id="kpi-malz-trend"><span class="spinner" style="width:10px;height:10px;"></span></div>
+    </div>
+  </div>
+
+  <!-- MIDDLE ROW -->
+  <div class="section-label">Atölye & Günlük Akış</div>
+  <div class="mid-grid">
+
+    <!-- TEZGAH GRID -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-dot" style="background:var(--blue)"></div>
+        Tezgah Durumu
+        <span class="card-head-right" id="tz-count"></span>
+      </div>
+      <div id="tezgah-container">
+        <div class="loading-inline"><span class="spinner"></span> Tezgahlar yükleniyor...</div>
+      </div>
+    </div>
+
+    <!-- GÜNLÜK AKIŞ -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-dot" style="background:var(--green)"></div>
+        Günlük Akış
+        <span class="card-head-right" id="akis-count"></span>
+      </div>
+      <div id="akis-container">
+        <div class="loading-inline"><span class="spinner"></span> Operasyonlar yükleniyor...</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- BOTTOM ROW -->
+  <div class="section-label">Analiz & Planlama</div>
+  <div class="bot-grid">
+
+    <!-- AI RAPOR -->
+    <div class="card ai-card ai-card-wrap">
+      <div class="card-head">
+        <div class="card-dot" style="background:var(--accent)"></div>
+        AI Günlük Özet
+        <span class="card-head-right">claude-sonnet-4-20250514</span>
+      </div>
+      <div class="card-body">
+        <button class="ai-btn" id="ai-btn" onclick="generateAIReport()">
+          &#10022; AI Fabrika Raporu Oluştur
+        </button>
+        <div id="ai-result" style="display:none;" class="ai-result"></div>
+      </div>
+    </div>
+
+    <!-- TERMİN TAKVİMİ -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-dot" style="background:var(--orange)"></div>
+        Termin Takvimi
+        <span class="card-head-right">Önümüzdeki 14 gün</span>
+      </div>
+      <div id="termin-container">
+        <div class="loading-inline"><span class="spinner"></span> Yükleniyor...</div>
+      </div>
+    </div>
+
+    <!-- SON LOGLAR -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-dot" style="background:var(--accent)"></div>
+        Son Loglar
+        <span class="card-head-right" id="log-refresh-label">Otomatik yenileme: 30s</span>
+      </div>
+      <div id="log-container">
+        <div class="loading-inline"><span class="spinner"></span> Yükleniyor...</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- UYARILAR BANNER -->
+  <div class="uyari-section">
+    <div class="section-label">Aktif Uyarılar</div>
+    <div class="uyari-grid" id="uyari-grid">
+      <div class="uyari-card uyari-red"><div class="loading-inline" style="padding:4px;"><span class="spinner"></span> Hesaplanıyor...</div></div>
+      <div class="uyari-card uyari-yellow"><div class="loading-inline" style="padding:4px;"><span class="spinner"></span></div></div>
+      <div class="uyari-card uyari-orange"><div class="loading-inline" style="padding:4px;"><span class="spinner"></span></div></div>
+      <div class="uyari-card uyari-blue"><div class="loading-inline" style="padding:4px;"><span class="spinner"></span></div></div>
+    </div>
+  </div>
+
+</div><!-- /dash-wrap -->
+
+<!-- POPUP -->
+<div class="overlay" id="popup-overlay" style="display:none;" onclick="closePopup(event)">
+  <div class="popup" id="popup-box">
+    <div class="popup-title" id="popup-title">Tezgah Detayı</div>
+    <div id="popup-body"></div>
+    <button class="popup-close" onclick="document.getElementById('popup-overlay').style.display='none'">Kapat</button>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<script>
+// ─── CONFIG ───────────────────────────────────────────────
+const BASE = 'app5LDgJMgocw79Ix';
+const T = {
+  ie:        'tbl58qL39I2tv8hK4',
+  op:        'tblVECelTUG33EYm8',
+  tezgah:    'tblsBXDsWACBAFEJ5',
+  ncr:       'tblreW3hJTIxwXb0K',
+  traveller: 'tbljfjpefe5Z03S0a',
+  malzeme:   'tblSj5Ep6F9Ir1NGu',
+  stl:       'tblHmfCvNZq0qNtb1',
+  log:       'Sistem Logu'
+};
+
+// ─── API ──────────────────────────────────────────────────
+async function apiGet(table, params) {
+  const url = params ? `/v0/${BASE}/${encodeURIComponent(table)}?${params}` : `/v0/${BASE}/${encodeURIComponent(table)}`;
+  const res = await fetch('/.netlify/functions/airtable', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({method:'GET', path: url})
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+async function apiGetAll(table, params) {
+  let all = [], offset = '';
+  do {
+    const sep = params ? '&' : '';
+    const d = await apiGet(table, (params||'') + (offset ? sep+'offset='+offset : ''));
+    all = all.concat(d.records || []);
+    offset = d.offset || '';
+  } while (offset);
+  return all;
+}
+
+// ─── HELPERS ──────────────────────────────────────────────
+const today = () => new Date().toISOString().split('T')[0];
+const todayStr = today();
+
+function fmtDate(d) {
+  if (!d) return '—';
+  try { return new Date(d).toLocaleDateString('tr-TR'); } catch { return d; }
+}
+
+function timeAgo(isoStr) {
+  if (!isoStr) return '—';
+  const diff = Date.now() - new Date(isoStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'az önce';
+  if (mins < 60) return mins + ' dk önce';
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return hrs + ' sa önce';
+  return Math.floor(hrs / 24) + ' gün önce';
+}
+
+function daysUntil(dateStr) {
+  if (!dateStr) return null;
+  const diff = new Date(dateStr) - new Date(todayStr);
+  return Math.ceil(diff / 86400000);
+}
+
+function badge(text, cls) {
+  return `<span class="badge ${cls || 'b-default'}">${text || '—'}</span>`;
+}
+
+function tezgahBadgeCls(durum) {
+  const map = {'Çalışıyor':'b-Çalışıyor','Duruyor':'b-Duruyor','Bakımda':'b-Bakımda','Arıza':'b-Arıza'};
+  return map[durum] || 'b-default';
+}
+
+function toast(msg, type) {
+  const el = document.createElement('div');
+  el.className = 'toast ' + (type||'inf');
+  el.textContent = msg;
+  document.getElementById('toast-wrap').appendChild(el);
+  setTimeout(()=>el.remove(), 3500);
+}
+
+// ─── CLOCK ────────────────────────────────────────────────
+function updateClock() {
+  const now = new Date();
+  document.getElementById('ph-clock').textContent =
+    now.toLocaleDateString('tr-TR') + ' ' +
+    now.toLocaleTimeString('tr-TR', {hour:'2-digit', minute:'2-digit'});
+}
+updateClock();
+setInterval(updateClock, 30000);
+
+// ─── STATE ────────────────────────────────────────────────
+let state = {
+  ieRecords: [],
+  tezgahRecords: [],
+  travellerRecords: [],
+  ncrRecords: [],
+  malzemeRecords: [],
+  stlRecords: [],
+  terminRecords: [],
+  logRecords: [],
+};
+
+// ─── LOAD ALL ─────────────────────────────────────────────
+async function refreshAll() {
+  try {
+    await Promise.all([
+      loadKPIs(),
+      loadTezgahlar(),
+      loadGunlukAkis(),
+      loadTermin(),
+      loadLogs(),
+    ]);
+    renderUyarilar();
+  } catch(e) {
+    toast('Veri yükleme hatası: ' + e.message, 'err');
+  }
+}
+
+// ─── KPI: Aktif İş Emri ───────────────────────────────────
+async function loadKPIs() {
+  // IE
+  try {
+    const formula = encodeURIComponent("AND(NOT({Durum}='Tamamlandı'),NOT({Durum}='İptal'))");
+    const recs = await apiGetAll(T.ie, `filterByFormula=${formula}&fields[]=Durum&fields[]=IE%20No&fields[]=Par%C3%A7a%20Ad%C4%B1&fields[]=Termin%20Tarihi&fields[]=%C3%96ncelik`);
+    state.ieRecords = recs;
+    setKPI('kpi-ie', recs.length, 'var(--blue)', 'Aktif İş Emri');
+    document.getElementById('kpi-ie-trend').textContent = recs.length + ' iş emri işlemde';
+  } catch(e) {
+    document.getElementById('kpi-ie').textContent = 'Err';
+    document.getElementById('kpi-ie-trend').textContent = e.message;
+  }
+
+  // Bugün Tamamlanan Operasyon (Traveller)
+  try {
+    const recs = await apiGetAll(T.traveller, `fields[]=Biti%C5%9F%20Zaman%C4%B1&fields[]=Tezgah&fields[]=%C4%B0%C5%9F%20Emri&fields[]=Operasyon&fields[]=S%C3%BCre%20dk&fields[]=Ba%C5%9Flang%C4%B1%C3%A7%20Zaman%C4%B1`);
+    state.travellerRecords = recs;
+    const todayOps = recs.filter(r => {
+      const bitis = r.fields?.['Bitiş Zamanı'] || r.fields?.['Bitiş'] || '';
+      return bitis && bitis.startsWith(todayStr);
+    });
+    setKPI('kpi-op', todayOps.length, 'var(--green)', 'Bugün Tamamlanan');
+    document.getElementById('kpi-op-trend').textContent = 'Bugün ' + todayStr;
+  } catch(e) {
+    document.getElementById('kpi-op').textContent = 'Err';
+    document.getElementById('kpi-op-trend').textContent = e.message;
+  }
+
+  // NCR
+  try {
+    const recs = await apiGetAll(T.ncr, `fields[]=Stat%C3%BC&fields[]=NCR%20No&fields[]=%C4%B0%C5%9F%20Emri`);
+    state.ncrRecords = recs;
+    const open = recs.filter(r => {
+      const s = r.fields?.['Statü'] || '';
+      return s !== 'Kapalı' && s !== 'İptal';
+    });
+    setKPI('kpi-ncr', open.length, 'var(--red)', 'Açık NCR');
+    document.getElementById('kpi-ncr-trend').textContent = open.length + ' açık kayıt';
+  } catch(e) {
+    document.getElementById('kpi-ncr').textContent = 'Err';
+    document.getElementById('kpi-ncr-trend').textContent = e.message;
+  }
+
+  // Malzeme Karantina
+  try {
+    const recs = await apiGetAll(T.malzeme, `fields[]=Stat%C3%BC&fields[]=Malzeme%20Ad%C4%B1&fields[]=Sertifika%20Durumu`);
+    state.malzemeRecords = recs;
+    const karantina = recs.filter(r => r.fields?.['Statü'] === 'Karantina');
+    setKPI('kpi-malz', karantina.length, 'var(--orange)', 'Karantina');
+    document.getElementById('kpi-malz-trend').textContent = karantina.length + ' bekleyen malzeme';
+  } catch(e) {
+    document.getElementById('kpi-malz').textContent = 'Err';
+    document.getElementById('kpi-malz-trend').textContent = e.message;
+  }
+
+  // STL for uyarı
+  try {
+    const recs = await apiGetAll(T.stl, `fields[]=Durum&fields[]=Talep%20No&fields[]=Malzeme`);
+    state.stlRecords = recs;
+  } catch(e) { state.stlRecords = []; }
+}
+
+function setKPI(id, num, color, label) {
+  const el = document.getElementById(id);
+  el.textContent = num;
+  el.style.color = color;
+}
+
+// ─── TEZGAHLAR ────────────────────────────────────────────
+async function loadTezgahlar() {
+  try {
+    const recs = await apiGetAll(T.tezgah, `fields[]=Tezgah%20Ad%C4%B1&fields[]=Tezgah%20Kodu&fields[]=Durum&fields[]=Son%20Bak%C4%B1m&fields[]=Sonraki%20Bak%C4%B1m`);
+    state.tezgahRecords = recs;
+    renderTezgahlar(recs);
+  } catch(e) {
+    document.getElementById('tezgah-container').innerHTML = `<div class="empty">Hata: ${e.message}</div>`;
+  }
+}
+
+function renderTezgahlar(recs) {
+  const el = document.getElementById('tezgah-container');
+  document.getElementById('tz-count').textContent = recs.length + ' tezgah';
+  if (!recs.length) {
+    el.innerHTML = '<div class="empty">Tezgah kaydı bulunamadı</div>';
+    return;
+  }
+  const cards = recs.map(r => {
+    const f = r.fields || {};
+    const durum = f['Durum'] || '—';
+    const sonBakim = fmtDate(f['Son Bakım']);
+    const sonraki = f['Sonraki Bakım'];
+    const days = daysUntil(sonraki);
+    const warnIcon = (days !== null && days <= 7) ? '<span class="tz-warn"> ⚠️</span>' : '';
+    const sonrakiTxt = sonraki ? fmtDate(sonraki) : '—';
+    return `<div class="tz-card" onclick="showTezgahDetail('${r.id}')">
+      <div class="tz-name">${f['Tezgah Adı'] || '—'}</div>
+      <div class="tz-code">${f['Tezgah Kodu'] || '—'}</div>
+      <div class="tz-meta">
+        ${badge(durum, tezgahBadgeCls(durum))}
+      </div>
+      <div class="tz-bakim">Son Bakım: ${sonBakim} · Sonraki: ${sonrakiTxt}${warnIcon}</div>
+    </div>`;
+  }).join('');
+  el.innerHTML = `<div class="tezgah-grid">${cards}</div>`;
+}
+
+function showTezgahDetail(id) {
+  const r = state.tezgahRecords.find(x => x.id === id);
+  if (!r) return;
+  const f = r.fields || {};
+  const durum = f['Durum'] || '—';
+  const days = daysUntil(f['Sonraki Bakım']);
+  const warnHtml = (days !== null && days <= 7) ? `<div style="color:var(--orange);font-size:11px;font-weight:600;margin-top:8px;">⚠️ Sonraki bakıma ${days} gün kaldı!</div>` : '';
+  document.getElementById('popup-title').textContent = f['Tezgah Adı'] || '—';
+  document.getElementById('popup-body').innerHTML = `
+    <div class="popup-row"><div class="popup-label">Tezgah Kodu</div><div class="popup-val" style="font-family:var(--mono);">${f['Tezgah Kodu']||'—'}</div></div>
+    <div class="popup-row"><div class="popup-label">Durum</div><div class="popup-val">${badge(durum, tezgahBadgeCls(durum))}</div></div>
+    <div class="popup-row"><div class="popup-label">Son Bakım</div><div class="popup-val">${fmtDate(f['Son Bakım'])}</div></div>
+    <div class="popup-row"><div class="popup-label">Sonraki Bakım</div><div class="popup-val">${fmtDate(f['Sonraki Bakım'])}</div></div>
+    ${warnHtml}
+  `;
+  document.getElementById('popup-overlay').style.display = 'flex';
+}
+
+function closePopup(e) {
+  if (e.target === document.getElementById('popup-overlay')) {
+    document.getElementById('popup-overlay').style.display = 'none';
+  }
+}
+
+// ─── GÜNLÜK AKIŞ ─────────────────────────────────────────
+async function loadGunlukAkis() {
+  try {
+    // Use traveller already fetched; filter by today
+    // If traveller not loaded yet, fetch
+    if (!state.travellerRecords.length) {
+      const recs = await apiGetAll(T.traveller, `fields[]=Ba%C5%9Flang%C4%B1%C3%A7%20Zaman%C4%B1&fields[]=Biti%C5%9F%20Zaman%C4%B1&fields[]=Tezgah&fields[]=%C4%B0%C5%9F%20Emri&fields[]=Operasyon&fields[]=S%C3%BCre%20dk`);
+      state.travellerRecords = recs;
+    }
+    const todayRecs = state.travellerRecords.filter(r => {
+      const bs = r.fields?.['Başlangıç Zamanı'] || r.fields?.['Başlangıç'] || '';
+      return bs && bs.startsWith(todayStr);
+    });
+    renderGunlukAkis(todayRecs);
+  } catch(e) {
+    document.getElementById('akis-container').innerHTML = `<div class="empty">Hata: ${e.message}</div>`;
+  }
+}
+
+function renderGunlukAkis(recs) {
+  const el = document.getElementById('akis-container');
+  document.getElementById('akis-count').textContent = recs.length + ' kayıt';
+  if (!recs.length) {
+    el.innerHTML = '<div class="empty">Bugün henüz operasyon kaydı yok</div>';
+    return;
+  }
+  const rows = recs.map(r => {
+    const f = r.fields || {};
+    const bs = f['Başlangıç Zamanı'] || f['Başlangıç'] || '';
+    const saat = bs ? new Date(bs).toLocaleTimeString('tr-TR', {hour:'2-digit', minute:'2-digit'}) : '—';
+    const tezgah = Array.isArray(f['Tezgah']) ? f['Tezgah'].join(', ') : (f['Tezgah'] || '—');
+    const ie = Array.isArray(f['İş Emri']) ? f['İş Emri'].join(', ') : (f['İş Emri'] || '—');
+    const op = f['Operasyon'] || '—';
+    const sure = f['Süre dk'] || '—';
+    return `<tr>
+      <td style="font-family:var(--mono);font-size:10px;">${saat}</td>
+      <td>${tezgah}</td>
+      <td style="font-family:var(--mono);font-size:10px;">${ie}</td>
+      <td>${op}</td>
+      <td style="font-family:var(--mono);text-align:right;">${sure}</td>
+    </tr>`;
+  }).join('');
+  el.innerHTML = `<div class="akis-scroll"><table class="akis-table">
+    <thead><tr><th>Saat</th><th>Tezgah</th><th>İş Emri</th><th>Operasyon</th><th style="text-align:right;">Süre dk</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table></div>`;
+}
+
+// ─── TERMİN TAKVİMİ ──────────────────────────────────────
+async function loadTermin() {
+  try {
+    const in14 = new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0];
+    const formula = encodeURIComponent(`AND({Termin Tarihi}>='${todayStr}',{Termin Tarihi}<='${in14}')`);
+    const recs = await apiGetAll(T.ie, `filterByFormula=${formula}&fields[]=IE%20No&fields[]=Par%C3%A7a%20Ad%C4%B1&fields[]=Termin%20Tarihi&fields[]=Durum&sort[0][field]=Termin%20Tarihi&sort[0][direction]=asc`);
+    state.terminRecords = recs;
+    renderTermin(recs);
+  } catch(e) {
+    document.getElementById('termin-container').innerHTML = `<div class="empty">Hata: ${e.message}</div>`;
+  }
+}
+
+function renderTermin(recs) {
+  const el = document.getElementById('termin-container');
+  if (!recs.length) {
+    el.innerHTML = '<div class="empty">Önümüzdeki 14 günde termin yok</div>';
+    return;
+  }
+  const items = recs.map(r => {
+    const f = r.fields || {};
+    const days = daysUntil(f['Termin Tarihi']);
+    const daysCls = days <= 2 ? 'td-red' : days <= 7 ? 'td-orange' : 'td-green';
+    const daysLabel = days === 0 ? 'Bugün' : days < 0 ? Math.abs(days)+'g gecikti' : days + ' gün';
+    return `<div class="termin-item">
+      <div class="termin-no">${f['IE No']||'—'}</div>
+      <div class="termin-parca">${f['Parça Adı']||'—'}</div>
+      <div class="termin-date">${fmtDate(f['Termin Tarihi'])}</div>
+      <div class="termin-days ${daysCls}">${daysLabel}</div>
+    </div>`;
+  }).join('');
+  el.innerHTML = `<div class="termin-scroll termin-list">${items}</div>`;
+}
+
+// ─── SON LOGLAR ───────────────────────────────────────────
+async function loadLogs() {
+  try {
+    const recs = await apiGetAll(T.log, `sort[0][field]=Zaman&sort[0][direction]=desc&maxRecords=10&fields[]=Zaman&fields[]=Kullan%C4%B1c%C4%B1&fields[]=%C4%B0%C5%9Flem%20Tipi&fields[]=Kay%C4%B1t%20%C3%96zeti&fields[]=Modul`);
+    state.logRecords = recs;
+    renderLogs(recs);
+  } catch(e) {
+    document.getElementById('log-container').innerHTML = `<div class="empty">Hata: ${e.message}</div>`;
+  }
+}
+
+function renderLogs(recs) {
+  const el = document.getElementById('log-container');
+  if (!recs.length) {
+    el.innerHTML = '<div class="empty">Log kaydı bulunamadı</div>';
+    return;
+  }
+  const items = recs.map(r => {
+    const f = r.fields || {};
+    const zaman = f['Zaman'] || f['Oluşturulma'] || '';
+    return `<div class="log-item">
+      <div class="log-row1">
+        <span class="log-time">${timeAgo(zaman)}</span>
+        <span class="log-user">${f['Kullanıcı']||'—'}</span>
+        <span class="log-islem">${f['İşlem Tipi']||f['Modul']||'—'}</span>
+      </div>
+      <div class="log-ozet">${f['Kayıt Özeti']||f['Özet']||'—'}</div>
+    </div>`;
+  }).join('');
+  el.innerHTML = `<div class="log-scroll log-list">${items}</div>`;
+}
+
+// Auto-refresh logs every 30 seconds
+let logRefreshCountdown = 30;
+setInterval(() => {
+  logRefreshCountdown--;
+  if (logRefreshCountdown <= 0) {
+    logRefreshCountdown = 30;
+    loadLogs();
+  }
+  document.getElementById('log-refresh-label').textContent = `Yenileme: ${logRefreshCountdown}s`;
+}, 1000);
+
+// ─── UYARILAR ─────────────────────────────────────────────
+function renderUyarilar() {
+  const grid = document.getElementById('uyari-grid');
+
+  // 1. Termini 2 günden az
+  const critIE = state.ieRecords.filter(r => {
+    const t = r.fields?.['Termin Tarihi'];
+    if (!t) return false;
+    const d = daysUntil(t);
+    return d !== null && d <= 2 && d >= 0;
+  });
+
+  // 2. Bakımı 7 günden az kalan tezgahlar
+  const bakimUyari = state.tezgahRecords.filter(r => {
+    const d = daysUntil(r.fields?.['Sonraki Bakım']);
+    return d !== null && d <= 7 && d >= 0;
+  });
+
+  // 3. Sertifika Eksik malzemeler
+  const eksikSert = state.malzemeRecords.filter(r =>
+    r.fields?.['Sertifika Durumu'] === 'Eksik - Sonradan Gelecek'
+  );
+
+  // 4. Satınalma gönderildi
+  const bekleyenSatinalma = state.stlRecords.filter(r =>
+    r.fields?.['Durum'] === 'Gönderildi'
+  );
+
+  grid.innerHTML = `
+    <div class="uyari-card uyari-red">
+      <div class="uyari-header">🔴 Kritik Termin</div>
+      <div class="uyari-count">${critIE.length}</div>
+      <div class="uyari-body">2 günden az kalan iş emri${critIE.length > 0 ? ':' : ''}
+        ${critIE.map(r => `<div class="uyari-detail">• ${r.fields?.['IE No']||r.id}</div>`).join('')}
+        ${critIE.length === 0 ? '<div style="opacity:.6;font-size:10px;margin-top:4px;">Kritik termin yok</div>' : ''}
+      </div>
+    </div>
+    <div class="uyari-card uyari-yellow">
+      <div class="uyari-header">🟡 Yaklaşan Bakım</div>
+      <div class="uyari-count">${bakimUyari.length}</div>
+      <div class="uyari-body">7 günden az kalan tezgah bakımı
+        ${bakimUyari.map(r => `<div class="uyari-detail">• ${r.fields?.['Tezgah Adı']||r.id}</div>`).join('')}
+        ${bakimUyari.length === 0 ? '<div style="opacity:.6;font-size:10px;margin-top:4px;">Yaklaşan bakım yok</div>' : ''}
+      </div>
+    </div>
+    <div class="uyari-card uyari-orange">
+      <div class="uyari-header">🟠 Eksik Belge</div>
+      <div class="uyari-count">${eksikSert.length}</div>
+      <div class="uyari-body">Eksik sertifikalı malzeme
+        ${eksikSert.map(r => `<div class="uyari-detail">• ${r.fields?.['Malzeme Adı']||r.id}</div>`).join('')}
+        ${eksikSert.length === 0 ? '<div style="opacity:.6;font-size:10px;margin-top:4px;">Eksik belge yok</div>' : ''}
+      </div>
+    </div>
+    <div class="uyari-card uyari-blue">
+      <div class="uyari-header">🔵 Bekleyen Satınalma</div>
+      <div class="uyari-count">${bekleyenSatinalma.length}</div>
+      <div class="uyari-body">Yanıt bekleyen satınalma talebi
+        ${bekleyenSatinalma.map(r => `<div class="uyari-detail">• ${r.fields?.['Talep No']||r.id}</div>`).join('')}
+        ${bekleyenSatinalma.length === 0 ? '<div style="opacity:.6;font-size:10px;margin-top:4px;">Bekleyen talep yok</div>' : ''}
+      </div>
+    </div>
+  `;
+}
+
+// ─── AI RAPOR ─────────────────────────────────────────────
+async function generateAIReport() {
+  const btn = document.getElementById('ai-btn');
+  const resultEl = document.getElementById('ai-result');
+  btn.disabled = true;
+  btn.textContent = '⏳ Rapor oluşturuluyor...';
+  resultEl.style.display = 'none';
+
+  try {
+    // Collect data
+    const aktifIE = state.ieRecords.length;
+    const bugunTamamlanan = state.travellerRecords.filter(r => {
+      const b = r.fields?.['Bitiş Zamanı'] || r.fields?.['Bitiş'] || '';
+      return b && b.startsWith(todayStr);
+    }).length;
+    const acikNCR = state.ncrRecords.filter(r => {
+      const s = r.fields?.['Statü'] || '';
+      return s !== 'Kapalı' && s !== 'İptal';
+    }).length;
+    const bekleyenMalz = state.malzemeRecords.filter(r => r.fields?.['Statü'] === 'Karantina').length;
+
+    const tezgahList = state.tezgahRecords.map(r => {
+      const f = r.fields || {};
+      return `${f['Tezgah Adı']||'?'}: ${f['Durum']||'?'}`;
+    }).join(', ');
+
+    const prompt = `Aşağıdaki üretim verilerini analiz et. Türkçe günlük fabrika özeti yaz. Gecikmeli işleri, riskleri ve bugün öncelikli yapılacakları listele.\n\nAktif İş Emirleri: ${aktifIE}\nBugün Tamamlanan: ${bugunTamamlanan}\nAçık NCR: ${acikNCR}\nTezgah Durumu: ${tezgahList || 'Veri yok'}\nBekleyen Malzeme: ${bekleyenMalz}`;
+
+    const res = await fetch('/.netlify/functions/claude', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1024,
+        messages: [{role:'user', content: prompt}]
+      })
+    });
+
+    if (!res.ok) {
+      const err = await res.text();
+      throw new Error(err);
+    }
+
+    const data = await res.json();
+    const text = data?.content?.[0]?.text || data?.result || data?.text || JSON.stringify(data);
+
+    resultEl.textContent = text;
+    resultEl.style.display = 'block';
+
+    await logIslem('AI Çağrıldı', 'Diğer', null, 'Günlük Fabrika Raporu');
+    toast('AI raporu oluşturuldu', 'ok');
+
+  } catch(e) {
+    resultEl.textContent = 'Hata: ' + e.message;
+    resultEl.style.display = 'block';
+    toast('AI hatası: ' + e.message, 'err');
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '&#10022; AI Fabrika Raporu Oluştur';
+}
+
+// ─── INIT ─────────────────────────────────────────────────
+refreshAll();
+</script>
+</body>
+</html>
