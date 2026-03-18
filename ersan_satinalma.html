@@ -309,6 +309,7 @@ function showSEGroup(seId) {
       <div style="font-size:15px;font-weight:700;font-family:var(--mono);">${seNo}</div>
       <span style="font-size:12px;color:var(--text2);">${records.length} talep satırı</span>
       <div style="flex:1;"></div>
+      <button class="btn" style="color:#dc2626;border-color:#fca5a5;" onclick="deleteSTLGroup('${seId}')">🗑 Tümünü Sil</button>
       ${!tumOnay ? `<button class="btn warn" onclick="sendRFQGroup('${seId}')">📧 Tedarikçiye Gönder</button>` : ''}
       ${tumOnay ? `<span class="badge b-Onaylandı" style="font-size:12px;padding:4px 12px;">✓ Tüm Talepler Onaylandı</span>` : ''}
     </div>
@@ -648,6 +649,27 @@ async function deleteSTL(id, seId) {
     if (seId) showSEGroup(seId);
     else document.getElementById('detail-content').innerHTML = '<div style="padding:40px;text-align:center;color:var(--text3);">Talep silindi.</div>';
     toast('Talep silindi');
+  } catch(e) { toast('Hata: ' + e.message); }
+}
+
+// ── GRUP SİL (SE'ye bağlı tüm talepler) ──
+async function deleteSTLGroup(seId) {
+  var records = stlList.filter(function(r){ return (r.fields['SE No']||[])[0] === seId; });
+  var seNo = getSENo(seId);
+  if (!records.length) { toast('Silinecek talep yok'); return; }
+  if (!confirm(seNo + ' — ' + records.length + ' talep satırı silinsin mi?')) return;
+  try {
+    for (var i = 0; i < records.length; i++) {
+      await fetch('/.netlify/functions/airtable', {
+        method: 'DELETE', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({table:'tblHmfCvNZq0qNtb1', id:records[i].id})
+      });
+    }
+    stlList = stlList.filter(function(r){ return (r.fields['SE No']||[])[0] !== seId; });
+    activeId = null;
+    renderList();
+    document.getElementById('detail-content').innerHTML = '<div style="padding:40px;text-align:center;color:var(--text3);">' + seNo + ' talepleri silindi.</div>';
+    toast(records.length + ' talep silindi');
   } catch(e) { toast('Hata: ' + e.message); }
 }
 
