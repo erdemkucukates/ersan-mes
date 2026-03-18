@@ -399,8 +399,8 @@ async function selectKalem(idx) {
   }
 
   if (url && url !== pdfCurrentUrl) loadPDF(url, name);
-  else if (!url) clearPDF();
-  else { var fn = document.getElementById('pdf-filename'); if(fn) fn.textContent = name; }
+  else if (url) { var fn = document.getElementById('pdf-filename'); if(fn) fn.textContent = name; }
+  // PDF yoksa mevcut PDF'i ekranda birak (clearPDF yapma)
 }
 
 function clearPDF() {
