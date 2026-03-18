@@ -1330,10 +1330,11 @@ async function confirmSEOlustur(teklifId) {
     }
     document.getElementById('teknik-resim-modal')?.remove();
     window._trFiles = {};
-    toast(seciliItems.length + ' kalem sipariş oluşturuldu (' + spNo + ') ✓', 'success');
+    toast(seciliItems.length + ' kalem sipariş oluşturuldu (' + spNo + ') — yönlendiriliyor...', 'success');
 
-    await loadAll();
-    await loadDetail(teklifId);
+    setTimeout(function() {
+      window.location.href = 'ersan_siparisler.html';
+    }, 1200);
   } catch(e) {
     const errEl = document.getElementById('tr-error');
     if (errEl) { errEl.textContent = 'Hata: ' + e.message; errEl.style.display = 'block'; }
