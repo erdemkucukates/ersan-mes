@@ -397,28 +397,29 @@ function renderOlcuFields() {
 function calcTedKg() {
   var tip = window._rfqMalzemeTip || 'Mil';
   var miktar = rfqData ? (rfqData['Miktar'] || 1) : 1;
-  var rho = 7.85;
-  var kg = 0;
+  var rho = 7.85; // g/cm³
+  var gram = 0;
   if (tip === 'Mil') {
     var cap = parseFloat(document.getElementById('f-olcu-cap')?.value) || 0;
     var boy = parseFloat(document.getElementById('f-olcu-boy')?.value) || 0;
-    if (cap > 0 && boy > 0) { var r = cap/2/10, h = boy/10; kg = Math.PI*r*r*h*rho*miktar; }
+    if (cap > 0 && boy > 0) { var r = cap/2/10, h = boy/10; gram = Math.PI*r*r*h*rho; }
   } else if (tip === 'Boru') {
     var cap = parseFloat(document.getElementById('f-olcu-cap')?.value) || 0;
     var ic = parseFloat(document.getElementById('f-olcu-ic')?.value) || 0;
     var boy = parseFloat(document.getElementById('f-olcu-boy')?.value) || 0;
-    if (cap > 0 && boy > 0) { var rd = cap/2/10, ri = ic/2/10, h = boy/10; kg = Math.PI*(rd*rd-ri*ri)*h*rho*miktar; }
+    if (cap > 0 && boy > 0) { var rd = cap/2/10, ri = ic/2/10, h = boy/10; gram = Math.PI*(rd*rd-ri*ri)*h*rho; }
   } else if (tip === 'Lama') {
     var en = parseFloat(document.getElementById('f-olcu-en')?.value) || 0;
     var kal = parseFloat(document.getElementById('f-olcu-kal')?.value) || 0;
     var boy = parseFloat(document.getElementById('f-olcu-boy')?.value) || 0;
-    if (en > 0 && kal > 0 && boy > 0) { kg = (en/10)*(kal/10)*(boy/10)*rho*miktar; }
+    if (en > 0 && kal > 0 && boy > 0) { gram = (en/10)*(kal/10)*(boy/10)*rho; }
   } else if (tip === 'Sac') {
     var en = parseFloat(document.getElementById('f-olcu-en')?.value) || 0;
     var boy = parseFloat(document.getElementById('f-olcu-boy')?.value) || 0;
     var kal = parseFloat(document.getElementById('f-olcu-kal')?.value) || 0;
-    if (en > 0 && boy > 0 && kal > 0) { kg = (en/10)*(boy/10)*(kal/10)*rho*miktar; }
+    if (en > 0 && boy > 0 && kal > 0) { gram = (en/10)*(boy/10)*(kal/10)*rho; }
   }
+  var kg = gram / 1000 * miktar;
   var kgEl = document.getElementById('ted-kg');
   var kgIn = document.getElementById('f-ted-kg');
   if (kg > 0) {

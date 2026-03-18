@@ -597,25 +597,31 @@ function removeSTLRow(kalemIdx, rowIdx) {
 var _stlInp = 'width:100%;padding:4px;border:1px solid #e2e5ea;border-radius:6px;font-size:11px;';
 var _stlLbl = 'font-size:10px;color:#9aa0ad;margin-bottom:2px';
 
+// Ortak kg hesaplama (g/cm³ × cm³ = gram, /1000 = kg)
+function calcKg(tip, s, adet) {
+  var rho = YOGUNLUK[s.yogunluk]||7.85, gram=0;
+  if(tip==='Mil'){var r2=(parseFloat(s.cap)||0)/2/10,h2=(parseFloat(s.boy)||0)/10;gram=Math.PI*r2*r2*h2*rho;}
+  else if(tip==='Boru'){var rd2=(parseFloat(s.cap)||0)/2/10,ri2=(parseFloat(s.ic_cap)||0)/2/10,h3=(parseFloat(s.boy)||0)/10;gram=Math.PI*(rd2*rd2-ri2*ri2)*h3*rho;}
+  else if(tip==='Lama'){gram=((parseFloat(s.en)||0)/10)*((parseFloat(s.kalinlik)||0)/10)*((parseFloat(s.boy)||0)/10)*rho;}
+  else if(tip==='Sac'){gram=((parseFloat(s.en)||0)/10)*((parseFloat(s.boy)||0)/10)*((parseFloat(s.kalinlik)||0)/10)*rho;}
+  return gram/1000*(adet||1);
+}
+
+var FASON_ISLEMLER = ['Isıl İşlem','İndüksiyon','Nitrasyon','Sementasyon','Taşlama','Boyama','Kaplama','Diğer'];
+var YOGUNLUK_KEYS = Object.keys(YOGUNLUK);
+
 function renderSTLRow(s, uid) {
-  var YOGUNLUK = {Çelik:7.85,Paslanmaz:7.93,Alüminyum:2.70,Titanyum:4.51,Bronz:8.89};
-  var rho = YOGUNLUK[s.yogunluk]||7.85, kg=0;
-  if(s.tip==='Hammadde'){
-    if(s.malzemeTipi==='Mil'){var r2=(parseFloat(s.cap)||0)/2/10,h2=(parseFloat(s.boy)||0)/10;kg=Math.PI*r2*r2*h2*rho;}
-    else if(s.malzemeTipi==='Boru'){var rd2=(parseFloat(s.cap)||0)/2/10,ri2=(parseFloat(s.ic_cap)||0)/2/10,h3=(parseFloat(s.boy)||0)/10;kg=Math.PI*(rd2*rd2-ri2*ri2)*h3*rho;}
-    else if(s.malzemeTipi==='Lama'){kg=((parseFloat(s.en)||0)/10)*((parseFloat(s.kalinlik)||0)/10)*((parseFloat(s.boy)||0)/10)*rho;}
-    else if(s.malzemeTipi==='Sac'){kg=((parseFloat(s.en)||0)/10)*((parseFloat(s.boy)||0)/10)*((parseFloat(s.kalinlik)||0)/10)*rho;}
-  }
+  var kg = s.tip==='Hammadde' ? calcKg(s.malzemeTipi, s, 1) : 0;
   var html = '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">';
-  // Tip
   html += '<div><div style="'+_stlLbl+'">TİP</div><select id="stl-tip-'+uid+'" style="'+_stlInp+'">'+
     '<option'+(s.tip==='Hammadde'?' selected':'')+'>Hammadde</option>'+
     '<option'+(s.tip==='Fason'?' selected':'')+'>Fason</option></select></div>';
   if(s.tip==='Hammadde'){
     html += '<div><div style="'+_stlLbl+'">MALZEME TİPİ</div><select id="stl-mtyp-'+uid+'" style="'+_stlInp+'">'+
       ['Mil','Boru','Lama','Sac'].map(function(t){return '<option'+(s.malzemeTipi===t?' selected':'')+'>'+t+'</option>';}).join('')+'</select></div>';
+    html += '<div><div style="'+_stlLbl+'">YOĞUNLUK</div><select id="stl-yog-'+uid+'" style="'+_stlInp+'">'+
+      YOGUNLUK_KEYS.map(function(k){return '<option'+(s.yogunluk===k?' selected':'')+'>'+k+'</option>';}).join('')+'</select></div>';
     html += '<div><div style="'+_stlLbl+'">MALZEME CİNSİ</div><input id="stl-mc-'+uid+'" style="'+_stlInp+'" value="'+(s.malzemeCinsi||'')+'" placeholder="AISI 4140"></div>';
-    // Olcu alanlari malzeme tipine gore
     if(s.malzemeTipi==='Mil'){
       html += '<div><div style="'+_stlLbl+'">ÇAP (mm)</div><input id="stl-cap-'+uid+'" type="number" style="'+_stlInp+'" value="'+(s.cap||'')+'" placeholder="150"></div>';
       html += '<div><div style="'+_stlLbl+'">BOY (mm)</div><input id="stl-boy-'+uid+'" type="number" style="'+_stlInp+'" value="'+(s.boy||'')+'" placeholder="200"></div>';
@@ -632,9 +638,10 @@ function renderSTLRow(s, uid) {
       html += '<div><div style="'+_stlLbl+'">BOY (mm)</div><input id="stl-boy-'+uid+'" type="number" style="'+_stlInp+'" value="'+(s.boy||'')+'" placeholder="500"></div>';
       html += '<div><div style="'+_stlLbl+'">KALINLIK (mm)</div><input id="stl-kal-'+uid+'" type="number" style="'+_stlInp+'" value="'+(s.kalinlik||'')+'" placeholder="5"></div>';
     }
-    html += '<div id="stl-kg-'+uid+'" style="grid-column:1/-1;background:#d1fae5;border-radius:6px;padding:4px 8px;font-size:11px;color:#059669;font-weight:600;display:'+(kg>0?'block':'none')+';">'+(kg>0?'Tahmini: '+kg.toFixed(2)+' kg':'')+'</div>';
+    html += '<div id="stl-kg-'+uid+'" style="grid-column:1/-1;background:#d1fae5;border-radius:6px;padding:4px 8px;font-size:11px;color:#059669;font-weight:600;display:'+(kg>0?'block':'none')+';">'+(kg>0?'Tahmini: '+kg.toFixed(2)+' kg/adet':'')+'</div>';
   } else {
-    html += '<div><div style="'+_stlLbl+'">İŞLEM</div><input id="stl-mc-'+uid+'" style="'+_stlInp+'" value="'+(s.malzemeCinsi||'')+'" placeholder="Isıl İşlem..."></div>';
+    html += '<div><div style="'+_stlLbl+'">İŞLEM TİPİ</div><select id="stl-mc-'+uid+'" style="'+_stlInp+'">'+
+      FASON_ISLEMLER.map(function(t){return '<option'+(s.malzemeCinsi===t?' selected':'')+'>'+t+'</option>';}).join('')+'</select></div>';
     html += '<div><div style="'+_stlLbl+'">ŞARTNAME</div><input id="stl-spec-'+uid+'" style="'+_stlInp+'" value="'+(s.spec||'')+'" placeholder="58-60 HRC"></div>';
   }
   html += '</div>';
@@ -675,11 +682,17 @@ function renderSTL() {
         if(tipSel) tipSel.onchange = function(){ kalem.rows[ri].tip=this.value; if(this.value==='Fason') kalem.rows[ri].malzemeTipi='Fason'; renderSTL(); };
         var mtypSel = document.getElementById('stl-mtyp-'+uid);
         if(mtypSel) mtypSel.onchange = function(){ kalem.rows[ri].malzemeTipi=this.value; renderSTL(); };
+        var yogSel = document.getElementById('stl-yog-'+uid);
+        if(yogSel) yogSel.onchange = function(){ kalem.rows[ri].yogunluk=this.value; stlDebounceKg(uid,ki,ri); };
         ['mc','cap','ic','boy','en','kal','spec'].forEach(function(fld){
           var el = document.getElementById('stl-'+fld+'-'+uid);
           if(!el) return;
           var map = {mc:'malzemeCinsi',cap:'cap',ic:'ic_cap',boy:'boy',en:'en',kal:'kalinlik',spec:'spec'};
-          el.oninput = function(){ kalem.rows[ri][map[fld]]=this.value; if(['cap','ic','boy','en','kal'].indexOf(fld)>=0) stlDebounceKg(uid,ki,ri); };
+          if(fld==='mc' && kalem.rows[ri].tip==='Fason') {
+            el.onchange = function(){ kalem.rows[ri].malzemeCinsi=this.value; };
+          } else {
+            el.oninput = function(){ kalem.rows[ri][map[fld]]=this.value; if(['cap','ic','boy','en','kal'].indexOf(fld)>=0) stlDebounceKg(uid,ki,ri); };
+          }
         });
       }, 0);
     });
@@ -691,14 +704,9 @@ function stlDebounceKg(uid, ki, ri) {
   clearTimeout(_stlKgTimer);
   _stlKgTimer = setTimeout(function() {
     var s = window._stlKalemler[ki].rows[ri]; if(!s) return;
-    var YOGUNLUK = {Çelik:7.85,Paslanmaz:7.93,Alüminyum:2.70,Titanyum:4.51,Bronz:8.89};
-    var rho = YOGUNLUK[s.yogunluk]||7.85, kg=0;
-    if(s.malzemeTipi==='Mil'){var r2=(parseFloat(s.cap)||0)/2/10,h2=(parseFloat(s.boy)||0)/10;kg=Math.PI*r2*r2*h2*rho;}
-    else if(s.malzemeTipi==='Boru'){var rd2=(parseFloat(s.cap)||0)/2/10,ri2=(parseFloat(s.ic_cap)||0)/2/10,h3=(parseFloat(s.boy)||0)/10;kg=Math.PI*(rd2*rd2-ri2*ri2)*h3*rho;}
-    else if(s.malzemeTipi==='Lama'){kg=((parseFloat(s.en)||0)/10)*((parseFloat(s.kalinlik)||0)/10)*((parseFloat(s.boy)||0)/10)*rho;}
-    else if(s.malzemeTipi==='Sac'){kg=((parseFloat(s.en)||0)/10)*((parseFloat(s.boy)||0)/10)*((parseFloat(s.kalinlik)||0)/10)*rho;}
+    var kg = calcKg(s.malzemeTipi, s, 1);
     var el = document.getElementById('stl-kg-'+uid);
-    if(el){ el.textContent = kg>0?'Tahmini: '+kg.toFixed(2)+' kg':''; el.style.display = kg>0?'block':'none'; }
+    if(el){ el.textContent = kg>0?'Tahmini: '+kg.toFixed(2)+' kg/adet':''; el.style.display = kg>0?'block':'none'; }
   }, 600);
 }
 
@@ -711,18 +719,13 @@ function stlOlcuStr(s) {
 }
 
 async function saveSTL() {
-  var YOGUNLUK = {Çelik:7.85,Paslanmaz:7.93,Alüminyum:2.70,Titanyum:4.51,Bronz:8.89};
   try {
     var count = 0;
     for (var ki=0; ki<window._stlKalemler.length; ki++) {
       var kalem = window._stlKalemler[ki];
       for (var ri=0; ri<kalem.rows.length; ri++) {
         var s = kalem.rows[ri];
-        var rho = YOGUNLUK[s.yogunluk]||7.85, kg=0;
-        if(s.malzemeTipi==='Mil'){var r2=(parseFloat(s.cap)||0)/2/10,h2=(parseFloat(s.boy)||0)/10;kg=Math.PI*r2*r2*h2*rho*kalem.miktar;}
-        else if(s.malzemeTipi==='Boru'){var rd2=(parseFloat(s.cap)||0)/2/10,ri2=(parseFloat(s.ic_cap)||0)/2/10,h3=(parseFloat(s.boy)||0)/10;kg=Math.PI*(rd2*rd2-ri2*ri2)*h3*rho*kalem.miktar;}
-        else if(s.malzemeTipi==='Lama'){kg=((parseFloat(s.en)||0)/10)*((parseFloat(s.kalinlik)||0)/10)*((parseFloat(s.boy)||0)/10)*rho*kalem.miktar;}
-        else if(s.malzemeTipi==='Sac'){kg=((parseFloat(s.en)||0)/10)*((parseFloat(s.boy)||0)/10)*((parseFloat(s.kalinlik)||0)/10)*rho*kalem.miktar;}
+        var kg = s.tip==='Hammadde' ? calcKg(s.malzemeTipi, s, kalem.miktar) : 0;
         await fetch('/.netlify/functions/airtable',{
           method:'POST',headers:{'Content-Type':'application/json'},
           body:JSON.stringify({method:'POST',path:'/v0/'+BASE+'/'+encodeURIComponent('Satınalma Talepleri'),body:{fields:{
@@ -771,6 +774,8 @@ function openIEModal(g) {
       '<option>Normal</option><option>Acil</option><option>Kritik</option></select></div>'+
       '<div><div style="font-size:10px;color:#9aa0ad;margin-bottom:2px">FAI GEREKLİ</div>'+
       '<label style="display:flex;align-items:center;gap:4px;font-size:11px;"><input type="checkbox" id="ie-fai-'+i+'"> Evet</label></div>'+
+      '<div><div style="font-size:10px;color:#9aa0ad;margin-bottom:2px">TERMİN TARİHİ</div>'+
+      '<input id="ie-termin-'+i+'" type="date" value="'+(f['Termin Tarihi']||'')+'" style="width:100%;padding:4px;border:1px solid #e2e5ea;border-radius:6px;font-size:11px;"></div>'+
       '</div></div>';
   }).join('');
 
@@ -804,15 +809,7 @@ async function saveIE(g) {
       var oncelik = document.getElementById('ie-onc-'+i).value || 'Normal';
       var fai = document.getElementById('ie-fai-'+i).checked;
 
-      // Termin tarihi: teslim suresi varsa bugun + teslim suresi, yoksa SE termin tarihi
-      var terminDate = null;
-      var teslimSuresi = f['Teslim Süresi İş Günü'] || 0;
-      if (teslimSuresi > 0) {
-        var d = new Date(); d.setDate(d.getDate() + teslimSuresi);
-        terminDate = d.toISOString().split('T')[0];
-      } else {
-        terminDate = f['Termin Tarihi'] || null;
-      }
+      var terminDate = document.getElementById('ie-termin-'+i).value || f['Termin Tarihi'] || null;
 
       var ieFields = {
         'SE No': [r.id],
