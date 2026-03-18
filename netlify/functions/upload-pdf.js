@@ -30,21 +30,29 @@ exports.handler = async (event) => {
     await store.set(blobKey, buffer, { metadata: { filename, contentType: 'application/pdf' } });
     console.log('[upload-pdf] Blob kaydedildi');
 
-    // ── ADIM 3: Serve URL'yi Airtable'a kaydet ──
+    // ── ADIM 3: Serve URL'yi Airtable'a kaydet (opsiyonel) ──
     const serveUrl = '/.netlify/functions/serve-pdf?key=' + encodeURIComponent(blobKey);
-    const BASE  = process.env.AIRTABLE_BASE_ID || 'app5LDgJMgocw79Ix';
-    const TOKEN_AT = process.env.AIRTABLE_TOKEN;
     const targetTable = table || 'Satış Emirleri';
     const targetField = field || 'PDF Data';
 
-    const patchRes = await fetch(
-      `https://api.airtable.com/v0/${BASE}/${encodeURIComponent(targetTable)}/${recordId}`,
-      {method:'PATCH', headers:{'Authorization':`Bearer ${TOKEN_AT}`,'Content-Type':'application/json'},
-       body:JSON.stringify({fields:{[targetField]: serveUrl}})}
-    );
-    const patchData = await patchRes.json();
-    if (patchData.error) throw new Error('Airtable: ' + JSON.stringify(patchData.error));
-    console.log('[upload-pdf] BASARILI:', serveUrl);
+    if (targetField !== 'skip') {
+      const BASE  = process.env.AIRTABLE_BASE_ID || 'app5LDgJMgocw79Ix';
+      const TOKEN_AT = process.env.AIRTABLE_TOKEN;
+      try {
+        const patchRes = await fetch(
+          `https://api.airtable.com/v0/${BASE}/${encodeURIComponent(targetTable)}/${recordId}`,
+          {method:'PATCH', headers:{'Authorization':`Bearer ${TOKEN_AT}`,'Content-Type':'application/json'},
+           body:JSON.stringify({fields:{[targetField]: serveUrl}})}
+        );
+        const patchData = await patchRes.json();
+        if (patchData.error) console.log('[upload-pdf] Airtable PATCH uyarisi:', JSON.stringify(patchData.error));
+        else console.log('[upload-pdf] Airtable BASARILI:', serveUrl);
+      } catch(atErr) {
+        console.log('[upload-pdf] Airtable PATCH hatasi (dosya yine de yuklendi):', atErr.message);
+      }
+    } else {
+      console.log('[upload-pdf] Airtable PATCH atlanildi (field=skip)');
+    }
 
     return {statusCode:200,headers:CORS,body:JSON.stringify({success:true, url:serveUrl})};
   } catch(e) {

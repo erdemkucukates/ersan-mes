@@ -866,7 +866,7 @@ async function uploadCert(event, recId) {
     const res = await fetch('/.netlify/functions/upload-pdf', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({filename: file.name, data: dataUrl, recordId: recId, table: 'Malzeme Girişleri', field: 'Notlar'})
+      body: JSON.stringify({filename: file.name, data: dataUrl, recordId: recId, table: 'tblSj5Ep6F9Ir1NGu', field: 'skip'})
     });
     const data = await res.json();
     if (data.success || data.url) {

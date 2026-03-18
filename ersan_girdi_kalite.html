@@ -732,7 +732,7 @@ async function handleCertUpload(e, recId) {
     const dataUrl = await fileToBase64(file);
     const res = await fetch('/.netlify/functions/upload-pdf', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({filename:file.name, data:dataUrl, recordId:recId, table:'tblSj5Ep6F9Ir1NGu', field:'Notlar'})
+      body: JSON.stringify({filename:file.name, data:dataUrl, recordId:recId, table:'tblSj5Ep6F9Ir1NGu', field:'skip'})
     });
     if(!res.ok) throw new Error('Yükleme başarısız');
     if(fnEl){ fnEl.textContent = '✓ '+file.name; fnEl.style.color='var(--green)'; }
