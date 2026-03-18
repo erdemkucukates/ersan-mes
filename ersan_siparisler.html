@@ -428,9 +428,11 @@ async function loadPDF(url, filename) {
 }
 
 async function renderPDFPage() {
+  console.log('[ZOOM] renderPDFPage CALLED, pdfDoc:', !!pdfDoc);
   if (!pdfDoc) { console.log('[ZOOM] renderPDFPage: pdfDoc yok'); return; }
   var area = document.getElementById('pdf-canvas-area');
-  if (!area) { console.log('[ZOOM] renderPDFPage: area yok'); return; }
+  console.log('[ZOOM] area element:', area, 'getElementById result:', !!area);
+  if (!area) { console.log('[ZOOM] renderPDFPage: area yok!'); return; }
   area.className = 'pdf-canvas-wrap';
   try {
     var page = await pdfDoc.getPage(1);
