@@ -710,6 +710,7 @@ function renderDetail(q) {
     `<option value="${p.id}" ${p.id===hazirlayanId?'selected':''}>${p.fields['Ad Soyad']}</option>`
   ).join('');
 
+  const isDraft = q.id.startsWith('_new_');
   const idx = filteredQuotes.findIndex(r => r.id === q.id);
   const prevId = idx > 0 ? filteredQuotes[idx-1].id : null;
   const nextId = idx < filteredQuotes.length-1 ? filteredQuotes[idx+1].id : null;
@@ -726,21 +727,21 @@ function renderDetail(q) {
         <span class="qi-status ${statusColors[durum]||'status-Taslak'} detail-musteri-tag">${durum}</span>
         <span class="detail-musteri-tag">${getMusteriName(musteriId)}</span>
       </div>
-      <button class="toolbar-btn ghost" onclick="loadDetail('${q.id}')">
+      ${isDraft ? '' : `<button class="toolbar-btn ghost" onclick="loadDetail('${q.id}')">
         <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M11 6.5A4.5 4.5 0 112 6.5a4.5 4.5 0 019 0z" stroke="currentColor" stroke-width="1.5"/><path d="M9.5 9.5l2 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
         Yenile
-      </button>
-      <button class="toolbar-btn" style="background:#1e1b4b;color:white;border-color:#1e1b4b;" onclick="generatePDF('${q.id}')">
+      </button>`}
+      ${isDraft ? '' : `<button class="toolbar-btn" style="background:#1e1b4b;color:white;border-color:#1e1b4b;" onclick="generatePDF('${q.id}')">
         <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 10h9M6.5 2v6M4 6l2.5 2.5L9 6" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
         Proforma PDF
-      </button>
-      <button class="toolbar-btn" onclick="deleteQuote('${q.id}')">
+      </button>`}
+      ${isDraft ? '' : `<button class="toolbar-btn" onclick="deleteQuote('${q.id}')">
         <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 3h9M5 3V2h3v1M4 3l.5 7h4L9 3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
         Sil
-      </button>
+      </button>`}
       <button class="toolbar-btn primary" onclick="saveQuote('${q.id}')">
         <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 7l3 3 6-6" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        Güncelle
+        Teklifi Kaydet
       </button>
     </div>
 
@@ -883,7 +884,7 @@ function renderDetail(q) {
     </div><!-- end scroll -->
 
     <!-- DURUM BUTTONS -->
-    <div class="durum-row">
+    ${isDraft ? '' : `<div class="durum-row">
       <span class="durum-label">Teklif Durumu:</span>
       <span class="qi-status ${statusColors[durum]}" style="font-size:12px;">${durum}</span>
       <span style="flex:1"></span>
@@ -894,7 +895,7 @@ function renderDetail(q) {
         <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 6.5h9M7.5 3l4 3.5-4 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
         Gönderildi
       </button>
-    </div>
+    </div>`}
   `;
 
   renderItems();
@@ -1117,8 +1118,18 @@ async function saveQuote(id) {
     const kdv = fields['KDV Oranı']||0;
     fields['Toplam Tutar'] = ara + ara*kdv/100;
 
-    // Save main record
-    await api('PATCH', TABLES.teklifler, {fields}, id);
+    // New quote (draft) or existing?
+    const isNew = id.startsWith('_new_');
+    let realId = id;
+
+    if (isNew) {
+      // POST to create
+      const res = await api('POST', TABLES.teklifler, {fields});
+      realId = res.id;
+    } else {
+      // PATCH to update
+      await api('PATCH', TABLES.teklifler, {fields}, id);
+    }
 
     // Delete removed items
     for (const delId of itemsToDelete) {
@@ -1139,7 +1150,7 @@ async function saveQuote(id) {
         'İskonto': item.iskonto||0,
         'Notlar': item.aciklama||null,
         'Teklif Süresi (Gün)': item.teslim ? (parseInt(item.teslim)||null) : null,
-        'Teklifler': [id],
+        'Teklifler': [realId],
       };
 
       // Handle teslim as string if not a number
@@ -1161,9 +1172,10 @@ async function saveQuote(id) {
     // Reload quotes list
     await loadAll();
     // Re-select active
-    await loadDetail(id);
+    activeId = realId;
+    await loadDetail(realId);
 
-    toast('Teklif kaydedildi ✓');
+    toast(isNew ? 'Teklif oluşturuldu ✓' : 'Teklif kaydedildi ✓');
   } catch(e) {
     toast('Kaydetme hatası: ' + e.message, 'error');
   }
@@ -1877,22 +1889,22 @@ async function updateSEDurum(id, durum) {
 }
 
 // ── CREATE NEW ──
-async function createNewQuote() {
-  try {
-    const today = new Date().toISOString().split('T')[0];
-    const res = await api('POST', TABLES.teklifler, {
-      fields: {
-        'Teklif Tarihi': today,
-        'Durum': 'Taslak',
-        'Para Birimi': 'TL',
-      }
-    });
-    await loadAll();
-    await loadDetail(res.id);
-    toast('Yeni teklif oluşturuldu', 'info');
-  } catch(e) {
-    toast('Oluşturma hatası: ' + e.message, 'error');
-  }
+function createNewQuote() {
+  const today = new Date().toISOString().split('T')[0];
+  const draftId = '_new_' + Date.now();
+  const draft = {
+    id: draftId,
+    fields: {
+      'Teklif Tarihi': today,
+      'Durum': 'Taslak',
+      'Para Birimi': 'TL',
+    }
+  };
+  activeId = draftId;
+  currentItems = [];
+  itemsToDelete = [];
+  renderDetail(draft);
+  toast('Teklif bilgilerini doldurup "Teklifi Kaydet" butonuna tıklayın', 'info');
 }
 
 // ── DELETE ──
