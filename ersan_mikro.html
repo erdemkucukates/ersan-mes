@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — Mikro Entegrasyon</title>
+<link rel="stylesheet" href="ersan_styles.css">
+<script src="ersan_nav.js" defer></script>
+<script src="ersan_log.js" defer></script>
+</head>
+<body>
+<div id="nav-alani"></div>
+<div class="icerik-alani">
+  <div class="topbar">
+    <div class="topbar-baslik">Mikro Entegrasyon</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
+    </div>
+  </div>
+  <div class="sayfa-icerik">
+
+    <!-- BILGI BANNER -->
+    <div style="background:var(--mavi-acik);border:1px solid var(--mavi);border-radius:8px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:12px;">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="var(--mavi)" stroke-width="1.5"/><path d="M10 6v5M10 13v1" stroke="var(--mavi)" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <div>
+        <div style="font-size:13px;font-weight:600;color:var(--mavi-koyu);">Mikro ERP Entegrasyonu</div>
+        <div style="font-size:12px;color:var(--metin2);margin-top:2px;">Bu modul Mikro ERP ile veri senkronizasyonu saglar. Entegrasyon yakin zamanda aktif olacaktir.</div>
+      </div>
+    </div>
+
+    <!-- KPI -->
+    <div class="kpi-grid">
+      <div class="kpi-kart" id="kpi-baglanti">
+        <div class="kpi-etiket">Baglanti Durumu</div>
+        <div class="kpi-deger" id="kpi-durum" style="font-size:14px;">Kontrol ediliyor...</div>
+      </div>
+      <div class="kpi-kart">
+        <div class="kpi-etiket">Son Senkronizasyon</div>
+        <div class="kpi-deger" style="font-size:14px;">—</div>
+        <div class="kpi-alt">Henuz senkronizasyon yapilmadi</div>
+      </div>
+      <div class="kpi-kart">
+        <div class="kpi-etiket">Aktarilan Kayit</div>
+        <div class="kpi-deger">0</div>
+      </div>
+      <div class="kpi-kart">
+        <div class="kpi-etiket">Hata</div>
+        <div class="kpi-deger">0</div>
+      </div>
+    </div>
+
+    <!-- YAPILANDIRMA -->
+    <div class="kart">
+      <div class="kart-baslik">Baglanti Yapilandirmasi</div>
+      <div class="form-grid-3" style="gap:12px;">
+        <div class="form-grup">
+          <label class="form-label">Firma Kodu</label>
+          <input class="form-input" type="text" id="mikro-firma" placeholder="Ornek: 001">
+        </div>
+        <div class="form-grup">
+          <label class="form-label">Calisma Yili</label>
+          <input class="form-input" type="text" id="mikro-yil" placeholder="2026">
+        </div>
+        <div class="form-grup">
+          <label class="form-label">API Key</label>
+          <input class="form-input" type="password" id="mikro-key" placeholder="Mikro API anahtari">
+        </div>
+      </div>
+      <div style="margin-top:12px;display:flex;align-items:center;gap:12px;">
+        <button class="btn btn-mavi" onclick="yapilandirmaKaydet()">Kaydet</button>
+        <button class="btn btn-beyaz" onclick="baglantiTest()">Baglanti Test Et</button>
+      </div>
+      <div id="yapilandirma-mesaj" style="margin-top:10px;font-size:12px;display:none;"></div>
+    </div>
+
+    <!-- SENKRONIZASYON MODULLERI -->
+    <div class="kart">
+      <div class="kart-baslik">Senkronizasyon Modulleri</div>
+      <div class="tablo-wrap" style="border:none;">
+        <table class="tablo">
+          <thead>
+            <tr>
+              <th>Modul</th>
+              <th>Yon</th>
+              <th>Durum</th>
+              <th>Son Calistirma</th>
+              <th>Islem</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Musteriler</td>
+              <td><span class="badge badge-mavi">MES &rarr; Mikro</span></td>
+              <td><span class="badge badge-gri">Pasif</span></td>
+              <td style="color:var(--metin4);">—</td>
+              <td><button class="btn btn-sm btn-beyaz" disabled>Baslat</button></td>
+            </tr>
+            <tr>
+              <td>Stok Kartlari</td>
+              <td><span class="badge badge-mavi">Mikro &rarr; MES</span></td>
+              <td><span class="badge badge-gri">Pasif</span></td>
+              <td style="color:var(--metin4);">—</td>
+              <td><button class="btn btn-sm btn-beyaz" disabled>Baslat</button></td>
+            </tr>
+            <tr>
+              <td>Siparisler</td>
+              <td><span class="badge badge-mavi">MES &rarr; Mikro</span></td>
+              <td><span class="badge badge-gri">Pasif</span></td>
+              <td style="color:var(--metin4);">—</td>
+              <td><button class="btn btn-sm btn-beyaz" disabled>Baslat</button></td>
+            </tr>
+            <tr>
+              <td>Faturalar</td>
+              <td><span class="badge badge-mavi">Mikro &rarr; MES</span></td>
+              <td><span class="badge badge-gri">Pasif</span></td>
+              <td style="color:var(--metin4);">—</td>
+              <td><button class="btn btn-sm btn-beyaz" disabled>Baslat</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SYNC LOGLARI -->
+    <div class="kart">
+      <div class="kart-baslik">Senkronizasyon Loglari</div>
+      <div id="sync-log" style="min-height:60px;">
+        <div class="bos-durum" style="padding:20px;">
+          <p style="font-size:12px;">Henuz senkronizasyon logu bulunmuyor</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── BAGLANTI KONTROL ──
+function baglantiKontrol() {
+  var kpiEl = document.getElementById('kpi-durum');
+  var kartEl = document.getElementById('kpi-baglanti');
+  // Simdilik statik — Netlify env kontrolu yapilamaz client-side
+  kpiEl.textContent = 'Yapilandirilmamis';
+  kpiEl.style.color = 'var(--sari)';
+  kartEl.style.borderTopColor = 'var(--sari)';
+}
+
+function yapilandirmaKaydet() {
+  var firma = document.getElementById('mikro-firma').value;
+  var yil = document.getElementById('mikro-yil').value;
+  var key = document.getElementById('mikro-key').value;
+  var mesaj = document.getElementById('yapilandirma-mesaj');
+
+  if (!firma || !yil || !key) {
+    mesaj.style.display = 'block';
+    mesaj.style.color = 'var(--kirmizi)';
+    mesaj.textContent = 'Tum alanlari doldurun.';
+    return;
+  }
+
+  mesaj.style.display = 'block';
+  mesaj.style.color = 'var(--metin2)';
+  mesaj.innerHTML = 'Bu degerleri Netlify ortam degiskeni olarak kaydedin:<br>'
+    + '<code style="background:var(--bg2);padding:8px 12px;display:block;margin-top:6px;border-radius:4px;font-size:11px;">'
+    + 'MIKRO_FIRMA_KODU=' + firma + '<br>'
+    + 'MIKRO_CALISMA_YILI=' + yil + '<br>'
+    + 'MIKRO_API_KEY=' + key
+    + '</code><br>'
+    + '<span style="font-size:11px;color:var(--metin3);">Netlify Dashboard &rarr; Site Settings &rarr; Environment Variables</span>';
+}
+
+function baglantiTest() {
+  alert('Baglanti testi yakin zamanda aktif olacaktir.\nOnce Netlify ortam degiskenlerini yapilandirin.');
+}
+
+// ── INIT ──
+document.addEventListener('DOMContentLoaded', baglantiKontrol);
+</script>
+</body>
+</html>
