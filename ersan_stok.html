@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — Stok</title>
+<link rel="stylesheet" href="ersan_styles.css">
+<script src="ersan_nav.js" defer></script>
+<script src="ersan_log.js" defer></script>
+</head>
+<body>
+<div id="nav-alani"></div>
+<div class="icerik-alani">
+  <div class="topbar">
+    <div class="topbar-baslik">Stok Yonetimi</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
+    </div>
+  </div>
+  <div class="sayfa-icerik">
+
+    <!-- KPI -->
+    <div class="kpi-grid" id="kpi-area">
+      <div class="kpi-kart">
+        <div class="kpi-etiket">Toplam Kalem</div>
+        <div class="kpi-deger" id="kpi-toplam">-</div>
+      </div>
+      <div class="kpi-kart yesil">
+        <div class="kpi-etiket">Yeterli Stok</div>
+        <div class="kpi-deger" id="kpi-yeterli">-</div>
+      </div>
+      <div class="kpi-kart kirmizi">
+        <div class="kpi-etiket">Kritik Stok</div>
+        <div class="kpi-deger" id="kpi-kritik">-</div>
+      </div>
+      <div class="kpi-kart sari">
+        <div class="kpi-etiket">Bekleyen Giris</div>
+        <div class="kpi-deger" id="kpi-bekleyen">-</div>
+      </div>
+    </div>
+
+    <!-- ANA LAYOUT -->
+    <div class="iki-panel">
+
+      <!-- SOL PANEL -->
+      <div class="sol-panel">
+        <div class="sol-panel-ust">
+          <div class="sol-panel-baslik">Malzemeler</div>
+          <span id="liste-sayi" style="font-size:11px;color:var(--metin4);"></span>
+        </div>
+        <div class="sol-arama">
+          <input type="text" id="arama" placeholder="MAT no veya malzeme ara..." oninput="filtrele()">
+        </div>
+        <div class="sol-filtre">
+          <button class="filtre-btn aktif" onclick="sekmeGecis('hammadde',this)">Hammadde</button>
+          <button class="filtre-btn" onclick="sekmeGecis('yari',this)">Yari Mamul</button>
+          <button class="filtre-btn" onclick="sekmeGecis('bitmis',this)">Bitmis Urun</button>
+          <button class="filtre-btn" onclick="sekmeGecis('kritik',this)">Kritik Stok</button>
+        </div>
+        <div class="sol-liste" id="liste">
+          <div class="yukleniyor"><div class="spinner"></div> Yukleniyor...</div>
+        </div>
+      </div>
+
+      <!-- SAG PANEL -->
+      <div class="sag-panel">
+        <div id="detay-icerik">
+          <div class="bos-durum">
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="6" y="10" width="36" height="28" rx="3" stroke="currentColor" stroke-width="1.5"/><path d="M16 20h16M16 26h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            <p>Listeden bir malzeme secin</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+// ── CONFIG ──
+const TABLES = {
+  malzemeGirisleri: 'tblSj5Ep6F9Ir1NGu',
+};
+const BASE = 'app5LDgJMgocw79Ix';
+
+let malzemeler = [];
+let filtrelenmis = [];
+let aktifId = null;
+let aktifSekme = 'hammadde';
+
+// ── API ──
+async function apiGet(table, query) {
+  const url = '/.netlify/functions/airtable?table=' + table + (query ? '&' + query : '');
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('API hata: ' + res.status);
+  return res.json();
+}
+
+// ── YUKLE ──
+async function yukle() {
+  try {
+    const data = await apiGet(TABLES.malzemeGirisleri, 'pageSize=100');
+    malzemeler = (data.records || []).map(r => ({
+      id: r.id,
+      matNo: r.fields['MAT No'] || r.fields['Malzeme No'] || '',
+      ad: r.fields['Malzeme Adi'] || r.fields['Malzeme'] || '',
+      miktar: r.fields['Miktar'] || 0,
+      birim: r.fields['Birim'] || 'Adet',
+      tip: (r.fields['Tip'] || r.fields['Kategori'] || 'Hammadde').toLowerCase(),
+      minStok: r.fields['Min Stok'] || 0,
+      durum: r.fields['Durum'] || r.fields['Status'] || 'Depoda',
+      konum: r.fields['Konum'] || '',
+      tarih: r.fields['Giris Tarihi'] || r.fields['Tarih'] || '',
+      fields: r.fields,
+    }));
+    kpiGuncelle();
+    filtrele();
+  } catch(e) {
+    document.getElementById('liste').innerHTML = '<div style="padding:20px;color:var(--kirmizi);font-size:12px;">Yukleme hatasi: ' + e.message + '</div>';
+  }
+}
+
+// ── KPI ──
+function kpiGuncelle() {
+  document.getElementById('kpi-toplam').textContent = malzemeler.length;
+  const kritik = malzemeler.filter(m => m.minStok > 0 && m.miktar < m.minStok);
+  document.getElementById('kpi-kritik').textContent = kritik.length;
+  document.getElementById('kpi-yeterli').textContent = malzemeler.length - kritik.length;
+  const bekleyen = malzemeler.filter(m => m.durum === 'Beklemede' || m.durum === 'Yolda');
+  document.getElementById('kpi-bekleyen').textContent = bekleyen.length;
+}
+
+// ── SEKME ──
+function sekmeGecis(sekme, btn) {
+  aktifSekme = sekme;
+  document.querySelectorAll('.sol-filtre .filtre-btn').forEach(b => b.classList.remove('aktif'));
+  btn.classList.add('aktif');
+  filtrele();
+}
+
+// ── FILTRE ──
+function filtrele() {
+  const q = (document.getElementById('arama').value || '').toLowerCase();
+  let sonuc = malzemeler;
+
+  if (aktifSekme === 'hammadde') {
+    sonuc = sonuc.filter(m => m.tip.includes('hammadde') || m.tip.includes('ham'));
+  } else if (aktifSekme === 'yari') {
+    sonuc = sonuc.filter(m => m.tip.includes('yari') || m.tip.includes('wip'));
+  } else if (aktifSekme === 'bitmis') {
+    sonuc = sonuc.filter(m => m.tip.includes('bitmis') || m.tip.includes('urun') || m.tip.includes('finished'));
+  } else if (aktifSekme === 'kritik') {
+    sonuc = sonuc.filter(m => m.minStok > 0 && m.miktar < m.minStok);
+  }
+
+  if (q) {
+    sonuc = sonuc.filter(m =>
+      (m.matNo || '').toLowerCase().includes(q) ||
+      (m.ad || '').toLowerCase().includes(q)
+    );
+  }
+
+  filtrelenmis = sonuc;
+  listeRender();
+}
+
+// ── LISTE RENDER ──
+function listeRender() {
+  const el = document.getElementById('liste');
+  document.getElementById('liste-sayi').textContent = filtrelenmis.length + ' kalem';
+
+  if (!filtrelenmis.length) {
+    el.innerHTML = '<div class="bos-durum" style="padding:20px;"><p>Kayit bulunamadi</p></div>';
+    return;
+  }
+
+  el.innerHTML = filtrelenmis.map(m => {
+    const secili = m.id === aktifId ? ' secili' : '';
+    const kritik = (m.minStok > 0 && m.miktar < m.minStok);
+    return '<div class="liste-satir' + secili + '" onclick="detayYukle(\'' + m.id + '\')">'
+      + '<div class="liste-satir-no">' + (m.matNo || '—') + '</div>'
+      + '<div class="liste-satir-ad">' + (m.ad || '—') + '</div>'
+      + '<div class="liste-satir-alt">'
+      + '<span style="font-size:10px;color:var(--metin4);">' + m.miktar + ' ' + m.birim + '</span>'
+      + (kritik ? '<span class="badge badge-kirmizi">Kritik</span>' : '<span class="badge badge-yesil">Yeterli</span>')
+      + '</div></div>';
+  }).join('');
+}
+
+// ── DETAY ──
+function detayYukle(id) {
+  aktifId = id;
+  listeRender();
+  const m = malzemeler.find(x => x.id === id);
+  if (!m) return;
+
+  const kritik = (m.minStok > 0 && m.miktar < m.minStok);
+  const dc = document.getElementById('detay-icerik');
+
+  dc.innerHTML = ''
+    + '<div class="sag-panel-ust">'
+    + '<div style="display:flex;align-items:center;gap:10px;">'
+    + '<span style="font-family:monospace;font-size:14px;font-weight:600;color:var(--laci);">' + (m.matNo || 'Malzeme') + '</span>'
+    + (kritik ? '<span class="badge badge-kirmizi">Kritik Stok</span>' : '<span class="badge badge-yesil">Yeterli</span>')
+    + '</div>'
+    + '<div style="display:flex;gap:6px;">'
+    + (kritik ? '<button class="btn btn-mavi btn-sm" onclick="satinalmaTalebi(\'' + m.id + '\')">Satinalma Talebi Olustur</button>' : '')
+    + '</div>'
+    + '</div>'
+    + '<div class="sag-panel-icerik">'
+    + '<div class="kart"><div class="kart-baslik">Malzeme Bilgileri</div>'
+    + '<div class="form-grid-2" style="gap:12px;">'
+    + formAlani('MAT No', m.matNo)
+    + formAlani('Malzeme Adi', m.ad)
+    + formAlani('Miktar', m.miktar + ' ' + m.birim)
+    + formAlani('Min Stok', m.minStok || '—')
+    + formAlani('Tip', m.tip)
+    + formAlani('Durum', m.durum)
+    + formAlani('Konum', m.konum || '—')
+    + formAlani('Giris Tarihi', m.tarih || '—')
+    + '</div></div>'
+
+    + '<div class="kart"><div class="kart-baslik">Stok Hareketi Ekle</div>'
+    + '<div class="form-grid-3" style="gap:12px;">'
+    + '<div class="form-grup"><label class="form-label">Hareket Tipi</label>'
+    + '<select class="form-select" id="h-tip"><option>Giris</option><option>Cikis</option><option>Sayim</option></select></div>'
+    + '<div class="form-grup"><label class="form-label">Miktar</label>'
+    + '<input class="form-input" type="number" id="h-miktar" placeholder="0"></div>'
+    + '<div class="form-grup"><label class="form-label">Aciklama</label>'
+    + '<input class="form-input" type="text" id="h-aciklama" placeholder="Hareket notu..."></div>'
+    + '</div>'
+    + '<div style="margin-top:10px;"><button class="btn btn-mavi" onclick="hareketKaydet(\'' + m.id + '\')">Hareketi Kaydet</button></div>'
+    + '</div>'
+    + '</div>';
+}
+
+function formAlani(etiket, deger) {
+  return '<div class="form-grup"><label class="form-label">' + etiket + '</label>'
+    + '<div style="font-size:13px;color:var(--metin2);padding:6px 0;">' + (deger || '—') + '</div></div>';
+}
+
+// ── HAREKET KAYDET (placeholder) ──
+function hareketKaydet(id) {
+  var tip = document.getElementById('h-tip').value;
+  var miktar = document.getElementById('h-miktar').value;
+  if (!miktar || isNaN(miktar)) {
+    alert('Gecerli bir miktar girin');
+    return;
+  }
+  alert('Stok hareketi kaydedildi: ' + tip + ' ' + miktar + ' adet\n(Bu ozellik yakin zamanda Airtable ile entegre edilecek)');
+}
+
+// ── SATINALMA TALEBI ──
+function satinalmaTalebi(id) {
+  var m = malzemeler.find(function(x) { return x.id === id; });
+  if (!m) return;
+  if (confirm(m.ad + ' icin satinalma talebi olusturulsun mu?')) {
+    window.location.href = 'ersan_satinalma.html';
+  }
+}
+
+// ── TOAST ──
+function toast(msg, tip) {
+  var el = document.createElement('div');
+  el.className = 'toast ' + (tip === 'error' ? 'toast-hata' : 'toast-basari') + ' goster';
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(function() { el.remove(); }, 3000);
+}
+
+// ── INIT ──
+document.addEventListener('DOMContentLoaded', yukle);
+</script>
+</body>
+</html>
