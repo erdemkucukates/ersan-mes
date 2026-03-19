@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — Test Simulatoru</title>
+<link rel="stylesheet" href="ersan_styles.css">
+<script src="ersan_nav.js" defer></script>
+<script src="ersan_log.js" defer></script>
+<style>
+.test-layout {
+  display: flex;
+  gap: 12px;
+  height: calc(100vh - 52px - 32px);
+}
+.test-sol {
+  width: 340px;
+  flex-shrink: 0;
+  background: var(--beyaz);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow-y: auto;
+  padding: 12px;
+}
+.test-sag {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+}
+.test-adim {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin-bottom: 4px;
+  transition: background .2s;
+}
+.test-adim.aktif { background: var(--mavi-acik); }
+.test-adim.gecti { background: #f0fdf4; }
+.test-adim.hata { background: #fff5f5; }
+.ta-no {
+  width: 24px; height: 24px; border-radius: 50%;
+  background: var(--bg2); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700; flex-shrink: 0;
+  color: var(--metin3);
+}
+.test-adim.aktif .ta-no { background: var(--mavi); color: #fff; border-color: var(--mavi); }
+.test-adim.gecti .ta-no { background: var(--yesil); color: #fff; border-color: var(--yesil); }
+.test-adim.hata .ta-no { background: var(--kirmizi); color: #fff; border-color: var(--kirmizi); }
+.ta-icerik { flex: 1; }
+.ta-baslik { font-size: 12px; font-weight: 600; color: var(--laci); }
+.ta-alt { font-size: 10px; color: var(--metin3); margin-top: 2px; }
+.ta-ikon { width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0; }
+.ta-ikon.bekliyor { background: var(--bg2); border: 1px solid var(--border); }
+.ta-ikon.calisiyor { border: 2px solid var(--mavi); border-top-color: transparent; animation: spin .7s linear infinite; }
+.ta-ikon.gecti { background: var(--yesil); }
+.ta-ikon.hata { background: var(--kirmizi); }
+@keyframes spin { to { transform: rotate(360deg); } }
+.ilerleme-bar {
+  background: var(--bg2);
+  border-radius: 3px;
+  height: 6px;
+  overflow: hidden;
+}
+.test-log {
+  background: #0f2744;
+  border-radius: 8px;
+  padding: 12px;
+  height: 300px;
+  overflow-y: auto;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  color: #93c5fd;
+}
+@media (max-width: 768px) {
+  .test-layout { flex-direction: column; height: auto; }
+  .test-sol { width: 100%; }
+}
+</style>
+</head>
+<body>
+<div id="nav-alani"></div>
+<div class="icerik-alani">
+  <div class="topbar">
+    <div class="topbar-baslik">Test Simulatoru — Uctan Uca Surec Testi</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button class="btn btn-yesil" onclick="testiBaslat()">Testi Baslat</button>
+      <button class="btn btn-kirmizi" onclick="testTemizle()">Temizle</button>
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
+    </div>
+  </div>
+  <div class="sayfa-icerik">
+    <div class="test-layout">
+
+      <!-- SOL PANEL — ADIMLAR -->
+      <div class="test-sol" id="adimlar-alani"></div>
+
+      <!-- SAG PANEL — LOG + SONUCLAR -->
+      <div class="test-sag">
+        <!-- Ilerleme -->
+        <div class="kart" style="padding:12px;">
+          <div class="ilerleme-bar">
+            <div id="ilerleme-ic" style="width:0%;background:var(--mavi);height:6px;border-radius:3px;transition:width .5s"></div>
+          </div>
+          <div style="text-align:right;font-size:11px;color:var(--metin3);margin-top:4px" id="ilerleme-yazi">0/15 adim tamamlandi</div>
+        </div>
+
+        <!-- Canli Log -->
+        <div class="test-log" id="test-log"></div>
+
+        <!-- Sonuc Alani -->
+        <div id="sonuc-alani" style="display:none">
+          <div class="kpi-grid">
+            <div class="kpi-kart yesil">
+              <div class="kpi-etiket">Gecen Adim</div>
+              <div class="kpi-deger" id="gecen-sayi">&mdash;</div>
+            </div>
+            <div class="kpi-kart kirmizi">
+              <div class="kpi-etiket">Hatali Adim</div>
+              <div class="kpi-deger" id="hatali-sayi">&mdash;</div>
+            </div>
+            <div class="kpi-kart">
+              <div class="kpi-etiket">AS9100 Uyum</div>
+              <div class="kpi-deger" id="uyum-skoru">&mdash;</div>
+            </div>
+            <div class="kpi-kart sari">
+              <div class="kpi-etiket">Toplam Sure</div>
+              <div class="kpi-deger" id="toplam-sure">&mdash;</div>
+            </div>
+          </div>
+
+          <div class="tablo-wrap" style="margin-top:12px">
+            <div class="tablo-baslik">
+              <div class="tablo-baslik-text">AS9100 Madde Uyum Raporu</div>
+            </div>
+            <table class="tablo">
+              <thead>
+                <tr><th>Madde</th><th>Aciklama</th><th>Sonuc</th><th>Not</th></tr>
+              </thead>
+              <tbody id="uyum-tbody"></tbody>
+            </table>
+          </div>
+
+          <div class="kart" style="margin-top:12px">
+            <div class="kart-baslik">AI Degerlendirme</div>
+            <div id="ai-degerlendirme" style="font-size:13px;line-height:1.6;color:var(--metin2);white-space:pre-wrap"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+var TEST_ADIMLARI = [
+  { no:1,  baslik:'Musteri & Teklif olustur', aciklama:'Test musterisi ve taslak teklif Airtable\'a yazilir', as9100:'8.2.2', grup:'satis' },
+  { no:2,  baslik:'Teklif kalemi ekle', aciklama:'10 adet Flans Grubu, 850 TL/adet', as9100:'8.2.3', grup:'satis' },
+  { no:3,  baslik:'Teklif gonderildi', aciklama:'Durum: Gonderildi', as9100:'8.2.3', grup:'satis' },
+  { no:4,  baslik:'Siparis olusturuldu', aciklama:'Teklif onaylandi, SP otomatik olusturuldu', as9100:'8.2.4', grup:'satis' },
+  { no:5,  baslik:'Satinalma talebi', aciklama:'STL olusturuldu, hammadde tedarik basladi', as9100:'8.4.1', grup:'tedarik' },
+  { no:6,  baslik:'Malzeme geldi — On Kabul', aciklama:'Karantinaya alindi', as9100:'8.4.3', grup:'tedarik' },
+  { no:7,  baslik:'Girdi Kalite Kontrolu', aciklama:'Muayene yapildi, MAT ID olusturuldu, serbest', as9100:'8.4.3', grup:'tedarik' },
+  { no:8,  baslik:'Is Emri acildi', aciklama:'Operasyon rotasi, lot baglandi', as9100:'8.5.1', grup:'uretim' },
+  { no:9,  baslik:'Uretim tamamlandi', aciklama:'Tum operasyonlar bitti: Tornalama->Freze->Taslama', as9100:'8.5.1', grup:'uretim' },
+  { no:10, baslik:'Test NCR acildi (kasitli)', aciklama:'Boyut sapmasi tespit edildi — sistem tepkisi test', as9100:'8.7', grup:'kalite' },
+  { no:11, baslik:'NCR kapatildi', aciklama:'Yeniden isleme karari, duzeltici aksiyon', as9100:'8.7+10.2', grup:'kalite' },
+  { no:12, baslik:'Final muayene', aciklama:'10/10 parca onaylandi', as9100:'8.6', grup:'kalite' },
+  { no:13, baslik:'Sevkiyat on kontrol', aciklama:'8 madde otomatik kontrol', as9100:'8.5.4', grup:'sevk' },
+  { no:14, baslik:'Sevkiyat tamamlandi', aciklama:'CoC + irsaliye uretildi, IE: Sevk Edildi', as9100:'8.5.4', grup:'sevk' },
+  { no:15, baslik:'Fatura & Mikro testi', aciklama:'Fatura koprusu test edildi', as9100:'7.5', grup:'sevk' },
+];
+
+var testKayitlari = {};
+var testSonuclari = [];
+var calisiyorMu = false;
+
+// Adimlari render et
+function adimlariRender() {
+  var el = document.getElementById('adimlar-alani');
+  el.innerHTML = TEST_ADIMLARI.map(function(a) {
+    return '<div class="test-adim" id="adim-' + a.no + '">' +
+      '<div class="ta-no">' + a.no + '</div>' +
+      '<div class="ta-icerik">' +
+      '<div class="ta-baslik">' + a.baslik + '</div>' +
+      '<div class="ta-alt">' + a.aciklama + '</div>' +
+      '</div>' +
+      '<div class="ta-ikon bekliyor"></div>' +
+      '</div>';
+  }).join('');
+}
+
+// Log
+function log(mesaj, tip) {
+  tip = tip || 'bilgi';
+  var renkler = { bilgi:'#93c5fd', basari:'#86efac', hata:'#fca5a5', uyari:'#fde68a', ai:'#c4b5fd' };
+  var zaman = new Date().toLocaleTimeString('tr-TR');
+  var div = document.getElementById('test-log');
+  div.innerHTML += '<div style="color:' + (renkler[tip]||'#93c5fd') + ';margin-bottom:3px">' +
+    '<span style="color:rgba(255,255,255,.3)">[' + zaman + ']</span> ' + mesaj + '</div>';
+  div.scrollTop = div.scrollHeight;
+}
+
+// Tek adim calistir
+async function adimCalistir(adimNo) {
+  var adimEl = document.getElementById('adim-' + adimNo);
+  adimEl.classList.add('aktif');
+  var ikonEl = adimEl.querySelector('.ta-ikon');
+  ikonEl.className = 'ta-ikon calisiyor';
+
+  log('&#9654; Adim ' + adimNo + ' basliyor...', 'bilgi');
+
+  try {
+    var r = await fetch('/.netlify/functions/test-bot', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ adim: adimNo, kayitlar: testKayitlari })
+    });
+    var d = await r.json();
+
+    if (d.teklifId) testKayitlari.teklifId = d.teklifId;
+    if (d.musteriId) testKayitlari.musteriId = d.musteriId;
+    if (d.siparisId) testKayitlari.siparisId = d.siparisId;
+    if (d.stlId) testKayitlari.stlId = d.stlId;
+    if (d.malzemeId) testKayitlari.malzemeId = d.malzemeId;
+    if (d.ieId) testKayitlari.ieId = d.ieId;
+    if (d.ncrId) testKayitlari.ncrId = d.ncrId;
+    if (d.muayeneId) testKayitlari.muayeneId = d.muayeneId;
+    if (d.kalemId) testKayitlari.kalemId = d.kalemId;
+
+    if (d.kontrol) {
+      ikonEl.className = 'ta-ikon gecti';
+      adimEl.classList.remove('aktif');
+      adimEl.classList.add('gecti');
+      log('&#10003; ' + d.mesaj, 'basari');
+      if (d.as9100) log('  AS9100 ' + d.as9100, 'ai');
+    } else {
+      ikonEl.className = 'ta-ikon hata';
+      adimEl.classList.remove('aktif');
+      adimEl.classList.add('hata');
+      log('&#10007; HATA: ' + (d.mesaj || d.error || 'Bilinmeyen hata'), 'hata');
+    }
+
+    testSonuclari.push({ adim: adimNo, gecti: !!d.kontrol, mesaj: d.mesaj, as9100: d.as9100 });
+    return !!d.kontrol;
+
+  } catch (e) {
+    ikonEl.className = 'ta-ikon hata';
+    adimEl.classList.remove('aktif');
+    adimEl.classList.add('hata');
+    log('&#10007; Baglanti hatasi: ' + e.message, 'hata');
+    testSonuclari.push({ adim: adimNo, gecti: false, mesaj: e.message });
+    return false;
+  }
+}
+
+// Tum testi calistir
+async function testiBaslat() {
+  if (calisiyorMu) return;
+  calisiyorMu = true;
+  testKayitlari = {};
+  testSonuclari = [];
+
+  adimlariRender();
+  document.getElementById('test-log').innerHTML = '';
+  document.getElementById('sonuc-alani').style.display = 'none';
+
+  log('Ersan MES Uctan Uca Test Simulatoru basladi', 'bilgi');
+  log('━'.repeat(50), 'bilgi');
+
+  var baslangic = Date.now();
+  var gecenSayi = 0;
+
+  for (var i = 0; i < TEST_ADIMLARI.length; i++) {
+    var adim = TEST_ADIMLARI[i];
+    var yuzde = Math.round((i / TEST_ADIMLARI.length) * 100);
+    document.getElementById('ilerleme-ic').style.width = yuzde + '%';
+    document.getElementById('ilerleme-yazi').textContent = i + '/' + TEST_ADIMLARI.length + ' adim tamamlandi';
+
+    var gecti = await adimCalistir(adim.no);
+    if (gecti) gecenSayi++;
+
+    await new Promise(function(resolve) { setTimeout(resolve, 800); });
+  }
+
+  document.getElementById('ilerleme-ic').style.width = '100%';
+  document.getElementById('ilerleme-yazi').textContent = TEST_ADIMLARI.length + '/' + TEST_ADIMLARI.length + ' tamamlandi';
+
+  var sure = Math.round((Date.now() - baslangic) / 1000);
+
+  log('━'.repeat(50), 'bilgi');
+  log('Test tamamlandi: ' + gecenSayi + '/' + TEST_ADIMLARI.length + ' gecti', 'basari');
+  log('Toplam sure: ' + sure + ' saniye', 'bilgi');
+
+  sonuclariGoster(gecenSayi, sure);
+  await aiDegerlendirme(gecenSayi, sure);
+
+  calisiyorMu = false;
+}
+
+// Sonuclari goster
+function sonuclariGoster(gecen, sure) {
+  var hatali = TEST_ADIMLARI.length - gecen;
+  var uyum = Math.round((gecen / TEST_ADIMLARI.length) * 100);
+
+  document.getElementById('gecen-sayi').textContent = gecen;
+  document.getElementById('hatali-sayi').textContent = hatali;
+  document.getElementById('uyum-skoru').textContent = '%' + uyum;
+  document.getElementById('toplam-sure').textContent = sure + 'sn';
+
+  var as9100Maddeler = [
+    { madde:'8.2', aciklama:'Teklif ve siparis teyidi', adimlar:[1,2,3,4] },
+    { madde:'8.4', aciklama:'Disaridan tedarik kontrolu', adimlar:[5,6,7] },
+    { madde:'8.5', aciklama:'Uretim ve hizmet saglama', adimlar:[8,9] },
+    { madde:'8.6', aciklama:'Urun serbest birakma', adimlar:[12] },
+    { madde:'8.7', aciklama:'Uygun olmayan cikti kontrolu', adimlar:[10,11] },
+    { madde:'8.5.4', aciklama:'Teslimat kontrolu', adimlar:[13,14] },
+    { madde:'7.5', aciklama:'Dokumante bilgi', adimlar:[15] },
+  ];
+
+  var tbody = document.getElementById('uyum-tbody');
+  tbody.innerHTML = '';
+  for (var mi = 0; mi < as9100Maddeler.length; mi++) {
+    var m = as9100Maddeler[mi];
+    var adimSonuclari = m.adimlar.map(function(n) {
+      return testSonuclari.find(function(s) { return s.adim === n; });
+    }).filter(Boolean);
+    var hepsiGecti = adimSonuclari.every(function(s) { return s.gecti; });
+    var renk = hepsiGecti ? 'badge-yesil' : 'badge-kirmizi';
+    var metin = hepsiGecti ? 'Uyumlu' : 'Kontrol Et';
+
+    tbody.innerHTML += '<tr>' +
+      '<td class="td-mono">' + m.madde + '</td>' +
+      '<td>' + m.aciklama + '</td>' +
+      '<td><span class="badge ' + renk + '">' + metin + '</span></td>' +
+      '<td style="font-size:11px;color:var(--metin3)">Adim ' + m.adimlar.join(',') + ' test edildi</td>' +
+      '</tr>';
+  }
+
+  document.getElementById('sonuc-alani').style.display = 'block';
+}
+
+// AI degerlendirme
+async function aiDegerlendirme(gecen, sure) {
+  var toplam = TEST_ADIMLARI.length;
+  var uyum = Math.round((gecen / toplam) * 100);
+  var el = document.getElementById('ai-degerlendirme');
+  el.textContent = 'AI degerlendirme yukleniyor...';
+
+  try {
+    var r = await fetch('/.netlify/functions/claude', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{
+          role: 'user',
+          content: 'Ersan MES AS9100 uyum testi tamamlandi.\n' +
+            'Sonuclar: ' + gecen + '/' + toplam + ' adim gecti (%' + uyum + ' uyum)\n' +
+            'Test suresi: ' + sure + ' saniye\n' +
+            'Test adimlari: Teklif, Siparis, Satinalma, On Kabul, Girdi Kalite, Is Emri, Uretim, NCR, Final Muayene, Sevkiyat, Fatura.\n\n' +
+            'AS9100 ve ISO 9001 perspektifinden degerlendirme yap:\n' +
+            '1. Sistemin guclu yanlari (2-3 madde)\n' +
+            '2. Kritik iyilestirme alanlari (2-3 madde)\n' +
+            '3. Denetim hazirligi skoru (0-100)\n' +
+            '4. Bir sonraki sprint icin oneriler\n\n' +
+            'Turkce, is dili, somut, 150-200 kelime.'
+        }]
+      })
+    });
+    var d = await r.json();
+    var metin = (d.content && d.content[0] && d.content[0].text) ? d.content[0].text : 'AI yanit vermedi';
+    el.textContent = metin;
+  } catch (e) {
+    el.textContent = 'AI degerlendirme alinamadi: ' + e.message;
+  }
+}
+
+// Temizle
+async function testTemizle() {
+  if (!confirm('Tum TEST kayitlari Airtable\'dan silinecek. Emin misiniz?')) return;
+
+  log('Test kayitlari temizleniyor...', 'uyari');
+  try {
+    var r = await fetch('/.netlify/functions/test-bot', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ temizle: true })
+    });
+    var d = await r.json();
+    log('Temizlendi: ' + JSON.stringify(d.silinen), 'basari');
+  } catch (e) {
+    log('Temizleme hatasi: ' + e.message, 'hata');
+  }
+
+  adimlariRender();
+  testKayitlari = {};
+  testSonuclari = [];
+  document.getElementById('sonuc-alani').style.display = 'none';
+  document.getElementById('ilerleme-ic').style.width = '0%';
+  document.getElementById('ilerleme-yazi').textContent = '0/15 adim tamamlandi';
+}
+
+// Init
+document.addEventListener('DOMContentLoaded', adimlariRender);
+</script>
+</body>
+</html>
