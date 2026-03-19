@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — Ana Sayfa</title>
+<link rel="stylesheet" href="ersan_styles.css">
+<script src="ersan_nav.js" defer></script>
+<script src="ersan_log.js" defer></script>
+</head>
+<body>
+<div id="nav-alani"></div>
+<div class="icerik-alani">
+  <div class="topbar">
+    <div class="topbar-baslik">Ana Sayfa</div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:12px;color:var(--metin3)">Ersan Endustriyel Makine</span>
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
+    </div>
+  </div>
+  <div class="sayfa-icerik">
+
+    <!-- KPI SATIRI -->
+    <div class="kpi-grid" style="margin-bottom:16px">
+      <div class="kpi-kart">
+        <div class="kpi-etiket">Acik Teklif</div>
+        <div class="kpi-deger" id="kpi-teklif">&mdash;</div>
+        <div class="kpi-alt">bekleyen onay</div>
+      </div>
+      <div class="kpi-kart yesil">
+        <div class="kpi-etiket">Aktif Siparis</div>
+        <div class="kpi-deger" id="kpi-siparis">&mdash;</div>
+        <div class="kpi-alt">uretimde</div>
+      </div>
+      <div class="kpi-kart sari">
+        <div class="kpi-etiket">Is Emri</div>
+        <div class="kpi-deger" id="kpi-isemri">&mdash;</div>
+        <div class="kpi-alt">acik</div>
+      </div>
+      <div class="kpi-kart sari">
+        <div class="kpi-etiket">Bekleyen Satinalma</div>
+        <div class="kpi-deger" id="kpi-satinalma">&mdash;</div>
+        <div class="kpi-alt">onay bekliyor</div>
+      </div>
+      <div class="kpi-kart kirmizi">
+        <div class="kpi-etiket">Acik NCR</div>
+        <div class="kpi-deger" id="kpi-ncr">&mdash;</div>
+        <div class="kpi-alt">inceleme gerekiyor</div>
+      </div>
+      <div class="kpi-kart">
+        <div class="kpi-etiket">Karantina Malzeme</div>
+        <div class="kpi-deger" id="kpi-karantina">&mdash;</div>
+        <div class="kpi-alt">bekleyen muayene</div>
+      </div>
+    </div>
+
+    <!-- SATIS & URETIM AKISI -->
+    <div style="font-size:12px;font-weight:600;color:var(--laci);margin-bottom:10px">Satis &amp; Uretim Akisi</div>
+    <div id="grup-satis" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-bottom:20px"></div>
+
+    <!-- KALITE & UYGUNLUK -->
+    <div style="font-size:12px;font-weight:600;color:var(--laci);margin-bottom:10px">Kalite &amp; Uygunluk</div>
+    <div id="grup-kalite" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-bottom:20px"></div>
+
+    <!-- DESTEK SURECLERI -->
+    <div style="font-size:12px;font-weight:600;color:var(--laci);margin-bottom:10px">Destek Surecleri</div>
+    <div id="grup-destek" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-bottom:20px"></div>
+
+  </div>
+</div>
+
+<script>
+// ── MODUL KARTLARI ──
+function modulKart(ikon, baslik, aciklama, standart, renk, url) {
+  return '<a href="' + url + '" style="text-decoration:none">' +
+    '<div class="kart" style="cursor:pointer;transition:box-shadow .15s,transform .1s;border-top:3px solid ' + renk + ';" ' +
+    'onmouseover="this.style.boxShadow=\'0 4px 12px rgba(0,0,0,.1)\';this.style.transform=\'translateY(-2px)\'" ' +
+    'onmouseout="this.style.boxShadow=\'\';this.style.transform=\'\'">' +
+    '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">' +
+    '<div style="width:32px;height:32px;border-radius:8px;background:' + renk + '22;display:flex;align-items:center;justify-content:center;font-size:16px">' + ikon + '</div>' +
+    '<div>' +
+    '<div style="font-size:12px;font-weight:700;color:var(--laci)">' + baslik + '</div>' +
+    '<div style="font-size:10px;color:var(--metin3)">' + standart + '</div>' +
+    '</div>' +
+    '<div style="margin-left:auto"><span class="badge badge-yesil" style="font-size:9px">Aktif</span></div>' +
+    '</div>' +
+    '<div style="font-size:11px;color:var(--metin3);line-height:1.4">' + aciklama + '</div>' +
+    '</div></a>';
+}
+
+var satis = [
+  { ikon:'&#128203;', baslik:'Teklif Yonetimi', aciklama:'Teknik resim bazli AI maliyet hesaplama, teklif olusturma, PDF gonderme', standart:'AS9100 \u00A78.2', renk:'#378ADD', url:'ersan_teklif.html' },
+  { ikon:'&#128230;', baslik:'Siparis Yonetimi', aciklama:'Onaylanan tekliften siparis, SP gruplama, PDF viewer, teknik resim', standart:'AS9100 \u00A78.2', renk:'#378ADD', url:'ersan_siparisler.html' },
+  { ikon:'&#128722;', baslik:'Satinalma', aciklama:'AI muzakere paketi, RFQ, tedarikci teklif karsilastirma', standart:'AS9100 \u00A78.4', renk:'#BA7517', url:'ersan_satinalma.html' },
+  { ikon:'&#128229;', baslik:'On Kabul', aciklama:'Malzeme on kabul formu, tedarikci satinalma siparis eslestirme', standart:'AS9100 \u00A78.4', renk:'#BA7517', url:'ersan_on_kabul.html' },
+  { ikon:'&#128300;', baslik:'Girdi Kalite', aciklama:'Malzeme muayenesi, MAT ID, QR etiket, kabul/red karari', standart:'AS9100 \u00A78.4', renk:'#BA7517', url:'ersan_girdi_kalite.html' },
+  { ikon:'&#9881;', baslik:'Is Emirleri', aciklama:'WO olusturma, lot numarasi, traveler, operasyon rotasi, tezgah atama', standart:'AS9100 \u00A78.5', renk:'#7c3aed', url:'ersan_isemirleri.html' },
+  { ikon:'&#128202;', baslik:'Uretim / Atolye', aciklama:'Operasyon rotasi, traveller takibi, QR tarama, tezgah durumu', standart:'AS9100 \u00A78.5', renk:'#7c3aed', url:'ersan_uretim.html' },
+  { ikon:'&#128666;', baslik:'Sevkiyat', aciklama:'8 madde sevk kontrol, CoC olusturma, irsaliye, kalite onay', standart:'AS9100 \u00A78.5.4', renk:'#1D9E75', url:'ersan_sevkiyat.html' }
+];
+
+var kalite = [
+  { ikon:'&#9989;', baslik:'Kalite Kontrol', aciklama:'Girdi kalite, uretim muayenesi, NCR, CAPA hub sayfasi', standart:'AS9100 \u00A78.6', renk:'#1D9E75', url:'ersan_kalite.html' },
+  { ikon:'&#9888;', baslik:'NCR Yonetimi', aciklama:'Uygunsuzluk raporu, AI kok neden, iskarta/yeniden isle/sapma karari', standart:'AS9100 \u00A78.7', renk:'#E24B4A', url:'ersan_ncr.html' },
+  { ikon:'&#128260;', baslik:'CAPA', aciklama:'Duzeltici faaliyet, 5-Why, AI analizi, onleyici aksiyon, kapanis', standart:'AS9100 \u00A710.2', renk:'#E24B4A', url:'ersan_duzeltici.html' },
+  { ikon:'&#128203;', baslik:'Ic Denetim', aciklama:'Denetim plani, AI kontrol listesi, bulgu kaydi, kapanis takibi', standart:'AS9100 \u00A79.2', renk:'#0F6E56', url:'ersan_denetim.html' }
+];
+
+var destek = [
+  { ikon:'&#128101;', baslik:'Musteri Yonetimi', aciklama:'Musteri bilgileri, siparis gecmisi, sikayet, AI 8D raporu', standart:'AS9100 \u00A78.5.5', renk:'#64748b', url:'ersan_musteri.html' },
+  { ikon:'&#128295;', baslik:'Ekipman & Bakim', aciklama:'Bakim takvimi, ariza kaydi, kalibrasyon, MTBF/MTTR', standart:'AS9100 \u00A77.1.3', renk:'#64748b', url:'ersan_bakim.html' },
+  { ikon:'&#128100;', baslik:'Personel', aciklama:'Yetkinlik matrisi, egitim takibi, performans degerlendirme', standart:'AS9100 \u00A77.2', renk:'#64748b', url:'ersan_personel.html' },
+  { ikon:'&#9888;', baslik:'Risk Yonetimi', aciklama:'Risk tanimlama, degerlendirme, onlem, AI risk analizi', standart:'AS9100 \u00A76.1', renk:'#64748b', url:'ersan_risk.html' },
+  { ikon:'&#129466;', baslik:'ISG', aciklama:'Tehlike kaydi, olay bildirimi, guvenlik takibi', standart:'ISO 45001', renk:'#64748b', url:'ersan_isg.html' },
+  { ikon:'&#128196;', baslik:'Dokuman', aciklama:'Prosedur, talimat, form yonetimi, revizyon kontrolu', standart:'AS9100 \u00A77.5', renk:'#64748b', url:'ersan_dokuman.html' }
+];
+
+function renderGrup(containerId, moduller) {
+  var el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = moduller.map(function(m) {
+    return modulKart(m.ikon, m.baslik, m.aciklama, m.standart, m.renk, m.url);
+  }).join('');
+}
+
+// ── API ──
+async function apiGet(tablo, filtre) {
+  var url = '/.netlify/functions/airtable?table=' + encodeURIComponent(tablo);
+  if (filtre) url += '&filterByFormula=' + encodeURIComponent(filtre);
+  url += '&pageSize=100';
+  var res = await fetch(url);
+  if (!res.ok) return [];
+  var data = await res.json();
+  return data.records || [];
+}
+
+// ── KPI YUKLE ──
+async function kpiYukle() {
+  try {
+    var teklifler = await apiGet('Teklifler', "NOT(OR({Durum}='Onaylandı',{Durum}='Reddedildi'))");
+    document.getElementById('kpi-teklif').textContent = teklifler.length;
+
+    var siparisler = await apiGet('Satış Emirleri', "NOT({Durum}='Tamamlandı')");
+    document.getElementById('kpi-siparis').textContent = siparisler.length;
+
+    var isEmirleri = await apiGet('İş Emirleri', "NOT({Durum}='Tamamlandı')");
+    document.getElementById('kpi-isemri').textContent = isEmirleri.length;
+
+    var satinalma = await apiGet('Satınalma Talepleri', "{Durum}='Taslak'");
+    document.getElementById('kpi-satinalma').textContent = satinalma.length;
+
+    var ncr = await apiGet('NCR Kayıtları', "NOT({Durum}='Kapatıldı')");
+    document.getElementById('kpi-ncr').textContent = ncr.length;
+
+    var karantina = await apiGet('Malzeme Girişleri', "{Durum}='Karantinada'");
+    document.getElementById('kpi-karantina').textContent = karantina.length;
+  } catch(e) {
+    // KPI yuklenemedi, varsayilan degerler kalir
+  }
+}
+
+// ── INIT ──
+document.addEventListener('DOMContentLoaded', function() {
+  renderGrup('grup-satis', satis);
+  renderGrup('grup-kalite', kalite);
+  renderGrup('grup-destek', destek);
+  kpiYukle();
+});
+</script>
+</body>
+</html>

@@ -52,7 +52,7 @@ const NAV_GRUPLARI = [
 function navOlustur() {
   var aktifUrl = window.location.pathname.split('/').pop() || 'index.html';
   var html = '<div class="sidebar">'
-    + '<a href="index.html" style="text-decoration:none">'
+    + '<a href="ersan_anasayfa.html" style="text-decoration:none">'
     + '<div class="sidebar-logo">'
     + '<div class="sidebar-logo-text">Ersan MES</div>'
     + '<div class="sidebar-logo-sub">AS9100 \u00B7 \u00DCretim Y\u00F6netimi</div>'
