@@ -153,7 +153,7 @@ function renderSEList() {
     const f = r.fields;
     const durum = f['Durum']||'Beklemede';
     const musteriAd = getMusteriAd(f['Müşteri']?.[0]);
-    return `<div class="se-item${r.id===activeId?' active':''}" onclick="loadDetail('${r.id}')">
+    return `<div class="liste-satir se-item${r.id===activeId?' secili':''}" onclick="loadDetail('${r.id}')">
       <div class="se-top">
         <span class="se-no">${f['SE No']||'—'}</span>
         <span class="badge b-${durum}">${durum}</span>

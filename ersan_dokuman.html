@@ -181,7 +181,7 @@ function renderList() {
     const reviewOverdue = isReviewOverdue(f['Sonraki Gözden Geçirme']);
     const statuCls = statu === 'Aktif' ? 'b-Aktif' : statu === 'Revize' ? 'b-Revize' : 'b-Arşiv';
     const tipCls = 'b-' + (tip || '').replace(/\s+/g,'');
-    return `<div class="dok-item${isActive?' active':''}" onclick="selectDok('${r.id}')">
+    return `<div class="liste-satir dok-item${isActive?' secili':''}" onclick="selectDok('${r.id}')">
       ${reviewSoon || reviewOverdue ? `<div class="alert-icon" title="${reviewOverdue?'Gecikmiş':'30 gün içinde'}">!</div>` : ''}
       <div class="dok-no">${f['Doküman No'] || '—'}</div>
       <div class="dok-baslik">${f['Başlık'] || '—'}</div>

@@ -239,7 +239,7 @@ function renderList() {
       ${records.map(r => {
         const f = r.fields;
         const durum = f['Durum']||'Taslak';
-        return `<div class="stl-item${r.id===activeId?' active':''}" onclick="showDetail('${r.id}')">
+        return `<div class="liste-satir${r.id===activeId?' secili':''}" onclick="showDetail('${r.id}')">
           <div style="display:flex;justify-content:space-between;align-items:center;">
             <span class="badge b-${f['Talep Tipi']||'Hammadde'}" style="font-size:9px;">${f['Talep Tipi']||'—'}</span>
             <span class="badge b-${durum}" style="font-size:9px;">${durum}</span>

@@ -141,7 +141,7 @@ function renderList(list) {
     const f = r.fields;
     const aktif = f['Aktif mi?'] === true;
     const gorev = f['Görevi'] || '';
-    return `<div class="p-item${r.id===selectedId?' active':''}" onclick="selectPersonel('${r.id}')">
+    return `<div class="liste-satir${r.id===selectedId?' secili':''}" onclick="selectPersonel('${r.id}')">
       <div class="p-name">${esc(f['Ad Soyad'] || '—')}</div>
       ${gorev ? `<div class="p-gorev">${esc(gorev)}</div>` : ''}
       <div class="p-badges">

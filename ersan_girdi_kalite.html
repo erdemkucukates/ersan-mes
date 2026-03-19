@@ -238,7 +238,7 @@ function renderList() {
     const isActive = currentRec && currentRec.id === r.id;
     const tdName = getTedarikciName(r);
     const irsaliye = getIrsaliye(r);
-    return `<div class="gk-item${isActive?' active':''}" onclick="openRec('${r.id}')">
+    return `<div class="liste-satir${isActive?' secili':''}" onclick="openRec('${r.id}')">
       <div class="gk-mat">${escHtml(matNo)}</div>
       <div class="gk-malzeme">${escHtml(f['Malzeme Adı']||'—')}${tdName?' · '+escHtml(tdName):''}</div>
       <div class="gk-tedarikci">${escHtml(irsaliye)}</div>

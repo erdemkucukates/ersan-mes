@@ -191,8 +191,8 @@ function renderList() {
     const f = r.fields;
     const sd = sevkDurumu(f);
     const badgeCls = 'b-sevk-' + sd;
-    const isActive = r.id === selectedId ? ' active' : '';
-    return `<div class="ie-item${isActive}" onclick="selectIE('${r.id}')">
+    const isActive = r.id === selectedId ? ' secili' : '';
+    return `<div class="liste-satir ie-item${isActive}" onclick="selectIE('${r.id}')">
       <div class="ie-no">${escHtml(f['IE No']||'—')}</div>
       <div class="ie-parca">${escHtml(f['Parça Adı']||'—')}</div>
       <div class="ie-meta">

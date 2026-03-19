@@ -187,9 +187,9 @@ function renderList() {
     const durum = f['Durum'] || 'Taslak';
     const tarih = fmtDate(f['Teklif Tarihi']);
     const tutar = f['Toplam Tutar'] ? fmt(f['Toplam Tutar']) + ' ' + (f['Para Birimi']||'TL') : '—';
-    const active = q.id === activeId ? ' active' : '';
+    const active = q.id === activeId ? ' secili' : '';
 
-    return `<div class="quote-item${active}" onclick="loadDetail('${q.id}')">
+    return `<div class="liste-satir${active}" onclick="loadDetail('${q.id}')">
       <div class="qi-top">
         <span class="qi-no">${no}</span>
         <span class="qi-status ${statusColors[durum]||'status-Taslak'}">${durum}</span>
@@ -1159,7 +1159,7 @@ function renderSiparisList() {
     const f = s.fields;
     const durum = f['Durum'] || 'Beklemede';
     const durumClass = durum === 'Tamamlandı' ? 'status-Onaylandı' : durum === 'İptal' ? 'status-Reddedildi' : durum === 'Üretimde' ? 'status-Gönderildi' : 'status-Taslak';
-    return `<div class="quote-item" onclick="showSiparisDetail('${s.id}')">
+    return `<div class="liste-satir" onclick="showSiparisDetail('${s.id}')">
       <div class="qi-top">
         <span class="qi-no">${f['SE No']||'—'}</span>
         <span class="qi-status ${durumClass}">${durum}</span>

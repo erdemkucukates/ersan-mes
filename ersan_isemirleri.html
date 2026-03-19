@@ -223,8 +223,8 @@ function renderList() {
     const f = wo.fields;
     const durum = f['Durum'] || 'Taslak';
     const oncelik = f['Öncelik'] || 'Normal';
-    const active = wo.id === activeWOId ? ' active' : '';
-    return `<div class="wo-item${active} p-${oncelik}" onclick="loadDetail('${wo.id}')">
+    const active = wo.id === activeWOId ? ' secili' : '';
+    return `<div class="liste-satir${active} p-${oncelik}" onclick="loadDetail('${wo.id}')">
       <div class="wo-top">
         <div>
           <div class="wo-no">${f['IE No']||'—'}</div>

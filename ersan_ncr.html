@@ -184,7 +184,7 @@ function renderList() {
     const ieRec = ieId ? ieList.find(x => x.id === ieId) : null;
     const ieLabel = ieRec ? (ieRec.fields['İş Emri No'] || ieRec.fields['Parça Adı'] || '—') : '—';
     const isActive = selectedNCR && selectedNCR.id === r.id;
-    return `<div class="ncr-item${isActive?' active':''}" onclick="selectNCR('${r.id}')">
+    return `<div class="liste-satir${isActive?' secili':''}" onclick="selectNCR('${r.id}')">
       <div class="ncr-no">${f['NCR No'] || '—'}</div>
       <div class="ncr-ie">${ieLabel}</div>
       <div class="ncr-meta">

@@ -88,14 +88,14 @@ body {
 .list-scroll::-webkit-scrollbar { width: 4px; }
 .list-scroll::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
 
-.musteri-item {
+.liste-satir {
   padding: 10px 14px;
   border-bottom: 1px solid var(--border);
   cursor: pointer;
   transition: background .12s;
 }
-.musteri-item:hover { background: var(--surface2); }
-.musteri-item.active { background: var(--accent-light); border-left: 3px solid var(--accent); }
+.liste-satir:hover { background: var(--surface2); }
+.liste-satir.secili { background: var(--accent-light); border-left: 3px solid var(--accent); }
 .mi-name { font-size: 12px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .mi-bottom { display: flex; justify-content: space-between; align-items: center; margin-top: 4px; }
 .mi-kod { font-size: 10px; font-family: var(--mono); color: var(--text3); }
@@ -710,8 +710,8 @@ function renderList() {
     const aktif = m['Aktif mi?'];
     const kod = m['Müşteri Kodu'] || '—';
     const ad = m['Müşteri Adı'] || '(isimsiz)';
-    const isActive = selectedMusteri && selectedMusteri.id === m.id ? ' active' : '';
-    return '<div class="musteri-item' + isActive + '" onclick="selectMusteri(\'' + m.id + '\')">'
+    const isActive = selectedMusteri && selectedMusteri.id === m.id ? ' secili' : '';
+    return '<div class="liste-satir' + isActive + '" onclick="selectMusteri(\'' + m.id + '\')">'
       + '<div class="mi-name">' + ad + '</div>'
       + '<div class="mi-bottom">'
       + '<span class="mi-kod">' + kod + '</span>'

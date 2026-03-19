@@ -211,7 +211,7 @@ function renderList() {
     const irsaliye = getIrsaliye(r);
     const statu = f['Statü']||'';
     const isActive = currentRec && currentRec.id === r.id;
-    return `<div class="ok-item${isActive?' active':''}" onclick="openRec('${r.id}')">
+    return `<div class="liste-satir ok-item${isActive?' secili':''}" onclick="openRec('${r.id}')">
       <div class="ok-irsaliye">${irsaliye}</div>
       <div class="ok-malzeme">${f['Malzeme Adı']||'—'}</div>
       <div class="ok-tedarikci">${getTedarikciName(r)||'—'}</div>

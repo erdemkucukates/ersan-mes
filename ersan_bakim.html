@@ -289,7 +289,7 @@ function renderList(records) {
     const urgentClass = (days !== null && days <= 7) ? 'urgent' : '';
     const sonrakiTxt = sonraki ? fmtDate(sonraki) : '—';
     const isActive = currentRec && currentRec.id === r.id;
-    return `<div class="eq-item${isActive?' active':''}" data-id="${r.id}" onclick="selectTezgah('${r.id}')">
+    return `<div class="liste-satir${isActive?' secili':''}" data-id="${r.id}" onclick="selectTezgah('${r.id}')">
       <div class="eq-name">${escHtml(f['Tezgah Adı'] || '—')}</div>
       <div class="eq-code">${escHtml(f['Tezgah Kodu'] || '')}</div>
       <div class="eq-row">
