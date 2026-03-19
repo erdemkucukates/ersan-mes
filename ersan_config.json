@@ -1,0 +1,41 @@
+{
+  "versiyon": "2.0",
+  "son_guncelleme": "2026-03-19",
+  "netlify_url": "https://ersan-mes.netlify.app",
+  "airtable_base": "app5LDgJMgocw79Ix",
+  "tablolar": {
+    "musteriler":         "tblPxhjJDEx0fyUQx",
+    "tedarikciler":       "tblEI6683Im5AXj36",
+    "personel":           "tblwG9GqnLC9oFZzb",
+    "tezgahlar":          "tblsBXDsWACBAFEJ5",
+    "teklifler":          "tblBvcPQjPDdg6N52",
+    "teklifKalemleri":    "tblqRGCv8yu6zQXZ4",
+    "satisEmirleri":      "tbl56Oj1nPaqefI60",
+    "isEmirleri":         "tbl58qL39I2tv8hK4",
+    "operasyonRotalari":  "tblVECelTUG33EYm8",
+    "traveller":          "tbljfjpefe5Z03S0a",
+    "malzemeGirisleri":   "tblSj5Ep6F9Ir1NGu",
+    "lotlar":             "tbljPBwL1AvdwWeOD",
+    "satinalmaTalepleri": "tblHmfCvNZq0qNtb1",
+    "muzakereKayitlari":  "tbl7Odd0ZZnEZ8PRP",
+    "muayeneKayitlari":   "tblm47qZunWAsfufH",
+    "ncrKayitlari":       "tblreW3hJTIxwXb0K",
+    "musteriSikayetleri": "tblGHxxrRAsZQwqw6",
+    "icDenetim":          "tblchEyZnXKmAnWaJ",
+    "capa":               "tblJJCsiAH5ocpL77",
+    "riskKayitlari":      "tblQrteUTQJLu7111",
+    "isgKayitlari":       "tblZm2cN0VMandmz2",
+    "dokumanlar":         "tbllMoEseZZUtbBOb",
+    "sistemLogu":         "tbl1CFFVwBoP9cELA",
+    "lokasyonlar":        "tbltaEVWPLUwutn9D",
+    "aiOgrenme":          "tblaIWnf5pFh5oX2r",
+    "systemConfig":       "tbl1buK6696eY324j"
+  },
+  "netlify_functions": {
+    "airtable":   "/.netlify/functions/airtable",
+    "claude":     "/.netlify/functions/claude",
+    "upload":     "/.netlify/functions/upload-pdf",
+    "log":        "/.netlify/functions/log"
+  },
+  "bilinen_hatalar": []
+}
