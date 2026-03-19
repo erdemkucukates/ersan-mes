@@ -6,8 +6,18 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'FILE=\"$CLAUDE_FILE_PATH\"; if [[ \"$FILE\" == *.html ]]; then node --check \"$FILE\" 2>&1 || echo \"SYNTAX ERROR: $FILE dosyasında syntax hatası var!\"; fi'",
-            "description": "HTML dosyası değiştirilince node --check ile syntax kontrolü"
+            "command": "bash -c 'FILE=\"$CLAUDE_FILE_PATH\"; if [[ \"$FILE\" == *.html || \"$FILE\" == *.js ]]; then node --check \"$FILE\" 2>&1 && echo \"✓ Syntax OK: $FILE\" || echo \"✗ SYNTAX HATASI: $FILE — CLAUDE.md Öğrenilen Dersler bölümüne kaydet!\"; fi'",
+            "description": "Syntax kontrol + hata uyarısı"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'echo \"$CLAUDE_TOOL_INPUT\" | grep -q \"git push\" && echo \"✓ Push tamamlandı — CLAUDE.md Bu Oturumda Yapılanlar bölümünü güncelle\" || true'",
+            "description": "Push sonrası CLAUDE.md güncelleme hatırlatıcısı"
           }
         ]
       }
@@ -18,11 +28,37 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'FILE=\"$CLAUDE_FILE_PATH\"; if [[ \"$FILE\" == *.env* ]] || [[ \"$FILE\" == *token* ]] || [[ \"$FILE\" == *credential* ]] || [[ \"$FILE\" == *secret* ]]; then echo \"ENGELLENDI: $FILE hassas dosya — düzenleme izni yok\" && exit 2; fi'",
-            "description": ".env veya token iceren dosyalara dokunmayi engelle"
+            "command": "bash -c 'FILE=\"$CLAUDE_FILE_PATH\"; if [[ \"$FILE\" == *.env* || \"$FILE\" == *token* || \"$FILE\" == *secret* || \"$FILE\" == *password* ]]; then echo \"ENGELLENDI: $FILE hassas dosya\" && exit 2; fi'",
+            "description": "Hassas dosya koruması"
+          },
+          {
+            "type": "command",
+            "command": "bash -c 'FILE=\"$CLAUDE_FILE_PATH\"; if [[ -f \"$FILE\" ]]; then SATIR=$(wc -l < \"$FILE\" 2>/dev/null || echo 0); if [ \"$SATIR\" -gt 500 ]; then echo \"⚠ UYARI: $FILE dosyası $SATIR satır — büyük değişikliklerde parçalara böl\"; fi; fi'",
+            "description": "Büyük dosya uyarısı"
           }
         ]
       }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git pull:*)",
+      "Bash(git log:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git tag:*)",
+      "Bash(node --check:*)",
+      "Bash(npm install:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(wc:*)",
+      "Bash(echo:*)",
+      "Bash(mkdir:*)",
+      "Bash(cp:*)",
+      "Bash(mv:*)"
     ]
   }
 }
