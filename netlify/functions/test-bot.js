@@ -91,13 +91,13 @@ exports.handler = async (event) => {
     };
 
     await temizleTablosu('Teklifler', T.teklifler, 'Teklif Notu');
-    await temizleTablosu('Teklif Kalemleri', T.teklifKalem, 'Notlar');
-    await temizleTablosu('Satis Emirleri', T.satisEmirleri, 'Notlar');
-    await temizleTablosu('Is Emirleri', T.isEmirleri, 'Notlar');
-    await temizleTablosu('Satinalma', T.satinalma, 'Notlar');
-    await temizleTablosu('Malzeme', T.malzeme, 'Notlar');
-    await temizleTablosu('NCR', T.ncr, 'Notlar');
-    await temizleTablosu('Muayene', T.muayene, 'Notlar');
+    await temizleTablosu('Teklif Kalemleri', T.teklifKalem, 'Par\u00E7a Ad\u0131');
+    await temizleTablosu('Satis Emirleri', T.satisEmirleri, 'Par\u00E7a Ad\u0131');
+    await temizleTablosu('Is Emirleri', T.isEmirleri, 'Par\u00E7a Ad\u0131');
+    await temizleTablosu('Satinalma', T.satinalma, 'Kalem Ad\u0131');
+    await temizleTablosu('Malzeme', T.malzeme, 'Malzeme Ad\u0131');
+    await temizleTablosu('NCR', T.ncr, 'A\u00E7\u0131klama');
+    await temizleTablosu('Muayene', T.muayene, 'Sonu\u00E7');
 
     // Test musterisini sil
     try {
@@ -179,7 +179,6 @@ exports.handler = async (event) => {
           'Miktar': 15,
           'Birim': 'Adet',
           'Durum': 'Taslak',
-          'Notlar': 'TEST - Simulasyon satinalma talebi',
         });
         sonuc = { stlId: stl.id, mesaj: 'Satinalma talebi olusturuldu', kontrol: true, as9100: '\u00A78.4.1 \u2014 Tedarikci secim sureci basladi' };
         break;
@@ -188,9 +187,11 @@ exports.handler = async (event) => {
       // ADIM 6 — Malzeme geldi, on kabul
       case 6: {
         const mal = await atCreate(T.malzeme, {
-          'Miktar': 15,
+          'Malzeme Ad\u0131': 'TEST 1040 Celik Cubuk',
+          'Toplam Miktar': 15,
           'Birim': 'Adet',
-          'Notlar': 'TEST - Simulasyon malzeme girisi, karantinada',
+          'Stat\u00FC': 'Karantina',
+          'Giri\u015F Tarihi': BUGUN,
         });
         sonuc = { malzemeId: mal.id, mesaj: 'Malzeme karantinaya alindi', kontrol: true, as9100: '\u00A78.4.3 \u2014 Gelen urun dogrulama basladi' };
         break;
@@ -201,7 +202,8 @@ exports.handler = async (event) => {
         const matNo = 'MAT-' + new Date().getFullYear() + '-' + String(Math.floor(Math.random() * 9000) + 1000);
         if (kayitlar.malzemeId) {
           await atUpdate(T.malzeme, kayitlar.malzemeId, {
-            'Notlar': 'TEST - Muayene gecti. MAT ID: ' + matNo + '. Serbest birakildi.',
+            'Stat\u00FC': 'Serbest',
+            'Malzeme ID': matNo,
           });
         }
         sonuc = { matNo, mesaj: 'Malzeme kabul edildi. MAT ID: ' + matNo, kontrol: true, as9100: '\u00A78.4.3 \u2014 Gelen urun muayenesi tamamlandi' };
@@ -218,7 +220,7 @@ exports.handler = async (event) => {
           'Birim': 'Adet',
           'Durum': 'Taslak',
           'A\u00E7\u0131l\u0131\u015F Tarihi': BUGUN,
-          'Notlar': 'TEST - Simulasyon is emri',
+          '\u00D6ncelik': 'Normal',
         });
         sonuc = { ieId: ie.id, mesaj: 'Is emri acildi: ' + ie.id, kontrol: true, as9100: '\u00A78.5.1 \u2014 Uretim kontrolu' };
         break;
@@ -236,8 +238,9 @@ exports.handler = async (event) => {
       // ADIM 10 — NCR ac (kasitli)
       case 10: {
         const ncr = await atCreate(T.ncr, {
-          'Durum': 'A\u00E7\u0131k',
-          'Notlar': 'TEST NCR - Boyut sapmasi tespit edildi. Kasitli test.',
+          'Stat\u00FC': 'A\u00E7\u0131k',
+          'A\u00E7\u0131klama': 'TEST NCR - Boyut sapmasi tespit edildi. Kasitli test.',
+          'A\u00E7\u0131l\u0131\u015F Tarihi': BUGUN,
         });
         sonuc = { ncrId: ncr.id, mesaj: 'Test NCR acildi (kasitli boyut hatasi)', kontrol: true, uyari: true, as9100: '\u00A78.7 \u2014 Uygun olmayan ciktilarin kontrolu' };
         break;
@@ -247,8 +250,9 @@ exports.handler = async (event) => {
       case 11: {
         if (kayitlar.ncrId) {
           await atUpdate(T.ncr, kayitlar.ncrId, {
-            'Durum': 'Kapat\u0131ld\u0131',
-            'Notlar': 'TEST NCR - Kapatildi, yeniden isleme yapildi. Duzeltici aksiyon tamamlandi.',
+            'Stat\u00FC': 'Kapal\u0131',
+            'A\u00E7\u0131klama': 'TEST NCR - Kapatildi, yeniden isleme yapildi. Duzeltici aksiyon tamamlandi.',
+            'K\u00F6k Neden': 'TEST - Takim asinmasi',
           });
         }
         sonuc = { mesaj: 'NCR kapatildi — Yeniden isleme yapildi', kontrol: true, as9100: '\u00A78.7 + \u00A710.2 \u2014 NCR kapatma ve duzeltici faaliyet' };
@@ -258,7 +262,7 @@ exports.handler = async (event) => {
       // ADIM 12 — Final muayene
       case 12: {
         const muayene = await atCreate(T.muayene, {
-          'Notlar': 'TEST - Final muayene OK. 10/10 parca tolerans dahilinde.',
+          'Sonu\u00E7': 'Ge\u00E7ti',
         });
         sonuc = { muayeneId: muayene.id, mesaj: 'Final muayene gecti — 10/10 parca OK', kontrol: true, as9100: '\u00A78.6 \u2014 Urun serbest birakma' };
         break;
