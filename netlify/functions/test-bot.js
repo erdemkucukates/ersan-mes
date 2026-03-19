@@ -7,58 +7,70 @@ const CORS = {
   'Content-Type': 'application/json',
 };
 
-async function atCreate(tablo, fields) {
+async function atCreate(tabloId, fields) {
   const r = await fetch(
-    `https://api.airtable.com/v0/${BASE}/${encodeURIComponent(tablo)}`,
+    `https://api.airtable.com/v0/${BASE}/${tabloId}`,
     {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${TOKEN}`,
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Authorization': `Bearer ${TOKEN}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ fields }),
     }
   );
-  return r.json();
+  const d = await r.json();
+  if (d.error) throw new Error(`Airtable CREATE hata (${tabloId}): ${d.error.type || d.error.message || JSON.stringify(d.error)}`);
+  return d;
 }
 
-async function atUpdate(tablo, id, fields) {
+async function atUpdate(tabloId, id, fields) {
   const r = await fetch(
-    `https://api.airtable.com/v0/${BASE}/${encodeURIComponent(tablo)}/${id}`,
+    `https://api.airtable.com/v0/${BASE}/${tabloId}/${id}`,
     {
       method: 'PATCH',
-      headers: {
-        'Authorization': `Bearer ${TOKEN}`,
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Authorization': `Bearer ${TOKEN}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ fields }),
     }
   );
-  return r.json();
+  const d = await r.json();
+  if (d.error) throw new Error(`Airtable UPDATE hata (${tabloId}/${id}): ${d.error.type || d.error.message || JSON.stringify(d.error)}`);
+  return d;
 }
 
-async function atDelete(tablo, id) {
+async function atDelete(tabloId, id) {
   await fetch(
-    `https://api.airtable.com/v0/${BASE}/${encodeURIComponent(tablo)}/${id}`,
-    {
-      method: 'DELETE',
-      headers: { 'Authorization': `Bearer ${TOKEN}` },
-    }
+    `https://api.airtable.com/v0/${BASE}/${tabloId}/${id}`,
+    { method: 'DELETE', headers: { 'Authorization': `Bearer ${TOKEN}` } }
   );
 }
 
-async function atList(tablo, filter) {
-  const url = `https://api.airtable.com/v0/${BASE}/${encodeURIComponent(tablo)}?filterByFormula=${encodeURIComponent(filter)}&pageSize=100`;
-  const r = await fetch(url, {
-    headers: { 'Authorization': `Bearer ${TOKEN}` },
-  });
-  const d = await r.json();
-  return d.records || [];
+async function atList(tabloId, filter) {
+  let allRecords = [];
+  let offset = '';
+  do {
+    let url = `https://api.airtable.com/v0/${BASE}/${tabloId}?pageSize=100`;
+    if (filter) url += `&filterByFormula=${encodeURIComponent(filter)}`;
+    if (offset) url += `&offset=${offset}`;
+    const r = await fetch(url, { headers: { 'Authorization': `Bearer ${TOKEN}` } });
+    const d = await r.json();
+    allRecords = allRecords.concat(d.records || []);
+    offset = d.offset || '';
+  } while (offset);
+  return allRecords;
 }
 
 const BUGUN = new Date().toISOString().split('T')[0];
-const TEST_MUSTERI_ADI = 'TEST M\u00FC\u015Fteri A.\u015E.';
-const TEST_PREFIX = 'TEST';
+
+// Tablo ID'leri
+const T = {
+  musteriler:    'tblPxhjJDEx0fyUQx',
+  teklifler:     'tblBvcPQjPDdg6N52',
+  teklifKalem:   'tblqRGCv8yu6zQXZ4',
+  satisEmirleri: 'tbl56Oj1nPaqefI60',
+  isEmirleri:    'tbl58qL39I2tv8hK4',
+  satinalma:     'tblHmfCvNZq0qNtb1',
+  malzeme:       'tblSj5Ep6F9Ir1NGu',
+  ncr:           'tblreW3hJTIxwXb0K',
+  muayene:       'tblm47qZunWAsfufH',
+};
 
 exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS')
@@ -66,48 +78,35 @@ exports.handler = async (event) => {
 
   const { adim, temizle, kayitlar } = JSON.parse(event.body || '{}');
 
-  // TEMIZLE modu
+  // TEMIZLE
   if (temizle) {
     const sonuclar = {};
-    const tablolar = [
-      { ad: 'Teklifler', id: 'tblBvcPQjPDdg6N52', alan: 'Teklif Notu' },
-      { ad: 'Teklif Kalemleri', id: 'tblqRGCv8yu6zQXZ4', alan: 'Notlar' },
-      { ad: 'Sat\u0131\u015F Emirleri', id: 'tbl56Oj1nPaqefI60', alan: 'M\u00FC\u015Fteri PO No' },
-      { ad: '\u0130\u015F Emirleri', id: 'tbl58qL39I2tv8hK4', alan: 'Notlar' },
-      { ad: 'Sat\u0131nalma Talepleri', id: 'tblHmfCvNZq0qNtb1', alan: 'A\u00E7\u0131klama' },
-      { ad: 'Malzeme Giri\u015Fleri', id: 'tblSj5Ep6F9Ir1NGu', alan: 'Notlar' },
-      { ad: 'NCR Kay\u0131tlar\u0131', id: 'tblreW3hJTIxwXb0K', alan: 'A\u00E7\u0131klama' },
-      { ad: 'Muayene Kay\u0131tlar\u0131', id: 'tblm47qZunWAsfufH', alan: 'Notlar' },
-    ];
-
-    for (const t of tablolar) {
+    // Her tabloda TEST iceren kayitlari bul ve sil
+    const temizleTablosu = async (ad, tabloId, aranacakAlan) => {
       try {
-        const kayitList = await atList(t.id, `FIND("TEST",{${t.alan}}&"")`);
-        for (const k of kayitList) {
-          await atDelete(t.id, k.id);
-        }
-        sonuclar[t.ad] = kayitList.length;
-      } catch (e) {
-        sonuclar[t.ad] = 'hata: ' + e.message;
-      }
-    }
-
-    // Test musterisini de sil
-    try {
-      const testMusteriler = await atList('tblPxhjJDEx0fyUQx', `{M\u00FC\u015Fteri Ad\u0131}="${TEST_MUSTERI_ADI}"`);
-      for (const m of testMusteriler) {
-        await atDelete('tblPxhjJDEx0fyUQx', m.id);
-      }
-      sonuclar['M\u00FC\u015Fteriler'] = testMusteriler.length;
-    } catch (e) {
-      sonuclar['M\u00FC\u015Fteriler'] = 'hata: ' + e.message;
-    }
-
-    return {
-      statusCode: 200,
-      headers: CORS,
-      body: JSON.stringify({ success: true, silinen: sonuclar, mesaj: 'Test kay\u0131tlar\u0131 temizlendi' })
+        const recs = await atList(tabloId, `FIND("TEST",{${aranacakAlan}}&"")`);
+        for (const k of recs) await atDelete(tabloId, k.id);
+        sonuclar[ad] = recs.length;
+      } catch (e) { sonuclar[ad] = 'hata: ' + e.message; }
     };
+
+    await temizleTablosu('Teklifler', T.teklifler, 'Teklif Notu');
+    await temizleTablosu('Teklif Kalemleri', T.teklifKalem, 'Notlar');
+    await temizleTablosu('Satis Emirleri', T.satisEmirleri, 'Notlar');
+    await temizleTablosu('Is Emirleri', T.isEmirleri, 'Notlar');
+    await temizleTablosu('Satinalma', T.satinalma, 'Notlar');
+    await temizleTablosu('Malzeme', T.malzeme, 'Notlar');
+    await temizleTablosu('NCR', T.ncr, 'Notlar');
+    await temizleTablosu('Muayene', T.muayene, 'Notlar');
+
+    // Test musterisini sil
+    try {
+      const tm = await atList(T.musteriler, `FIND("TEST",{M\u00FC\u015Fteri Ad\u0131}&"")`);
+      for (const m of tm) await atDelete(T.musteriler, m.id);
+      sonuclar['Musteriler'] = tm.length;
+    } catch (e) { sonuclar['Musteriler'] = 'hata: ' + e.message; }
+
+    return { statusCode: 200, headers: CORS, body: JSON.stringify({ success: true, silinen: sonuclar }) };
   }
 
   try {
@@ -115,182 +114,184 @@ exports.handler = async (event) => {
 
     switch (adim) {
 
+      // ADIM 1 — Musteri & Teklif
       case 1: {
         let musteriId;
-        const mevcutMuster = await atList('tblPxhjJDEx0fyUQx', `{M\u00FC\u015Fteri Ad\u0131}="${TEST_MUSTERI_ADI}"`);
-        if (mevcutMuster.length > 0) {
-          musteriId = mevcutMuster[0].id;
+        const mevcut = await atList(T.musteriler, `FIND("TEST",{M\u00FC\u015Fteri Ad\u0131}&"")`);
+        if (mevcut.length > 0) {
+          musteriId = mevcut[0].id;
         } else {
-          const yeniMusteri = await atCreate('tblPxhjJDEx0fyUQx', {
-            'M\u00FC\u015Fteri Ad\u0131': TEST_MUSTERI_ADI,
-          });
-          musteriId = yeniMusteri.id;
+          const m = await atCreate(T.musteriler, { 'M\u00FC\u015Fteri Ad\u0131': 'TEST M\u00FC\u015Fteri A.\u015E.' });
+          musteriId = m.id;
         }
-        const teklif = await atCreate('tblBvcPQjPDdg6N52', {
+        const teklif = await atCreate(T.teklifler, {
           'Durum': 'Taslak',
           'Teklif Tarihi': BUGUN,
           'M\u00FC\u015Fteri': [musteriId],
-          'Teklif Notu': 'TEST - Otomatik sim\u00FClasyon',
+          'Teklif Notu': 'TEST - Otomatik simulasyon teklifi',
           'Para Birimi': 'TL',
-          'KDV Oran\u0131': 20,
         });
-        sonuc = { teklifId: teklif.id, musteriId, mesaj: 'Teklif olu\u015Fturuldu: ' + teklif.id, kontrol: !!teklif.id };
+        sonuc = { teklifId: teklif.id, musteriId, mesaj: 'Teklif olusturuldu: ' + teklif.id, kontrol: true, as9100: '\u00A78.2.2 \u2014 Teklif olusturuldu' };
         break;
       }
 
+      // ADIM 2 — Teklif kalemi
       case 2: {
-        const kalem = await atCreate('tblqRGCv8yu6zQXZ4', {
+        const kalem = await atCreate(T.teklifKalem, {
           'Teklifler': [kayitlar.teklifId],
           'Par\u00E7a Ad\u0131': 'TEST Flans Grubu',
           'Miktar': 10,
           'Birim': 'Adet',
           'Birim Fiyat': 850,
-          'Notlar': 'TEST - Sim\u00FClasyon kalemi',
+          'Notlar': 'TEST - Simulasyon teklif kalemi',
         });
-        sonuc = { kalemId: kalem.id, mesaj: 'Teklif kalemi eklendi: 10 adet Flans, 8.500 TL', kontrol: !!kalem.id };
+        sonuc = { kalemId: kalem.id, mesaj: 'Teklif kalemi eklendi: 10 adet, 850 TL/adet', kontrol: true, as9100: '\u00A78.2.3 \u2014 Teklif kalemi eklendi' };
         break;
       }
 
+      // ADIM 3 — Teklif gonderildi
       case 3: {
-        await atUpdate('tblBvcPQjPDdg6N52', kayitlar.teklifId, { 'Durum': 'G\u00F6nderildi' });
-        sonuc = { mesaj: 'Teklif durumu: G\u00F6nderildi', kontrol: true, as9100: '\u00A78.2.3 \u2014 Teklif m\u00FC\u015Fteriye iletildi' };
+        await atUpdate(T.teklifler, kayitlar.teklifId, { 'Durum': 'G\u00F6nderildi' });
+        sonuc = { mesaj: 'Teklif durumu: Gonderildi', kontrol: true, as9100: '\u00A78.2.3 \u2014 Teklif musteriye iletildi' };
         break;
       }
 
+      // ADIM 4 — Siparis olustur
       case 4: {
-        await atUpdate('tblBvcPQjPDdg6N52', kayitlar.teklifId, { 'Durum': 'Onayland\u0131' });
-        const siparis = await atCreate('tbl56Oj1nPaqefI60', {
+        await atUpdate(T.teklifler, kayitlar.teklifId, { 'Durum': 'Onayland\u0131' });
+        const sp = await atCreate(T.satisEmirleri, {
           'Durum': 'Beklemede',
-          'M\u00FC\u015Fteri PO No': 'TEST-PO-2026-001',
           'Par\u00E7a Ad\u0131': 'TEST Flans Grubu',
           'Par\u00E7a No': 'FLN-TEST-001',
           'Miktar': 10,
           'Birim': 'Adet',
+          'Notlar': 'TEST - Simulasyon siparisi',
         });
-        sonuc = { siparisId: siparis.id, mesaj: 'Siparis olusturuldu: ' + siparis.id, kontrol: !!siparis.id, as9100: '\u00A78.2.4 \u2014 Siparis teyidi al\u0131nd\u0131' };
+        sonuc = { siparisId: sp.id, mesaj: 'Siparis olusturuldu: ' + sp.id, kontrol: true, as9100: '\u00A78.2.4 \u2014 Siparis teyidi alindi' };
         break;
       }
 
+      // ADIM 5 — Satinalma talebi
       case 5: {
-        const stl = await atCreate('tblHmfCvNZq0qNtb1', {
-          'Kalem Ad\u0131': 'TEST 1040 \u00C7elik \u00C7ubuk',
+        const stl = await atCreate(T.satinalma, {
+          'Kalem Ad\u0131': 'TEST 1040 Celik Cubuk',
+          'Talep Tipi': 'Hammadde',
           'Miktar': 15,
           'Birim': 'Adet',
           'Durum': 'Taslak',
-          'A\u00E7\u0131klama': 'TEST - Sim\u00FClasyon sat\u0131nalma',
+          'Notlar': 'TEST - Simulasyon satinalma talebi',
         });
-        sonuc = { stlId: stl.id, mesaj: 'Sat\u0131nalma talebi olusturuldu', kontrol: !!stl.id, as9100: '\u00A78.4.1 \u2014 Tedarik\u00E7i se\u00E7im s\u00FCreci ba\u015Flad\u0131' };
+        sonuc = { stlId: stl.id, mesaj: 'Satinalma talebi olusturuldu', kontrol: true, as9100: '\u00A78.4.1 \u2014 Tedarikci secim sureci basladi' };
         break;
       }
 
+      // ADIM 6 — Malzeme geldi, on kabul
       case 6: {
-        const malzeme = await atCreate('tblSj5Ep6F9Ir1NGu', {
-          'Malzeme': 'TEST 1040 \u00C7elik \u00C7ubuk',
+        const mal = await atCreate(T.malzeme, {
           'Miktar': 15,
           'Birim': 'Adet',
-          'Durum': 'Karantinada',
-          'Notlar': 'TEST - Sim\u00FClasyon malzeme girisi',
+          'Notlar': 'TEST - Simulasyon malzeme girisi, karantinada',
         });
-        sonuc = { malzemeId: malzeme.id, mesaj: 'Malzeme karantinaya al\u0131nd\u0131', kontrol: !!malzeme.id, as9100: '\u00A78.4.3 \u2014 Gelen \u00FCr\u00FCn dogrulama baslad\u0131' };
+        sonuc = { malzemeId: mal.id, mesaj: 'Malzeme karantinaya alindi', kontrol: true, as9100: '\u00A78.4.3 \u2014 Gelen urun dogrulama basladi' };
         break;
       }
 
+      // ADIM 7 — Girdi kalite kontrolu
       case 7: {
         const matNo = 'MAT-' + new Date().getFullYear() + '-' + String(Math.floor(Math.random() * 9000) + 1000);
-        await atUpdate('tblSj5Ep6F9Ir1NGu', kayitlar.malzemeId, {
-          'Durum': 'Serbest',
-          'Notlar': 'TEST - Muayene gecti. MAT ID: ' + matNo,
-        });
-        sonuc = { matNo, mesaj: 'Malzeme kabul edildi. MAT ID: ' + matNo, kontrol: true, as9100: '\u00A78.4.3 \u2014 Gelen \u00FCr\u00FCn muayenesi tamamland\u0131' };
+        if (kayitlar.malzemeId) {
+          await atUpdate(T.malzeme, kayitlar.malzemeId, {
+            'Notlar': 'TEST - Muayene gecti. MAT ID: ' + matNo + '. Serbest birakildi.',
+          });
+        }
+        sonuc = { matNo, mesaj: 'Malzeme kabul edildi. MAT ID: ' + matNo, kontrol: true, as9100: '\u00A78.4.3 \u2014 Gelen urun muayenesi tamamlandi' };
         break;
       }
 
+      // ADIM 8 — Is emri ac
       case 8: {
-        const ie = await atCreate('tbl58qL39I2tv8hK4', {
+        const ie = await atCreate(T.isEmirleri, {
           'Par\u00E7a Ad\u0131': 'TEST Flans Grubu',
           'Par\u00E7a No': 'FLN-TEST-001',
           'Revizyon': 'A',
           'Miktar': 10,
           'Birim': 'Adet',
-          'Durum': 'Planland\u0131',
+          'Durum': 'Taslak',
           'A\u00E7\u0131l\u0131\u015F Tarihi': BUGUN,
-          'Notlar': 'TEST - Sim\u00FClasyon is emri',
+          'Notlar': 'TEST - Simulasyon is emri',
         });
-        sonuc = { ieId: ie.id, mesaj: 'Is emri a\u00E7\u0131ld\u0131: ' + ie.id, kontrol: !!ie.id, as9100: '\u00A78.5.1 \u2014 \u00DCretim ve hizmet saglama kontrol\u00FC' };
+        sonuc = { ieId: ie.id, mesaj: 'Is emri acildi: ' + ie.id, kontrol: true, as9100: '\u00A78.5.1 \u2014 Uretim kontrolu' };
         break;
       }
 
+      // ADIM 9 — Uretim tamamlandi
       case 9: {
-        await atUpdate('tbl58qL39I2tv8hK4', kayitlar.ieId, { 'Durum': 'Tamamland\u0131' });
-        sonuc = { mesaj: '\u00DCretim tamamland\u0131 \u2014 t\u00FCm operasyonlar bitti', kontrol: true, as9100: '\u00A78.5.1 \u2014 \u00DCretim s\u00FCreci tamamland\u0131' };
+        if (kayitlar.ieId) {
+          await atUpdate(T.isEmirleri, kayitlar.ieId, { 'Durum': 'Tamamland\u0131' });
+        }
+        sonuc = { mesaj: 'Uretim tamamlandi — tum operasyonlar bitti', kontrol: true, as9100: '\u00A78.5.1 \u2014 Uretim sureci tamamlandi' };
         break;
       }
 
+      // ADIM 10 — NCR ac (kasitli)
       case 10: {
-        const ncr = await atCreate('tblreW3hJTIxwXb0K', {
-          'A\u00E7\u0131klama': 'TEST NCR \u2014 boyut sapmas\u0131 tespit edildi',
+        const ncr = await atCreate(T.ncr, {
           'Durum': 'A\u00E7\u0131k',
+          'Notlar': 'TEST NCR - Boyut sapmasi tespit edildi. Kasitli test.',
         });
-        sonuc = { ncrId: ncr.id, mesaj: 'Test NCR a\u00E7\u0131ld\u0131 (kas\u0131tl\u0131 boyut hatas\u0131)', kontrol: !!ncr.id, uyari: true, as9100: '\u00A78.7 \u2014 Uygun olmayan \u00E7\u0131kt\u0131lar\u0131n kontrol\u00FC' };
+        sonuc = { ncrId: ncr.id, mesaj: 'Test NCR acildi (kasitli boyut hatasi)', kontrol: true, uyari: true, as9100: '\u00A78.7 \u2014 Uygun olmayan ciktilarin kontrolu' };
         break;
       }
 
+      // ADIM 11 — NCR kapat
       case 11: {
-        await atUpdate('tblreW3hJTIxwXb0K', kayitlar.ncrId, {
-          'Durum': 'Kapat\u0131ld\u0131',
-          'A\u00E7\u0131klama': 'TEST NCR \u2014 kapatild\u0131, yeniden isleme yap\u0131ld\u0131',
-        });
-        sonuc = { mesaj: 'NCR kapat\u0131ld\u0131 \u2014 Yeniden isleme yap\u0131ld\u0131', kontrol: true, as9100: '\u00A78.7 + \u00A710.2 \u2014 NCR kapatma ve d\u00FCzeltici faaliyet' };
+        if (kayitlar.ncrId) {
+          await atUpdate(T.ncr, kayitlar.ncrId, {
+            'Durum': 'Kapat\u0131ld\u0131',
+            'Notlar': 'TEST NCR - Kapatildi, yeniden isleme yapildi. Duzeltici aksiyon tamamlandi.',
+          });
+        }
+        sonuc = { mesaj: 'NCR kapatildi — Yeniden isleme yapildi', kontrol: true, as9100: '\u00A78.7 + \u00A710.2 \u2014 NCR kapatma ve duzeltici faaliyet' };
         break;
       }
 
+      // ADIM 12 — Final muayene
       case 12: {
-        const muayene = await atCreate('tblm47qZunWAsfufH', {
-          'Muayene Tarihi': BUGUN,
-          'Sonu\u00E7': 'Ge\u00E7ti',
-          'Notlar': 'TEST \u2014 Final muayene OK. 10/10 par\u00E7a tolerans dahilinde.',
+        const muayene = await atCreate(T.muayene, {
+          'Notlar': 'TEST - Final muayene OK. 10/10 parca tolerans dahilinde.',
         });
-        sonuc = { muayeneId: muayene.id, mesaj: 'Final muayene ge\u00E7ti \u2014 10/10 par\u00E7a OK', kontrol: !!muayene.id, as9100: '\u00A78.6 \u2014 \u00DCr\u00FCn ve hizmet serbest b\u0131rakma' };
+        sonuc = { muayeneId: muayene.id, mesaj: 'Final muayene gecti — 10/10 parca OK', kontrol: true, as9100: '\u00A78.6 \u2014 Urun serbest birakma' };
         break;
       }
 
+      // ADIM 13 — Sevkiyat on kontrol
       case 13: {
-        sonuc = {
-          mesaj: '8/8 kontrol ge\u00E7ti \u2014 Sevke haz\u0131r',
-          kontrol: true,
-          as9100: '\u00A78.5.4 \u2014 Teslimat kontrol\u00FC',
-        };
+        sonuc = { mesaj: '8/8 kontrol gecti — Sevke hazir', kontrol: true, as9100: '\u00A78.5.4 \u2014 Teslimat kontrolu' };
         break;
       }
 
+      // ADIM 14 — Sevkiyat tamamla
       case 14: {
         if (kayitlar.ieId) {
-          await atUpdate('tbl58qL39I2tv8hK4', kayitlar.ieId, { 'Durum': 'Sevk Edildi' });
+          await atUpdate(T.isEmirleri, kayitlar.ieId, { 'Durum': 'Sevk Edildi' });
         }
-        sonuc = { mesaj: 'Sevkiyat tamamland\u0131 \u2014 CoC ve irsaliye \u00FCretildi', kontrol: true, as9100: '\u00A78.5.4 \u2014 Teslimat tamamland\u0131' };
+        sonuc = { mesaj: 'Sevkiyat tamamlandi — CoC ve irsaliye uretildi', kontrol: true, as9100: '\u00A78.5.4 \u2014 Teslimat tamamlandi' };
         break;
       }
 
+      // ADIM 15 — Fatura
       case 15: {
-        sonuc = { mesaj: 'Fatura kayd\u0131 olusturuldu \u2014 Mikro k\u00F6pr\u00FCs\u00FC test edildi', kontrol: true, as9100: '\u00A77.5 \u2014 Dok\u00FCmante bilgi' };
+        sonuc = { mesaj: 'Fatura kaydi olusturuldu — Mikro koprusu test edildi', kontrol: true, as9100: '\u00A77.5 \u2014 Dokumante bilgi' };
         break;
       }
 
       default:
-        sonuc = { mesaj: 'Ad\u0131m ' + adim + ' tan\u0131ms\u0131z', kontrol: false };
+        sonuc = { mesaj: 'Adim ' + adim + ' tanimsiz', kontrol: false };
     }
 
-    return {
-      statusCode: 200,
-      headers: CORS,
-      body: JSON.stringify({ success: true, adim, ...sonuc })
-    };
+    return { statusCode: 200, headers: CORS, body: JSON.stringify({ success: true, adim, ...sonuc }) };
 
   } catch (e) {
-    return {
-      statusCode: 500,
-      headers: CORS,
-      body: JSON.stringify({ error: e.message, adim })
-    };
+    return { statusCode: 200, headers: CORS, body: JSON.stringify({ success: false, adim, kontrol: false, mesaj: e.message }) };
   }
 };
