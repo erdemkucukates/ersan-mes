@@ -126,7 +126,7 @@ var PAKETLER = [
     {id:'hata_bos_alan',baslik:'Bos zorunlu alan',alt:'Parca adi olmadan IE',as9100:'Validasyon',ters:true},
     {id:'hata_duplicate_kapatma',baslik:'Cift kapatma',alt:'Ayni IE 2x Tamamlandi',as9100:'Log'},
     {id:'hata_turkce',baslik:'Turkce karakter',alt:'UTF-8 yaz/oku testi',as9100:'Encoding'},
-    {id:'hata_injection',baslik:'XSS injection',alt:'<script> tag yazma',as9100:'Guvenlik'},
+    {id:'hata_injection',baslik:'XSS injection',alt:'Script tag yazma testi',as9100:'Guvenlik'},
   ]},
   { ad: 'AS9100 Uyum', renk: 'mavi', testler: [
     {id:'as9100_dokuman',baslik:'Dokuman kontrolu',alt:'Zorunlu prosedurler var mi?',as9100:'4.1+7.5'},
@@ -165,13 +165,25 @@ function adimlariRender() {
       '<div class="ta-ikon bekliyor"></div></div>';
   }).join('');
 }
+function escHtml(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 function log(m, tip) {
   tip = tip || 'bilgi';
   var renkler = {bilgi:'#93c5fd',basari:'#86efac',hata:'#fca5a5',uyari:'#fde68a',ai:'#c4b5fd'};
   var z = new Date().toLocaleTimeString('tr-TR');
   var d = document.getElementById('test-log');
-  d.innerHTML += '<div style="color:' + (renkler[tip]||'#93c5fd') + ';margin-bottom:2px"><span style="color:rgba(255,255,255,.3)">[' + z + ']</span> ' + m + '</div>';
+  var satir = document.createElement('div');
+  satir.style.cssText = 'color:' + (renkler[tip]||'#93c5fd') + ';margin-bottom:2px';
+  satir.innerHTML = '<span style="color:rgba(255,255,255,.3)">[' + z + ']</span> ';
+  satir.appendChild(document.createTextNode(m));
+  d.appendChild(satir);
   d.scrollTop = d.scrollHeight;
+}
+function fetchTimeout(url, opts, ms) {
+  ms = ms || 15000;
+  return Promise.race([
+    fetch(url, opts),
+    new Promise(function(_,rej){ setTimeout(function(){rej(new Error('Timeout ('+ms+'ms)'))}, ms); })
+  ]);
 }
 function kpiGuncelle() {
   document.getElementById('kc-gecen').textContent = toplamSonuc.gecen;
@@ -218,7 +230,7 @@ async function paralelTeklifTest() {
   var bas = Date.now();
   var istekler = [];
   for (var i = 0; i < 10; i++) {
-    istekler.push(fetch('/.netlify/functions/test-bot', {
+    istekler.push(fetchTimeout('/.netlify/functions/test-bot', {
       method: 'POST', headers: {'Content-Type':'application/json'},
       body: JSON.stringify({ adim: 'paralel_teklif', veri: { index: i+1 } })
     }).then(function(r){return r.json()}).catch(function(e){return{success:false,mesaj:e.message}}));
@@ -234,14 +246,14 @@ async function paralelTeklifTest() {
 async function devTeklifTest() {
   log('Dev teklif olusturuluyor (10 kalem)...', 'bilgi');
   // Once teklif olustur
-  var r1 = await fetch('/.netlify/functions/test-bot', {
+  var r1 = await fetchTimeout('/.netlify/functions/test-bot', {
     method: 'POST', headers: {'Content-Type':'application/json'},
     body: JSON.stringify({ adim: 'paralel_teklif', veri: { index: 99 } })
   });
   var d1 = await r1.json();
   if (!d1.id) return { kontrol: false, mesaj: 'Teklif olusturulamadi' };
   // Kalem ekle
-  var r2 = await fetch('/.netlify/functions/test-bot', {
+  var r2 = await fetchTimeout('/.netlify/functions/test-bot', {
     method: 'POST', headers: {'Content-Type':'application/json'},
     body: JSON.stringify({ adim: 'dev_teklif_kalem', veri: { teklifId: d1.id } })
   });
@@ -269,11 +281,12 @@ async function adimCalistir(paketIdx, testIdx) {
       sonuc = await clientTest(test.id);
     } else {
       // Server-side test
-      var r = await fetch('/.netlify/functions/test-bot', {
+      var r = await fetchTimeout('/.netlify/functions/test-bot', {
         method: 'POST', headers: {'Content-Type':'application/json'},
         body: JSON.stringify({ adim: test.id, kayitlar: testKayitlari, veri: {} })
       });
-      sonuc = await r.json();
+      var txt = await r.text();
+      try { sonuc = JSON.parse(txt); } catch(pe) { throw new Error('JSON parse hatasi (status ' + r.status + '): ' + txt.substring(0,100)); }
     }
 
     // Kayitlari guncelle
@@ -455,7 +468,7 @@ async function testTemizle() {
   if (!confirm('Tum TEST kayitlari silinecek. Emin misiniz?')) return;
   log('Temizleniyor...', 'uyari');
   try {
-    var r = await fetch('/.netlify/functions/test-bot', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({temizle:true}) });
+    var r = await fetchTimeout('/.netlify/functions/test-bot', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({temizle:true}) });
     var d = await r.json();
     log('Temizlendi: ' + JSON.stringify(d.silinen), 'basari');
   } catch(e) { log('Temizleme hatasi: ' + e.message, 'hata'); }
