@@ -1,70 +1,81 @@
-var ERSAN_MODULES = [
-  { id: 'teklif',       label: 'Teklif Yönetimi',        icon: '📋', url: 'ersan_teklif.html',       status: 'active' },
-  { id: 'siparis',      label: 'Sipariş Yönetimi',        icon: '📦', url: 'ersan_siparisler.html',    status: 'active' },
-  { id: 'satinalma',    label: 'Satınalma',               icon: '🛒', url: 'ersan_satinalma.html',     status: 'active' },
-  { id: 'onkabul',      label: 'Ön Kabul',                icon: '📋', url: 'ersan_on_kabul.html',     status: 'active' },
-  { id: 'girdikalite',  label: 'Girdi Kalite',            icon: '🔬', url: 'ersan_girdi_kalite.html', status: 'active' },
-  { id: 'malzeme',      label: 'Malzeme Girişi',          icon: '📥', url: 'ersan_malzeme.html',      status: 'active' },
-  { id: 'isemri',       label: 'İş Emirleri',             icon: '⚙️', url: 'ersan_isemirleri.html',   status: 'active' },
-  { id: 'planlama',     label: 'Planlama',                icon: '📅', url: 'ersan_planlama.html',      status: 'active' },
-  { id: 'hesaplama',    label: 'Maliyet Hesaplama',       icon: '🧮', url: 'ersan_hesaplama.html',     status: 'active' },
-  { id: 'tedarikciler', label: 'Tedarikçiler',            icon: '🏢', url: 'ersan_tedarikciler.html',  status: 'active' },
-  { id: 'uretim',       label: 'Üretim / Atölye',         icon: '🏭', url: 'ersan_uretim.html',        status: 'active' },
-  { id: 'kalite',       label: 'Kalite Kontrol',          icon: '✅', url: 'ersan_kalite.html',        status: 'active' },
-  { id: 'sevkiyat',     label: 'Sevkiyat',                icon: '🚚', url: 'ersan_sevkiyat.html',      status: 'active' },
-  { id: 'musteri',      label: 'Müşteri Geri Bildirimi',  icon: '💬', url: 'ersan_musteri.html',       status: 'active' },
-  { id: 'dokuman',      label: 'Doküman Yönetimi',        icon: '📁', url: 'ersan_dokuman.html',       status: 'active' },
-  { id: 'denetim',      label: 'İç Denetim',              icon: '🔍', url: 'ersan_denetim.html',       status: 'active' },
-  { id: 'duzeltici',    label: 'Düzeltici Faaliyet',      icon: '🔧', url: 'ersan_duzeltici.html',     status: 'active' },
-  { id: 'ncr',           label: 'NCR',                     icon: '⚠️', url: 'ersan_ncr.html',           status: 'active' },
-  { id: 'fabrika',       label: 'Akıllı Fabrika',          icon: '🏭', url: 'ersan_akilli_fabrika.html',status: 'active' },
-  { id: 'bakim',        label: 'Ekipman & Bakım',         icon: '🔩', url: 'ersan_bakim.html',         status: 'active' },
-  { id: 'personel',     label: 'Personel Yönetimi',       icon: '👥', url: 'ersan_personel.html',      status: 'active' },
-  { id: 'egitim',       label: 'Eğitim',                  icon: '🎓', url: 'ersan_egitim.html',        status: 'soon' },
-  { id: 'risk',         label: 'Risk Yönetimi',           icon: '⚠️', url: 'ersan_risk.html',          status: 'active' },
-  { id: 'isg',          label: 'İSG / Güvenlik',          icon: '🦺', url: 'ersan_isg.html',           status: 'active' },
-  { id: 'ygg',          label: 'Yönetim Gözden Geçirme', icon: '📊', url: 'ersan_ygg.html',           status: 'active' },
-  { id: 'sistemlogu',   label: 'Sistem Logu',             icon: '📜', url: 'ersan_sistem_logu.html',  status: 'active' },
+const NAV_GRUPLARI = [
+  {
+    baslik: 'Satis',
+    sayfalar: [
+      { id: 'teklif',     etiket: 'Teklifler',      url: 'ersan_teklif.html' },
+      { id: 'siparisler', etiket: 'Siparisler',      url: 'ersan_siparisler.html' },
+      { id: 'musteri',    etiket: 'Musteriler',      url: 'ersan_musteri.html' },
+    ]
+  },
+  {
+    baslik: 'Tedarik',
+    sayfalar: [
+      { id: 'satinalma',  etiket: 'Satinalma',       url: 'ersan_satinalma.html' },
+      { id: 'on_kabul',   etiket: 'On Kabul',        url: 'ersan_on_kabul.html' },
+      { id: 'girdi_k',    etiket: 'Girdi Kalite',    url: 'ersan_girdi_kalite.html' },
+      { id: 'stok',       etiket: 'Stok',            url: 'ersan_stok.html' },
+    ]
+  },
+  {
+    baslik: 'Uretim',
+    sayfalar: [
+      { id: 'isemirleri', etiket: 'Is Emirleri',     url: 'ersan_isemirleri.html' },
+      { id: 'planlama',   etiket: 'Planlama',        url: 'ersan_planlama.html' },
+      { id: 'uretim',     etiket: 'Atolye',          url: 'ersan_uretim.html' },
+    ]
+  },
+  {
+    baslik: 'Kalite',
+    sayfalar: [
+      { id: 'kalite',     etiket: 'Kalite',          url: 'ersan_kalite.html' },
+      { id: 'ncr',        etiket: 'NCR',             url: 'ersan_ncr.html' },
+      { id: 'sevkiyat',   etiket: 'Sevkiyat',        url: 'ersan_sevkiyat.html' },
+      { id: 'capa',       etiket: 'CAPA',            url: 'ersan_duzeltici.html' },
+    ]
+  },
+  {
+    baslik: 'Sistem',
+    sayfalar: [
+      { id: 'bakim',      etiket: 'Ekipman & Bakim', url: 'ersan_bakim.html' },
+      { id: 'personel',   etiket: 'Personel',        url: 'ersan_personel.html' },
+      { id: 'denetim',    etiket: 'Ic Denetim',      url: 'ersan_denetim.html' },
+      { id: 'risk',       etiket: 'Risk',            url: 'ersan_risk.html' },
+      { id: 'isg',        etiket: 'ISG',             url: 'ersan_isg.html' },
+      { id: 'ygg',        etiket: 'YGG Dashboard',   url: 'ersan_ygg.html' },
+      { id: 'dokuman',    etiket: 'Dokuman',         url: 'ersan_dokuman.html' },
+      { id: 'log',        etiket: 'Sistem Logu',     url: 'ersan_sistem_logu.html' },
+      { id: 'mikro',      etiket: 'Mikro Entegrasyon', url: 'ersan_mikro.html' },
+    ]
+  },
 ];
 
-function injectNav() {
-  if (document.getElementById('ersan-nav')) return;
-  var currentFile = window.location.pathname.split('/').pop() || 'index.html';
-  var style = document.createElement('style');
-  style.textContent = '#ersan-nav{position:fixed;top:0;left:0;right:0;z-index:9999;background:#0f172a;height:48px;display:flex;align-items:center;border-bottom:1px solid rgba(255,255,255,0.08);font-family:-apple-system,sans-serif}'
-    + '#ersan-nav .en-logo{padding:0 14px;font-size:13px;font-weight:600;color:#fff;white-space:nowrap;border-right:1px solid rgba(255,255,255,0.1);height:100%;display:flex;align-items:center;gap:6px;min-width:130px;text-decoration:none}'
-    + '#ersan-nav .en-logo small{font-size:9px;color:rgba(255,255,255,0.35);font-weight:400;margin-left:4px}'
-    + '#ersan-nav .en-scroll{display:flex;align-items:center;overflow-x:auto;height:100%;scrollbar-width:none;flex:1}'
-    + '#ersan-nav .en-scroll::-webkit-scrollbar{display:none}'
-    + '#ersan-nav .en-item{padding:0 13px;height:100%;display:flex;align-items:center;gap:5px;font-size:12px;color:rgba(255,255,255,0.5);text-decoration:none;white-space:nowrap;border-bottom:2px solid transparent;flex-shrink:0}'
-    + '#ersan-nav .en-item:hover{color:rgba(255,255,255,0.85)}'
-    + '#ersan-nav .en-active{color:#fff!important;border-bottom-color:#3b82f6!important}'
-    + '#ersan-nav .en-soon{opacity:0.35;pointer-events:none}'
-    + 'body{padding-top:48px!important}';
-  document.head.appendChild(style);
-  var nav = document.createElement('nav');
-  nav.id = 'ersan-nav';
-  var logo = document.createElement('a');
-  logo.href = 'index.html';
-  logo.className = 'en-logo';
-  logo.innerHTML = '&#9881; Ersan MES<small>AS9100</small>';
-  nav.appendChild(logo);
-  var scroll = document.createElement('div');
-  scroll.className = 'en-scroll';
-  ERSAN_MODULES.forEach(function(m) {
-    var isActive = currentFile === m.url.split('#')[0];
-    var a = document.createElement('a');
-    a.href = m.status === 'active' ? m.url : '#';
-    a.className = 'en-item' + (isActive ? ' en-active' : '') + (m.status === 'soon' ? ' en-soon' : '');
-    a.title = m.status === 'soon' ? m.label + ' (yakında)' : '';
-    a.innerHTML = '<span style="font-size:12px">' + m.icon + '</span>' + m.label;
-    scroll.appendChild(a);
+function navOlustur() {
+  var aktifUrl = window.location.pathname.split('/').pop() || 'index.html';
+  var html = '<div class="sidebar">'
+    + '<a href="index.html" style="text-decoration:none">'
+    + '<div class="sidebar-logo">'
+    + '<div class="sidebar-logo-text">Ersan MES</div>'
+    + '<div class="sidebar-logo-sub">AS9100 \u00B7 \u00DCretim Y\u00F6netimi</div>'
+    + '</div></a>';
+
+  NAV_GRUPLARI.forEach(function(grup) {
+    html += '<div class="nav-grup">'
+      + '<div class="nav-grup-baslik">' + grup.baslik + '</div>';
+    grup.sayfalar.forEach(function(sayfa) {
+      var aktif = aktifUrl === sayfa.url ? ' aktif' : '';
+      html += '<a class="nav-item' + aktif + '" href="' + sayfa.url + '">'
+        + '<div class="nav-nokta"></div>' + sayfa.etiket + '</a>';
+    });
+    html += '</div>';
   });
-  nav.appendChild(scroll);
-  document.body.insertBefore(nav, document.body.firstChild);
+  html += '</div>';
+  return html;
 }
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', injectNav);
-} else {
-  injectNav();
-}
+
+// Sayfa yuklenince nav'i yerlestir
+document.addEventListener('DOMContentLoaded', function() {
+  var navAlan = document.getElementById('nav-alani');
+  if (navAlan) {
+    navAlan.innerHTML = navOlustur();
+  }
+});
