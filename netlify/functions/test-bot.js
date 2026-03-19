@@ -262,7 +262,6 @@ exports.handler = async (event) => {
       // ADIM 12 — Final muayene
       case 12: {
         const muayene = await atCreate(T.muayene, {
-          'Sonu\u00E7': 'Ge\u00E7ti',
         });
         sonuc = { muayeneId: muayene.id, mesaj: 'Final muayene gecti — 10/10 parca OK', kontrol: true, as9100: '\u00A78.6 \u2014 Urun serbest birakma' };
         break;
@@ -277,7 +276,7 @@ exports.handler = async (event) => {
       // ADIM 14 — Sevkiyat tamamla
       case 14: {
         if (kayitlar.ieId) {
-          await atUpdate(T.isEmirleri, kayitlar.ieId, { 'Durum': 'Sevk Edildi' });
+          await atUpdate(T.isEmirleri, kayitlar.ieId, { 'Durum': 'Tamamland\u0131' });
         }
         sonuc = { mesaj: 'Sevkiyat tamamlandi — CoC ve irsaliye uretildi', kontrol: true, as9100: '\u00A78.5.4 \u2014 Teslimat tamamlandi' };
         break;
