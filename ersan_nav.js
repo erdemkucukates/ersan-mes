@@ -45,6 +45,7 @@ const NAV_GRUPLARI = [
       { id: 'dokuman',    etiket: 'Dokuman',         url: 'ersan_dokuman.html' },
       { id: 'log',        etiket: 'Sistem Logu',     url: 'ersan_sistem_logu.html' },
       { id: 'mikro',      etiket: 'Mikro Entegrasyon', url: 'ersan_mikro.html' },
+      { id: 'test_sim',   etiket: 'Test Simulatoru', url: 'ersan_test_simulasyon.html' },
     ]
   },
 ];
