@@ -602,12 +602,535 @@ body {
   gap: 8px;
 }
 
+/* ══════════════════════════════════════════════════
+   BACKWARD COMPATIBILITY — eski class isimleri
+   Mevcut sayfalar bu class'ları kullanıyor.
+   Yeni sayfalarda yeni class isimlerini kullanın.
+   ══════════════════════════════════════════════════ */
+
+/* Eski CSS degiskenleri → yeni degiskenlerle eslestir */
+:root {
+  --surface: var(--beyaz);
+  --surface2: var(--bg2);
+  --text: var(--metin);
+  --text2: var(--metin2);
+  --text3: var(--metin3);
+  --accent: var(--mavi);
+  --accent-light: var(--mavi-acik);
+  --accent-hover: var(--mavi-koyu);
+  --green: var(--yesil);
+  --green-light: var(--yesil-bg);
+  --red: var(--kirmizi);
+  --red-light: var(--kirmizi-bg);
+  --orange: var(--sari);
+  --orange-light: var(--sari-bg);
+  --blue: var(--mavi);
+  --blue-light: var(--mavi-acik);
+  --gray: var(--metin3);
+  --gray-light: #f3f4f6;
+  --shadow: 0 1px 3px rgba(0,0,0,.08);
+  --radius: 8px;
+  --mono: 'Courier New', monospace;
+  --sans: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+/* ── ESKI HEADER → gizle (sidebar ile degisti) ── */
+.header {
+  display: none !important;
+}
+
+/* ── ESKI LAYOUT → sidebar uyumlu ── */
+.layout {
+  display: flex;
+  height: calc(100vh - 52px);
+  margin-top: 0;
+  overflow: hidden;
+}
+
+/* ── ESKI LIST PANEL ── */
+.list-panel {
+  width: 280px;
+  flex-shrink: 0;
+  background: var(--beyaz);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.list-header {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+.list-header h2 {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--laci);
+}
+.list-count {
+  font-size: 11px;
+  color: var(--metin4);
+}
+.list-search {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.list-search input {
+  width: 100%;
+  padding: 5px 8px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  font-size: 12px;
+  color: var(--metin2);
+  background: var(--bg2);
+  font-family: inherit;
+}
+.list-search input:focus {
+  outline: none;
+  border-color: var(--mavi);
+}
+.list-scroll {
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* ── ESKI DETAIL PANEL ── */
+.detail-panel {
+  flex: 1;
+  background: var(--beyaz);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.detail-toolbar {
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  background: var(--beyaz);
+}
+.detail-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+.detail-title {
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--laci);
+}
+.detail-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px;
+}
+
+/* ── ESKI CARD ── */
+.card {
+  background: var(--beyaz);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+.card-header {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--laci);
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg2);
+}
+.card-body {
+  padding: 14px;
+}
+
+/* ── ESKI FORM ── */
+.field-group {
+  margin-bottom: 10px;
+}
+.field-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--metin3);
+  margin-bottom: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.field-input, .field-select, .field-textarea {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--metin2);
+  background: var(--beyaz);
+  transition: border-color .15s;
+  font-family: inherit;
+}
+.field-input:focus, .field-select:focus, .field-textarea:focus {
+  outline: none;
+  border-color: var(--mavi);
+  box-shadow: 0 0 0 3px rgba(55,138,221,0.1);
+}
+.field-input:disabled, .field-select:disabled {
+  background: var(--bg);
+  color: var(--metin3);
+}
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.form-grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+/* ── ESKI BUTONLAR ── */
+.toolbar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--beyaz);
+  color: var(--metin2);
+  transition: all .12s;
+  font-family: inherit;
+}
+.toolbar-btn:hover { background: var(--bg2); }
+.toolbar-btn.primary { background: var(--mavi); color: #fff; border-color: var(--mavi); }
+.toolbar-btn.primary:hover { background: var(--mavi-koyu); }
+.toolbar-btn.ghost { background: transparent; }
+.toolbar-btn.success, .toolbar-btn.warn { border-color: var(--yesil); color: var(--yesil); }
+.toolbar-btn.danger { border-color: var(--kirmizi); color: var(--kirmizi); }
+
+.btn-primary { background: var(--mavi); color: #fff; border: none; }
+.btn-primary:hover { background: var(--mavi-koyu); }
+.btn-success { background: var(--yesil); color: #fff; border: none; }
+.btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--metin2); }
+.btn-ghost:hover { background: var(--bg2); }
+.btn-red { background: var(--kirmizi); color: #fff; border: none; }
+.btn-orange { background: var(--sari); color: #fff; border: none; }
+.btn-new {
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  background: var(--mavi);
+  color: #fff;
+  font-family: inherit;
+}
+
+/* ── ESKI TOAST ── */
+.toast-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 9999;
+}
+
+/* ── ESKI MODAL ── */
+.modal-bg {
+  position: fixed;
+  inset: 0;
+  background: rgba(15,39,68,0.5);
+  z-index: 9998;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.modal-box {
+  background: var(--beyaz);
+  border-radius: 10px;
+  padding: 0;
+  width: 90%;
+  max-width: 560px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+}
+.modal-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--laci);
+}
+.modal-body { padding: 18px; }
+.modal-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 18px;
+  border-top: 1px solid var(--border);
+}
+
+/* ── ESKI STATUS/BADGE ── */
+.qi-status, .status-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.status-Taslak, .status-Beklemede { background: #f1f5f9; color: #475569; }
+.status-Gonderildi, .status-Gönderildi { background: var(--mavi-acik); color: var(--mavi-koyu); }
+.status-Onaylandi, .status-Onaylandı, .status-Tamamlandi { background: var(--yesil-bg); color: var(--yesil-t); }
+.status-Reddedildi, .status-Iptal { background: var(--kirmizi-bg); color: var(--kirmizi-t); }
+.status-Revizyon { background: var(--sari-bg); color: var(--sari-t); }
+
+/* ── ESKI DURUM ROW ── */
+.durum-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-top: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.durum-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--metin3);
+}
+
+/* ── ESKI FILTER ROW ── */
+.filter-row {
+  display: flex;
+  gap: 0;
+  padding: 0;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  overflow-x: auto;
+}
+.filter-row button, .fc {
+  flex: 1;
+  padding: 6px 8px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--metin3);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  text-align: center;
+  transition: all .12s;
+}
+.filter-row button.on, .fc.on {
+  color: var(--mavi);
+  border-bottom-color: var(--mavi);
+  background: var(--mavi-acik);
+}
+
+/* ── ESKI TAB/VIEW TABS ── */
+.view-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.view-tab {
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--metin3);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all .12s;
+  background: transparent;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+}
+.view-tab.active {
+  color: var(--mavi);
+  border-bottom-color: var(--mavi);
+}
+
+/* ── NAV ARROWS ── */
+.nav-arrows {
+  display: flex;
+  gap: 2px;
+}
+.nav-btn {
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--beyaz);
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--metin3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.nav-btn:hover { background: var(--bg2); }
+.nav-btn:disabled { opacity: 0.3; cursor: default; }
+
+/* ── ESKI EMPTY STATE ── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: var(--metin4);
+  font-size: 13px;
+  gap: 12px;
+}
+.empty-state svg { color: var(--metin4); }
+
+/* ── ESKI LOADING ── */
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 40px;
+  color: var(--metin3);
+  font-size: 13px;
+}
+.loading .spinner, .spinner {
+  width: 20px; height: 20px;
+  border: 2px solid var(--border);
+  border-top-color: var(--mavi);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+
+/* ── ESKI QUOTE/ITEM STYLES ── */
+.quote-item, .se-item, .eq-item, .wo-item {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--bg2);
+  cursor: pointer;
+  transition: background .1s;
+  border-left: 3px solid transparent;
+}
+.quote-item:hover, .se-item:hover, .eq-item:hover, .wo-item:hover {
+  background: var(--bg2);
+}
+.quote-item.active, .se-item.active, .eq-item.active, .wo-item.active {
+  background: var(--mavi-acik);
+  border-left-color: var(--mavi);
+}
+.qi-top, .qi-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.qi-no {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--mavi-koyu);
+}
+.qi-musteri {
+  font-size: 12px;
+  color: var(--metin2);
+  margin: 2px 0;
+}
+.qi-tarih { font-size: 10px; color: var(--metin4); }
+.qi-tutar { font-size: 11px; font-weight: 600; color: var(--metin2); }
+
+/* ── DETAIL MUSTERI TAG ── */
+.detail-musteri-tag {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background: var(--bg2);
+  color: var(--metin3);
+}
+
+/* ── ESKI TABLO ── */
+.items-table, .stl-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.items-table th, .stl-table th {
+  background: var(--bg2);
+  padding: 7px 10px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--metin3);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+.items-table td, .stl-table td {
+  padding: 7px 10px;
+  font-size: 12px;
+  color: var(--metin2);
+  border-bottom: 1px solid var(--bg2);
+}
+.items-table tr:hover td, .stl-table tr:hover td {
+  background: var(--bg2);
+}
+.items-table input, .stl-table input, .items-table select, .stl-table select {
+  width: 100%;
+  padding: 4px 6px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 11px;
+  font-family: inherit;
+  background: var(--beyaz);
+  color: var(--metin2);
+}
+.items-table input:focus, .stl-table input:focus {
+  outline: none;
+  border-color: var(--mavi);
+}
+
+/* ── ACTION ROW ── */
+.action-row {
+  display: flex;
+  gap: 8px;
+  padding: 10px 0;
+}
+
+/* ── HEADER-SEP ── */
+.header-sep {
+  display: none;
+}
+
 /* ── RESPONSIVE ── */
 @media (max-width: 768px) {
   .sidebar { width: 100%; height: auto; position: relative; }
   .icerik-alani { margin-left: 0; }
   .iki-panel { flex-direction: column; height: auto; }
   .sol-panel { width: 100%; height: 300px; }
-  .form-grid-2, .form-grid-3 { grid-template-columns: 1fr; }
+  .list-panel { width: 100%; height: 300px; }
+  .layout { flex-direction: column; height: auto; }
+  .form-grid, .form-grid-2, .form-grid-3, .form-grid-4 { grid-template-columns: 1fr; }
   .kpi-grid { grid-template-columns: repeat(2, 1fr); }
 }

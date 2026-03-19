@@ -4,146 +4,20 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ersan MES — Personel & Yetkinlik Yönetimi</title>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-<style>
-:root{
-  --bg:#f0f2f5;--surface:#fff;--surface2:#f7f8fa;--border:#e2e5ea;--border2:#c8cdd6;
-  --text:#1a1d23;--text2:#5a6170;--text3:#9aa0ad;
-  --accent:#7c3aed;--accent-light:#ede9fe;--accent-hover:#6d28d9;
-  --green:#059669;--green-light:#d1fae5;--red:#dc2626;--red-light:#fee2e2;
-  --orange:#d97706;--orange-light:#fef3c7;--blue:#2563eb;--blue-light:#dbeafe;
-  --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;--radius:8px;
-}
-*{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:var(--sans);background:var(--bg);color:var(--text);height:100vh;overflow:hidden;font-size:13px;}
-
-/* HEADER */
-.header{height:52px;background:#1e1b4b;display:flex;align-items:center;padding:0 20px;gap:16px;position:fixed;top:0;left:0;right:0;z-index:100;}
-.logo-badge{width:28px;height:28px;border-radius:6px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:white;font-family:var(--mono);}
-.header-title{color:white;font-size:14px;font-weight:600;}
-.header-sub{color:rgba(255,255,255,.5);font-size:11px;}
-.header-sep{width:1px;height:28px;background:rgba(255,255,255,.2);}
-.std-badge{font-size:10px;font-weight:600;background:rgba(124,58,237,.3);color:#c4b5fd;padding:3px 10px;border-radius:20px;border:1px solid rgba(124,58,237,.4);}
-
-/* LAYOUT */
-.layout-wrapper{display:flex;height:calc(100vh - 52px);margin-top:52px;}
-
-/* LEFT PANEL */
-.list-panel{width:220px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;}
-.list-header{padding:12px 14px 8px;border-bottom:1px solid var(--border);}
-.list-header h2{font-size:13px;font-weight:600;color:var(--text);}
-.list-count{font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:2px;}
-.list-search{padding:8px 10px;border-bottom:1px solid var(--border);}
-.list-search input{width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:var(--sans);background:var(--surface2);outline:none;color:var(--text);}
-.list-search input:focus{border-color:var(--accent);}
-.list-scroll{flex:1;overflow-y:auto;}
-.p-item{padding:10px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s;}
-.p-item:hover{background:var(--surface2);}
-.p-item.active{background:var(--accent-light);border-left:3px solid var(--accent);}
-.p-name{font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.p-gorev{font-size:11px;color:var(--text3);margin-top:2px;}
-.p-badges{display:flex;gap:4px;margin-top:4px;flex-wrap:wrap;}
-.badge-aktif{font-size:9px;font-weight:700;padding:1px 7px;border-radius:10px;background:var(--green-light);color:var(--green);}
-.badge-pasif{font-size:9px;font-weight:700;padding:1px 7px;border-radius:10px;background:#f3f4f6;color:#9ca3af;}
-.list-empty{padding:32px 16px;text-align:center;color:var(--text3);font-size:12px;}
-
-/* RIGHT PANEL */
-.detail-panel{flex:1;overflow:hidden;display:flex;flex-direction:column;background:var(--bg);}
-.detail-toolbar{height:48px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:10px;flex-shrink:0;}
-.detail-name{font-size:14px;font-weight:600;color:var(--text);flex:1;}
-.detail-scroll{flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:12px;}
-
-/* CARDS */
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
-.card-header{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;}
-.card-dot{width:6px;height:6px;border-radius:50%;}
-.card-body{padding:14px;}
-
-/* FORM GRID */
-.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
-.fg{display:flex;flex-direction:column;gap:4px;}
-.fg.full{grid-column:1/-1;}
-.fl{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;}
-.fi{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:12px;font-family:var(--sans);color:var(--text);outline:none;width:100%;}
-.fi:focus{border-color:var(--accent);}
-.fi:disabled{opacity:.6;cursor:not-allowed;}
-.fi-static{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:12px;color:var(--text);min-height:32px;}
-
-/* BUTTONS */
-.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;background:var(--surface);color:var(--text2);font-family:var(--sans);transition:all .15s;white-space:nowrap;}
-.btn:hover{border-color:var(--accent);color:var(--accent);}
-.btn.primary{background:var(--accent);color:white;border-color:var(--accent);}
-.btn.primary:hover{background:var(--accent-hover);}
-.btn:disabled{opacity:.5;cursor:not-allowed;}
-
-/* YETKINLIK MATRISI */
-.yk-table{width:100%;border-collapse:collapse;}
-.yk-table th{padding:7px 10px;text-align:left;font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;background:var(--surface2);border-bottom:1px solid var(--border);}
-.yk-table td{padding:6px 10px;border-bottom:1px solid var(--border);vertical-align:middle;font-size:12px;}
-.yk-table tr:last-child td{border-bottom:none;}
-.yk-table tr:hover td{background:var(--surface2);}
-.yk-select{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:12px;font-family:var(--sans);color:var(--text);outline:none;width:100%;}
-.yk-select:focus{border-color:var(--accent);}
-.yk-usta{background:#fef3c7;color:#92400e;}
-.yk-yeterli{background:var(--green-light);color:#065f46;}
-.yk-aday{background:var(--blue-light);color:#1e40af;}
-.yk-yetkisiz{background:#f3f4f6;color:#6b7280;}
-
-/* AKTIVITE CARD */
-.akt-box{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:16px;text-align:center;}
-.akt-box p{font-size:13px;color:var(--text2);line-height:1.7;}
-.akt-box a{color:var(--accent);text-decoration:none;font-weight:500;}
-.akt-box a:hover{text-decoration:underline;}
-
-/* EMPTY STATE */
-.empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text3);gap:12px;padding:40px;text-align:center;}
-.empty-icon{font-size:40px;opacity:.4;}
-
-/* TOAST */
-.toast-wrap{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;}
-.toast{padding:10px 16px;border-radius:8px;font-size:12px;font-weight:500;color:white;animation:fadeIn .2s;}
-.toast.ok{background:var(--green);}
-.toast.err{background:var(--red);}
-.toast.inf{background:var(--accent);}
-@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-
-/* SPINNER */
-.spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;display:inline-block;}
-@keyframes spin{to{transform:rotate(360deg)}}
-.loading-row{display:flex;align-items:center;justify-content:center;padding:32px;gap:12px;color:var(--text3);font-size:13px;}
-
-/* SAVE ROW */
-.save-row{display:flex;align-items:center;justify-content:flex-end;gap:8px;padding-top:10px;border-top:1px solid var(--border);margin-top:10px;}
-.save-status{font-size:11px;color:var(--text3);}
-
-/* CHECKBOX */
-.aktif-row{display:flex;align-items:center;gap:8px;}
-.aktif-row input[type=checkbox]{width:15px;height:15px;accent-color:var(--accent);cursor:pointer;}
-.aktif-row label{font-size:12px;color:var(--text2);}
-
-/* MOBILE */
-@media(max-width:768px){
-  .list-panel{width:100%;max-width:100%;position:fixed;bottom:0;left:0;right:0;top:auto;height:50vh;z-index:50;border-top:2px solid var(--border);border-right:none;}
-  .detail-panel{margin-bottom:50vh;}
-  .form-grid{grid-template-columns:1fr;}
-  .form-grid-3{grid-template-columns:1fr 1fr;}
-}
-</style>
 <link rel="stylesheet" href="ersan_styles.css">
+<script src="ersan_nav.js" defer></script>
+<script src="ersan_log.js" defer></script>
 </head>
 <body>
-<script src="ersan_nav.js"></script>
-<script src="ersan_log.js"></script>
-
-<header class="header">
-  <div style="display:flex;align-items:center;gap:10px;">
-    <div class="logo-badge">MES</div>
-    <div><div class="header-title">Ersan MES</div><div class="header-sub">Personel & Yetkinlik Yönetimi</div></div>
+<div id="nav-alani"></div>
+<div class="icerik-alani">
+  <div class="topbar">
+    <div class="topbar-baslik">Personel</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
+    </div>
   </div>
-  <div class="header-sep"></div>
-  <span class="std-badge">ISO 9001 §7.1.2</span>
-</header>
+  <div class="sayfa-icerik">
 
 <div class="layout-wrapper">
 
@@ -178,6 +52,9 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);height:100vh
 </div>
 
 <div class="toast-wrap" id="toastWrap"></div>
+
+  </div>
+</div>
 
 <script>
 // ── CONFIG ──────────────────────────────────────────────────────────────

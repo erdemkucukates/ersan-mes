@@ -4,166 +4,21 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ersan MES — Girdi Kalite Kontrol</title>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-<style>
-:root{
-  --bg:#f0f2f5;--surface:#fff;--surface2:#f7f8fa;--border:#e2e5ea;--border2:#c8cdd6;
-  --text:#1a1d23;--text2:#5a6170;--text3:#9aa0ad;
-  --accent:#7c3aed;--accent-light:#ede9fe;--accent-hover:#6d28d9;
-  --green:#059669;--green-light:#d1fae5;--red:#dc2626;--red-light:#fee2e2;
-  --orange:#d97706;--orange-light:#fef3c7;--blue:#2563eb;--blue-light:#dbeafe;
-  --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;--radius:8px;
-}
-*{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:var(--sans);background:var(--bg);color:var(--text);height:100vh;overflow:hidden;font-size:13px;}
-
-.header{height:52px;background:#1e1b4b;display:flex;align-items:center;padding:0 20px;gap:16px;position:fixed;top:0;left:0;right:0;z-index:100;}
-.logo-badge{width:28px;height:28px;border-radius:6px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:white;font-family:var(--mono);}
-.header-title{color:white;font-size:14px;font-weight:600;}
-.header-sub{color:rgba(255,255,255,.5);font-size:11px;}
-.header-sep{width:1px;height:28px;background:rgba(255,255,255,.2);}
-.header-nav a{color:rgba(255,255,255,.6);font-size:13px;font-weight:500;text-decoration:none;padding:6px 12px;border-radius:6px;transition:all .15s;}
-.header-nav a:hover{background:rgba(255,255,255,.1);color:white;}
-.header-nav a.active{background:rgba(255,255,255,.15);color:white;}
-.header-nav{display:flex;gap:4px;}
-
-.layout-wrapper{display:flex;height:calc(100vh - 52px);margin-top:52px;}
-
-/* LEFT PANEL */
-.list-panel{width:220px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;}
-.list-header{padding:12px 14px 8px;border-bottom:1px solid var(--border);}
-.list-header h2{font-size:12px;font-weight:600;}
-.list-count{font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:2px;}
-.list-search{padding:8px 10px 6px;border-bottom:1px solid var(--border);}
-.list-search input{width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:var(--sans);background:var(--surface2);outline:none;}
-.list-search input:focus{border-color:var(--accent);}
-.filter-row{padding:6px 10px 8px;border-bottom:1px solid var(--border);display:flex;gap:4px;flex-wrap:wrap;}
-.fc{padding:3px 8px;border-radius:10px;font-size:10px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text3);}
-.fc.on{background:var(--accent-light);color:var(--accent);border-color:var(--accent);}
-.list-scroll{flex:1;overflow-y:auto;}
-
-.gk-item{padding:10px 12px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s;}
-.gk-item:hover{background:var(--surface2);}
-.gk-item.active{background:var(--accent-light);border-left:3px solid var(--accent);}
-.gk-mat{font-family:var(--mono);font-size:11px;font-weight:500;color:var(--accent);}
-.gk-malzeme{font-size:12px;font-weight:500;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.gk-tedarikci{font-size:10px;color:var(--text3);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.gk-meta{font-size:10px;color:var(--text3);margin-top:2px;display:flex;align-items:center;justify-content:space-between;}
-
-/* RIGHT PANEL */
-.detail-panel{flex:1;overflow:hidden;display:flex;flex-direction:column;}
-.detail-toolbar{height:52px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:10px;flex-shrink:0;}
-.toolbar-title{font-size:14px;font-weight:600;font-family:var(--mono);}
-.detail-scroll{flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:12px;}
-
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
-.card-header{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;}
-.card-body{padding:14px;}
-.card-dot{width:6px;height:6px;border-radius:50%;}
-
-.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;background:var(--surface);color:var(--text2);font-family:var(--sans);transition:all .15s;white-space:nowrap;}
-.btn:hover{border-color:var(--accent);color:var(--accent);}
-.btn.primary{background:var(--accent);color:white;border-color:var(--accent);}
-.btn.primary:hover{background:var(--accent-hover);}
-.btn.success{background:var(--green);color:white;border-color:var(--green);}
-.btn.warn{background:var(--orange);color:white;border-color:var(--orange);}
-.btn.danger{background:var(--red);color:white;border-color:var(--red);}
-.btn:disabled{opacity:.5;cursor:not-allowed;}
-
-.badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;}
-.b-Karantina{background:var(--orange-light);color:var(--orange);}
-.b-Muayenede{background:var(--blue-light);color:var(--blue);}
-.b-Serbest{background:var(--green-light);color:var(--green);}
-.b-Reddedildi{background:var(--red-light);color:var(--red);}
-.b-Tükendi{background:#f3f4f6;color:#6b7280;}
-.b-Koşullu\ Serbest{background:var(--blue-light);color:var(--blue);}
-
-.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
-.fg{display:flex;flex-direction:column;gap:4px;}
-.fl{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;}
-.fi{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:12px;font-family:var(--sans);color:var(--text);outline:none;width:100%;}
-.fi:focus{border-color:var(--accent);}
-.fi:disabled{opacity:.65;cursor:default;}
-.fi[readonly]{opacity:.65;cursor:default;}
-textarea.fi{resize:vertical;min-height:80px;}
-
-/* Gözle Muayene Radio Buttons */
-.muayene-group{display:flex;gap:10px;margin-top:4px;}
-.muayene-btn{flex:1;min-width:80px;height:52px;border-radius:8px;border:2px solid var(--border);background:var(--surface2);cursor:pointer;font-size:13px;font-weight:700;font-family:var(--sans);display:flex;align-items:center;justify-content:center;gap:5px;transition:all .15s;}
-.muayene-btn:hover{border-color:var(--border2);}
-.muayene-btn.sel-uygun{border-color:var(--green);background:var(--green-light);color:var(--green);}
-.muayene-btn.sel-sartli{border-color:var(--orange);background:var(--orange-light);color:var(--orange);}
-.muayene-btn.sel-uygun-degil{border-color:var(--red);background:var(--red-light);color:var(--red);}
-
-.upload-area{border:2px dashed var(--border);border-radius:6px;padding:12px;text-align:center;cursor:pointer;transition:all .15s;font-size:12px;color:var(--text3);}
-.upload-area:hover{border-color:var(--accent);color:var(--accent);}
-.upload-filename{font-size:11px;color:var(--green);font-family:var(--mono);margin-top:4px;}
-
-.warning-banner{background:var(--red-light);border:1px solid var(--red);border-radius:6px;padding:8px 12px;font-size:12px;color:var(--red);font-weight:500;margin-top:8px;}
-
-.action-row{display:flex;justify-content:flex-end;gap:8px;padding-top:4px;}
-
-.lot-table{width:100%;border-collapse:collapse;font-size:12px;}
-.lot-table th{text-align:left;padding:6px 8px;font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border);}
-.lot-table td{padding:7px 8px;border-bottom:1px solid var(--border);color:var(--text);}
-.lot-table tr:last-child td{border-bottom:none;}
-
-.empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text3);gap:12px;padding:40px;text-align:center;}
-.empty-icon{font-size:40px;opacity:.4;}
-
-.toast-wrap{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;}
-.toast{padding:10px 16px;border-radius:8px;font-size:12px;font-weight:500;color:white;animation:fadeIn .2s;}
-.toast.ok{background:var(--green);}
-.toast.err{background:var(--red);}
-.toast.inf{background:var(--accent);}
-@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-
-/* Modal */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;display:flex;align-items:center;justify-content:center;}
-.modal-box{background:var(--surface);border-radius:10px;padding:24px;width:400px;max-width:95vw;display:flex;flex-direction:column;gap:14px;}
-.modal-title{font-size:14px;font-weight:600;}
-.modal-footer{display:flex;justify-content:flex-end;gap:8px;}
-
-/* Print */
-@media print {
-  body * { visibility:hidden; }
-  #print-area, #print-area * { visibility:visible; }
-  #print-area { position:fixed; top:0; left:0; width:70mm; height:40mm; display:flex; align-items:center; gap:8px; padding:4mm; }
-}
-
-@media(max-width:768px){
-  .layout-wrapper{flex-direction:column;height:auto;overflow:auto;}
-  .list-panel{width:100%;height:auto;border-right:none;border-bottom:1px solid var(--border);}
-  .list-scroll{max-height:300px;}
-  .detail-panel{min-height:400px;}
-  .form-grid{grid-template-columns:1fr;}
-  .form-grid-3{grid-template-columns:1fr 1fr;}
-  .header-nav{display:none;}
-  .muayene-group{flex-wrap:wrap;}
-}
-</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <link rel="stylesheet" href="ersan_styles.css">
+<script src="ersan_nav.js" defer></script>
+<script src="ersan_log.js" defer></script>
 </head>
 <body>
-<script src="ersan_nav.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-
-<header class="header">
-  <div style="display:flex;align-items:center;gap:10px;">
-    <div class="logo-badge">MES</div>
-    <div><div class="header-title">Ersan MES</div><div class="header-sub">Girdi Kalite</div></div>
+<div id="nav-alani"></div>
+<div class="icerik-alani">
+  <div class="topbar">
+    <div class="topbar-baslik">Girdi Kalite</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
+    </div>
   </div>
-  <div class="header-sep"></div>
-  <nav class="header-nav">
-    <a href="ersan_teklif.html">Teklifler</a>
-    <a href="ersan_planlama.html">Planlama</a>
-    <a href="ersan_satinalma.html">Satınalma</a>
-    <a href="ersan_on_kabul.html">Ön Kabul</a>
-    <a href="ersan_girdi_kalite.html" class="active">Girdi Kalite</a>
-    <a href="ersan_isemirleri.html">İş Emirleri</a>
-  </nav>
-</header>
+  <div class="sayfa-icerik">
 
 <div class="layout-wrapper">
 
@@ -877,5 +732,8 @@ async function modalConfirm() {
 /* ─── INIT ────────────────────────────────────────── */
 loadAll();
 </script>
+
+  </div><!-- /sayfa-icerik -->
+</div><!-- /icerik-alani -->
 </body>
 </html>

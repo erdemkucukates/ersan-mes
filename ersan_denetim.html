@@ -4,144 +4,20 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ersan MES — İç Denetim</title>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-<style>
-:root{
-  --bg:#f0f2f5;--surface:#fff;--surface2:#f7f8fa;--border:#e2e5ea;--border2:#c8cdd6;
-  --text:#1a1d23;--text2:#5a6170;--text3:#9aa0ad;
-  --accent:#7c3aed;--accent-light:#ede9fe;--accent-hover:#6d28d9;
-  --green:#059669;--green-light:#d1fae5;--red:#dc2626;--red-light:#fee2e2;
-  --orange:#d97706;--orange-light:#fef3c7;--blue:#2563eb;--blue-light:#dbeafe;
-  --yellow:#ca8a04;--yellow-light:#fef9c3;
-  --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;--radius:8px;
-}
-*{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:var(--sans);background:var(--bg);color:var(--text);height:100vh;overflow:hidden;font-size:13px;}
-
-/* TOP HEADER */
-.header{height:52px;background:#1e1b4b;display:flex;align-items:center;padding:0 20px;gap:14px;position:fixed;top:48px;left:0;right:0;z-index:99;}
-.logo-badge{width:28px;height:28px;border-radius:6px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:14px;color:white;}
-.header-title{color:white;font-size:14px;font-weight:600;}
-.header-sub{color:rgba(255,255,255,.45);font-size:11px;}
-.header-sep{width:1px;height:28px;background:rgba(255,255,255,.18);}
-
-/* LAYOUT */
-.layout-wrapper{display:flex;height:calc(100vh - 48px - 52px);margin-top:calc(48px + 52px);}
-
-/* LEFT PANEL */
-.list-panel{width:220px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;}
-.list-header{padding:12px 14px 8px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
-.list-header h2{font-size:12px;font-weight:600;}
-.list-count{font-size:10px;color:var(--text3);font-family:var(--mono);}
-.list-new-btn{display:inline-flex;align-items:center;gap:4px;padding:4px 9px;background:var(--accent);color:white;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:var(--sans);}
-.list-new-btn:hover{background:var(--accent-hover);}
-.filter-row{padding:6px 10px 7px;border-bottom:1px solid var(--border);display:flex;gap:4px;flex-wrap:wrap;}
-.fc{padding:3px 7px;border-radius:10px;font-size:10px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text3);transition:all .12s;}
-.fc.on{background:var(--accent-light);color:var(--accent);border-color:var(--accent);}
-.list-scroll{flex:1;overflow-y:auto;}
-.list-empty{padding:20px 14px;text-align:center;color:var(--text3);font-size:12px;line-height:1.6;}
-.den-item{padding:10px 12px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s;}
-.den-item:hover{background:var(--surface2);}
-.den-item.active{background:var(--accent-light);border-left:3px solid var(--accent);}
-.den-no{font-family:var(--mono);font-size:11px;font-weight:500;color:var(--accent);}
-.den-tarih{font-size:10px;color:var(--text3);margin-top:1px;}
-.den-kapsam{font-size:11px;color:var(--text2);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.den-meta{display:flex;align-items:center;justify-content:space-between;margin-top:4px;}
-
-/* RIGHT PANEL */
-.detail-panel{flex:1;overflow:hidden;display:flex;flex-direction:column;}
-.detail-toolbar{height:52px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:10px;flex-shrink:0;}
-.toolbar-title{font-size:13px;font-weight:600;font-family:var(--mono);color:var(--accent);}
-.toolbar-spacer{flex:1;}
-.detail-scroll{flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:12px;}
-
-/* CARDS */
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
-.card-header{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;}
-.card-dot{width:6px;height:6px;border-radius:50%;}
-.card-body{padding:14px;}
-.card-header-right{margin-left:auto;display:flex;gap:6px;align-items:center;}
-
-/* FORM */
-.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
-.fg{display:flex;flex-direction:column;gap:4px;}
-.fg-full{grid-column:1/-1;}
-.fl{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;}
-.fi{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:12px;font-family:var(--sans);color:var(--text);outline:none;width:100%;}
-.fi:focus{border-color:var(--accent);background:var(--surface);}
-.fi:disabled{opacity:.6;cursor:default;}
-textarea.fi{resize:vertical;min-height:80px;}
-select.fi{cursor:pointer;}
-
-/* BUTTONS */
-.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;background:var(--surface);color:var(--text2);font-family:var(--sans);transition:all .15s;white-space:nowrap;}
-.btn:hover{border-color:var(--accent);color:var(--accent);}
-.btn.primary{background:var(--accent);color:white;border-color:var(--accent);}
-.btn.primary:hover{background:var(--accent-hover);}
-.btn.success{background:var(--green);color:white;border-color:var(--green);}
-.btn.danger{background:var(--red);color:white;border-color:var(--red);}
-.btn.sm{padding:4px 9px;font-size:11px;}
-.btn:disabled{opacity:.5;cursor:not-allowed;}
-
-/* BADGES */
-.badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;white-space:nowrap;}
-.b-Planlandı{background:var(--blue-light);color:var(--blue);}
-.b-Devam\ Ediyor{background:var(--orange-light);color:var(--orange);}
-.b-Tamamlandı{background:var(--green-light);color:var(--green);}
-.b-Majör{background:var(--red-light);color:var(--red);}
-.b-Minör{background:var(--orange-light);color:var(--orange);}
-.b-Gözlem{background:var(--yellow-light);color:var(--yellow);}
-
-/* BULGULAR CARD */
-.bulgu-list{display:flex;flex-direction:column;gap:8px;}
-.bulgu-card{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:10px 12px;position:relative;}
-.bulgu-card-head{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
-.bulgu-remove-btn{margin-left:auto;background:none;border:none;cursor:pointer;color:var(--text3);font-size:14px;padding:2px 5px;border-radius:4px;transition:color .12s;}
-.bulgu-remove-btn:hover{color:var(--red);}
-.bulgu-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-
-/* AI CARD */
-.ai-result{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:12px 14px;font-size:12px;line-height:1.75;color:var(--text);white-space:pre-wrap;max-height:400px;overflow-y:auto;}
-.ai-result.loading{color:var(--text3);font-style:italic;}
-.ai-result ol, .ai-result ul{padding-left:18px;}
-.ai-result li{margin-bottom:3px;}
-
-/* EMPTY STATE */
-.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--text3);gap:8px;}
-.empty-state .es-icon{font-size:40px;opacity:.4;}
-.empty-state .es-text{font-size:13px;}
-.empty-state .es-sub{font-size:11px;}
-
-/* TOAST */
-.toast{position:fixed;bottom:24px;right:24px;background:#1e1b4b;color:white;padding:10px 18px;border-radius:8px;font-size:12px;font-weight:500;z-index:9999;opacity:0;transform:translateY(8px);transition:all .25s;pointer-events:none;}
-.toast.show{opacity:1;transform:translateY(0);}
-.toast.err{background:var(--red);}
-
-/* MOBILE */
-@media(max-width:640px){
-  .list-panel{width:100%;position:fixed;bottom:0;height:50vh;border-top:1px solid var(--border);border-right:none;z-index:50;}
-  .list-panel.hidden{display:none;}
-  .layout-wrapper{flex-direction:column;}
-  .detail-panel{height:50vh;}
-  .form-grid,.form-grid-3,.bulgu-grid{grid-template-columns:1fr;}
-}
-</style>
 <link rel="stylesheet" href="ersan_styles.css">
+<script src="ersan_nav.js" defer></script>
+<script src="ersan_log.js" defer></script>
 </head>
 <body>
-<script src="ersan_nav.js"></script>
-<script src="ersan_log.js"></script>
-
-<div class="header">
-  <div class="logo-badge">🔍</div>
-  <div>
-    <div class="header-title">İç Denetim</div>
-    <div class="header-sub">AS9100 Rev.D §9.2</div>
+<div id="nav-alani"></div>
+<div class="icerik-alani">
+  <div class="topbar">
+    <div class="topbar-baslik">Ic Denetim</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
+    </div>
   </div>
-  <div class="header-sep"></div>
-  <div class="header-sub" style="color:rgba(255,255,255,.5);font-size:11px;">Denetim planlama · Bulgu yönetimi · AI kontrol listesi</div>
-</div>
+  <div class="sayfa-icerik">
 
 <div class="layout-wrapper">
   <!-- LEFT PANEL -->
@@ -182,6 +58,9 @@ select.fi{cursor:pointer;}
 </div>
 
 <div class="toast" id="toast"></div>
+
+  </div>
+</div>
 
 <script>
 /* ===== CONFIG ===== */

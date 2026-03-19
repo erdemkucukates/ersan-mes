@@ -4,7 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ersan MES — Teklif Hesaplama</title>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="ersan_styles.css">
+<script src="ersan_nav.js" defer></script>
+<script src="ersan_log.js" defer></script>
 <style>
 :root {
   --bg: #0f1117;
@@ -337,27 +339,17 @@ input[type=range]::-webkit-slider-thumb {
 }
 .op-row:last-child { border-bottom: none; }
 </style>
-<link rel="stylesheet" href="ersan_styles.css">
 </head>
 <body>
-<script src="ersan_nav.js"></script>
-
-<!-- HEADER -->
-<header class="header">
-  <div class="logo">
-    <div class="logo-badge">MES</div>
-    <div>
-      <div class="logo-text">Ersan MES</div>
-      <div class="logo-sub">Teklif Hesaplama</div>
+<div id="nav-alani"></div>
+<div class="icerik-alani">
+  <div class="topbar">
+    <div class="topbar-baslik">Maliyet Hesaplama</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
     </div>
   </div>
-  <div class="header-sep"></div>
-  <button class="header-back" onclick="window.location='ersan_teklif.html'">
-    ← Teklife Dön
-  </button>
-  <div class="header-title">AI Destekli Maliyet Hesaplama</div>
-  <div class="header-badge">Claude Vision</div>
-</header>
+  <div class="sayfa-icerik">
 
 <!-- LAYOUT -->
 <div class="layout">
@@ -1891,5 +1883,7 @@ renderOps();
 hesapla();
 loadOgrenmeOrnekleri();
 </script>
+  </div><!-- /sayfa-icerik -->
+</div><!-- /icerik-alani -->
 </body>
 </html>

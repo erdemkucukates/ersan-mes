@@ -4,20 +4,29 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ersan MES — Kalite Kontrol</title>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="ersan_styles.css">
+<script src="ersan_nav.js" defer></script>
+<script src="ersan_log.js" defer></script>
+</head>
+<body>
+<div id="nav-alani"></div>
+<div class="icerik-alani">
+  <div class="topbar">
+    <div class="topbar-baslik">Kalite Kontrol</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
+    </div>
+  </div>
+  <div class="sayfa-icerik">
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'IBM Plex Sans', sans-serif; background: #f0f2f5; min-height: 100vh; color: #1a1d23; }
 .container { max-width: 900px; margin: 0 auto; padding: 40px 20px; }
 .page-header { text-align: center; margin-bottom: 40px; }
 .page-icon { font-size: 48px; margin-bottom: 12px; }
 .page-title { font-size: 24px; font-weight: 700; margin-bottom: 6px; }
 .page-std { font-size: 11px; font-weight: 600; background: #ede9fe; color: #5b21b6; padding: 3px 12px; border-radius: 20px; display: inline-block; margin-bottom: 8px; }
 .page-desc { font-size: 14px; color: #5a6170; max-width: 500px; margin: 0 auto; line-height: 1.6; }
-
 .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 @media(max-width:640px) { .cards { grid-template-columns: 1fr; } }
-
 .card {
   background: #fff; border: 1px solid #e2e5ea; border-radius: 12px;
   padding: 24px; transition: all .15s; position: relative; overflow: hidden;
@@ -32,10 +41,6 @@ body { font-family: 'IBM Plex Sans', sans-serif; background: #f0f2f5; min-height
 .card-arrow { position: absolute; top: 24px; right: 20px; font-size: 18px; color: #e2e5ea; }
 .card.active .card-arrow { color: #7c3aed; }
 </style>
-<link rel="stylesheet" href="ersan_styles.css">
-</head>
-<body>
-<script src="ersan_nav.js"></script>
 <div class="container">
   <div class="page-header">
     <div class="page-icon">✅</div>
@@ -74,5 +79,7 @@ body { font-family: 'IBM Plex Sans', sans-serif; background: #f0f2f5; min-height
 
   </div>
 </div>
+  </div><!-- /sayfa-icerik -->
+</div><!-- /icerik-alani -->
 </body>
 </html>

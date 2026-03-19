@@ -4,7 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ersan MES — Müşteri Yönetimi</title>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="ersan_styles.css">
+<script src="ersan_nav.js" defer></script>
+<script src="ersan_log.js" defer></script>
 <style>
 :root {
   --bg: #f0f2f5;
@@ -358,11 +360,17 @@ textarea.field-input { resize: vertical; min-height: 70px; }
   .stat-grid { grid-template-columns: repeat(2, 1fr); }
 }
 </style>
-<link rel="stylesheet" href="ersan_styles.css">
 </head>
 <body>
-<script src="ersan_nav.js"></script>
-<script src="ersan_log.js"></script>
+<div id="nav-alani"></div>
+<div class="icerik-alani">
+  <div class="topbar">
+    <div class="topbar-baslik">Musteriler</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
+    </div>
+  </div>
+  <div class="sayfa-icerik">
 
 <div class="layout">
 
@@ -1128,5 +1136,7 @@ document.getElementById('aiModal').addEventListener('click', function(e) {
 // ═══════════════════════════════════════
 loadMusteriler();
 </script>
+  </div><!-- /sayfa-icerik -->
+</div><!-- /icerik-alani -->
 </body>
 </html>

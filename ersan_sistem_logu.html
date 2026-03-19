@@ -4,159 +4,20 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ersan MES — Sistem Log Görüntüleyici</title>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-<style>
-:root{
-  --bg:#f0f2f5;--surface:#fff;--surface2:#f7f8fa;--border:#e2e5ea;--border2:#c8cdd6;
-  --text:#1a1d23;--text2:#5a6170;--text3:#9aa0ad;
-  --accent:#7c3aed;--accent-light:#ede9fe;--accent-hover:#6d28d9;
-  --green:#059669;--green-light:#d1fae5;--red:#dc2626;--red-light:#fee2e2;
-  --orange:#d97706;--orange-light:#fef3c7;--blue:#2563eb;--blue-light:#dbeafe;
-  --purple:#7c3aed;--purple-light:#ede9fe;
-  --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;--radius:8px;
-}
-*{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:var(--sans);background:var(--bg);color:var(--text);height:100vh;overflow:hidden;font-size:13px;}
-
-.header{height:52px;background:#1e1b4b;display:flex;align-items:center;padding:0 20px;gap:16px;position:fixed;top:0;left:0;right:0;z-index:100;}
-.logo-badge{width:28px;height:28px;border-radius:6px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:white;font-family:var(--mono);}
-.header-title{color:white;font-size:14px;font-weight:600;}
-.header-sub{color:rgba(255,255,255,.5);font-size:11px;}
-.header-sep{width:1px;height:28px;background:rgba(255,255,255,.2);}
-.header-nav a{color:rgba(255,255,255,.6);font-size:13px;font-weight:500;text-decoration:none;padding:6px 12px;border-radius:6px;transition:all .15s;}
-.header-nav a:hover{background:rgba(255,255,255,.1);color:white;}
-.header-nav a.active{background:rgba(255,255,255,.15);color:white;}
-.header-nav{display:flex;gap:4px;}
-
-.layout-wrapper{display:flex;flex-direction:column;height:calc(100vh - 52px);margin-top:52px;}
-
-/* FILTER BAR */
-.filter-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;flex-shrink:0;}
-.filter-bar select,.filter-bar input[type="date"]{
-  padding:6px 10px;border:1px solid var(--border);border-radius:6px;
-  font-size:12px;font-family:var(--sans);background:var(--surface2);
-  color:var(--text);outline:none;cursor:pointer;
-}
-.filter-bar select:focus,.filter-bar input[type="date"]:focus{border-color:var(--accent);}
-.filter-label{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;white-space:nowrap;}
-.filter-sep{width:1px;height:24px;background:var(--border);margin:0 4px;}
-
-.btn{display:flex;align-items:center;gap:5px;padding:6px 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;background:var(--surface);color:var(--text2);font-family:var(--sans);transition:all .15s;white-space:nowrap;}
-.btn:hover{border-color:var(--accent);color:var(--accent);}
-.btn.primary{background:var(--accent);color:white;border-color:var(--accent);}
-.btn.primary:hover{background:var(--accent-hover);}
-.btn.ghost{background:transparent;border-color:var(--border2);color:var(--text2);}
-.btn.ghost:hover{background:var(--surface2);}
-
-.count-badge{background:var(--accent-light);color:var(--accent);font-size:11px;font-weight:600;padding:3px 10px;border-radius:10px;font-family:var(--mono);}
-
-/* MAIN AREA */
-.main-area{flex:1;overflow:hidden;display:flex;flex-direction:column;padding:16px 20px;gap:12px;}
-
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
-
-/* TABLE */
-.table-wrap{overflow:auto;flex:1;}
-.log-table{width:100%;border-collapse:collapse;min-width:800px;}
-.log-table th{
-  padding:8px 12px;text-align:left;font-size:10px;font-weight:600;
-  color:var(--text3);text-transform:uppercase;letter-spacing:.5px;
-  background:var(--surface2);border-bottom:2px solid var(--border);
-  position:sticky;top:0;z-index:1;white-space:nowrap;
-}
-.log-table td{padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:middle;font-size:12px;}
-.log-table tr:last-child td{border-bottom:none;}
-.log-table tbody tr{transition:filter .1s;}
-.log-table tbody tr:hover{filter:brightness(.97);}
-
-/* Row colors */
-.row-silindi td{background:#fee2e2;}
-.row-reddedildi td{background:#fef3c7;}
-.row-onaylandi td,.row-olusturuldu td{background:#d1fae5;}
-.row-guncellendi td{background:#dbeafe;}
-.row-ai td{background:#ede9fe;}
-.row-default td{background:#fff;}
-
-/* Badges */
-.badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;white-space:nowrap;}
-.badge-Oluşturuldu{background:#d1fae5;color:#059669;}
-.badge-Güncellendi{background:#dbeafe;color:#2563eb;}
-.badge-Silindi{background:#fee2e2;color:#dc2626;}
-.badge-Onaylandı{background:#d1fae5;color:#059669;}
-.badge-Reddedildi{background:#fef3c7;color:#d97706;}
-.badge-PDF\ Yüklendi{background:#dbeafe;color:#2563eb;}
-.badge-AI\ Çağrıldı{background:#ede9fe;color:#7c3aed;}
-.badge-Mail\ Gönderildi{background:#f3f4f6;color:#6b7280;}
-.badge-default{background:#f3f4f6;color:#6b7280;}
-
-.mod-badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;background:var(--surface2);color:var(--text2);border:1px solid var(--border);white-space:nowrap;}
-
-.ts-cell{font-family:var(--mono);font-size:11px;color:var(--text2);white-space:nowrap;}
-.user-cell{font-size:12px;font-weight:500;}
-.summary-cell{max-width:280px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text2);}
-.detail-btn{padding:4px 10px;border:1px solid var(--border);border-radius:5px;font-size:11px;font-weight:500;cursor:pointer;background:var(--surface);color:var(--accent);font-family:var(--sans);transition:all .15s;}
-.detail-btn:hover{background:var(--accent-light);border-color:var(--accent);}
-
-/* EMPTY / LOADING */
-.empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text3);gap:12px;padding:40px;text-align:center;}
-.empty-icon{font-size:40px;opacity:.4;}
-@keyframes spin{to{transform:rotate(360deg)}}
-.spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;}
-
-/* TOAST */
-.toast-wrap{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;}
-.toast{padding:10px 16px;border-radius:8px;font-size:12px;font-weight:500;color:white;animation:fadeIn .2s;}
-.toast.ok{background:var(--green);}
-.toast.err{background:var(--red);}
-.toast.inf{background:var(--accent);}
-@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-
-/* MODAL */
-.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;display:flex;align-items:center;justify-content:center;}
-.modal-box{background:white;border-radius:12px;width:760px;max-width:95vw;max-height:88vh;overflow:hidden;display:flex;flex-direction:column;}
-.modal-head{background:#1e1b4b;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;}
-.modal-head-title{color:white;font-weight:600;font-size:14px;}
-.modal-body{padding:20px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:14px;}
-.modal-foot{padding:12px 16px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;}
-.btn-x{background:transparent;border:none;color:white;font-size:20px;cursor:pointer;line-height:1;}
-
-.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.detail-grid-full{grid-column:1/-1;}
-.fg{display:flex;flex-direction:column;gap:4px;}
-.fl{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;}
-.fv{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:12px;font-family:var(--sans);color:var(--text);word-break:break-word;}
-.fv.mono{font-family:var(--mono);font-size:11px;}
-
-.diff-cols{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-.diff-block{border-radius:8px;overflow:hidden;}
-.diff-block-head{padding:8px 12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;}
-.diff-block-head.old{background:#fca5a5;color:#7f1d1d;}
-.diff-block-head.new{background:#6ee7b7;color:#064e3b;}
-.diff-block-body{padding:10px 12px;font-family:var(--mono);font-size:11px;line-height:1.6;white-space:pre-wrap;word-break:break-all;min-height:60px;max-height:280px;overflow-y:auto;}
-.diff-block-body.old{background:#fee2e2;color:#991b1b;}
-.diff-block-body.new{background:#d1fae5;color:#065f46;}
-.diff-block-body.empty-diff{color:var(--text3);font-style:italic;font-family:var(--sans);}
-</style>
 <link rel="stylesheet" href="ersan_styles.css">
+<script src="ersan_nav.js" defer></script>
+<script src="ersan_log.js" defer></script>
 </head>
 <body>
-<script src="ersan_nav.js"></script>
-<script src="ersan_log.js"></script>
-
-<header class="header">
-  <div style="display:flex;align-items:center;gap:10px;">
-    <div class="logo-badge">MES</div>
-    <div><div class="header-title">Ersan MES</div><div class="header-sub">Sistem Log Görüntüleyici</div></div>
+<div id="nav-alani"></div>
+<div class="icerik-alani">
+  <div class="topbar">
+    <div class="topbar-baslik">Sistem Logu</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
+    </div>
   </div>
-  <div class="header-sep"></div>
-  <nav class="header-nav">
-    <a href="ersan_teklif.html">Teklifler</a>
-    <a href="ersan_planlama.html">Planlama</a>
-    <a href="ersan_satinalma.html">Satınalma</a>
-    <a href="ersan_isemirleri.html">İş Emirleri</a>
-    <a href="ersan_sistem_logu.html" class="active">Sistem Logu</a>
-  </nav>
-</header>
+  <div class="sayfa-icerik">
 
 <div class="layout-wrapper">
 
@@ -524,5 +385,8 @@ document.addEventListener('keydown', e => {
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 loadLogs();
 </script>
+
+  </div><!-- /sayfa-icerik -->
+</div><!-- /icerik-alani -->
 </body>
 </html>

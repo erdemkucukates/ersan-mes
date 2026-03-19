@@ -4,172 +4,20 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ersan MES — Satınalma</title>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-<style>
-:root{
-  --bg:#f0f2f5;--surface:#fff;--surface2:#f7f8fa;--border:#e2e5ea;--border2:#c8cdd6;
-  --text:#1a1d23;--text2:#5a6170;--text3:#9aa0ad;
-  --accent:#7c3aed;--accent-light:#ede9fe;--accent-hover:#6d28d9;
-  --green:#059669;--green-light:#d1fae5;--red:#dc2626;--red-light:#fee2e2;
-  --orange:#d97706;--orange-light:#fef3c7;--blue:#2563eb;--blue-light:#dbeafe;
-  --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;--radius:8px;
-}
-*{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:var(--sans);background:var(--bg);color:var(--text);height:100vh;overflow:hidden;font-size:13px;}
-
-.header{height:52px;background:#1e1b4b;display:flex;align-items:center;padding:0 20px;gap:16px;position:fixed;top:0;left:0;right:0;z-index:100;}
-.logo-badge{width:28px;height:28px;border-radius:6px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:white;font-family:var(--mono);}
-.header-title{color:white;font-size:14px;font-weight:600;}
-.header-sub{color:rgba(255,255,255,.5);font-size:11px;}
-.header-sep{width:1px;height:28px;background:rgba(255,255,255,.2);}
-.header-nav a{color:rgba(255,255,255,.6);font-size:13px;font-weight:500;text-decoration:none;padding:6px 12px;border-radius:6px;transition:all .15s;}
-.header-nav a:hover{background:rgba(255,255,255,.1);color:white;}
-.header-nav a.active{background:rgba(255,255,255,.15);color:white;}
-.header-nav{display:flex;gap:4px;}
-
-/* TAB BAR */
-.tab-bar{display:flex;gap:6px;padding:8px 16px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;}
-.tab-btn{padding:6px 16px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text2);font-family:var(--sans);transition:all .15s;white-space:nowrap;}
-.tab-btn:hover{border-color:var(--accent);color:var(--accent);}
-.tab-btn.active{background:var(--accent);color:white;border-color:var(--accent);}
-
-.layout-wrapper{display:flex;flex-direction:column;height:calc(100vh - 52px);margin-top:52px;}
-.layout{display:flex;flex:1;overflow:hidden;}
-
-/* LIST */
-.list-panel{width:300px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;}
-.list-header{padding:12px 16px 8px;border-bottom:1px solid var(--border);}
-.list-header h2{font-size:13px;font-weight:600;}
-.list-count{font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:2px;}
-.list-search{padding:8px 12px;border-bottom:1px solid var(--border);}
-.list-search input{width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:var(--sans);background:var(--surface2);outline:none;}
-.list-search input:focus{border-color:var(--accent);}
-.filter-row{padding:6px 12px 8px;border-bottom:1px solid var(--border);display:flex;gap:4px;flex-wrap:wrap;}
-.fc{padding:3px 10px;border-radius:10px;font-size:10px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text3);}
-.fc.on{background:var(--accent-light);color:var(--accent);border-color:var(--accent);}
-.list-scroll{flex:1;overflow-y:auto;}
-
-.stl-item{padding:10px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s;}
-.stl-item:hover{background:var(--surface2);}
-.stl-item.active{background:var(--accent-light);border-left:3px solid var(--accent);}
-.stl-no{font-family:var(--mono);font-size:11px;font-weight:500;color:var(--accent);}
-.stl-parca{font-size:12px;font-weight:500;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.stl-meta{font-size:11px;color:var(--text3);}
-
-/* DETAIL */
-.detail-panel{flex:1;overflow:hidden;display:flex;flex-direction:column;}
-.detail-toolbar{height:52px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:10px;flex-shrink:0;}
-.detail-scroll{flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:12px;}
-
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
-.card-header{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;}
-.card-body{padding:14px;}
-.card-dot{width:6px;height:6px;border-radius:50%;}
-
-.btn{display:flex;align-items:center;gap:5px;padding:6px 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;background:var(--surface);color:var(--text2);font-family:var(--sans);transition:all .15s;white-space:nowrap;}
-.btn:hover{border-color:var(--accent);color:var(--accent);}
-.btn.primary{background:var(--accent);color:white;border-color:var(--accent);}
-.btn.primary:hover{background:var(--accent-hover);}
-.btn.success{background:var(--green);color:white;border-color:var(--green);}
-.btn.warn{background:var(--orange);color:white;border-color:var(--orange);}
-.btn:disabled{opacity:.5;cursor:not-allowed;}
-
-.badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;}
-.b-Taslak{background:#f3f4f6;color:#6b7280;}
-.b-Gönderildi{background:var(--blue-light);color:var(--blue);}
-.b-Teklif\ Alındı{background:var(--orange-light);color:var(--orange);}
-.b-Onaylandı{background:var(--green-light);color:var(--green);}
-.b-İptal{background:var(--red-light);color:var(--red);}
-.b-Hammadde{background:var(--blue-light);color:var(--blue);}
-.b-Fason{background:var(--orange-light);color:var(--orange);}
-.b-Başarılı{background:var(--green-light);color:var(--green);}
-.b-Başarısız{background:var(--red-light);color:var(--red);}
-
-.fg{display:flex;flex-direction:column;gap:4px;}
-.fl{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;}
-.fi{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:12px;font-family:var(--sans);color:var(--text);outline:none;width:100%;}
-.fi:focus{border-color:var(--accent);}
-.fi:disabled{opacity:.6;}
-
-.stl-table{width:100%;border-collapse:collapse;}
-.stl-table th{padding:7px 10px;text-align:left;font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;background:var(--surface2);border-bottom:1px solid var(--border);}
-.stl-table td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:middle;font-size:12px;}
-.stl-table tr:last-child td{border-bottom:none;}
-.stl-table tr:hover td{background:var(--surface2);}
-
-/* Karşılaştırma tablosu */
-.rfq-compare-table{width:100%;border-collapse:collapse;}
-.rfq-compare-table th{padding:7px 10px;text-align:left;font-size:10px;font-weight:600;color:var(--text3);background:var(--surface2);border-bottom:1px solid var(--border);}
-.rfq-compare-table td{padding:8px 10px;border-bottom:1px solid var(--border);font-size:12px;}
-.rfq-compare-table .best{background:var(--green-light);}
-.rfq-compare-table tr:last-child td{border-bottom:none;}
-
-.toast-wrap{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;}
-.toast{padding:10px 16px;border-radius:8px;font-size:12px;font-weight:500;color:white;animation:fadeIn .2s;}
-.toast.ok{background:var(--green);}
-.toast.err{background:var(--red);}
-.toast.inf{background:var(--accent);}
-@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-
-.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;display:flex;align-items:center;justify-content:center;}
-.modal-box{background:white;border-radius:12px;width:520px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;}
-.modal-head{background:#1e1b4b;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;}
-.modal-head-title{color:white;font-weight:600;font-size:14px;}
-.modal-body{padding:16px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:12px;}
-.modal-foot{padding:12px 16px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;}
-.btn-x{background:transparent;border:none;color:white;font-size:20px;cursor:pointer;line-height:1;}
-
-.empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text3);gap:12px;padding:40px;text-align:center;}
-
-/* TEDARİKÇİ GRUPLARI TAB */
-.td-layout{display:flex;flex:1;overflow:hidden;}
-.td-list{width:300px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;}
-.td-detail{flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:12px;}
-.td-group-item{padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s;}
-.td-group-item:hover{background:var(--surface2);}
-.td-group-item.active{background:var(--accent-light);border-left:3px solid var(--accent);}
-.td-group-name{font-size:13px;font-weight:600;}
-.td-group-meta{font-size:11px;color:var(--text3);margin-top:2px;}
-.td-group-amount{font-size:13px;font-weight:700;color:var(--accent);font-family:var(--mono);}
-
-/* AI CARD */
-.ai-card{background:var(--surface);border:2px solid transparent;border-radius:var(--radius);overflow:hidden;background-clip:padding-box;position:relative;}
-.ai-card::before{content:'';position:absolute;inset:0;border-radius:var(--radius);padding:2px;background:linear-gradient(135deg,#7c3aed,#2563eb,#059669);-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;}
-.ai-card-body{padding:16px;}
-.ai-card-header{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;font-size:11px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.5px;background:linear-gradient(135deg,rgba(124,58,237,.06),rgba(37,99,235,.06));}
-
-/* AI LOADING */
-.ai-loading{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;gap:12px;color:var(--text2);font-size:13px;}
-@keyframes spin{to{transform:rotate(360deg)}}
-.spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;}
-
-/* MÜZAKERE FORM */
-.muzakere-form{display:flex;flex-direction:column;gap:10px;}
-.muzakere-form .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.muzakere-form .form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
-
-/* TASARRUF RAPORU TAB */
-.tasarruf-wrap{flex:1;overflow-y:auto;padding:20px;}
-</style>
 <link rel="stylesheet" href="ersan_styles.css">
+<script src="ersan_nav.js" defer></script>
+<script src="ersan_log.js" defer></script>
 </head>
 <body>
-<script src="ersan_nav.js"></script>
-<script src="ersan_log.js"></script>
-
-<header class="header">
-  <div style="display:flex;align-items:center;gap:10px;">
-    <div class="logo-badge">MES</div>
-    <div><div class="header-title">Ersan MES</div><div class="header-sub">Satınalma</div></div>
+<div id="nav-alani"></div>
+<div class="icerik-alani">
+  <div class="topbar">
+    <div class="topbar-baslik">Satinalma</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
+    </div>
   </div>
-  <div class="header-sep"></div>
-  <nav class="header-nav">
-    <a href="ersan_teklif.html">Teklifler</a>
-    <a href="ersan_planlama.html">Planlama</a>
-    <a href="ersan_satinalma.html" class="active">Satınalma</a>
-    <a href="ersan_isemirleri.html">İş Emirleri</a>
-  </nav>
-</header>
+  <div class="sayfa-icerik">
 
 <div class="layout-wrapper">
 
@@ -247,6 +95,9 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);height:100vh
 </div>
 
 <div class="toast-wrap" id="toast-wrap"></div>
+
+  </div>
+</div>
 
 <script>
 const BASE = 'app5LDgJMgocw79Ix';
