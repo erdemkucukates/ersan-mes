@@ -1,3 +1,34 @@
+## ⚡ HIZLI BAŞLANGIÇ (her oturumda oku)
+1. CONTEXT_OZET.md oku (20 satır, hızlı)
+2. ersan_config.json oku (tablo ID'leri)
+3. "Öğrenilen Dersler" bölümüne bak
+4. Görev neyse o dosyayı oku, tüm repo değil
+
+---
+
+## 🧠 Öğrenilen Dersler
+(Hatalar buraya kaydedilir — her oturumda oku)
+
+| Tarih | Hata | Çözüm |
+|-------|------|-------|
+| 2026-03-19 | Airtable linked record string yazıldı | [{id:"recXXX"}] formatı kullan |
+| 2026-03-19 | Token HTML içine yazıldı | Sadece Netlify env var kullan |
+| 2026-03-19 | git push öncesi pull yapılmadı | Önce git pull --rebase origin main |
+
+---
+
+## 📊 Bu Oturumda Yapılanlar
+(Oturum kapanırken güncelle)
+Son güncelleme: 2026-03-19
+- v1.0-koyu-tema tag'i oluşturuldu
+- Yeni açık tema CSS sistemi yazıldı
+- Nav gruplu yapıya geçildi
+- ersan_config.json + CONTEXT_OZET.md eklendi
+- ersan_stok.html + ersan_mikro.html oluşturuldu
+- Tüm HTML sayfaları sidebar nav'a geçirildi
+
+---
+
 # Ersan MES - Kodlama Kuralları (ZORUNLU)
 
 ## Rules
@@ -224,25 +255,12 @@ Teklif → Teklif Kalemleri → Satış Emirleri (SP) → İş Emirleri (IE) →
 
 ## Navigasyon Sistemi
 
-`ersan_nav.js` dosyası tüm sayfalara otomatik ekleniyor. Modül sırası:
-1. Teklif Yönetimi
-2. Sipariş Yönetimi
-3. Satınalma
-4. İş Emirleri
-5. Üretim/Atölye
-6. Kalite Kontrol
-7. Sevkiyat
-8. Müşteri Geri Bildirimi
-9. Doküman Yönetimi
-10. İç Denetim
-11. Düzeltici Faaliyet
-12. Ekipman & Bakım
-13. Personel Yönetimi
-14. Eğitim
-15. Risk Yönetimi
-16. İSG
-17. Yönetim Gözden Geçirme
-18. Tedarikçiler
+`ersan_nav.js` — sol sidebar, 5 gruplu navigasyon:
+- **Satış:** Teklifler, Siparişler, Müşteriler
+- **Tedarik:** Satınalma, Ön Kabul, Girdi Kalite, Stok
+- **Üretim:** İş Emirleri, Planlama, Atölye
+- **Kalite:** Kalite, NCR, Sevkiyat, CAPA
+- **Sistem:** Ekipman, Personel, İç Denetim, Risk, İSG, YGG, Doküman, Sistem Logu, Mikro Entegrasyon
 
 ---
 
@@ -261,9 +279,10 @@ AIRTABLE_BASE_ID=app5LDgJMgocw79Ix
 
 ## Tasarım Prensipleri
 
-- Tüm sayfalar tek HTML dosyası (CSS + JS inline)
-- IBM Plex Sans / IBM Plex Mono fontları
-- Renk paleti: #1a1d23 (koyu), #7c3aed (mor/vurgu), #e2e5ea (border)
+- Tüm sayfalar tek HTML dosyası, CSS ersan_styles.css'den
+- Font: Segoe UI / system-ui
+- Renk paleti: --laci (#0f2744), --mavi (#378ADD), --bg (#f0f4f8) — açık tema
+- Sol sidebar navigasyon (ersan_nav.js), 5 grup
 - Sol panel liste, sağ panel detay layout
 - Tüm değişiklikler Airtable'a anında kaydedilir
 - Token veya hassas bilgi HTML içine yazılmaz — Netlify Functions üzerinden
