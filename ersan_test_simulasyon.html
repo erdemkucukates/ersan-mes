@@ -3,410 +3,472 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ersan MES — Test Simulatoru</title>
+<title>Ersan MES — Test Simulatoru v2.0</title>
 <link rel="stylesheet" href="ersan_styles.css">
 <script src="ersan_nav.js" defer></script>
 <script src="ersan_log.js" defer></script>
 <style>
-.test-layout {
-  display: flex;
-  gap: 12px;
-  height: calc(100vh - 52px - 32px);
-}
-.test-sol {
-  width: 340px;
-  flex-shrink: 0;
-  background: var(--beyaz);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  overflow-y: auto;
-  padding: 12px;
-}
-.test-sag {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  overflow-y: auto;
-}
-.test-adim {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 8px 12px;
-  border-radius: 6px;
-  margin-bottom: 4px;
-  transition: background .2s;
-}
-.test-adim.aktif { background: var(--mavi-acik); }
-.test-adim.gecti { background: #f0fdf4; }
-.test-adim.hata { background: #fff5f5; }
-.ta-no {
-  width: 24px; height: 24px; border-radius: 50%;
-  background: var(--bg2); border: 1px solid var(--border);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 10px; font-weight: 700; flex-shrink: 0;
-  color: var(--metin3);
-}
-.test-adim.aktif .ta-no { background: var(--mavi); color: #fff; border-color: var(--mavi); }
-.test-adim.gecti .ta-no { background: var(--yesil); color: #fff; border-color: var(--yesil); }
-.test-adim.hata .ta-no { background: var(--kirmizi); color: #fff; border-color: var(--kirmizi); }
-.ta-icerik { flex: 1; }
-.ta-baslik { font-size: 12px; font-weight: 600; color: var(--laci); }
-.ta-alt { font-size: 10px; color: var(--metin3); margin-top: 2px; }
-.ta-ikon { width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0; }
-.ta-ikon.bekliyor { background: var(--bg2); border: 1px solid var(--border); }
-.ta-ikon.calisiyor { border: 2px solid var(--mavi); border-top-color: transparent; animation: spin .7s linear infinite; }
-.ta-ikon.gecti { background: var(--yesil); }
-.ta-ikon.hata { background: var(--kirmizi); }
-@keyframes spin { to { transform: rotate(360deg); } }
-.ilerleme-bar {
-  background: var(--bg2);
-  border-radius: 3px;
-  height: 6px;
-  overflow: hidden;
-}
-.test-log {
-  background: #0f2744;
-  border-radius: 8px;
-  padding: 12px;
-  height: 300px;
-  overflow-y: auto;
-  font-family: 'Courier New', monospace;
-  font-size: 11px;
-  color: #93c5fd;
-}
-@media (max-width: 768px) {
-  .test-layout { flex-direction: column; height: auto; }
-  .test-sol { width: 100%; }
-}
+.test-layout{display:flex;gap:12px;height:calc(100vh - 52px - 32px)}
+.test-sol{width:340px;flex-shrink:0;background:var(--beyaz);border:1px solid var(--border);border-radius:8px;display:flex;flex-direction:column;overflow:hidden}
+.test-sag{flex:1;display:flex;flex-direction:column;gap:10px;overflow-y:auto}
+.paket-sekmeler{display:flex;border-bottom:1px solid var(--border);flex-shrink:0}
+.paket-sekme{flex:1;padding:8px 6px;font-size:11px;font-weight:600;text-align:center;cursor:pointer;border-bottom:2px solid transparent;color:var(--metin3);background:transparent;border-top:none;border-left:none;border-right:none;font-family:inherit;white-space:nowrap}
+.paket-sekme.aktif{color:var(--mavi);border-bottom-color:var(--mavi);background:var(--mavi-acik)}
+.test-liste{flex:1;overflow-y:auto;padding:8px}
+.test-adim{display:flex;align-items:flex-start;gap:8px;padding:6px 10px;border-radius:6px;margin-bottom:3px;transition:background .2s}
+.test-adim.aktif{background:var(--mavi-acik)}
+.test-adim.gecti{background:#f0fdf4}
+.test-adim.hata{background:#fff5f5}
+.test-adim.uyari{background:var(--sari-bg)}
+.ta-no{width:22px;height:22px;border-radius:50%;background:var(--bg2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;color:var(--metin3)}
+.test-adim.aktif .ta-no{background:var(--mavi);color:#fff;border-color:var(--mavi)}
+.test-adim.gecti .ta-no{background:var(--yesil);color:#fff;border-color:var(--yesil)}
+.test-adim.hata .ta-no{background:var(--kirmizi);color:#fff;border-color:var(--kirmizi)}
+.test-adim.uyari .ta-no{background:var(--sari);color:#fff;border-color:var(--sari)}
+.ta-baslik{font-size:11px;font-weight:600;color:var(--laci)}
+.ta-alt{font-size:9px;color:var(--metin3);margin-top:1px}
+.ta-ikon{width:16px;height:16px;border-radius:50%;flex-shrink:0;margin-left:auto}
+.ta-ikon.bekliyor{background:var(--bg2);border:1px solid var(--border)}
+.ta-ikon.calisiyor{border:2px solid var(--mavi);border-top-color:transparent;animation:spin .7s linear infinite}
+.ta-ikon.gecti{background:var(--yesil)}
+.ta-ikon.hata{background:var(--kirmizi)}
+.ta-ikon.uyari{background:var(--sari)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ilerleme-bar{background:var(--bg2);border-radius:3px;height:6px;overflow:hidden}
+.test-log{background:#0f2744;border-radius:8px;padding:12px;height:260px;overflow-y:auto;font-family:'Courier New',monospace;font-size:11px;color:#93c5fd}
+.kpi-canli{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.kpi-canli-item{display:flex;align-items:center;gap:4px;font-size:12px;font-weight:600}
+.kritik-bulgu{background:var(--kirmizi-bg);border:1px solid var(--kirmizi);border-radius:8px;padding:10px 14px;margin-top:8px;font-size:12px;color:var(--kirmizi-t)}
+.uyari-bulgu{background:var(--sari-bg);border:1px solid var(--sari);border-radius:8px;padding:10px 14px;margin-top:8px;font-size:12px;color:var(--sari-t)}
+@media(max-width:768px){.test-layout{flex-direction:column;height:auto}.test-sol{width:100%}}
+@media print{.sidebar,.topbar,.test-sol,.test-log,.paket-sekmeler{display:none!important}.test-layout{display:block}.test-sag{overflow:visible}#sonuc-alani{display:block!important}}
 </style>
 </head>
 <body>
 <div id="nav-alani"></div>
 <div class="icerik-alani">
   <div class="topbar">
-    <div class="topbar-baslik">Test Simulatoru — Uctan Uca Surec Testi</div>
+    <div class="topbar-baslik">Test Simulatoru v2.0</div>
     <div style="display:flex;align-items:center;gap:8px;">
-      <button class="btn btn-yesil" onclick="testiBaslat()">Testi Baslat</button>
+      <button class="btn btn-yesil" onclick="tumunuCalistir()">Tumunu Calistir</button>
+      <button class="btn btn-beyaz" onclick="seciliPaketiCalistir()">Secili Paketi Calistir</button>
       <button class="btn btn-kirmizi" onclick="testTemizle()">Temizle</button>
-      <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
+      <button class="btn btn-beyaz" onclick="window.print()">PDF Rapor</button>
     </div>
   </div>
   <div class="sayfa-icerik">
+    <!-- CANLI KPI -->
+    <div class="kpi-canli" id="kpi-canli">
+      <div class="kpi-canli-item" style="color:var(--yesil)">&#10003; Gecen: <span id="kc-gecen">0</span></div>
+      <div class="kpi-canli-item" style="color:var(--kirmizi)">&#10007; Hatali: <span id="kc-hatali">0</span></div>
+      <div class="kpi-canli-item" style="color:var(--sari)">&#9888; Uyari: <span id="kc-uyari">0</span></div>
+      <div class="kpi-canli-item" style="color:var(--metin3)">&#9201; Sure: <span id="kc-sure">0</span>sn</div>
+      <div class="kpi-canli-item" style="color:var(--mavi)">&#128202; Skor: <span id="kc-skor">-%</span></div>
+    </div>
     <div class="test-layout">
-
-      <!-- SOL PANEL — ADIMLAR -->
-      <div class="test-sol" id="adimlar-alani"></div>
-
-      <!-- SAG PANEL — LOG + SONUCLAR -->
-      <div class="test-sag">
-        <!-- Ilerleme -->
-        <div class="kart" style="padding:12px;">
-          <div class="ilerleme-bar">
-            <div id="ilerleme-ic" style="width:0%;background:var(--mavi);height:6px;border-radius:3px;transition:width .5s"></div>
-          </div>
-          <div style="text-align:right;font-size:11px;color:var(--metin3);margin-top:4px" id="ilerleme-yazi">0/15 adim tamamlandi</div>
+      <!-- SOL PANEL -->
+      <div class="test-sol">
+        <div class="paket-sekmeler">
+          <button class="paket-sekme aktif" onclick="paketSec(0,this)">Normal Akis</button>
+          <button class="paket-sekme" onclick="paketSec(1,this)">Hata Senaryolari</button>
+          <button class="paket-sekme" onclick="paketSec(2,this)">AS9100 Uyum</button>
+          <button class="paket-sekme" onclick="paketSec(3,this)">Sinir Testleri</button>
         </div>
-
-        <!-- Canli Log -->
+        <div class="test-liste" id="adimlar-alani"></div>
+      </div>
+      <!-- SAG PANEL -->
+      <div class="test-sag">
+        <div class="kart" style="padding:10px;">
+          <div class="ilerleme-bar"><div id="ilerleme-ic" style="width:0%;background:var(--mavi);height:6px;border-radius:3px;transition:width .5s"></div></div>
+          <div style="text-align:right;font-size:11px;color:var(--metin3);margin-top:4px" id="ilerleme-yazi">Hazir</div>
+        </div>
         <div class="test-log" id="test-log"></div>
-
-        <!-- Sonuc Alani -->
         <div id="sonuc-alani" style="display:none">
           <div class="kpi-grid">
-            <div class="kpi-kart yesil">
-              <div class="kpi-etiket">Gecen Adim</div>
-              <div class="kpi-deger" id="gecen-sayi">&mdash;</div>
-            </div>
-            <div class="kpi-kart kirmizi">
-              <div class="kpi-etiket">Hatali Adim</div>
-              <div class="kpi-deger" id="hatali-sayi">&mdash;</div>
-            </div>
-            <div class="kpi-kart">
-              <div class="kpi-etiket">AS9100 Uyum</div>
-              <div class="kpi-deger" id="uyum-skoru">&mdash;</div>
-            </div>
-            <div class="kpi-kart sari">
-              <div class="kpi-etiket">Toplam Sure</div>
-              <div class="kpi-deger" id="toplam-sure">&mdash;</div>
-            </div>
+            <div class="kpi-kart yesil"><div class="kpi-etiket">Gecen</div><div class="kpi-deger" id="s-gecen">0</div></div>
+            <div class="kpi-kart kirmizi"><div class="kpi-etiket">Hatali</div><div class="kpi-deger" id="s-hatali">0</div></div>
+            <div class="kpi-kart sari"><div class="kpi-etiket">Uyari</div><div class="kpi-deger" id="s-uyari">0</div></div>
+            <div class="kpi-kart"><div class="kpi-etiket">Genel Skor</div><div class="kpi-deger" id="s-skor">-%</div></div>
           </div>
-
-          <div class="tablo-wrap" style="margin-top:12px">
-            <div class="tablo-baslik">
-              <div class="tablo-baslik-text">AS9100 Madde Uyum Raporu</div>
-            </div>
-            <table class="tablo">
-              <thead>
-                <tr><th>Madde</th><th>Aciklama</th><th>Sonuc</th><th>Not</th></tr>
-              </thead>
-              <tbody id="uyum-tbody"></tbody>
-            </table>
+          <div class="tablo-wrap" style="margin-top:12px"><div class="tablo-baslik"><div class="tablo-baslik-text">Paket Bazli Sonuclar</div></div>
+            <table class="tablo"><thead><tr><th>Paket</th><th>Gecen</th><th>Hatali</th><th>Uyari</th><th>Skor</th></tr></thead><tbody id="paket-tbody"></tbody></table>
           </div>
-
-          <div class="kart" style="margin-top:12px">
-            <div class="kart-baslik">AI Degerlendirme</div>
-            <div id="ai-degerlendirme" style="font-size:13px;line-height:1.6;color:var(--metin2);white-space:pre-wrap"></div>
-          </div>
+          <div id="bulgular-alani"></div>
+          <div class="kart" style="margin-top:12px"><div class="kart-baslik">AI Degerlendirme</div><div id="ai-degerlendirme" style="font-size:13px;line-height:1.6;color:var(--metin2);white-space:pre-wrap"></div></div>
         </div>
-
       </div>
     </div>
   </div>
 </div>
-
 <script>
-var TEST_ADIMLARI = [
-  { no:1,  baslik:'Musteri & Teklif olustur', aciklama:'Test musterisi ve taslak teklif Airtable\'a yazilir', as9100:'8.2.2', grup:'satis' },
-  { no:2,  baslik:'Teklif kalemi ekle', aciklama:'10 adet Flans Grubu, 850 TL/adet', as9100:'8.2.3', grup:'satis' },
-  { no:3,  baslik:'Teklif gonderildi', aciklama:'Durum: Gonderildi', as9100:'8.2.3', grup:'satis' },
-  { no:4,  baslik:'Siparis olusturuldu', aciklama:'Teklif onaylandi, SP otomatik olusturuldu', as9100:'8.2.4', grup:'satis' },
-  { no:5,  baslik:'Satinalma talebi', aciklama:'STL olusturuldu, hammadde tedarik basladi', as9100:'8.4.1', grup:'tedarik' },
-  { no:6,  baslik:'Malzeme geldi — On Kabul', aciklama:'Karantinaya alindi', as9100:'8.4.3', grup:'tedarik' },
-  { no:7,  baslik:'Girdi Kalite Kontrolu', aciklama:'Muayene yapildi, MAT ID olusturuldu, serbest', as9100:'8.4.3', grup:'tedarik' },
-  { no:8,  baslik:'Is Emri acildi', aciklama:'Operasyon rotasi, lot baglandi', as9100:'8.5.1', grup:'uretim' },
-  { no:9,  baslik:'Uretim tamamlandi', aciklama:'Tum operasyonlar bitti: Tornalama->Freze->Taslama', as9100:'8.5.1', grup:'uretim' },
-  { no:10, baslik:'Test NCR acildi (kasitli)', aciklama:'Boyut sapmasi tespit edildi — sistem tepkisi test', as9100:'8.7', grup:'kalite' },
-  { no:11, baslik:'NCR kapatildi', aciklama:'Yeniden isleme karari, duzeltici aksiyon', as9100:'8.7+10.2', grup:'kalite' },
-  { no:12, baslik:'Final muayene', aciklama:'10/10 parca onaylandi', as9100:'8.6', grup:'kalite' },
-  { no:13, baslik:'Sevkiyat on kontrol', aciklama:'8 madde otomatik kontrol', as9100:'8.5.4', grup:'sevk' },
-  { no:14, baslik:'Sevkiyat tamamlandi', aciklama:'CoC + irsaliye uretildi, IE: Sevk Edildi', as9100:'8.5.4', grup:'sevk' },
-  { no:15, baslik:'Fatura & Mikro testi', aciklama:'Fatura koprusu test edildi', as9100:'7.5', grup:'sevk' },
+var PAKETLER = [
+  { ad: 'Normal Akis', renk: 'yesil', testler: [
+    {id:1,baslik:'Musteri & Teklif olustur',alt:'Airtable\'a test musterisi + taslak teklif',as9100:'8.2.2'},
+    {id:2,baslik:'Teklif kalemi ekle',alt:'10 adet Flans, 850 TL/adet',as9100:'8.2.3'},
+    {id:3,baslik:'Teklif gonderildi',alt:'Durum guncelle',as9100:'8.2.3'},
+    {id:4,baslik:'Siparis olusturuldu',alt:'Onay + SP kaydi',as9100:'8.2.4'},
+    {id:5,baslik:'Satinalma talebi',alt:'Hammadde talebi',as9100:'8.4.1'},
+    {id:6,baslik:'Malzeme on kabul',alt:'Karantinaya al',as9100:'8.4.3'},
+    {id:7,baslik:'Girdi kalite',alt:'Muayene + MAT ID',as9100:'8.4.3'},
+    {id:8,baslik:'Is emri ac',alt:'IE + rota',as9100:'8.5.1'},
+    {id:9,baslik:'Uretim tamamla',alt:'Tum operasyonlar',as9100:'8.5.1'},
+    {id:10,baslik:'NCR ac (kasitli)',alt:'Boyut sapmasi testi',as9100:'8.7'},
+    {id:11,baslik:'NCR kapat',alt:'Duzeltici faaliyet',as9100:'8.7+10.2'},
+    {id:12,baslik:'Final muayene',alt:'10/10 OK',as9100:'8.6'},
+    {id:13,baslik:'Sevkiyat on kontrol',alt:'8 madde kontrol',as9100:'8.5.4'},
+    {id:14,baslik:'Sevkiyat tamamla',alt:'CoC + irsaliye',as9100:'8.5.4'},
+    {id:15,baslik:'Fatura testi',alt:'Mikro koprusu',as9100:'7.5'},
+    {id:'paralel_teklif',baslik:'Paralel 10 teklif',alt:'Eszamanli kapasite',as9100:'8.2',ozel:'paralel'},
+    {id:'dev_teklif',baslik:'Dev teklif (10 kalem)',alt:'Cok kalemli teklif',as9100:'8.2',ozel:'dev_teklif'},
+  ]},
+  { ad: 'Hata Senaryolari', renk: 'kirmizi', testler: [
+    {id:'hata_negatif_miktar',baslik:'Negatif miktar',alt:'Miktar=-5 yazilabilir mi?',as9100:'Validasyon',ters:true},
+    {id:'hata_bos_alan',baslik:'Bos zorunlu alan',alt:'Parca adi olmadan IE',as9100:'Validasyon',ters:true},
+    {id:'hata_duplicate_kapatma',baslik:'Cift kapatma',alt:'Ayni IE 2x Tamamlandi',as9100:'Log'},
+    {id:'hata_turkce',baslik:'Turkce karakter',alt:'UTF-8 yaz/oku testi',as9100:'Encoding'},
+    {id:'hata_injection',baslik:'XSS injection',alt:'<script> tag yazma',as9100:'Guvenlik'},
+  ]},
+  { ad: 'AS9100 Uyum', renk: 'mavi', testler: [
+    {id:'as9100_dokuman',baslik:'Dokuman kontrolu',alt:'Zorunlu prosedurler var mi?',as9100:'4.1+7.5'},
+    {id:'as9100_personel',baslik:'Personel yetkinlik',alt:'Departman + veri kontrolu',as9100:'7.2'},
+    {id:'as9100_izlenebilirlik',baslik:'Izlenebilirlik zinciri',alt:'IE->Lot->MAT->Heat',as9100:'8.5.2'},
+    {id:'as9100_kpi',baslik:'KPI izleme',alt:'OTD, NCR orani, hedefler',as9100:'9.1'},
+    {id:'as9100_denetim',baslik:'Ic denetim kaydi',alt:'Denetim + bulgu durumu',as9100:'9.2'},
+    {id:'as9100_capa',baslik:'CAPA etkinligi',alt:'Acik/kapali CAPA durumu',as9100:'10.2+10.3'},
+  ]},
+  { ad: 'Sinir Testleri', renk: 'sari', testler: [
+    {id:'sinir_api_hiz',baslik:'API yanit suresi',alt:'Airtable < 3sn?',as9100:'Performans',ozel:'client_api'},
+    {id:'sinir_eszamanli',baslik:'Eszamanli 10 istek',alt:'Paralel API kapasitesi',as9100:'Performans',ozel:'client_paralel'},
+    {id:'sinir_turkce_stres',baslik:'Turkce stres testi',alt:'Ozel karakter yaz/oku',as9100:'Encoding'},
+    {id:'sinir_tarih',baslik:'Tarih formati',alt:'ISO/gecersiz/bos',as9100:'Veri butunlugu'},
+    {id:'sinir_hatali_url',baslik:'Hatali URL',alt:'404 yonetimi',as9100:'Hata yonetimi',ozel:'client_404'},
+  ]},
 ];
 
-var testKayitlari = {};
-var testSonuclari = [];
-var calisiyorMu = false;
+var aktifPaket = 0, testKayitlari = {}, calisiyorMu = false;
+var toplamSonuc = { gecen:0, hatali:0, uyari:0, paketSonuclari:[], bulgular:[] };
 
-// Adimlari render et
+function paketSec(idx, btn) {
+  aktifPaket = idx;
+  document.querySelectorAll('.paket-sekme').forEach(function(s){s.classList.remove('aktif')});
+  btn.classList.add('aktif');
+  adimlariRender();
+}
 function adimlariRender() {
   var el = document.getElementById('adimlar-alani');
-  el.innerHTML = TEST_ADIMLARI.map(function(a) {
-    return '<div class="test-adim" id="adim-' + a.no + '">' +
-      '<div class="ta-no">' + a.no + '</div>' +
-      '<div class="ta-icerik">' +
-      '<div class="ta-baslik">' + a.baslik + '</div>' +
-      '<div class="ta-alt">' + a.aciklama + '</div>' +
-      '</div>' +
-      '<div class="ta-ikon bekliyor"></div>' +
-      '</div>';
+  var testler = PAKETLER[aktifPaket].testler;
+  el.innerHTML = testler.map(function(t,i) {
+    var elId = 'adim-' + aktifPaket + '-' + i;
+    return '<div class="test-adim" id="' + elId + '">' +
+      '<div class="ta-no">' + (i+1) + '</div>' +
+      '<div style="flex:1"><div class="ta-baslik">' + t.baslik + '</div><div class="ta-alt">' + t.alt + '</div></div>' +
+      '<div class="ta-ikon bekliyor"></div></div>';
   }).join('');
 }
-
-// Log
-function log(mesaj, tip) {
+function log(m, tip) {
   tip = tip || 'bilgi';
-  var renkler = { bilgi:'#93c5fd', basari:'#86efac', hata:'#fca5a5', uyari:'#fde68a', ai:'#c4b5fd' };
-  var zaman = new Date().toLocaleTimeString('tr-TR');
-  var div = document.getElementById('test-log');
-  div.innerHTML += '<div style="color:' + (renkler[tip]||'#93c5fd') + ';margin-bottom:3px">' +
-    '<span style="color:rgba(255,255,255,.3)">[' + zaman + ']</span> ' + mesaj + '</div>';
-  div.scrollTop = div.scrollHeight;
+  var renkler = {bilgi:'#93c5fd',basari:'#86efac',hata:'#fca5a5',uyari:'#fde68a',ai:'#c4b5fd'};
+  var z = new Date().toLocaleTimeString('tr-TR');
+  var d = document.getElementById('test-log');
+  d.innerHTML += '<div style="color:' + (renkler[tip]||'#93c5fd') + ';margin-bottom:2px"><span style="color:rgba(255,255,255,.3)">[' + z + ']</span> ' + m + '</div>';
+  d.scrollTop = d.scrollHeight;
+}
+function kpiGuncelle() {
+  document.getElementById('kc-gecen').textContent = toplamSonuc.gecen;
+  document.getElementById('kc-hatali').textContent = toplamSonuc.hatali;
+  document.getElementById('kc-uyari').textContent = toplamSonuc.uyari;
+  var toplam = toplamSonuc.gecen + toplamSonuc.hatali;
+  var skor = toplam > 0 ? Math.round(toplamSonuc.gecen / toplam * 100) : 0;
+  document.getElementById('kc-skor').textContent = skor + '%';
+}
+
+// Client-side testler
+async function clientTest(testId) {
+  if (testId === 'sinir_api_hiz') {
+    var bas = Date.now();
+    try {
+      var r = await fetch('/.netlify/functions/airtable?table=Teklifler&maxRecords=1');
+      var sure = Date.now() - bas;
+      return { kontrol: sure < 3000, mesaj: 'API yanit: ' + sure + 'ms' + (sure < 3000 ? ' (OK)' : ' (YAVAS!)'), sure: sure };
+    } catch(e) { return { kontrol: false, mesaj: 'API erisim hatasi: ' + e.message }; }
+  }
+  if (testId === 'sinir_eszamanli') {
+    var bas2 = Date.now();
+    var istekler = [];
+    for (var i = 0; i < 10; i++) {
+      istekler.push(fetch('/.netlify/functions/airtable?table=Teklifler&maxRecords=1').then(function(r){return{ok:r.ok,sure:Date.now()-bas2}}).catch(function(){return{ok:false,sure:Date.now()-bas2}}));
+    }
+    var sonuclar = await Promise.all(istekler);
+    var basarili = sonuclar.filter(function(s){return s.ok}).length;
+    var maxSure = Math.max.apply(null, sonuclar.map(function(s){return s.sure}));
+    return { kontrol: basarili >= 8, mesaj: basarili + '/10 basarili, max: ' + maxSure + 'ms' };
+  }
+  if (testId === 'sinir_hatali_url') {
+    try {
+      var r2 = await fetch('/.netlify/functions/yanlis-url-12345');
+      return { kontrol: !r2.ok, mesaj: r2.ok ? 'Hatali URL 200 dondu!' : 'Hatali URL dogru yakalandi: ' + r2.status };
+    } catch(e) { return { kontrol: true, mesaj: 'Hata yakalandi (network): ' + e.message }; }
+  }
+  return null;
+}
+
+// Paralel teklif testi
+async function paralelTeklifTest() {
+  log('10 paralel teklif olusturuluyor...', 'bilgi');
+  var bas = Date.now();
+  var istekler = [];
+  for (var i = 0; i < 10; i++) {
+    istekler.push(fetch('/.netlify/functions/test-bot', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ adim: 'paralel_teklif', veri: { index: i+1 } })
+    }).then(function(r){return r.json()}).catch(function(e){return{success:false,mesaj:e.message}}));
+  }
+  var sonuclar = await Promise.all(istekler);
+  var basarili = sonuclar.filter(function(s){return s.success && s.kontrol}).length;
+  var sureler = sonuclar.filter(function(s){return s.sure}).map(function(s){return s.sure});
+  var ortSure = sureler.length > 0 ? Math.round(sureler.reduce(function(a,b){return a+b},0) / sureler.length) : 0;
+  return { kontrol: basarili >= 8, mesaj: basarili + '/10 paralel teklif, ort: ' + ortSure + 'ms' };
+}
+
+// Dev teklif testi
+async function devTeklifTest() {
+  log('Dev teklif olusturuluyor (10 kalem)...', 'bilgi');
+  // Once teklif olustur
+  var r1 = await fetch('/.netlify/functions/test-bot', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ adim: 'paralel_teklif', veri: { index: 99 } })
+  });
+  var d1 = await r1.json();
+  if (!d1.id) return { kontrol: false, mesaj: 'Teklif olusturulamadi' };
+  // Kalem ekle
+  var r2 = await fetch('/.netlify/functions/test-bot', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ adim: 'dev_teklif_kalem', veri: { teklifId: d1.id } })
+  });
+  var d2 = await r2.json();
+  return { kontrol: d2.kontrol, mesaj: (d2.kalemSayisi||0) + ' kalem olusturuldu' };
 }
 
 // Tek adim calistir
-async function adimCalistir(adimNo) {
-  var adimEl = document.getElementById('adim-' + adimNo);
-  adimEl.classList.add('aktif');
-  var ikonEl = adimEl.querySelector('.ta-ikon');
-  ikonEl.className = 'ta-ikon calisiyor';
+async function adimCalistir(paketIdx, testIdx) {
+  var test = PAKETLER[paketIdx].testler[testIdx];
+  var elId = 'adim-' + paketIdx + '-' + testIdx;
+  var adimEl = document.getElementById(elId);
+  if (adimEl) {
+    adimEl.classList.add('aktif');
+    adimEl.querySelector('.ta-ikon').className = 'ta-ikon calisiyor';
+  }
+  log('&#9654; [' + PAKETLER[paketIdx].ad + '] ' + test.baslik, 'bilgi');
 
-  log('&#9654; Adim ' + adimNo + ' basliyor...', 'bilgi');
-
+  var sonuc;
   try {
-    var r = await fetch('/.netlify/functions/test-bot', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ adim: adimNo, kayitlar: testKayitlari })
-    });
-    var d = await r.json();
-
-    if (d.teklifId) testKayitlari.teklifId = d.teklifId;
-    if (d.musteriId) testKayitlari.musteriId = d.musteriId;
-    if (d.siparisId) testKayitlari.siparisId = d.siparisId;
-    if (d.stlId) testKayitlari.stlId = d.stlId;
-    if (d.malzemeId) testKayitlari.malzemeId = d.malzemeId;
-    if (d.ieId) testKayitlari.ieId = d.ieId;
-    if (d.ncrId) testKayitlari.ncrId = d.ncrId;
-    if (d.muayeneId) testKayitlari.muayeneId = d.muayeneId;
-    if (d.kalemId) testKayitlari.kalemId = d.kalemId;
-
-    if (d.kontrol) {
-      ikonEl.className = 'ta-ikon gecti';
-      adimEl.classList.remove('aktif');
-      adimEl.classList.add('gecti');
-      log('&#10003; ' + d.mesaj, 'basari');
-      if (d.as9100) log('  AS9100 ' + d.as9100, 'ai');
+    // Ozel client-side testler
+    if (test.ozel === 'paralel') { sonuc = await paralelTeklifTest(); }
+    else if (test.ozel === 'dev_teklif') { sonuc = await devTeklifTest(); }
+    else if (test.ozel === 'client_api' || test.ozel === 'client_paralel' || test.ozel === 'client_404') {
+      sonuc = await clientTest(test.id);
     } else {
-      ikonEl.className = 'ta-ikon hata';
-      adimEl.classList.remove('aktif');
-      adimEl.classList.add('hata');
-      log('&#10007; HATA: ' + (d.mesaj || d.error || 'Bilinmeyen hata'), 'hata');
+      // Server-side test
+      var r = await fetch('/.netlify/functions/test-bot', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ adim: test.id, kayitlar: testKayitlari, veri: {} })
+      });
+      sonuc = await r.json();
     }
 
-    testSonuclari.push({ adim: adimNo, gecti: !!d.kontrol, mesaj: d.mesaj, as9100: d.as9100 });
-    return !!d.kontrol;
+    // Kayitlari guncelle
+    if (sonuc.teklifId) testKayitlari.teklifId = sonuc.teklifId;
+    if (sonuc.musteriId) testKayitlari.musteriId = sonuc.musteriId;
+    if (sonuc.siparisId) testKayitlari.siparisId = sonuc.siparisId;
+    if (sonuc.stlId) testKayitlari.stlId = sonuc.stlId;
+    if (sonuc.malzemeId) testKayitlari.malzemeId = sonuc.malzemeId;
+    if (sonuc.ieId) testKayitlari.ieId = sonuc.ieId;
+    if (sonuc.ncrId) testKayitlari.ncrId = sonuc.ncrId;
+    if (sonuc.muayeneId) testKayitlari.muayeneId = sonuc.muayeneId;
+    if (sonuc.kalemId) testKayitlari.kalemId = sonuc.kalemId;
 
-  } catch (e) {
-    ikonEl.className = 'ta-ikon hata';
-    adimEl.classList.remove('aktif');
-    adimEl.classList.add('hata');
-    log('&#10007; Baglanti hatasi: ' + e.message, 'hata');
-    testSonuclari.push({ adim: adimNo, gecti: false, mesaj: e.message });
+    var gecti = !!sonuc.kontrol;
+    var uyariMi = !!sonuc.uyari || !!sonuc.guvenlikAcigi;
+
+    if (gecti && !uyariMi) {
+      if (adimEl) { adimEl.querySelector('.ta-ikon').className = 'ta-ikon gecti'; adimEl.classList.remove('aktif'); adimEl.classList.add('gecti'); }
+      log('&#10003; ' + (sonuc.mesaj||'Gecti'), 'basari');
+      toplamSonuc.gecen++;
+    } else if (uyariMi) {
+      if (adimEl) { adimEl.querySelector('.ta-ikon').className = 'ta-ikon uyari'; adimEl.classList.remove('aktif'); adimEl.classList.add('uyari'); }
+      log('&#9888; ' + (sonuc.mesaj||'Uyari'), 'uyari');
+      toplamSonuc.uyari++;
+      toplamSonuc.gecen++;
+      toplamSonuc.bulgular.push({ tip: 'uyari', paket: PAKETLER[paketIdx].ad, test: test.baslik, mesaj: sonuc.mesaj });
+    } else {
+      if (adimEl) { adimEl.querySelector('.ta-ikon').className = 'ta-ikon hata'; adimEl.classList.remove('aktif'); adimEl.classList.add('hata'); }
+      log('&#10007; ' + (sonuc.mesaj||'Hata'), 'hata');
+      toplamSonuc.hatali++;
+      toplamSonuc.bulgular.push({ tip: 'hata', paket: PAKETLER[paketIdx].ad, test: test.baslik, mesaj: sonuc.mesaj });
+    }
+    if (sonuc.as9100) log('  AS9100 ' + sonuc.as9100, 'ai');
+    kpiGuncelle();
+    return gecti;
+  } catch(e) {
+    if (adimEl) { adimEl.querySelector('.ta-ikon').className = 'ta-ikon hata'; adimEl.classList.remove('aktif'); adimEl.classList.add('hata'); }
+    log('&#10007; Hata: ' + e.message, 'hata');
+    toplamSonuc.hatali++;
+    toplamSonuc.bulgular.push({ tip: 'hata', paket: PAKETLER[paketIdx].ad, test: test.baslik, mesaj: e.message });
+    kpiGuncelle();
     return false;
   }
 }
 
-// Tum testi calistir
-async function testiBaslat() {
+// Secili paketi calistir
+async function seciliPaketiCalistir() {
   if (calisiyorMu) return;
   calisiyorMu = true;
+  var pIdx = aktifPaket;
+  var testler = PAKETLER[pIdx].testler;
   testKayitlari = {};
-  testSonuclari = [];
-
+  toplamSonuc = { gecen:0, hatali:0, uyari:0, paketSonuclari:[], bulgular:[] };
   adimlariRender();
   document.getElementById('test-log').innerHTML = '';
   document.getElementById('sonuc-alani').style.display = 'none';
-
-  log('Ersan MES Uctan Uca Test Simulatoru basladi', 'bilgi');
-  log('━'.repeat(50), 'bilgi');
-
-  var baslangic = Date.now();
-  var gecenSayi = 0;
-
-  for (var i = 0; i < TEST_ADIMLARI.length; i++) {
-    var adim = TEST_ADIMLARI[i];
-    var yuzde = Math.round((i / TEST_ADIMLARI.length) * 100);
-    document.getElementById('ilerleme-ic').style.width = yuzde + '%';
-    document.getElementById('ilerleme-yazi').textContent = i + '/' + TEST_ADIMLARI.length + ' adim tamamlandi';
-
-    var gecti = await adimCalistir(adim.no);
-    if (gecti) gecenSayi++;
-
-    await new Promise(function(resolve) { setTimeout(resolve, 800); });
+  log('Paket: ' + PAKETLER[pIdx].ad + ' (' + testler.length + ' test)', 'bilgi');
+  log('\u2501'.repeat(40), 'bilgi');
+  var bas = Date.now();
+  for (var i = 0; i < testler.length; i++) {
+    document.getElementById('ilerleme-ic').style.width = Math.round(i/testler.length*100) + '%';
+    document.getElementById('ilerleme-yazi').textContent = i + '/' + testler.length;
+    await adimCalistir(pIdx, i);
+    await new Promise(function(r){setTimeout(r,500)});
   }
-
   document.getElementById('ilerleme-ic').style.width = '100%';
-  document.getElementById('ilerleme-yazi').textContent = TEST_ADIMLARI.length + '/' + TEST_ADIMLARI.length + ' tamamlandi';
-
-  var sure = Math.round((Date.now() - baslangic) / 1000);
-
-  log('━'.repeat(50), 'bilgi');
-  log('Test tamamlandi: ' + gecenSayi + '/' + TEST_ADIMLARI.length + ' gecti', 'basari');
-  log('Toplam sure: ' + sure + ' saniye', 'bilgi');
-
-  sonuclariGoster(gecenSayi, sure);
-  await aiDegerlendirme(gecenSayi, sure);
-
+  var sure = Math.round((Date.now()-bas)/1000);
+  document.getElementById('kc-sure').textContent = sure;
+  document.getElementById('ilerleme-yazi').textContent = testler.length + '/' + testler.length + ' — ' + sure + 'sn';
+  log('\u2501'.repeat(40), 'bilgi');
+  log('Paket tamamlandi: ' + toplamSonuc.gecen + ' gecen, ' + toplamSonuc.hatali + ' hata, ' + toplamSonuc.uyari + ' uyari', 'basari');
+  toplamSonuc.paketSonuclari.push({ ad: PAKETLER[pIdx].ad, gecen: toplamSonuc.gecen, hatali: toplamSonuc.hatali, uyari: toplamSonuc.uyari });
+  sonuclariGoster(sure);
   calisiyorMu = false;
 }
 
-// Sonuclari goster
-function sonuclariGoster(gecen, sure) {
-  var hatali = TEST_ADIMLARI.length - gecen;
-  var uyum = Math.round((gecen / TEST_ADIMLARI.length) * 100);
+// Tumunu calistir
+async function tumunuCalistir() {
+  if (calisiyorMu) return;
+  calisiyorMu = true;
+  testKayitlari = {};
+  toplamSonuc = { gecen:0, hatali:0, uyari:0, paketSonuclari:[], bulgular:[] };
+  document.getElementById('test-log').innerHTML = '';
+  document.getElementById('sonuc-alani').style.display = 'none';
+  log('ERSAN MES v2.0 — Kapsamli Test Basliyor', 'bilgi');
+  log('4 paket, ' + PAKETLER.reduce(function(s,p){return s+p.testler.length},0) + ' test', 'bilgi');
+  log('\u2501'.repeat(50), 'bilgi');
+  var bas = Date.now();
+  var toplamTest = PAKETLER.reduce(function(s,p){return s+p.testler.length},0);
+  var sayac = 0;
 
-  document.getElementById('gecen-sayi').textContent = gecen;
-  document.getElementById('hatali-sayi').textContent = hatali;
-  document.getElementById('uyum-skoru').textContent = '%' + uyum;
-  document.getElementById('toplam-sure').textContent = sure + 'sn';
+  for (var pIdx = 0; pIdx < PAKETLER.length; pIdx++) {
+    var paket = PAKETLER[pIdx];
+    log('', 'bilgi');
+    log('\u2550\u2550\u2550 PAKET ' + (pIdx+1) + ': ' + paket.ad.toUpperCase() + ' \u2550\u2550\u2550', 'bilgi');
 
-  var as9100Maddeler = [
-    { madde:'8.2', aciklama:'Teklif ve siparis teyidi', adimlar:[1,2,3,4] },
-    { madde:'8.4', aciklama:'Disaridan tedarik kontrolu', adimlar:[5,6,7] },
-    { madde:'8.5', aciklama:'Uretim ve hizmet saglama', adimlar:[8,9] },
-    { madde:'8.6', aciklama:'Urun serbest birakma', adimlar:[12] },
-    { madde:'8.7', aciklama:'Uygun olmayan cikti kontrolu', adimlar:[10,11] },
-    { madde:'8.5.4', aciklama:'Teslimat kontrolu', adimlar:[13,14] },
-    { madde:'7.5', aciklama:'Dokumante bilgi', adimlar:[15] },
-  ];
+    // Sol panelde bu paketi goster
+    aktifPaket = pIdx;
+    document.querySelectorAll('.paket-sekme').forEach(function(s,i){s.classList.toggle('aktif',i===pIdx)});
+    adimlariRender();
 
-  var tbody = document.getElementById('uyum-tbody');
-  tbody.innerHTML = '';
-  for (var mi = 0; mi < as9100Maddeler.length; mi++) {
-    var m = as9100Maddeler[mi];
-    var adimSonuclari = m.adimlar.map(function(n) {
-      return testSonuclari.find(function(s) { return s.adim === n; });
-    }).filter(Boolean);
-    var hepsiGecti = adimSonuclari.every(function(s) { return s.gecti; });
-    var renk = hepsiGecti ? 'badge-yesil' : 'badge-kirmizi';
-    var metin = hepsiGecti ? 'Uyumlu' : 'Kontrol Et';
-
-    tbody.innerHTML += '<tr>' +
-      '<td class="td-mono">' + m.madde + '</td>' +
-      '<td>' + m.aciklama + '</td>' +
-      '<td><span class="badge ' + renk + '">' + metin + '</span></td>' +
-      '<td style="font-size:11px;color:var(--metin3)">Adim ' + m.adimlar.join(',') + ' test edildi</td>' +
-      '</tr>';
+    var paketGecen = 0, paketHatali = 0, paketUyari = 0;
+    for (var i = 0; i < paket.testler.length; i++) {
+      sayac++;
+      document.getElementById('ilerleme-ic').style.width = Math.round(sayac/toplamTest*100) + '%';
+      document.getElementById('ilerleme-yazi').textContent = sayac + '/' + toplamTest;
+      var oncekiGecen = toplamSonuc.gecen, oncekiHatali = toplamSonuc.hatali, oncekiUyari = toplamSonuc.uyari;
+      await adimCalistir(pIdx, i);
+      if (toplamSonuc.gecen > oncekiGecen) paketGecen++;
+      if (toplamSonuc.hatali > oncekiHatali) paketHatali++;
+      if (toplamSonuc.uyari > oncekiUyari) paketUyari++;
+      await new Promise(function(r){setTimeout(r,400)});
+    }
+    toplamSonuc.paketSonuclari.push({ ad: paket.ad, gecen: paketGecen, hatali: paketHatali, uyari: paketUyari });
+    // Normal akis sonrasi kayitlari sifirla (diger paketler temiz baslasin)
+    if (pIdx === 0) testKayitlari = {};
   }
+
+  document.getElementById('ilerleme-ic').style.width = '100%';
+  var sure = Math.round((Date.now()-bas)/1000);
+  document.getElementById('kc-sure').textContent = sure;
+  document.getElementById('ilerleme-yazi').textContent = toplamTest + '/' + toplamTest + ' — ' + sure + 'sn';
+  log('', 'bilgi');
+  log('\u2501'.repeat(50), 'bilgi');
+  log('TUM TESTLER TAMAMLANDI: ' + toplamSonuc.gecen + ' gecen, ' + toplamSonuc.hatali + ' hata, ' + toplamSonuc.uyari + ' uyari (' + sure + 'sn)', 'basari');
+
+  sonuclariGoster(sure);
+  await aiDegerlendirme(sure);
+  calisiyorMu = false;
+}
+
+function sonuclariGoster(sure) {
+  var toplam = toplamSonuc.gecen + toplamSonuc.hatali;
+  var skor = toplam > 0 ? Math.round(toplamSonuc.gecen / toplam * 100) : 0;
+  document.getElementById('s-gecen').textContent = toplamSonuc.gecen;
+  document.getElementById('s-hatali').textContent = toplamSonuc.hatali;
+  document.getElementById('s-uyari').textContent = toplamSonuc.uyari;
+  document.getElementById('s-skor').textContent = '%' + skor;
+
+  var tbody = document.getElementById('paket-tbody');
+  tbody.innerHTML = toplamSonuc.paketSonuclari.map(function(p) {
+    var pToplam = p.gecen + p.hatali;
+    var pSkor = pToplam > 0 ? Math.round(p.gecen / pToplam * 100) : 0;
+    var renk = pSkor >= 80 ? 'badge-yesil' : pSkor >= 50 ? 'badge-sari' : 'badge-kirmizi';
+    return '<tr><td style="font-weight:600">' + p.ad + '</td><td style="color:var(--yesil)">' + p.gecen + '</td><td style="color:var(--kirmizi)">' + p.hatali + '</td><td style="color:var(--sari)">' + p.uyari + '</td><td><span class="badge ' + renk + '">%' + pSkor + '</span></td></tr>';
+  }).join('');
+
+  // Bulgular
+  var bulguAlani = document.getElementById('bulgular-alani');
+  bulguAlani.innerHTML = '';
+  toplamSonuc.bulgular.forEach(function(b) {
+    var cls = b.tip === 'hata' ? 'kritik-bulgu' : 'uyari-bulgu';
+    var ikon = b.tip === 'hata' ? '&#9940;' : '&#9888;';
+    bulguAlani.innerHTML += '<div class="' + cls + '">' + ikon + ' <b>' + b.paket + ' / ' + b.test + ':</b> ' + b.mesaj + '</div>';
+  });
 
   document.getElementById('sonuc-alani').style.display = 'block';
 }
 
-// AI degerlendirme
-async function aiDegerlendirme(gecen, sure) {
-  var toplam = TEST_ADIMLARI.length;
-  var uyum = Math.round((gecen / toplam) * 100);
+async function aiDegerlendirme(sure) {
+  var toplam = toplamSonuc.gecen + toplamSonuc.hatali;
+  var skor = toplam > 0 ? Math.round(toplamSonuc.gecen / toplam * 100) : 0;
   var el = document.getElementById('ai-degerlendirme');
   el.textContent = 'AI degerlendirme yukleniyor...';
-
+  var paketOzet = toplamSonuc.paketSonuclari.map(function(p){return p.ad+': '+p.gecen+' gecen, '+p.hatali+' hata'}).join('\n');
+  var bulguOzet = toplamSonuc.bulgular.map(function(b){return '['+b.tip.toUpperCase()+'] '+b.test+': '+b.mesaj}).join('\n');
   try {
     var r = await fetch('/.netlify/functions/claude', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        messages: [{
-          role: 'user',
-          content: 'Ersan MES AS9100 uyum testi tamamlandi.\n' +
-            'Sonuclar: ' + gecen + '/' + toplam + ' adim gecti (%' + uyum + ' uyum)\n' +
-            'Test suresi: ' + sure + ' saniye\n' +
-            'Test adimlari: Teklif, Siparis, Satinalma, On Kabul, Girdi Kalite, Is Emri, Uretim, NCR, Final Muayene, Sevkiyat, Fatura.\n\n' +
-            'AS9100 ve ISO 9001 perspektifinden degerlendirme yap:\n' +
-            '1. Sistemin guclu yanlari (2-3 madde)\n' +
-            '2. Kritik iyilestirme alanlari (2-3 madde)\n' +
-            '3. Denetim hazirligi skoru (0-100)\n' +
-            '4. Bir sonraki sprint icin oneriler\n\n' +
-            'Turkce, is dili, somut, 150-200 kelime.'
-        }]
-      })
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:1200, messages:[{role:'user',
+        content:'Ersan MES v2.0 kapsamli test sonuclari:\n\nGenel skor: %'+skor+' ('+toplamSonuc.gecen+'/'+toplam+')\nSure: '+sure+' saniye\nUyari: '+toplamSonuc.uyari+'\n\nPaket bazli:\n'+paketOzet+'\n\nBulgular:\n'+(bulguOzet||'Bulgu yok')+'\n\nAS9100 Rev.D perspektifinden:\n1. Denetim hazirligi skoru (0-100) ve gerekce\n2. En kritik 3 guvenlik/uyum acigi\n3. Sonraki sprint icin oncelikli 5 duzeltme\n4. Guclu yanlar (2-3 madde)\n5. Tahmini denetim riski: Dusuk/Orta/Yuksek\n\nTurkce, teknik, somut.'}]})
     });
     var d = await r.json();
-    var metin = (d.content && d.content[0] && d.content[0].text) ? d.content[0].text : 'AI yanit vermedi';
-    el.textContent = metin;
-  } catch (e) {
-    el.textContent = 'AI degerlendirme alinamadi: ' + e.message;
-  }
+    el.textContent = (d.content && d.content[0] && d.content[0].text) || 'AI yanit vermedi';
+  } catch(e) { el.textContent = 'AI alinamadi: ' + e.message; }
 }
 
-// Temizle
 async function testTemizle() {
-  if (!confirm('Tum TEST kayitlari Airtable\'dan silinecek. Emin misiniz?')) return;
-
-  log('Test kayitlari temizleniyor...', 'uyari');
+  if (!confirm('Tum TEST kayitlari silinecek. Emin misiniz?')) return;
+  log('Temizleniyor...', 'uyari');
   try {
-    var r = await fetch('/.netlify/functions/test-bot', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ temizle: true })
-    });
+    var r = await fetch('/.netlify/functions/test-bot', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({temizle:true}) });
     var d = await r.json();
     log('Temizlendi: ' + JSON.stringify(d.silinen), 'basari');
-  } catch (e) {
-    log('Temizleme hatasi: ' + e.message, 'hata');
-  }
-
-  adimlariRender();
+  } catch(e) { log('Temizleme hatasi: ' + e.message, 'hata'); }
   testKayitlari = {};
-  testSonuclari = [];
+  toplamSonuc = { gecen:0, hatali:0, uyari:0, paketSonuclari:[], bulgular:[] };
+  kpiGuncelle();
+  document.getElementById('kc-sure').textContent = '0';
   document.getElementById('sonuc-alani').style.display = 'none';
   document.getElementById('ilerleme-ic').style.width = '0%';
-  document.getElementById('ilerleme-yazi').textContent = '0/15 adim tamamlandi';
+  document.getElementById('ilerleme-yazi').textContent = 'Hazir';
+  adimlariRender();
 }
 
-// Init
 document.addEventListener('DOMContentLoaded', adimlariRender);
 </script>
 </body>
