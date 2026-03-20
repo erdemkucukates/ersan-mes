@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — Finans — Genel Bakis</title>
+<link rel="stylesheet" href="ersan_styles.css">
+<script src="ersan_nav.js" defer></script>
+<script src="ersan_log.js" defer></script>
+</head>
+<body>
+<div id="nav-alani"></div>
+<div class="icerik-alani">
+  <div class="topbar">
+    <div class="topbar-baslik">Finans — Genel Bakis</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <input type="month" id="aySecici" class="form-input" style="width:160px;padding:4px 8px;font-size:12px;">
+      <button class="btn btn-mavi btn-sm" onclick="aiRaporAc()">AI Rapor</button>
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
+    </div>
+  </div>
+  <div class="sayfa-icerik">
+
+    <!-- KPI Kartlari -->
+    <div class="kpi-grid">
+      <div class="kpi-kart yesil">
+        <div class="kpi-etiket">Toplam Ciro</div>
+        <div class="kpi-deger" id="kpiCiro">—</div>
+        <div class="kpi-alt" id="kpiCiroAlt">Bu ay</div>
+      </div>
+      <div class="kpi-kart sari">
+        <div class="kpi-etiket">Bekleyen Alacak</div>
+        <div class="kpi-deger" id="kpiAlacak">—</div>
+        <div class="kpi-alt" id="kpiAlacakAlt">Acik faturalar</div>
+      </div>
+      <div class="kpi-kart kirmizi">
+        <div class="kpi-etiket">Odenecek Borc</div>
+        <div class="kpi-deger" id="kpiBorc">—</div>
+        <div class="kpi-alt" id="kpiBorcAlt">Tedarikci borclari</div>
+      </div>
+      <div class="kpi-kart yesil">
+        <div class="kpi-etiket">Brut Kar Marji %</div>
+        <div class="kpi-deger" id="kpiMarj">—</div>
+        <div class="kpi-alt" id="kpiMarjAlt">Ortalama</div>
+      </div>
+    </div>
+
+    <!-- 3 Sutunlu Grid -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px;">
+      <!-- Gelir Dagilimi -->
+      <div class="kart">
+        <div class="kart-baslik">Gelir Dagilimi</div>
+        <div id="gelirDagilimi" style="min-height:140px;">
+          <div class="bos-durum" style="padding:20px;">Veriler yukleniyor...</div>
+        </div>
+      </div>
+      <!-- Maliyet Kirilimi -->
+      <div class="kart">
+        <div class="kart-baslik">Maliyet Kirilimi</div>
+        <div id="maliyetKirilimi" style="min-height:140px;">
+          <div class="bos-durum" style="padding:20px;">Veriler yukleniyor...</div>
+        </div>
+      </div>
+      <!-- Nakit Akisi -->
+      <div class="kart">
+        <div class="kart-baslik">Nakit Akisi (6 Ay)</div>
+        <div id="nakitAkisi" style="min-height:140px;">
+          <div class="bos-durum" style="padding:20px;">Veriler yukleniyor...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alt Bolum: 2 Sutun -->
+    <div style="display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-bottom:12px;">
+      <!-- Acik Alacaklar Tablosu -->
+      <div class="tablo-wrap">
+        <div class="tablo-baslik">
+          <div class="tablo-baslik-text">Acik Alacaklar</div>
+          <span class="tablo-baslik-sayi" id="alacakSayi">0 kayit</span>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="tablo">
+            <thead>
+              <tr>
+                <th>Fatura No</th>
+                <th>Musteri</th>
+                <th>Tutar</th>
+                <th>Vade</th>
+                <th>Durum</th>
+              </tr>
+            </thead>
+            <tbody id="alacakTablo">
+              <tr><td colspan="5" style="text-align:center;color:var(--metin4);padding:20px;">Yukleniyor...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Siparis Kar Analizi -->
+      <div class="kart">
+        <div class="kart-baslik">Siparis Kar Analizi (Top 5)</div>
+        <div id="karAnalizi" style="min-height:140px;">
+          <div class="bos-durum" style="padding:20px;">Veriler yukleniyor...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mikro Bar -->
+    <div class="mikro-bar">
+      <div class="mikro-bar-sol">
+        <div class="mikro-bar-baslik">Mikro Entegrasyon</div>
+        <div class="mikro-bar-bilgi">
+          Son senkronizasyon: <span id="mikroSon">—</span>
+          &nbsp;|&nbsp; Durum: <span id="mikroDurum">Baglanti bekleniyor</span>
+        </div>
+      </div>
+      <div class="mikro-bar-sag">
+        <button class="mikro-btn" style="background:var(--mavi);color:#fff;" onclick="faturalariGor()">Faturalari Gor</button>
+        <button class="mikro-btn" style="background:var(--yesil);color:#fff;" onclick="mikroAktar()">Mikro'ya Aktar</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- AI Rapor Modal -->
+<div id="aiRaporModal" style="display:none;">
+  <div class="modal-overlay" onclick="aiRaporKapat()">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-baslik">
+        <span>AI Finansal Rapor</span>
+        <button class="modal-kapat" onclick="aiRaporKapat()">&times;</button>
+      </div>
+      <div id="aiRaporIcerik" style="font-size:13px;line-height:1.7;color:var(--metin2);white-space:pre-wrap;">
+        Rapor olusturuluyor...
+      </div>
+      <div class="modal-alt">
+        <button class="btn btn-beyaz" onclick="aiRaporKapat()">Kapat</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── API Helper ──
+async function apiGet(tablo, query) {
+  var url = '/.netlify/functions/airtable?table=' + encodeURIComponent(tablo);
+  if (query) url += '&' + query;
+  var r = await fetch(url);
+  return r.json();
+}
+
+function paraFormat(n) {
+  if (!n && n !== 0) return '—';
+  return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 }).format(n);
+}
+
+function toast(mesaj, tip) {
+  var t = document.getElementById('toast');
+  t.textContent = mesaj;
+  t.className = 'toast toast-' + (tip || 'bilgi') + ' goster';
+  setTimeout(function() { t.className = 'toast'; }, 3000);
+}
+
+// ── Placeholder Data ──
+var placeholderFaturalar = [
+  { faturaNo: 'FAT-2026-001', musteri: 'ABC Havacilik', tutar: 45000, vade: '2026-04-15', durum: 'Acik' },
+  { faturaNo: 'FAT-2026-002', musteri: 'XYZ Savunma', tutar: 78500, vade: '2026-03-25', durum: 'Gecikmis' },
+  { faturaNo: 'FAT-2026-003', musteri: 'DEF Muhendislik', tutar: 32000, vade: '2026-05-01', durum: 'Acik' },
+  { faturaNo: 'FAT-2026-004', musteri: 'GHI Makina', tutar: 15200, vade: '2026-02-28', durum: 'Gecikmis' },
+  { faturaNo: 'FAT-2026-005', musteri: 'JKL Otomasyon', tutar: 92000, vade: '2026-04-30', durum: 'Acik' }
+];
+
+var placeholderGelir = [
+  { musteri: 'ABC Havacilik', tutar: 185000 },
+  { musteri: 'XYZ Savunma', tutar: 142000 },
+  { musteri: 'DEF Muhendislik', tutar: 98000 },
+  { musteri: 'GHI Makina', tutar: 67000 },
+  { musteri: 'JKL Otomasyon', tutar: 45000 }
+];
+
+var placeholderMaliyet = [
+  { kategori: 'Malzeme', tutar: 120000 },
+  { kategori: 'Iscilik', tutar: 85000 },
+  { kategori: 'Tezgah', tutar: 62000 },
+  { kategori: 'Fason', tutar: 28000 }
+];
+
+var placeholderNakit = [
+  { ay: 'Eki', giris: 95000, cikis: 72000 },
+  { ay: 'Kas', giris: 110000, cikis: 88000 },
+  { ay: 'Ara', giris: 130000, cikis: 95000 },
+  { ay: 'Oca', giris: 85000, cikis: 78000 },
+  { ay: 'Sub', giris: 145000, cikis: 102000 },
+  { ay: 'Mar', giris: 125000, cikis: 91000 }
+];
+
+var placeholderKar = [
+  { ie: 'IE-2026-00012', parca: 'Flansh Kaplin', marj: 42 },
+  { ie: 'IE-2026-00008', parca: 'Hidrolik Blok', marj: 38 },
+  { ie: 'IE-2026-00015', parca: 'Mil Baglantisi', marj: 35 },
+  { ie: 'IE-2026-00003', parca: 'Govde Parcasi', marj: 28 },
+  { ie: 'IE-2026-00019', parca: 'Bilyali Yatak', marj: 22 }
+];
+
+// ── Bar Render Helpers ──
+function renderBar(etiket, deger, maks, renk) {
+  var oran = maks > 0 ? (deger / maks * 100) : 0;
+  return '<div style="margin-bottom:8px;">' +
+    '<div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px;">' +
+      '<span style="color:var(--metin2);">' + etiket + '</span>' +
+      '<span style="font-weight:600;color:var(--laci);">' + paraFormat(deger) + '</span>' +
+    '</div>' +
+    '<div style="height:8px;background:var(--bg);border-radius:4px;overflow:hidden;">' +
+      '<div style="height:100%;width:' + oran + '%;background:' + (renk || 'var(--mavi)') + ';border-radius:4px;transition:width .3s;"></div>' +
+    '</div>' +
+  '</div>';
+}
+
+function renderMarjBar(etiket, alt, marj) {
+  var renk = marj >= 35 ? 'var(--yesil)' : marj >= 25 ? 'var(--sari)' : 'var(--kirmizi)';
+  return '<div style="margin-bottom:8px;">' +
+    '<div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px;">' +
+      '<span style="color:var(--metin2);">' + etiket + ' <span style="color:var(--metin4);font-size:10px;">' + alt + '</span></span>' +
+      '<span class="badge ' + (marj >= 35 ? 'badge-yesil' : marj >= 25 ? 'badge-sari' : 'badge-kirmizi') + '">%' + marj + '</span>' +
+    '</div>' +
+    '<div style="height:6px;background:var(--bg);border-radius:3px;overflow:hidden;">' +
+      '<div style="height:100%;width:' + marj + '%;background:' + renk + ';border-radius:3px;"></div>' +
+    '</div>' +
+  '</div>';
+}
+
+// ── Veri Yukle ──
+var faturalar = [];
+var tabloYapilandirilmamis = false;
+
+async function verileriYukle() {
+  var ay = document.getElementById('aySecici').value;
+
+  // Fatura Kayitlari tablosunu dene
+  try {
+    var res = await apiGet('Fatura Kayitlari', 'pageSize=100');
+    if (res && res.records && res.records.length > 0) {
+      faturalar = res.records;
+      tabloYapilandirilmamis = false;
+    } else {
+      tabloYapilandirilmamis = true;
+      faturalar = [];
+    }
+  } catch(e) {
+    console.warn('[Finans] Fatura Kayitlari tablosu bulunamadi:', e.message);
+    tabloYapilandirilmamis = true;
+    faturalar = [];
+  }
+
+  // Maliyet Kalemleri tablosunu dene
+  try {
+    var resMaliyet = await apiGet('Maliyet Kalemleri', 'pageSize=100');
+    if (resMaliyet && resMaliyet.records && resMaliyet.records.length > 0) {
+      // Gercek veri ile render
+      renderGercekMaliyet(resMaliyet.records);
+    }
+  } catch(e) {
+    console.warn('[Finans] Maliyet Kalemleri tablosu bulunamadi:', e.message);
+  }
+
+  renderAll();
+}
+
+function renderAll() {
+  renderKPIs();
+  renderGelirDagilimi();
+  renderMaliyetKirilimi();
+  renderNakitAkisi();
+  renderAlacakTablosu();
+  renderKarAnalizi();
+}
+
+function renderKPIs() {
+  if (tabloYapilandirilmamis) {
+    document.getElementById('kpiCiro').textContent = paraFormat(537000);
+    document.getElementById('kpiCiroAlt').textContent = 'Placeholder veri';
+    document.getElementById('kpiAlacak').textContent = paraFormat(262700);
+    document.getElementById('kpiAlacakAlt').textContent = 'Placeholder veri';
+    document.getElementById('kpiBorc').textContent = paraFormat(148000);
+    document.getElementById('kpiBorcAlt').textContent = 'Placeholder veri';
+    document.getElementById('kpiMarj').textContent = '%34.2';
+    document.getElementById('kpiMarjAlt').textContent = 'Placeholder veri';
+  } else {
+    var toplamCiro = 0;
+    var bekleyenAlacak = 0;
+    faturalar.forEach(function(r) {
+      var f = r.fields || {};
+      var tutar = parseFloat(f['Tutar'] || f['tutar'] || 0);
+      toplamCiro += tutar;
+      var durum = f['Durum'] || f['durum'] || '';
+      if (durum !== 'Odendi') bekleyenAlacak += tutar;
+    });
+    document.getElementById('kpiCiro').textContent = paraFormat(toplamCiro);
+    document.getElementById('kpiCiroAlt').textContent = faturalar.length + ' fatura';
+    document.getElementById('kpiAlacak').textContent = paraFormat(bekleyenAlacak);
+    document.getElementById('kpiAlacakAlt').textContent = 'Acik faturalar';
+    document.getElementById('kpiBorc').textContent = '—';
+    document.getElementById('kpiBorcAlt').textContent = 'Satinalma verileri bekleniyor';
+    document.getElementById('kpiMarj').textContent = '—';
+    document.getElementById('kpiMarjAlt').textContent = 'Maliyet verileri bekleniyor';
+  }
+}
+
+function renderGelirDagilimi() {
+  var el = document.getElementById('gelirDagilimi');
+  var data = placeholderGelir;
+  var maks = 0;
+  data.forEach(function(d) { if (d.tutar > maks) maks = d.tutar; });
+  var html = '';
+  if (tabloYapilandirilmamis) {
+    html += '<div style="padding:6px 0;font-size:10px;color:var(--sari);font-weight:600;">Tablo yapilandirilmamis — placeholder veri</div>';
+  }
+  data.forEach(function(d) {
+    html += renderBar(d.musteri, d.tutar, maks, 'var(--mavi)');
+  });
+  el.innerHTML = html;
+}
+
+function renderMaliyetKirilimi() {
+  var el = document.getElementById('maliyetKirilimi');
+  var data = placeholderMaliyet;
+  var maks = 0;
+  data.forEach(function(d) { if (d.tutar > maks) maks = d.tutar; });
+  var renkler = ['var(--kirmizi)', 'var(--sari)', 'var(--mavi)', '#8b5cf6'];
+  var html = '';
+  if (tabloYapilandirilmamis) {
+    html += '<div style="padding:6px 0;font-size:10px;color:var(--sari);font-weight:600;">Tablo yapilandirilmamis — placeholder veri</div>';
+  }
+  data.forEach(function(d, i) {
+    html += renderBar(d.kategori, d.tutar, maks, renkler[i] || 'var(--mavi)');
+  });
+  el.innerHTML = html;
+}
+
+function renderGercekMaliyet(records) {
+  // Gercek veriler gelirse override
+  var el = document.getElementById('maliyetKirilimi');
+  var kategoriler = {};
+  records.forEach(function(r) {
+    var f = r.fields || {};
+    var kat = f['Kalem Tipi'] || f['Kategori'] || 'Diger';
+    var tutar = parseFloat(f['Tutar'] || f['Toplam'] || 0);
+    kategoriler[kat] = (kategoriler[kat] || 0) + tutar;
+  });
+  var data = [];
+  for (var k in kategoriler) {
+    data.push({ kategori: k, tutar: kategoriler[k] });
+  }
+  data.sort(function(a, b) { return b.tutar - a.tutar; });
+  if (data.length === 0) return;
+  var maks = data[0].tutar;
+  var renkler = ['var(--kirmizi)', 'var(--sari)', 'var(--mavi)', '#8b5cf6'];
+  var html = '';
+  data.forEach(function(d, i) {
+    html += renderBar(d.kategori, d.tutar, maks, renkler[i % renkler.length]);
+  });
+  el.innerHTML = html;
+}
+
+function renderNakitAkisi() {
+  var el = document.getElementById('nakitAkisi');
+  var data = placeholderNakit;
+  var maks = 0;
+  data.forEach(function(d) { if (d.giris > maks) maks = d.giris; if (d.cikis > maks) maks = d.cikis; });
+  var html = '';
+  if (tabloYapilandirilmamis) {
+    html += '<div style="padding:6px 0;font-size:10px;color:var(--sari);font-weight:600;">Tablo yapilandirilmamis — placeholder veri</div>';
+  }
+  html += '<div style="display:flex;gap:4px;align-items:flex-end;height:100px;">';
+  data.forEach(function(d) {
+    var girisH = maks > 0 ? (d.giris / maks * 80) : 0;
+    var cikisH = maks > 0 ? (d.cikis / maks * 80) : 0;
+    html += '<div style="flex:1;text-align:center;">' +
+      '<div style="display:flex;gap:2px;justify-content:center;align-items:flex-end;height:80px;">' +
+        '<div style="width:10px;height:' + girisH + 'px;background:var(--yesil);border-radius:2px 2px 0 0;" title="Giris: ' + paraFormat(d.giris) + '"></div>' +
+        '<div style="width:10px;height:' + cikisH + 'px;background:var(--kirmizi);border-radius:2px 2px 0 0;" title="Cikis: ' + paraFormat(d.cikis) + '"></div>' +
+      '</div>' +
+      '<div style="font-size:9px;color:var(--metin4);margin-top:4px;">' + d.ay + '</div>' +
+    '</div>';
+  });
+  html += '</div>';
+  html += '<div style="display:flex;gap:12px;justify-content:center;margin-top:6px;">' +
+    '<span style="font-size:9px;color:var(--metin4);"><span style="display:inline-block;width:8px;height:8px;background:var(--yesil);border-radius:2px;vertical-align:middle;margin-right:3px;"></span>Giris</span>' +
+    '<span style="font-size:9px;color:var(--metin4);"><span style="display:inline-block;width:8px;height:8px;background:var(--kirmizi);border-radius:2px;vertical-align:middle;margin-right:3px;"></span>Cikis</span>' +
+  '</div>';
+  el.innerHTML = html;
+}
+
+function renderAlacakTablosu() {
+  var el = document.getElementById('alacakTablo');
+  var data = tabloYapilandirilmamis ? placeholderFaturalar : [];
+
+  if (!tabloYapilandirilmamis && faturalar.length > 0) {
+    faturalar.forEach(function(r) {
+      var f = r.fields || {};
+      var durum = f['Durum'] || f['durum'] || 'Acik';
+      if (durum !== 'Odendi') {
+        data.push({
+          faturaNo: f['Fatura No'] || f['faturaNo'] || '—',
+          musteri: f['Musteri'] || f['musteri'] || '—',
+          tutar: parseFloat(f['Tutar'] || f['tutar'] || 0),
+          vade: f['Vade Tarihi'] || f['vade'] || '—',
+          durum: durum
+        });
+      }
+    });
+  }
+
+  if (data.length === 0) {
+    el.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--metin4);padding:20px;">Acik alacak bulunamadi</td></tr>';
+    document.getElementById('alacakSayi').textContent = '0 kayit';
+    return;
+  }
+
+  var warn = tabloYapilandirilmamis ? '<tr><td colspan="5" style="background:var(--sari-bg);color:var(--sari-t);font-size:10px;font-weight:600;padding:6px 12px;">Tablo yapilandirilmamis — placeholder veri gosteriliyor</td></tr>' : '';
+  var html = warn;
+  data.forEach(function(d) {
+    var badgeCls = 'badge-gri';
+    if (d.durum === 'Acik') badgeCls = 'badge-sari';
+    else if (d.durum === 'Gecikmis') badgeCls = 'badge-kirmizi';
+    else if (d.durum === 'Odendi') badgeCls = 'badge-yesil';
+    html += '<tr>' +
+      '<td class="td-mono">' + d.faturaNo + '</td>' +
+      '<td>' + d.musteri + '</td>' +
+      '<td style="font-weight:600;">' + paraFormat(d.tutar) + '</td>' +
+      '<td>' + d.vade + '</td>' +
+      '<td><span class="badge ' + badgeCls + '">' + d.durum + '</span></td>' +
+    '</tr>';
+  });
+  el.innerHTML = html;
+  document.getElementById('alacakSayi').textContent = data.length + ' kayit';
+}
+
+function renderKarAnalizi() {
+  var el = document.getElementById('karAnalizi');
+  var html = '';
+  if (tabloYapilandirilmamis) {
+    html += '<div style="padding:6px 0;font-size:10px;color:var(--sari);font-weight:600;">Tablo yapilandirilmamis — placeholder veri</div>';
+  }
+  placeholderKar.forEach(function(d) {
+    html += renderMarjBar(d.ie, d.parca, d.marj);
+  });
+  el.innerHTML = html;
+}
+
+// ── Actions ──
+function faturalariGor() {
+  window.location.href = 'ersan_alacaklar.html';
+}
+
+function mikroAktar() {
+  toast('Mikro entegrasyonu henuz yapilandirilmamis', 'bilgi');
+  logIslem('Deneme', 'Finans', null, 'Mikro aktarim denemesi');
+}
+
+// ── AI Rapor ──
+function aiRaporAc() {
+  document.getElementById('aiRaporModal').style.display = 'block';
+  document.getElementById('aiRaporIcerik').textContent = 'Rapor olusturuluyor...';
+  aiRaporOlustur();
+}
+
+function aiRaporKapat() {
+  document.getElementById('aiRaporModal').style.display = 'none';
+}
+
+async function aiRaporOlustur() {
+  var ay = document.getElementById('aySecici').value || '2026-03';
+  var prompt = 'Ersan Endustriyel Makine icin ' + ay + ' ayi finansal ozet raporu olustur. ' +
+    'Ciro, alacak, borc ve kar marji bilgilerini ozetle. Turkce yaz, kisa ve net ol. ' +
+    'Not: Bu bir MES sistemi finans moduludur.';
+
+  try {
+    var res = await fetch('/.netlify/functions/claude', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: prompt })
+    });
+    var data = await res.json();
+    var icerik = (data && data.content) ? data.content : (data && data.message) ? data.message : 'Rapor olusturulamadi.';
+    document.getElementById('aiRaporIcerik').textContent = icerik;
+    logIslem('AI Rapor', 'Finans', null, 'Aylik finansal rapor: ' + ay);
+  } catch(e) {
+    document.getElementById('aiRaporIcerik').textContent = 'Hata: AI rapor servisi yanit vermedi.\n\n' + e.message;
+  }
+}
+
+// ── Init ──
+(function() {
+  var bugun = new Date();
+  var ayStr = bugun.getFullYear() + '-' + String(bugun.getMonth() + 1).padStart(2, '0');
+  document.getElementById('aySecici').value = ayStr;
+  document.getElementById('aySecici').addEventListener('change', function() { verileriYukle(); });
+  verileriYukle();
+})();
+</script>
+</body>
+</html>

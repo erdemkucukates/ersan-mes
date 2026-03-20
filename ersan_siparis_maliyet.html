@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — Siparis Maliyet Analizi</title>
+<link rel="stylesheet" href="ersan_styles.css">
+<script src="ersan_nav.js" defer></script>
+<script src="ersan_log.js" defer></script>
+</head>
+<body>
+<div id="nav-alani"></div>
+<div class="icerik-alani">
+  <div class="topbar">
+    <div class="topbar-baslik">Siparis Maliyet Analizi</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
+    </div>
+  </div>
+  <div class="sayfa-icerik">
+    <div class="iki-panel">
+
+      <!-- Sol Panel: IE Listesi -->
+      <div class="sol-panel">
+        <div class="sol-panel-ust">
+          <div class="sol-panel-baslik">Is Emirleri</div>
+          <span class="tablo-baslik-sayi" id="ieSayi">0</span>
+        </div>
+        <div class="sol-arama">
+          <input type="text" placeholder="IE No veya parca ara..." id="ieArama" oninput="ieFiltrele()">
+        </div>
+        <div class="sol-filtre">
+          <button class="filtre-btn aktif" data-filtre="Tumu" onclick="filtreSec(this)">Tumu</button>
+          <button class="filtre-btn" data-filtre="Uretimde" onclick="filtreSec(this)">Uretimde</button>
+          <button class="filtre-btn" data-filtre="Tamamlanan" onclick="filtreSec(this)">Tamamlanan</button>
+        </div>
+        <div class="sol-liste" id="ieListe">
+          <div class="yukleniyor"><div class="spinner"></div> Yukleniyor...</div>
+        </div>
+      </div>
+
+      <!-- Sag Panel: Detay -->
+      <div class="sag-panel">
+        <div id="sagIcerik">
+          <div class="bos-durum" style="margin-top:80px;">
+            <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M9 7h6m-6 4h6m-6 4h4M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z"/></svg>
+            <div>Sol panelden bir is emri secin</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- AI Varyans Modal -->
+<div id="varyansModal" style="display:none;">
+  <div class="modal-overlay" onclick="varyansKapat()">
+    <div class="modal" onclick="event.stopPropagation()" style="max-width:640px;">
+      <div class="modal-baslik">
+        <span>AI Varyans Analizi</span>
+        <button class="modal-kapat" onclick="varyansKapat()">&times;</button>
+      </div>
+      <div id="varyansIcerik" style="font-size:13px;line-height:1.7;color:var(--metin2);white-space:pre-wrap;">
+        Analiz yapiliyor...
+      </div>
+      <div class="modal-alt">
+        <button class="btn btn-beyaz" onclick="varyansKapat()">Kapat</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── API Helper ──
+async function apiGet(tablo, query) {
+  var url = '/.netlify/functions/airtable?table=' + encodeURIComponent(tablo);
+  if (query) url += '&' + query;
+  var r = await fetch(url);
+  return r.json();
+}
+
+function paraFormat(n) {
+  if (!n && n !== 0) return '—';
+  return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 }).format(n);
+}
+
+function toast(mesaj, tip) {
+  var t = document.getElementById('toast');
+  t.textContent = mesaj;
+  t.className = 'toast toast-' + (tip || 'bilgi') + ' goster';
+  setTimeout(function() { t.className = 'toast'; }, 3000);
+}
+
+// ── State ──
+var isEmirleri = [];
+var maliyetKalemleri = [];
+var aktifFiltre = 'Tumu';
+var seciliIE = null;
+var tabloYapilandirilmamis = false;
+
+// ── Placeholder Data ──
+var placeholderIE = [
+  { id: 'rec_ph1', fields: { 'IE No': 'IE-2026-00012', 'Parça Adı': 'Flansh Kaplin', 'Durum': 'Uretimde', '_satisFiyati': 45000, '_toplamMaliyet': 26100, '_marj': 42 } },
+  { id: 'rec_ph2', fields: { 'IE No': 'IE-2026-00008', 'Parça Adı': 'Hidrolik Blok', 'Durum': 'Tamamlanan', '_satisFiyati': 78500, '_toplamMaliyet': 48670, '_marj': 38 } },
+  { id: 'rec_ph3', fields: { 'IE No': 'IE-2026-00015', 'Parça Adı': 'Mil Baglantisi', 'Durum': 'Uretimde', '_satisFiyati': 32000, '_toplamMaliyet': 20800, '_marj': 35 } },
+  { id: 'rec_ph4', fields: { 'IE No': 'IE-2026-00003', 'Parça Adı': 'Govde Parcasi', 'Durum': 'Tamamlanan', '_satisFiyati': 92000, '_toplamMaliyet': 66240, '_marj': 28 } },
+  { id: 'rec_ph5', fields: { 'IE No': 'IE-2026-00019', 'Parça Adı': 'Bilyali Yatak Y.', 'Durum': 'Uretimde', '_satisFiyati': 15200, '_toplamMaliyet': 11856, '_marj': 22 } }
+];
+
+var placeholderMaliyet = [
+  { fields: { 'Kalem Tipi': 'Malzeme', 'Aciklama': 'AISI 4140 Yuvarlak', 'Miktar': 2, 'Birim Fiyat': 3200, 'Tarih': '2026-03-01' } },
+  { fields: { 'Kalem Tipi': 'Iscilik', 'Aciklama': 'CNC Torna Op10', 'Miktar': 4, 'Birim Fiyat': 850, 'Tarih': '2026-03-05' } },
+  { fields: { 'Kalem Tipi': 'Tezgah', 'Aciklama': 'Mazak QTN-200 (4 saat)', 'Miktar': 4, 'Birim Fiyat': 1200, 'Tarih': '2026-03-05' } },
+  { fields: { 'Kalem Tipi': 'Iscilik', 'Aciklama': 'CNC Freze Op20', 'Miktar': 6, 'Birim Fiyat': 900, 'Tarih': '2026-03-08' } },
+  { fields: { 'Kalem Tipi': 'Fason', 'Aciklama': 'Isil Islem', 'Miktar': 1, 'Birim Fiyat': 2800, 'Tarih': '2026-03-12' } }
+];
+
+// ── Veri Yukle ──
+async function verileriYukle() {
+  try {
+    var res = await apiGet('İş Emirleri', 'pageSize=100');
+    if (res && res.records && res.records.length > 0) {
+      isEmirleri = res.records;
+      tabloYapilandirilmamis = false;
+    } else {
+      isEmirleri = placeholderIE;
+      tabloYapilandirilmamis = true;
+    }
+  } catch(e) {
+    console.warn('[Maliyet] Is Emirleri yuklenemedi:', e.message);
+    isEmirleri = placeholderIE;
+    tabloYapilandirilmamis = true;
+  }
+
+  // Maliyet kalemleri
+  try {
+    var resM = await apiGet('Maliyet Kalemleri', 'pageSize=100');
+    if (resM && resM.records && resM.records.length > 0) {
+      maliyetKalemleri = resM.records;
+    }
+  } catch(e) {
+    console.warn('[Maliyet] Maliyet Kalemleri tablosu bulunamadi:', e.message);
+  }
+
+  renderListe();
+}
+
+// ── Filtre ──
+function filtreSec(btn) {
+  var btns = document.querySelectorAll('.filtre-btn');
+  for (var i = 0; i < btns.length; i++) btns[i].classList.remove('aktif');
+  btn.classList.add('aktif');
+  aktifFiltre = btn.getAttribute('data-filtre');
+  renderListe();
+}
+
+function ieFiltrele() {
+  renderListe();
+}
+
+function getFilteredList() {
+  var arama = (document.getElementById('ieArama').value || '').toLowerCase();
+  return isEmirleri.filter(function(r) {
+    var f = r.fields || {};
+    var ieNo = (f['IE No'] || '').toLowerCase();
+    var parca = (f['Parça Adı'] || f['Parca Adi'] || '').toLowerCase();
+    var durum = f['Durum'] || '';
+
+    var filtrePassed = aktifFiltre === 'Tumu' || durum === aktifFiltre;
+    var aramaPassed = !arama || ieNo.indexOf(arama) >= 0 || parca.indexOf(arama) >= 0;
+    return filtrePassed && aramaPassed;
+  });
+}
+
+function renderListe() {
+  var el = document.getElementById('ieListe');
+  var filtered = getFilteredList();
+  document.getElementById('ieSayi').textContent = filtered.length;
+
+  if (filtered.length === 0) {
+    el.innerHTML = '<div class="bos-durum">Kayit bulunamadi</div>';
+    return;
+  }
+
+  var html = '';
+  if (tabloYapilandirilmamis) {
+    html += '<div style="padding:6px 12px;font-size:10px;color:var(--sari-t);background:var(--sari-bg);font-weight:600;">Placeholder veri</div>';
+  }
+
+  filtered.forEach(function(r) {
+    var f = r.fields || {};
+    var ieNo = f['IE No'] || '—';
+    var parca = f['Parça Adı'] || f['Parca Adi'] || '—';
+    var satisFiyati = parseFloat(f['_satisFiyati'] || f['Satis Fiyati'] || 0);
+    var toplamMaliyet = parseFloat(f['_toplamMaliyet'] || f['Toplam Maliyet'] || 0);
+    var marj = f['_marj'] || (satisFiyati > 0 ? Math.round((satisFiyati - toplamMaliyet) / satisFiyati * 100) : 0);
+    var durum = f['Durum'] || '';
+    var secili = seciliIE && seciliIE.id === r.id ? ' secili' : '';
+
+    var badgeCls = marj >= 35 ? 'badge-yesil' : marj >= 25 ? 'badge-sari' : 'badge-kirmizi';
+
+    html += '<div class="liste-satir' + secili + '" onclick="ieSecim(\'' + r.id + '\')">' +
+      '<div class="liste-satir-no">' + ieNo + '</div>' +
+      '<div class="liste-satir-ad">' + parca + '</div>' +
+      '<div class="liste-satir-alt">' +
+        '<span style="font-size:10px;color:var(--metin4);">' + paraFormat(toplamMaliyet) + ' / ' + paraFormat(satisFiyati) + '</span>' +
+        '<span class="badge ' + badgeCls + '">%' + marj + '</span>' +
+      '</div>' +
+    '</div>';
+  });
+  el.innerHTML = html;
+}
+
+// ── IE Secim ──
+function ieSecim(id) {
+  seciliIE = null;
+  for (var i = 0; i < isEmirleri.length; i++) {
+    if (isEmirleri[i].id === id) { seciliIE = isEmirleri[i]; break; }
+  }
+  renderListe();
+  renderDetay();
+}
+
+function renderDetay() {
+  var el = document.getElementById('sagIcerik');
+  if (!seciliIE) {
+    el.innerHTML = '<div class="bos-durum" style="margin-top:80px;"><div>Sol panelden bir is emri secin</div></div>';
+    return;
+  }
+
+  var f = seciliIE.fields || {};
+  var ieNo = f['IE No'] || '—';
+  var parca = f['Parça Adı'] || f['Parca Adi'] || '—';
+  var satisFiyati = parseFloat(f['_satisFiyati'] || f['Satis Fiyati'] || 0);
+  var toplamMaliyet = parseFloat(f['_toplamMaliyet'] || f['Toplam Maliyet'] || 0);
+  var brutKar = satisFiyati - toplamMaliyet;
+  var marj = satisFiyati > 0 ? Math.round(brutKar / satisFiyati * 100) : 0;
+
+  var html = '<div style="padding:16px;">';
+
+  // Baslik
+  html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">' +
+    '<div>' +
+      '<span style="font-family:monospace;font-size:16px;font-weight:700;color:var(--laci);">' + ieNo + '</span>' +
+      '<span style="margin-left:8px;font-size:13px;color:var(--metin3);">' + parca + '</span>' +
+    '</div>' +
+    '<button class="btn btn-mavi btn-sm" onclick="varyansAnaliziAc()">AI Varyans Analizi</button>' +
+  '</div>';
+
+  // Mini KPIs
+  html += '<div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px;">';
+  html += '<div class="kpi-kart"><div class="kpi-etiket">Satis Fiyati</div><div class="kpi-deger" style="font-size:16px;">' + paraFormat(satisFiyati) + '</div></div>';
+  html += '<div class="kpi-kart kirmizi"><div class="kpi-etiket">Toplam Maliyet</div><div class="kpi-deger" style="font-size:16px;">' + paraFormat(toplamMaliyet) + '</div></div>';
+  html += '<div class="kpi-kart ' + (brutKar >= 0 ? 'yesil' : 'kirmizi') + '"><div class="kpi-etiket">Brut Kar</div><div class="kpi-deger" style="font-size:16px;">' + paraFormat(brutKar) + '</div></div>';
+  var marjBadge = marj >= 35 ? 'yesil' : marj >= 25 ? 'sari' : 'kirmizi';
+  html += '<div class="kpi-kart ' + marjBadge + '"><div class="kpi-etiket">Marj %</div><div class="kpi-deger" style="font-size:16px;">%' + marj + '</div></div>';
+  html += '</div>';
+
+  // Maliyet Kirilimi Tablosu
+  html += '<div class="tablo-wrap" style="margin-bottom:16px;">';
+  html += '<div class="tablo-baslik"><div class="tablo-baslik-text">Maliyet Kirilimi</div></div>';
+  html += '<div style="overflow-x:auto;"><table class="tablo"><thead><tr>' +
+    '<th>Kalem Tipi</th><th>Aciklama</th><th>Miktar</th><th>Birim Fiyat</th><th>Toplam</th><th>Tarih</th>' +
+    '</tr></thead><tbody id="maliyetTablo">';
+
+  // IE'ye ait maliyet kalemleri veya placeholder
+  var ieMaliyetleri = getMaliyetForIE(seciliIE.id);
+  if (ieMaliyetleri.length === 0) {
+    ieMaliyetleri = placeholderMaliyet;
+    html += '<tr><td colspan="6" style="background:var(--sari-bg);color:var(--sari-t);font-size:10px;font-weight:600;padding:6px 12px;">Placeholder veri — Maliyet Kalemleri tablosu yapilandirilmamis</td></tr>';
+  }
+
+  ieMaliyetleri.forEach(function(m) {
+    var mf = m.fields || m;
+    var miktar = parseFloat(mf['Miktar'] || 0);
+    var birimFiyat = parseFloat(mf['Birim Fiyat'] || 0);
+    var toplam = miktar * birimFiyat;
+    html += '<tr>' +
+      '<td><span class="badge badge-gri">' + (mf['Kalem Tipi'] || '—') + '</span></td>' +
+      '<td>' + (mf['Aciklama'] || '—') + '</td>' +
+      '<td style="text-align:center;">' + miktar + '</td>' +
+      '<td style="text-align:right;">' + paraFormat(birimFiyat) + '</td>' +
+      '<td style="text-align:right;font-weight:600;">' + paraFormat(toplam) + '</td>' +
+      '<td>' + (mf['Tarih'] || '—') + '</td>' +
+    '</tr>';
+  });
+  html += '</tbody></table></div></div>';
+
+  // Maliyet Ekleme Formu
+  html += '<div class="kart">';
+  html += '<div class="kart-baslik">Yeni Maliyet Kalemi Ekle</div>';
+  html += '<div class="form-grid-3" style="gap:10px;">';
+  html += '<div class="form-grup"><label class="form-label">Kalem Tipi</label>' +
+    '<select class="form-select" id="yeniKalemTipi">' +
+      '<option value="Malzeme">Malzeme</option>' +
+      '<option value="Iscilik">Iscilik</option>' +
+      '<option value="Tezgah">Tezgah</option>' +
+      '<option value="Fason">Fason</option>' +
+      '<option value="Diger">Diger</option>' +
+    '</select></div>';
+  html += '<div class="form-grup"><label class="form-label">Aciklama</label>' +
+    '<input type="text" class="form-input" id="yeniAciklama" placeholder="Aciklama..."></div>';
+  html += '<div class="form-grup"><label class="form-label">Tarih</label>' +
+    '<input type="date" class="form-input" id="yeniTarih"></div>';
+  html += '</div>';
+  html += '<div class="form-grid-3" style="gap:10px;margin-top:4px;">';
+  html += '<div class="form-grup"><label class="form-label">Miktar</label>' +
+    '<input type="number" class="form-input" id="yeniMiktar" placeholder="0" min="0" step="0.01"></div>';
+  html += '<div class="form-grup"><label class="form-label">Birim Fiyat (TL)</label>' +
+    '<input type="number" class="form-input" id="yeniBirimFiyat" placeholder="0.00" min="0" step="0.01"></div>';
+  html += '<div class="form-grup" style="display:flex;align-items:flex-end;">' +
+    '<button class="btn btn-yesil btn-tam" onclick="maliyetKaydet()">Kaydet</button></div>';
+  html += '</div>';
+  html += '</div>';
+
+  html += '</div>';
+  el.innerHTML = html;
+
+  // Tarih default
+  var tarihEl = document.getElementById('yeniTarih');
+  if (tarihEl) {
+    var bugun = new Date();
+    tarihEl.value = bugun.getFullYear() + '-' + String(bugun.getMonth() + 1).padStart(2, '0') + '-' + String(bugun.getDate()).padStart(2, '0');
+  }
+}
+
+function getMaliyetForIE(ieId) {
+  if (!maliyetKalemleri || maliyetKalemleri.length === 0) return [];
+  return maliyetKalemleri.filter(function(m) {
+    var f = m.fields || {};
+    var ieLink = f['Is Emri'] || f['IE'] || [];
+    if (Array.isArray(ieLink)) {
+      return ieLink.indexOf(ieId) >= 0;
+    }
+    return ieLink === ieId;
+  });
+}
+
+// ── Maliyet Kaydet ──
+async function maliyetKaydet() {
+  if (!seciliIE) { toast('Once bir is emri secin', 'hata'); return; }
+
+  var kalemTipi = document.getElementById('yeniKalemTipi').value;
+  var aciklama = document.getElementById('yeniAciklama').value;
+  var miktar = parseFloat(document.getElementById('yeniMiktar').value || 0);
+  var birimFiyat = parseFloat(document.getElementById('yeniBirimFiyat').value || 0);
+  var tarih = document.getElementById('yeniTarih').value;
+
+  if (!aciklama || miktar <= 0 || birimFiyat <= 0) {
+    toast('Lutfen tum alanlari doldurun', 'hata');
+    return;
+  }
+
+  var body = {
+    method: 'POST',
+    path: '/v0/app5LDgJMgocw79Ix/Maliyet Kalemleri',
+    body: {
+      fields: {
+        'Kalem Tipi': kalemTipi,
+        'Aciklama': aciklama,
+        'Miktar': miktar,
+        'Birim Fiyat': birimFiyat,
+        'Tarih': tarih,
+        'Is Emri': [seciliIE.id]
+      }
+    }
+  };
+
+  try {
+    var res = await fetch('/.netlify/functions/airtable', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    var data = await res.json();
+    if (data && data.id) {
+      toast('Maliyet kalemi kaydedildi', 'basari');
+      logIslem('Olusturuldu', 'Maliyet', data.id, kalemTipi + ': ' + aciklama, null, body.body.fields);
+      maliyetKalemleri.push(data);
+      renderDetay();
+    } else {
+      toast('Kayit hatasi: ' + (data.error || JSON.stringify(data)), 'hata');
+    }
+  } catch(e) {
+    toast('Kayit hatasi: ' + e.message, 'hata');
+  }
+}
+
+// ── AI Varyans Analizi ──
+function varyansAnaliziAc() {
+  if (!seciliIE) return;
+  document.getElementById('varyansModal').style.display = 'block';
+  document.getElementById('varyansIcerik').textContent = 'Analiz yapiliyor...';
+  varyansAnaliziCalistir();
+}
+
+function varyansKapat() {
+  document.getElementById('varyansModal').style.display = 'none';
+}
+
+async function varyansAnaliziCalistir() {
+  var f = seciliIE.fields || {};
+  var ieNo = f['IE No'] || '—';
+  var parca = f['Parça Adı'] || f['Parca Adi'] || '—';
+  var satisFiyati = parseFloat(f['_satisFiyati'] || f['Satis Fiyati'] || 0);
+  var toplamMaliyet = parseFloat(f['_toplamMaliyet'] || f['Toplam Maliyet'] || 0);
+
+  var prompt = 'CNC talasli imalat is emri maliyet varyans analizi yap.\n' +
+    'IE No: ' + ieNo + '\nParca: ' + parca + '\n' +
+    'Satis Fiyati: ' + satisFiyati + ' TL\nToplam Maliyet: ' + toplamMaliyet + ' TL\n' +
+    'Maliyet kategorileri: Malzeme, Iscilik, Tezgah, Fason.\n' +
+    'Varyans analizi, iyilestirme onerileri ve risk degerlendirmesi yap. Turkce yaz, kisa ve net ol.';
+
+  try {
+    var res = await fetch('/.netlify/functions/claude', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: prompt })
+    });
+    var data = await res.json();
+    var icerik = (data && data.content) ? data.content : (data && data.message) ? data.message : 'Analiz olusturulamadi.';
+    document.getElementById('varyansIcerik').textContent = icerik;
+    logIslem('AI Analiz', 'Maliyet', seciliIE.id, 'Varyans analizi: ' + ieNo);
+  } catch(e) {
+    document.getElementById('varyansIcerik').textContent = 'Hata: AI servisi yanit vermedi.\n\n' + e.message;
+  }
+}
+
+// ── Init ──
+verileriYukle();
+</script>
+</body>
+</html>

@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — Alacak Yonetimi</title>
+<link rel="stylesheet" href="ersan_styles.css">
+<script src="ersan_nav.js" defer></script>
+<script src="ersan_log.js" defer></script>
+</head>
+<body>
+<div id="nav-alani"></div>
+<div class="icerik-alani">
+  <div class="topbar">
+    <div class="topbar-baslik">Alacak Yonetimi</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button class="btn btn-mavi btn-sm" onclick="yeniFatura()">+ Yeni Fatura</button>
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
+    </div>
+  </div>
+  <div class="sayfa-icerik">
+    <div class="iki-panel">
+
+      <!-- Sol Panel: Fatura Listesi -->
+      <div class="sol-panel">
+        <div class="sol-panel-ust">
+          <div class="sol-panel-baslik">Faturalar</div>
+          <span class="tablo-baslik-sayi" id="faturaSayi">0</span>
+        </div>
+        <div class="sol-arama">
+          <input type="text" placeholder="Fatura No veya musteri ara..." id="faturaArama" oninput="faturaFiltrele()">
+        </div>
+        <div class="sol-filtre">
+          <button class="filtre-btn aktif" data-filtre="Tumu" onclick="filtreSec(this)">Tumu</button>
+          <button class="filtre-btn" data-filtre="Acik" onclick="filtreSec(this)">Acik</button>
+          <button class="filtre-btn" data-filtre="Gecikmis" onclick="filtreSec(this)">Gecikmis</button>
+          <button class="filtre-btn" data-filtre="Odendi" onclick="filtreSec(this)">Odendi</button>
+        </div>
+        <div class="sol-liste" id="faturaListe">
+          <div class="yukleniyor"><div class="spinner"></div> Yukleniyor...</div>
+        </div>
+      </div>
+
+      <!-- Sag Panel: Detay -->
+      <div class="sag-panel">
+        <div id="sagIcerik">
+          <div class="bos-durum" style="margin-top:80px;">
+            <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2L12 21l3.5-2L19 21z"/></svg>
+            <div>Sol panelden bir fatura secin veya yeni fatura olusturun</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── API Helper ──
+async function apiGet(tablo, query) {
+  var url = '/.netlify/functions/airtable?table=' + encodeURIComponent(tablo);
+  if (query) url += '&' + query;
+  var r = await fetch(url);
+  return r.json();
+}
+
+function paraFormat(n) {
+  if (!n && n !== 0) return '—';
+  return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 }).format(n);
+}
+
+function toast(mesaj, tip) {
+  var t = document.getElementById('toast');
+  t.textContent = mesaj;
+  t.className = 'toast toast-' + (tip || 'bilgi') + ' goster';
+  setTimeout(function() { t.className = 'toast'; }, 3000);
+}
+
+// ── State ──
+var faturalar = [];
+var musteriler = [];
+var aktifFiltre = 'Tumu';
+var seciliFatura = null;
+var tabloYapilandirilmamis = false;
+var yeniMod = false;
+
+// ── Placeholder Data ──
+var placeholderFaturalar = [
+  { id: 'rec_ph1', fields: { 'Fatura No': 'FAT-2026-001', 'Musteri': 'ABC Havacilik', 'Tutar': 45000, 'KDV Orani': 20, 'KDV Tutar': 9000, 'Toplam Tutar': 54000, 'Fatura Tarihi': '2026-03-01', 'Vade Tarihi': '2026-04-15', 'Durum': 'Acik', 'Aciklama': 'Flansh Kaplin imalati', 'SE No': 'SP-2026-001-01' } },
+  { id: 'rec_ph2', fields: { 'Fatura No': 'FAT-2026-002', 'Musteri': 'XYZ Savunma', 'Tutar': 78500, 'KDV Orani': 20, 'KDV Tutar': 15700, 'Toplam Tutar': 94200, 'Fatura Tarihi': '2026-02-15', 'Vade Tarihi': '2026-03-25', 'Durum': 'Gecikmis', 'Aciklama': 'Hidrolik Blok', 'SE No': 'SP-2026-002-01' } },
+  { id: 'rec_ph3', fields: { 'Fatura No': 'FAT-2026-003', 'Musteri': 'DEF Muhendislik', 'Tutar': 32000, 'KDV Orani': 20, 'KDV Tutar': 6400, 'Toplam Tutar': 38400, 'Fatura Tarihi': '2026-03-10', 'Vade Tarihi': '2026-05-01', 'Durum': 'Acik', 'Aciklama': 'Mil Baglantisi imalati', 'SE No': 'SP-2026-003-01' } },
+  { id: 'rec_ph4', fields: { 'Fatura No': 'FAT-2026-004', 'Musteri': 'GHI Makina', 'Tutar': 15200, 'KDV Orani': 20, 'KDV Tutar': 3040, 'Toplam Tutar': 18240, 'Fatura Tarihi': '2026-01-20', 'Vade Tarihi': '2026-02-28', 'Durum': 'Gecikmis', 'Aciklama': 'Bilyali Yatak Yuvasi', 'SE No': 'SP-2026-004-01' } },
+  { id: 'rec_ph5', fields: { 'Fatura No': 'FAT-2026-005', 'Musteri': 'JKL Otomasyon', 'Tutar': 92000, 'KDV Orani': 20, 'KDV Tutar': 18400, 'Toplam Tutar': 110400, 'Fatura Tarihi': '2026-03-05', 'Vade Tarihi': '2026-04-30', 'Durum': 'Acik', 'Aciklama': 'Govde Parcasi seti', 'SE No': 'SP-2026-005-01' } },
+  { id: 'rec_ph6', fields: { 'Fatura No': 'FAT-2026-006', 'Musteri': 'ABC Havacilik', 'Tutar': 28000, 'KDV Orani': 20, 'KDV Tutar': 5600, 'Toplam Tutar': 33600, 'Fatura Tarihi': '2026-02-01', 'Vade Tarihi': '2026-03-15', 'Durum': 'Odendi', 'Aciklama': 'Kaplin parcasi', 'SE No': 'SP-2026-001-02' } }
+];
+
+// ── Veri Yukle ──
+async function verileriYukle() {
+  // Fatura Kayitlari
+  try {
+    var res = await apiGet('Fatura Kayitlari', 'pageSize=100');
+    if (res && res.records && res.records.length > 0) {
+      faturalar = res.records;
+      tabloYapilandirilmamis = false;
+    } else {
+      faturalar = placeholderFaturalar;
+      tabloYapilandirilmamis = true;
+    }
+  } catch(e) {
+    console.warn('[Alacak] Fatura Kayitlari yuklenemedi:', e.message);
+    faturalar = placeholderFaturalar;
+    tabloYapilandirilmamis = true;
+  }
+
+  // Musteriler (dropdown icin)
+  try {
+    var resM = await apiGet('Müşteriler', 'pageSize=100');
+    if (resM && resM.records) {
+      musteriler = resM.records;
+    }
+  } catch(e) {
+    console.warn('[Alacak] Musteriler yuklenemedi:', e.message);
+  }
+
+  renderListe();
+}
+
+// ── Filtre ──
+function filtreSec(btn) {
+  var btns = document.querySelectorAll('.filtre-btn');
+  for (var i = 0; i < btns.length; i++) btns[i].classList.remove('aktif');
+  btn.classList.add('aktif');
+  aktifFiltre = btn.getAttribute('data-filtre');
+  renderListe();
+}
+
+function faturaFiltrele() {
+  renderListe();
+}
+
+function getFilteredList() {
+  var arama = (document.getElementById('faturaArama').value || '').toLowerCase();
+  return faturalar.filter(function(r) {
+    var f = r.fields || {};
+    var fatNo = (f['Fatura No'] || '').toLowerCase();
+    var musteri = (f['Musteri'] || '').toLowerCase();
+    var durum = f['Durum'] || '';
+
+    var filtrePassed = aktifFiltre === 'Tumu' || durum === aktifFiltre;
+    var aramaPassed = !arama || fatNo.indexOf(arama) >= 0 || musteri.indexOf(arama) >= 0;
+    return filtrePassed && aramaPassed;
+  });
+}
+
+function renderListe() {
+  var el = document.getElementById('faturaListe');
+  var filtered = getFilteredList();
+  document.getElementById('faturaSayi').textContent = filtered.length;
+
+  if (filtered.length === 0) {
+    el.innerHTML = '<div class="bos-durum">Fatura bulunamadi</div>';
+    return;
+  }
+
+  var html = '';
+  if (tabloYapilandirilmamis) {
+    html += '<div style="padding:6px 12px;font-size:10px;color:var(--sari-t);background:var(--sari-bg);font-weight:600;">Tablo yapilandirilmamis — placeholder veri</div>';
+  }
+
+  filtered.forEach(function(r) {
+    var f = r.fields || {};
+    var fatNo = f['Fatura No'] || '—';
+    var musteri = f['Musteri'] || '—';
+    var tutar = parseFloat(f['Tutar'] || 0);
+    var vade = f['Vade Tarihi'] || '—';
+    var durum = f['Durum'] || 'Acik';
+    var secili = seciliFatura && seciliFatura.id === r.id ? ' secili' : '';
+
+    var badgeCls = 'badge-gri';
+    if (durum === 'Acik') badgeCls = 'badge-sari';
+    else if (durum === 'Gecikmis') badgeCls = 'badge-kirmizi';
+    else if (durum === 'Odendi') badgeCls = 'badge-yesil';
+
+    html += '<div class="liste-satir' + secili + '" onclick="faturaSecim(\'' + r.id + '\')">' +
+      '<div class="liste-satir-no">' + fatNo + '</div>' +
+      '<div class="liste-satir-ad">' + musteri + '</div>' +
+      '<div class="liste-satir-alt">' +
+        '<span style="font-size:11px;font-weight:600;color:var(--metin2);">' + paraFormat(tutar) + '</span>' +
+        '<span class="badge ' + badgeCls + '">' + durum + '</span>' +
+      '</div>' +
+      '<div style="font-size:10px;color:var(--metin4);margin-top:2px;">Vade: ' + vade + '</div>' +
+    '</div>';
+  });
+  el.innerHTML = html;
+}
+
+// ── Fatura Secim ──
+function faturaSecim(id) {
+  yeniMod = false;
+  seciliFatura = null;
+  for (var i = 0; i < faturalar.length; i++) {
+    if (faturalar[i].id === id) { seciliFatura = faturalar[i]; break; }
+  }
+  renderListe();
+  renderDetay();
+}
+
+// ── Yeni Fatura ──
+function yeniFatura() {
+  yeniMod = true;
+  seciliFatura = null;
+  renderListe();
+  renderYeniForm();
+}
+
+function sonrakiFaturaNo() {
+  var maks = 0;
+  faturalar.forEach(function(r) {
+    var f = r.fields || {};
+    var no = f['Fatura No'] || '';
+    var match = no.match(/FAT-\d{4}-(\d+)/);
+    if (match) {
+      var n = parseInt(match[1]);
+      if (n > maks) maks = n;
+    }
+  });
+  var yil = new Date().getFullYear();
+  return 'FAT-' + yil + '-' + String(maks + 1).padStart(3, '0');
+}
+
+function renderYeniForm() {
+  var el = document.getElementById('sagIcerik');
+  var fatNo = sonrakiFaturaNo();
+  var bugun = new Date();
+  var bugunStr = bugun.getFullYear() + '-' + String(bugun.getMonth() + 1).padStart(2, '0') + '-' + String(bugun.getDate()).padStart(2, '0');
+
+  var html = '<div style="padding:16px;">';
+  html += '<div style="font-size:16px;font-weight:700;color:var(--laci);margin-bottom:16px;">Yeni Fatura Olustur</div>';
+  html += renderForm(fatNo, '', '', 0, 20, bugunStr, '', 'Acik', '', '');
+  html += '<div style="margin-top:16px;display:flex;gap:8px;">' +
+    '<button class="btn btn-yesil" onclick="faturaKaydet()">Kaydet</button>' +
+    '<button class="btn btn-beyaz" onclick="yeniIptal()">Iptal</button>' +
+  '</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+function renderDetay() {
+  var el = document.getElementById('sagIcerik');
+  if (!seciliFatura) {
+    el.innerHTML = '<div class="bos-durum" style="margin-top:80px;"><div>Sol panelden bir fatura secin</div></div>';
+    return;
+  }
+
+  var f = seciliFatura.fields || {};
+  var fatNo = f['Fatura No'] || '—';
+  var musteri = f['Musteri'] || '';
+  var tutar = f['Tutar'] || 0;
+  var kdvOrani = f['KDV Orani'] || 20;
+  var faturaTarihi = f['Fatura Tarihi'] || '';
+  var vadeTarihi = f['Vade Tarihi'] || '';
+  var durum = f['Durum'] || 'Acik';
+  var aciklama = f['Aciklama'] || '';
+  var seNo = f['SE No'] || '';
+
+  var html = '<div style="padding:16px;">';
+
+  // Baslik + Durum
+  html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">' +
+    '<div>' +
+      '<span style="font-family:monospace;font-size:16px;font-weight:700;color:var(--laci);">' + fatNo + '</span>' +
+      '<span style="margin-left:8px;font-size:13px;color:var(--metin3);">' + musteri + '</span>' +
+    '</div>' +
+    '<span class="badge ' + durumBadge(durum) + '" style="font-size:12px;padding:4px 12px;">' + durum + '</span>' +
+  '</div>';
+
+  // Form
+  html += renderForm(fatNo, musteri, seNo, tutar, kdvOrani, faturaTarihi, vadeTarihi, durum, aciklama, seciliFatura.id);
+
+  // Durum Butonlari
+  html += '<div class="kart" style="margin-top:16px;">';
+  html += '<div class="kart-baslik">Islemler</div>';
+  html += '<div style="display:flex;gap:8px;flex-wrap:wrap;">';
+  if (durum !== 'Odendi') {
+    html += '<button class="btn btn-mavi" onclick="durumGuncelle(\'Acik\')">FATURA KES</button>';
+    html += '<button class="btn btn-yesil" onclick="durumGuncelle(\'Odendi\')">ODENDI</button>';
+    html += '<button class="btn btn-kirmizi" onclick="durumGuncelle(\'Gecikmis\')">GECIKMIS</button>';
+  } else {
+    html += '<span style="font-size:12px;color:var(--yesil);font-weight:600;">Bu fatura odenmis</span>';
+  }
+  html += '<button class="btn btn-beyaz" onclick="mikroGonder()" style="margin-left:auto;">Mikro Gonder</button>';
+  html += '</div></div>';
+
+  // Guncelle butonu
+  html += '<div style="margin-top:12px;display:flex;gap:8px;">' +
+    '<button class="btn btn-mavi" onclick="faturaGuncelle()">Guncelle</button>' +
+  '</div>';
+
+  // Musteri Gecmisi
+  html += '<div class="tablo-wrap" style="margin-top:16px;">';
+  html += '<div class="tablo-baslik"><div class="tablo-baslik-text">Musteri Gecmisi: ' + musteri + '</div></div>';
+  html += '<div style="overflow-x:auto;"><table class="tablo"><thead><tr>' +
+    '<th>Fatura No</th><th>Tutar</th><th>Vade</th><th>Durum</th>' +
+  '</tr></thead><tbody>';
+
+  var gecmis = faturalar.filter(function(r) {
+    return (r.fields || {})['Musteri'] === musteri && r.id !== seciliFatura.id;
+  });
+
+  if (gecmis.length === 0) {
+    html += '<tr><td colspan="4" style="text-align:center;color:var(--metin4);padding:12px;">Baska fatura bulunamadi</td></tr>';
+  } else {
+    gecmis.forEach(function(r) {
+      var gf = r.fields || {};
+      html += '<tr>' +
+        '<td class="td-mono">' + (gf['Fatura No'] || '—') + '</td>' +
+        '<td style="font-weight:600;">' + paraFormat(gf['Tutar'] || 0) + '</td>' +
+        '<td>' + (gf['Vade Tarihi'] || '—') + '</td>' +
+        '<td><span class="badge ' + durumBadge(gf['Durum'] || '') + '">' + (gf['Durum'] || '—') + '</span></td>' +
+      '</tr>';
+    });
+  }
+  html += '</tbody></table></div></div>';
+
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+function renderForm(fatNo, musteri, seNo, tutar, kdvOrani, faturaTarihi, vadeTarihi, durum, aciklama, recId) {
+  var kdvTutar = tutar * (kdvOrani / 100);
+  var toplamTutar = tutar + kdvTutar;
+
+  var musteriOptions = '<option value="">Musteri secin...</option>';
+  if (musteriler.length > 0) {
+    musteriler.forEach(function(m) {
+      var ad = (m.fields || {})['Müşteri Adı'] || (m.fields || {})['Ad'] || '—';
+      var sel = ad === musteri ? ' selected' : '';
+      musteriOptions += '<option value="' + ad + '"' + sel + '>' + ad + '</option>';
+    });
+  } else {
+    // Placeholder musteriler
+    var phMust = ['ABC Havacilik', 'XYZ Savunma', 'DEF Muhendislik', 'GHI Makina', 'JKL Otomasyon'];
+    phMust.forEach(function(m) {
+      var sel = m === musteri ? ' selected' : '';
+      musteriOptions += '<option value="' + m + '"' + sel + '>' + m + '</option>';
+    });
+  }
+
+  var html = '<div class="kart">';
+  html += '<div class="kart-baslik">Fatura Bilgileri</div>';
+  html += '<div class="form-grid-3">';
+  html += '<div class="form-grup"><label class="form-label">Fatura No</label>' +
+    '<input type="text" class="form-input" id="frmFaturaNo" value="' + fatNo + '" readonly style="background:var(--bg);"></div>';
+  html += '<div class="form-grup"><label class="form-label">Musteri</label>' +
+    '<select class="form-select" id="frmMusteri">' + musteriOptions + '</select></div>';
+  html += '<div class="form-grup"><label class="form-label">SE No</label>' +
+    '<input type="text" class="form-input" id="frmSENo" value="' + seNo + '" placeholder="SP-2026-XXX-XX"></div>';
+  html += '</div>';
+
+  html += '<div class="form-grid-3">';
+  html += '<div class="form-grup"><label class="form-label">Tutar (TL)</label>' +
+    '<input type="number" class="form-input" id="frmTutar" value="' + tutar + '" min="0" step="0.01" oninput="kdvHesapla()"></div>';
+  html += '<div class="form-grup"><label class="form-label">KDV Orani %</label>' +
+    '<select class="form-select" id="frmKDVOrani" onchange="kdvHesapla()">' +
+      '<option value="0"' + (kdvOrani == 0 ? ' selected' : '') + '>%0</option>' +
+      '<option value="1"' + (kdvOrani == 1 ? ' selected' : '') + '>%1</option>' +
+      '<option value="10"' + (kdvOrani == 10 ? ' selected' : '') + '>%10</option>' +
+      '<option value="20"' + (kdvOrani == 20 ? ' selected' : '') + '>%20</option>' +
+    '</select></div>';
+  html += '<div class="form-grup"><label class="form-label">Toplam Tutar</label>' +
+    '<input type="text" class="form-input" id="frmToplamTutar" value="' + paraFormat(toplamTutar) + '" readonly style="background:var(--bg);font-weight:600;"></div>';
+  html += '</div>';
+
+  html += '<div class="form-grid-3">';
+  html += '<div class="form-grup"><label class="form-label">Fatura Tarihi</label>' +
+    '<input type="date" class="form-input" id="frmFaturaTarihi" value="' + faturaTarihi + '"></div>';
+  html += '<div class="form-grup"><label class="form-label">Vade Tarihi</label>' +
+    '<input type="date" class="form-input" id="frmVadeTarihi" value="' + vadeTarihi + '"></div>';
+  html += '<div class="form-grup"><label class="form-label">Durum</label>' +
+    '<select class="form-select" id="frmDurum">' +
+      '<option value="Acik"' + (durum === 'Acik' ? ' selected' : '') + '>Acik</option>' +
+      '<option value="Gecikmis"' + (durum === 'Gecikmis' ? ' selected' : '') + '>Gecikmis</option>' +
+      '<option value="Odendi"' + (durum === 'Odendi' ? ' selected' : '') + '>Odendi</option>' +
+    '</select></div>';
+  html += '</div>';
+
+  html += '<div class="form-grup"><label class="form-label">Aciklama</label>' +
+    '<textarea class="form-textarea" id="frmAciklama" rows="2" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;resize:vertical;">' + aciklama + '</textarea></div>';
+
+  html += '</div>';
+  return html;
+}
+
+function kdvHesapla() {
+  var tutar = parseFloat(document.getElementById('frmTutar').value || 0);
+  var kdvOrani = parseFloat(document.getElementById('frmKDVOrani').value || 0);
+  var kdvTutar = tutar * (kdvOrani / 100);
+  var toplamTutar = tutar + kdvTutar;
+  document.getElementById('frmToplamTutar').value = paraFormat(toplamTutar);
+}
+
+function durumBadge(durum) {
+  if (durum === 'Acik') return 'badge-sari';
+  if (durum === 'Gecikmis') return 'badge-kirmizi';
+  if (durum === 'Odendi') return 'badge-yesil';
+  return 'badge-gri';
+}
+
+// ── Formdan Veri Topla ──
+function formVerisi() {
+  var tutar = parseFloat(document.getElementById('frmTutar').value || 0);
+  var kdvOrani = parseFloat(document.getElementById('frmKDVOrani').value || 0);
+  var kdvTutar = tutar * (kdvOrani / 100);
+  return {
+    'Fatura No': document.getElementById('frmFaturaNo').value,
+    'Musteri': document.getElementById('frmMusteri').value,
+    'SE No': document.getElementById('frmSENo').value,
+    'Tutar': tutar,
+    'KDV Orani': kdvOrani,
+    'KDV Tutar': kdvTutar,
+    'Toplam Tutar': tutar + kdvTutar,
+    'Fatura Tarihi': document.getElementById('frmFaturaTarihi').value,
+    'Vade Tarihi': document.getElementById('frmVadeTarihi').value,
+    'Durum': document.getElementById('frmDurum').value,
+    'Aciklama': document.getElementById('frmAciklama').value
+  };
+}
+
+// ── Kaydet (Yeni) ──
+async function faturaKaydet() {
+  var fields = formVerisi();
+  if (!fields['Musteri']) { toast('Musteri secin', 'hata'); return; }
+  if (!fields['Tutar'] || fields['Tutar'] <= 0) { toast('Tutar girin', 'hata'); return; }
+
+  try {
+    var res = await fetch('/.netlify/functions/airtable', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        method: 'POST',
+        path: '/v0/app5LDgJMgocw79Ix/Fatura Kayitlari',
+        body: { fields: fields }
+      })
+    });
+    var data = await res.json();
+    if (data && data.id) {
+      toast('Fatura olusturuldu: ' + fields['Fatura No'], 'basari');
+      logIslem('Olusturuldu', 'Alacak', data.id, fields['Fatura No'], null, fields);
+      faturalar.push(data);
+      seciliFatura = data;
+      yeniMod = false;
+      renderListe();
+      renderDetay();
+    } else {
+      var errMsg = data && data.error ? (typeof data.error === 'object' ? data.error.message || JSON.stringify(data.error) : data.error) : 'Bilinmeyen hata';
+      toast('Kayit hatasi: ' + errMsg, 'hata');
+      console.warn('[Alacak] Kayit hatasi:', data);
+    }
+  } catch(e) {
+    toast('Kayit hatasi: ' + e.message, 'hata');
+  }
+}
+
+// ── Guncelle ──
+async function faturaGuncelle() {
+  if (!seciliFatura || !seciliFatura.id || seciliFatura.id.indexOf('rec_ph') === 0) {
+    toast('Placeholder veri guncellenemez — Airtable tablosu yapilandirilmamis', 'bilgi');
+    return;
+  }
+
+  var fields = formVerisi();
+
+  try {
+    var res = await fetch('/.netlify/functions/airtable', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        table: 'Fatura Kayitlari',
+        id: seciliFatura.id,
+        fields: fields
+      })
+    });
+    var data = await res.json();
+    if (data && data.id) {
+      toast('Fatura guncellendi', 'basari');
+      logIslem('Guncellendi', 'Alacak', data.id, fields['Fatura No'], seciliFatura.fields, fields);
+      seciliFatura.fields = fields;
+      renderListe();
+      renderDetay();
+    } else {
+      toast('Guncelleme hatasi', 'hata');
+    }
+  } catch(e) {
+    toast('Guncelleme hatasi: ' + e.message, 'hata');
+  }
+}
+
+// ── Durum Guncelle ──
+async function durumGuncelle(yeniDurum) {
+  if (!seciliFatura) return;
+
+  if (seciliFatura.id.indexOf('rec_ph') === 0) {
+    // Placeholder — lokal guncelle
+    seciliFatura.fields['Durum'] = yeniDurum;
+    toast('Durum guncellendi (lokal): ' + yeniDurum, 'bilgi');
+    renderListe();
+    renderDetay();
+    return;
+  }
+
+  try {
+    var res = await fetch('/.netlify/functions/airtable', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        table: 'Fatura Kayitlari',
+        id: seciliFatura.id,
+        fields: { 'Durum': yeniDurum }
+      })
+    });
+    var data = await res.json();
+    if (data && data.id) {
+      seciliFatura.fields['Durum'] = yeniDurum;
+      toast('Durum guncellendi: ' + yeniDurum, 'basari');
+      logIslem('Durum Degisti', 'Alacak', data.id, (seciliFatura.fields || {})['Fatura No'] || '', null, { Durum: yeniDurum });
+      renderListe();
+      renderDetay();
+    } else {
+      toast('Durum guncelleme hatasi', 'hata');
+    }
+  } catch(e) {
+    toast('Hata: ' + e.message, 'hata');
+  }
+}
+
+// ── Mikro Gonder ──
+function mikroGonder() {
+  toast('Mikro entegrasyonu henuz yapilandirilmamis', 'bilgi');
+  logIslem('Deneme', 'Alacak', null, 'Mikro gonderim denemesi');
+}
+
+// ── Yeni Iptal ──
+function yeniIptal() {
+  yeniMod = false;
+  seciliFatura = null;
+  document.getElementById('sagIcerik').innerHTML = '<div class="bos-durum" style="margin-top:80px;"><div>Sol panelden bir fatura secin</div></div>';
+}
+
+// ── Init ──
+verileriYukle();
+</script>
+</body>
+</html>
