@@ -301,6 +301,7 @@ async function loadDetail(id) {
       </button>
       <button class="toolbar-btn" onclick="setWODurum('${id}','Üretimde')" style="background:var(--blue-light);color:var(--blue);border-color:var(--blue);">▶ Üretime Al</button>
       <button class="toolbar-btn success" onclick="setWODurum('${id}','Tamamlandı')">✓ Tamamla</button>
+      <button class="toolbar-btn" onclick="prAc('${f['IE No']||id}')" style="border-color:var(--sari);color:var(--sari);">📋 PR Ac</button>
       <button class="toolbar-btn primary" onclick="saveWO('${id}')">💾 Kaydet</button>
       <button class="toolbar-btn" style="border-color:var(--red);color:var(--red);" onclick="deleteWO('${id}')">🗑 Sil</button>
     </div>
@@ -985,6 +986,11 @@ async function printTraveler(woId) {
 
   doc.save(`Traveler_${tr(f['IE No']||'WO')}.pdf`);
   toast('Traveler PDF indiriliyor...');
+}
+
+// ── SATINALMA TALEBİ AÇ ──
+function prAc(woNo) {
+  window.location.href = 'ersan_satinalma_pr.html?wo=' + encodeURIComponent(woNo);
 }
 
 // ── İŞ EMRİ SİL ──

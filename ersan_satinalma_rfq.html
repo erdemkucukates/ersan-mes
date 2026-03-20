@@ -12,7 +12,7 @@
 <div id="nav-alani"></div>
 <div class="icerik-alani">
   <div class="topbar">
-    <div class="topbar-baslik">Satinalma Teklifleri</div>
+    <div class="topbar-baslik">Satinalma Teklifleri <span id="pr-badge" style="display:none;font-size:12px;padding:3px 10px;border-radius:4px;background:#dbeafe;color:#1e40af;font-weight:600;margin-left:12px;"></span></div>
     <div style="display:flex;align-items:center;gap:8px;">
       <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
     </div>
@@ -25,5 +25,18 @@
     </div>
   </div>
 </div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var urlParams = new URLSearchParams(window.location.search);
+  var prParam = urlParams.get('pr');
+  if (prParam) {
+    var prBadge = document.getElementById('pr-badge');
+    if (prBadge) {
+      prBadge.textContent = 'PR: ' + prParam;
+      prBadge.style.display = 'inline-block';
+    }
+  }
+});
+</script>
 </body>
 </html>

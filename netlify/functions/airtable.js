@@ -14,6 +14,8 @@ var COUNTER_MAP = {
   'QT':'QT_COUNTER', 'SO':'SO_COUNTER', 'WO':'WO_COUNTER',
   'PO':'PO_COUNTER', 'RFQ':'RFQ_COUNTER', 'NCR':'NCR_COUNTER',
   'FAI':'FAI_COUNTER', 'LOT':'LOT_COUNTER', 'INV':'INV_COUNTER',
+  'PR':'PR_COUNTER', 'GRN':'GRN_COUNTER', 'CAR':'CAR_COUNTER',
+  'DEV':'DEV_COUNTER', 'WAI':'WAI_COUNTER', 'SINV':'SINV_COUNTER',
 };
 
 async function generateCode(prefix, padLength) {

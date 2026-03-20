@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — Satinalma Talepleri</title>
+<link rel="stylesheet" href="ersan_styles.css">
+<script src="ersan_nav.js" defer></script>
+<script src="ersan_log.js" defer></script>
+<style>
+.pr-layout{display:flex;gap:12px;height:calc(100vh - 52px - 32px)}
+.pr-sol{width:320px;flex-shrink:0;background:var(--beyaz);border:1px solid var(--border);border-radius:8px;display:flex;flex-direction:column;overflow:hidden}
+.pr-sag{flex:1;background:var(--beyaz);border:1px solid var(--border);border-radius:8px;overflow-y:auto;padding:16px}
+.pr-tabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0}
+.pr-tab{flex:1;padding:8px;font-size:12px;font-weight:600;text-align:center;cursor:pointer;border-bottom:2px solid transparent;color:var(--metin3);background:transparent;border-top:none;border-left:none;border-right:none;font-family:inherit}
+.pr-tab.aktif{color:var(--mavi);border-bottom-color:var(--mavi);background:var(--mavi-acik)}
+.f-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.f-row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px}
+.f-grp{display:flex;flex-direction:column;gap:3px}
+.f-lbl{font-size:10px;font-weight:600;color:var(--metin3);text-transform:uppercase;letter-spacing:.3px}
+.f-inp{width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;color:var(--metin2);background:var(--beyaz);font-family:inherit}
+.f-inp:focus{outline:none;border-color:var(--mavi);box-shadow:0 0 0 3px rgba(55,138,221,.1)}
+.f-inp-linked{background:#f0fdf4;border-color:#86efac;color:#166534}
+.f-inp-auto{background:#f0f9ff;border-color:#93c5fd;color:#1e40af}
+.kalem-tablo{width:100%;border-collapse:collapse;margin-top:8px}
+.kalem-tablo th{background:var(--bg2);padding:6px 8px;font-size:10px;font-weight:600;color:var(--metin3);text-transform:uppercase;text-align:left;border-bottom:1px solid var(--border)}
+.kalem-tablo td{padding:5px 8px;border-bottom:1px solid var(--bg2);font-size:12px}
+.kalem-tablo input,.kalem-tablo select{width:100%;padding:4px 6px;border:1px solid var(--border);border-radius:4px;font-size:12px;font-family:inherit}
+.modal-overlay{position:fixed;inset:0;background:rgba(15,39,68,.5);z-index:500;display:flex;align-items:center;justify-content:center}
+.modal-box{background:var(--beyaz);border-radius:10px;width:90%;max-width:740px;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border)}
+.modal-title{font-size:14px;font-weight:600;color:var(--laci)}
+.modal-body{padding:18px}
+.modal-foot{display:flex;justify-content:flex-end;gap:8px;padding:12px 18px;border-top:1px solid var(--border)}
+</style>
+</head>
+<body>
+<div id="nav-alani"></div>
+<div class="icerik-alani">
+  <div class="topbar">
+    <div class="topbar-baslik">Satinalma Talepleri (PR)</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button class="btn btn-mavi" onclick="modalAc()">+ Yeni Talep</button>
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
+    </div>
+  </div>
+  <div class="sayfa-icerik">
+    <div class="kpi-grid" style="margin-bottom:12px">
+      <div class="kpi-kart"><div class="kpi-etiket">Toplam Talep</div><div class="kpi-deger" id="kpi-toplam">-</div></div>
+      <div class="kpi-kart sari"><div class="kpi-etiket">Onay Bekleyen</div><div class="kpi-deger" id="kpi-onay">-</div></div>
+      <div class="kpi-kart yesil"><div class="kpi-etiket">Onaylanan</div><div class="kpi-deger" id="kpi-onayli">-</div></div>
+      <div class="kpi-kart"><div class="kpi-etiket">RFQ Olustrulan</div><div class="kpi-deger" id="kpi-rfq">-</div></div>
+    </div>
+    <div class="pr-layout">
+      <div class="pr-sol">
+        <div style="padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+          <span style="font-size:12px;font-weight:600;color:var(--laci);">Talepler</span>
+          <span id="pr-sayi" style="font-size:11px;color:var(--metin4);"></span>
+        </div>
+        <div style="padding:8px 12px;border-bottom:1px solid var(--border);flex-shrink:0;">
+          <input type="text" id="pr-arama" placeholder="PR no, siparis ara..." oninput="filtrele()" style="width:100%;padding:5px 8px;border:1px solid var(--border);border-radius:5px;font-size:12px;font-family:inherit;">
+        </div>
+        <div style="display:flex;border-bottom:1px solid var(--border);flex-shrink:0;">
+          <button class="pr-tab aktif" onclick="durumFiltre('Tumu',this)">Tumu</button>
+          <button class="pr-tab" onclick="durumFiltre('Onay Bekliyor',this)">Bekleyen</button>
+          <button class="pr-tab" onclick="durumFiltre('Onaylandi',this)">Onayli</button>
+          <button class="pr-tab" onclick="durumFiltre('RFQ',this)">RFQ</button>
+        </div>
+        <div id="pr-liste" style="flex:1;overflow-y:auto;"></div>
+      </div>
+      <div class="pr-sag" id="pr-detay">
+        <div class="bos-durum"><p>Listeden bir talep secin veya yeni talep olusturun</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div id="pr-modal" style="display:none"></div>
+
+<script>
+var BASE = 'app5LDgJMgocw79Ix';
+var TABLO = 'Sat\u0131nalma Talepleri';
+var talepler = [];
+var filtrelenmis = [];
+var seciliId = null;
+var aktifDurum = 'Tumu';
+var siparisler = [];
+var tedarikciler = [];
+
+async function apiGet(tablo, query) {
+  var url = '/.netlify/functions/airtable?table=' + encodeURIComponent(tablo);
+  if (query) url += '&' + query;
+  var r = await fetch(url);
+  return r.json();
+}
+async function apiPost(tablo, fields) {
+  var r = await fetch('/.netlify/functions/airtable', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({method:'POST', path:'/v0/' + BASE + '/' + encodeURIComponent(tablo), body:{fields:fields}})
+  });
+  return r.json();
+}
+async function apiPatch(tablo, id, fields) {
+  var r = await fetch('/.netlify/functions/airtable', {
+    method:'PATCH', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({table:tablo, id:id, fields:fields})
+  });
+  return r.json();
+}
+
+async function veriYukle() {
+  try {
+    // Is emrinden yonlendirme kontrolu
+    var woParam = new URLSearchParams(window.location.search).get('wo');
+
+    var data = await apiGet(TABLO, 'pageSize=100&sort[0][field]=Talep%20Tarihi&sort[0][direction]=desc');
+    talepler = (data.records || []);
+
+    var spData = await apiGet('Sat\u0131\u015F Emirleri', 'pageSize=100&sort[0][field]=SE%20No&sort[0][direction]=desc');
+    siparisler = spData.records || [];
+
+    var tdData = await apiGet('Tedarik\u00E7iler (OTL)', 'filterByFormula=' + encodeURIComponent("{Aktif}=TRUE()"));
+    tedarikciler = tdData.records || [];
+
+    kpiGuncelle();
+    filtrele();
+
+    if (woParam) {
+      await modalAc();
+      var woInp = document.getElementById('f-wo-no');
+      if (woInp) {
+        woInp.value = woParam;
+        woInp.className = 'f-inp f-inp-linked';
+      }
+    }
+  } catch(e) {
+    document.getElementById('pr-liste').innerHTML = '<div style="padding:16px;color:var(--kirmizi);font-size:12px;">Yukleme hatasi: ' + e.message + '</div>';
+  }
+}
+
+function kpiGuncelle() {
+  document.getElementById('kpi-toplam').textContent = talepler.length;
+  document.getElementById('kpi-onay').textContent = talepler.filter(function(r){return r.fields['Durum']==='Onay Bekliyor'}).length;
+  document.getElementById('kpi-onayli').textContent = talepler.filter(function(r){return r.fields['Durum']==='Onayland\u0131'}).length;
+  document.getElementById('kpi-rfq').textContent = talepler.filter(function(r){return (r.fields['Durum']||'').indexOf('RFQ')>=0}).length;
+}
+
+function durumFiltre(durum, btn) {
+  aktifDurum = durum;
+  document.querySelectorAll('.pr-tab').forEach(function(b){b.classList.remove('aktif')});
+  btn.classList.add('aktif');
+  filtrele();
+}
+
+function filtrele() {
+  var q = (document.getElementById('pr-arama').value || '').toLowerCase();
+  filtrelenmis = talepler.filter(function(r) {
+    var f = r.fields;
+    var durumOk = aktifDurum === 'Tumu' || (f['Durum']||'').indexOf(aktifDurum) >= 0;
+    var aramaOk = !q || (f['Talep No']||'').toLowerCase().indexOf(q) >= 0 || (f['Kalem Ad\u0131']||'').toLowerCase().indexOf(q) >= 0;
+    return durumOk && aramaOk;
+  });
+  listeRender();
+}
+
+function listeRender() {
+  var el = document.getElementById('pr-liste');
+  document.getElementById('pr-sayi').textContent = filtrelenmis.length + ' talep';
+  if (!filtrelenmis.length) {
+    el.innerHTML = '<div class="bos-durum" style="padding:20px"><p>Talep bulunamadi</p></div>';
+    return;
+  }
+  el.innerHTML = filtrelenmis.map(function(r) {
+    var f = r.fields;
+    var secili = r.id === seciliId ? ' secili' : '';
+    var durum = f['Durum'] || 'Taslak';
+    var durumCls = durum === 'Onayland\u0131' ? 'badge-yesil' : durum === 'Onay Bekliyor' ? 'badge-sari' : durum.indexOf('RFQ') >= 0 ? 'badge-mavi' : 'badge-gri';
+    var acil = (f['Aciliyet'] === 'Kritik' || f['Aciliyet'] === 'Y\u00FCksek');
+    return '<div class="liste-satir' + secili + '" onclick="talepSec(\'' + r.id + '\')" style="' + (acil ? 'border-left:3px solid var(--kirmizi);' : '') + '">' +
+      '<div class="liste-satir-no">' + (f['Talep No'] || r.id.substring(0,8)) + '</div>' +
+      '<div class="liste-satir-ad">' + (f['Kalem Ad\u0131'] || f['Kategori'] || 'Talep') + '</div>' +
+      '<div class="liste-satir-alt"><span style="font-size:10px;color:var(--metin4)">' + (f['Talep Tarihi'] || '') + '</span><span class="badge ' + durumCls + '">' + durum + '</span></div>' +
+      '</div>';
+  }).join('');
+}
+
+function talepSec(id) {
+  seciliId = id;
+  listeRender();
+  var r = talepler.find(function(t){return t.id === id});
+  if (!r) return;
+  var f = r.fields;
+  var durum = f['Durum'] || 'Taslak';
+  var durumCls = durum === 'Onayland\u0131' ? 'badge-yesil' : durum === 'Onay Bekliyor' ? 'badge-sari' : 'badge-gri';
+
+  var html = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">' +
+    '<div><span style="font-family:monospace;font-size:16px;font-weight:600;color:var(--laci);">' + (f['Talep No']||'') + '</span> <span class="badge ' + durumCls + '" style="margin-left:8px;">' + durum + '</span></div>' +
+    '<div style="display:flex;gap:6px;">';
+
+  if (durum === 'Onay Bekliyor') {
+    html += '<button class="btn btn-yesil btn-sm" onclick="durumGuncelle(\'' + r.id + '\',\'Onayland\u0131\')">Onayla</button>';
+    html += '<button class="btn btn-kirmizi btn-sm" onclick="durumGuncelle(\'' + r.id + '\',\'Reddedildi\')">Reddet</button>';
+  }
+  if (durum === 'Onayland\u0131') {
+    html += '<button class="btn btn-mavi btn-sm" onclick="rfqDonustur(\'' + r.id + '\')">RFQ Olustur</button>';
+  }
+  html += '</div></div>';
+
+  html += '<div class="kart"><div class="kart-baslik">Talep Bilgileri</div>';
+  html += '<div class="f-row3">';
+  html += '<div class="f-grp"><div class="f-lbl">Talep Tipi</div><div style="font-size:13px;color:var(--metin2)">' + (f['Talep Tipi']||'-') + '</div></div>';
+  html += '<div class="f-grp"><div class="f-lbl">Kategori</div><div style="font-size:13px;color:var(--metin2)">' + (f['Kategori']||'-') + '</div></div>';
+  html += '<div class="f-grp"><div class="f-lbl">Aciliyet</div><div style="font-size:13px;color:var(--metin2)">' + (f['Aciliyet']||'-') + '</div></div>';
+  html += '</div>';
+  html += '<div class="f-row3">';
+  html += '<div class="f-grp"><div class="f-lbl">Talep Eden</div><div style="font-size:13px;color:var(--metin2)">' + (f['Talep Eden']||'-') + '</div></div>';
+  html += '<div class="f-grp"><div class="f-lbl">Talep Tarihi</div><div style="font-size:13px;color:var(--metin2)">' + (f['Talep Tarihi']||'-') + '</div></div>';
+  html += '<div class="f-grp"><div class="f-lbl">Ihtiyac Tarihi</div><div style="font-size:13px;color:var(--metin2)">' + (f['Ihtiyac Tarihi']||'-') + '</div></div>';
+  html += '</div>';
+  html += '<div class="f-row">';
+  html += '<div class="f-grp"><div class="f-lbl">Siparis No</div><div style="font-size:13px;color:var(--metin2);font-family:monospace">' + (f['Siparis No']||'-') + '</div></div>';
+  html += '<div class="f-grp"><div class="f-lbl">Is Emri No</div><div style="font-size:13px;color:var(--metin2);font-family:monospace">' + (f['Is Emri No']||'-') + '</div></div>';
+  html += '</div>';
+  if (f['Notlar']) {
+    html += '<div class="f-grp" style="margin-top:8px"><div class="f-lbl">Notlar</div><div style="font-size:13px;color:var(--metin2)">' + f['Notlar'] + '</div></div>';
+  }
+  html += '</div>';
+
+  document.getElementById('pr-detay').innerHTML = html;
+}
+
+// MODAL
+var modalKalemler = [];
+
+async function modalAc() {
+  var prNo = '';
+  try { prNo = await kodUret('PR'); } catch(e) { prNo = 'PR-' + new Date().getFullYear().toString().slice(-2) + '-XXXXX'; }
+
+  modalKalemler = [{ malzeme:'', miktar:1, birim:'Adet', aciklama:'' }];
+
+  var tdOpts = '<option value="">-- Tedarikci Sec --</option>' + tedarikciler.map(function(t){
+    return '<option value="' + t.id + '">' + (t.fields['Tedarik\u00E7i Ad\u0131']||'') + '</option>';
+  }).join('');
+
+  var spOpts = '<option value="">-- Siparis Sec --</option>' + siparisler.map(function(s){
+    return '<option value="' + s.id + '" data-parca="' + (s.fields['Par\u00E7a Ad\u0131']||'') + '" data-wo="' + (s.fields['\u0130\u015F Emirleri']||'') + '">' + (s.fields['SE No']||s.id) + ' - ' + (s.fields['Par\u00E7a Ad\u0131']||'') + '</option>';
+  }).join('');
+
+  var bugun = new Date().toISOString().split('T')[0];
+  var bugunPlus7 = new Date(Date.now() + 7*86400000).toISOString().split('T')[0];
+
+  var html = '<div class="modal-overlay" onclick="if(event.target===this)modalKapat()">' +
+    '<div class="modal-box">' +
+    '<div class="modal-head"><div class="modal-title">Yeni Satinalma Talebi</div><button onclick="modalKapat()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--metin3)">&times;</button></div>' +
+    '<div class="modal-body">' +
+    '<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;padding:10px 14px;background:var(--bg2);border-radius:8px;">' +
+    '<span style="font-family:monospace;font-size:16px;font-weight:700;color:var(--laci)">' + prNo + '</span>' +
+    '<span class="badge badge-sari">Onay Bekliyor</span>' +
+    '</div>' +
+
+    // Sekmeler
+    '<div class="pr-tabs" style="margin-bottom:12px">' +
+    '<button class="pr-tab aktif" onclick="modalSekme(\'siparis\',this)">Siparise Bagli</button>' +
+    '<button class="pr-tab" onclick="modalSekme(\'genel\',this)">Genel Alim</button>' +
+    '</div>' +
+
+    '<div id="modal-siparis">' +
+    '<div class="f-row">' +
+    '<div class="f-grp"><div class="f-lbl">Siparis</div><select class="f-inp" id="f-siparis" onchange="siparisSecildi(this)">' + spOpts + '</select></div>' +
+    '<div class="f-grp"><div class="f-lbl">WO No</div><input class="f-inp" id="f-wo-no" placeholder="Otomatik gelir" readonly></div>' +
+    '</div>' +
+    '</div>' +
+
+    '<div id="modal-genel" style="display:none">' +
+    '<div class="f-row">' +
+    '<div class="f-grp"><div class="f-lbl">Kategori</div><select class="f-inp" id="f-kategori"><option>Hammadde</option><option>Fason</option><option>Hizmet</option><option>Sarf Malzeme</option><option>Yedek Parca</option></select></div>' +
+    '<div class="f-grp"><div class="f-lbl">Gerekce</div><input class="f-inp" id="f-gerekce" placeholder="Neden gerekli?"></div>' +
+    '</div>' +
+    '</div>' +
+
+    '<div class="f-row3">' +
+    '<div class="f-grp"><div class="f-lbl">Aciliyet</div><select class="f-inp" id="f-aciliyet" onchange="aciliyetDegisti(this)"><option>Normal</option><option>Y\u00FCksek</option><option>Kritik</option></select></div>' +
+    '<div class="f-grp"><div class="f-lbl">Ihtiyac Tarihi</div><input type="date" class="f-inp f-inp-auto" id="f-ihtiyac" value="' + bugunPlus7 + '"></div>' +
+    '<div class="f-grp"><div class="f-lbl">Tercih Edilen Tedarikci</div><select class="f-inp" id="f-tedarikci">' + tdOpts + '</select></div>' +
+    '</div>' +
+
+    '<div style="margin-top:12px"><div class="f-lbl" style="margin-bottom:6px">Talep Kalemleri</div>' +
+    '<div id="kalem-alani"></div>' +
+    '<button onclick="kalemEkle()" style="margin-top:6px;padding:5px 12px;border:1px dashed var(--border);border-radius:6px;background:transparent;color:var(--metin3);font-size:12px;cursor:pointer;font-family:inherit;width:100%">+ Kalem Ekle</button>' +
+    '</div>' +
+
+    '<div class="f-grp" style="margin-top:12px"><div class="f-lbl">Notlar</div><textarea class="f-inp" id="f-notlar" rows="2" placeholder="Ek aciklama..."></textarea></div>' +
+
+    '</div>' +
+    '<div class="modal-foot">' +
+    '<button class="btn btn-beyaz" onclick="modalKapat()">Iptal</button>' +
+    '<button class="btn btn-mavi" onclick="talepKaydet(\'' + prNo + '\')">Talebi Kaydet</button>' +
+    '</div></div></div>';
+
+  document.getElementById('pr-modal').innerHTML = html;
+  document.getElementById('pr-modal').style.display = 'block';
+  kalemlerRender();
+}
+
+function modalKapat() {
+  document.getElementById('pr-modal').style.display = 'none';
+  document.getElementById('pr-modal').innerHTML = '';
+}
+
+function modalSekme(sekme, btn) {
+  document.querySelectorAll('#pr-modal .pr-tab').forEach(function(b){b.classList.remove('aktif')});
+  btn.classList.add('aktif');
+  document.getElementById('modal-siparis').style.display = sekme === 'siparis' ? 'block' : 'none';
+  document.getElementById('modal-genel').style.display = sekme === 'genel' ? 'block' : 'none';
+}
+
+function siparisSecildi(sel) {
+  var opt = sel.options[sel.selectedIndex];
+  var woNo = opt.dataset.wo || '';
+  var woInp = document.getElementById('f-wo-no');
+  if (woInp && woNo) {
+    woInp.value = woNo;
+    woInp.className = 'f-inp f-inp-linked';
+  }
+}
+
+function aciliyetDegisti(sel) {
+  var ihtiyac = document.getElementById('f-ihtiyac');
+  if (!ihtiyac) return;
+  if (sel.value === 'Normal') {
+    var d = new Date(); d.setDate(d.getDate() + 7);
+    ihtiyac.value = d.toISOString().split('T')[0];
+    ihtiyac.className = 'f-inp f-inp-auto';
+  } else {
+    ihtiyac.value = new Date().toISOString().split('T')[0];
+    ihtiyac.className = 'f-inp';
+    ihtiyac.style.borderColor = sel.value === 'Kritik' ? 'var(--kirmizi)' : 'var(--sari)';
+  }
+}
+
+function kalemEkle() {
+  modalKalemler.push({ malzeme:'', miktar:1, birim:'Adet', aciklama:'' });
+  kalemlerRender();
+}
+function kalemSil(idx) {
+  modalKalemler.splice(idx, 1);
+  if (modalKalemler.length === 0) modalKalemler.push({ malzeme:'', miktar:1, birim:'Adet', aciklama:'' });
+  kalemlerRender();
+}
+
+function kalemlerRender() {
+  var el = document.getElementById('kalem-alani');
+  if (!el) return;
+  var html = '<table class="kalem-tablo"><thead><tr><th>#</th><th>Malzeme / Hizmet</th><th style="width:70px">Miktar</th><th style="width:80px">Birim</th><th>Aciklama</th><th style="width:30px"></th></tr></thead><tbody>';
+  modalKalemler.forEach(function(k, i) {
+    html += '<tr>' +
+      '<td style="text-align:center;font-weight:600;color:var(--metin3)">' + (i+1) + '</td>' +
+      '<td><input value="' + (k.malzeme||'') + '" oninput="modalKalemler[' + i + '].malzeme=this.value" placeholder="Malzeme adi"></td>' +
+      '<td><input type="number" value="' + (k.miktar||1) + '" min="1" oninput="modalKalemler[' + i + '].miktar=parseFloat(this.value)||1"></td>' +
+      '<td><select onchange="modalKalemler[' + i + '].birim=this.value"><option ' + (k.birim==='Adet'?'selected':'') + '>Adet</option><option ' + (k.birim==='Kg'?'selected':'') + '>Kg</option><option ' + (k.birim==='Mt'?'selected':'') + '>Mt</option><option ' + (k.birim==='Tk'?'selected':'') + '>Tk</option><option ' + (k.birim==='Lt'?'selected':'') + '>Lt</option></select></td>' +
+      '<td><input value="' + (k.aciklama||'') + '" oninput="modalKalemler[' + i + '].aciklama=this.value" placeholder="Olcu, spec..."></td>' +
+      '<td><button onclick="kalemSil(' + i + ')" style="background:none;border:none;color:var(--kirmizi);cursor:pointer;font-size:14px">&times;</button></td>' +
+      '</tr>';
+  });
+  html += '</tbody></table>';
+  el.innerHTML = html;
+}
+
+async function talepKaydet(prNo) {
+  try {
+    var siparisSekme = document.getElementById('modal-siparis').style.display !== 'none';
+    var fields = {
+      'Talep No': prNo,
+      'Talep Tarihi': new Date().toISOString().split('T')[0],
+      'Durum': 'Onay Bekliyor',
+      'Aciliyet': document.getElementById('f-aciliyet').value,
+      'Ihtiyac Tarihi': document.getElementById('f-ihtiyac').value,
+      'Notlar': document.getElementById('f-notlar').value || '',
+      'Kalem Sayisi': modalKalemler.length,
+    };
+
+    if (siparisSekme) {
+      fields['Talep Tipi'] = 'Siparise Bagli';
+      var spSel = document.getElementById('f-siparis');
+      if (spSel && spSel.value) {
+        fields['Siparis No'] = spSel.options[spSel.selectedIndex].text.split(' - ')[0];
+      }
+      fields['Is Emri No'] = document.getElementById('f-wo-no').value || '';
+    } else {
+      fields['Talep Tipi'] = 'Genel Alim';
+      fields['Kategori'] = document.getElementById('f-kategori').value;
+    }
+
+    // Kalem bilgilerini notlara ekle
+    var kalemOzet = modalKalemler.map(function(k, i) {
+      return (i+1) + '. ' + (k.malzeme||'?') + ' x' + k.miktar + ' ' + k.birim + (k.aciklama ? ' (' + k.aciklama + ')' : '');
+    }).join('\n');
+    fields['Notlar'] = (fields['Notlar'] ? fields['Notlar'] + '\n\n' : '') + 'Kalemler:\n' + kalemOzet;
+
+    var res = await apiPost(TABLO, fields);
+    if (res.error) throw new Error(res.error.type || res.error.message || JSON.stringify(res.error));
+
+    if (typeof logIslem === 'function') {
+      logIslem('PR_OLUSTURULDU', 'Satinalma', res.id, prNo, null, fields);
+    }
+
+    modalKapat();
+    await veriYukle();
+    talepSec(res.id);
+  } catch(e) {
+    alert('Kaydetme hatasi: ' + e.message);
+  }
+}
+
+async function durumGuncelle(id, durum) {
+  try {
+    await apiPatch(TABLO, id, { 'Durum': durum });
+    await veriYukle();
+    talepSec(id);
+  } catch(e) { alert('Hata: ' + e.message); }
+}
+
+async function rfqDonustur(id) {
+  var r = talepler.find(function(t){return t.id === id});
+  if (!r) return;
+  var prNo = r.fields['Talep No'] || '';
+  if (!confirm(prNo + ' icin RFQ olusturulsun mu?')) return;
+  try {
+    await apiPatch(TABLO, id, { 'Durum': 'RFQ Olusturuldu' });
+    if (typeof logIslem === 'function') {
+      logIslem('PR_RFQ_DONUSTURULDU', 'Satinalma', id, prNo, null, {});
+    }
+    window.location.href = 'ersan_satinalma_rfq.html?pr=' + encodeURIComponent(prNo);
+  } catch(e) { alert('Hata: ' + e.message); }
+}
+
+document.addEventListener('DOMContentLoaded', veriYukle);
+</script>
+</body>
+</html>

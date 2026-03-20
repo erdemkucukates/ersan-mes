@@ -10,6 +10,7 @@ var ERSAN_NAV = [
     { label: 'M\u00FC\u015Fteriler', href: 'ersan_musteriler.html' },
   ]},
   { group: 'Sat\u0131nalma', collapsed: false, items: [
+    { label: 'Sat\u0131nalma Talepleri',   href: 'ersan_satinalma_pr.html' },
     { label: 'Sat\u0131nalma Teklifleri',  href: 'ersan_satinalma_rfq.html' },
     { label: 'Sat\u0131nalma Sipari\u015Fleri', href: 'ersan_satinalma_po.html' },
     { label: 'Tedarik\u00E7iler',          href: 'ersan_tedarikciler.html' },
