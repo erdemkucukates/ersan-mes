@@ -394,35 +394,77 @@ async function loadDetail(id) {
     </div>`;
 
   // Load Teknik Resim
-  renderTeknikResim(f);
+  await renderTeknikResim(f, id);
 
   // Load operations
   await loadOps(id);
 }
 
 // ── TEKNİK RESİM ──
-function renderTeknikResim(f) {
+async function renderTeknikResim(f, woId) {
   var el = document.getElementById('ie-teknik-resim');
   if (!el) return;
   var attachments = f['Teknik Resim'];
+
+  // IE'nin kendi Teknik Resim alani bossa, bagli Satis Emrinden cek
+  if ((!attachments || !attachments.length)) {
+    el.innerHTML = '<div style="padding:12px;text-align:center;color:var(--text3);font-size:12px;">Satis emrinden yukleniyor...</div>';
+    try {
+      // IE'nin bagli SE kayitlari
+      var seIds = f['SE No'] || f['Satış Emirleri'] || [];
+      if (seIds.length > 0) {
+        var seId = typeof seIds[0] === 'string' ? seIds[0] : seIds[0];
+        var seData = await apiGetFn(TABLES.satisEmirleri, 'filterByFormula=RECORD_ID()%3D%22' + seId + '%22');
+        var seRec = (seData.records || [])[0];
+        if (seRec) {
+          // Satis Emrindeki Teknik Resim veya PDF Data
+          var seAtts = seRec.fields['Teknik Resim'];
+          var sePdfData = seRec.fields['PDF Data'];
+          if (seAtts && seAtts.length > 0) {
+            attachments = seAtts;
+          } else if (sePdfData) {
+            attachments = [{ url: sePdfData, filename: 'teknik-resim.pdf' }];
+          }
+        }
+      }
+    } catch(e) {
+      console.warn('[IE] SE teknik resim cekme hatasi:', e);
+    }
+  }
+
   if (!attachments || !attachments.length) {
-    el.innerHTML = '<div style="padding:16px;text-align:center;color:var(--text3);font-size:12px;">Teknik resim eklenmemis</div>';
+    el.innerHTML = '<div style="padding:16px;text-align:center;color:var(--text3);font-size:12px;">Teknik resim bulunamadi. Siparis kaleminden yukleyin.</div>';
     return;
   }
-  var html = '<div style="display:flex;flex-wrap:wrap;gap:10px;padding:4px;">';
+
+  var html = '';
+  var firstPdfUrl = null;
   attachments.forEach(function(att) {
     var url = att.url || '';
     var name = att.filename || 'dosya';
-    var isPdf = name.toLowerCase().endsWith('.pdf');
-    if (isPdf) {
-      html += '<a href="' + url + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;color:var(--accent);text-decoration:none;background:var(--bg2);">' +
-        '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="2" y="1" width="10" height="12" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M5 5h4M5 7h4M5 9h2" stroke="currentColor" stroke-width="1" stroke-linecap="round"/></svg>' +
-        name + '</a>';
-    } else {
-      html += '<a href="' + url + '" target="_blank"><img src="' + (att.thumbnails?.large?.url || url) + '" style="max-width:300px;max-height:220px;border-radius:6px;border:1px solid var(--border);cursor:pointer;" title="' + name + '"></a>';
-    }
+    var isPdf = name.toLowerCase().endsWith('.pdf') || url.toLowerCase().includes('.pdf');
+    if (isPdf && !firstPdfUrl) firstPdfUrl = url;
   });
-  html += '</div>';
+
+  // PDF varsa embed viewer goster, yoksa resim/link goster
+  if (firstPdfUrl) {
+    html = '<div style="height:400px;display:flex;flex-direction:column;">' +
+      '<div style="background:var(--laci);padding:6px 12px;display:flex;align-items:center;justify-content:space-between;border-radius:6px 6px 0 0;">' +
+      '<span style="color:#fff;font-size:11px;">' + (attachments[0].filename || 'teknik-resim.pdf') + '</span>' +
+      '<a href="' + firstPdfUrl + '" target="_blank" style="color:#93c5fd;font-size:11px;text-decoration:none;">Yeni sekmede ac</a>' +
+      '</div>' +
+      '<iframe src="' + firstPdfUrl + '" style="flex:1;border:none;border-radius:0 0 6px 6px;background:#fff;" allowfullscreen></iframe>' +
+      '</div>';
+  } else {
+    html = '<div style="display:flex;flex-wrap:wrap;gap:10px;padding:4px;">';
+    attachments.forEach(function(att) {
+      var url = att.url || '';
+      var name = att.filename || 'dosya';
+      html += '<a href="' + url + '" target="_blank"><img src="' + (att.thumbnails && att.thumbnails.large ? att.thumbnails.large.url : url) + '" style="max-width:300px;max-height:220px;border-radius:6px;border:1px solid var(--border);cursor:pointer;" title="' + name + '"></a>';
+    });
+    html += '</div>';
+  }
+
   el.innerHTML = html;
 }
 
