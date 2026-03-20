@@ -1,113 +1,87 @@
 var ERSAN_NAV = [
+  { group: 'CRM', collapsed: false, items: [
+    { label: 'Pipeline',        href: 'ersan_pipeline.html' },
+    { label: 'Takip Listesi',   href: 'ersan_takip.html' },
+    { label: 'Sat\u0131\u015F Tahmini',  href: 'ersan_tahmin.html' },
+  ]},
+  { group: 'Sat\u0131\u015F', collapsed: false, items: [
+    { label: 'Teklifler',   href: 'ersan_teklif.html' },
+    { label: 'Sipari\u015Fler',  href: 'ersan_siparisler.html' },
+    { label: 'M\u00FC\u015Fteriler', href: 'ersan_musteriler.html' },
+  ]},
+  { group: 'Sat\u0131nalma', collapsed: false, items: [
+    { label: 'Sat\u0131nalma Teklifleri',  href: 'ersan_satinalma_rfq.html' },
+    { label: 'Sat\u0131nalma Sipari\u015Fleri', href: 'ersan_satinalma_po.html' },
+    { label: 'Tedarik\u00E7iler',          href: 'ersan_tedarikciler.html' },
+    { label: 'Sat\u0131nalma Faturalar\u0131',  href: 'ersan_satinalma_fatura.html' },
+    { label: '\u00D6n Kabul',              href: 'ersan_on_kabul.html' },
+  ]},
+  { group: 'Stok Y\u00F6netimi', collapsed: false, items: [
+    { label: 'Stok Durumu',      href: 'ersan_stok.html' },
+    { label: 'Stok Hareketleri', href: 'ersan_stok_hareketleri.html' },
+    { label: 'Say\u0131m',             href: 'ersan_sayim.html' },
+  ]},
+  { group: 'Depo Y\u00F6netimi', collapsed: false, items: [
+    { label: 'At\u00F6lye Haritas\u0131',   href: 'ersan_atolye_harita.html' },
+    { label: 'QR Etiketler',      href: 'ersan_qr.html' },
+    { label: 'Palet / Traveller', href: 'ersan_palet.html' },
+  ]},
+  { group: 'Tedarik', collapsed: false, items: [
+    { label: 'Girdi Kalite', href: 'ersan_girdi_kalite.html' },
+  ]},
+  { group: '\u00DCretim', collapsed: false, items: [
+    { label: '\u0130\u015F Emirleri', href: 'ersan_isemirleri.html' },
+    { label: 'Planlama',    href: 'ersan_planlama.html' },
+    { label: 'At\u00F6lye',      href: 'ersan_atolye.html' },
+  ]},
   {
-    group: 'CRM', collapsed: false,
-    items: [
-      { label: 'Pipeline', href: 'ersan_crm.html' },
-      { label: 'Takip Listesi', href: 'ersan_crm_takip.html' },
-      { label: 'Satis Tahmini', href: 'ersan_satis_tahmini.html' },
-    ]
-  },
-  {
-    group: 'Satis', collapsed: false,
-    items: [
-      { label: 'Teklifler', href: 'ersan_teklif.html' },
-      { label: 'Siparisler', href: 'ersan_siparisler.html' },
-      { label: 'Musteriler', href: 'ersan_musteri.html' },
-    ]
-  },
-  {
-    group: 'Finans', collapsed: true,
-    items: [
-      { label: 'Genel Bakis', href: 'ersan_finans.html' },
-      { label: 'Alacaklar', href: 'ersan_alacaklar.html' },
-      { label: 'Borclar', href: 'ersan_borclar.html' },
-      { label: 'Siparis Maliyeti', href: 'ersan_siparis_maliyet.html' },
-      { label: 'Kar Analizi', href: 'ersan_kar_analizi.html' },
-      { label: 'Nakit Akisi', href: 'ersan_nakit_akisi.html' },
-    ]
-  },
-  {
-    group: 'Satinalma', collapsed: false,
-    items: [
-      { label: 'Satinalma', href: 'ersan_satinalma.html' },
-      { label: 'On Kabul', href: 'ersan_on_kabul.html' },
-      { label: 'Girdi Kalite', href: 'ersan_girdi_kalite.html' },
-      { label: 'Tedarikciler', href: 'ersan_tedarikciler.html' },
-    ]
-  },
-  {
-    group: 'Stok & Depo', collapsed: false,
-    items: [
-      { label: 'Stok Durumu', href: 'ersan_stok.html' },
-      { label: 'Malzeme Girisi', href: 'ersan_malzeme.html' },
-    ]
-  },
-  {
-    group: 'Uretim', collapsed: false,
-    items: [
-      { label: 'Is Emirleri', href: 'ersan_isemirleri.html' },
-      { label: 'Planlama', href: 'ersan_planlama.html' },
-      { label: 'Atolye', href: 'ersan_uretim.html' },
-    ]
-  },
-  {
-    group: 'Kalite', collapsed: false,
+    group: 'Kalite',
+    collapsed: false,
     subgroups: [
-      {
-        label: 'Rutin', collapsed: false,
-        items: [
-          { label: 'Kalite Hub', href: 'ersan_kalite.html' },
-          { label: 'Kontrol Plani', href: 'ersan_kontrol_plani.html' },
-          { label: 'FAI', href: 'ersan_fai.html' },
-          { label: 'FOD Kontrol', href: 'ersan_fod.html' },
-          { label: 'Sevkiyat', href: 'ersan_sevkiyat.html' },
-        ]
-      },
-      {
-        label: 'Uygunsuzluk', collapsed: true,
-        items: [
-          { label: 'NCR', href: 'ersan_ncr.html' },
-          { label: 'Sapma / Feragat', href: 'ersan_sapma.html' },
-          { label: 'CAPA', href: 'ersan_duzeltici.html' },
-          { label: 'Sahte Parca', href: 'ersan_sahte_parca.html' },
-        ]
-      },
-      {
-        label: 'Sistem', collapsed: true,
-        items: [
-          { label: 'Ic Denetim', href: 'ersan_denetim.html' },
-          { label: 'ECO', href: 'ersan_eco.html' },
-          { label: 'ASL', href: 'ersan_asl.html' },
-        ]
-      }
+      { label: 'Rutin', collapsed: false, items: [
+        { label: 'Kalite Hub',        href: 'ersan_kalite_hub.html' },
+        { label: 'Kontrol Plan\u0131',     href: 'ersan_kontrol_plani.html' },
+        { label: 'Girdi Muayene',     href: 'ersan_girdi_kalite.html' },
+        { label: '\u00DCretim Muayenesi', href: 'ersan_muayene.html' },
+        { label: 'FAI',              href: 'ersan_fai.html' },
+        { label: 'FOD Kontrol',       href: 'ersan_fod.html' },
+        { label: 'CoC / Sevkiyat',    href: 'ersan_sevkiyat.html' },
+      ]},
+      { label: 'Uygunsuzluk & D\u00FCzeltme', collapsed: true, items: [
+        { label: 'NCR',              href: 'ersan_ncr.html' },
+        { label: 'Sapma / Feragat',  href: 'ersan_sapma.html' },
+        { label: 'CAPA',             href: 'ersan_capa.html' },
+        { label: 'M\u00FC\u015Fteri \u015Eikayeti', href: 'ersan_sikayet.html' },
+      ]},
+      { label: 'Sistem & Denetim', collapsed: true, items: [
+        { label: '\u0130\u00E7 Denetim',         href: 'ersan_denetim.html' },
+        { label: 'Kalite Ekipmanlar\u0131', href: 'ersan_kalite_ekipman.html' },
+      ]},
     ]
   },
-  {
-    group: 'Ekipman & Bakim', collapsed: false,
-    items: [
-      { label: 'Ekipmanlar', href: 'ersan_bakim.html' },
-    ]
-  },
-  {
-    group: 'Destek', collapsed: true,
-    items: [
-      { label: 'Personel 360', href: 'ersan_personel.html' },
-      { label: 'Departman KPI', href: 'ersan_departman_kpi.html' },
-      { label: 'Yetenek Matrisi', href: 'ersan_dokuz_kutu.html' },
-      { label: 'Dokuman', href: 'ersan_dokuman.html' },
-      { label: 'Risk', href: 'ersan_risk.html' },
-      { label: 'ISG', href: 'ersan_isg.html' },
-    ]
-  },
-  {
-    group: 'Yonetim', collapsed: true,
-    items: [
-      { label: 'YGG Dashboard', href: 'ersan_ygg.html' },
-      { label: 'Sistem Logu', href: 'ersan_sistem_logu.html' },
-      { label: 'Mikro Entegrasyon', href: 'ersan_mikro.html' },
-      { label: 'Test Simulatoru', href: 'ersan_test_simulasyon.html' },
-    ]
-  }
+  { group: 'Ekipman & Bak\u0131m', collapsed: false, items: [
+    { label: 'Ekipmanlar',   href: 'ersan_ekipmanlar.html' },
+    { label: 'Bak\u0131m Plan\u0131',  href: 'ersan_bakim.html' },
+    { label: 'Ar\u0131za Kayd\u0131', href: 'ersan_ariza.html' },
+  ]},
+  { group: 'Finans', collapsed: true, items: [
+    { label: 'Genel Bak\u0131\u015F',      href: 'ersan_finans.html' },
+    { label: 'Alacaklar',        href: 'ersan_alacaklar.html' },
+    { label: 'Bor\u00E7lar',          href: 'ersan_borclar.html' },
+    { label: 'Sipari\u015F Maliyeti', href: 'ersan_maliyet.html' },
+    { label: 'Kar Analizi',      href: 'ersan_kar.html' },
+    { label: 'Nakit Ak\u0131\u015F\u0131',      href: 'ersan_nakit.html' },
+  ]},
+  { group: 'Destek', collapsed: true, items: [
+    { label: 'Dok\u00FCman Y\u00F6netimi',    href: 'ersan_dokuman.html' },
+    { label: 'Personel & Yetkinlik', href: 'ersan_personel.html' },
+    { label: 'Risk Y\u00F6netimi',        href: 'ersan_risk.html' },
+    { label: '\u0130SG',                  href: 'ersan_isg.html' },
+  ]},
+  { group: 'Y\u00F6netim', collapsed: true, items: [
+    { label: 'YGG Dashboard',   href: 'ersan_ygg.html' },
+    { label: 'Sistem Ayarlar\u0131', href: 'ersan_sistem.html' },
+  ]},
 ];
 
 function navOlustur() {
