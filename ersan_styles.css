@@ -113,6 +113,15 @@ body {
   background: var(--mavi);
   opacity: 1;
 }
+/* Nav subgroup & collapse */
+.nav-group-toggle { font-size: 11px; color: rgba(255,255,255,0.3); }
+.nav-subgroup-header { transition: color .12s; }
+.nav-subgroup-header:hover { color: rgba(255,255,255,0.55) !important; }
+.nav-alert-badge {
+  font-size: 9px; background: #dc2626; color: #fff;
+  border-radius: 8px; padding: 0 5px; margin-left: auto;
+  min-width: 16px; text-align: center;
+}
 
 /* ── TOPBAR ── */
 .topbar {
