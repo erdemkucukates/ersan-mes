@@ -1,6 +1,6 @@
 {
-  "versiyon": "2.0",
-  "son_guncelleme": "2026-03-19",
+  "versiyon": "3.0",
+  "son_guncelleme": "2026-03-20",
   "netlify_url": "https://ersan-mes.netlify.app",
   "airtable_base": "app5LDgJMgocw79Ix",
   "tablolar": {
@@ -29,13 +29,51 @@
     "sistemLogu":         "tbl1CFFVwBoP9cELA",
     "lokasyonlar":        "tbltaEVWPLUwutn9D",
     "aiOgrenme":          "tblaIWnf5pFh5oX2r",
-    "systemConfig":       "tbl1buK6696eY324j"
+    "systemConfig":       "tbl1buK6696eY324j",
+    "faturaKayitlari":    "TBD_faturaKayitlari",
+    "maliyetKalemleri":   "TBD_maliyetKalemleri",
+    "firsatlar":          "TBD_firsatlar",
+    "iletisimKayitlari":  "TBD_iletisimKayitlari",
+    "performansDeg":      "TBD_performansDeg",
+    "kpiKayitlari":       "TBD_kpiKayitlari",
+    "ucYuzAlti":          "TBD_ucYuzAlti",
+    "faiKayitlari":       "TBD_faiKayitlari",
+    "sahteParcaKontrol":  "TBD_sahteParcaKontrol",
+    "fodKontrol":         "TBD_fodKontrol",
+    "ecoKayitlari":       "TBD_ecoKayitlari",
+    "onayliTedarikci":    "TBD_onayliTedarikci",
+    "kontrolPlani":       "TBD_kontrolPlani",
+    "sapmaFeragat":       "TBD_sapmaFeragat"
   },
   "netlify_functions": {
     "airtable":   "/.netlify/functions/airtable",
     "claude":     "/.netlify/functions/claude",
     "upload":     "/.netlify/functions/upload-pdf",
-    "log":        "/.netlify/functions/log"
+    "log":        "/.netlify/functions/log",
+    "mikroBridge":"/.netlify/functions/mikro-bridge",
+    "kpiHesapla": "/.netlify/functions/kpi-hesapla"
   },
-  "bilinen_hatalar": []
+  "kpiHedefleri": {
+    "Uretim": {
+      "OEE": { "hedef": 85, "birim": "%" },
+      "Hata Orani": { "hedef": 1.0, "birim": "%", "tersine": true },
+      "Termin Uyumu": { "hedef": 95, "birim": "%" }
+    },
+    "Kalite": {
+      "Ilk Gecis Orani": { "hedef": 95, "birim": "%" },
+      "NCR Kapatma": { "hedef": 3, "birim": "gun", "tersine": true }
+    },
+    "Satis": {
+      "Donusum Orani": { "hedef": 45, "birim": "%" },
+      "Aylik Teklif": { "hedef": 25, "birim": "adet" }
+    },
+    "Satinalma": {
+      "Zamaninda Teslimat": { "hedef": 90, "birim": "%" },
+      "Tedarikci Skoru": { "hedef": 85, "birim": "/100" }
+    },
+    "Bakim": {
+      "MTBF": { "hedef": 200, "birim": "saat" },
+      "Planli Bakim Uyumu": { "hedef": 95, "birim": "%" }
+    }
+  }
 }
