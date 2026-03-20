@@ -209,7 +209,7 @@ function talepSec(id) {
 
   html += '<div class="kart"><div class="kart-baslik">Talep Bilgileri</div>';
   html += '<div class="f-row3">';
-  html += '<div class="f-grp"><div class="f-lbl">Talep Tipi</div><div style="font-size:13px;color:var(--metin2)">' + (f['Talep Tipi']||'-') + '</div></div>';
+  html += '<div class="f-grp"><div class="f-lbl">PR Tipi</div><div style="font-size:13px;color:var(--metin2)">' + (f['PR Tipi']||'-') + '</div></div>';
   html += '<div class="f-grp"><div class="f-lbl">Kategori</div><div style="font-size:13px;color:var(--metin2)">' + (f['Kategori']||'-') + '</div></div>';
   html += '<div class="f-grp"><div class="f-lbl">Aciliyet</div><div style="font-size:13px;color:var(--metin2)">' + (f['Aciliyet']||'-') + '</div></div>';
   html += '</div>';
@@ -381,14 +381,14 @@ async function talepKaydet(prNo) {
     };
 
     if (siparisSekme) {
-      fields['Talep Tipi'] = 'Siparise Bagli';
+      fields['PR Tipi'] = 'Siparise Bagli';
       var spSel = document.getElementById('f-siparis');
       if (spSel && spSel.value) {
         fields['Siparis No'] = spSel.options[spSel.selectedIndex].text.split(' - ')[0];
       }
       fields['Is Emri No'] = document.getElementById('f-wo-no').value || '';
     } else {
-      fields['Talep Tipi'] = 'Genel Alim';
+      fields['PR Tipi'] = 'Genel Alim';
       fields['Kategori'] = document.getElementById('f-kategori').value;
     }
 
