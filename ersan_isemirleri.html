@@ -348,48 +348,50 @@ async function loadDetail(id) {
         </div>
       </div>
 
-      <!-- OPERASYONLAR -->
-      <div class="card">
-        <div class="card-header">
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="currentColor" stroke-width="1.3"/><path d="M6 3v3l2 2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
-          Operasyon Rotası
-          <span style="margin-left:auto;font-size:10px;font-weight:400;color:var(--text3);" id="op-count"></span>
-        </div>
-        <div class="card-body" style="padding:0;">
-          <div style="overflow-x:auto;">
-            <table class="ops-table">
-              <thead>
-                <tr>
-                  <th style="width:28px;"></th>
-                  <th style="width:32px;">Sıra</th>
-                  <th>Operasyon</th>
-                  <th style="width:180px;">Açıklama / Talimat</th>
-                  <th style="width:130px;">Tezgah / Firma</th>
-                  <th style="width:68px;">Setup(dk)</th>
-                  <th style="width:68px;">İşleme(dk)</th>
-                  <th style="width:110px;">Durum</th>
-                  <th style="width:32px;"></th>
-                </tr>
-              </thead>
-              <tbody id="ops-tbody"></tbody>
-            </table>
+      <!-- OPERASYONLAR + TEKNİK RESİM YAN YANA -->
+      <div style="display:flex;gap:12px;align-items:flex-start;">
+        <!-- SOL: Operasyonlar (2/5) -->
+        <div class="card" style="width:40%;flex-shrink:0;">
+          <div class="card-header">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="currentColor" stroke-width="1.3"/><path d="M6 3v3l2 2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+            Operasyon Rotası
+            <span style="margin-left:auto;font-size:10px;font-weight:400;color:var(--text3);" id="op-count"></span>
           </div>
-          <div style="padding:8px 12px;">
-            <button class="btn-add-op" onclick="addOp()">
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 2v8M2 6h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-              Operasyon Ekle
-            </button>
+          <div class="card-body" style="padding:0;">
+            <div style="overflow-x:auto;">
+              <table class="ops-table">
+                <thead>
+                  <tr>
+                    <th style="width:28px;"></th>
+                    <th style="width:32px;">Sıra</th>
+                    <th>Operasyon</th>
+                    <th style="width:130px;">Tezgah / Firma</th>
+                    <th style="width:56px;">Setup</th>
+                    <th style="width:56px;">İşleme</th>
+                    <th style="width:90px;">Durum</th>
+                    <th style="width:28px;"></th>
+                  </tr>
+                </thead>
+                <tbody id="ops-tbody"></tbody>
+              </table>
+            </div>
+            <div style="padding:8px 12px;">
+              <button class="btn-add-op" onclick="addOp()">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 2v8M2 6h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                Operasyon Ekle
+              </button>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- TEKNİK RESİM -->
-      <div class="card">
-        <div class="card-header">
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="1" y="1" width="10" height="10" rx="2" stroke="currentColor" stroke-width="1.3"/><path d="M3 8l2-3 2 2 1.5-2L10 8H3z" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          Teknik Resim
+        <!-- SAĞ: Teknik Resim (3/5) -->
+        <div class="card" style="width:60%;">
+          <div class="card-header">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="1" y="1" width="10" height="10" rx="2" stroke="currentColor" stroke-width="1.3"/><path d="M3 8l2-3 2 2 1.5-2L10 8H3z" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Teknik Resim
+          </div>
+          <div class="card-body" id="ie-teknik-resim" style="min-height:800px;"></div>
         </div>
-        <div class="card-body" id="ie-teknik-resim" style="min-height:60px;"></div>
       </div>
     </div>`;
 
@@ -448,7 +450,7 @@ async function renderTeknikResim(f, woId) {
 
   // PDF varsa embed viewer goster, yoksa resim/link goster
   if (firstPdfUrl) {
-    html = '<div style="height:400px;display:flex;flex-direction:column;">' +
+    html = '<div style="height:800px;display:flex;flex-direction:column;">' +
       '<div style="background:var(--laci);padding:6px 12px;display:flex;align-items:center;justify-content:space-between;border-radius:6px 6px 0 0;">' +
       '<span style="color:#fff;font-size:11px;">' + (attachments[0].filename || 'teknik-resim.pdf') + '</span>' +
       '<a href="' + firstPdfUrl + '" target="_blank" style="color:#93c5fd;font-size:11px;text-decoration:none;">Yeni sekmede ac</a>' +
