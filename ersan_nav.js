@@ -223,6 +223,18 @@ function navBadgeEkle(href, sayi) {
   link.appendChild(badge);
 }
 
+// Merkezi kod uretici (tum sayfalarda kullanilabilir)
+async function kodUret(prefix) {
+  var res = await fetch('/.netlify/functions/airtable', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'generateCode', prefix: prefix })
+  });
+  var data = await res.json();
+  if (!data.kod) throw new Error('Kod uretilemedi: ' + (data.error || ''));
+  return data.kod;
+}
+
 // Sayfa yuklenince nav'i yerlestir
 document.addEventListener('DOMContentLoaded', function() {
   var navAlan = document.getElementById('nav-alani');

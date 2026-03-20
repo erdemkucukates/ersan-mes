@@ -10,11 +10,72 @@ const ATH = {
   'Content-Type':  'application/json',
 };
 
+var COUNTER_MAP = {
+  'QT':'QT_COUNTER', 'SO':'SO_COUNTER', 'WO':'WO_COUNTER',
+  'PO':'PO_COUNTER', 'RFQ':'RFQ_COUNTER', 'NCR':'NCR_COUNTER',
+  'FAI':'FAI_COUNTER', 'LOT':'LOT_COUNTER', 'INV':'INV_COUNTER',
+};
+
+async function generateCode(prefix, padLength) {
+  padLength = padLength || 5;
+  var counterKey = COUNTER_MAP[prefix];
+  if (!counterKey) throw new Error('Bilinmeyen prefix: ' + prefix);
+  var yilSuffix = String(new Date().getFullYear()).slice(-2);
+  var BASE_ID = process.env.AIRTABLE_BASE_ID || 'app5LDgJMgocw79Ix';
+  var TOKEN_VAL = process.env.AIRTABLE_TOKEN;
+  var headers = { 'Authorization': 'Bearer ' + TOKEN_VAL, 'Content-Type': 'application/json' };
+
+  // Find counter record in System Config
+  var configRes = await fetch(
+    'https://api.airtable.com/v0/' + BASE_ID + '/tbl1buK6696eY324j?filterByFormula=' + encodeURIComponent("{Key}='" + counterKey + "'") + '&maxRecords=1',
+    { headers: headers }
+  );
+  var configData = await configRes.json();
+  var rec = (configData.records || [])[0];
+
+  var mevcutSayac = 0;
+  if (rec) {
+    // Value format: "YY:COUNT" e.g. "26:5"
+    var parts = (rec.fields['Value'] || '').split(':');
+    if (parts[0] === yilSuffix) {
+      mevcutSayac = parseInt(parts[1]) || 0;
+    }
+  }
+
+  var yeniSayac = mevcutSayac + 1;
+  var yeniDeger = yilSuffix + ':' + yeniSayac;
+
+  if (rec) {
+    // Update existing record
+    await fetch(
+      'https://api.airtable.com/v0/' + BASE_ID + '/tbl1buK6696eY324j/' + rec.id,
+      { method: 'PATCH', headers: headers, body: JSON.stringify({ fields: { 'Value': yeniDeger } }) }
+    );
+  } else {
+    // Create new counter record
+    await fetch(
+      'https://api.airtable.com/v0/' + BASE_ID + '/tbl1buK6696eY324j',
+      { method: 'POST', headers: headers, body: JSON.stringify({ fields: { 'Key': counterKey, 'Value': yeniDeger } }) }
+    );
+  }
+
+  return prefix + '-' + yilSuffix + '-' + String(yeniSayac).padStart(padLength, '0');
+}
+
 exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') return {statusCode:200,headers:CORS,body:''};
   try {
     if (event.httpMethod === 'POST' && event.body) {
       const p = JSON.parse(event.body || '{}');
+
+      if (p.action === 'generateCode') {
+        try {
+          var kod = await generateCode(p.prefix, p.padLength);
+          return { statusCode: 200, headers: CORS, body: JSON.stringify({ kod: kod }) };
+        } catch(e) {
+          return { statusCode: 500, headers: CORS, body: JSON.stringify({ error: e.message }) };
+        }
+      }
       if (p.method === 'TOKEN') return {statusCode:200,headers:CORS,body:JSON.stringify({token:TOKEN})};
       if (p.method && p.path) {
         const r = await fetch('https://api.airtable.com' + p.path, {
