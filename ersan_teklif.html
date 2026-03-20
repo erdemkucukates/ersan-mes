@@ -139,6 +139,11 @@ function onMusteriChange(id) {
   document.getElementById('f-musteri-yetkili').value = m.fields['Yetkili Kişi'] || '';
   document.getElementById('f-musteri-tel').value = m.fields['Telefon'] || '';
   document.getElementById('f-musteri-email').value = m.fields['E-posta'] || '';
+  // Auto-fill vade if musteri has it
+  var vadeEl = document.getElementById('f-vade');
+  if (vadeEl && !vadeEl.dataset.manuelDegistirildi) {
+    if (!vadeEl.value) { vadeEl.value = 30; }
+  }
 }
 
 // ── LOAD DATA ──
@@ -427,10 +432,7 @@ function renderDetail(q) {
                 <option ${f['Para Birimi']==='EUR'?'selected':''}>EUR</option>
               </select>
             </div>
-            <div class="field-group">
-              <label class="field-label">KDV Oranı (%)</label>
-              <input type="number" class="field-input" id="f-kdv" value="${f['KDV Oranı']||''}">
-            </div>
+            <!-- KDV alanı kaldırıldı -->
             <div class="field-group" style="grid-column:span 4;">
               <label class="field-label">Teklif Notu (Müşteri talep / proje no)</label>
               <input type="text" class="field-input" id="f-not" value="${f['Teklif Notu']||''}" placeholder="Müşteri talep / proje no...">
@@ -557,19 +559,11 @@ function calcItemTotal(item) {
 }
 
 function renderTotals() {
-  const box = document.getElementById('totals-box');
+  var box = document.getElementById('totals-box');
   if (!box) return;
-  const kdv = parseFloat(document.getElementById('f-kdv')?.value||0) || 0;
-  const para = document.getElementById('f-para')?.value || 'TL';
-  const ara = currentItems.reduce((s,i) => s + calcItemTotal(i), 0);
-  const kdvTutar = ara * kdv / 100;
-  const genel = ara + kdvTutar;
-
-  box.innerHTML = `
-    <div class="total-row"><span class="total-label">Ara Toplam</span><span class="total-val">${fmt(ara)} ${para}</span></div>
-    ${kdv ? `<div class="total-row"><span class="total-label">KDV (%${kdv})</span><span class="total-val">${fmt(kdvTutar)} ${para}</span></div>` : ''}
-    <div class="total-row total-grand"><span class="total-label">Genel Toplam</span><span class="total-val">${fmt(genel)} ${para}</span></div>
-  `;
+  var para = document.getElementById('f-para')?.value || 'TL';
+  var genel = currentItems.reduce(function(s,i) { return s + calcItemTotal(i); }, 0);
+  box.innerHTML = '<div class="total-row total-grand"><span class="total-label">Genel Toplam</span><span class="total-val">' + fmt(genel) + ' ' + para + '</span></div>';
 }
 
 function updateItem(i, key, val) {
@@ -704,7 +698,7 @@ async function saveQuote(id) {
       'Vade Süresi (Gün)': parseFloat(document.getElementById('f-vade').value)||null,
       'Durum': document.getElementById('f-durum').value,
       'Para Birimi': document.getElementById('f-para').value,
-      'KDV Oranı': parseFloat(document.getElementById('f-kdv').value)||null,
+      // KDV alanı kaldırıldı
       'Teklif Notu': document.getElementById('f-not').value||null,
       'Dosya No': document.getElementById('f-dosya-no').value||null,
     };
@@ -717,8 +711,7 @@ async function saveQuote(id) {
 
     // Calculate total from items
     const ara = currentItems.reduce((s,i) => s + calcItemTotal(i), 0);
-    const kdv = fields['KDV Oranı']||0;
-    fields['Toplam Tutar'] = ara + ara*kdv/100;
+    fields['Toplam Tutar'] = ara;
 
     // New quote (draft) or existing?
     const isNew = id.startsWith('_new_');
@@ -948,7 +941,7 @@ async function confirmSEOlustur(teklifId) {
     toast(seciliItems.length + ' kalem sipariş oluşturuldu (' + spNo + ') — yönlendiriliyor...', 'success');
     console.log('[SE] Sipariş oluşturuldu, yönlendirme başlıyor...');
     logIslem('Oluşturuldu', 'Sipariş', null, spNo, null, {kalem:seciliItems.length});
-    setTimeout(function() { window.location.href = 'ersan_siparisler.html'; }, 1500);
+    setTimeout(function() { window.location.href = 'ersan_siparisler.html?sp=' + encodeURIComponent(spNo); }, 1500);
   } catch(e) {
     console.error('[SE] Sipariş oluşturma hatası:', e);
     const errEl = document.getElementById('tr-error');
@@ -1506,6 +1499,20 @@ function createNewQuote() {
   currentItems = [];
   itemsToDelete = [];
   renderDetail(draft);
+  setTimeout(function() {
+    var gecEl = document.getElementById('f-gecerlilik');
+    if (gecEl && !gecEl.value) {
+      var d = new Date();
+      d.setDate(d.getDate() + 7);
+      gecEl.value = d.toISOString().split('T')[0];
+    }
+  }, 100);
+  setTimeout(function() {
+    var hazEl = document.getElementById('f-hazirlayan');
+    if (hazEl && hazEl.tagName === 'SELECT' && hazEl.options.length > 1 && !hazEl.value) {
+      hazEl.selectedIndex = 1;
+    }
+  }, 200);
   toast('Teklif bilgilerini doldurup "Teklifi Kaydet" butonuna tıklayın', 'info');
 }
 
@@ -1745,15 +1752,11 @@ async function generatePDF(id) {
     y = doc.lastAutoTable.finalY + 6;
 
     // ── TOTALS ──
-    const kdv = parseFloat(f['KDV Oranı']||0)||0;
     const ara = currentItems.reduce((s,i) => s + calcItemTotal(i), 0);
-    const kdvT = ara * kdv / 100;
-    const genel = ara + kdvT;
+    const genel = ara;
 
     const totW = 80, totX = W - M - totW;
     const totals = [
-      ['Ara Toplam', fmt(ara) + ' ' + para],
-      ...(kdv ? [['KDV (%' + kdv + ')', fmt(kdvT) + ' ' + para]] : []),
       ['GENEL TOPLAM', fmt(genel) + ' ' + para],
     ];
     totals.forEach(([label, val], i) => {

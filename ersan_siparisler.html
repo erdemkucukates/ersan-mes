@@ -590,6 +590,14 @@ async function loadList() {
     } while (pageOffset);
     records = all;
     filterList();
+    var params = new URLSearchParams(window.location.search);
+    var hedefSP = params.get('sp');
+    if (hedefSP) {
+      setTimeout(function() {
+        selectGroup(hedefSP);
+        window.history.replaceState({}, '', 'ersan_siparisler.html');
+      }, 300);
+    }
   } catch(e) {
     document.getElementById('sb-list').innerHTML = '<div style="padding:1rem;color:var(--kirmizi);font-size:12px;">Hata: '+e.message+'</div>';
   }
@@ -679,6 +687,13 @@ function renderMain(g) {
 
   window._currentGroup = g;
   renderKalemler(g.kalemler, null);
+
+  // Auto-select first kalem
+  setTimeout(function() {
+    if (g.kalemler.length > 0) {
+      selectKalem(0);
+    }
+  }, 200);
 
   setTimeout(function() {
     var stlBtn = document.getElementById('stl-btn');
@@ -1151,6 +1166,31 @@ function openIEModal(g) {
     '</div></div>';
   document.body.appendChild(modal);
   document.getElementById('ie-save-btn').onclick = function() { saveIE(g); };
+
+  // Auto-fill empty termin inputs with today + 21 days
+  setTimeout(function() {
+    for (var j = 0; j < g.kalemler.length; j++) {
+      var terminInput = document.getElementById('ie-termin-' + j);
+      if (terminInput && !terminInput.value) {
+        // Default: today + 15 business days ≈ 21 calendar days
+        var d = new Date();
+        d.setDate(d.getDate() + 21);
+        terminInput.value = d.toISOString().split('T')[0];
+        terminInput.style.background = '#f0f9ff';
+        terminInput.style.borderColor = '#93c5fd';
+      }
+      // Add change listener for manual edit indication
+      (function(idx) {
+        var inp = document.getElementById('ie-termin-' + idx);
+        if (inp) {
+          inp.addEventListener('change', function() {
+            this.style.background = '#fefce8';
+            this.style.borderColor = '#fbbf24';
+          });
+        }
+      })(j);
+    }
+  }, 100);
 }
 
 async function saveIE(g) {

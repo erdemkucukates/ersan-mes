@@ -19,13 +19,29 @@
 
 ## 📊 Bu Oturumda Yapılanlar
 (Oturum kapanırken güncelle)
-Son güncelleme: 2026-03-19
+Son güncelleme: 2026-03-20
+
+### Oturum 1 (2026-03-19)
 - v1.0-koyu-tema tag'i oluşturuldu
-- Yeni açık tema CSS sistemi yazıldı
-- Nav gruplu yapıya geçildi
+- Yeni açık tema CSS sistemi yazıldı (ersan_styles.css v2.0)
+- Nav gruplu sidebar yapıya geçildi (ersan_nav.js)
 - ersan_config.json + CONTEXT_OZET.md eklendi
 - ersan_stok.html + ersan_mikro.html oluşturuldu
-- Tüm HTML sayfaları sidebar nav'a geçirildi
+- Tüm HTML sayfaları sidebar nav'a geçirildi (28 dosya)
+- ersan_siparisler.html tamamen yeniden yazıldı (yeni CSS class sistemi)
+- Liste satır standardizasyonu: 12 dosyada liste-satir + secili
+
+### Oturum 2 (2026-03-20)
+- ersan_anasayfa.html: 6 KPI + 18 modül kartı dashboard
+- Test Simülatörü v2.0: 4 paket, 33 test (15/15 normal akış geçti)
+  - test-bot.js: Airtable alan adı düzeltmeleri (3 iterasyon)
+- Finans modülü (6 dosya): finans, siparis_maliyet, alacaklar, borclar, kar_analizi, nakit_akisi
+- CRM modülü (5 dosya): musteri 360, crm pipeline, crm_takip, satis_tahmini, musteri_portal
+- Performans modülü (5 dosya): personel 360, departman_kpi, dokuz_kutu, 360 form, kpi-hesapla.js
+- AS9100 Kalite modülü (8 dosya): fai, fod, sahte_parca, eco, asl, kontrol_plani, sapma, kalite hub
+- ersan_config.json v3.0: 40 tablo (14 yeni gerçek ID), KPI hedefleri
+- ersan_nav.js: CRM, Finans, Performans, Kalite (11 alt sayfa) grupları
+- Toplam: 52 HTML sayfa, 10 Netlify Function
 
 ---
 
