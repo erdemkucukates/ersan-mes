@@ -69,19 +69,42 @@ const TABLES = {
   tezgahlar:    'tblsBXDsWACBAFEJ5',
   personel:     'tblwG9GqnLC9oFZzb',
   satisEmirleri:'tbl56Oj1nPaqefI60',
+  tedarikciler: 'tblEI6683Im5AXj36',
 };
 
+// Operasyon tipleri — dunya standartlari
 const OP_TYPES = [
-  'Tornalama','Frezeleme','Taşlama','Taşlama (fason)',
-  'Delik Delme','Diş Açma','Çapak Alma',
-  'Isıl İşlem (fason)','İndüksiyon Sertleştirme (fason)',
-  'Yüzey İşlemi (fason)','Krom Kaplama (fason)',
-  'Kaynak','Montaj',
-  'Kalite Kontrol','Final Muayene','FAI'
+  'CNC Turning','CNC Milling','Grinding','Drilling','Tapping',
+  'Deburring','Welding','Assembly',
+  'Heat Treatment (subcon)','Induction Hardening (subcon)',
+  'Surface Treatment (subcon)','Chrome Plating (subcon)',
+  'Grinding (subcon)',
+  'QC Inspection','Final Inspection','FAI'
 ];
 
-const FASON_OPS = ['Isıl İşlem (fason)','İndüksiyon Sertleştirme (fason)',
-  'Yüzey İşlemi (fason)','Krom Kaplama (fason)','Taşlama (fason)'];
+const FASON_OPS = [
+  'Heat Treatment (subcon)','Induction Hardening (subcon)',
+  'Surface Treatment (subcon)','Chrome Plating (subcon)','Grinding (subcon)'
+];
+
+// Operasyon tipine gore tezgah filtresi
+const OP_TEZGAH_MAP = {
+  'CNC Turning': 'CNC Torna',
+  'CNC Milling': 'CNC Freze',
+  'Grinding': 'Taşlama',
+  'Drilling': 'Matkap',
+};
+
+// Fason operasyon tipine gore tedarikci filtresi
+const OP_TEDARIKCI_MAP = {
+  'Heat Treatment (subcon)': 'Isıl İşlem',
+  'Induction Hardening (subcon)': 'Isıl İşlem',
+  'Surface Treatment (subcon)': 'Yüzey İşlem',
+  'Chrome Plating (subcon)': 'Kaplama',
+  'Grinding (subcon)': 'Taşlama',
+};
+
+var tedarikciler = [];
 
 let workOrders = [], filteredWOs = [];
 let tezgahlar = [], personel = [], satisEmirleri = [];
@@ -182,14 +205,16 @@ async function loadAll() {
     } while (offset);
     workOrders = all;
 
-    const [tz, ps, se] = await Promise.all([
+    const [tz, ps, se, td] = await Promise.all([
       apiGetFn(TABLES.tezgahlar, ''),
       apiGetFn(TABLES.personel, ''),
       apiGetFn(TABLES.satisEmirleri, 'sort[0][field]=SE%20No&sort[0][direction]=desc'),
+      apiGetFn(TABLES.tedarikciler, 'filterByFormula=' + encodeURIComponent("{Aktif}=TRUE()")),
     ]);
     tezgahlar = tz.records || [];
     personel = ps.records || [];
     satisEmirleri = se.records || [];
+    tedarikciler = td.records || [];
 
     filterAndRender();
   } catch(e) {
@@ -350,8 +375,8 @@ async function loadDetail(id) {
 
       <!-- OPERASYONLAR + TEKNİK RESİM YAN YANA -->
       <div style="display:flex;gap:12px;align-items:flex-start;">
-        <!-- SOL: Operasyonlar (2/5) -->
-        <div class="card" style="width:40%;flex-shrink:0;">
+        <!-- SOL: Operasyonlar (genisletildi) -->
+        <div class="card" style="width:48%;flex-shrink:0;">
           <div class="card-header">
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="currentColor" stroke-width="1.3"/><path d="M6 3v3l2 2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
             Operasyon Rotası
@@ -362,14 +387,15 @@ async function loadDetail(id) {
               <table class="ops-table">
                 <thead>
                   <tr>
-                    <th style="width:28px;"></th>
-                    <th style="width:32px;">Sıra</th>
-                    <th>Operasyon</th>
-                    <th style="width:130px;">Tezgah / Firma</th>
-                    <th style="width:56px;">Setup</th>
-                    <th style="width:56px;">İşleme</th>
-                    <th style="width:90px;">Durum</th>
-                    <th style="width:28px;"></th>
+                    <th style="width:24px;"></th>
+                    <th style="width:30px;font-size:11px;">Op</th>
+                    <th style="font-size:11px;">Operation</th>
+                    <th style="font-size:11px;">Notes</th>
+                    <th style="width:150px;font-size:11px;">Machine / Supplier</th>
+                    <th style="width:52px;font-size:11px;">Setup</th>
+                    <th style="width:52px;font-size:11px;">Cycle</th>
+                    <th style="width:100px;font-size:11px;">Status</th>
+                    <th style="width:24px;"></th>
                   </tr>
                 </thead>
                 <tbody id="ops-tbody"></tbody>
@@ -384,13 +410,13 @@ async function loadDetail(id) {
           </div>
         </div>
 
-        <!-- SAĞ: Teknik Resim (3/5) -->
-        <div class="card" style="width:60%;">
+        <!-- SAĞ: Teknik Resim -->
+        <div class="card" style="width:52%;">
           <div class="card-header">
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="1" y="1" width="10" height="10" rx="2" stroke="currentColor" stroke-width="1.3"/><path d="M3 8l2-3 2 2 1.5-2L10 8H3z" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/></svg>
             Teknik Resim
           </div>
-          <div class="card-body" id="ie-teknik-resim" style="min-height:800px;"></div>
+          <div class="card-body" id="ie-teknik-resim" style="min-height:1000px;"></div>
         </div>
       </div>
     </div>`;
@@ -450,7 +476,7 @@ async function renderTeknikResim(f, woId) {
 
   // PDF varsa embed viewer goster, yoksa resim/link goster
   if (firstPdfUrl) {
-    html = '<div style="height:800px;display:flex;flex-direction:column;">' +
+    html = '<div style="height:1000px;display:flex;flex-direction:column;">' +
       '<div style="background:var(--laci);padding:6px 12px;display:flex;align-items:center;justify-content:space-between;border-radius:6px 6px 0 0;">' +
       '<span style="color:#fff;font-size:11px;">' + (attachments[0].filename || 'teknik-resim.pdf') + '</span>' +
       '<a href="' + firstPdfUrl + '" target="_blank" style="color:#93c5fd;font-size:11px;text-decoration:none;">Yeni sekmede ac</a>' +
@@ -501,9 +527,26 @@ function renderOps() {
   if (!tbody) return;
   document.getElementById('op-count').textContent = `${currentOps.length} operasyon`;
 
-  const tezgahOpts = tezgahlar.map(t =>
-    `<option value="${t.id}">${t.fields['Tezgah No']||''} ${t.fields['Tezgah Adı']||''}</option>`
-  ).join('');
+  // Tezgah ve tedarikci opsiyonlari operasyon tipine gore filtrelenir
+  function getTezgahOpts(opTip) {
+    var filtreTip = OP_TEZGAH_MAP[opTip] || '';
+    return tezgahlar.filter(function(t) {
+      if (!filtreTip) return true;
+      return (t.fields['Tezgah Tipi'] || '').indexOf(filtreTip) >= 0 || (t.fields['Tezgah Adı'] || '').indexOf(filtreTip) >= 0;
+    }).map(function(t) {
+      return '<option value="' + t.id + '">' + (t.fields['Tezgah Kodu']||'') + ' ' + (t.fields['Tezgah Adı']||'') + '</option>';
+    }).join('');
+  }
+  function getTedarikciOpts(opTip) {
+    var filtreKat = OP_TEDARIKCI_MAP[opTip] || '';
+    return tedarikciler.filter(function(t) {
+      if (!filtreKat) return true;
+      var kat = (t.fields['Tedarikçi Tipi'] || '') + ' ' + (t.fields['Malzeme Kategorisi'] || []).join(' ') + ' ' + (t.fields['Tedarik Ettiği Malzeme'] || '');
+      return kat.indexOf(filtreKat) >= 0;
+    }).map(function(t) {
+      return '<option value="' + t.id + '">' + (t.fields['Tedarikçi Adı']||'') + '</option>';
+    }).join('');
+  }
 
   if (!currentOps.length) {
     tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--text3);font-size:12px;">Henüz operasyon eklenmedi</td></tr>`;
@@ -520,52 +563,53 @@ function renderOps() {
       style="cursor:default;">
       <td><span class="drag-handle" title="Sürükle">⠿</span></td>
       <td><span class="op-sira">${i+1}</span></td>
-      <td style="min-width:160px;">
-        <select style="border:1px solid transparent;border-radius:5px;padding:4px 6px;font-size:12px;font-family:var(--sans);width:100%;outline:none;background:transparent;"
+      <td style="min-width:180px;">
+        <select style="border:1px solid transparent;border-radius:5px;padding:5px 7px;font-size:13px;font-family:var(--sans);width:100%;outline:none;background:transparent;"
           onchange="updateOp(${i},'tip',this.value);checkFason(${i})"
           onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='transparent'">
           ${OP_TYPES.map(t => `<option ${op.tip===t?'selected':''}>${t}</option>`).join('')}
         </select>
-        ${isFason ? '<span class="fason-tag">FASON</span>' : ''}
+        ${isFason ? '<span class="fason-tag">SUBCON</span>' : ''}
       </td>
       <td>
-        <input style="border:1px solid transparent;border-radius:5px;padding:4px 7px;font-size:11px;font-family:var(--sans);width:100%;outline:none;"
+        <input style="border:1px solid transparent;border-radius:5px;padding:5px 7px;font-size:13px;font-family:var(--sans);width:100%;outline:none;"
           value="${op.aciklama.replace(/"/g,'&quot;')}"
           oninput="updateOp(${i},'aciklama',this.value)"
           onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='transparent'"
-          placeholder="Talimat / not...">
+          placeholder="Instructions / notes...">
       </td>
       <td>
         ${isFason
-          ? `<input style="border:1px solid transparent;border-radius:5px;padding:4px 7px;font-size:11px;font-family:var(--sans);width:100%;outline:none;"
-              value="${op.fasonFirma.replace(/"/g,'&quot;')}"
-              oninput="updateOp(${i},'fasonFirma',this.value)"
-              onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='transparent'"
-              placeholder="Fason firma adı">`
-          : `<select style="border:1px solid transparent;border-radius:5px;padding:4px 6px;font-size:11px;font-family:var(--sans);width:100%;outline:none;background:transparent;"
+          ? `<select style="border:1px solid transparent;border-radius:5px;padding:5px 7px;font-size:13px;font-family:var(--sans);width:100%;outline:none;background:transparent;"
+              onchange="updateOp(${i},'fasonFirma',this.options[this.selectedIndex].text);updateOp(${i},'tezgahId',this.value)"
+              onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='transparent'">
+              <option value="">— Supplier —</option>
+              ${getTedarikciOpts(op.tip).replace('value="' + op.tezgahId + '"', 'value="' + op.tezgahId + '" selected')}
+            </select>`
+          : `<select style="border:1px solid transparent;border-radius:5px;padding:5px 7px;font-size:13px;font-family:var(--sans);width:100%;outline:none;background:transparent;"
               onchange="updateOp(${i},'tezgahId',this.value)"
               onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='transparent'">
-              <option value="">— Tezgah —</option>
-              ${tezgahOpts.replace(`value="${op.tezgahId}"`, `value="${op.tezgahId}" selected`)}
+              <option value="">— Machine —</option>
+              ${getTezgahOpts(op.tip).replace('value="' + op.tezgahId + '"', 'value="' + op.tezgahId + '" selected')}
             </select>`
         }
       </td>
       <td>
-        <input type="number" style="border:1px solid transparent;border-radius:5px;padding:4px 6px;font-size:12px;font-family:var(--mono);width:60px;text-align:right;outline:none;"
+        <input type="number" style="border:1px solid transparent;border-radius:5px;padding:5px 6px;font-size:13px;font-family:var(--mono);width:60px;text-align:right;outline:none;"
           value="${op.setup||''}"
           oninput="updateOp(${i},'setup',parseFloat(this.value)||0)"
           onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='transparent'"
           placeholder="0">
       </td>
       <td>
-        <input type="number" style="border:1px solid transparent;border-radius:5px;padding:4px 6px;font-size:12px;font-family:var(--mono);width:60px;text-align:right;outline:none;"
+        <input type="number" style="border:1px solid transparent;border-radius:5px;padding:5px 6px;font-size:13px;font-family:var(--mono);width:60px;text-align:right;outline:none;"
           value="${op.sure||''}"
           oninput="updateOp(${i},'sure',parseFloat(this.value)||0)"
           onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='transparent'"
           placeholder="0">
       </td>
       <td>
-        <select style="border:1px solid transparent;border-radius:5px;padding:4px 6px;font-size:11px;font-family:var(--sans);width:100%;outline:none;color:${durumColor};font-weight:600;background:transparent;"
+        <select style="border:1px solid transparent;border-radius:5px;padding:5px 6px;font-size:12px;font-family:var(--sans);width:100%;outline:none;color:${durumColor};font-weight:600;background:transparent;"
           onchange="updateOp(${i},'durum',this.value)"
           onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='transparent'">
           ${['Bekliyor','İşlemde','Muayene Bekliyor','Tamamlandı','Atlandı'].map(d=>`<option ${op.durum===d?'selected':''}>${d}</option>`).join('')}
