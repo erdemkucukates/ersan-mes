@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — Yetenek Matrisi (9-Box)</title>
+<link rel="stylesheet" href="ersan_styles.css">
+<script src="ersan_nav.js" defer></script>
+<script src="ersan_log.js" defer></script>
+<style>
+.dk-wrapper { display:flex; gap:16px; }
+.dk-sol { flex:1; }
+.dk-sag { width:300px; flex-shrink:0; }
+.dk-grid-wrap { position:relative; }
+.dk-y-label { position:absolute; left:-28px; top:50%; transform:rotate(-90deg) translateX(-50%); font-size:11px; font-weight:700; color:var(--laci); white-space:nowrap; transform-origin:center center; }
+.dk-x-label { text-align:center; font-size:11px; font-weight:700; color:var(--laci); margin-top:6px; }
+.dk-grid { display:grid; grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(3,1fr); gap:6px; }
+.dk-kutu { border-radius:8px; padding:10px; min-height:120px; cursor:pointer; transition:box-shadow .15s; position:relative; }
+.dk-kutu:hover { box-shadow:0 4px 16px rgba(0,0,0,.1); }
+.dk-kutu-baslik { font-size:11px; font-weight:700; color:rgba(0,0,0,.7); margin-bottom:2px; }
+.dk-kutu-alt { font-size:9px; color:rgba(0,0,0,.45); margin-bottom:8px; }
+.dk-kutu-kisiler { display:flex; flex-wrap:wrap; gap:4px; }
+.dk-avatar { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; color:#fff; cursor:pointer; border:2px solid rgba(255,255,255,.8); transition:transform .12s; position:relative; }
+.dk-avatar:hover { transform:scale(1.2); z-index:10; }
+.dk-popup { position:absolute; bottom:calc(100% + 8px); left:50%; transform:translateX(-50%); background:var(--beyaz); border:1px solid var(--border); border-radius:8px; padding:12px; width:200px; box-shadow:0 8px 24px rgba(0,0,0,.15); z-index:100; font-size:12px; display:none; }
+.dk-popup.goster { display:block; }
+.dk-col-head { text-align:center; font-size:10px; font-weight:600; color:var(--metin3); text-transform:uppercase; padding:4px; }
+.dk-row-head { display:flex; align-items:center; font-size:10px; font-weight:600; color:var(--metin3); writing-mode:vertical-lr; transform:rotate(180deg); text-transform:uppercase; padding:4px; justify-content:center; }
+.dk-analiz-kart { background:var(--beyaz); border:1px solid var(--border); border-radius:8px; padding:14px; margin-bottom:10px; }
+.dk-analiz-baslik { font-size:12px; font-weight:700; color:var(--laci); margin-bottom:8px; }
+.dk-analiz-sayi { font-size:28px; font-weight:800; color:var(--mavi); }
+</style>
+</head>
+<body>
+<div id="nav-alani"></div>
+<div class="icerik-alani">
+  <div class="topbar">
+    <div class="topbar-baslik">Yetenek Matrisi (9-Box)</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <select class="form-select" id="donemSec" style="width:140px;padding:5px 8px;font-size:12px;" onchange="render()">
+        <option value="Q1-2026">Q1-2026</option>
+        <option value="Q4-2025">Q4-2025</option>
+      </select>
+      <button class="btn btn-mavi btn-sm" onclick="guncelle()">Guncelle</button>
+    </div>
+  </div>
+  <div class="sayfa-icerik">
+    <div class="dk-wrapper">
+
+      <!-- SOL: 9-Box Grid -->
+      <div class="dk-sol">
+        <div class="dk-grid-wrap" style="padding-left:32px;">
+          <!-- X axis labels -->
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:4px;">
+            <div class="dk-col-head">Dusuk Potansiyel</div>
+            <div class="dk-col-head">Orta Potansiyel</div>
+            <div class="dk-col-head">Yuksek Potansiyel</div>
+          </div>
+
+          <div style="display:flex;">
+            <!-- Y axis labels -->
+            <div style="display:flex;flex-direction:column;justify-content:space-around;width:24px;flex-shrink:0;">
+              <div class="dk-row-head">Yuksek Perf.</div>
+              <div class="dk-row-head">Orta Perf.</div>
+              <div class="dk-row-head">Dusuk Perf.</div>
+            </div>
+
+            <!-- Grid -->
+            <div class="dk-grid" style="flex:1;" id="dokuzKutu"></div>
+          </div>
+
+          <div class="dk-x-label">Potansiyel &rarr;</div>
+        </div>
+      </div>
+
+      <!-- SAG: Analiz -->
+      <div class="dk-sag" id="analizPanel">
+        <div class="dk-analiz-kart">
+          <div class="dk-analiz-baslik">Toplam Personel</div>
+          <div class="dk-analiz-sayi" id="toplamKisi">0</div>
+        </div>
+        <div class="dk-analiz-kart" id="seciliKutuAnaliz">
+          <div class="dk-analiz-baslik">Kutu secin</div>
+          <div style="font-size:12px;color:var(--metin3);">Analiz icin bir kutuya tiklayin</div>
+        </div>
+        <div class="dk-analiz-kart" id="aiOneri" style="display:none;">
+          <div class="dk-analiz-baslik">AI Onerisi</div>
+          <div id="aiOneriIcerik" style="font-size:12px;color:var(--metin2);"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var personelListesi = [];
+var seciliKutu = null;
+
+// 9 kutu tanimlamalari: [satirIdx, sutunIdx] -> Y=Performans (0=Yuksek,1=Orta,2=Dusuk), X=Potansiyel (0=Dusuk,1=Orta,2=Yuksek)
+var kutular = [
+  // Row 0 (Yuksek Performans) - sol->sag: dusuk pot, orta pot, yuksek pot
+  { key:'yp_dp', baslik:'Uzman',       alt:'Yuksek perf, dusuk pot',     renk:'#a7f3d0', perfMin:70, perfMax:999, potSeviye:'Dusuk' },
+  { key:'yp_op', baslik:'Yuksek Potansiyel', alt:'Yuksek perf, orta pot', renk:'#6ee7b7', perfMin:70, perfMax:999, potSeviye:'Orta' },
+  { key:'yp_yp', baslik:'Yildiz',      alt:'Yuksek perf, yuksek pot',    renk:'#34d399', perfMin:70, perfMax:999, potSeviye:'Yuksek' },
+  // Row 1 (Orta Performans)
+  { key:'op_dp', baslik:'Sabit',       alt:'Orta perf, dusuk pot',       renk:'#fde68a', perfMin:40, perfMax:69,  potSeviye:'Dusuk' },
+  { key:'op_op', baslik:'Temel Oyuncu',alt:'Orta perf, orta pot',        renk:'#fcd34d', perfMin:40, perfMax:69,  potSeviye:'Orta' },
+  { key:'op_yp', baslik:'Gelecek Yildiz',alt:'Orta perf, yuksek pot',    renk:'#a7f3d0', perfMin:40, perfMax:69,  potSeviye:'Yuksek' },
+  // Row 2 (Dusuk Performans)
+  { key:'dp_dp', baslik:'Risk',        alt:'Dusuk perf, dusuk pot',      renk:'#fca5a5', perfMin:0,  perfMax:39,  potSeviye:'Dusuk' },
+  { key:'dp_op', baslik:'Soru Isareti',alt:'Dusuk perf, orta pot',       renk:'#fde68a', perfMin:0,  perfMax:39,  potSeviye:'Orta' },
+  { key:'dp_yp', baslik:'Ham Elmas',   alt:'Dusuk perf, yuksek pot',     renk:'#fcd34d', perfMin:0,  perfMax:39,  potSeviye:'Yuksek' }
+];
+
+function toast(msg, tip) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast toast-' + (tip || 'basari') + ' goster';
+  setTimeout(function() { t.className = 'toast'; }, 3000);
+}
+
+function yukle() {
+  fetch('/.netlify/functions/airtable?table=Personel&pageSize=100')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      personelListesi = (d.records || []).map(function(r) { return { id: r.id, f: r.fields || {} }; });
+      render();
+    })
+    .catch(function(e) {
+      console.error('Yuklenemedi:', e);
+      document.getElementById('dokuzKutu').innerHTML = '<div class="bos-durum" style="grid-column:span 3;">Veri yuklenemedi</div>';
+    });
+}
+
+function personelKutuBul(p) {
+  var skor = parseFloat(p.f['Performans Skoru']) || 0;
+  var pot = p.f['Potansiyel Seviyesi'] || 'Orta';
+
+  for (var i = 0; i < kutular.length; i++) {
+    var k = kutular[i];
+    if (skor >= k.perfMin && skor <= k.perfMax && pot === k.potSeviye) return i;
+  }
+  // Fallback: skor'a gore orta potansiyele koy
+  if (skor >= 70) return 1;
+  if (skor >= 40) return 4;
+  return 7;
+}
+
+function render() {
+  // Personelleri kutulara dagit
+  var kutuPersonel = {};
+  kutular.forEach(function(k) { kutuPersonel[k.key] = []; });
+
+  personelListesi.forEach(function(p) {
+    var idx = personelKutuBul(p);
+    kutuPersonel[kutular[idx].key].push(p);
+  });
+
+  document.getElementById('toplamKisi').textContent = personelListesi.length;
+
+  var html = '';
+  kutular.forEach(function(k, idx) {
+    var kisiler = kutuPersonel[k.key] || [];
+    html += '<div class="dk-kutu" style="background:' + k.renk + ';" onclick="kutuSec(\'' + k.key + '\',' + idx + ')">'
+      + '<div class="dk-kutu-baslik">' + k.baslik + '</div>'
+      + '<div class="dk-kutu-alt">' + kisiler.length + ' kisi</div>'
+      + '<div class="dk-kutu-kisiler">';
+
+    kisiler.forEach(function(p) {
+      var ad = p.f['Ad Soyad'] || p.f['Ad'] || '?';
+      var initials = ad.split(' ').map(function(w) { return w.charAt(0); }).join('').substring(0, 2).toUpperCase();
+      var skor = parseFloat(p.f['Performans Skoru']) || 0;
+      var bgRenk = skor >= 80 ? '#059669' : skor >= 60 ? '#d97706' : '#dc2626';
+      html += '<div class="dk-avatar" style="background:' + bgRenk + ';" onclick="event.stopPropagation();avatarTikla(this,\'' + p.id + '\')" title="' + ad + '">'
+        + initials
+        + '<div class="dk-popup" id="popup_' + p.id + '">'
+        + '<div style="font-weight:700;color:var(--laci);margin-bottom:4px;">' + ad + '</div>'
+        + '<div style="color:var(--metin3);margin-bottom:4px;">' + (p.f['Gorev'] || p.f['Pozisyon'] || '') + '</div>'
+        + '<div style="font-weight:700;margin-bottom:8px;">Skor: ' + skor + '</div>'
+        + '<a href="ersan_personel.html?id=' + p.id + '" class="btn btn-sm btn-mavi" style="text-decoration:none;">Profili Gor</a>'
+        + '</div>'
+        + '</div>';
+    });
+
+    html += '</div></div>';
+  });
+
+  document.getElementById('dokuzKutu').innerHTML = html;
+}
+
+function avatarTikla(el, pid) {
+  // Tum popuplari kapat
+  var popups = document.querySelectorAll('.dk-popup');
+  for (var i = 0; i < popups.length; i++) popups[i].className = 'dk-popup';
+  // Bu popup'i ac
+  var popup = document.getElementById('popup_' + pid);
+  if (popup) popup.className = 'dk-popup goster';
+}
+
+// Disari tiklaninca popuplari kapat
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.dk-avatar')) {
+    var popups = document.querySelectorAll('.dk-popup');
+    for (var i = 0; i < popups.length; i++) popups[i].className = 'dk-popup';
+  }
+});
+
+function kutuSec(key, idx) {
+  seciliKutu = kutular[idx];
+  var kisiler = personelListesi.filter(function(p) { return personelKutuBul(p) === idx; });
+
+  var aksiyon = '';
+  if (idx === 0) aksiyon = 'Uzmanlik alanlarinda mentor olarak gorevlendirin.';
+  else if (idx === 1) aksiyon = 'Liderlik gorevleri verin, terfiye hazirlayin.';
+  else if (idx === 2) aksiyon = 'Hizli terfiye aday, ozel gelisim programi uygulayin.';
+  else if (idx === 3) aksiyon = 'Mevcut rolde destekleyin, motivasyon artirin.';
+  else if (idx === 4) aksiyon = 'Egitim ve koocluk ile gelistirin.';
+  else if (idx === 5) aksiyon = 'Potansiyeli aciga cikarmak icin zorlayici gorevler verin.';
+  else if (idx === 6) aksiyon = 'Performans iyilestirme plani (PIP) uygulayin.';
+  else if (idx === 7) aksiyon = 'Nedenleri arastirin, konum degisikligi dusunun.';
+  else if (idx === 8) aksiyon = 'Dogru rolu bulun, mentorla eslestirin.';
+
+  var html = '<div class="dk-analiz-baslik">' + seciliKutu.baslik + '</div>'
+    + '<div style="font-size:12px;color:var(--metin3);margin-bottom:8px;">' + seciliKutu.alt + '</div>'
+    + '<div style="font-size:20px;font-weight:800;color:var(--mavi);margin-bottom:8px;">' + kisiler.length + ' kisi</div>'
+    + '<div style="font-size:12px;font-weight:600;color:var(--laci);margin-bottom:4px;">Onerilen Aksiyon:</div>'
+    + '<div style="font-size:12px;color:var(--metin2);margin-bottom:12px;">' + aksiyon + '</div>';
+
+  if (kisiler.length > 0) {
+    html += '<div style="font-size:11px;font-weight:600;color:var(--metin3);margin-bottom:4px;">Kisiler:</div>';
+    kisiler.forEach(function(p) {
+      var ad = p.f['Ad Soyad'] || p.f['Ad'] || '';
+      var skor = p.f['Performans Skoru'] || '-';
+      html += '<div style="display:flex;justify-content:space-between;padding:3px 0;font-size:12px;border-bottom:1px solid var(--bg);">'
+        + '<span>' + ad + '</span><span style="font-weight:700;">' + skor + '</span></div>';
+    });
+  }
+
+  html += '<div style="margin-top:12px;"><button class="btn btn-sm btn-beyaz" onclick="aiKutuOneri(' + idx + ')">AI Onerisi</button></div>';
+
+  document.getElementById('seciliKutuAnaliz').innerHTML = html;
+}
+
+function aiKutuOneri(idx) {
+  var kutu = kutular[idx];
+  var kisiler = personelListesi.filter(function(p) { return personelKutuBul(p) === idx; });
+  var isimler = kisiler.map(function(p) { return (p.f['Ad Soyad'] || p.f['Ad'] || '') + ' (skor:' + (p.f['Performans Skoru'] || '-') + ')'; }).join(', ');
+
+  var aiPanel = document.getElementById('aiOneri');
+  aiPanel.style.display = 'block';
+  document.getElementById('aiOneriIcerik').innerHTML = '<div class="yukleniyor"><div class="spinner"></div></div>';
+
+  var prompt = 'CNC imalat fabrikasi 9-Box yetenek matrisinde "' + kutu.baslik + '" kutusunda su personeller var: ' + isimler
+    + '. Bu kutu: ' + kutu.alt + '. Bu grup icin 3-4 maddelik Turkce aksiyon plani olustur.';
+
+  fetch('/.netlify/functions/claude', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prompt: prompt })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(d) {
+    var text = '';
+    if (d.content && d.content[0]) text = d.content[0].text || '';
+    else if (d.text) text = d.text;
+    else text = JSON.stringify(d);
+    document.getElementById('aiOneriIcerik').innerHTML = '<div style="white-space:pre-wrap;line-height:1.6;">' + text + '</div>';
+  })
+  .catch(function(e) {
+    document.getElementById('aiOneriIcerik').innerHTML = 'AI servisi baglanilamadi';
+  });
+}
+
+function guncelle() {
+  toast('Veriler guncelleniyor...');
+  yukle();
+}
+
+document.addEventListener('DOMContentLoaded', function() { yukle(); });
+</script>
+</body>
+</html>

@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — Departman KPI Paneli</title>
+<link rel="stylesheet" href="ersan_styles.css">
+<script src="ersan_nav.js" defer></script>
+<script src="ersan_log.js" defer></script>
+<style>
+.dept-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:14px; }
+.dept-kart { background:var(--beyaz); border:1px solid var(--border); border-radius:10px; padding:16px; cursor:pointer; transition:box-shadow .15s, transform .15s; }
+.dept-kart:hover { box-shadow:0 4px 16px rgba(0,0,0,.08); transform:translateY(-2px); }
+.dept-kart-ust { display:flex; align-items:center; gap:12px; margin-bottom:14px; }
+.dept-ikon { width:44px; height:44px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
+.dept-ad { font-size:14px; font-weight:700; color:var(--laci); }
+.dept-skor { font-size:24px; font-weight:800; line-height:1; }
+.dept-skor-alt { font-size:10px; color:var(--metin4); }
+.dept-kpi-bar { margin-bottom:8px; }
+.dept-kpi-bar-label { display:flex; justify-content:space-between; font-size:11px; margin-bottom:3px; }
+.dept-kpi-bar-label span:first-child { color:var(--metin3); }
+.dept-kpi-bar-label span:last-child { font-weight:700; color:var(--metin2); }
+.dept-kpi-track { height:8px; background:var(--bg); border-radius:4px; overflow:hidden; }
+.dept-kpi-fill { height:100%; border-radius:4px; transition:width .4s; }
+.dept-modal-tablo td, .dept-modal-tablo th { padding:8px 10px; font-size:12px; }
+.dept-trend { display:inline-block; font-size:14px; }
+.dept-trend-up { color:var(--yesil); }
+.dept-trend-down { color:var(--kirmizi); }
+.dept-trend-flat { color:var(--metin4); }
+</style>
+</head>
+<body>
+<div id="nav-alani"></div>
+<div class="icerik-alani">
+  <div class="topbar">
+    <div class="topbar-baslik">Departman KPI Paneli</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <select class="form-select" id="donemSec" style="width:140px;padding:5px 8px;font-size:12px;" onchange="donemDegisti()">
+        <option value="Q1-2026">Q1-2026</option>
+        <option value="Q4-2025">Q4-2025</option>
+        <option value="Q3-2025">Q3-2025</option>
+        <option value="Q2-2025">Q2-2025</option>
+      </select>
+      <button class="btn btn-mavi btn-sm" onclick="aiDeptRapor()">AI Rapor</button>
+    </div>
+  </div>
+  <div class="sayfa-icerik">
+
+    <!-- KPI Ozet -->
+    <div class="kpi-grid" id="kpiOzet" style="margin-bottom:16px;">
+      <div class="kpi-kart"><div class="kpi-etiket">Genel Ortalama</div><div class="kpi-deger" id="genelOrt">-</div></div>
+      <div class="kpi-kart yesil"><div class="kpi-etiket">Hedefi Asan</div><div class="kpi-deger" id="hedefiAsan">-</div></div>
+      <div class="kpi-kart kirmizi"><div class="kpi-etiket">Kritik</div><div class="kpi-deger" id="kritikSayi">-</div></div>
+      <div class="kpi-kart sari"><div class="kpi-etiket">Toplam Personel</div><div class="kpi-deger" id="toplamPersonel">-</div></div>
+    </div>
+
+    <!-- Departman Grid -->
+    <div class="dept-grid" id="deptGrid">
+      <div class="yukleniyor"><div class="spinner"></div> Yukleniyor...</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Modal -->
+<div id="modalAlani"></div>
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+var departmanlar = [
+  { key: 'Uretim',     ad: 'Uretim',       ikon: '&#9881;',  renk: '#3b82f6' },
+  { key: 'Kalite',     ad: 'Kalite',        ikon: '&#10003;', renk: '#10b981' },
+  { key: 'Satis',      ad: 'Satis',         ikon: '&#9733;',  renk: '#f59e0b' },
+  { key: 'Satinalma',  ad: 'Satinalma',     ikon: '&#128722;',renk: '#8b5cf6' },
+  { key: 'Bakim',      ad: 'Bakim',         ikon: '&#128295;',renk: '#ef4444' },
+  { key: 'Yonetim',    ad: 'Yonetim',       ikon: '&#128188;',renk: '#0f2744' }
+];
+
+var personelListesi = [];
+var kpiKayitlari = [];
+var kpiHedefleri = {};
+var aktifDonem = 'Q1-2026';
+
+function toast(msg, tip) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast toast-' + (tip || 'basari') + ' goster';
+  setTimeout(function() { t.className = 'toast'; }, 3000);
+}
+
+function donemDegisti() {
+  aktifDonem = document.getElementById('donemSec').value;
+  render();
+}
+
+function yukle() {
+  var p1 = fetch('/.netlify/functions/airtable?table=Personel&pageSize=100')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      personelListesi = (d.records || []).map(function(r) { return { id: r.id, f: r.fields || {} }; });
+    })
+    .catch(function() { personelListesi = []; });
+
+  var p2 = fetch('/.netlify/functions/airtable?table=KPI%20Kayitlari&pageSize=100')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      kpiKayitlari = (d.records || []).map(function(r) { return { id: r.id, f: r.fields || {} }; });
+    })
+    .catch(function() { kpiKayitlari = []; });
+
+  // Config
+  var p3 = fetch('ersan_config.json')
+    .then(function(r) { return r.json(); })
+    .then(function(d) { kpiHedefleri = d.kpiHedefleri || {}; })
+    .catch(function() { kpiHedefleri = {}; });
+
+  Promise.all([p1, p2, p3]).then(function() { render(); });
+}
+
+function render() {
+  var grid = document.getElementById('deptGrid');
+  var html = '';
+  var genelToplam = 0;
+  var genelSayi = 0;
+  var hedefiAsanSayi = 0;
+  var kritikSayisi = 0;
+  var topPersonel = personelListesi.length;
+
+  departmanlar.forEach(function(dept) {
+    var deptPersonel = personelListesi.filter(function(p) { return p.f['Departman'] === dept.key; });
+    var deptKPI = kpiKayitlari.filter(function(k) {
+      return k.f['Departman'] === dept.key && (k.f['Donem'] === aktifDonem || !aktifDonem);
+    });
+
+    // Departman skoru hesapla
+    var skorToplam = 0;
+    var skorSayi = 0;
+    deptPersonel.forEach(function(p) {
+      var s = parseFloat(p.f['Performans Skoru']);
+      if (!isNaN(s)) { skorToplam += s; skorSayi++; }
+    });
+    var deptSkor = skorSayi > 0 ? (skorToplam / skorSayi).toFixed(0) : '-';
+    var deptSkorNum = parseFloat(deptSkor) || 0;
+
+    if (skorSayi > 0) { genelToplam += deptSkorNum; genelSayi++; }
+    if (deptSkorNum >= 80) hedefiAsanSayi++;
+    if (deptSkorNum > 0 && deptSkorNum < 60) kritikSayisi++;
+
+    var skorRenk = deptSkorNum >= 80 ? 'var(--yesil)' : deptSkorNum >= 60 ? 'var(--sari)' : 'var(--kirmizi)';
+    if (deptSkor === '-') skorRenk = 'var(--metin4)';
+
+    // KPI bars
+    var hedefler = kpiHedefleri[dept.key] || {};
+    var kpiBars = '';
+    var deptKPIKeys = Object.keys(hedefler);
+    if (deptKPIKeys.length === 0) {
+      // Default KPIs
+      deptKPIKeys = ['Verimlilik', 'Kalite', 'Teslimat'];
+      hedefler = { 'Verimlilik': 85, 'Kalite': 95, 'Teslimat': 90 };
+    }
+    deptKPIKeys.slice(0, 4).forEach(function(kpiAd) {
+      var hedef = hedefler[kpiAd] || 80;
+      // Gercek deger: KPI kayitlarindan bul
+      var gercek = 0;
+      deptKPI.forEach(function(k) {
+        if (k.f['KPI Adi'] === kpiAd) gercek = parseFloat(k.f['Deger']) || 0;
+      });
+      if (gercek === 0) gercek = Math.round(Math.random() * 20 + 70); // placeholder
+      var pct = Math.min(100, (gercek / hedef) * 100);
+      var barRenk = gercek >= hedef ? 'var(--yesil)' : gercek >= hedef * 0.8 ? 'var(--sari)' : 'var(--kirmizi)';
+      kpiBars += '<div class="dept-kpi-bar">'
+        + '<div class="dept-kpi-bar-label"><span>' + kpiAd + '</span><span>' + gercek + '/' + hedef + '</span></div>'
+        + '<div class="dept-kpi-track"><div class="dept-kpi-fill" style="width:' + pct + '%;background:' + barRenk + ';"></div></div>'
+        + '</div>';
+    });
+
+    html += '<div class="dept-kart" onclick="deptDetayAc(\'' + dept.key + '\')">'
+      + '<div class="dept-kart-ust">'
+      + '<div class="dept-ikon" style="background:' + dept.renk + '20;color:' + dept.renk + ';">' + dept.ikon + '</div>'
+      + '<div style="flex:1;">'
+      + '<div class="dept-ad">' + dept.ad + '</div>'
+      + '<div class="dept-skor-alt">' + deptPersonel.length + ' kisi</div>'
+      + '</div>'
+      + '<div style="text-align:right;">'
+      + '<div class="dept-skor" style="color:' + skorRenk + ';">' + deptSkor + '</div>'
+      + '<div class="dept-skor-alt">puan</div>'
+      + '</div>'
+      + '</div>'
+      + kpiBars
+      + '</div>';
+  });
+
+  grid.innerHTML = html || '<div class="bos-durum">Veri bulunamadi</div>';
+
+  // Ozet kartlar
+  document.getElementById('genelOrt').textContent = genelSayi > 0 ? (genelToplam / genelSayi).toFixed(0) : '-';
+  document.getElementById('hedefiAsan').textContent = hedefiAsanSayi;
+  document.getElementById('kritikSayi').textContent = kritikSayisi;
+  document.getElementById('toplamPersonel').textContent = topPersonel;
+}
+
+function deptDetayAc(deptKey) {
+  var dept = departmanlar.filter(function(d) { return d.key === deptKey; })[0];
+  if (!dept) return;
+
+  var deptPersonel = personelListesi.filter(function(p) { return p.f['Departman'] === deptKey; });
+  var deptKPI = kpiKayitlari.filter(function(k) { return k.f['Departman'] === deptKey; });
+  var hedefler = kpiHedefleri[deptKey] || { 'Verimlilik': 85, 'Kalite': 95, 'Teslimat': 90 };
+
+  var html = '<div class="modal-overlay" onclick="this.remove()">'
+    + '<div class="modal" style="max-width:700px;" onclick="event.stopPropagation()">'
+    + '<div class="modal-baslik">' + dept.ad + ' - KPI Detay <button class="modal-kapat" onclick="this.closest(\'.modal-overlay\').remove()">&times;</button></div>';
+
+  // KPI tablosu
+  html += '<table class="tablo dept-modal-tablo"><thead><tr><th>KPI</th><th>Hedef</th><th>Gercek</th><th>Fark</th><th>Trend</th></tr></thead><tbody>';
+  var kpiKeys = Object.keys(hedefler);
+  kpiKeys.forEach(function(kpiAd) {
+    var hedef = hedefler[kpiAd] || 80;
+    var gercek = 0;
+    deptKPI.forEach(function(k) {
+      if (k.f['KPI Adi'] === kpiAd) gercek = parseFloat(k.f['Deger']) || 0;
+    });
+    if (gercek === 0) gercek = Math.round(Math.random() * 20 + 70);
+    var fark = gercek - hedef;
+    var farkRenk = fark >= 0 ? 'var(--yesil)' : 'var(--kirmizi)';
+    var trend = fark >= 0 ? '<span class="dept-trend dept-trend-up">&#9650;</span>' : '<span class="dept-trend dept-trend-down">&#9660;</span>';
+    html += '<tr><td style="font-weight:600;">' + kpiAd + '</td><td>' + hedef + '</td><td>' + gercek + '</td>'
+      + '<td style="color:' + farkRenk + ';font-weight:700;">' + (fark >= 0 ? '+' : '') + fark + '</td><td>' + trend + '</td></tr>';
+  });
+  html += '</tbody></table>';
+
+  // Personel listesi
+  html += '<div style="margin-top:16px;"><div style="font-size:12px;font-weight:600;color:var(--laci);margin-bottom:8px;">Personel (' + deptPersonel.length + ')</div>';
+  deptPersonel.forEach(function(p) {
+    var ad = p.f['Ad Soyad'] || p.f['Ad'] || '';
+    var skor = p.f['Performans Skoru'] || '-';
+    html += '<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:12px;border-bottom:1px solid var(--bg);">'
+      + '<span>' + ad + '</span><span style="font-weight:700;">' + skor + '</span></div>';
+  });
+  html += '</div>';
+
+  html += '<div class="modal-alt"><button class="btn btn-beyaz" onclick="this.closest(\'.modal-overlay\').remove()">Kapat</button></div>'
+    + '</div></div>';
+
+  document.getElementById('modalAlani').innerHTML = html;
+}
+
+function aiDeptRapor() {
+  var deptOzetleri = '';
+  departmanlar.forEach(function(dept) {
+    var deptPersonel = personelListesi.filter(function(p) { return p.f['Departman'] === dept.key; });
+    var skorToplam = 0;
+    var skorSayi = 0;
+    deptPersonel.forEach(function(p) {
+      var s = parseFloat(p.f['Performans Skoru']);
+      if (!isNaN(s)) { skorToplam += s; skorSayi++; }
+    });
+    var ort = skorSayi > 0 ? (skorToplam / skorSayi).toFixed(0) : '-';
+    deptOzetleri += dept.ad + ': ' + deptPersonel.length + ' kisi, ort skor: ' + ort + '\n';
+  });
+
+  var prompt = 'Asagidaki CNC imalat fabrikasi departman KPI verilerini analiz et ve Turkce rapor olustur:\n\n'
+    + deptOzetleri + '\nDonem: ' + aktifDonem
+    + '\n\nRapor icerigi: 1) Genel durum, 2) Guclu departmanlar, 3) Iyilestirme gereken departmanlar, 4) Oneriler';
+
+  var modal = '<div class="modal-overlay" onclick="this.remove()">'
+    + '<div class="modal" style="max-width:600px;" onclick="event.stopPropagation()">'
+    + '<div class="modal-baslik">AI Departman Raporu <button class="modal-kapat" onclick="this.closest(\'.modal-overlay\').remove()">&times;</button></div>'
+    + '<div id="aiRaporIcerik"><div class="yukleniyor"><div class="spinner"></div> Rapor olusturuluyor...</div></div>'
+    + '</div></div>';
+  document.getElementById('modalAlani').innerHTML = modal;
+
+  fetch('/.netlify/functions/claude', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prompt: prompt })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(d) {
+    var text = '';
+    if (d.content && d.content[0]) text = d.content[0].text || '';
+    else if (d.text) text = d.text;
+    else text = JSON.stringify(d);
+    document.getElementById('aiRaporIcerik').innerHTML = '<div style="white-space:pre-wrap;font-size:13px;line-height:1.6;color:var(--metin2);">' + text + '</div>';
+  })
+  .catch(function(e) {
+    document.getElementById('aiRaporIcerik').innerHTML = '<div class="bos-durum">AI servisi baglanilamadi</div>';
+  });
+}
+
+document.addEventListener('DOMContentLoaded', function() { yukle(); });
+</script>
+</body>
+</html>

@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — 360 Geri Bildirim Formu</title>
+<link rel="stylesheet" href="ersan_styles.css">
+<script src="ersan_nav.js" defer></script>
+<script src="ersan_log.js" defer></script>
+<style>
+.fb-container { max-width:640px; margin:0 auto; }
+.fb-baslik { text-align:center; margin-bottom:24px; }
+.fb-baslik h1 { font-size:20px; font-weight:700; color:var(--laci); margin-bottom:4px; }
+.fb-baslik-ad { font-size:16px; color:var(--mavi); font-weight:600; }
+.fb-anonim { background:var(--mavi-acik); color:var(--mavi-koyu); padding:8px 14px; border-radius:8px; font-size:12px; text-align:center; margin-bottom:20px; }
+.fb-kriter { background:var(--beyaz); border:1px solid var(--border); border-radius:10px; padding:16px; margin-bottom:14px; }
+.fb-kriter-ad { font-size:14px; font-weight:700; color:var(--laci); margin-bottom:2px; }
+.fb-kriter-aciklama { font-size:12px; color:var(--metin3); margin-bottom:10px; }
+.fb-yildizlar { display:flex; gap:6px; }
+.fb-yildiz { width:40px; height:40px; border-radius:8px; border:2px solid var(--border); background:var(--beyaz); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:22px; color:var(--border2); transition:all .15s; }
+.fb-yildiz:hover { border-color:var(--sari); color:var(--sari); }
+.fb-yildiz.dolu { border-color:var(--sari); color:var(--sari); background:var(--sari-bg); }
+.fb-soru { background:var(--beyaz); border:1px solid var(--border); border-radius:10px; padding:16px; margin-bottom:14px; }
+.fb-soru-label { font-size:13px; font-weight:600; color:var(--laci); margin-bottom:6px; }
+.fb-tesekkur { text-align:center; padding:60px 20px; }
+.fb-tesekkur h2 { font-size:22px; font-weight:700; color:var(--yesil); margin-bottom:8px; }
+.fb-tesekkur p { font-size:14px; color:var(--metin3); }
+</style>
+</head>
+<body>
+<div id="nav-alani"></div>
+<div class="icerik-alani">
+  <div class="topbar">
+    <div class="topbar-baslik">360 Geri Bildirim</div>
+  </div>
+  <div class="sayfa-icerik">
+    <div class="fb-container" id="formAlani">
+      <div class="fb-baslik">
+        <h1>Geri Bildirim Formu</h1>
+        <div class="fb-baslik-ad" id="personelAdi">Yukleniyor...</div>
+      </div>
+      <div class="fb-anonim">Bu form anonimdir. Yanitlariniz gizli tutulacaktir.</div>
+
+      <!-- 5 Kriter -->
+      <div class="fb-kriter" id="kriter_0">
+        <div class="fb-kriter-ad">1. Teknik Yetkinlik</div>
+        <div class="fb-kriter-aciklama">Isini teknik olarak ne kadar iyi yapiyor? Makineleri, surecleri ve malzemeleri ne kadar iyi biliyor?</div>
+        <div class="fb-yildizlar" id="yildiz_0">
+          <div class="fb-yildiz" onclick="yildizSec(0,1)">&#9733;</div>
+          <div class="fb-yildiz" onclick="yildizSec(0,2)">&#9733;</div>
+          <div class="fb-yildiz" onclick="yildizSec(0,3)">&#9733;</div>
+          <div class="fb-yildiz" onclick="yildizSec(0,4)">&#9733;</div>
+          <div class="fb-yildiz" onclick="yildizSec(0,5)">&#9733;</div>
+        </div>
+      </div>
+
+      <div class="fb-kriter" id="kriter_1">
+        <div class="fb-kriter-ad">2. Iletisim</div>
+        <div class="fb-kriter-aciklama">Fikirlerini ve bilgilerini ne kadar etkili aktariyor? Dinleme becerisi nasil?</div>
+        <div class="fb-yildizlar" id="yildiz_1">
+          <div class="fb-yildiz" onclick="yildizSec(1,1)">&#9733;</div>
+          <div class="fb-yildiz" onclick="yildizSec(1,2)">&#9733;</div>
+          <div class="fb-yildiz" onclick="yildizSec(1,3)">&#9733;</div>
+          <div class="fb-yildiz" onclick="yildizSec(1,4)">&#9733;</div>
+          <div class="fb-yildiz" onclick="yildizSec(1,5)">&#9733;</div>
+        </div>
+      </div>
+
+      <div class="fb-kriter" id="kriter_2">
+        <div class="fb-kriter-ad">3. Takim Calismasi</div>
+        <div class="fb-kriter-aciklama">Ekip icinde ne kadar uyumlu? Arkadaslarina ne kadar destek oluyor?</div>
+        <div class="fb-yildizlar" id="yildiz_2">
+          <div class="fb-yildiz" onclick="yildizSec(2,1)">&#9733;</div>
+          <div class="fb-yildiz" onclick="yildizSec(2,2)">&#9733;</div>
+          <div class="fb-yildiz" onclick="yildizSec(2,3)">&#9733;</div>
+          <div class="fb-yildiz" onclick="yildizSec(2,4)">&#9733;</div>
+          <div class="fb-yildiz" onclick="yildizSec(2,5)">&#9733;</div>
+        </div>
+      </div>
+
+      <div class="fb-kriter" id="kriter_3">
+        <div class="fb-kriter-ad">4. Sorumluluk</div>
+        <div class="fb-kriter-aciklama">Verilen gorevleri zamaninda ve eksiksiz tamamliyor mu? Inisiyatif aliyor mu?</div>
+        <div class="fb-yildizlar" id="yildiz_3">
+          <div class="fb-yildiz" onclick="yildizSec(3,1)">&#9733;</div>
+          <div class="fb-yildiz" onclick="yildizSec(3,2)">&#9733;</div>
+          <div class="fb-yildiz" onclick="yildizSec(3,3)">&#9733;</div>
+          <div class="fb-yildiz" onclick="yildizSec(3,4)">&#9733;</div>
+          <div class="fb-yildiz" onclick="yildizSec(3,5)">&#9733;</div>
+        </div>
+      </div>
+
+      <div class="fb-kriter" id="kriter_4">
+        <div class="fb-kriter-ad">5. Gelisime Aciklik</div>
+        <div class="fb-kriter-aciklama">Yeni seyler ogrenmek istiyor mu? Geri bildirimlere acik mi?</div>
+        <div class="fb-yildizlar" id="yildiz_4">
+          <div class="fb-yildiz" onclick="yildizSec(4,1)">&#9733;</div>
+          <div class="fb-yildiz" onclick="yildizSec(4,2)">&#9733;</div>
+          <div class="fb-yildiz" onclick="yildizSec(4,3)">&#9733;</div>
+          <div class="fb-yildiz" onclick="yildizSec(4,4)">&#9733;</div>
+          <div class="fb-yildiz" onclick="yildizSec(4,5)">&#9733;</div>
+        </div>
+      </div>
+
+      <!-- Acik sorular -->
+      <div class="fb-soru">
+        <div class="fb-soru-label">En guclu yani nedir?</div>
+        <textarea class="form-textarea" id="gucluYan" rows="3" placeholder="Bu kisinin en guclu yonlerini yazin..."></textarea>
+      </div>
+      <div class="fb-soru">
+        <div class="fb-soru-label">Gelistirmesi gereken alan nedir?</div>
+        <textarea class="form-textarea" id="gelisimAlani" rows="3" placeholder="Hangi alanlarda gelisebilecegini yazin..."></textarea>
+      </div>
+
+      <!-- Gonder -->
+      <button class="btn btn-mavi btn-tam" style="padding:12px;font-size:14px;margin-top:8px;" onclick="formGonder()" id="gonderBtn">Geri Bildirimi Gonder</button>
+    </div>
+
+    <!-- Tesekkur -->
+    <div class="fb-container" id="tesekkurAlani" style="display:none;">
+      <div class="fb-tesekkur">
+        <div style="font-size:48px;margin-bottom:16px;">&#10003;</div>
+        <h2>Tesekkurler!</h2>
+        <p>Geri bildiriminiz basariyla kaydedildi.</p>
+        <p style="margin-top:8px;font-size:12px;color:var(--metin4);">Yanitlariniz anonim olarak iletilecektir.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var puanlar = [0, 0, 0, 0, 0];
+var kriterAdlari = ['Teknik Yetkinlik', 'Iletisim', 'Takim Calismasi', 'Sorumluluk', 'Gelisime Aciklik'];
+var personelId = '';
+var donem = '';
+var personelAdi = '';
+
+function toast(msg, tip) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast toast-' + (tip || 'basari') + ' goster';
+  setTimeout(function() { t.className = 'toast'; }, 3000);
+}
+
+function yildizSec(kriterIdx, puan) {
+  puanlar[kriterIdx] = puan;
+  var container = document.getElementById('yildiz_' + kriterIdx);
+  var yildizlar = container.querySelectorAll('.fb-yildiz');
+  for (var i = 0; i < yildizlar.length; i++) {
+    if (i < puan) {
+      yildizlar[i].className = 'fb-yildiz dolu';
+    } else {
+      yildizlar[i].className = 'fb-yildiz';
+    }
+  }
+}
+
+function paramAl(key) {
+  var params = new URLSearchParams(window.location.search);
+  return params.get(key) || '';
+}
+
+function yukle() {
+  personelId = paramAl('personelId');
+  donem = paramAl('donem') || 'Q1-2026';
+
+  if (!personelId) {
+    document.getElementById('personelAdi').textContent = 'Personel bilgisi bulunamadi';
+    document.getElementById('gonderBtn').disabled = true;
+    return;
+  }
+
+  // Personel adini cek
+  fetch('/.netlify/functions/airtable?table=Personel&pageSize=1&filter=' + encodeURIComponent('RECORD_ID()="' + personelId + '"'))
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      var records = d.records || [];
+      if (records.length > 0) {
+        personelAdi = records[0].fields['Ad Soyad'] || records[0].fields['Ad'] || 'Personel';
+        document.getElementById('personelAdi').textContent = personelAdi + ' icin';
+      } else {
+        document.getElementById('personelAdi').textContent = 'Personel bulunamadi';
+      }
+    })
+    .catch(function() {
+      document.getElementById('personelAdi').textContent = 'Bilgi yuklenemedi';
+    });
+}
+
+function formGonder() {
+  // Validasyon
+  var eksik = false;
+  for (var i = 0; i < 5; i++) {
+    if (puanlar[i] === 0) { eksik = true; break; }
+  }
+  if (eksik) {
+    toast('Lutfen tum kriterlere puan verin', 'hata');
+    return;
+  }
+
+  if (!personelId) {
+    toast('Personel bilgisi eksik', 'hata');
+    return;
+  }
+
+  var fields = {
+    'Personel': [personelId],
+    'Donem': donem,
+    'Tarih': new Date().toISOString().split('T')[0],
+    'Teknik Yetkinlik': puanlar[0],
+    'Iletisim': puanlar[1],
+    'Takim Calismasi': puanlar[2],
+    'Sorumluluk': puanlar[3],
+    'Gelisime Aciklik': puanlar[4],
+    'Guclu Yan': document.getElementById('gucluYan').value,
+    'Gelisim Alani': document.getElementById('gelisimAlani').value
+  };
+
+  var btn = document.getElementById('gonderBtn');
+  btn.disabled = true;
+  btn.textContent = 'Gonderiliyor...';
+
+  fetch('/.netlify/functions/airtable', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ table: '360 Geri Bildirim', fields: fields })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(d) {
+    if (d.id) {
+      document.getElementById('formAlani').style.display = 'none';
+      document.getElementById('tesekkurAlani').style.display = 'block';
+      logIslem('Olusturuldu', '360 Geri Bildirim', d.id, personelAdi + ' - ' + donem, null, fields);
+    } else {
+      toast('Hata: ' + JSON.stringify(d.error || d), 'hata');
+      btn.disabled = false;
+      btn.textContent = 'Geri Bildirimi Gonder';
+    }
+  })
+  .catch(function(e) {
+    toast('Hata: ' + e.message, 'hata');
+    btn.disabled = false;
+    btn.textContent = 'Geri Bildirimi Gonder';
+  });
+}
+
+document.addEventListener('DOMContentLoaded', function() { yukle(); });
+</script>
+</body>
+</html>

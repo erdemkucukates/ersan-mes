@@ -3,464 +3,577 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ersan MES — Personel & Yetkinlik Yönetimi</title>
+<title>Ersan MES — Personel 360</title>
 <link rel="stylesheet" href="ersan_styles.css">
 <script src="ersan_nav.js" defer></script>
 <script src="ersan_log.js" defer></script>
+<style>
+.p360-slider-wrap { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+.p360-slider-label { width:130px; font-size:12px; font-weight:600; color:var(--metin2); }
+.p360-slider { flex:1; -webkit-appearance:none; height:6px; border-radius:3px; background:var(--border); outline:none; }
+.p360-slider::-webkit-slider-thumb { -webkit-appearance:none; width:18px; height:18px; border-radius:50%; background:var(--mavi); cursor:pointer; }
+.p360-slider-val { width:30px; text-align:center; font-size:13px; font-weight:700; color:var(--laci); }
+.p360-radar { display:flex; justify-content:center; padding:20px 0; }
+.p360-radar-box { position:relative; width:280px; height:280px; }
+.p360-radar-axis { position:absolute; background:var(--border); }
+.p360-bar-row { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+.p360-bar-label { width:60px; font-size:11px; color:var(--metin3); text-align:right; }
+.p360-bar-track { flex:1; height:20px; background:var(--bg); border-radius:4px; overflow:hidden; }
+.p360-bar-fill { height:100%; border-radius:4px; transition:width .3s; display:flex; align-items:center; justify-content:flex-end; padding-right:6px; font-size:10px; font-weight:700; color:#fff; }
+.p360-initials { width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:#fff; flex-shrink:0; }
+.p360-skor-big { font-size:36px; font-weight:800; color:var(--laci); line-height:1; }
+.p360-ai-plan { background:var(--bg2); border:1px solid var(--border); border-radius:8px; padding:16px; white-space:pre-wrap; font-size:13px; line-height:1.6; color:var(--metin2); max-height:500px; overflow-y:auto; }
+.p360-goal-item { display:flex; align-items:center; gap:8px; padding:8px 0; border-bottom:1px solid var(--bg); font-size:12px; }
+.p360-goal-done { color:var(--yesil); }
+.p360-goal-pending { color:var(--metin4); }
+</style>
 </head>
 <body>
 <div id="nav-alani"></div>
 <div class="icerik-alani">
   <div class="topbar">
-    <div class="topbar-baslik">Personel</div>
+    <div class="topbar-baslik">Personel 360</div>
     <div style="display:flex;align-items:center;gap:8px;">
       <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
     </div>
   </div>
   <div class="sayfa-icerik">
+    <div class="iki-panel">
 
-<div class="layout-wrapper">
-
-  <!-- LEFT: Personel Listesi -->
-  <div class="list-panel">
-    <div class="list-header">
-      <h2>Personel</h2>
-      <div class="list-count" id="listCount">Yükleniyor…</div>
-    </div>
-    <div class="list-search">
-      <input type="text" id="searchInput" placeholder="Ara…" oninput="filterList()">
-    </div>
-    <div class="list-scroll" id="listScroll">
-      <div class="loading-row"><div class="spinner"></div> Yükleniyor…</div>
-    </div>
-  </div>
-
-  <!-- RIGHT: Detay Paneli -->
-  <div class="detail-panel">
-    <div class="detail-toolbar" id="detailToolbar">
-      <span class="detail-name" id="detailName" style="color:var(--text3);">Bir personel seçin</span>
-    </div>
-    <div class="detail-scroll" id="detailScroll">
-      <div class="empty">
-        <div class="empty-icon">👥</div>
-        <div style="font-size:13px;font-weight:500;">Personel Seçin</div>
-        <div style="font-size:12px;">Sol listeden bir personel seçerek detaylarını görüntüleyin.</div>
+      <!-- SOL PANEL -->
+      <div class="sol-panel">
+        <div class="sol-panel-ust">
+          <div class="sol-panel-baslik">Personel</div>
+          <div id="listCount" style="font-size:11px;color:var(--metin4);">0</div>
+        </div>
+        <div class="sol-arama">
+          <input type="text" id="aramaInput" placeholder="Ara..." oninput="listeFiltrele()">
+        </div>
+        <div class="sol-filtre" id="filtreBtns">
+          <button class="filtre-btn aktif" onclick="filtreAyarla(this,'Tumu')">Tumu</button>
+          <button class="filtre-btn" onclick="filtreAyarla(this,'Uretim')">Uretim</button>
+          <button class="filtre-btn" onclick="filtreAyarla(this,'Kalite')">Kalite</button>
+          <button class="filtre-btn" onclick="filtreAyarla(this,'Satis')">Satis</button>
+          <button class="filtre-btn" onclick="filtreAyarla(this,'Satinalma')">Satinalma</button>
+          <button class="filtre-btn" onclick="filtreAyarla(this,'Bakim')">Bakim</button>
+          <button class="filtre-btn" onclick="filtreAyarla(this,'Yonetim')">Yonetim</button>
+        </div>
+        <div class="sol-liste" id="personelListe">
+          <div class="yukleniyor"><div class="spinner"></div> Yukleniyor...</div>
+        </div>
       </div>
+
+      <!-- SAG PANEL -->
+      <div class="sag-panel">
+        <div id="sagBos" class="bos-durum" style="flex:1;">
+          <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0ZM12 14c-4.418 0-8 1.79-8 4v2h16v-2c0-2.21-3.582-4-8-4Z"/></svg>
+          <span>Listeden bir personel secin</span>
+        </div>
+        <div id="sagIcerik" style="display:none;flex:1;display:none;flex-direction:column;">
+          <!-- SEKME BAR -->
+          <div class="sekme-bar" id="sekmeBar">
+            <div class="sekme aktif" onclick="sekmeAc(0)">Genel Bakis</div>
+            <div class="sekme" onclick="sekmeAc(1)">Degerlendirme</div>
+            <div class="sekme" onclick="sekmeAc(2)">AI Gelisim Plani</div>
+            <div class="sekme" onclick="sekmeAc(3)">360 Geri Bildirim</div>
+            <div class="sekme" onclick="sekmeAc(4)">Gelisim Gecmisi</div>
+          </div>
+          <div class="sag-panel-icerik" id="sekmeIcerik" style="overflow-y:auto;"></div>
+        </div>
+      </div>
+
     </div>
   </div>
-
 </div>
 
-<div class="toast-wrap" id="toastWrap"></div>
-
-  </div>
-</div>
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
 
 <script>
-// ── CONFIG ──────────────────────────────────────────────────────────────
-const BASE = 'app5LDgJMgocw79Ix';
-const T = {
-  personel: 'tblwG9GqnLC9oFZzb',
-  tezgah:   'tblsBXDsWACBAFEJ5'
-};
-const PROXY = '/.netlify/functions/airtable';
+var personelListesi = [];
+var seciliPersonel = null;
+var aktifFiltre = 'Tumu';
+var aktifSekme = 0;
+var degerlendirmeler = [];
+var kpiKayitlari = [];
+var ucYuzAlti = [];
 
-// ── STATE ────────────────────────────────────────────────────────────────
-let allPersonel = [];
-let allTezgahlar = [];
-let selectedId = null;
-let tezgahlarLoaded = false;
-
-// ── API HELPERS ──────────────────────────────────────────────────────────
-async function atGet(table, filter, sort, dir) {
-  const p = new URLSearchParams({ table });
-  if (filter) p.append('filter', filter);
-  if (sort)   p.append('sort', sort);
-  if (dir)    p.append('dir', dir);
-  const r = await fetch(`${PROXY}?${p}`);
-  if (!r.ok) throw new Error('API hatası: ' + r.status);
-  return r.json();
-}
-
-async function atGetAll(table, sort, dir) {
-  let records = [], offset = null;
-  do {
-    const p = new URLSearchParams({ table });
-    if (sort)   p.append('sort', sort);
-    if (dir)    p.append('dir', dir);
-    if (offset) p.append('offset', offset);
-    const r = await fetch(`${PROXY}?${p}`);
-    const d = await r.json();
-    if (d.records) records = records.concat(d.records);
-    offset = d.offset || null;
-  } while (offset);
-  return records;
-}
-
-async function atPatch(table, id, fields) {
-  const r = await fetch(PROXY, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ table, id, fields })
-  });
-  if (!r.ok) throw new Error('Kayıt hatası: ' + r.status);
-  return r.json();
-}
-
-// ── TOAST ────────────────────────────────────────────────────────────────
-function toast(msg, type='ok') {
-  const w = document.getElementById('toastWrap');
-  const t = document.createElement('div');
-  t.className = 'toast ' + type;
+// ── TOAST ──
+function toast(msg, tip) {
+  var t = document.getElementById('toast');
   t.textContent = msg;
-  w.appendChild(t);
-  setTimeout(() => t.remove(), 3000);
+  t.className = 'toast toast-' + (tip || 'basari') + ' goster';
+  setTimeout(function() { t.className = 'toast'; }, 3000);
 }
 
-// ── LOAD PERSONEL ────────────────────────────────────────────────────────
-async function loadPersonel() {
-  try {
-    const records = await atGetAll(T.personel, 'Ad Soyad', 'asc');
-    allPersonel = records;
-    renderList(allPersonel);
-  } catch(e) {
-    document.getElementById('listScroll').innerHTML =
-      '<div class="list-empty">Yüklenemedi: ' + e.message + '</div>';
-  }
+// ── VERI YUKLE ──
+function yukle() {
+  fetch('/.netlify/functions/airtable?table=Personel&pageSize=100')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      personelListesi = (d.records || []).map(function(r) {
+        return { id: r.id, f: r.fields || {} };
+      });
+      listeRender();
+    })
+    .catch(function(e) {
+      console.error('Personel yuklenemedi:', e);
+      document.getElementById('personelListe').innerHTML = '<div class="bos-durum">Veri yuklenemedi</div>';
+    });
 }
 
-function renderList(list) {
-  const el = document.getElementById('listScroll');
-  const cnt = document.getElementById('listCount');
-  cnt.textContent = list.length + ' personel';
-  if (!list.length) {
-    el.innerHTML = '<div class="list-empty">Kayıt bulunamadı.</div>';
+function listeFiltrele() { listeRender(); }
+
+function filtreAyarla(btn, filtre) {
+  aktifFiltre = filtre;
+  var btns = document.querySelectorAll('#filtreBtns .filtre-btn');
+  for (var i = 0; i < btns.length; i++) btns[i].className = 'filtre-btn';
+  btn.className = 'filtre-btn aktif';
+  listeRender();
+}
+
+function listeRender() {
+  var arama = (document.getElementById('aramaInput').value || '').toLowerCase();
+  var filtered = personelListesi.filter(function(p) {
+    var ad = (p.f['Ad Soyad'] || p.f['Ad'] || '').toLowerCase();
+    var dept = p.f['Departman'] || '';
+    var aramaOk = !arama || ad.indexOf(arama) > -1;
+    var filtreOk = aktifFiltre === 'Tumu' || dept === aktifFiltre;
+    return aramaOk && filtreOk;
+  });
+  document.getElementById('listCount').textContent = filtered.length + ' kisi';
+  if (filtered.length === 0) {
+    document.getElementById('personelListe').innerHTML = '<div class="bos-durum">Kayit bulunamadi</div>';
     return;
   }
-  el.innerHTML = list.map(r => {
-    const f = r.fields;
-    const aktif = f['Aktif mi?'] === true;
-    const gorev = f['Görevi'] || '';
-    return `<div class="liste-satir${r.id===selectedId?' secili':''}" onclick="selectPersonel('${r.id}')">
-      <div class="p-name">${esc(f['Ad Soyad'] || '—')}</div>
-      ${gorev ? `<div class="p-gorev">${esc(gorev)}</div>` : ''}
-      <div class="p-badges">
-        <span class="${aktif?'badge-aktif':'badge-pasif'}">${aktif?'Aktif':'Pasif'}</span>
-      </div>
-    </div>`;
-  }).join('');
+  var html = '';
+  filtered.forEach(function(p) {
+    var ad = p.f['Ad Soyad'] || p.f['Ad'] || 'Isimsiz';
+    var gorev = p.f['Gorev'] || p.f['Pozisyon'] || '';
+    var dept = p.f['Departman'] || '';
+    var skor = p.f['Performans Skoru'] || '-';
+    var secili = (seciliPersonel && seciliPersonel.id === p.id) ? ' secili' : '';
+    var initials = ad.split(' ').map(function(w) { return w.charAt(0); }).join('').substring(0, 2).toUpperCase();
+    var renk = skorRenk(skor);
+    html += '<div class="liste-satir' + secili + '" onclick="personelSec(\'' + p.id + '\')">'
+      + '<div style="display:flex;align-items:center;gap:10px;">'
+      + '<div class="p360-initials" style="background:' + renk + ';">' + initials + '</div>'
+      + '<div>'
+      + '<div class="liste-satir-ad">' + ad + '</div>'
+      + '<div class="liste-satir-alt">'
+      + '<span style="font-size:11px;color:var(--metin3);">' + gorev + '</span>'
+      + '</div>'
+      + '</div>'
+      + '</div>'
+      + '<div class="liste-satir-alt" style="margin-top:4px;">'
+      + '<span class="badge badge-mavi">' + dept + '</span>'
+      + '<span style="font-size:12px;font-weight:700;color:' + renk + ';">' + skor + '</span>'
+      + '</div>'
+      + '</div>';
+  });
+  document.getElementById('personelListe').innerHTML = html;
 }
 
-function filterList() {
-  const q = document.getElementById('searchInput').value.toLowerCase();
-  if (!q) { renderList(allPersonel); return; }
-  renderList(allPersonel.filter(r => {
-    const f = r.fields;
-    return (f['Ad Soyad']||'').toLowerCase().includes(q)
-        || (f['Görevi']||'').toLowerCase().includes(q)
-        || (f['Personel Kodu']||'').toLowerCase().includes(q);
-  }));
+function skorRenk(s) {
+  var n = parseFloat(s);
+  if (isNaN(n)) return 'var(--metin4)';
+  if (n >= 80) return 'var(--yesil)';
+  if (n >= 60) return 'var(--sari)';
+  return 'var(--kirmizi)';
 }
 
-// ── SELECT PERSONEL ──────────────────────────────────────────────────────
-async function selectPersonel(id) {
-  selectedId = id;
-  const rec = allPersonel.find(r => r.id === id);
-  if (!rec) return;
-  renderList(document.getElementById('searchInput').value.toLowerCase()
-    ? allPersonel.filter(r => {
-        const q = document.getElementById('searchInput').value.toLowerCase();
-        const f = r.fields;
-        return (f['Ad Soyad']||'').toLowerCase().includes(q)
-            || (f['Görevi']||'').toLowerCase().includes(q)
-            || (f['Personel Kodu']||'').toLowerCase().includes(q);
-      })
-    : allPersonel);
+function personelSec(id) {
+  seciliPersonel = personelListesi.filter(function(p) { return p.id === id; })[0] || null;
+  if (!seciliPersonel) return;
+  listeRender();
+  document.getElementById('sagBos').style.display = 'none';
+  var si = document.getElementById('sagIcerik');
+  si.style.display = 'flex';
+  si.style.flexDirection = 'column';
+  si.style.flex = '1';
+  aktifSekme = 0;
+  sekmeBarGuncelle();
+  personelVerilerYukle();
+}
 
-  const f = rec.fields;
-  document.getElementById('detailName').textContent = f['Ad Soyad'] || '—';
-  document.getElementById('detailName').style.color = '';
+function personelVerilerYukle() {
+  var pid = seciliPersonel.id;
+  degerlendirmeler = [];
+  kpiKayitlari = [];
+  ucYuzAlti = [];
 
-  const ds = document.getElementById('detailScroll');
-  ds.innerHTML = renderDetailCards(rec);
+  var p1 = fetch('/.netlify/functions/airtable?table=Performans%20Degerlendirmeleri&pageSize=50&filter=' + encodeURIComponent('{Personel}="' + pid + '"'))
+    .then(function(r) { return r.json(); })
+    .then(function(d) { degerlendirmeler = (d.records || []).map(function(r) { return { id: r.id, f: r.fields || {} }; }); })
+    .catch(function() { degerlendirmeler = []; });
 
-  if (!tezgahlarLoaded) {
-    await loadTezgahlar();
+  var p2 = fetch('/.netlify/functions/airtable?table=KPI%20Kayitlari&pageSize=50&filter=' + encodeURIComponent('{Personel}="' + pid + '"'))
+    .then(function(r) { return r.json(); })
+    .then(function(d) { kpiKayitlari = (d.records || []).map(function(r) { return { id: r.id, f: r.fields || {} }; }); })
+    .catch(function() { kpiKayitlari = []; });
+
+  var p3 = fetch('/.netlify/functions/airtable?table=360%20Geri%20Bildirim&pageSize=50&filter=' + encodeURIComponent('{Personel}="' + pid + '"'))
+    .then(function(r) { return r.json(); })
+    .then(function(d) { ucYuzAlti = (d.records || []).map(function(r) { return { id: r.id, f: r.fields || {} }; }); })
+    .catch(function() { ucYuzAlti = []; });
+
+  Promise.all([p1, p2, p3]).then(function() {
+    sekmeIcerikRender();
+  });
+}
+
+// ── SEKME ──
+function sekmeAc(idx) {
+  aktifSekme = idx;
+  sekmeBarGuncelle();
+  sekmeIcerikRender();
+}
+
+function sekmeBarGuncelle() {
+  var sekmeler = document.querySelectorAll('#sekmeBar .sekme');
+  for (var i = 0; i < sekmeler.length; i++) {
+    sekmeler[i].className = i === aktifSekme ? 'sekme aktif' : 'sekme';
   }
-  renderYetkinlikMatrisi(rec);
 }
 
-function renderDetailCards(rec) {
-  const f = rec.fields;
-  const aktif = f['Aktif mi?'] === true;
-  const girisTarihi = f['İşe Giriş Tarihi'] || '';
-
-  return `
-  <!-- Card 1: Kişisel Bilgiler -->
-  <div class="card" id="card-kisel">
-    <div class="card-header">
-      <div class="card-dot" style="background:var(--accent)"></div>
-      Kişisel Bilgiler
-    </div>
-    <div class="card-body">
-      <div class="form-grid">
-        <div class="fg">
-          <div class="fl">Ad Soyad</div>
-          <input class="fi" id="f-adSoyad" type="text" value="${esc(f['Ad Soyad']||'')}">
-        </div>
-        <div class="fg">
-          <div class="fl">Personel Kodu</div>
-          <input class="fi" id="f-personelKodu" type="text" value="${esc(f['Personel Kodu']||'')}">
-        </div>
-        <div class="fg">
-          <div class="fl">Görevi</div>
-          <select class="fi" id="f-gorevi">
-            <option value="">— Seçiniz —</option>
-            ${['Operatör','Teknisyen','Mühendis','Kalite','Yönetici','Diğer'].map(g =>
-              `<option value="${g}"${f['Görevi']===g?' selected':''}>${g}</option>`
-            ).join('')}
-          </select>
-        </div>
-        <div class="fg">
-          <div class="fl">Telefon</div>
-          <input class="fi" id="f-telefon" type="tel" value="${esc(f['Telefon']||'')}">
-        </div>
-        <div class="fg">
-          <div class="fl">E-posta</div>
-          <input class="fi" id="f-eposta" type="email" value="${esc(f['E-posta']||'')}">
-        </div>
-        <div class="fg">
-          <div class="fl">İşe Giriş Tarihi</div>
-          <input class="fi" id="f-girisTarihi" type="date" value="${girisTarihi}">
-        </div>
-        <div class="fg full">
-          <div class="fl">Durum</div>
-          <div class="aktif-row">
-            <input type="checkbox" id="f-aktif" ${aktif?'checked':''}>
-            <label for="f-aktif">Aktif personel</label>
-          </div>
-        </div>
-      </div>
-      <div class="save-row">
-        <span class="save-status" id="saveStatus1"></span>
-        <button class="btn primary" onclick="saveKisel('${rec.id}')">Kaydet</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Card 2: Yetkinlik Matrisi -->
-  <div class="card" id="card-yetkinlik">
-    <div class="card-header">
-      <div class="card-dot" style="background:var(--orange)"></div>
-      Yetkinlik Matrisi
-      <span style="margin-left:auto;font-size:11px;color:var(--text3);font-family:var(--mono);">Tezgah Bazlı</span>
-    </div>
-    <div class="card-body" id="yetkinlikBody">
-      <div class="loading-row"><div class="spinner"></div> Tezgahlar yükleniyor…</div>
-    </div>
-  </div>
-
-  <!-- Card 3: Aktivite -->
-  <div class="card">
-    <div class="card-header">
-      <div class="card-dot" style="background:var(--blue)"></div>
-      Aktivite
-    </div>
-    <div class="card-body">
-      <div class="akt-box">
-        <p>Bu personelin sistem aktiviteleri ve değişiklik logları<br>
-        <a href="ersan_sistem_logu.html">Sistem Logu</a> sayfasından görüntülenebilir.</p>
-      </div>
-    </div>
-  </div>
-  `;
+function sekmeIcerikRender() {
+  if (!seciliPersonel) return;
+  var el = document.getElementById('sekmeIcerik');
+  if (aktifSekme === 0) el.innerHTML = renderGenelBakis();
+  else if (aktifSekme === 1) el.innerHTML = renderDegerlendirme();
+  else if (aktifSekme === 2) el.innerHTML = renderAIGelisim();
+  else if (aktifSekme === 3) el.innerHTML = render360();
+  else if (aktifSekme === 4) el.innerHTML = renderGelisimGecmisi();
 }
 
-// ── KAYDET: KİŞİSEL ─────────────────────────────────────────────────────
-async function saveKisel(id) {
-  const btn = document.querySelector('[onclick="saveKisel(\'' + id + '\')"]');
-  const status = document.getElementById('saveStatus1');
-  const rec = allPersonel.find(r => r.id === id);
-  if (!rec) return;
+// ── TAB 1: GENEL BAKIS ──
+function renderGenelBakis() {
+  var f = seciliPersonel.f;
+  var ad = f['Ad Soyad'] || f['Ad'] || '';
+  var skor = f['Performans Skoru'] || '-';
+  var kidem = f['Ise Giris Tarihi'] || f['Baslangic Tarihi'] || '-';
+  var devamsizlik = f['Devamsizlik'] || 0;
+  var egitimSayisi = f['Egitim Sayisi'] || 0;
+  var donemDeger = degerlendirmeler.length > 0 ? (degerlendirmeler[0].f['Ortalama'] || '-') : '-';
 
-  const oldFields = {
-    'Ad Soyad': rec.fields['Ad Soyad'] || '',
-    'Personel Kodu': rec.fields['Personel Kodu'] || '',
-    'Görevi': rec.fields['Görevi'] || '',
-    'Telefon': rec.fields['Telefon'] || '',
-    'E-posta': rec.fields['E-posta'] || '',
-    'İşe Giriş Tarihi': rec.fields['İşe Giriş Tarihi'] || '',
-    'Aktif mi?': rec.fields['Aktif mi?'] || false,
+  var html = '<div style="padding:4px 0 12px;"><span style="font-size:16px;font-weight:700;color:var(--laci);">' + ad + '</span></div>';
+
+  // KPI Cards
+  html += '<div class="kpi-grid">';
+  html += '<div class="kpi-kart"><div class="kpi-etiket">Performans Skoru</div><div class="p360-skor-big">' + skor + '</div></div>';
+  html += '<div class="kpi-kart sari"><div class="kpi-etiket">Donem Degerlendirme</div><div class="kpi-deger">' + donemDeger + '</div></div>';
+  html += '<div class="kpi-kart"><div class="kpi-etiket">Egitim Sayisi</div><div class="kpi-deger">' + egitimSayisi + '</div></div>';
+  html += '<div class="kpi-kart kirmizi"><div class="kpi-etiket">Devamsizlik (gun)</div><div class="kpi-deger">' + devamsizlik + '</div></div>';
+  html += '<div class="kpi-kart yesil"><div class="kpi-etiket">Kidem</div><div class="kpi-deger" style="font-size:14px;">' + kidem + '</div></div>';
+  html += '</div>';
+
+  // Son 3 degerlendirme
+  html += '<div class="kart"><div class="kart-baslik">Son 3 Degerlendirme</div>';
+  if (degerlendirmeler.length === 0) {
+    html += '<div class="bos-durum">Henuz degerlendirme yok</div>';
+  } else {
+    html += '<table class="tablo"><thead><tr><th>Donem</th><th>Teknik</th><th>Kalite</th><th>Hiz</th><th>Takim</th><th>Ort.</th></tr></thead><tbody>';
+    var son3 = degerlendirmeler.slice(0, 3);
+    son3.forEach(function(d) {
+      html += '<tr>'
+        + '<td>' + (d.f['Donem'] || '-') + '</td>'
+        + '<td>' + (d.f['Teknik Beceri'] || '-') + '</td>'
+        + '<td>' + (d.f['Kalite Odagi'] || '-') + '</td>'
+        + '<td>' + (d.f['Hiz'] || '-') + '</td>'
+        + '<td>' + (d.f['Takim'] || '-') + '</td>'
+        + '<td style="font-weight:700;">' + (d.f['Ortalama'] || '-') + '</td>'
+        + '</tr>';
+    });
+    html += '</tbody></table>';
+  }
+  html += '</div>';
+  return html;
+}
+
+// ── TAB 2: DEGERLENDIRME ──
+function renderDegerlendirme() {
+  var html = '<div class="kart"><div class="kart-baslik">Performans Degerlendirme Formu</div>';
+  html += '<div class="form-grup"><label class="form-label">Donem</label><input class="form-input" id="degDonem" placeholder="Q1-2026"></div>';
+
+  var kriterler = ['Teknik Beceri', 'Kalite Odagi', 'Hiz', 'Takim Calismasi', 'Sorumluluk'];
+  kriterler.forEach(function(k, i) {
+    html += '<div class="p360-slider-wrap">'
+      + '<div class="p360-slider-label">' + k + '</div>'
+      + '<input type="range" class="p360-slider" id="slider_' + i + '" min="1" max="10" value="5" oninput="sliderDegisti(' + i + ')">'
+      + '<div class="p360-slider-val" id="sliderVal_' + i + '">5</div>'
+      + '</div>';
+  });
+
+  html += '<div class="form-grid-2">'
+    + '<div class="form-grup"><label class="form-label">Guclu Yanlari</label><textarea class="form-textarea" id="degGuclu" rows="3" placeholder="Guclu yanlari..."></textarea></div>'
+    + '<div class="form-grup"><label class="form-label">Gelisim Alanlari</label><textarea class="form-textarea" id="degGelisim" rows="3" placeholder="Gelisim alanlari..."></textarea></div>'
+    + '</div>';
+  html += '<div style="margin-top:12px;"><button class="btn btn-mavi btn-tam" onclick="degerlendirmeKaydet()">Degerlendirmeyi Kaydet</button></div>';
+  html += '</div>';
+  return html;
+}
+
+function sliderDegisti(idx) {
+  var val = document.getElementById('slider_' + idx).value;
+  document.getElementById('sliderVal_' + idx).textContent = val;
+}
+
+function degerlendirmeKaydet() {
+  if (!seciliPersonel) return;
+  var donem = document.getElementById('degDonem').value;
+  if (!donem) { toast('Donem giriniz', 'hata'); return; }
+
+  var teknik = parseInt(document.getElementById('slider_0').value);
+  var kalite = parseInt(document.getElementById('slider_1').value);
+  var hiz = parseInt(document.getElementById('slider_2').value);
+  var takim = parseInt(document.getElementById('slider_3').value);
+  var sorumluluk = parseInt(document.getElementById('slider_4').value);
+  var ort = ((teknik + kalite + hiz + takim + sorumluluk) / 5).toFixed(1);
+
+  var fields = {
+    'Personel': [seciliPersonel.id],
+    'Donem': donem,
+    'Teknik Beceri': teknik,
+    'Kalite Odagi': kalite,
+    'Hiz': hiz,
+    'Takim': takim,
+    'Sorumluluk': sorumluluk,
+    'Ortalama': parseFloat(ort),
+    'Guclu Yanlar': document.getElementById('degGuclu').value,
+    'Gelisim Alanlari': document.getElementById('degGelisim').value
   };
 
-  const fields = {};
-  const adSoyad = document.getElementById('f-adSoyad').value.trim();
-  const personelKodu = document.getElementById('f-personelKodu').value.trim();
-  const gorevi = document.getElementById('f-gorevi').value;
-  const telefon = document.getElementById('f-telefon').value.trim();
-  const eposta = document.getElementById('f-eposta').value.trim();
-  const girisTarihi = document.getElementById('f-girisTarihi').value;
-  const aktif = document.getElementById('f-aktif').checked;
-
-  if (adSoyad)       fields['Ad Soyad'] = adSoyad;
-  if (personelKodu)  fields['Personel Kodu'] = personelKodu;
-  if (gorevi)        fields['Görevi'] = gorevi;
-  if (telefon)       fields['Telefon'] = telefon;
-  if (eposta)        fields['E-posta'] = eposta;
-  if (girisTarihi)   fields['İşe Giriş Tarihi'] = girisTarihi;
-  fields['Aktif mi?'] = aktif;
-
-  btn.disabled = true;
-  status.textContent = 'Kaydediliyor…';
-  try {
-    const updated = await atPatch(T.personel, id, fields);
-    // Update local cache
-    rec.fields = Object.assign(rec.fields, updated.fields || fields);
-    document.getElementById('detailName').textContent = rec.fields['Ad Soyad'] || '—';
-    renderList(document.getElementById('searchInput').value.toLowerCase()
-      ? allPersonel.filter(r => {
-          const q = document.getElementById('searchInput').value.toLowerCase();
-          const ff = r.fields;
-          return (ff['Ad Soyad']||'').toLowerCase().includes(q)
-              || (ff['Görevi']||'').toLowerCase().includes(q)
-              || (ff['Personel Kodu']||'').toLowerCase().includes(q);
-        })
-      : allPersonel);
-    status.textContent = 'Kaydedildi ✓';
-    setTimeout(() => { status.textContent = ''; }, 2500);
-    toast('Kişisel bilgiler güncellendi.');
-    await logIslem('Güncellendi', 'Personel', id, rec.fields['Ad Soyad'] || id, oldFields, fields);
-  } catch(e) {
-    status.textContent = 'Hata!';
-    toast('Kayıt başarısız: ' + e.message, 'err');
-  } finally {
-    btn.disabled = false;
-  }
+  fetch('/.netlify/functions/airtable', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ table: 'Performans Degerlendirmeleri', fields: fields })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(d) {
+    if (d.id) {
+      toast('Degerlendirme kaydedildi');
+      logIslem('Olusturuldu', 'Performans', d.id, seciliPersonel.f['Ad Soyad'] || '', null, fields);
+      personelVerilerYukle();
+    } else {
+      toast('Hata: ' + JSON.stringify(d.error || d), 'hata');
+    }
+  })
+  .catch(function(e) { toast('Hata: ' + e.message, 'hata'); });
 }
 
-// ── LOAD TEZGAHLAR ───────────────────────────────────────────────────────
-async function loadTezgahlar() {
-  try {
-    allTezgahlar = await atGetAll(T.tezgah, 'Tezgah Adı', 'asc');
-    tezgahlarLoaded = true;
-  } catch(e) {
-    allTezgahlar = [];
-    tezgahlarLoaded = true;
-  }
+// ── TAB 3: AI GELISIM PLANI ──
+function renderAIGelisim() {
+  var html = '<div class="kart"><div class="kart-baslik">AI Destekli 90 Gunluk Gelisim Plani</div>';
+  html += '<p style="font-size:12px;color:var(--metin3);margin-bottom:12px;">Degerlendirme puanlarini analiz ederek kisisellestirilmis gelisim plani olusturur.</p>';
+  html += '<button class="btn btn-mavi" onclick="aiGelisimPlaniOlustur()">AI Gelisim Plani Olustur</button>';
+  html += '<div id="aiPlanSonuc" style="margin-top:16px;"></div>';
+  html += '</div>';
+  return html;
 }
 
-// ── YETKINLIK MATRİSİ ────────────────────────────────────────────────────
-// Saved as JSON in "Notlar" field: { "tezgahId": "Usta", ... }
-function renderYetkinlikMatrisi(rec) {
-  const body = document.getElementById('yetkinlikBody');
-  if (!body) return;
+function aiGelisimPlaniOlustur() {
+  if (!seciliPersonel) return;
+  var sonuc = document.getElementById('aiPlanSonuc');
+  sonuc.innerHTML = '<div class="yukleniyor"><div class="spinner"></div> AI plani olusturuluyor...</div>';
 
-  let matris = {};
-  try {
-    const raw = rec.fields['Notlar'] || '';
-    // Try to find JSON in the Notlar field
-    const m = raw.match(/\[\[YK\]\]([\s\S]*?)\[\[\/YK\]\]/);
-    if (m) matris = JSON.parse(m[1]);
-  } catch(e) { matris = {}; }
+  var ad = seciliPersonel.f['Ad Soyad'] || seciliPersonel.f['Ad'] || '';
+  var gorev = seciliPersonel.f['Gorev'] || seciliPersonel.f['Pozisyon'] || '';
+  var skor = seciliPersonel.f['Performans Skoru'] || '-';
 
-  if (!allTezgahlar.length) {
-    body.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:8px 0;">Tezgah verisi bulunamadı.</div>';
-    return;
+  var degBilgi = '';
+  if (degerlendirmeler.length > 0) {
+    var son = degerlendirmeler[0].f;
+    degBilgi = 'Teknik:' + (son['Teknik Beceri'] || '-') + ', Kalite:' + (son['Kalite Odagi'] || '-')
+      + ', Hiz:' + (son['Hiz'] || '-') + ', Takim:' + (son['Takim'] || '-') + ', Sorumluluk:' + (son['Sorumluluk'] || '-')
+      + ', Guclu:' + (son['Guclu Yanlar'] || '-') + ', Gelisim:' + (son['Gelisim Alanlari'] || '-');
   }
 
-  const seviyeler = ['Usta', 'Yeterli', 'Aday', 'Yetkisiz'];
-  const seviyeClass = { 'Usta': 'yk-usta', 'Yeterli': 'yk-yeterli', 'Aday': 'yk-aday', 'Yetkisiz': 'yk-yetkisiz' };
+  var prompt = 'Asagidaki CNC imalat personeli icin 90 gunluk gelisim plani olustur (Turkce).\n'
+    + 'Ad: ' + ad + '\nGorev: ' + gorev + '\nSkor: ' + skor + '\nDegerlendirme: ' + degBilgi
+    + '\n\nPlan su formatta olsun:\n1. Hafta 1-2: ...\n2. Hafta 3-4: ...\n3. Hafta 5-8: ...\n4. Hafta 9-12: ...\nHedef ve olcutler ekle.';
 
-  body.innerHTML = `
-    <table class="yk-table">
-      <thead>
-        <tr>
-          <th style="width:55%">Tezgah / Ekipman</th>
-          <th>Yetkinlik Seviyesi</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${allTezgahlar.map(t => {
-          const tid = t.id;
-          const adField = t.fields['Tezgah Adı'] || t.fields['Ad'] || t.fields['İsim'] || t.fields['Name'] || Object.values(t.fields)[0] || tid;
-          const mevcut = matris[tid] || 'Yetkisiz';
-          return `<tr>
-            <td style="font-weight:500;">${esc(String(adField))}</td>
-            <td>
-              <select class="yk-select" id="yk-${tid}" onchange="updateYkBadge('${tid}',this.value)">
-                ${seviyeler.map(s =>
-                  `<option value="${s}"${mevcut===s?' selected':''}>${s}</option>`
-                ).join('')}
-              </select>
-            </td>
-          </tr>`;
-        }).join('')}
-      </tbody>
-    </table>
-    <div class="save-row">
-      <span class="save-status" id="saveStatusYK"></span>
-      <button class="btn primary" onclick="saveYetkinlik('${rec.id}')">Yetkinlikleri Kaydet</button>
-    </div>
-  `;
-}
-
-function updateYkBadge(tid, val) {
-  // Visual feedback only — save happens on button click
-}
-
-async function saveYetkinlik(id) {
-  const rec = allPersonel.find(r => r.id === id);
-  if (!rec) return;
-
-  const matris = {};
-  allTezgahlar.forEach(t => {
-    const sel = document.getElementById('yk-' + t.id);
-    if (sel) matris[t.id] = sel.value;
+  fetch('/.netlify/functions/claude', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prompt: prompt })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(d) {
+    var text = '';
+    if (d.content && d.content[0]) text = d.content[0].text || '';
+    else if (d.text) text = d.text;
+    else if (d.error) text = 'Hata: ' + JSON.stringify(d.error);
+    else text = JSON.stringify(d);
+    sonuc.innerHTML = '<div class="p360-ai-plan">' + text + '</div>';
+  })
+  .catch(function(e) {
+    sonuc.innerHTML = '<div class="bos-durum">AI servisi baglanilamadi: ' + e.message + '</div>';
   });
+}
 
-  const matrisJson = JSON.stringify(matris);
-  const oldNotlar = rec.fields['Notlar'] || '';
-  let newNotlar;
+// ── TAB 4: 360 GERI BILDIRIM ──
+function render360() {
+  var html = '<div class="kart"><div class="kart-baslik">360 Geri Bildirimler</div>';
 
-  // Embed the matris JSON as a tagged block in Notlar
-  const tag = /\[\[YK\]\][\s\S]*?\[\[\/YK\]\]/;
-  const block = `[[YK]]${matrisJson}[[/YK]]`;
-  if (tag.test(oldNotlar)) {
-    newNotlar = oldNotlar.replace(tag, block);
+  if (ucYuzAlti.length === 0) {
+    html += '<div class="bos-durum">Henuz geri bildirim yok</div>';
   } else {
-    newNotlar = oldNotlar ? (oldNotlar + '\n' + block) : block;
+    // Radar chart - simple CSS bars for 5 axes
+    var axes = ['Teknik Yetkinlik', 'Iletisim', 'Takim Calismasi', 'Sorumluluk', 'Gelisime Aciklik'];
+    var ortalamalar = {};
+    axes.forEach(function(a) { ortalamalar[a] = { toplam: 0, sayi: 0 }; });
+    ucYuzAlti.forEach(function(gb) {
+      axes.forEach(function(a) {
+        var val = gb.f[a];
+        if (val) { ortalamalar[a].toplam += parseFloat(val); ortalamalar[a].sayi++; }
+      });
+    });
+
+    html += '<div style="margin-bottom:16px;">';
+    axes.forEach(function(a) {
+      var ort = ortalamalar[a].sayi > 0 ? (ortalamalar[a].toplam / ortalamalar[a].sayi).toFixed(1) : 0;
+      var pct = (parseFloat(ort) / 5 * 100);
+      var renk = pct >= 70 ? 'var(--yesil)' : pct >= 50 ? 'var(--sari)' : 'var(--kirmizi)';
+      html += '<div class="p360-bar-row">'
+        + '<div class="p360-bar-label">' + a + '</div>'
+        + '<div class="p360-bar-track"><div class="p360-bar-fill" style="width:' + pct + '%;background:' + renk + ';">' + ort + '</div></div>'
+        + '</div>';
+    });
+    html += '</div>';
+
+    // List
+    html += '<table class="tablo"><thead><tr><th>Tarih</th><th>Donem</th><th>Ort.</th></tr></thead><tbody>';
+    ucYuzAlti.forEach(function(gb) {
+      var tarih = gb.f['Tarih'] || '-';
+      var donem = gb.f['Donem'] || '-';
+      var vals = axes.map(function(a) { return parseFloat(gb.f[a]) || 0; });
+      var avg = vals.reduce(function(s, v) { return s + v; }, 0) / 5;
+      html += '<tr><td>' + tarih + '</td><td>' + donem + '</td><td style="font-weight:700;">' + avg.toFixed(1) + '</td></tr>';
+    });
+    html += '</tbody></table>';
   }
 
-  const btn = document.querySelector('[onclick="saveYetkinlik(\'' + id + '\')"]');
-  const status = document.getElementById('saveStatusYK');
-  if (btn) btn.disabled = true;
-  if (status) status.textContent = 'Kaydediliyor…';
+  html += '<div style="margin-top:12px;">'
+    + '<button class="btn btn-beyaz" onclick="geriBildirimIste()">Geri Bildirim Iste</button>'
+    + '</div></div>';
+  return html;
+}
 
-  try {
-    await atPatch(T.personel, id, { 'Notlar': newNotlar });
-    rec.fields['Notlar'] = newNotlar;
-    if (status) { status.textContent = 'Kaydedildi ✓'; setTimeout(()=>{ status.textContent=''; }, 2500); }
-    toast('Yetkinlik matrisi güncellendi.');
-    await logIslem('Güncellendi', 'Personel Yetkinlik', id, rec.fields['Ad Soyad'] || id, null, matris);
-  } catch(e) {
-    if (status) status.textContent = 'Hata!';
-    toast('Kayıt başarısız: ' + e.message, 'err');
-  } finally {
-    if (btn) btn.disabled = false;
+function geriBildirimIste() {
+  if (!seciliPersonel) return;
+  var link = window.location.origin + '/ersan_360.html?personelId=' + seciliPersonel.id + '&donem=Q1-2026';
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(link);
+    toast('360 form linki kopyalandi');
+  } else {
+    prompt('Bu linki paylasin:', link);
   }
 }
 
-// ── UTILS ────────────────────────────────────────────────────────────────
-function esc(s) {
-  return String(s)
-    .replace(/&/g,'&amp;')
-    .replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;');
+// ── TAB 5: GELISIM GECMISI ──
+function renderGelisimGecmisi() {
+  var html = '';
+
+  // Score trend bars
+  html += '<div class="kart"><div class="kart-baslik">Skor Trendi (Son 8 Donem)</div>';
+  if (degerlendirmeler.length === 0) {
+    html += '<div class="bos-durum">Veri yok</div>';
+  } else {
+    var son8 = degerlendirmeler.slice(0, 8).reverse();
+    html += '<div style="display:flex;align-items:flex-end;gap:8px;height:120px;padding:8px 0;">';
+    son8.forEach(function(d) {
+      var ort = parseFloat(d.f['Ortalama'] || 0);
+      var pct = (ort / 10) * 100;
+      var renk = ort >= 8 ? 'var(--yesil)' : ort >= 6 ? 'var(--sari)' : 'var(--kirmizi)';
+      html += '<div style="flex:1;display:flex;flex-direction:column;align-items:center;">'
+        + '<div style="font-size:10px;font-weight:700;color:var(--metin2);margin-bottom:4px;">' + ort.toFixed(1) + '</div>'
+        + '<div style="width:100%;height:' + pct + '%;background:' + renk + ';border-radius:4px 4px 0 0;min-height:4px;"></div>'
+        + '<div style="font-size:9px;color:var(--metin4);margin-top:4px;">' + (d.f['Donem'] || '') + '</div>'
+        + '</div>';
+    });
+    html += '</div>';
+  }
+  html += '</div>';
+
+  // Goals
+  html += '<div class="kart"><div class="kart-baslik">Tamamlanan Hedefler</div>';
+  var hedefler = seciliPersonel.f['Hedefler'] || '';
+  if (!hedefler) {
+    html += '<div class="bos-durum">Henuz hedef kaydedilmemis</div>';
+  } else {
+    var satirlar = hedefler.split('\n');
+    satirlar.forEach(function(s) {
+      if (!s.trim()) return;
+      var done = s.indexOf('[x]') > -1 || s.indexOf('[X]') > -1;
+      html += '<div class="p360-goal-item">'
+        + '<span style="font-size:16px;" class="' + (done ? 'p360-goal-done' : 'p360-goal-pending') + '">' + (done ? '&#10003;' : '&#9675;') + '</span>'
+        + '<span>' + s.replace(/\[.\]/g, '').trim() + '</span>'
+        + '</div>';
+    });
+  }
+  html += '</div>';
+
+  // Training records
+  html += '<div class="kart"><div class="kart-baslik" style="display:flex;justify-content:space-between;align-items:center;">Egitim Kayitlari <button class="btn btn-sm btn-mavi" onclick="egitimEkleModal()">+ Egitim Ekle</button></div>';
+  var egitimler = seciliPersonel.f['Egitimler'] || '';
+  if (!egitimler) {
+    html += '<div class="bos-durum">Egitim kaydi yok</div>';
+  } else {
+    html += '<div style="font-size:12px;color:var(--metin2);white-space:pre-wrap;">' + egitimler + '</div>';
+  }
+  html += '</div>';
+
+  // Egitim ekleme modal placeholder
+  html += '<div id="egitimModalAlani"></div>';
+  return html;
 }
 
-// ── INIT ─────────────────────────────────────────────────────────────────
-loadPersonel();
+function egitimEkleModal() {
+  var alan = document.getElementById('egitimModalAlani');
+  alan.innerHTML = '<div class="modal-overlay" onclick="this.remove()">'
+    + '<div class="modal" onclick="event.stopPropagation()">'
+    + '<div class="modal-baslik">Egitim Ekle <button class="modal-kapat" onclick="this.closest(\'.modal-overlay\').remove()">&times;</button></div>'
+    + '<div class="form-grup"><label class="form-label">Egitim Adi</label><input class="form-input" id="egitimAdi"></div>'
+    + '<div class="form-grup"><label class="form-label">Tarih</label><input class="form-input" id="egitimTarih" type="date"></div>'
+    + '<div class="form-grup"><label class="form-label">Notlar</label><textarea class="form-textarea" id="egitimNot" rows="2"></textarea></div>'
+    + '<div class="modal-alt"><button class="btn btn-mavi" onclick="egitimKaydet()">Kaydet</button></div>'
+    + '</div></div>';
+}
+
+function egitimKaydet() {
+  var ad = document.getElementById('egitimAdi').value;
+  var tarih = document.getElementById('egitimTarih').value;
+  var not_ = document.getElementById('egitimNot').value;
+  if (!ad) { toast('Egitim adi giriniz', 'hata'); return; }
+
+  var mevcut = seciliPersonel.f['Egitimler'] || '';
+  var yeni = mevcut + (mevcut ? '\n' : '') + tarih + ' - ' + ad + (not_ ? ' (' + not_ + ')' : '');
+
+  fetch('/.netlify/functions/airtable', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ table: 'Personel', id: seciliPersonel.id, fields: { 'Egitimler': yeni } })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(d) {
+    if (d.id) {
+      toast('Egitim eklendi');
+      seciliPersonel.f['Egitimler'] = yeni;
+      logIslem('Guncellendi', 'Personel', seciliPersonel.id, ad, null, { Egitimler: yeni });
+      var overlay = document.querySelector('.modal-overlay');
+      if (overlay) overlay.remove();
+      sekmeIcerikRender();
+    } else {
+      toast('Hata', 'hata');
+    }
+  })
+  .catch(function(e) { toast('Hata: ' + e.message, 'hata'); });
+}
+
+// ── INIT ──
+document.addEventListener('DOMContentLoaded', function() {
+  yukle();
+});
 </script>
 </body>
 </html>
