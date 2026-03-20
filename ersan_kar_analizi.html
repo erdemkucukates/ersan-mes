@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — Kar Analizi</title>
+<link rel="stylesheet" href="ersan_styles.css">
+<script src="ersan_nav.js" defer></script>
+<script src="ersan_log.js" defer></script>
+</head>
+<body>
+<div id="nav-alani"></div>
+<div class="icerik-alani">
+  <div class="topbar">
+    <div class="topbar-baslik">Kar Analizi</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button class="btn btn-beyaz btn-sm" onclick="aiDanisman()">AI Karlilik Danismani</button>
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
+    </div>
+  </div>
+  <div class="sayfa-icerik">
+
+    <!-- Donem Secici -->
+    <div class="kart" style="margin-bottom:12px;">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        <div class="form-grup" style="margin:0;">
+          <label class="form-label">Donem Tipi</label>
+          <select class="form-select" id="donem-tip" onchange="yukle()" style="width:140px;">
+            <option value="ay">Aylik</option>
+            <option value="ceyrek">Ceyreklik</option>
+            <option value="yil">Yillik</option>
+          </select>
+        </div>
+        <div class="form-grup" style="margin:0;">
+          <label class="form-label">Baslangic</label>
+          <input type="month" class="form-input" id="donem-bas" style="width:160px;" onchange="yukle()">
+        </div>
+        <div class="form-grup" style="margin:0;">
+          <label class="form-label">Bitis</label>
+          <input type="month" class="form-input" id="donem-son" style="width:160px;" onchange="yukle()">
+        </div>
+      </div>
+    </div>
+
+    <!-- KPI Kartlari -->
+    <div class="kpi-grid" id="kpi-alan">
+      <div class="kpi-kart yesil">
+        <div class="kpi-etiket">Brut Kar</div>
+        <div class="kpi-deger" id="kpi-brut-kar">-</div>
+        <div class="kpi-alt">Toplam gelir - maliyet</div>
+      </div>
+      <div class="kpi-kart">
+        <div class="kpi-etiket">Brut Kar Marji</div>
+        <div class="kpi-deger" id="kpi-marj">-%</div>
+        <div class="kpi-alt">Kar / Gelir x 100</div>
+      </div>
+      <div class="kpi-kart sari">
+        <div class="kpi-etiket">En Yuksek Marjli Siparis</div>
+        <div class="kpi-deger" id="kpi-en-iyi" style="font-size:14px;">-</div>
+        <div class="kpi-alt" id="kpi-en-iyi-alt">-</div>
+      </div>
+      <div class="kpi-kart">
+        <div class="kpi-etiket">Ortalama Siparis Marji</div>
+        <div class="kpi-deger" id="kpi-ort-marj">-%</div>
+        <div class="kpi-alt">Tum siparislerin ortalamasi</div>
+      </div>
+    </div>
+
+    <!-- Musteri Karlilik Tablosu -->
+    <div class="tablo-wrap" style="margin-bottom:16px;">
+      <div class="tablo-baslik">
+        <div class="tablo-baslik-text">Musteri Karlilik Analizi</div>
+        <div class="tablo-baslik-sayi" id="musteri-sayi">0 musteri</div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="tablo">
+          <thead>
+            <tr>
+              <th>Musteri</th>
+              <th style="text-align:right;">Yillik Ciro</th>
+              <th style="text-align:right;">Toplam Maliyet</th>
+              <th style="text-align:right;">Kar</th>
+              <th style="text-align:right;">Marj %</th>
+            </tr>
+          </thead>
+          <tbody id="musteri-tablo">
+            <tr><td colspan="5" style="text-align:center;padding:20px;color:var(--metin4);">Yukleniyor...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Siparis Bazli Kar Grafigi (CSS Bar) -->
+    <div class="kart">
+      <div class="kart-baslik">Siparis Bazli Kar Marji</div>
+      <div id="siparis-bar-chart">
+        <div class="yukleniyor"><div class="spinner"></div> Hesaplaniyor...</div>
+      </div>
+    </div>
+
+    <!-- AI Danismani Modal -->
+    <div id="ai-modal" style="display:none;">
+      <div class="modal-overlay" onclick="aiKapat()">
+        <div class="modal" onclick="event.stopPropagation()">
+          <div class="modal-baslik">
+            <span>AI Karlilik Danismani</span>
+            <button class="modal-kapat" onclick="aiKapat()">&times;</button>
+          </div>
+          <div id="ai-sonuc" style="font-size:13px;line-height:1.6;color:var(--metin2);white-space:pre-wrap;">
+            <div class="yukleniyor"><div class="spinner"></div> AI analiz ediyor...</div>
+          </div>
+          <div class="modal-alt">
+            <button class="btn btn-beyaz" onclick="aiKapat()">Kapat</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var isEmirleri = [];
+var satisEmirleri = [];
+var maliyetKalemleri = [];
+var siparisAnaliz = [];
+
+// ── API Helper ──
+async function apiGet(tablo, query) {
+  var url = '/.netlify/functions/airtable?table=' + encodeURIComponent(tablo);
+  if (query) url += '&' + query;
+  var r = await fetch(url);
+  return r.json();
+}
+
+function toast(msg, tip) {
+  var el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast toast-' + (tip || 'bilgi') + ' goster';
+  setTimeout(function() { el.className = 'toast'; }, 3000);
+}
+
+// ── Varsayilan donem ──
+function varsayilanDonem() {
+  var d = new Date();
+  var yil = d.getFullYear();
+  var ay = String(d.getMonth() + 1).padStart(2, '0');
+  document.getElementById('donem-bas').value = yil + '-01';
+  document.getElementById('donem-son').value = yil + '-' + ay;
+}
+
+// ── Veri Yukle ──
+async function yukle() {
+  try {
+    var sonuclar = await Promise.all([
+      apiGet('Satis Emirleri', 'pageSize=100'),
+      apiGet('Is Emirleri', 'pageSize=100'),
+      apiGet('Maliyet Kalemleri', 'pageSize=100')
+    ]);
+
+    satisEmirleri = (sonuclar[0].records || []).map(function(r) {
+      var f = r.fields || {};
+      return {
+        id: r.id,
+        seNo: f['SE No'] || f['Name'] || '-',
+        musteri: f['Musteri'] || f['Musteri Adi'] || (f['Musteri (from Dosya&Projeler)'] || ['-'])[0] || '-',
+        tutar: parseFloat(f['Tutar'] || f['Toplam Tutar'] || f['Birim Fiyat'] || 0),
+        adet: parseInt(f['Adet'] || f['Miktar'] || 1),
+        tarih: f['Tarih'] || f['Olusturma Tarihi'] || '',
+        parcaAdi: f['Parca Adi'] || f['Parca No'] || ''
+      };
+    });
+
+    isEmirleri = (sonuclar[1].records || []).map(function(r) {
+      var f = r.fields || {};
+      return {
+        id: r.id,
+        ieNo: f['IE No'] || f['Name'] || '-',
+        seNo: f['SE No'] || '',
+        maliyet: parseFloat(f['Toplam Maliyet'] || f['Maliyet'] || 0),
+        musteri: f['Musteri'] || (f['Musteri (from SE)'] || ['-'])[0] || '-'
+      };
+    });
+
+    maliyetKalemleri = (sonuclar[2].records || []).map(function(r) {
+      var f = r.fields || {};
+      return {
+        id: r.id,
+        ieNo: f['IE No'] || '',
+        tip: f['Kalem Tipi'] || f['Tip'] || '',
+        tutar: parseFloat(f['Tutar'] || f['Maliyet'] || 0)
+      };
+    });
+
+    hesapla();
+  } catch(e) {
+    console.error('Veri yukleme hatasi:', e);
+    document.getElementById('musteri-tablo').innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--metin4);">Veri yuklenemedi. Tablolar henuz olusturulmamis olabilir.</td></tr>';
+    document.getElementById('siparis-bar-chart').innerHTML = '<div class="bos-durum"><p>Veri bulunamadi</p></div>';
+  }
+}
+
+// ── Hesaplama ──
+function hesapla() {
+  // SE bazli maliyet esleme
+  var seMaliyet = {};
+  isEmirleri.forEach(function(ie) {
+    if (!ie.seNo) return;
+    if (!seMaliyet[ie.seNo]) seMaliyet[ie.seNo] = 0;
+    // Maliyet kalemleri topla
+    var ieMaliyet = ie.maliyet;
+    maliyetKalemleri.forEach(function(mk) {
+      if (mk.ieNo === ie.ieNo) ieMaliyet += mk.tutar;
+    });
+    seMaliyet[ie.seNo] += ieMaliyet;
+  });
+
+  siparisAnaliz = [];
+  var toplamGelir = 0;
+  var toplamMaliyet = 0;
+  var musteriGrup = {};
+
+  satisEmirleri.forEach(function(se) {
+    var gelir = se.tutar * se.adet;
+    var maliyet = seMaliyet[se.seNo] || 0;
+    var kar = gelir - maliyet;
+    var marj = gelir > 0 ? (kar / gelir * 100) : 0;
+
+    siparisAnaliz.push({
+      seNo: se.seNo,
+      musteri: se.musteri,
+      gelir: gelir,
+      maliyet: maliyet,
+      kar: kar,
+      marj: marj,
+      parcaAdi: se.parcaAdi
+    });
+
+    toplamGelir += gelir;
+    toplamMaliyet += maliyet;
+
+    // Musteri gruplama
+    if (!musteriGrup[se.musteri]) musteriGrup[se.musteri] = {gelir: 0, maliyet: 0};
+    musteriGrup[se.musteri].gelir += gelir;
+    musteriGrup[se.musteri].maliyet += maliyet;
+  });
+
+  var toplamKar = toplamGelir - toplamMaliyet;
+  var toplamMarj = toplamGelir > 0 ? (toplamKar / toplamGelir * 100) : 0;
+
+  // KPI guncelle
+  document.getElementById('kpi-brut-kar').textContent = formatTL(toplamKar);
+  document.getElementById('kpi-marj').textContent = toplamMarj.toFixed(1) + '%';
+
+  // En iyi marj
+  siparisAnaliz.sort(function(a, b) { return b.marj - a.marj; });
+  if (siparisAnaliz.length > 0) {
+    document.getElementById('kpi-en-iyi').textContent = siparisAnaliz[0].seNo;
+    document.getElementById('kpi-en-iyi-alt').textContent = siparisAnaliz[0].marj.toFixed(1) + '% marj - ' + siparisAnaliz[0].musteri;
+  }
+
+  // Ortalama marj
+  var ortMarj = 0;
+  if (siparisAnaliz.length > 0) {
+    var topMarj = 0;
+    siparisAnaliz.forEach(function(s) { topMarj += s.marj; });
+    ortMarj = topMarj / siparisAnaliz.length;
+  }
+  document.getElementById('kpi-ort-marj').textContent = ortMarj.toFixed(1) + '%';
+
+  // Musteri tablo
+  musteriTabloGoster(musteriGrup);
+
+  // Bar chart
+  barChartGoster();
+}
+
+// ── Musteri Tablosu ──
+function musteriTabloGoster(musteriGrup) {
+  var keys = Object.keys(musteriGrup);
+  document.getElementById('musteri-sayi').textContent = keys.length + ' musteri';
+
+  if (keys.length === 0) {
+    document.getElementById('musteri-tablo').innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--metin4);">Henuz veri yok</td></tr>';
+    return;
+  }
+
+  var satiral = keys.map(function(m) {
+    var d = musteriGrup[m];
+    var kar = d.gelir - d.maliyet;
+    var marj = d.gelir > 0 ? (kar / d.gelir * 100) : 0;
+    return {musteri: m, gelir: d.gelir, maliyet: d.maliyet, kar: kar, marj: marj};
+  });
+
+  satiral.sort(function(a, b) { return b.marj - a.marj; });
+
+  var html = '';
+  satiral.forEach(function(s) {
+    var marjRenk = s.marj >= 40 ? 'var(--yesil-t)' : s.marj >= 30 ? 'var(--yesil)' : s.marj >= 20 ? 'var(--sari-t)' : 'var(--kirmizi-t)';
+    html += '<tr>'
+      + '<td style="font-weight:500;">' + s.musteri + '</td>'
+      + '<td style="text-align:right;">' + formatTL(s.gelir) + '</td>'
+      + '<td style="text-align:right;">' + formatTL(s.maliyet) + '</td>'
+      + '<td style="text-align:right;font-weight:600;">' + formatTL(s.kar) + '</td>'
+      + '<td style="text-align:right;font-weight:700;color:' + marjRenk + ';">' + s.marj.toFixed(1) + '%</td>'
+      + '</tr>';
+  });
+  document.getElementById('musteri-tablo').innerHTML = html;
+}
+
+// ── CSS Bar Chart ──
+function barChartGoster() {
+  var container = document.getElementById('siparis-bar-chart');
+
+  if (siparisAnaliz.length === 0) {
+    container.innerHTML = '<div class="bos-durum"><p>Henuz siparis verisi yok</p></div>';
+    return;
+  }
+
+  // Ilk 20 siparis goster
+  var gosterilecek = siparisAnaliz.slice(0, 20);
+  var maxMarj = 100;
+
+  var html = '<div style="display:flex;flex-direction:column;gap:6px;padding:8px 0;">';
+  gosterilecek.forEach(function(s) {
+    var renk = '#c53030';
+    if (s.marj >= 40) renk = '#065f46';
+    else if (s.marj >= 30) renk = '#16a34a';
+    else if (s.marj >= 20) renk = '#d97706';
+
+    var genislik = Math.max(Math.abs(s.marj), 2);
+    if (genislik > 100) genislik = 100;
+
+    html += '<div style="display:flex;align-items:center;gap:8px;cursor:pointer;" onclick="siparisDetay(\'' + encodeURIComponent(s.seNo) + '\')">'
+      + '<div style="width:100px;flex-shrink:0;font-family:monospace;font-size:11px;font-weight:600;color:var(--mavi-koyu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="' + s.seNo + '">' + s.seNo + '</div>'
+      + '<div style="flex:1;background:var(--bg);border-radius:4px;height:22px;position:relative;overflow:hidden;">'
+      + '<div style="width:' + genislik + '%;height:100%;background:' + renk + ';border-radius:4px;transition:width .3s;"></div>'
+      + '</div>'
+      + '<div style="width:55px;flex-shrink:0;text-align:right;font-size:11px;font-weight:700;color:' + renk + ';">' + s.marj.toFixed(1) + '%</div>'
+      + '</div>';
+  });
+  html += '</div>';
+
+  // Renk aciklamasi
+  html += '<div style="display:flex;gap:16px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:10px;color:var(--metin3);flex-wrap:wrap;">'
+    + '<span><span style="display:inline-block;width:10px;height:10px;background:#065f46;border-radius:2px;margin-right:4px;"></span>%40+</span>'
+    + '<span><span style="display:inline-block;width:10px;height:10px;background:#16a34a;border-radius:2px;margin-right:4px;"></span>%30-40</span>'
+    + '<span><span style="display:inline-block;width:10px;height:10px;background:#d97706;border-radius:2px;margin-right:4px;"></span>%20-30</span>'
+    + '<span><span style="display:inline-block;width:10px;height:10px;background:#c53030;border-radius:2px;margin-right:4px;"></span>%20 alti</span>'
+    + '</div>';
+
+  container.innerHTML = html;
+}
+
+function siparisDetay(seNoEncoded) {
+  var seNo = decodeURIComponent(seNoEncoded);
+  window.location.href = 'ersan_siparis_maliyet.html?se=' + encodeURIComponent(seNo);
+}
+
+// ── AI Danismani ──
+async function aiDanisman() {
+  document.getElementById('ai-modal').style.display = 'block';
+  document.getElementById('ai-sonuc').innerHTML = '<div class="yukleniyor"><div class="spinner"></div> AI analiz ediyor...</div>';
+
+  var ozet = 'Ersan MES Karlilik Analizi:\n';
+  ozet += 'Toplam siparis: ' + siparisAnaliz.length + '\n';
+
+  var topGelir = 0, topMaliyet = 0;
+  siparisAnaliz.forEach(function(s) { topGelir += s.gelir; topMaliyet += s.maliyet; });
+  ozet += 'Toplam Gelir: ' + formatTL(topGelir) + '\n';
+  ozet += 'Toplam Maliyet: ' + formatTL(topMaliyet) + '\n';
+  ozet += 'Brut Kar: ' + formatTL(topGelir - topMaliyet) + '\n';
+  ozet += 'Brut Marj: ' + (topGelir > 0 ? ((topGelir - topMaliyet) / topGelir * 100).toFixed(1) : 0) + '%\n\n';
+
+  ozet += 'Siparis detaylari:\n';
+  siparisAnaliz.slice(0, 15).forEach(function(s) {
+    ozet += s.seNo + ' (' + s.musteri + '): Gelir=' + formatTL(s.gelir) + ', Maliyet=' + formatTL(s.maliyet) + ', Marj=' + s.marj.toFixed(1) + '%\n';
+  });
+
+  try {
+    var r = await fetch('/.netlify/functions/claude', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        prompt: 'Sen bir CNC imalat sektoru finansal danismanisin. Asagidaki Ersan Endustriyel firmasinin karlilik verilerini analiz et. Turkce yanit ver. Oneriler, riskler ve iyilestirme alanlari belirt. Kisa ve net ol.\n\n' + ozet
+      })
+    });
+    var data = await r.json();
+    var yanit = data.content || data.response || data.text || JSON.stringify(data);
+    if (typeof yanit === 'object' && yanit[0]) yanit = yanit[0].text || JSON.stringify(yanit);
+    document.getElementById('ai-sonuc').textContent = yanit;
+    logIslem('AI Analiz', 'Kar Analizi', null, 'Karlilik danismani calistirildi');
+  } catch(e) {
+    console.error('AI hatasi:', e);
+    document.getElementById('ai-sonuc').textContent = 'AI servisine ulasilamadi. Hata: ' + e.message;
+  }
+}
+
+function aiKapat() {
+  document.getElementById('ai-modal').style.display = 'none';
+}
+
+// ── Yardimci ──
+function formatTL(n) {
+  if (!n || isNaN(n)) return '0,00 TL';
+  return Number(n).toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' TL';
+}
+
+// ── Basla ──
+document.addEventListener('DOMContentLoaded', function() {
+  varsayilanDonem();
+  yukle();
+});
+</script>
+</body>
+</html>

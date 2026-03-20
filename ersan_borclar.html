@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — Borc Yonetimi</title>
+<link rel="stylesheet" href="ersan_styles.css">
+<script src="ersan_nav.js" defer></script>
+<script src="ersan_log.js" defer></script>
+</head>
+<body>
+<div id="nav-alani"></div>
+<div class="icerik-alani">
+  <div class="topbar">
+    <div class="topbar-baslik">Borc Yonetimi</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
+    </div>
+  </div>
+  <div class="sayfa-icerik">
+
+    <div class="iki-panel">
+      <!-- SOL PANEL: Satinalma Talepleri Listesi -->
+      <div class="sol-panel">
+        <div class="sol-panel-ust">
+          <div class="sol-panel-baslik">Borclar</div>
+          <div id="borc-sayi" style="font-size:11px;color:var(--metin4);">0</div>
+        </div>
+        <div class="sol-arama">
+          <input type="text" id="borc-arama" placeholder="Talep no, tedarikci ara..." oninput="filtrele()">
+        </div>
+        <div class="sol-filtre">
+          <button class="filtre-btn aktif" data-f="Tumu" onclick="filtreAyarla(this)">Tumu</button>
+          <button class="filtre-btn" data-f="Bekleyen" onclick="filtreAyarla(this)">Bekleyen</button>
+          <button class="filtre-btn" data-f="Vadeli" onclick="filtreAyarla(this)">Vadeli</button>
+          <button class="filtre-btn" data-f="Gecikmis" onclick="filtreAyarla(this)">Gecikmis</button>
+          <button class="filtre-btn" data-f="Odendi" onclick="filtreAyarla(this)">Odendi</button>
+        </div>
+        <div class="sol-liste" id="borc-liste">
+          <div class="yukleniyor"><div class="spinner"></div> Yukleniyor...</div>
+        </div>
+      </div>
+
+      <!-- SAG PANEL: Detay -->
+      <div class="sag-panel">
+        <div class="sag-panel-ust">
+          <div style="font-size:13px;font-weight:600;color:var(--laci);" id="detay-baslik">Bir kayit secin</div>
+        </div>
+        <div class="sag-panel-icerik" id="sag-icerik">
+          <div class="bos-durum">
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none" style="opacity:.2"><rect x="6" y="6" width="36" height="36" rx="6" stroke="currentColor" stroke-width="2"/><path d="M16 20h16M16 28h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            <p>Listeden bir borc kaydi secin</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+var tumVeriler = [];
+var aktifFiltre = 'Tumu';
+var seciliKayit = null;
+
+// ── API Helper ──
+async function apiGet(tablo, query) {
+  var url = '/.netlify/functions/airtable?table=' + encodeURIComponent(tablo);
+  if (query) url += '&' + query;
+  var r = await fetch(url);
+  return r.json();
+}
+
+async function apiPatch(tablo, id, fields) {
+  var r = await fetch('/.netlify/functions/airtable', {
+    method: 'PATCH',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({table: tablo, id: id, fields: fields})
+  });
+  return r.json();
+}
+
+// ── Toast ──
+function toast(msg, tip) {
+  var el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast toast-' + (tip || 'bilgi') + ' goster';
+  setTimeout(function() { el.className = 'toast'; }, 3000);
+}
+
+// ── Veri Yukle ──
+async function yukle() {
+  try {
+    var data = await apiGet('Satinalma Talepleri', 'pageSize=100');
+    tumVeriler = (data.records || []).map(function(r) {
+      var f = r.fields || {};
+      return {
+        id: r.id,
+        talepNo: f['Talep No'] || f['Name'] || '-',
+        tedarikci: f['Tedarikci'] || f['Tedarikci Adi'] || '-',
+        tutar: parseFloat(f['Tutar'] || f['Toplam Tutar'] || 0),
+        vade: f['Vade Tarihi'] || f['Vade'] || '',
+        durum: f['Odeme Durumu'] || f['Durum'] || 'Bekleyen',
+        odemeTarihi: f['Odeme Tarihi'] || '',
+        malzeme: f['Malzeme'] || f['Malzeme Adi'] || '',
+        aciklama: f['Aciklama'] || f['Not'] || '',
+        fields: f
+      };
+    });
+    listeGuncelle();
+  } catch(e) {
+    console.error('Veri yukleme hatasi:', e);
+    document.getElementById('borc-liste').innerHTML = '<div class="bos-durum"><p>Veri yuklenemedi. Tablo henuz olusturulmamis olabilir.</p></div>';
+  }
+}
+
+// ── Filtre ──
+function filtreAyarla(btn) {
+  document.querySelectorAll('.filtre-btn').forEach(function(b) { b.classList.remove('aktif'); });
+  btn.classList.add('aktif');
+  aktifFiltre = btn.getAttribute('data-f');
+  listeGuncelle();
+}
+
+function filtrele() {
+  listeGuncelle();
+}
+
+function vadeDurumu(vade, durum) {
+  if (durum === 'Odendi') return 'Odendi';
+  if (!vade) return 'Bekleyen';
+  var bugun = new Date();
+  bugun.setHours(0,0,0,0);
+  var vadeTarih = new Date(vade);
+  if (vadeTarih < bugun) return 'Gecikmis';
+  var fark = (vadeTarih - bugun) / (1000 * 60 * 60 * 24);
+  if (fark <= 7) return 'Vadeli';
+  return 'Bekleyen';
+}
+
+function listeGuncelle() {
+  var arama = (document.getElementById('borc-arama').value || '').toLowerCase();
+  var filtrelenmis = tumVeriler.filter(function(v) {
+    var vd = vadeDurumu(v.vade, v.durum);
+    if (aktifFiltre !== 'Tumu' && vd !== aktifFiltre) return false;
+    if (arama && v.talepNo.toLowerCase().indexOf(arama) === -1 && v.tedarikci.toLowerCase().indexOf(arama) === -1) return false;
+    return true;
+  });
+
+  document.getElementById('borc-sayi').textContent = filtrelenmis.length + ' kayit';
+  var liste = document.getElementById('borc-liste');
+
+  if (filtrelenmis.length === 0) {
+    liste.innerHTML = '<div class="bos-durum"><p>Kayit bulunamadi</p></div>';
+    return;
+  }
+
+  var html = '';
+  filtrelenmis.forEach(function(v) {
+    var vd = vadeDurumu(v.vade, v.durum);
+    var badgeCls = 'badge-gri';
+    if (vd === 'Odendi') badgeCls = 'badge-yesil';
+    else if (vd === 'Gecikmis') badgeCls = 'badge-kirmizi';
+    else if (vd === 'Vadeli') badgeCls = 'badge-sari';
+    else if (vd === 'Bekleyen') badgeCls = 'badge-mavi';
+
+    var secili = seciliKayit && seciliKayit.id === v.id ? ' secili' : '';
+    html += '<div class="liste-satir' + secili + '" onclick="kayitSec(\'' + v.id + '\')">'
+      + '<div class="liste-satir-no">' + v.talepNo + '</div>'
+      + '<div class="liste-satir-ad">' + v.tedarikci + '</div>'
+      + '<div class="liste-satir-alt">'
+      + '<span style="font-size:11px;font-weight:600;color:var(--metin2);">' + formatTL(v.tutar) + '</span>'
+      + '<span class="badge ' + badgeCls + '">' + vd + '</span>'
+      + '</div>'
+      + '<div style="font-size:10px;color:var(--metin4);margin-top:2px;">' + (v.vade ? 'Vade: ' + formatTarih(v.vade) : 'Vade belirtilmemis') + '</div>'
+      + '</div>';
+  });
+  liste.innerHTML = html;
+}
+
+// ── Kayit Sec ──
+function kayitSec(id) {
+  seciliKayit = tumVeriler.find(function(v) { return v.id === id; });
+  if (!seciliKayit) return;
+  listeGuncelle();
+  detayGoster();
+}
+
+function detayGoster() {
+  var v = seciliKayit;
+  if (!v) return;
+  var vd = vadeDurumu(v.vade, v.durum);
+  document.getElementById('detay-baslik').textContent = v.talepNo;
+
+  var html = '';
+
+  // Kart 1: Borc Detayi
+  html += '<div class="kart">'
+    + '<div class="kart-baslik">Borc Detayi</div>'
+    + '<div class="form-grid-2">'
+    + '<div class="form-grup"><div class="form-label">Talep No</div><div style="font-size:13px;font-weight:600;color:var(--mavi-koyu);font-family:monospace;">' + v.talepNo + '</div></div>'
+    + '<div class="form-grup"><div class="form-label">Tedarikci</div><div style="font-size:13px;">' + v.tedarikci + '</div></div>'
+    + '<div class="form-grup"><div class="form-label">Tutar</div><div style="font-size:16px;font-weight:700;color:var(--laci);">' + formatTL(v.tutar) + '</div></div>'
+    + '<div class="form-grup"><div class="form-label">Vade Tarihi</div><div style="font-size:13px;">' + (v.vade ? formatTarih(v.vade) : '-') + '</div></div>'
+    + '<div class="form-grup"><div class="form-label">Durum</div><div>' + badgeHTML(vd) + '</div></div>'
+    + '<div class="form-grup"><div class="form-label">Malzeme</div><div style="font-size:12px;">' + v.malzeme + '</div></div>'
+    + '</div>'
+    + (v.aciklama ? '<div class="form-grup" style="margin-top:8px;"><div class="form-label">Aciklama</div><div style="font-size:12px;">' + v.aciklama + '</div></div>' : '')
+    + '</div>';
+
+  // Kart 2: Odeme Kaydi
+  html += '<div class="kart">'
+    + '<div class="kart-baslik">Odeme Kaydi</div>';
+  if (vd === 'Odendi') {
+    html += '<div style="padding:12px;background:var(--yesil-bg);border-radius:6px;color:var(--yesil-t);font-size:12px;font-weight:600;">Bu borc odenmistir.' + (v.odemeTarihi ? ' Odeme Tarihi: ' + formatTarih(v.odemeTarihi) : '') + '</div>';
+  } else {
+    html += '<div class="form-grid-2">'
+      + '<div class="form-grup"><div class="form-label">Odeme Tarihi</div><input type="date" class="form-input" id="odeme-tarih" value="' + bugunTarih() + '"></div>'
+      + '<div class="form-grup"><div class="form-label">Odeme Notu</div><input type="text" class="form-input" id="odeme-not" placeholder="Aciklama..."></div>'
+      + '</div>'
+      + '<button class="btn btn-yesil btn-tam" style="margin-top:10px;" onclick="odemeYap()">ODEME YAPILDI</button>';
+  }
+  html += '</div>';
+
+  // Kart 3: Tedarikci Ozeti
+  html += '<div class="kart">'
+    + '<div class="kart-baslik">Tedarikci Ozeti: ' + v.tedarikci + '</div>'
+    + '<div id="tedarikci-ozet"><div class="yukleniyor"><div class="spinner"></div> Hesaplaniyor...</div></div>'
+    + '</div>';
+
+  document.getElementById('sag-icerik').innerHTML = html;
+
+  // Tedarikci ozeti hesapla
+  hesaplaTedarikciOzet(v.tedarikci);
+}
+
+function hesaplaTedarikciOzet(tedarikciAdi) {
+  var ayniTedarikci = tumVeriler.filter(function(v) { return v.tedarikci === tedarikciAdi; });
+  var acikBorc = 0;
+  var odenenmis = [];
+
+  ayniTedarikci.forEach(function(v) {
+    var vd = vadeDurumu(v.vade, v.durum);
+    if (vd !== 'Odendi') {
+      acikBorc += v.tutar;
+    } else {
+      odenenmis.push(v);
+    }
+  });
+
+  // Son 3 odeme
+  odenenmis.sort(function(a, b) {
+    return (b.odemeTarihi || '').localeCompare(a.odemeTarihi || '');
+  });
+  var son3 = odenenmis.slice(0, 3);
+
+  var html = '<div class="form-grid-2" style="margin-bottom:12px;">'
+    + '<div class="form-grup"><div class="form-label">Toplam Acik Borc</div><div style="font-size:18px;font-weight:700;color:var(--kirmizi);">' + formatTL(acikBorc) + '</div></div>'
+    + '<div class="form-grup"><div class="form-label">Toplam Islem</div><div style="font-size:18px;font-weight:700;color:var(--laci);">' + ayniTedarikci.length + '</div></div>'
+    + '</div>';
+
+  if (son3.length > 0) {
+    html += '<div class="form-label" style="margin-bottom:6px;">Son Odemeler</div>';
+    html += '<table class="tablo" style="font-size:11px;"><thead><tr><th>Talep No</th><th>Tutar</th><th>Tarih</th></tr></thead><tbody>';
+    son3.forEach(function(v) {
+      html += '<tr><td class="td-mono">' + v.talepNo + '</td><td>' + formatTL(v.tutar) + '</td><td>' + (v.odemeTarihi ? formatTarih(v.odemeTarihi) : '-') + '</td></tr>';
+    });
+    html += '</tbody></table>';
+  } else {
+    html += '<div style="font-size:12px;color:var(--metin4);padding:8px 0;">Henuz odeme kaydi yok</div>';
+  }
+
+  document.getElementById('tedarikci-ozet').innerHTML = html;
+}
+
+// ── Odeme Yap ──
+async function odemeYap() {
+  if (!seciliKayit) return;
+  var tarih = document.getElementById('odeme-tarih').value;
+  var not = document.getElementById('odeme-not').value;
+
+  try {
+    await apiPatch('Satinalma Talepleri', seciliKayit.id, {
+      'Odeme Durumu': 'Odendi',
+      'Odeme Tarihi': tarih || bugunTarih(),
+      'Odeme Notu': not
+    });
+
+    logIslem('Guncellendi', 'Borc', seciliKayit.id, seciliKayit.talepNo + ' odendi', null, {durum: 'Odendi', tarih: tarih});
+    toast('Odeme kaydedildi', 'basari');
+
+    // Yerel veriyi guncelle
+    seciliKayit.durum = 'Odendi';
+    seciliKayit.odemeTarihi = tarih;
+    listeGuncelle();
+    detayGoster();
+  } catch(e) {
+    console.error('Odeme hatasi:', e);
+    toast('Odeme kaydedilemedi', 'hata');
+  }
+}
+
+// ── Yardimci ──
+function formatTL(n) {
+  if (!n || isNaN(n)) return '0,00 TL';
+  return Number(n).toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' TL';
+}
+
+function formatTarih(d) {
+  if (!d) return '-';
+  var p = d.split('-');
+  if (p.length === 3) return p[2] + '.' + p[1] + '.' + p[0];
+  return d;
+}
+
+function bugunTarih() {
+  var d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+
+function badgeHTML(vd) {
+  var cls = 'badge-gri';
+  if (vd === 'Odendi') cls = 'badge-yesil';
+  else if (vd === 'Gecikmis') cls = 'badge-kirmizi';
+  else if (vd === 'Vadeli') cls = 'badge-sari';
+  else if (vd === 'Bekleyen') cls = 'badge-mavi';
+  return '<span class="badge ' + cls + '">' + vd + '</span>';
+}
+
+// ── Basla ──
+document.addEventListener('DOMContentLoaded', function() {
+  yukle();
+});
+</script>
+</body>
+</html>

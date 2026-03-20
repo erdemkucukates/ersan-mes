@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — Nakit Akisi</title>
+<link rel="stylesheet" href="ersan_styles.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="ersan_nav.js" defer></script>
+<script src="ersan_log.js" defer></script>
+</head>
+<body>
+<div id="nav-alani"></div>
+<div class="icerik-alani">
+  <div class="topbar">
+    <div class="topbar-baslik">Nakit Akisi</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
+    </div>
+  </div>
+  <div class="sayfa-icerik">
+
+    <!-- AI Uyari Banner -->
+    <div id="uyari-banner" style="display:none;background:var(--sari-bg);border:1px solid #f0c674;border-radius:8px;padding:12px 16px;margin-bottom:12px;display:none;">
+      <div style="display:flex;align-items:flex-start;gap:10px;">
+        <div style="font-size:18px;flex-shrink:0;">&#9888;</div>
+        <div>
+          <div style="font-size:12px;font-weight:700;color:var(--sari-t);margin-bottom:4px;">Nakit Uyarisi</div>
+          <div style="font-size:12px;color:var(--sari-t);" id="uyari-mesaj">Onumuzdeki 30 gun icinde nakit bakiyeniz 20.000 TL altina dusebilir.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- KPI Kartlari -->
+    <div class="kpi-grid">
+      <div class="kpi-kart">
+        <div class="kpi-etiket">Mevcut Nakit</div>
+        <div class="kpi-deger" id="kpi-nakit">-</div>
+        <div class="kpi-alt">Tahmini bakiye</div>
+      </div>
+      <div class="kpi-kart yesil">
+        <div class="kpi-etiket">Bu Ay Beklenen Tahsilat</div>
+        <div class="kpi-deger" id="kpi-tahsilat">-</div>
+        <div class="kpi-alt">Fatura kayitlarindan</div>
+      </div>
+      <div class="kpi-kart kirmizi">
+        <div class="kpi-etiket">Bu Ay Odenecek Borc</div>
+        <div class="kpi-deger" id="kpi-borc">-</div>
+        <div class="kpi-alt">Satinalma taleplerinden</div>
+      </div>
+    </div>
+
+    <!-- Grafik -->
+    <div class="kart" style="margin-bottom:16px;">
+      <div class="kart-baslik">6 Aylik Nakit Akisi</div>
+      <div style="position:relative;height:300px;">
+        <canvas id="nakit-chart"></canvas>
+      </div>
+    </div>
+
+    <!-- 30 Gun Projeksiyon Tablosu -->
+    <div class="tablo-wrap">
+      <div class="tablo-baslik">
+        <div class="tablo-baslik-text">30 Gunluk Nakit Projeksiyon</div>
+        <div class="tablo-baslik-sayi" id="prj-sayi">0 islem</div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="tablo">
+          <thead>
+            <tr>
+              <th>Tarih</th>
+              <th>Aciklama</th>
+              <th style="text-align:right;">Gelen (+)</th>
+              <th style="text-align:right;">Giden (-)</th>
+              <th style="text-align:right;">Bakiye</th>
+            </tr>
+          </thead>
+          <tbody id="prj-tablo">
+            <tr><td colspan="5" style="text-align:center;padding:20px;color:var(--metin4);">Yukleniyor...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var faturalar = [];
+var satinalmalar = [];
+var chartInstance = null;
+
+// ── API Helper ──
+async function apiGet(tablo, query) {
+  var url = '/.netlify/functions/airtable?table=' + encodeURIComponent(tablo);
+  if (query) url += '&' + query;
+  var r = await fetch(url);
+  return r.json();
+}
+
+function toast(msg, tip) {
+  var el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast toast-' + (tip || 'bilgi') + ' goster';
+  setTimeout(function() { el.className = 'toast'; }, 3000);
+}
+
+// ── Veri Yukle ──
+async function yukle() {
+  try {
+    var sonuclar = await Promise.all([
+      apiGet('Fatura Kayitlari', 'pageSize=100').catch(function() { return {records: []}; }),
+      apiGet('Satinalma Talepleri', 'pageSize=100').catch(function() { return {records: []}; })
+    ]);
+
+    faturalar = (sonuclar[0].records || []).map(function(r) {
+      var f = r.fields || {};
+      return {
+        id: r.id,
+        faturaNo: f['Fatura No'] || f['Name'] || '-',
+        musteri: f['Musteri'] || f['Musteri Adi'] || '-',
+        tutar: parseFloat(f['Tutar'] || f['Toplam'] || 0),
+        tarih: f['Tarih'] || f['Fatura Tarihi'] || '',
+        vadeTarih: f['Vade Tarihi'] || f['Vade'] || '',
+        durum: f['Durum'] || f['Odeme Durumu'] || 'Bekleyen',
+        tip: f['Tip'] || 'Gelen'
+      };
+    });
+
+    satinalmalar = (sonuclar[1].records || []).map(function(r) {
+      var f = r.fields || {};
+      return {
+        id: r.id,
+        talepNo: f['Talep No'] || f['Name'] || '-',
+        tedarikci: f['Tedarikci'] || f['Tedarikci Adi'] || '-',
+        tutar: parseFloat(f['Tutar'] || f['Toplam Tutar'] || 0),
+        vadeTarih: f['Vade Tarihi'] || f['Vade'] || '',
+        durum: f['Odeme Durumu'] || f['Durum'] || 'Bekleyen'
+      };
+    });
+
+    hesapla();
+  } catch(e) {
+    console.error('Veri yukleme hatasi:', e);
+    document.getElementById('prj-tablo').innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--metin4);">Veri yuklenemedi. Tablolar henuz olusturulmamis olabilir.</td></tr>';
+  }
+}
+
+// ── Hesaplama ──
+function hesapla() {
+  var bugun = new Date();
+  bugun.setHours(0,0,0,0);
+  var buAyBas = new Date(bugun.getFullYear(), bugun.getMonth(), 1);
+  var buAySon = new Date(bugun.getFullYear(), bugun.getMonth() + 1, 0);
+
+  // Bu ay beklenen tahsilat
+  var buAyTahsilat = 0;
+  faturalar.forEach(function(f) {
+    if (f.durum === 'Odendi' || f.durum === 'Tahsil Edildi') return;
+    var vade = f.vadeTarih ? new Date(f.vadeTarih) : null;
+    if (vade && vade >= buAyBas && vade <= buAySon) {
+      buAyTahsilat += f.tutar;
+    }
+  });
+
+  // Bu ay odenecek borc
+  var buAyBorc = 0;
+  satinalmalar.forEach(function(s) {
+    if (s.durum === 'Odendi') return;
+    var vade = s.vadeTarih ? new Date(s.vadeTarih) : null;
+    if (vade && vade >= buAyBas && vade <= buAySon) {
+      buAyBorc += s.tutar;
+    }
+  });
+
+  // Tahmini nakit (baslangicindan toplam gelen - giden)
+  var toplamGelen = 0, toplamGiden = 0;
+  faturalar.forEach(function(f) {
+    if (f.durum === 'Odendi' || f.durum === 'Tahsil Edildi') toplamGelen += f.tutar;
+  });
+  satinalmalar.forEach(function(s) {
+    if (s.durum === 'Odendi') toplamGiden += s.tutar;
+  });
+  var mevcutNakit = toplamGelen - toplamGiden;
+
+  document.getElementById('kpi-nakit').textContent = formatTL(mevcutNakit);
+  document.getElementById('kpi-tahsilat').textContent = formatTL(buAyTahsilat);
+  document.getElementById('kpi-borc').textContent = formatTL(buAyBorc);
+
+  // Grafik
+  chartCiz();
+
+  // 30 gun projeksiyon
+  projeksiyonHesapla(mevcutNakit);
+}
+
+// ── Chart.js Grafik ──
+function chartCiz() {
+  var aylar = [];
+  var gelenData = [];
+  var gidenData = [];
+  var bugun = new Date();
+
+  for (var i = 5; i >= 0; i--) {
+    var d = new Date(bugun.getFullYear(), bugun.getMonth() - i, 1);
+    var ayStr = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+    var ayBas = new Date(d.getFullYear(), d.getMonth(), 1);
+    var aySon = new Date(d.getFullYear(), d.getMonth() + 1, 0);
+
+    var ayIsimleri = ['Oca','Sub','Mar','Nis','May','Haz','Tem','Agu','Eyl','Eki','Kas','Ara'];
+    aylar.push(ayIsimleri[d.getMonth()] + ' ' + d.getFullYear());
+
+    var gelen = 0, giden = 0;
+    faturalar.forEach(function(f) {
+      var t = f.tarih ? new Date(f.tarih) : null;
+      if (t && t >= ayBas && t <= aySon) gelen += f.tutar;
+    });
+    satinalmalar.forEach(function(s) {
+      var t = s.vadeTarih ? new Date(s.vadeTarih) : null;
+      if (t && t >= ayBas && t <= aySon) giden += s.tutar;
+    });
+
+    gelenData.push(gelen);
+    gidenData.push(giden);
+  }
+
+  var ctx = document.getElementById('nakit-chart');
+  if (!ctx) return;
+
+  if (chartInstance) chartInstance.destroy();
+
+  chartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: aylar,
+      datasets: [
+        {
+          label: 'Gelen',
+          data: gelenData,
+          borderColor: '#16a34a',
+          backgroundColor: 'rgba(22,163,74,0.1)',
+          fill: true,
+          tension: 0.3,
+          borderWidth: 2,
+          pointRadius: 4,
+          pointBackgroundColor: '#16a34a'
+        },
+        {
+          label: 'Giden',
+          data: gidenData,
+          borderColor: '#dc2626',
+          backgroundColor: 'rgba(220,38,38,0.1)',
+          fill: true,
+          tension: 0.3,
+          borderWidth: 2,
+          pointRadius: 4,
+          pointBackgroundColor: '#dc2626'
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'top',
+          labels: { font: { size: 11 }, usePointStyle: true, pointStyle: 'circle' }
+        },
+        tooltip: {
+          callbacks: {
+            label: function(ctx) {
+              return ctx.dataset.label + ': ' + Number(ctx.parsed.y).toLocaleString('tr-TR', {minimumFractionDigits: 2}) + ' TL';
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            font: { size: 10 },
+            callback: function(v) { return (v / 1000).toFixed(0) + 'K'; }
+          },
+          grid: { color: '#f1f5f9' }
+        },
+        x: {
+          ticks: { font: { size: 10 } },
+          grid: { display: false }
+        }
+      }
+    }
+  });
+}
+
+// ── 30 Gun Projeksiyon ──
+function projeksiyonHesapla(baslangicBakiye) {
+  var bugun = new Date();
+  bugun.setHours(0,0,0,0);
+  var hareketler = [];
+
+  // Beklenen tahsilatlar
+  faturalar.forEach(function(f) {
+    if (f.durum === 'Odendi' || f.durum === 'Tahsil Edildi') return;
+    var vade = f.vadeTarih ? new Date(f.vadeTarih) : null;
+    if (!vade) return;
+    var fark = (vade - bugun) / (1000 * 60 * 60 * 24);
+    if (fark >= 0 && fark <= 30) {
+      hareketler.push({
+        tarih: f.vadeTarih,
+        aciklama: 'Tahsilat: ' + f.faturaNo + ' (' + f.musteri + ')',
+        gelen: f.tutar,
+        giden: 0
+      });
+    }
+  });
+
+  // Beklenen odemeler
+  satinalmalar.forEach(function(s) {
+    if (s.durum === 'Odendi') return;
+    var vade = s.vadeTarih ? new Date(s.vadeTarih) : null;
+    if (!vade) return;
+    var fark = (vade - bugun) / (1000 * 60 * 60 * 24);
+    if (fark >= 0 && fark <= 30) {
+      hareketler.push({
+        tarih: s.vadeTarih,
+        aciklama: 'Odeme: ' + s.talepNo + ' (' + s.tedarikci + ')',
+        gelen: 0,
+        giden: s.tutar
+      });
+    }
+  });
+
+  // Tarihe gore sirala
+  hareketler.sort(function(a, b) { return a.tarih.localeCompare(b.tarih); });
+
+  document.getElementById('prj-sayi').textContent = hareketler.length + ' islem';
+
+  if (hareketler.length === 0) {
+    document.getElementById('prj-tablo').innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--metin4);">Onumuzdeki 30 gun icinde beklenen hareket yok</td></tr>';
+    return;
+  }
+
+  var bakiye = baslangicBakiye;
+  var kritikGun = false;
+  var html = '';
+
+  // Baslangic satiri
+  html += '<tr style="background:var(--bg2);">'
+    + '<td style="font-weight:600;">' + formatTarih(tarihStr(bugun)) + '</td>'
+    + '<td style="font-style:italic;color:var(--metin3);">Baslangic Bakiyesi</td>'
+    + '<td style="text-align:right;">-</td>'
+    + '<td style="text-align:right;">-</td>'
+    + '<td style="text-align:right;font-weight:700;">' + formatTL(bakiye) + '</td>'
+    + '</tr>';
+
+  hareketler.forEach(function(h) {
+    bakiye = bakiye + h.gelen - h.giden;
+    var kritik = bakiye < 20000;
+    if (kritik) kritikGun = true;
+
+    var satirStil = kritik ? 'background:var(--kirmizi-bg);' : '';
+    var bakiyeRenk = kritik ? 'color:var(--kirmizi-t);' : '';
+
+    html += '<tr style="' + satirStil + '">'
+      + '<td>' + formatTarih(h.tarih) + '</td>'
+      + '<td style="font-size:11px;">' + h.aciklama + '</td>'
+      + '<td style="text-align:right;color:var(--yesil);">' + (h.gelen > 0 ? '+' + formatTL(h.gelen) : '') + '</td>'
+      + '<td style="text-align:right;color:var(--kirmizi);">' + (h.giden > 0 ? '-' + formatTL(h.giden) : '') + '</td>'
+      + '<td style="text-align:right;font-weight:600;' + bakiyeRenk + '">' + formatTL(bakiye) + '</td>'
+      + '</tr>';
+  });
+
+  document.getElementById('prj-tablo').innerHTML = html;
+
+  // Uyari banner
+  var banner = document.getElementById('uyari-banner');
+  if (kritikGun) {
+    banner.style.display = 'block';
+    document.getElementById('uyari-mesaj').textContent = 'Onumuzdeki 30 gun icinde nakit bakiyeniz 20.000 TL altina dusebilir. Tahsilat takibini sikistirin veya odemeleri erteleyin.';
+  } else {
+    banner.style.display = 'none';
+  }
+}
+
+// ── Yardimci ──
+function formatTL(n) {
+  if (n === undefined || n === null || isNaN(n)) return '0,00 TL';
+  return Number(n).toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' TL';
+}
+
+function formatTarih(d) {
+  if (!d) return '-';
+  var p = d.split('-');
+  if (p.length === 3) return p[2] + '.' + p[1] + '.' + p[0];
+  return d;
+}
+
+function tarihStr(d) {
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+
+// ── Basla ──
+document.addEventListener('DOMContentLoaded', function() {
+  yukle();
+});
+</script>
+</body>
+</html>
