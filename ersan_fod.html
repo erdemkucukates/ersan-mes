@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — FOD Kontrol</title>
+<link rel="stylesheet" href="ersan_styles.css">
+<script src="ersan_nav.js" defer></script>
+<script src="ersan_log.js" defer></script>
+</head>
+<body>
+<div id="nav-alani"></div>
+<div class="icerik-alani">
+  <div class="topbar">
+    <div class="topbar-baslik">FOD Kontrol</div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:11px;color:var(--metin3)">AS9100 §8.5.4</span>
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
+    </div>
+  </div>
+  <div class="sayfa-icerik">
+
+    <!-- Gunluk FOD Durum Cubugu -->
+    <div id="fod-bar" style="background:var(--laci);border-radius:8px;padding:12px 20px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between">
+      <div style="color:#fff">
+        <div style="font-size:11px;font-weight:700;margin-bottom:2px">Gunluk FOD Durumu</div>
+        <div style="font-size:10px;color:rgba(255,255,255,.5)">Bugun: <span id="fod-tarih-goster" style="color:#93c5fd;font-weight:600"></span></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:16px">
+        <div style="text-align:center">
+          <div style="font-size:20px;font-weight:700;color:#93c5fd" id="fod-tamamlanan">0</div>
+          <div style="font-size:9px;color:rgba(255,255,255,.4)">TAMAMLANAN</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:20px;font-weight:700;color:#fbbf24" id="fod-beklenen">0</div>
+          <div style="font-size:9px;color:rgba(255,255,255,.4)">BEKLENEN</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:20px;font-weight:700" id="fod-yuzde" style="color:#4ade80">0%</div>
+          <div style="font-size:9px;color:rgba(255,255,255,.4)">TAMAMLANMA</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="iki-panel">
+
+      <!-- SOL PANEL -->
+      <div class="sol-panel">
+        <div class="sol-panel-ust">
+          <div class="sol-panel-baslik">FOD Kayitlari</div>
+          <button class="btn-new" onclick="yeniFod()">+ Yeni</button>
+        </div>
+        <div class="sol-arama"><input type="text" placeholder="Ara..." oninput="araFiltre(this.value)"></div>
+        <div class="sol-filtre">
+          <button class="filtre-btn aktif" onclick="filtreUygula('Tumu',this)">Tumu</button>
+          <button class="filtre-btn" onclick="filtreUygula('Temiz',this)">Temiz</button>
+          <button class="filtre-btn" onclick="filtreUygula('FOD Tespit',this)">FOD Tespit</button>
+        </div>
+        <div class="sol-liste" id="fod-liste">
+          <div class="yukleniyor"><div class="spinner"></div> Yukleniyor...</div>
+        </div>
+      </div>
+
+      <!-- SAG PANEL -->
+      <div class="sag-panel">
+        <div class="sag-panel-ust">
+          <div style="font-size:13px;font-weight:600;color:var(--laci)" id="sag-baslik">FOD Kontrol</div>
+          <div id="sag-badge"></div>
+        </div>
+        <div class="sag-panel-icerik" id="sag-icerik">
+          <div class="bos-durum">Listeden bir FOD kaydi secin veya yeni olusturun.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var fodListesi = [];
+var tezgahlar = [];
+var aktifFiltre = 'Tumu';
+var seciliId = null;
+
+async function apiGet(tablo, query) {
+  var url = '/.netlify/functions/airtable?table=' + encodeURIComponent(tablo);
+  if (query) url += '&' + query;
+  var r = await fetch(url);
+  return r.json();
+}
+async function apiPost(tablo, fields) {
+  var r = await fetch('/.netlify/functions/airtable', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({method:'POST', path:'/v0/app5LDgJMgocw79Ix/' + encodeURIComponent(tablo), body:{fields:fields}})
+  });
+  return r.json();
+}
+async function apiPatch(tablo, id, fields) {
+  var r = await fetch('/.netlify/functions/airtable', {
+    method:'PATCH', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({table:tablo, id:id, fields:fields})
+  });
+  return r.json();
+}
+
+function toast(mesaj, tip) {
+  var t = document.getElementById('toast');
+  t.textContent = mesaj;
+  t.className = 'toast toast-' + (tip || 'basari') + ' goster';
+  setTimeout(function(){ t.className = 'toast'; }, 3000);
+}
+
+async function yukle() {
+  try {
+    var s1 = await apiGet('FOD Kontrol', 'pageSize=100');
+    fodListesi = s1.records || [];
+  } catch(e) { fodListesi = []; }
+  try {
+    var s2 = await apiGet('Tezgahlar', 'pageSize=100');
+    tezgahlar = s2.records || [];
+  } catch(e) { tezgahlar = []; }
+  gunlukDurumGuncelle();
+  listeGuncelle();
+}
+
+function gunlukDurumGuncelle() {
+  var bugun = new Date().toISOString().split('T')[0];
+  document.getElementById('fod-tarih-goster').textContent = bugun;
+  var bugunKayitlari = fodListesi.filter(function(r) { return r.fields['Tarih'] === bugun; });
+  var tamamlanan = bugunKayitlari.length;
+  var beklenen = Math.max(tezgahlar.length, 1);
+  var yuzde = Math.round((tamamlanan / beklenen) * 100);
+  document.getElementById('fod-tamamlanan').textContent = tamamlanan;
+  document.getElementById('fod-beklenen').textContent = beklenen;
+  var yuzdeEl = document.getElementById('fod-yuzde');
+  yuzdeEl.textContent = yuzde + '%';
+  yuzdeEl.style.color = yuzde >= 100 ? '#4ade80' : yuzde >= 50 ? '#fbbf24' : '#f87171';
+}
+
+function araFiltre(val) {
+  var arama = val.toLowerCase();
+  var satirlar = document.querySelectorAll('#fod-liste .liste-satir');
+  for (var i = 0; i < satirlar.length; i++) {
+    satirlar[i].style.display = satirlar[i].textContent.toLowerCase().indexOf(arama) >= 0 ? '' : 'none';
+  }
+}
+
+function filtreUygula(tip, btn) {
+  aktifFiltre = tip;
+  var btns = document.querySelectorAll('.filtre-btn');
+  for (var i = 0; i < btns.length; i++) btns[i].classList.remove('aktif');
+  if (btn) btn.classList.add('aktif');
+  listeGuncelle();
+}
+
+function listeGuncelle() {
+  var liste = document.getElementById('fod-liste');
+  var filtered = fodListesi;
+  if (aktifFiltre === 'Temiz') {
+    filtered = fodListesi.filter(function(r) { return r.fields['Sonuc'] === 'Temiz'; });
+  } else if (aktifFiltre === 'FOD Tespit') {
+    filtered = fodListesi.filter(function(r) { return r.fields['Sonuc'] === 'FOD Tespit Edildi'; });
+  }
+  if (filtered.length === 0) {
+    liste.innerHTML = '<div class="bos-durum">' + (fodListesi.length === 0 ? 'Tablo yapilandirilmamis veya kayit yok.' : 'Bu filtreye uygun kayit yok.') + '</div>';
+    return;
+  }
+  var html = '';
+  filtered.forEach(function(r) {
+    var f = r.fields;
+    var sonuc = f['Sonuc'] || 'Bekliyor';
+    var badgeCls = sonuc === 'Temiz' ? 'badge-yesil' : sonuc === 'FOD Tespit Edildi' ? 'badge-kirmizi' : 'badge-sari';
+    var secili = r.id === seciliId ? ' secili' : '';
+    html += '<div class="liste-satir' + secili + '" onclick="fodSec(\'' + r.id + '\')">'
+      + '<div class="liste-satir-no">' + (f['Tezgah'] || '-') + '</div>'
+      + '<div class="liste-satir-ad">' + (f['Kontrol Turu'] || '-') + '</div>'
+      + '<div class="liste-satir-alt"><span class="badge ' + badgeCls + '">' + sonuc + '</span>'
+      + '<span style="font-size:10px;color:var(--metin4)">' + (f['Tarih'] || '') + '</span></div>'
+      + '</div>';
+  });
+  liste.innerHTML = html;
+}
+
+function fodSec(id) {
+  seciliId = id;
+  listeGuncelle();
+  var kayit = fodListesi.find(function(r){ return r.id === id; });
+  if (kayit) detayGoster(kayit);
+}
+
+function detayGoster(kayit) {
+  var f = kayit.fields;
+  var sonuc = f['Sonuc'] || '';
+
+  document.getElementById('sag-baslik').textContent = (f['Tezgah'] || 'FOD Kontrol');
+  var badgeCls = sonuc === 'Temiz' ? 'badge-yesil' : sonuc === 'FOD Tespit Edildi' ? 'badge-kirmizi' : 'badge-sari';
+  document.getElementById('sag-badge').innerHTML = sonuc ? '<span class="badge ' + badgeCls + '">' + sonuc + '</span>' : '';
+
+  var html = '';
+
+  // Form
+  html += '<div class="kart"><div class="kart-baslik">FOD Kontrol Formu</div>'
+    + '<div class="form-grid-3">'
+    + '<div class="form-grup"><label class="form-label">Tezgah</label><select class="form-select" id="fod-tezgah">' + tezgahOptions(f['Tezgah']) + '</select></div>'
+    + '<div class="form-grup"><label class="form-label">Kontrol Turu</label><select class="form-select" id="fod-tur">'
+    + '<option' + (f['Kontrol Turu']==='Vardiya Basi' ? ' selected' : '') + '>Vardiya Basi</option>'
+    + '<option' + (f['Kontrol Turu']==='Vardiya Sonu' ? ' selected' : '') + '>Vardiya Sonu</option>'
+    + '<option' + (f['Kontrol Turu']==='Is Degisikligi' ? ' selected' : '') + '>Is Degisikligi</option>'
+    + '<option' + (f['Kontrol Turu']==='Rutin' ? ' selected' : '') + '>Rutin</option>'
+    + '</select></div>'
+    + '<div class="form-grup"><label class="form-label">Tarih</label><input type="date" class="form-input" id="fod-tarih" value="' + (f['Tarih'] || new Date().toISOString().split('T')[0]) + '"></div>'
+    + '</div>'
+    + '<div class="form-grup"><label class="form-label">Kontrol Eden</label><input class="form-input" id="fod-kontroleden" value="' + (f['Kontrol Eden'] || 'Erdem Kucukates') + '"></div>'
+    + '</div>';
+
+  // FOD Checklist
+  var checkItems = [
+    'Tezgah uzerinde yabanci cisim yok',
+    'Calisma alani temiz ve duzenli',
+    'Takim/aparat dogru yerlestirilmis',
+    'Talaş/capi temizlenmis',
+    'Koruyucu kapaklar yerinde',
+    'Uretilen parca uzerinde FOD yok'
+  ];
+  var mevcutKontroller = f['Kontrol Listesi'] || '';
+  html += '<div class="kart"><div class="kart-baslik">FOD Kontrol Listesi</div>';
+  checkItems.forEach(function(item, idx) {
+    var checked = mevcutKontroller.indexOf(item) >= 0 ? ' checked' : '';
+    html += '<div style="padding:5px 0"><label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--metin2);cursor:pointer">'
+      + '<input type="checkbox" class="fod-check" value="' + item + '"' + checked + ' onchange="fodSonucGuncelle()"> ' + item + '</label></div>';
+  });
+  html += '</div>';
+
+  // Sonuc ve FOD detay
+  html += '<div class="kart"><div class="kart-baslik">Sonuc</div>'
+    + '<div id="fod-sonuc-panel">'
+    + '<div style="text-align:center;padding:8px"><span class="badge ' + badgeCls + '" style="font-size:14px;padding:6px 16px" id="fod-sonuc-badge">' + (sonuc || 'Kontrol tamamlanmadi') + '</span></div>'
+    + '</div>'
+    + '<div id="fod-detay-panel" style="' + (sonuc === 'FOD Tespit Edildi' ? '' : 'display:none') + '">'
+    + '<div style="background:var(--kirmizi-bg);border:1px solid var(--kirmizi);border-radius:6px;padding:10px;margin-top:8px">'
+    + '<div class="form-grup"><label class="form-label" style="color:var(--kirmizi-t)">FOD Aciklamasi (Zorunlu)</label>'
+    + '<textarea class="form-textarea" id="fod-aciklama" rows="3" placeholder="Tespit edilen FOD\'u detayli aciklayiniz...">' + (f['Aciklama'] || '') + '</textarea></div>'
+    + '<div style="font-size:11px;color:var(--kirmizi-t)">Tezgah durumu "Bekliyor" olarak guncellenecektir.</div>'
+    + '</div></div>'
+    + '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">'
+    + '<button class="btn btn-mavi" onclick="fodKaydet()">Kaydet</button>'
+    + '</div>'
+    + '</div>';
+
+  document.getElementById('sag-icerik').innerHTML = html;
+}
+
+function tezgahOptions(selected) {
+  var html = '<option value="">-- Tezgah Sec --</option>';
+  tezgahlar.forEach(function(r) {
+    var ad = r.fields['Tezgah Kodu'] || r.fields['Ad'] || r.id.substring(0,8);
+    var sel = ad === selected ? ' selected' : '';
+    html += '<option value="' + ad + '"' + sel + '>' + ad + '</option>';
+  });
+  return html;
+}
+
+function fodSonucGuncelle() {
+  var checks = document.querySelectorAll('.fod-check');
+  var tumChecked = true;
+  for (var i = 0; i < checks.length; i++) {
+    if (!checks[i].checked) { tumChecked = false; break; }
+  }
+  var sonuc = tumChecked ? 'Temiz' : 'FOD Tespit Edildi';
+  var badge = document.getElementById('fod-sonuc-badge');
+  if (badge) {
+    badge.textContent = sonuc;
+    badge.className = 'badge ' + (sonuc === 'Temiz' ? 'badge-yesil' : 'badge-kirmizi') + ' ' ;
+    badge.style.fontSize = '14px';
+    badge.style.padding = '6px 16px';
+  }
+  var detayPanel = document.getElementById('fod-detay-panel');
+  if (detayPanel) {
+    detayPanel.style.display = sonuc === 'FOD Tespit Edildi' ? '' : 'none';
+  }
+}
+
+function checklistTopla() {
+  var checks = document.querySelectorAll('.fod-check:checked');
+  var arr = [];
+  for (var i = 0; i < checks.length; i++) arr.push(checks[i].value);
+  return arr.join('; ');
+}
+
+function yeniFod() {
+  seciliId = null;
+  document.getElementById('sag-baslik').textContent = 'Yeni FOD Kontrol';
+  document.getElementById('sag-badge').innerHTML = '';
+  detayGoster({fields:{}});
+}
+
+async function fodKaydet() {
+  var checks = document.querySelectorAll('.fod-check');
+  var tumChecked = true;
+  for (var i = 0; i < checks.length; i++) {
+    if (!checks[i].checked) { tumChecked = false; break; }
+  }
+  var sonuc = tumChecked ? 'Temiz' : 'FOD Tespit Edildi';
+
+  if (sonuc === 'FOD Tespit Edildi') {
+    var aciklama = document.getElementById('fod-aciklama').value;
+    if (!aciklama) {
+      toast('FOD tespit edildi ise aciklama zorunludur', 'hata');
+      return;
+    }
+  }
+
+  var fields = {
+    'Tezgah': document.getElementById('fod-tezgah').value,
+    'Kontrol Turu': document.getElementById('fod-tur').value,
+    'Tarih': document.getElementById('fod-tarih').value,
+    'Kontrol Eden': document.getElementById('fod-kontroleden').value,
+    'Kontrol Listesi': checklistTopla(),
+    'Sonuc': sonuc,
+    'Aciklama': sonuc === 'FOD Tespit Edildi' ? document.getElementById('fod-aciklama').value : ''
+  };
+
+  try {
+    if (seciliId) {
+      await apiPatch('FOD Kontrol', seciliId, fields);
+      await logIslem('Guncellendi', 'FOD', seciliId, fields['Tezgah'] + ' → ' + sonuc, null, fields);
+      toast('FOD kontrol guncellendi');
+    } else {
+      var s = await apiPost('FOD Kontrol', fields);
+      seciliId = s.id;
+      await logIslem('Olusturuldu', 'FOD', s.id, fields['Tezgah'] + ' → ' + sonuc, null, fields);
+      toast('FOD kontrol kaydedildi');
+    }
+
+    // FOD tespit edildi ise tezgah durumunu guncelle
+    if (sonuc === 'FOD Tespit Edildi' && fields['Tezgah']) {
+      var tezgah = tezgahlar.find(function(r) {
+        return (r.fields['Tezgah Kodu'] || r.fields['Ad']) === fields['Tezgah'];
+      });
+      if (tezgah) {
+        try {
+          await apiPatch('Tezgahlar', tezgah.id, {'Durum': 'Bekliyor'});
+          toast('Tezgah durumu "Bekliyor" olarak guncellendi', 'bilgi');
+        } catch(e) { console.warn('Tezgah durumu guncellenemedi:', e); }
+      }
+    }
+
+    await yukle();
+    if (seciliId) fodSec(seciliId);
+  } catch(e) {
+    toast('Hata: ' + e.message, 'hata');
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  yukle();
+});
+</script>
+</body>
+</html>

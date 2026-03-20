@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — Sahte Parca Onleme</title>
+<link rel="stylesheet" href="ersan_styles.css">
+<script src="ersan_nav.js" defer></script>
+<script src="ersan_log.js" defer></script>
+</head>
+<body>
+<div id="nav-alani"></div>
+<div class="icerik-alani">
+  <div class="topbar">
+    <div class="topbar-baslik">Sahte Parca Onleme</div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:11px;color:var(--metin3)">AS9100 §8.1.4</span>
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
+    </div>
+  </div>
+  <div class="sayfa-icerik">
+    <div class="iki-panel">
+
+      <!-- SOL PANEL -->
+      <div class="sol-panel">
+        <div class="sol-panel-ust">
+          <div class="sol-panel-baslik">Son Kontroller</div>
+          <button class="btn-new" onclick="yeniKontrol()">+ Yeni</button>
+        </div>
+        <div class="sol-arama"><input type="text" placeholder="Ara..." oninput="araFiltre(this.value)"></div>
+        <div class="sol-liste" id="kontrol-liste">
+          <div class="yukleniyor"><div class="spinner"></div> Yukleniyor...</div>
+        </div>
+      </div>
+
+      <!-- SAG PANEL -->
+      <div class="sag-panel">
+        <div class="sag-panel-ust">
+          <div style="font-size:13px;font-weight:600;color:var(--laci)" id="sag-baslik">Sahte Parca Kontrol</div>
+          <div id="sag-badge"></div>
+        </div>
+        <div class="sag-panel-icerik" id="sag-icerik">
+          <div class="bos-durum">Listeden bir kontrol secin veya yeni olusturun.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var kontrolListesi = [];
+var malzemeGirisleri = [];
+var tedarikciler = [];
+var seciliId = null;
+
+async function apiGet(tablo, query) {
+  var url = '/.netlify/functions/airtable?table=' + encodeURIComponent(tablo);
+  if (query) url += '&' + query;
+  var r = await fetch(url);
+  return r.json();
+}
+async function apiPost(tablo, fields) {
+  var r = await fetch('/.netlify/functions/airtable', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({method:'POST', path:'/v0/app5LDgJMgocw79Ix/' + encodeURIComponent(tablo), body:{fields:fields}})
+  });
+  return r.json();
+}
+async function apiPatch(tablo, id, fields) {
+  var r = await fetch('/.netlify/functions/airtable', {
+    method:'PATCH', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({table:tablo, id:id, fields:fields})
+  });
+  return r.json();
+}
+
+function toast(mesaj, tip) {
+  var t = document.getElementById('toast');
+  t.textContent = mesaj;
+  t.className = 'toast toast-' + (tip || 'basari') + ' goster';
+  setTimeout(function(){ t.className = 'toast'; }, 3000);
+}
+
+async function yukle() {
+  try {
+    var s1 = await apiGet('Sahte Parca Kontrol', 'pageSize=100');
+    kontrolListesi = s1.records || [];
+  } catch(e) { kontrolListesi = []; }
+  try {
+    var s2 = await apiGet('Malzeme Girisleri', 'pageSize=100');
+    malzemeGirisleri = s2.records || [];
+  } catch(e) { malzemeGirisleri = []; }
+  try {
+    var s3 = await apiGet('Tedarikciler (OTL)', 'pageSize=100');
+    tedarikciler = s3.records || [];
+  } catch(e) { tedarikciler = []; }
+  listeGuncelle();
+}
+
+function araFiltre(val) {
+  var arama = val.toLowerCase();
+  var satirlar = document.querySelectorAll('#kontrol-liste .liste-satir');
+  for (var i = 0; i < satirlar.length; i++) {
+    satirlar[i].style.display = satirlar[i].textContent.toLowerCase().indexOf(arama) >= 0 ? '' : 'none';
+  }
+}
+
+function listeGuncelle() {
+  var liste = document.getElementById('kontrol-liste');
+  if (kontrolListesi.length === 0) {
+    liste.innerHTML = '<div class="bos-durum">Tablo yapilandirilmamis veya kayit yok.</div>';
+    return;
+  }
+  var html = '';
+  kontrolListesi.forEach(function(r) {
+    var f = r.fields;
+    var sonuc = f['Sonuc'] || 'Bekliyor';
+    var supheli = sonuc === 'Karantina' || sonuc === 'Iade/Imha';
+    var badgeCls = sonuc === 'Kabul' ? 'badge-yesil' : supheli ? 'badge-kirmizi' : 'badge-sari';
+    var secili = r.id === seciliId ? ' secili' : '';
+    var bgStyle = supheli ? ';background:#fef2f2' : '';
+    html += '<div class="liste-satir' + secili + '" style="' + bgStyle + '" onclick="kontrolSec(\'' + r.id + '\')">'
+      + '<div class="liste-satir-no">' + (f['Kontrol No'] || r.id.substring(0,8)) + '</div>'
+      + '<div class="liste-satir-ad">' + (f['Tedarikci'] || '-') + '</div>'
+      + '<div class="liste-satir-alt"><span class="badge ' + badgeCls + '">' + sonuc + '</span>'
+      + '<span style="font-size:10px;color:var(--metin4)">' + (f['Tarih'] || '') + '</span></div>'
+      + '</div>';
+  });
+  liste.innerHTML = html;
+}
+
+function kontrolSec(id) {
+  seciliId = id;
+  listeGuncelle();
+  var kayit = kontrolListesi.find(function(r){ return r.id === id; });
+  if (kayit) detayGoster(kayit);
+}
+
+function detayGoster(kayit) {
+  var f = kayit.fields;
+  var sonuc = f['Sonuc'] || 'Bekliyor';
+
+  document.getElementById('sag-baslik').textContent = f['Kontrol No'] || 'Kontrol Detay';
+  var badgeCls = sonuc === 'Kabul' ? 'badge-yesil' : sonuc === 'Karantina' || sonuc === 'Iade/Imha' ? 'badge-kirmizi' : 'badge-sari';
+  document.getElementById('sag-badge').innerHTML = '<span class="badge ' + badgeCls + '">' + sonuc + '</span>';
+
+  var html = '';
+
+  // Uyari banner
+  if (sonuc === 'Karantina' || sonuc === 'Iade/Imha') {
+    html += '<div style="background:var(--kirmizi-bg);border:1px solid var(--kirmizi);border-radius:8px;padding:12px;margin-bottom:12px;display:flex;align-items:center;gap:10px">'
+      + '<span style="font-size:20px">&#9888;</span>'
+      + '<div><div style="font-size:12px;font-weight:700;color:var(--kirmizi-t)">SUPHELI PARCA TESPIT EDILDI</div>'
+      + '<div style="font-size:11px;color:var(--kirmizi-t)">Bu malzeme karantinaya alinmistir. Tedarikci ile iletisime gecin.</div></div>'
+      + '</div>';
+  }
+
+  // Kart 1: Kontrol Formu
+  html += '<div class="kart"><div class="kart-baslik">Kontrol Bilgileri</div>'
+    + '<div class="form-grid-2">'
+    + '<div class="form-grup"><label class="form-label">Malzeme Girisi</label><select class="form-select" id="sp-malzeme" onchange="malzemeSecildi()">' + malzemeOptions(f['Malzeme Girisi']) + '</select></div>'
+    + '<div class="form-grup"><label class="form-label">Tedarikci</label><input class="form-input" id="sp-tedarikci" value="' + (f['Tedarikci'] || '') + '" readonly style="background:var(--bg)"></div>'
+    + '</div>'
+    + '<div class="form-grid-2">'
+    + '<div class="form-grup"><label class="form-label">Tarih</label><input type="date" class="form-input" id="sp-tarih" value="' + (f['Tarih'] || '') + '"></div>'
+    + '<div class="form-grup"><label class="form-label">Kontrol Eden</label><input class="form-input" id="sp-kontroleden" value="' + (f['Kontrol Eden'] || 'Erdem Kucukates') + '"></div>'
+    + '</div>'
+    + '</div>';
+
+  // Kart 2: 6 Kontrol Sorusu
+  var sorular = [
+    'Tedarikci OTL listesinde mi?',
+    'Malzeme sertifikasi orjinal ve dogrulanabilir mi?',
+    'Ambalaj ve etiketleme standartlara uygun mu?',
+    'Parti/lot numarasi takip edilebilir mi?',
+    'Fiziksel gorunum ve boyutlar uygun mu?',
+    'Tedarikci gecmis performansi yeterli mi?'
+  ];
+  var mevcutCevaplar = {};
+  try { mevcutCevaplar = JSON.parse(f['Cevaplar'] || '{}'); } catch(e) { mevcutCevaplar = {}; }
+
+  html += '<div class="kart"><div class="kart-baslik">Sahte Parca Kontrol Sorulari</div>';
+  sorular.forEach(function(soru, idx) {
+    var key = 'S' + (idx + 1);
+    var cevap = mevcutCevaplar[key] || '';
+    html += '<div style="padding:8px 0;border-bottom:1px solid var(--border)">'
+      + '<div style="font-size:12px;color:var(--metin2);margin-bottom:6px">' + (idx+1) + '. ' + soru + '</div>'
+      + '<div style="display:flex;gap:16px">'
+      + '<label style="font-size:11px;display:flex;align-items:center;gap:4px;cursor:pointer"><input type="radio" name="soru' + idx + '" value="Evet"' + (cevap==='Evet'?' checked':'') + ' onchange="sonucHesapla()"> Evet</label>'
+      + '<label style="font-size:11px;display:flex;align-items:center;gap:4px;cursor:pointer"><input type="radio" name="soru' + idx + '" value="Hayir"' + (cevap==='Hayir'?' checked':'') + ' onchange="sonucHesapla()"> Hayir</label>'
+      + '<label style="font-size:11px;display:flex;align-items:center;gap:4px;cursor:pointer"><input type="radio" name="soru' + idx + '" value="Supheli"' + (cevap==='Supheli'?' checked':'') + ' onchange="sonucHesapla()"> Supheli</label>'
+      + '</div></div>';
+  });
+  html += '</div>';
+
+  // Kart 3: Sonuc
+  html += '<div class="kart"><div class="kart-baslik">Sonuc</div>'
+    + '<div id="sonuc-gosterge" style="text-align:center;padding:16px">'
+    + '<div style="font-size:24px;font-weight:700;color:var(--laci)" id="sonuc-text">' + sonuc + '</div>'
+    + '<div style="font-size:11px;color:var(--metin3);margin-top:4px">Otomatik hesaplanir</div>'
+    + '</div>'
+    + '<div style="display:flex;gap:8px;justify-content:flex-end">'
+    + '<button class="btn btn-mavi" onclick="kontrolKaydet()">Kaydet</button>'
+    + '</div>'
+    + '</div>';
+
+  document.getElementById('sag-icerik').innerHTML = html;
+}
+
+function malzemeOptions(selected) {
+  var html = '<option value="">-- Malzeme Girisi Sec --</option>';
+  malzemeGirisleri.forEach(function(r) {
+    var f = r.fields;
+    var label = (f['MAT ID'] || f['Malzeme'] || r.id.substring(0,8));
+    var sel = label === selected ? ' selected' : '';
+    html += '<option value="' + r.id + '" data-tedarikci="' + (f['Tedarikci'] || '') + '"' + sel + '>' + label + '</option>';
+  });
+  return html;
+}
+
+function malzemeSecildi() {
+  var sel = document.getElementById('sp-malzeme');
+  var opt = sel.options[sel.selectedIndex];
+  if (opt) {
+    document.getElementById('sp-tedarikci').value = opt.getAttribute('data-tedarikci') || '';
+  }
+}
+
+function sonucHesapla() {
+  var sorular = 6;
+  var hayirVar = false;
+  var supheliVar = false;
+  var tumEvet = true;
+  for (var i = 0; i < sorular; i++) {
+    var radios = document.querySelectorAll('input[name="soru' + i + '"]');
+    var cevap = '';
+    for (var j = 0; j < radios.length; j++) {
+      if (radios[j].checked) cevap = radios[j].value;
+    }
+    if (cevap === 'Hayir') hayirVar = true;
+    if (cevap === 'Supheli') supheliVar = true;
+    if (cevap !== 'Evet') tumEvet = false;
+  }
+  var sonuc = tumEvet ? 'Kabul' : hayirVar ? 'Iade/Imha' : supheliVar ? 'Karantina' : 'Bekliyor';
+  var el = document.getElementById('sonuc-text');
+  if (el) {
+    el.textContent = sonuc;
+    el.style.color = sonuc === 'Kabul' ? 'var(--yesil)' : sonuc === 'Iade/Imha' ? 'var(--kirmizi)' : sonuc === 'Karantina' ? 'var(--sari)' : 'var(--laci)';
+  }
+  return sonuc;
+}
+
+function cevaplariTopla() {
+  var cevaplar = {};
+  for (var i = 0; i < 6; i++) {
+    var radios = document.querySelectorAll('input[name="soru' + i + '"]');
+    for (var j = 0; j < radios.length; j++) {
+      if (radios[j].checked) cevaplar['S' + (i+1)] = radios[j].value;
+    }
+  }
+  return cevaplar;
+}
+
+function yeniKontrol() {
+  seciliId = null;
+  document.getElementById('sag-baslik').textContent = 'Yeni Kontrol';
+  document.getElementById('sag-badge').innerHTML = '<span class="badge badge-sari">Yeni</span>';
+  detayGoster({fields:{}});
+}
+
+async function kontrolKaydet() {
+  var sonuc = sonucHesapla();
+  var fields = {
+    'Tedarikci': document.getElementById('sp-tedarikci').value,
+    'Tarih': document.getElementById('sp-tarih').value,
+    'Kontrol Eden': document.getElementById('sp-kontroleden').value,
+    'Cevaplar': JSON.stringify(cevaplariTopla()),
+    'Sonuc': sonuc
+  };
+  try {
+    if (seciliId) {
+      await apiPatch('Sahte Parca Kontrol', seciliId, fields);
+      await logIslem('Guncellendi', 'Sahte Parca', seciliId, fields['Tedarikci'] + ' → ' + sonuc, null, fields);
+      toast('Kontrol guncellendi');
+    } else {
+      var s = await apiPost('Sahte Parca Kontrol', fields);
+      seciliId = s.id;
+      await logIslem('Olusturuldu', 'Sahte Parca', s.id, fields['Tedarikci'] + ' → ' + sonuc, null, fields);
+      toast('Kontrol olusturuldu');
+    }
+    await yukle();
+    if (seciliId) kontrolSec(seciliId);
+  } catch(e) {
+    toast('Hata: ' + e.message, 'hata');
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  yukle();
+});
+</script>
+</body>
+</html>

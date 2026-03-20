@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — Sapma / Feragat Kayitlari</title>
+<link rel="stylesheet" href="ersan_styles.css">
+<script src="ersan_nav.js" defer></script>
+<script src="ersan_log.js" defer></script>
+</head>
+<body>
+<div id="nav-alani"></div>
+<div class="icerik-alani">
+  <div class="topbar">
+    <div class="topbar-baslik">Sapma / Feragat Kayitlari</div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:11px;color:var(--metin3)">AS9100 §8.7</span>
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
+    </div>
+  </div>
+  <div class="sayfa-icerik">
+    <div class="iki-panel">
+
+      <!-- SOL PANEL -->
+      <div class="sol-panel">
+        <div class="sol-panel-ust">
+          <div class="sol-panel-baslik">Sapma / Feragat</div>
+          <button class="btn-new" onclick="yeniSapma()">+ Yeni</button>
+        </div>
+        <div class="sol-arama"><input type="text" placeholder="Ara..." oninput="araFiltre(this.value)"></div>
+        <div class="sol-filtre">
+          <button class="filtre-btn aktif" onclick="filtreUygula('Tumu',this)">Tumu</button>
+          <button class="filtre-btn" onclick="filtreUygula('Bekliyor',this)">Bekliyor</button>
+          <button class="filtre-btn" onclick="filtreUygula('Onaylandi',this)">Onaylandi</button>
+          <button class="filtre-btn" onclick="filtreUygula('Reddedildi',this)">Reddedildi</button>
+        </div>
+        <div class="sol-liste" id="sapma-liste">
+          <div class="yukleniyor"><div class="spinner"></div> Yukleniyor...</div>
+        </div>
+      </div>
+
+      <!-- SAG PANEL -->
+      <div class="sag-panel">
+        <div class="sag-panel-ust">
+          <div style="font-size:13px;font-weight:600;color:var(--laci)" id="sag-baslik">Sapma / Feragat Detay</div>
+          <div id="sag-badge"></div>
+        </div>
+        <div class="sag-panel-icerik" id="sag-icerik">
+          <div class="bos-durum">Listeden bir kayit secin veya yeni olusturun.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var sapmaListesi = [];
+var isEmirleri = [];
+var aktifFiltre = 'Tumu';
+var seciliId = null;
+
+async function apiGet(tablo, query) {
+  var url = '/.netlify/functions/airtable?table=' + encodeURIComponent(tablo);
+  if (query) url += '&' + query;
+  var r = await fetch(url);
+  return r.json();
+}
+async function apiPost(tablo, fields) {
+  var r = await fetch('/.netlify/functions/airtable', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({method:'POST', path:'/v0/app5LDgJMgocw79Ix/' + encodeURIComponent(tablo), body:{fields:fields}})
+  });
+  return r.json();
+}
+async function apiPatch(tablo, id, fields) {
+  var r = await fetch('/.netlify/functions/airtable', {
+    method:'PATCH', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({table:tablo, id:id, fields:fields})
+  });
+  return r.json();
+}
+
+function toast(mesaj, tip) {
+  var t = document.getElementById('toast');
+  t.textContent = mesaj;
+  t.className = 'toast toast-' + (tip || 'basari') + ' goster';
+  setTimeout(function(){ t.className = 'toast'; }, 3000);
+}
+
+async function yukle() {
+  try {
+    var s1 = await apiGet('Sapma Feragat', 'pageSize=100');
+    sapmaListesi = s1.records || [];
+  } catch(e) { sapmaListesi = []; }
+  try {
+    var s2 = await apiGet('Is Emirleri', 'pageSize=100');
+    isEmirleri = s2.records || [];
+  } catch(e) { isEmirleri = []; }
+  listeGuncelle();
+}
+
+function araFiltre(val) {
+  var arama = val.toLowerCase();
+  var satirlar = document.querySelectorAll('#sapma-liste .liste-satir');
+  for (var i = 0; i < satirlar.length; i++) {
+    satirlar[i].style.display = satirlar[i].textContent.toLowerCase().indexOf(arama) >= 0 ? '' : 'none';
+  }
+}
+
+function filtreUygula(tip, btn) {
+  aktifFiltre = tip;
+  var btns = document.querySelectorAll('.filtre-btn');
+  for (var i = 0; i < btns.length; i++) btns[i].classList.remove('aktif');
+  if (btn) btn.classList.add('aktif');
+  listeGuncelle();
+}
+
+function listeGuncelle() {
+  var liste = document.getElementById('sapma-liste');
+  var filtered = sapmaListesi;
+  if (aktifFiltre !== 'Tumu') {
+    filtered = sapmaListesi.filter(function(r) {
+      return (r.fields['Durum'] || 'Bekliyor') === aktifFiltre;
+    });
+  }
+  if (filtered.length === 0) {
+    liste.innerHTML = '<div class="bos-durum">' + (sapmaListesi.length === 0 ? 'Tablo yapilandirilmamis veya kayit yok.' : 'Bu filtreye uygun kayit yok.') + '</div>';
+    return;
+  }
+  var html = '';
+  filtered.forEach(function(r) {
+    var f = r.fields;
+    var durum = f['Durum'] || 'Bekliyor';
+    var ciddiyet = f['Ciddiyet'] || 'Minor';
+    var badgeCls = durum === 'Onaylandi' ? 'badge-yesil' : durum === 'Reddedildi' ? 'badge-kirmizi' : 'badge-sari';
+    var ciddiyetCls = ciddiyet === 'Kritik' ? 'badge-kirmizi' : ciddiyet === 'Major' ? 'badge-sari' : 'badge-gri';
+    var secili = r.id === seciliId ? ' secili' : '';
+    var musteriIcon = f['Musteri Onayi'] ? ' <span title="Musteri onayi alindi" style="color:var(--yesil)">&#10003;</span>' : '';
+    html += '<div class="liste-satir' + secili + '" onclick="sapmaSec(\'' + r.id + '\')">'
+      + '<div class="liste-satir-no">' + (f['Sapma No'] || r.id.substring(0,8)) + musteriIcon + '</div>'
+      + '<div class="liste-satir-ad">' + (f['Aciklama'] || '-').substring(0,50) + '</div>'
+      + '<div class="liste-satir-alt">'
+      + '<span class="badge ' + ciddiyetCls + '">' + ciddiyet + '</span>'
+      + '<span class="badge ' + badgeCls + '">' + durum + '</span>'
+      + '</div></div>';
+  });
+  liste.innerHTML = html;
+}
+
+function sapmaSec(id) {
+  seciliId = id;
+  listeGuncelle();
+  var kayit = sapmaListesi.find(function(r){ return r.id === id; });
+  if (kayit) detayGoster(kayit);
+}
+
+function detayGoster(kayit) {
+  var f = kayit.fields;
+  var durum = f['Durum'] || 'Bekliyor';
+  var ciddiyet = f['Ciddiyet'] || 'Minor';
+  var badgeCls = durum === 'Onaylandi' ? 'badge-yesil' : durum === 'Reddedildi' ? 'badge-kirmizi' : 'badge-sari';
+
+  document.getElementById('sag-baslik').textContent = f['Sapma No'] || 'Sapma Detay';
+  document.getElementById('sag-badge').innerHTML = '<span class="badge ' + badgeCls + '">' + durum + '</span>';
+
+  var html = '';
+
+  // Kart 1: Sapma Bilgileri
+  html += '<div class="kart"><div class="kart-baslik">Sapma Bilgileri</div>'
+    + '<div class="form-grid-2">'
+    + '<div class="form-grup"><label class="form-label">Is Emri</label><select class="form-select" id="sap-ie">' + ieOptions(f['IE No']) + '</select></div>'
+    + '<div class="form-grup"><label class="form-label">Tarih</label><input type="date" class="form-input" id="sap-tarih" value="' + (f['Tarih'] || '') + '"></div>'
+    + '</div>'
+    + '<div class="form-grup"><label class="form-label">Sapma Aciklamasi</label><textarea class="form-textarea" id="sap-aciklama" rows="3" placeholder="Sapmay detayli aciklayiniz...">' + (f['Aciklama'] || '') + '</textarea></div>'
+    + '<div class="form-grid-3">'
+    + '<div class="form-grup"><label class="form-label">Sapma Miktari</label><input class="form-input" id="sap-miktar" value="' + (f['Miktar'] || '') + '" placeholder="ornegin: +0.05mm"></div>'
+    + '<div class="form-grup"><label class="form-label">Ciddiyet</label><select class="form-select" id="sap-ciddiyet" onchange="ciddiyetDegisti()">'
+    + '<option' + (ciddiyet==='Minor'?' selected':'') + '>Minor</option>'
+    + '<option' + (ciddiyet==='Major'?' selected':'') + '>Major</option>'
+    + '<option' + (ciddiyet==='Kritik'?' selected':'') + '>Kritik</option>'
+    + '</select></div>'
+    + '<div class="form-grup"><label class="form-label">Etkilenen Adet</label><input type="number" class="form-input" id="sap-adet" value="' + (f['Etkilenen Adet'] || '') + '"></div>'
+    + '</div></div>';
+
+  // Kart 2: Teknik Degerlendirme
+  html += '<div class="kart"><div class="kart-baslik">Teknik Degerlendirme</div>'
+    + '<div class="form-grup"><label class="form-label">Kullanima Uygunluk Gerekcelendirmesi (Fitness-for-Use)</label>'
+    + '<textarea class="form-textarea" id="sap-gerekce" rows="3" placeholder="Bu sapmanin fonksiyon uzerindeki etkisini aciklayiniz...">' + (f['Gerekce'] || '') + '</textarea></div>'
+    + '<div class="form-grup"><label class="form-label">Risk Degerlendirmesi</label>'
+    + '<select class="form-select" id="sap-risk">'
+    + '<option' + (f['Risk']==='Dusuk'?' selected':'') + '>Dusuk</option>'
+    + '<option' + (f['Risk']==='Orta'?' selected':'') + '>Orta</option>'
+    + '<option' + (f['Risk']==='Yuksek'?' selected':'') + '>Yuksek</option>'
+    + '</select></div></div>';
+
+  // Kart 3: Musteri Onayi
+  var musteriOnayiGerekli = ciddiyet === 'Major' || ciddiyet === 'Kritik';
+  html += '<div class="kart" id="musteri-onay-kart"><div class="kart-baslik">Musteri Onayi'
+    + (musteriOnayiGerekli ? ' <span class="badge badge-kirmizi" style="margin-left:8px">ZORUNLU</span>' : '') + '</div>';
+  if (musteriOnayiGerekli) {
+    html += '<div style="background:var(--sari-bg);border:1px solid var(--sari);border-radius:6px;padding:10px;margin-bottom:12px;font-size:11px;color:var(--sari-t)">'
+      + 'Major ve Kritik sapmalar icin musteri onayi zorunludur (AS9100 §8.7.1).</div>';
+  }
+  html += '<div class="form-grid-2">'
+    + '<div class="form-grup"><label class="form-label">Musteri Onayi Alindi mi?</label><select class="form-select" id="sap-musteriOnay">'
+    + '<option value=""' + (!f['Musteri Onayi']?' selected':'') + '>Hayir</option>'
+    + '<option value="true"' + (f['Musteri Onayi']?' selected':'') + '>Evet</option>'
+    + '</select></div>'
+    + '<div class="form-grup"><label class="form-label">Musteri Referans No</label><input class="form-input" id="sap-musteriRef" value="' + (f['Musteri Referans'] || '') + '" placeholder="Musteri onay no / waiver no"></div>'
+    + '</div></div>';
+
+  // Kart 4: Onay Butonlari
+  html += '<div class="kart"><div class="kart-baslik">Karar</div>'
+    + '<div style="display:flex;gap:10px;margin-bottom:12px">'
+    + '<button class="btn btn-yesil" onclick="sapmaKarar(\'Onaylandi\')" style="flex:1">ONAYLA (Feragat Ver)</button>'
+    + '<button class="btn btn-kirmizi" onclick="sapmaKarar(\'Reddedildi\')" style="flex:1">REDDET</button>'
+    + '</div>'
+    + '<div class="form-grup"><label class="form-label">Not</label><textarea class="form-textarea" id="sap-not" rows="2">' + (f['Not'] || '') + '</textarea></div>'
+    + '</div>';
+
+  // AI Degerlendirme
+  html += '<div class="kart" style="border-top:3px solid var(--mavi)">'
+    + '<div class="kart-baslik">AI Sapma Degerlendirmesi</div>'
+    + '<p style="font-size:12px;color:var(--metin3);margin-bottom:10px">Sapmanin teknik etkisini ve risk duzeyini AI ile analiz edin.</p>'
+    + '<button class="btn btn-mavi" onclick="aiSapmaDegerlendir()">AI Degerlendirme</button>'
+    + '<div id="ai-sonuc" style="margin-top:10px"></div>'
+    + '</div>';
+
+  document.getElementById('sag-icerik').innerHTML = html;
+}
+
+function ieOptions(selected) {
+  var html = '<option value="">-- IE Sec --</option>';
+  isEmirleri.forEach(function(r) {
+    var no = r.fields['IE No'] || r.id.substring(0,8);
+    var sel = no === selected ? ' selected' : '';
+    html += '<option value="' + no + '"' + sel + '>' + no + ' — ' + (r.fields['Parca No'] || '') + '</option>';
+  });
+  return html;
+}
+
+function ciddiyetDegisti() {
+  var ciddiyet = document.getElementById('sap-ciddiyet').value;
+  var musteriOnayiGerekli = ciddiyet === 'Major' || ciddiyet === 'Kritik';
+  var kartBaslik = document.querySelector('#musteri-onay-kart .kart-baslik');
+  if (kartBaslik) {
+    kartBaslik.innerHTML = 'Musteri Onayi' + (musteriOnayiGerekli ? ' <span class="badge badge-kirmizi" style="margin-left:8px">ZORUNLU</span>' : '');
+  }
+}
+
+function yeniSapma() {
+  seciliId = null;
+  document.getElementById('sag-baslik').textContent = 'Yeni Sapma / Feragat';
+  document.getElementById('sag-badge').innerHTML = '<span class="badge badge-sari">Yeni</span>';
+  detayGoster({fields:{}});
+}
+
+function fieldsTopla() {
+  return {
+    'IE No': document.getElementById('sap-ie').value,
+    'Tarih': document.getElementById('sap-tarih').value,
+    'Aciklama': document.getElementById('sap-aciklama').value,
+    'Miktar': document.getElementById('sap-miktar').value,
+    'Ciddiyet': document.getElementById('sap-ciddiyet').value,
+    'Etkilenen Adet': document.getElementById('sap-adet').value ? parseInt(document.getElementById('sap-adet').value) : null,
+    'Gerekce': document.getElementById('sap-gerekce').value,
+    'Risk': document.getElementById('sap-risk').value,
+    'Musteri Onayi': document.getElementById('sap-musteriOnay').value === 'true',
+    'Musteri Referans': document.getElementById('sap-musteriRef').value,
+    'Not': document.getElementById('sap-not').value
+  };
+}
+
+async function sapmaKarar(yeniDurum) {
+  var fields = fieldsTopla();
+  fields['Durum'] = yeniDurum;
+
+  // Musteri onayi kontrolu
+  var ciddiyet = fields['Ciddiyet'];
+  if (yeniDurum === 'Onaylandi' && (ciddiyet === 'Major' || ciddiyet === 'Kritik') && !fields['Musteri Onayi']) {
+    toast('Major/Kritik sapmalar icin musteri onayi zorunludur', 'hata');
+    return;
+  }
+
+  try {
+    if (seciliId) {
+      await apiPatch('Sapma Feragat', seciliId, fields);
+      await logIslem('Guncellendi', 'Sapma Feragat', seciliId, (fields['Aciklama']||'').substring(0,30) + ' → ' + yeniDurum, null, fields);
+    } else {
+      var s = await apiPost('Sapma Feragat', fields);
+      seciliId = s.id;
+      await logIslem('Olusturuldu', 'Sapma Feragat', s.id, (fields['Aciklama']||'').substring(0,30) + ' → ' + yeniDurum, null, fields);
+    }
+    toast('Sapma ' + (yeniDurum === 'Onaylandi' ? 'onaylandi (feragat verildi)' : 'reddedildi'));
+    await yukle();
+    if (seciliId) sapmaSec(seciliId);
+  } catch(e) {
+    toast('Hata: ' + e.message, 'hata');
+  }
+}
+
+async function aiSapmaDegerlendir() {
+  var sonucDiv = document.getElementById('ai-sonuc');
+  sonucDiv.innerHTML = '<div class="yukleniyor"><div class="spinner"></div> AI analiz ediyor...</div>';
+  var prompt = 'AS9100 kapsaminda sapma/feragat degerlendirmesi yap.\n'
+    + 'Aciklama: ' + (document.getElementById('sap-aciklama').value || '-') + '\n'
+    + 'Sapma Miktari: ' + (document.getElementById('sap-miktar').value || '-') + '\n'
+    + 'Ciddiyet: ' + (document.getElementById('sap-ciddiyet').value || '-') + '\n'
+    + 'Risk: ' + (document.getElementById('sap-risk').value || '-') + '\n'
+    + 'Gerekce: ' + (document.getElementById('sap-gerekce').value || '-') + '\n'
+    + 'Turkce cevap ver. Fitness-for-use degerlendirmesi, risk analizi ve oneriler belirt.';
+  try {
+    var r = await fetch('/.netlify/functions/claude', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({prompt: prompt})
+    });
+    var data = await r.json();
+    var text = data.content || data.response || JSON.stringify(data);
+    sonucDiv.innerHTML = '<div style="background:var(--mavi-acik);border:1px solid var(--mavi);border-radius:8px;padding:12px;font-size:12px;color:var(--metin2);white-space:pre-wrap;line-height:1.6">' + text + '</div>';
+  } catch(e) {
+    sonucDiv.innerHTML = '<div style="color:var(--kirmizi);font-size:12px">AI baglantisi kurulamadi: ' + e.message + '</div>';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  yukle();
+});
+</script>
+</body>
+</html>

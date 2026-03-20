@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — FAI — Ilk Parca Muayenesi</title>
+<link rel="stylesheet" href="ersan_styles.css">
+<script src="ersan_nav.js" defer></script>
+<script src="ersan_log.js" defer></script>
+</head>
+<body>
+<div id="nav-alani"></div>
+<div class="icerik-alani">
+  <div class="topbar">
+    <div class="topbar-baslik">FAI — Ilk Parca Muayenesi</div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:11px;color:var(--metin3)">AS9102</span>
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
+    </div>
+  </div>
+  <div class="sayfa-icerik">
+    <div class="iki-panel">
+
+      <!-- SOL PANEL -->
+      <div class="sol-panel">
+        <div class="sol-panel-ust">
+          <div class="sol-panel-baslik">FAI Kayitlari</div>
+          <button class="btn-new" onclick="yeniFai()">+ Yeni</button>
+        </div>
+        <div class="sol-arama"><input type="text" placeholder="Ara..." oninput="filtreleListeArama(this.value)"></div>
+        <div class="sol-filtre">
+          <button class="filtre-btn aktif" onclick="filtreUygula('Tumu',this)">Tumu</button>
+          <button class="filtre-btn" onclick="filtreUygula('Onaylandi',this)">Onaylandi</button>
+          <button class="filtre-btn" onclick="filtreUygula('Bekliyor',this)">Bekliyor</button>
+          <button class="filtre-btn" onclick="filtreUygula('Reddedildi',this)">Reddedildi</button>
+        </div>
+        <div class="sol-liste" id="fai-liste">
+          <div class="yukleniyor"><div class="spinner"></div> Yukleniyor...</div>
+        </div>
+      </div>
+
+      <!-- SAG PANEL -->
+      <div class="sag-panel">
+        <div class="sag-panel-ust">
+          <div style="font-size:13px;font-weight:600;color:var(--laci)" id="sag-baslik">FAI Detay</div>
+          <div id="sag-badge"></div>
+        </div>
+        <div class="sag-panel-icerik" id="sag-icerik">
+          <div class="bos-durum">Listeden bir FAI kaydi secin veya yeni olusturun.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+var faiListesi = [];
+var isEmirleri = [];
+var aktifFiltre = 'Tumu';
+var seciliFaiId = null;
+
+// ── API HELPERS ──
+async function apiGet(tablo, query) {
+  var url = '/.netlify/functions/airtable?table=' + encodeURIComponent(tablo);
+  if (query) url += '&' + query;
+  var r = await fetch(url);
+  return r.json();
+}
+async function apiPost(tablo, fields) {
+  var r = await fetch('/.netlify/functions/airtable', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({method:'POST', path:'/v0/app5LDgJMgocw79Ix/' + encodeURIComponent(tablo), body:{fields:fields}})
+  });
+  return r.json();
+}
+async function apiPatch(tablo, id, fields) {
+  var r = await fetch('/.netlify/functions/airtable', {
+    method:'PATCH', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({table:tablo, id:id, fields:fields})
+  });
+  return r.json();
+}
+
+// ── TOAST ──
+function toast(mesaj, tip) {
+  var t = document.getElementById('toast');
+  t.textContent = mesaj;
+  t.className = 'toast toast-' + (tip || 'basari') + ' goster';
+  setTimeout(function(){ t.className = 'toast'; }, 3000);
+}
+
+// ── YUKLEME ──
+async function yukle() {
+  try {
+    var sonuc = await apiGet('FAI Kayitlari', 'pageSize=100');
+    faiListesi = sonuc.records || [];
+  } catch(e) {
+    faiListesi = [];
+    console.warn('FAI tablosu yuklenemedi:', e.message);
+  }
+  try {
+    var ie = await apiGet('Is Emirleri', 'pageSize=100');
+    isEmirleri = ie.records || [];
+  } catch(e) {
+    isEmirleri = [];
+  }
+  listeGuncelle();
+}
+
+// ── FILTRE ──
+function filtreUygula(tip, btn) {
+  aktifFiltre = tip;
+  var btns = document.querySelectorAll('.filtre-btn');
+  for (var i = 0; i < btns.length; i++) btns[i].classList.remove('aktif');
+  if (btn) btn.classList.add('aktif');
+  listeGuncelle();
+}
+
+function filtreleListeArama(val) {
+  var arama = val.toLowerCase();
+  var satirlar = document.querySelectorAll('#fai-liste .liste-satir');
+  for (var i = 0; i < satirlar.length; i++) {
+    var txt = satirlar[i].textContent.toLowerCase();
+    satirlar[i].style.display = txt.indexOf(arama) >= 0 ? '' : 'none';
+  }
+}
+
+// ── LISTE RENDER ──
+function listeGuncelle() {
+  var liste = document.getElementById('fai-liste');
+  var filtered = faiListesi;
+  if (aktifFiltre !== 'Tumu') {
+    filtered = faiListesi.filter(function(r) {
+      return (r.fields['Durum'] || 'Bekliyor') === aktifFiltre;
+    });
+  }
+  if (filtered.length === 0) {
+    liste.innerHTML = '<div class="bos-durum">' + (faiListesi.length === 0 ? 'Tablo yapilandirilmamis veya kayit yok.' : 'Bu filtreye uygun kayit yok.') + '</div>';
+    return;
+  }
+  var html = '';
+  filtered.forEach(function(r) {
+    var f = r.fields;
+    var durum = f['Durum'] || 'Bekliyor';
+    var badgeCls = durum === 'Onaylandi' ? 'badge-yesil' : durum === 'Reddedildi' ? 'badge-kirmizi' : 'badge-sari';
+    var secili = r.id === seciliFaiId ? ' secili' : '';
+    html += '<div class="liste-satir' + secili + '" onclick="faiSec(\'' + r.id + '\')">'
+      + '<div class="liste-satir-no">' + (f['FAI No'] || r.id.substring(0,8)) + '</div>'
+      + '<div class="liste-satir-ad">' + (f['Parca No'] || '-') + '</div>'
+      + '<div class="liste-satir-alt"><span class="badge ' + badgeCls + '">' + durum + '</span>'
+      + '<span style="font-size:10px;color:var(--metin4)">' + (f['Tarih'] || '') + '</span></div>'
+      + '</div>';
+  });
+  liste.innerHTML = html;
+}
+
+// ── FAI SEC ──
+function faiSec(id) {
+  seciliFaiId = id;
+  listeGuncelle();
+  var kayit = faiListesi.find(function(r){ return r.id === id; });
+  if (!kayit) return;
+  detayGoster(kayit);
+}
+
+// ── DETAY GOSTER ──
+function detayGoster(kayit) {
+  var f = kayit.fields;
+  var durum = f['Durum'] || 'Bekliyor';
+  var badgeCls = durum === 'Onaylandi' ? 'badge-yesil' : durum === 'Reddedildi' ? 'badge-kirmizi' : 'badge-sari';
+  document.getElementById('sag-baslik').textContent = f['FAI No'] || 'FAI Detay';
+  document.getElementById('sag-badge').innerHTML = '<span class="badge ' + badgeCls + '">' + durum + '</span>';
+
+  var html = '';
+
+  // Kart 1: FAI Bilgileri
+  html += '<div class="kart"><div class="kart-baslik">FAI Bilgileri</div>'
+    + '<div class="form-grid-2">'
+    + '<div class="form-grup"><label class="form-label">Is Emri</label><select class="form-select" id="fai-ie" onchange="ieSecildi()">' + ieOptions(f['IE No']) + '</select></div>'
+    + '<div class="form-grup"><label class="form-label">Parca No</label><input class="form-input" id="fai-parca" value="' + (f['Parca No'] || '') + '"></div>'
+    + '</div>'
+    + '<div class="form-grid-3">'
+    + '<div class="form-grup"><label class="form-label">Revizyon</label><input class="form-input" id="fai-rev" value="' + (f['Revizyon'] || '') + '"></div>'
+    + '<div class="form-grup"><label class="form-label">FAI Tipi</label><select class="form-select" id="fai-tip"><option' + (f['FAI Tipi']==='Tam' ? ' selected' : '') + '>Tam</option><option' + (f['FAI Tipi']==='Kismi' ? ' selected' : '') + '>Kismi</option></select></div>'
+    + '<div class="form-grup"><label class="form-label">Tetikleyici</label><select class="form-select" id="fai-tetik">'
+    + '<option' + (f['Tetikleyici']==='Yeni Parca' ? ' selected' : '') + '>Yeni Parca</option>'
+    + '<option' + (f['Tetikleyici']==='Tasarim Degisikligi' ? ' selected' : '') + '>Tasarim Degisikligi</option>'
+    + '<option' + (f['Tetikleyici']==='Proses Degisikligi' ? ' selected' : '') + '>Proses Degisikligi</option>'
+    + '<option' + (f['Tetikleyici']==='Tedarikci Degisikligi' ? ' selected' : '') + '>Tedarikci Degisikligi</option>'
+    + '<option' + (f['Tetikleyici']==='2 Yil Uretim Yok' ? ' selected' : '') + '>2 Yil Uretim Yok</option>'
+    + '</select></div>'
+    + '</div>'
+    + '<div class="form-grup"><label class="form-label">Tarih</label><input type="date" class="form-input" id="fai-tarih" value="' + (f['Tarih'] || '') + '"></div>'
+    + '</div>';
+
+  // Kart 2: Dogrulama Kontrol Listesi
+  var checkItems = [
+    'Teknik resim kontrolu',
+    'Malzeme sertifikasi dogrulamasi',
+    'Boyutsal olcum tamamlandi',
+    'Yuzey islem kontrolu',
+    'Fonksiyonel test yapildi',
+    'Ozel proses dogrulamasi',
+    'Ambalaj ve etiket kontrolu',
+    'Kayitlar ve izlenebilirlik tamam'
+  ];
+  html += '<div class="kart"><div class="kart-baslik">Dogrulama Kontrol Listesi (AS9102)</div>';
+  var mevcutKontroller = f['Kontrol Listesi'] || '';
+  checkItems.forEach(function(item, idx) {
+    var checked = mevcutKontroller.indexOf(item) >= 0 ? ' checked' : '';
+    html += '<div style="padding:4px 0"><label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--metin2);cursor:pointer">'
+      + '<input type="checkbox" class="fai-check" value="' + item + '"' + checked + '> ' + item + '</label></div>';
+  });
+  html += '</div>';
+
+  // Kart 3: Olcum Tablosu
+  var olcumler = [];
+  try { olcumler = JSON.parse(f['Olcumler'] || '[]'); } catch(e) { olcumler = []; }
+  html += '<div class="kart"><div class="kart-baslik">Olcum Tablosu</div>'
+    + '<table class="tablo" id="olcum-tablo"><thead><tr>'
+    + '<th>Ozellik</th><th>Nominal</th><th>Tolerans</th><th>Olculen</th><th>Sonuc</th><th></th>'
+    + '</tr></thead><tbody>';
+  if (olcumler.length === 0) {
+    olcumler = [{ozellik:'',nominal:'',tolerans:'',olculen:'',sonuc:''}];
+  }
+  olcumler.forEach(function(o, i) {
+    html += olcumSatiri(o, i);
+  });
+  html += '</tbody></table>'
+    + '<div style="padding:8px"><button class="btn btn-beyaz btn-sm" onclick="olcumEkle()">+ Satir Ekle</button></div>'
+    + '</div>';
+
+  // Kart 4: Karar
+  html += '<div class="kart"><div class="kart-baslik">Karar</div>'
+    + '<div style="display:flex;gap:10px;margin-bottom:12px">'
+    + '<button class="btn btn-yesil" onclick="faiKarar(\'Onaylandi\')" style="flex:1">ONAYLA</button>'
+    + '<button class="btn btn-kirmizi" onclick="faiKarar(\'Reddedildi\')" style="flex:1">REDDET</button>'
+    + '</div>'
+    + '<div class="form-grup"><label class="form-label">Red Nedeni / Not</label><textarea class="form-textarea" id="fai-neden" rows="2" placeholder="Red halinde neden yaziniz...">' + (f['Red Nedeni'] || '') + '</textarea></div>'
+    + '</div>';
+
+  // Kart 5: AI Degerlendirme
+  html += '<div class="kart" style="border-top:3px solid var(--mavi)">'
+    + '<div class="kart-baslik">AI FAI Degerlendirme</div>'
+    + '<p style="font-size:12px;color:var(--metin3);margin-bottom:10px">Claude AI ile FAI verilerini otomatik analiz edin.</p>'
+    + '<button class="btn btn-mavi" onclick="aiFaiDegerlendir()">AI Degerlendirme Baslat</button>'
+    + '<div id="ai-sonuc" style="margin-top:10px"></div>'
+    + '</div>';
+
+  document.getElementById('sag-icerik').innerHTML = html;
+}
+
+function olcumSatiri(o, i) {
+  return '<tr>'
+    + '<td><input class="form-input" style="padding:4px 6px;font-size:11px" value="' + (o.ozellik||'') + '" data-idx="' + i + '" data-field="ozellik"></td>'
+    + '<td><input class="form-input" style="padding:4px 6px;font-size:11px" value="' + (o.nominal||'') + '" data-idx="' + i + '" data-field="nominal"></td>'
+    + '<td><input class="form-input" style="padding:4px 6px;font-size:11px" value="' + (o.tolerans||'') + '" data-idx="' + i + '" data-field="tolerans"></td>'
+    + '<td><input class="form-input" style="padding:4px 6px;font-size:11px" value="' + (o.olculen||'') + '" data-idx="' + i + '" data-field="olculen" oninput="olcumSonucHesapla(this)"></td>'
+    + '<td><span class="badge ' + (o.sonuc==='OK' ? 'badge-yesil' : o.sonuc==='NOK' ? 'badge-kirmizi' : 'badge-gri') + '" id="sonuc-' + i + '">' + (o.sonuc||'-') + '</span></td>'
+    + '<td><button class="btn btn-beyaz btn-sm" onclick="olcumSil(' + i + ')" style="padding:2px 6px;font-size:10px">X</button></td>'
+    + '</tr>';
+}
+
+function olcumEkle() {
+  var tbody = document.querySelector('#olcum-tablo tbody');
+  var rows = tbody.querySelectorAll('tr');
+  var idx = rows.length;
+  var tr = document.createElement('tr');
+  tr.innerHTML = olcumSatiri({ozellik:'',nominal:'',tolerans:'',olculen:'',sonuc:''}, idx).replace('<tr>','').replace('</tr>','');
+  tbody.appendChild(tr);
+}
+
+function olcumSil(idx) {
+  var tbody = document.querySelector('#olcum-tablo tbody');
+  var rows = tbody.querySelectorAll('tr');
+  if (rows.length > 1 && rows[idx]) rows[idx].remove();
+}
+
+function olcumSonucHesapla(el) {
+  var idx = el.getAttribute('data-idx');
+  var row = el.closest('tr');
+  var nominal = parseFloat(row.querySelector('[data-field="nominal"]').value);
+  var tolerans = row.querySelector('[data-field="tolerans"]').value;
+  var olculen = parseFloat(el.value);
+  if (isNaN(nominal) || isNaN(olculen) || !tolerans) return;
+  var parts = tolerans.replace(/\s/g,'').split('/');
+  var ust = nominal, alt = nominal;
+  if (parts.length === 2) {
+    ust = nominal + parseFloat(parts[0]);
+    alt = nominal + parseFloat(parts[1]);
+  } else {
+    var t = parseFloat(tolerans);
+    if (!isNaN(t)) { ust = nominal + t; alt = nominal - t; }
+  }
+  if (ust < alt) { var tmp = ust; ust = alt; alt = tmp; }
+  var sonuc = (olculen >= alt && olculen <= ust) ? 'OK' : 'NOK';
+  var badge = document.getElementById('sonuc-' + idx);
+  if (badge) {
+    badge.textContent = sonuc;
+    badge.className = 'badge ' + (sonuc === 'OK' ? 'badge-yesil' : 'badge-kirmizi');
+  }
+}
+
+function ieOptions(selected) {
+  var html = '<option value="">-- IE Sec --</option>';
+  isEmirleri.forEach(function(r) {
+    var no = r.fields['IE No'] || r.id.substring(0,8);
+    var sel = no === selected ? ' selected' : '';
+    html += '<option value="' + no + '"' + sel + '>' + no + ' — ' + (r.fields['Parca No'] || '') + '</option>';
+  });
+  return html;
+}
+
+function ieSecildi() {
+  var sel = document.getElementById('fai-ie');
+  var no = sel.value;
+  var ie = isEmirleri.find(function(r){ return (r.fields['IE No'] || r.id.substring(0,8)) === no; });
+  if (ie) {
+    document.getElementById('fai-parca').value = ie.fields['Parca No'] || '';
+    document.getElementById('fai-rev').value = ie.fields['Revizyon'] || '';
+  }
+}
+
+// ── YENI FAI ──
+function yeniFai() {
+  seciliFaiId = null;
+  document.getElementById('sag-baslik').textContent = 'Yeni FAI Kaydi';
+  document.getElementById('sag-badge').innerHTML = '<span class="badge badge-sari">Yeni</span>';
+  detayGoster({fields:{}});
+}
+
+// ── KAYDET ──
+function olcumleriTopla() {
+  var rows = document.querySelectorAll('#olcum-tablo tbody tr');
+  var olcumler = [];
+  for (var i = 0; i < rows.length; i++) {
+    var inputs = rows[i].querySelectorAll('input');
+    if (inputs.length >= 4) {
+      olcumler.push({
+        ozellik: inputs[0].value, nominal: inputs[1].value,
+        tolerans: inputs[2].value, olculen: inputs[3].value,
+        sonuc: (rows[i].querySelector('.badge') || {}).textContent || ''
+      });
+    }
+  }
+  return olcumler;
+}
+
+function checklistTopla() {
+  var checks = document.querySelectorAll('.fai-check:checked');
+  var arr = [];
+  for (var i = 0; i < checks.length; i++) arr.push(checks[i].value);
+  return arr.join('; ');
+}
+
+async function faiKaydet() {
+  var fields = {
+    'IE No': document.getElementById('fai-ie').value,
+    'Parca No': document.getElementById('fai-parca').value,
+    'Revizyon': document.getElementById('fai-rev').value,
+    'FAI Tipi': document.getElementById('fai-tip').value,
+    'Tetikleyici': document.getElementById('fai-tetik').value,
+    'Tarih': document.getElementById('fai-tarih').value,
+    'Kontrol Listesi': checklistTopla(),
+    'Olcumler': JSON.stringify(olcumleriTopla()),
+    'Red Nedeni': document.getElementById('fai-neden').value
+  };
+  try {
+    if (seciliFaiId) {
+      await apiPatch('FAI Kayitlari', seciliFaiId, fields);
+      await logIslem('Guncellendi', 'FAI', seciliFaiId, fields['Parca No'], null, fields);
+      toast('FAI guncellendi');
+    } else {
+      fields['Durum'] = 'Bekliyor';
+      var sonuc = await apiPost('FAI Kayitlari', fields);
+      seciliFaiId = sonuc.id;
+      await logIslem('Olusturuldu', 'FAI', sonuc.id, fields['Parca No'], null, fields);
+      toast('FAI olusturuldu');
+    }
+    await yukle();
+    if (seciliFaiId) faiSec(seciliFaiId);
+  } catch(e) {
+    toast('Hata: ' + e.message, 'hata');
+  }
+}
+
+async function faiKarar(durum) {
+  var fields = {
+    'Durum': durum,
+    'IE No': document.getElementById('fai-ie').value,
+    'Parca No': document.getElementById('fai-parca').value,
+    'Revizyon': document.getElementById('fai-rev').value,
+    'FAI Tipi': document.getElementById('fai-tip').value,
+    'Tetikleyici': document.getElementById('fai-tetik').value,
+    'Tarih': document.getElementById('fai-tarih').value,
+    'Kontrol Listesi': checklistTopla(),
+    'Olcumler': JSON.stringify(olcumleriTopla()),
+    'Red Nedeni': document.getElementById('fai-neden').value
+  };
+  if (durum === 'Reddedildi' && !fields['Red Nedeni']) {
+    toast('Red nedeni giriniz', 'hata');
+    return;
+  }
+  try {
+    if (seciliFaiId) {
+      await apiPatch('FAI Kayitlari', seciliFaiId, fields);
+      await logIslem('Guncellendi', 'FAI', seciliFaiId, fields['Parca No'] + ' → ' + durum, null, fields);
+    } else {
+      var sonuc = await apiPost('FAI Kayitlari', fields);
+      seciliFaiId = sonuc.id;
+      await logIslem('Olusturuldu', 'FAI', sonuc.id, fields['Parca No'] + ' → ' + durum, null, fields);
+    }
+    toast('FAI ' + (durum === 'Onaylandi' ? 'onaylandi' : 'reddedildi'));
+    await yukle();
+    if (seciliFaiId) faiSec(seciliFaiId);
+  } catch(e) {
+    toast('Hata: ' + e.message, 'hata');
+  }
+}
+
+// ── AI FAI DEGERLENDIRME ──
+async function aiFaiDegerlendir() {
+  var sonucDiv = document.getElementById('ai-sonuc');
+  sonucDiv.innerHTML = '<div class="yukleniyor"><div class="spinner"></div> AI analiz ediyor...</div>';
+  var olcumler = olcumleriTopla();
+  var checklist = checklistTopla();
+  var prompt = 'FAI (First Article Inspection) degerlendirmesi yap. AS9102 standartina gore.\n'
+    + 'Parca No: ' + (document.getElementById('fai-parca').value || '-') + '\n'
+    + 'Revizyon: ' + (document.getElementById('fai-rev').value || '-') + '\n'
+    + 'FAI Tipi: ' + (document.getElementById('fai-tip').value || '-') + '\n'
+    + 'Tetikleyici: ' + (document.getElementById('fai-tetik').value || '-') + '\n'
+    + 'Tamamlanan kontroller: ' + (checklist || 'Hicbiri') + '\n'
+    + 'Olcum verileri: ' + JSON.stringify(olcumler) + '\n'
+    + 'Turkcecevap ver. Oneri ve eksikleri belirt.';
+  try {
+    var r = await fetch('/.netlify/functions/claude', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({prompt: prompt})
+    });
+    var data = await r.json();
+    var text = data.content || data.response || JSON.stringify(data);
+    sonucDiv.innerHTML = '<div style="background:var(--mavi-acik);border:1px solid var(--mavi);border-radius:8px;padding:12px;font-size:12px;color:var(--metin2);white-space:pre-wrap;line-height:1.6">' + text + '</div>';
+  } catch(e) {
+    sonucDiv.innerHTML = '<div style="color:var(--kirmizi);font-size:12px">AI baglantisi kurulamadi: ' + e.message + '</div>';
+  }
+}
+
+// ── INIT ──
+document.addEventListener('DOMContentLoaded', function() {
+  yukle();
+});
+</script>
+</body>
+</html>

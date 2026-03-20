@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — Onayli Tedarikci Listesi</title>
+<link rel="stylesheet" href="ersan_styles.css">
+<script src="ersan_nav.js" defer></script>
+<script src="ersan_log.js" defer></script>
+</head>
+<body>
+<div id="nav-alani"></div>
+<div class="icerik-alani">
+  <div class="topbar">
+    <div class="topbar-baslik">Onayli Tedarikci Listesi (ASL)</div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:11px;color:var(--metin3)">AS9100 §8.4</span>
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
+    </div>
+  </div>
+  <div class="sayfa-icerik">
+    <div class="iki-panel">
+
+      <!-- SOL PANEL -->
+      <div class="sol-panel" style="width:320px">
+        <div class="sol-panel-ust">
+          <div class="sol-panel-baslik">Tedarikciler</div>
+          <span class="badge badge-mavi" id="tedarikci-sayi">0</span>
+        </div>
+        <div class="sol-arama"><input type="text" placeholder="Tedarikci ara..." oninput="araFiltre(this.value)"></div>
+        <div class="sol-filtre">
+          <button class="filtre-btn aktif" onclick="filtreUygula('Tumu',this)">Tumu</button>
+          <button class="filtre-btn" onclick="filtreUygula('Onayli',this)">Onayli</button>
+          <button class="filtre-btn" onclick="filtreUygula('Kosullu',this)">Kosullu</button>
+          <button class="filtre-btn" onclick="filtreUygula('Askiya Alinmis',this)">Askida</button>
+        </div>
+        <div class="sol-liste" id="tedarikci-liste">
+          <div class="yukleniyor"><div class="spinner"></div> Yukleniyor...</div>
+        </div>
+      </div>
+
+      <!-- SAG PANEL -->
+      <div class="sag-panel">
+        <div class="sag-panel-ust">
+          <div style="font-size:13px;font-weight:600;color:var(--laci)" id="sag-baslik">Tedarikci Detay</div>
+          <div id="sag-badge"></div>
+        </div>
+        <div class="sag-panel-icerik" id="sag-icerik">
+          <div class="bos-durum">Listeden bir tedarikci secin.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var tedarikciler = [];
+var malzemeGirisleri = [];
+var aktifFiltre = 'Tumu';
+var seciliId = null;
+
+async function apiGet(tablo, query) {
+  var url = '/.netlify/functions/airtable?table=' + encodeURIComponent(tablo);
+  if (query) url += '&' + query;
+  var r = await fetch(url);
+  return r.json();
+}
+async function apiPatch(tablo, id, fields) {
+  var r = await fetch('/.netlify/functions/airtable', {
+    method:'PATCH', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({table:tablo, id:id, fields:fields})
+  });
+  return r.json();
+}
+
+function toast(mesaj, tip) {
+  var t = document.getElementById('toast');
+  t.textContent = mesaj;
+  t.className = 'toast toast-' + (tip || 'basari') + ' goster';
+  setTimeout(function(){ t.className = 'toast'; }, 3000);
+}
+
+async function yukle() {
+  try {
+    var s1 = await apiGet('Tedarikciler (OTL)', 'pageSize=100');
+    tedarikciler = s1.records || [];
+  } catch(e) { tedarikciler = []; }
+  try {
+    var s2 = await apiGet('Malzeme Girisleri', 'pageSize=100');
+    malzemeGirisleri = s2.records || [];
+  } catch(e) { malzemeGirisleri = []; }
+  document.getElementById('tedarikci-sayi').textContent = tedarikciler.length;
+  listeGuncelle();
+}
+
+function araFiltre(val) {
+  var arama = val.toLowerCase();
+  var satirlar = document.querySelectorAll('#tedarikci-liste .liste-satir');
+  for (var i = 0; i < satirlar.length; i++) {
+    satirlar[i].style.display = satirlar[i].textContent.toLowerCase().indexOf(arama) >= 0 ? '' : 'none';
+  }
+}
+
+function filtreUygula(tip, btn) {
+  aktifFiltre = tip;
+  var btns = document.querySelectorAll('.filtre-btn');
+  for (var i = 0; i < btns.length; i++) btns[i].classList.remove('aktif');
+  if (btn) btn.classList.add('aktif');
+  listeGuncelle();
+}
+
+function listeGuncelle() {
+  var liste = document.getElementById('tedarikci-liste');
+  var filtered = tedarikciler;
+  if (aktifFiltre !== 'Tumu') {
+    filtered = tedarikciler.filter(function(r) {
+      return (r.fields['Onay Durumu'] || 'Onayli') === aktifFiltre;
+    });
+  }
+  if (filtered.length === 0) {
+    liste.innerHTML = '<div class="bos-durum">' + (tedarikciler.length === 0 ? 'Tablo yapilandirilmamis veya kayit yok.' : 'Bu filtreye uygun tedarikci yok.') + '</div>';
+    return;
+  }
+  var bugun = new Date().toISOString().split('T')[0];
+  var html = '';
+  filtered.forEach(function(r) {
+    var f = r.fields;
+    var durum = f['Onay Durumu'] || 'Onayli';
+    var badgeCls = durum === 'Onayli' ? 'badge-yesil' : durum === 'Kosullu' ? 'badge-sari' : 'badge-kirmizi';
+    var secili = r.id === seciliId ? ' secili' : '';
+
+    // Sertifika badgeleri
+    var certBadges = '';
+    if (f['AS9100']) certBadges += '<span class="badge badge-mavi" style="font-size:8px;padding:1px 4px">AS9100</span> ';
+    if (f['ISO 9001']) certBadges += '<span class="badge badge-gri" style="font-size:8px;padding:1px 4px">ISO9001</span> ';
+
+    // Denetim uyarisi
+    var uyari = '';
+    var sonrakiDenetim = f['Sonraki Denetim'];
+    if (sonrakiDenetim && sonrakiDenetim <= bugun) {
+      uyari = ' <span title="Denetim suresi gecmis" style="color:var(--kirmizi)">&#9888;</span>';
+    } else if (sonrakiDenetim) {
+      var fark = Math.floor((new Date(sonrakiDenetim) - new Date()) / (1000*60*60*24));
+      if (fark <= 30) uyari = ' <span title="Denetim yaklesiyor (' + fark + ' gun)" style="color:var(--sari)">&#9888;</span>';
+    }
+
+    html += '<div class="liste-satir' + secili + '" onclick="tedarikciSec(\'' + r.id + '\')">'
+      + '<div class="liste-satir-no">' + (f['Tedarikci Adi'] || f['Ad'] || r.id.substring(0,8)) + uyari + '</div>'
+      + '<div style="margin:2px 0">' + certBadges + '</div>'
+      + '<div class="liste-satir-alt"><span class="badge ' + badgeCls + '">' + durum + '</span>'
+      + '<span style="font-size:10px;color:var(--metin4)">' + (f['Sehir'] || '') + '</span></div>'
+      + '</div>';
+  });
+  liste.innerHTML = html;
+}
+
+function tedarikciSec(id) {
+  seciliId = id;
+  listeGuncelle();
+  var kayit = tedarikciler.find(function(r){ return r.id === id; });
+  if (kayit) detayGoster(kayit);
+}
+
+function detayGoster(kayit) {
+  var f = kayit.fields;
+  var durum = f['Onay Durumu'] || 'Onayli';
+  var badgeCls = durum === 'Onayli' ? 'badge-yesil' : durum === 'Kosullu' ? 'badge-sari' : 'badge-kirmizi';
+
+  document.getElementById('sag-baslik').textContent = f['Tedarikci Adi'] || f['Ad'] || 'Tedarikci';
+  document.getElementById('sag-badge').innerHTML = '<span class="badge ' + badgeCls + '">' + durum + '</span>';
+
+  var html = '';
+
+  // Kart 1: Tedarikci Bilgileri
+  html += '<div class="kart"><div class="kart-baslik">Tedarikci Bilgileri</div>'
+    + '<div class="form-grid-2">'
+    + '<div class="form-grup"><label class="form-label">Tedarikci Adi</label><input class="form-input" value="' + (f['Tedarikci Adi'] || f['Ad'] || '') + '" readonly style="background:var(--bg)"></div>'
+    + '<div class="form-grup"><label class="form-label">Sehir / Ulke</label><input class="form-input" value="' + (f['Sehir'] || '') + ' / ' + (f['Ulke'] || 'TR') + '" readonly style="background:var(--bg)"></div>'
+    + '</div>'
+    + '<div class="form-grid-2">'
+    + '<div class="form-grup"><label class="form-label">Telefon</label><input class="form-input" value="' + (f['Telefon'] || '-') + '" readonly style="background:var(--bg)"></div>'
+    + '<div class="form-grup"><label class="form-label">Email</label><input class="form-input" value="' + (f['Email'] || '-') + '" readonly style="background:var(--bg)"></div>'
+    + '</div>'
+    + '</div>';
+
+  // Kart 2: Onay Durumu
+  html += '<div class="kart"><div class="kart-baslik">Onay Bilgileri</div>'
+    + '<div class="form-grid-3">'
+    + '<div class="form-grup"><label class="form-label">Onay Tipi</label><select class="form-select" id="asl-tip">'
+    + '<option' + (f['Onay Tipi']==='Tam Onay'?' selected':'') + '>Tam Onay</option>'
+    + '<option' + (f['Onay Tipi']==='Kosullu Onay'?' selected':'') + '>Kosullu Onay</option>'
+    + '<option' + (f['Onay Tipi']==='Sinirli Onay'?' selected':'') + '>Sinirli Onay</option>'
+    + '</select></div>'
+    + '<div class="form-grup"><label class="form-label">Onay Durumu</label><select class="form-select" id="asl-durum">'
+    + '<option' + (durum==='Onayli'?' selected':'') + '>Onayli</option>'
+    + '<option' + (durum==='Kosullu'?' selected':'') + '>Kosullu</option>'
+    + '<option' + (durum==='Askiya Alinmis'?' selected':'') + '>Askiya Alinmis</option>'
+    + '</select></div>'
+    + '<div class="form-grup"><label class="form-label">Onay Tarihi</label><input type="date" class="form-input" id="asl-onayTarih" value="' + (f['Onay Tarihi'] || '') + '"></div>'
+    + '</div>'
+    + '<div class="form-grup"><label class="form-label">Malzeme / Hizmet Kapsami</label><input class="form-input" id="asl-kapsam" value="' + (f['Kapsam'] || '') + '" placeholder="CNC imalat, hammadde, yuzey islem..."></div>'
+    + '<div class="form-grup"><label class="form-label">Flow-Down Gereksinimleri</label><textarea class="form-textarea" id="asl-flowdown" rows="2" placeholder="AS9100 akis gereksinimleri...">' + (f['Flow Down'] || '') + '</textarea></div>'
+    + '</div>';
+
+  // Kart 3: Sertifikalar
+  html += '<div class="kart"><div class="kart-baslik">Sertifikalar</div>'
+    + '<div class="form-grid-2">'
+    + '<div style="padding:8px;border:1px solid var(--border);border-radius:6px">'
+    + '<label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;margin-bottom:6px"><input type="checkbox" id="asl-as9100"' + (f['AS9100']?' checked':'') + '> AS9100 Sertifikali</label>'
+    + '<div class="form-grup" style="margin-bottom:0"><label class="form-label">Gecerlilik Tarihi</label><input type="date" class="form-input" id="asl-as9100-tarih" value="' + (f['AS9100 Gecerlilik'] || '') + '"></div>'
+    + '</div>'
+    + '<div style="padding:8px;border:1px solid var(--border);border-radius:6px">'
+    + '<label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;margin-bottom:6px"><input type="checkbox" id="asl-iso9001"' + (f['ISO 9001']?' checked':'') + '> ISO 9001 Sertifikali</label>'
+    + '<div class="form-grup" style="margin-bottom:0"><label class="form-label">Gecerlilik Tarihi</label><input type="date" class="form-input" id="asl-iso9001-tarih" value="' + (f['ISO 9001 Gecerlilik'] || '') + '"></div>'
+    + '</div>'
+    + '</div></div>';
+
+  // Kart 4: Denetim Gecmisi
+  html += '<div class="kart"><div class="kart-baslik">Denetim Gecmisi</div>'
+    + '<div class="form-grid-3">'
+    + '<div class="form-grup"><label class="form-label">Son Denetim</label><input type="date" class="form-input" id="asl-sonDenetim" value="' + (f['Son Denetim'] || '') + '"></div>'
+    + '<div class="form-grup"><label class="form-label">Denetim Puani</label><input type="number" class="form-input" id="asl-puan" value="' + (f['Denetim Puani'] || '') + '" min="0" max="100" placeholder="0-100"></div>'
+    + '<div class="form-grup"><label class="form-label">Sonraki Denetim</label><input type="date" class="form-input" id="asl-sonrakiDenetim" value="' + (f['Sonraki Denetim'] || '') + '"></div>'
+    + '</div>'
+    + '<button class="btn btn-beyaz btn-sm" onclick="denetimPlanla()">Denetim Planla</button>'
+    + '</div>';
+
+  // Kart 5: Performans Ozeti
+  var tedarikciAdi = f['Tedarikci Adi'] || f['Ad'] || '';
+  var toplamTeslimat = 0, reddedilen = 0, zamaninda = 0;
+  malzemeGirisleri.forEach(function(m) {
+    if ((m.fields['Tedarikci'] || '') === tedarikciAdi) {
+      toplamTeslimat++;
+      if (m.fields['Durum'] === 'Reddedildi' || m.fields['Sonuc'] === 'Red') reddedilen++;
+      if (m.fields['Zamaninda'] === true || m.fields['Zamaninda'] === 'Evet') zamaninda++;
+    }
+  });
+  var zamanindaYuzde = toplamTeslimat > 0 ? Math.round((zamaninda / toplamTeslimat) * 100) : 0;
+
+  html += '<div class="kart"><div class="kart-baslik">Performans Ozeti</div>'
+    + '<div class="kpi-grid">'
+    + '<div class="kpi-kart"><div class="kpi-etiket">Toplam Teslimat</div><div class="kpi-deger">' + toplamTeslimat + '</div></div>'
+    + '<div class="kpi-kart kirmizi"><div class="kpi-etiket">Reddedilen</div><div class="kpi-deger">' + reddedilen + '</div></div>'
+    + '<div class="kpi-kart yesil"><div class="kpi-etiket">Zamaninda %</div><div class="kpi-deger">' + zamanindaYuzde + '%</div></div>'
+    + '</div></div>';
+
+  // Kaydet butonu
+  html += '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">'
+    + '<button class="btn btn-mavi" onclick="tedarikciKaydet()">Kaydet</button>'
+    + '</div>';
+
+  // AI Degerlendirme
+  html += '<div class="kart" style="border-top:3px solid var(--mavi);margin-top:12px">'
+    + '<div class="kart-baslik">AI Tedarikci Degerlendirme</div>'
+    + '<p style="font-size:12px;color:var(--metin3);margin-bottom:10px">Tedarikci performansini ve risk durumunu AI ile analiz edin.</p>'
+    + '<button class="btn btn-mavi" onclick="aiTedarikciDegerlendir()">AI Degerlendirme</button>'
+    + '<div id="ai-sonuc" style="margin-top:10px"></div>'
+    + '</div>';
+
+  document.getElementById('sag-icerik').innerHTML = html;
+}
+
+function denetimPlanla() {
+  var sonraki = document.getElementById('asl-sonrakiDenetim');
+  if (!sonraki.value) {
+    var tarih = new Date();
+    tarih.setMonth(tarih.getMonth() + 12);
+    sonraki.value = tarih.toISOString().split('T')[0];
+  }
+  toast('Sonraki denetim tarihi ayarlandi', 'bilgi');
+}
+
+async function tedarikciKaydet() {
+  if (!seciliId) return;
+  var fields = {
+    'Onay Tipi': document.getElementById('asl-tip').value,
+    'Onay Durumu': document.getElementById('asl-durum').value,
+    'Onay Tarihi': document.getElementById('asl-onayTarih').value,
+    'Kapsam': document.getElementById('asl-kapsam').value,
+    'Flow Down': document.getElementById('asl-flowdown').value,
+    'AS9100': document.getElementById('asl-as9100').checked,
+    'AS9100 Gecerlilik': document.getElementById('asl-as9100-tarih').value,
+    'ISO 9001': document.getElementById('asl-iso9001').checked,
+    'ISO 9001 Gecerlilik': document.getElementById('asl-iso9001-tarih').value,
+    'Son Denetim': document.getElementById('asl-sonDenetim').value,
+    'Denetim Puani': document.getElementById('asl-puan').value ? parseInt(document.getElementById('asl-puan').value) : null,
+    'Sonraki Denetim': document.getElementById('asl-sonrakiDenetim').value
+  };
+  try {
+    await apiPatch('Tedarikciler (OTL)', seciliId, fields);
+    await logIslem('Guncellendi', 'ASL', seciliId, document.getElementById('sag-baslik').textContent, null, fields);
+    toast('Tedarikci bilgileri guncellendi');
+    await yukle();
+    tedarikciSec(seciliId);
+  } catch(e) {
+    toast('Hata: ' + e.message, 'hata');
+  }
+}
+
+async function aiTedarikciDegerlendir() {
+  var sonucDiv = document.getElementById('ai-sonuc');
+  sonucDiv.innerHTML = '<div class="yukleniyor"><div class="spinner"></div> AI analiz ediyor...</div>';
+  var kayit = tedarikciler.find(function(r){ return r.id === seciliId; });
+  if (!kayit) return;
+  var f = kayit.fields;
+  var prompt = 'AS9100 kapsaminda tedarikci degerlendirmesi yap.\n'
+    + 'Tedarikci: ' + (f['Tedarikci Adi'] || f['Ad'] || '') + '\n'
+    + 'Onay Durumu: ' + (f['Onay Durumu'] || '-') + '\n'
+    + 'AS9100: ' + (f['AS9100'] ? 'Evet' : 'Hayir') + '\n'
+    + 'ISO 9001: ' + (f['ISO 9001'] ? 'Evet' : 'Hayir') + '\n'
+    + 'Denetim Puani: ' + (f['Denetim Puani'] || '-') + '\n'
+    + 'Kapsam: ' + (f['Kapsam'] || '-') + '\n'
+    + 'Turkce cevap ver. Risk degerlendirmesi ve oneriler belirt.';
+  try {
+    var r = await fetch('/.netlify/functions/claude', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({prompt: prompt})
+    });
+    var data = await r.json();
+    var text = data.content || data.response || JSON.stringify(data);
+    sonucDiv.innerHTML = '<div style="background:var(--mavi-acik);border:1px solid var(--mavi);border-radius:8px;padding:12px;font-size:12px;color:var(--metin2);white-space:pre-wrap;line-height:1.6">' + text + '</div>';
+  } catch(e) {
+    sonucDiv.innerHTML = '<div style="color:var(--kirmizi);font-size:12px">AI baglantisi kurulamadi: ' + e.message + '</div>';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  yukle();
+});
+</script>
+</body>
+</html>

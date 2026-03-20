@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — Muhendislik Degisiklik Emirleri</title>
+<link rel="stylesheet" href="ersan_styles.css">
+<script src="ersan_nav.js" defer></script>
+<script src="ersan_log.js" defer></script>
+</head>
+<body>
+<div id="nav-alani"></div>
+<div class="icerik-alani">
+  <div class="topbar">
+    <div class="topbar-baslik">Muhendislik Degisiklik Emirleri (ECO)</div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:11px;color:var(--metin3)">AS9100 §8.5.6</span>
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
+    </div>
+  </div>
+  <div class="sayfa-icerik">
+    <div class="iki-panel">
+
+      <!-- SOL PANEL -->
+      <div class="sol-panel">
+        <div class="sol-panel-ust">
+          <div class="sol-panel-baslik">ECO Listesi</div>
+          <button class="btn-new" onclick="yeniEco()">+ Yeni</button>
+        </div>
+        <div class="sol-arama"><input type="text" placeholder="Ara..." oninput="araFiltre(this.value)"></div>
+        <div class="sol-liste" id="eco-liste">
+          <div class="yukleniyor"><div class="spinner"></div> Yukleniyor...</div>
+        </div>
+      </div>
+
+      <!-- SAG PANEL -->
+      <div class="sag-panel">
+        <div class="sag-panel-ust">
+          <div style="font-size:13px;font-weight:600;color:var(--laci)" id="sag-baslik">ECO Detay</div>
+          <div id="sag-badge"></div>
+        </div>
+        <div class="sag-panel-icerik" id="sag-icerik">
+          <div class="bos-durum">Listeden bir ECO secin veya yeni olusturun.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var ecoListesi = [];
+var isEmirleri = [];
+var seciliId = null;
+
+async function apiGet(tablo, query) {
+  var url = '/.netlify/functions/airtable?table=' + encodeURIComponent(tablo);
+  if (query) url += '&' + query;
+  var r = await fetch(url);
+  return r.json();
+}
+async function apiPost(tablo, fields) {
+  var r = await fetch('/.netlify/functions/airtable', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({method:'POST', path:'/v0/app5LDgJMgocw79Ix/' + encodeURIComponent(tablo), body:{fields:fields}})
+  });
+  return r.json();
+}
+async function apiPatch(tablo, id, fields) {
+  var r = await fetch('/.netlify/functions/airtable', {
+    method:'PATCH', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({table:tablo, id:id, fields:fields})
+  });
+  return r.json();
+}
+
+function toast(mesaj, tip) {
+  var t = document.getElementById('toast');
+  t.textContent = mesaj;
+  t.className = 'toast toast-' + (tip || 'basari') + ' goster';
+  setTimeout(function(){ t.className = 'toast'; }, 3000);
+}
+
+async function yukle() {
+  try {
+    var s1 = await apiGet('ECO Kayitlari', 'pageSize=100');
+    ecoListesi = s1.records || [];
+  } catch(e) { ecoListesi = []; }
+  try {
+    var s2 = await apiGet('Is Emirleri', 'pageSize=100');
+    isEmirleri = s2.records || [];
+  } catch(e) { isEmirleri = []; }
+  listeGuncelle();
+}
+
+function araFiltre(val) {
+  var arama = val.toLowerCase();
+  var satirlar = document.querySelectorAll('#eco-liste .liste-satir');
+  for (var i = 0; i < satirlar.length; i++) {
+    satirlar[i].style.display = satirlar[i].textContent.toLowerCase().indexOf(arama) >= 0 ? '' : 'none';
+  }
+}
+
+function listeGuncelle() {
+  var liste = document.getElementById('eco-liste');
+  if (ecoListesi.length === 0) {
+    liste.innerHTML = '<div class="bos-durum">Tablo yapilandirilmamis veya kayit yok.</div>';
+    return;
+  }
+  var html = '';
+  ecoListesi.forEach(function(r) {
+    var f = r.fields;
+    var durum = f['Durum'] || 'Taslak';
+    var badgeCls = durum === 'Onaylandi' ? 'badge-yesil' : durum === 'Reddedildi' ? 'badge-kirmizi' : durum === 'Incelemede' ? 'badge-mavi' : 'badge-gri';
+    var secili = r.id === seciliId ? ' secili' : '';
+    var faiIcon = f['FAI Gerekli'] === true || f['FAI Gerekli'] === 'true' ? ' <span title="FAI Gerekli" style="color:var(--sari)">&#9888;</span>' : '';
+    html += '<div class="liste-satir' + secili + '" onclick="ecoSec(\'' + r.id + '\')">'
+      + '<div class="liste-satir-no">' + (f['ECO No'] || r.id.substring(0,8)) + faiIcon + '</div>'
+      + '<div class="liste-satir-ad">' + (f['Konu'] || '-') + '</div>'
+      + '<div class="liste-satir-alt"><span class="badge ' + badgeCls + '">' + durum + '</span>'
+      + '<span style="font-size:10px;color:var(--metin4)">' + (f['Parca No'] || '') + '</span></div>'
+      + '</div>';
+  });
+  liste.innerHTML = html;
+}
+
+function ecoSec(id) {
+  seciliId = id;
+  listeGuncelle();
+  var kayit = ecoListesi.find(function(r){ return r.id === id; });
+  if (kayit) detayGoster(kayit);
+}
+
+function detayGoster(kayit) {
+  var f = kayit.fields;
+  var durum = f['Durum'] || 'Taslak';
+  var badgeCls = durum === 'Onaylandi' ? 'badge-yesil' : durum === 'Reddedildi' ? 'badge-kirmizi' : durum === 'Incelemede' ? 'badge-mavi' : 'badge-gri';
+
+  document.getElementById('sag-baslik').textContent = f['ECO No'] || 'ECO Detay';
+  document.getElementById('sag-badge').innerHTML = '<span class="badge ' + badgeCls + '">' + durum + '</span>';
+
+  var html = '';
+
+  // Kart 1: ECO Formu
+  html += '<div class="kart"><div class="kart-baslik">ECO Bilgileri</div>'
+    + '<div class="form-grup"><label class="form-label">Konu</label><input class="form-input" id="eco-konu" value="' + (f['Konu'] || '') + '"></div>'
+    + '<div class="form-grid-2">'
+    + '<div class="form-grup"><label class="form-label">Parca No</label><input class="form-input" id="eco-parca" value="' + (f['Parca No'] || '') + '" oninput="etkilenenIEleriAra()"></div>'
+    + '<div class="form-grup"><label class="form-label">Tarih</label><input type="date" class="form-input" id="eco-tarih" value="' + (f['Tarih'] || '') + '"></div>'
+    + '</div>'
+    + '<div class="form-grid-2">'
+    + '<div class="form-grup"><label class="form-label">Eski Revizyon</label><input class="form-input" id="eco-eskiRev" value="' + (f['Eski Rev'] || '') + '"></div>'
+    + '<div class="form-grup"><label class="form-label">Yeni Revizyon</label><input class="form-input" id="eco-yeniRev" value="' + (f['Yeni Rev'] || '') + '"></div>'
+    + '</div>'
+    + '<div class="form-grup"><label class="form-label">Degisiklik Nedeni</label><textarea class="form-textarea" id="eco-neden" rows="3">' + (f['Neden'] || '') + '</textarea></div>'
+    + '<div style="padding:6px 0"><label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--metin2);cursor:pointer">'
+    + '<input type="checkbox" id="eco-fai"' + (f['FAI Gerekli'] ? ' checked' : '') + '> FAI Gerekli (onay sonrasi otomatik FAI kaydi olusturulacak)</label></div>'
+    + '</div>';
+
+  // Kart 2: Etkilenen Is Emirleri
+  html += '<div class="kart"><div class="kart-baslik">Etkilenen Is Emirleri</div>'
+    + '<div id="etkilenen-ie-liste"><div class="bos-durum" style="padding:16px">Parca No girilerek otomatik aranir</div></div>'
+    + '</div>';
+
+  // Kart 3: Etkilenen Dokumanlar
+  var dokumanlar = f['Dokumanlar'] || '';
+  html += '<div class="kart"><div class="kart-baslik">Etkilenen Dokumanlar</div>'
+    + '<div class="form-grup"><label class="form-label">Dokuman Listesi</label><textarea class="form-textarea" id="eco-dokumanlar" rows="3" placeholder="Her satira bir dokuman...">' + dokumanlar + '</textarea></div>'
+    + '</div>';
+
+  // Kart 4: Onay Akisi
+  html += '<div class="kart"><div class="kart-baslik">Onay Akisi</div>'
+    + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">';
+
+  var durumlar = ['Taslak', 'Incelemede', 'Onaylandi', 'Reddedildi'];
+  durumlar.forEach(function(d) {
+    var aktif = d === durum;
+    var renk = d === 'Onaylandi' ? 'var(--yesil)' : d === 'Reddedildi' ? 'var(--kirmizi)' : d === 'Incelemede' ? 'var(--mavi)' : 'var(--metin4)';
+    html += '<div style="flex:1;text-align:center;padding:8px;border-radius:6px;font-size:11px;font-weight:600;'
+      + (aktif ? 'background:' + renk + ';color:#fff' : 'background:var(--bg);color:var(--metin3)') + '">' + d + '</div>';
+    if (d !== 'Reddedildi') html += '<div style="color:var(--metin4);font-size:16px">&#8594;</div>';
+  });
+
+  html += '</div>'
+    + '<div style="display:flex;gap:8px">'
+    + '<button class="btn btn-beyaz" onclick="ecoDurumGuncelle(\'Taslak\')" style="flex:1">Taslak</button>'
+    + '<button class="btn btn-mavi" onclick="ecoDurumGuncelle(\'Incelemede\')" style="flex:1">Incelemeye Al</button>'
+    + '<button class="btn btn-yesil" onclick="ecoDurumGuncelle(\'Onaylandi\')" style="flex:1">Onayla</button>'
+    + '<button class="btn btn-kirmizi" onclick="ecoDurumGuncelle(\'Reddedildi\')" style="flex:1">Reddet</button>'
+    + '</div>'
+    + '</div>';
+
+  document.getElementById('sag-icerik').innerHTML = html;
+
+  // Etkilenen IE'leri ara
+  if (f['Parca No']) etkilenenIEleriAra();
+}
+
+function etkilenenIEleriAra() {
+  var parcaNo = document.getElementById('eco-parca').value;
+  var div = document.getElementById('etkilenen-ie-liste');
+  if (!parcaNo) {
+    div.innerHTML = '<div class="bos-durum" style="padding:16px">Parca No girilerek otomatik aranir</div>';
+    return;
+  }
+  var eslesen = isEmirleri.filter(function(r) {
+    return (r.fields['Parca No'] || '').indexOf(parcaNo) >= 0;
+  });
+  if (eslesen.length === 0) {
+    div.innerHTML = '<div style="padding:12px;font-size:12px;color:var(--metin3)">Eslesen is emri bulunamadi.</div>';
+    return;
+  }
+  var html = '<table class="tablo"><thead><tr><th>IE No</th><th>Parca No</th><th>Durum</th><th>Revizyon</th></tr></thead><tbody>';
+  eslesen.forEach(function(r) {
+    var f = r.fields;
+    html += '<tr><td class="td-mono">' + (f['IE No'] || '-') + '</td><td>' + (f['Parca No'] || '-') + '</td>'
+      + '<td><span class="badge badge-mavi">' + (f['Durum'] || '-') + '</span></td>'
+      + '<td>' + (f['Revizyon'] || '-') + '</td></tr>';
+  });
+  html += '</tbody></table>';
+  div.innerHTML = html;
+}
+
+function yeniEco() {
+  seciliId = null;
+  document.getElementById('sag-baslik').textContent = 'Yeni ECO';
+  document.getElementById('sag-badge').innerHTML = '<span class="badge badge-gri">Yeni</span>';
+  detayGoster({fields:{}});
+}
+
+async function ecoKaydet() {
+  var fields = {
+    'Konu': document.getElementById('eco-konu').value,
+    'Parca No': document.getElementById('eco-parca').value,
+    'Tarih': document.getElementById('eco-tarih').value,
+    'Eski Rev': document.getElementById('eco-eskiRev').value,
+    'Yeni Rev': document.getElementById('eco-yeniRev').value,
+    'Neden': document.getElementById('eco-neden').value,
+    'FAI Gerekli': document.getElementById('eco-fai').checked,
+    'Dokumanlar': document.getElementById('eco-dokumanlar').value
+  };
+  try {
+    if (seciliId) {
+      await apiPatch('ECO Kayitlari', seciliId, fields);
+      await logIslem('Guncellendi', 'ECO', seciliId, fields['Konu'], null, fields);
+      toast('ECO guncellendi');
+    } else {
+      fields['Durum'] = 'Taslak';
+      var s = await apiPost('ECO Kayitlari', fields);
+      seciliId = s.id;
+      await logIslem('Olusturuldu', 'ECO', s.id, fields['Konu'], null, fields);
+      toast('ECO olusturuldu');
+    }
+    await yukle();
+    if (seciliId) ecoSec(seciliId);
+  } catch(e) {
+    toast('Hata: ' + e.message, 'hata');
+  }
+}
+
+async function ecoDurumGuncelle(yeniDurum) {
+  // Once kaydet
+  var fields = {
+    'Konu': document.getElementById('eco-konu').value,
+    'Parca No': document.getElementById('eco-parca').value,
+    'Tarih': document.getElementById('eco-tarih').value,
+    'Eski Rev': document.getElementById('eco-eskiRev').value,
+    'Yeni Rev': document.getElementById('eco-yeniRev').value,
+    'Neden': document.getElementById('eco-neden').value,
+    'FAI Gerekli': document.getElementById('eco-fai').checked,
+    'Dokumanlar': document.getElementById('eco-dokumanlar').value,
+    'Durum': yeniDurum
+  };
+
+  try {
+    if (seciliId) {
+      await apiPatch('ECO Kayitlari', seciliId, fields);
+      await logIslem('Guncellendi', 'ECO', seciliId, fields['Konu'] + ' → ' + yeniDurum, null, fields);
+    } else {
+      var s = await apiPost('ECO Kayitlari', fields);
+      seciliId = s.id;
+      await logIslem('Olusturuldu', 'ECO', s.id, fields['Konu'] + ' → ' + yeniDurum, null, fields);
+    }
+
+    // Onaylandi ve FAI gerekli ise FAI kaydi olustur
+    if (yeniDurum === 'Onaylandi' && document.getElementById('eco-fai').checked) {
+      try {
+        var faiFields = {
+          'Parca No': fields['Parca No'],
+          'Revizyon': fields['Yeni Rev'],
+          'FAI Tipi': 'Kismi',
+          'Tetikleyici': 'Tasarim Degisikligi',
+          'Tarih': new Date().toISOString().split('T')[0],
+          'Durum': 'Bekliyor'
+        };
+        var faiSonuc = await apiPost('FAI Kayitlari', faiFields);
+        await logIslem('Olusturuldu', 'FAI', faiSonuc.id, 'ECO\'dan otomatik: ' + fields['Parca No'], null, faiFields);
+        toast('ECO onaylandi + FAI kaydi olusturuldu');
+      } catch(e) {
+        toast('ECO onaylandi ancak FAI olusturulamadi: ' + e.message, 'hata');
+      }
+    } else {
+      toast('ECO durumu guncellendi: ' + yeniDurum);
+    }
+
+    await yukle();
+    if (seciliId) ecoSec(seciliId);
+  } catch(e) {
+    toast('Hata: ' + e.message, 'hata');
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  yukle();
+});
+</script>
+</body>
+</html>

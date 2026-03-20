@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ersan MES — Kalite Kontrol</title>
+<title>Ersan MES — Kalite Hub</title>
 <link rel="stylesheet" href="ersan_styles.css">
 <script src="ersan_nav.js" defer></script>
 <script src="ersan_log.js" defer></script>
@@ -12,74 +12,200 @@
 <div id="nav-alani"></div>
 <div class="icerik-alani">
   <div class="topbar">
-    <div class="topbar-baslik">Kalite Kontrol</div>
-    <div style="display:flex;align-items:center;gap:8px;">
+    <div class="topbar-baslik">Kalite Hub</div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:11px;color:var(--metin3)">AS9100 Rev.D</span>
       <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
     </div>
   </div>
   <div class="sayfa-icerik">
-<style>
-.container { max-width: 900px; margin: 0 auto; padding: 40px 20px; }
-.page-header { text-align: center; margin-bottom: 40px; }
-.page-icon { font-size: 48px; margin-bottom: 12px; }
-.page-title { font-size: 24px; font-weight: 700; margin-bottom: 6px; }
-.page-std { font-size: 11px; font-weight: 600; background: #ede9fe; color: #5b21b6; padding: 3px 12px; border-radius: 20px; display: inline-block; margin-bottom: 8px; }
-.page-desc { font-size: 14px; color: #5a6170; max-width: 500px; margin: 0 auto; line-height: 1.6; }
-.cards { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-@media(max-width:640px) { .cards { grid-template-columns: 1fr; } }
-.card {
-  background: #fff; border: 1px solid #e2e5ea; border-radius: 12px;
-  padding: 24px; transition: all .15s; position: relative; overflow: hidden;
-}
-.card.active { cursor: pointer; }
-.card.active:hover { border-color: #7c3aed; box-shadow: 0 4px 16px rgba(124,58,237,.1); transform: translateY(-2px); }
-.card-icon { font-size: 32px; margin-bottom: 12px; }
-.card-title { font-size: 16px; font-weight: 600; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
-.card-desc { font-size: 13px; color: #5a6170; line-height: 1.5; }
-.badge-active { font-size: 9px; font-weight: 700; background: #d1fae5; color: #059669; padding: 2px 8px; border-radius: 10px; }
-.badge-soon { font-size: 9px; font-weight: 700; background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 10px; }
-.card-arrow { position: absolute; top: 24px; right: 20px; font-size: 18px; color: #e2e5ea; }
-.card.active .card-arrow { color: #7c3aed; }
-</style>
-<div class="container">
-  <div class="page-header">
-    <div class="page-icon">✅</div>
-    <div class="page-title">Kalite Kontrol</div>
-    <div class="page-std">AS9100 §8.5 · §8.6 · §10.2</div>
-    <div class="page-desc">Gelen malzeme muayenesi, üretim kalite kontrol, uygunsuzluk yönetimi ve düzeltici faaliyetler.</div>
-  </div>
 
-  <div class="cards">
-
-    <div class="card active" onclick="window.location='ersan_girdi_kalite.html'">
-      <div class="card-arrow">→</div>
-      <div class="card-icon">🔬</div>
-      <div class="card-title">Girdi Kalite Kontrol <span class="badge-active">Aktif</span></div>
-      <div class="card-desc">Gelen malzeme muayenesi, kabul/red kararı, MAT ID oluşturma, QR etiket yazdırma. AS9100 §8.4 uyumlu.</div>
+    <!-- KPI SATIRI -->
+    <div class="kpi-grid" style="margin-bottom:20px">
+      <div class="kpi-kart yesil">
+        <div class="kpi-etiket">Bekleyen Muayene</div>
+        <div class="kpi-deger" id="kpi-muayene">&mdash;</div>
+        <div class="kpi-alt">girdi kalite</div>
+      </div>
+      <div class="kpi-kart sari">
+        <div class="kpi-etiket">Bekleyen FAI</div>
+        <div class="kpi-deger" id="kpi-fai">&mdash;</div>
+        <div class="kpi-alt">ilk parca</div>
+      </div>
+      <div class="kpi-kart kirmizi">
+        <div class="kpi-etiket">Acik NCR</div>
+        <div class="kpi-deger" id="kpi-ncr">&mdash;</div>
+        <div class="kpi-alt">uygunsuzluk</div>
+      </div>
+      <div class="kpi-kart">
+        <div class="kpi-etiket">Acik Sapma</div>
+        <div class="kpi-deger" id="kpi-sapma">&mdash;</div>
+        <div class="kpi-alt">feragat bekliyor</div>
+      </div>
+      <div class="kpi-kart sari">
+        <div class="kpi-etiket">Acik ECO</div>
+        <div class="kpi-deger" id="kpi-eco">&mdash;</div>
+        <div class="kpi-alt">degisiklik emri</div>
+      </div>
+      <div class="kpi-kart">
+        <div class="kpi-etiket">Acik CAPA</div>
+        <div class="kpi-deger" id="kpi-capa">&mdash;</div>
+        <div class="kpi-alt">duzeltici faaliyet</div>
+      </div>
     </div>
 
-    <div class="card">
-      <div class="card-icon">⚙️</div>
-      <div class="card-title">Üretim Muayenesi <span class="badge-soon">Yakında</span></div>
-      <div class="card-desc">Operasyon bazlı muayene, self-check, kaliteci muayene, CMM ölçüm, FAI raporu, CoC oluşturma.</div>
+    <!-- MODUL KARTLARI -->
+    <div style="font-size:12px;font-weight:600;color:var(--laci);margin-bottom:10px">Kalite Modulleri</div>
+    <div id="modul-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-bottom:24px">
     </div>
 
-    <div class="card">
-      <div class="card-icon">⚠️</div>
-      <div class="card-title">NCR Yönetimi <span class="badge-soon">Yakında</span></div>
-      <div class="card-desc">Uygunsuzluk raporları (NCR), kök neden analizi, karar (kullan/düzelt/hurda), izlenebilirlik.</div>
-    </div>
-
-    <div class="card active" onclick="window.location='ersan_duzeltici.html'">
-      <div class="card-arrow">→</div>
-      <div class="card-icon">🔧</div>
-      <div class="card-title">CAPA <span class="badge-soon">Yakında</span></div>
-      <div class="card-desc">Düzeltici ve önleyici faaliyetler, 8D raporu, etkinlik doğrulama. AS9100 §10.2 uyumlu.</div>
+    <!-- AS9100 UYUM SCORECARD -->
+    <div style="font-size:12px;font-weight:600;color:var(--laci);margin-bottom:10px">AS9100 Uyum Scorecard</div>
+    <div class="kart" id="scorecard">
+      <div class="yukleniyor"><div class="spinner"></div> Hesaplaniyor...</div>
     </div>
 
   </div>
 </div>
-  </div><!-- /sayfa-icerik -->
-</div><!-- /icerik-alani -->
+
+<script>
+// ── MODUL TANIMLARI ──
+var moduller = [
+  { ikon:'&#128300;', baslik:'Girdi Kalite Kontrol', aciklama:'Gelen malzeme muayenesi, MAT ID, QR etiket, kabul/red', standart:'AS9100 \u00A78.4.2', renk:'#1D9E75', url:'ersan_girdi_kalite.html', tablo:'Malzeme Girisleri', filtre:'Bekliyor', sayiId:'kpi-muayene' },
+  { ikon:'&#128203;', baslik:'FAI — Ilk Parca Muayenesi', aciklama:'AS9102 ilk parca muayenesi, dogrulama kontrol listesi, olcum', standart:'AS9102', renk:'#378ADD', url:'ersan_fai.html', tablo:'FAI Kayitlari', filtre:'Bekliyor', sayiId:'kpi-fai' },
+  { ikon:'&#128683;', baslik:'FOD Kontrol', aciklama:'Yabanci cisim hasar kontrolu, tezgah/alan bazli gunluk kontroller', standart:'AS9100 \u00A78.5.4', renk:'#BA7517', url:'ersan_fod.html', tablo:'FOD Kontrol', filtre:null, sayiId:null },
+  { ikon:'&#9888;', baslik:'NCR Yonetimi', aciklama:'Uygunsuzluk raporlari, kok neden analizi, karar ve izlenebilirlik', standart:'AS9100 \u00A710.2', renk:'#E24B4A', url:'ersan_ncr.html', tablo:'NCR Kayitlari', filtre:'Acik', sayiId:'kpi-ncr' },
+  { ikon:'&#128196;', baslik:'Kontrol Plani', aciklama:'Parca bazli kontrol planlari, Key Characteristic, muayene formu', standart:'AS9100 \u00A78.5.1', renk:'#378ADD', url:'ersan_kontrol_plani.html', tablo:'Kontrol Plani', filtre:null, sayiId:null },
+  { ikon:'&#8800;', baslik:'Sapma / Feragat', aciklama:'Sapma kayitlari, musteri onayi, teknik degerlendirme, feragat', standart:'AS9100 \u00A78.7', renk:'#BA7517', url:'ersan_sapma.html', tablo:'Sapma Feragat', filtre:'Bekliyor', sayiId:'kpi-sapma' },
+  { ikon:'&#128274;', baslik:'Sahte Parca Onleme', aciklama:'Sahte/taklit parca kontrolu, tedarikci dogrulama, karantina', standart:'AS9100 \u00A78.1.4', renk:'#E24B4A', url:'ersan_sahte_parca.html', tablo:'Sahte Parca Kontrol', filtre:null, sayiId:null },
+  { ikon:'&#128260;', baslik:'ECO — Degisiklik Emirleri', aciklama:'Muhendislik degisiklik emirleri, revizyon takibi, otomatik FAI', standart:'AS9100 \u00A78.5.6', renk:'#7c3aed', url:'ersan_eco.html', tablo:'ECO Kayitlari', filtre:'Incelemede', sayiId:'kpi-eco' },
+  { ikon:'&#128295;', baslik:'CAPA', aciklama:'Duzeltici ve onleyici faaliyetler, 8D raporu, etkinlik dogrulama', standart:'AS9100 \u00A710.2', renk:'#7c3aed', url:'ersan_duzeltici.html', tablo:'CAPA Kayitlari', filtre:'Acik', sayiId:'kpi-capa' }
+];
+
+async function apiGet(tablo, query) {
+  var url = '/.netlify/functions/airtable?table=' + encodeURIComponent(tablo);
+  if (query) url += '&' + query;
+  var r = await fetch(url);
+  return r.json();
+}
+
+// ── MODUL KARTLARINI RENDER ET ──
+function modulKartlariRender() {
+  var grid = document.getElementById('modul-grid');
+  var html = '';
+  moduller.forEach(function(m) {
+    html += '<a href="' + m.url + '" style="text-decoration:none">'
+      + '<div class="kart" style="cursor:pointer;transition:box-shadow .15s,transform .1s;border-top:3px solid ' + m.renk + ';min-height:120px" '
+      + 'onmouseover="this.style.boxShadow=\'0 4px 12px rgba(0,0,0,.1)\';this.style.transform=\'translateY(-2px)\'" '
+      + 'onmouseout="this.style.boxShadow=\'\';this.style.transform=\'\'">'
+      + '<div style="display:flex;align-items:flex-start;gap:10px">'
+      + '<div style="width:36px;height:36px;border-radius:8px;background:' + m.renk + '18;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">' + m.ikon + '</div>'
+      + '<div style="flex:1">'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">'
+      + '<div style="font-size:13px;font-weight:700;color:var(--laci)">' + m.baslik + '</div>'
+      + '<div id="count-' + m.tablo.replace(/[^a-zA-Z]/g,'') + '" style="font-size:16px;font-weight:700;color:' + m.renk + '"></div>'
+      + '</div>'
+      + '<div style="font-size:10px;font-weight:600;color:' + m.renk + ';margin-bottom:4px">' + m.standart + '</div>'
+      + '<div style="font-size:11px;color:var(--metin3);line-height:1.4">' + m.aciklama + '</div>'
+      + '</div>'
+      + '<div style="color:var(--metin4);font-size:16px;margin-left:4px">&#8594;</div>'
+      + '</div></div></a>';
+  });
+  grid.innerHTML = html;
+}
+
+// ── SAYILARI YUKLE ──
+async function sayilariYukle() {
+  for (var i = 0; i < moduller.length; i++) {
+    var m = moduller[i];
+    try {
+      var sonuc = await apiGet(m.tablo, 'pageSize=100');
+      var records = sonuc.records || [];
+      var countEl = document.getElementById('count-' + m.tablo.replace(/[^a-zA-Z]/g,''));
+
+      if (m.filtre && m.sayiId) {
+        var bekleyen = records.filter(function(r) {
+          return (r.fields['Durum'] || '') === m.filtre || (r.fields['Sonuc'] || '') === m.filtre;
+        });
+        if (countEl) countEl.textContent = bekleyen.length || '';
+        var kpiEl = document.getElementById(m.sayiId);
+        if (kpiEl) kpiEl.textContent = bekleyen.length;
+      } else {
+        if (countEl) countEl.textContent = records.length || '';
+      }
+    } catch(e) {
+      var countEl2 = document.getElementById('count-' + m.tablo.replace(/[^a-zA-Z]/g,''));
+      if (countEl2) countEl2.textContent = '';
+      if (m.sayiId) {
+        var kpiEl2 = document.getElementById(m.sayiId);
+        if (kpiEl2) kpiEl2.textContent = '0';
+      }
+    }
+  }
+}
+
+// ── AS9100 SCORECARD ──
+function scorecardRender() {
+  var maddeler = [
+    { madde: '4.1-4.4', baslik: 'Organizasyon Baglami & Liderlik', modul: 'risk,ygg', durum: 'Kismi' },
+    { madde: '5.1-5.3', baslik: 'Liderlik & Politika', modul: 'dokuman', durum: 'Kismi' },
+    { madde: '6.1-6.2', baslik: 'Planlama & Risk Yonetimi', modul: 'risk', durum: 'Kismi' },
+    { madde: '7.1-7.5', baslik: 'Destek (Kaynaklar, Yetkinlik, Dokuman)', modul: 'personel,egitim,dokuman,bakim', durum: 'Kismi' },
+    { madde: '8.1', baslik: 'Operasyonel Planlama & Kontrol', modul: 'planlama,isemirleri', durum: 'Uyumlu' },
+    { madde: '8.2', baslik: 'Urun/Hizmet Gereksinimleri', modul: 'teklif,siparisler', durum: 'Uyumlu' },
+    { madde: '8.4', baslik: 'Harici Tedarikciler (ASL, Girdi Kalite)', modul: 'asl,girdi_kalite,sahte_parca', durum: 'Uyumlu' },
+    { madde: '8.5', baslik: 'Uretim & Hizmet Saglanmasi', modul: 'uretim,fod,kontrol_plani', durum: 'Uyumlu' },
+    { madde: '8.5.6', baslik: 'Degisikliklerin Kontrolu (ECO)', modul: 'eco', durum: 'Uyumlu' },
+    { madde: '8.6', baslik: 'Urun/Hizmet Serbest Birakma (FAI)', modul: 'fai,sevkiyat', durum: 'Uyumlu' },
+    { madde: '8.7', baslik: 'Uygun Olmayan Ciktilar (NCR, Sapma)', modul: 'ncr,sapma', durum: 'Uyumlu' },
+    { madde: '9.1-9.3', baslik: 'Performans Degerlendirme & YGG', modul: 'ygg,denetim', durum: 'Kismi' },
+    { madde: '10.1-10.3', baslik: 'Iyilestirme & CAPA', modul: 'capa,ncr', durum: 'Uyumlu' }
+  ];
+
+  var uyumlu = 0, kismi = 0, eksik = 0;
+  maddeler.forEach(function(m) {
+    if (m.durum === 'Uyumlu') uyumlu++;
+    else if (m.durum === 'Kismi') kismi++;
+    else eksik++;
+  });
+
+  var html = '<div style="display:flex;gap:16px;margin-bottom:16px">'
+    + '<div style="display:flex;align-items:center;gap:6px"><div style="width:12px;height:12px;border-radius:50%;background:var(--yesil)"></div><span style="font-size:11px;color:var(--metin2)">Uyumlu (' + uyumlu + ')</span></div>'
+    + '<div style="display:flex;align-items:center;gap:6px"><div style="width:12px;height:12px;border-radius:50%;background:var(--sari)"></div><span style="font-size:11px;color:var(--metin2)">Kismi (' + kismi + ')</span></div>'
+    + '<div style="display:flex;align-items:center;gap:6px"><div style="width:12px;height:12px;border-radius:50%;background:var(--kirmizi)"></div><span style="font-size:11px;color:var(--metin2)">Eksik (' + eksik + ')</span></div>'
+    + '</div>';
+
+  html += '<table class="tablo"><thead><tr><th style="width:80px">Madde</th><th>Baslik</th><th style="width:100px;text-align:center">Durum</th></tr></thead><tbody>';
+  maddeler.forEach(function(m) {
+    var renk = m.durum === 'Uyumlu' ? 'yesil' : m.durum === 'Kismi' ? 'sari' : 'kirmizi';
+    html += '<tr>'
+      + '<td class="td-mono">' + m.madde + '</td>'
+      + '<td style="font-size:12px">' + m.baslik + '</td>'
+      + '<td style="text-align:center"><span class="badge badge-' + renk + '">' + m.durum + '</span></td>'
+      + '</tr>';
+  });
+  html += '</tbody></table>';
+
+  // Genel skor
+  var toplamPuan = uyumlu * 100 + kismi * 50 + eksik * 0;
+  var toplamMax = maddeler.length * 100;
+  var yuzde = Math.round((toplamPuan / toplamMax) * 100);
+  html += '<div style="margin-top:12px;display:flex;align-items:center;gap:12px">'
+    + '<div style="flex:1;height:8px;background:var(--bg);border-radius:4px;overflow:hidden">'
+    + '<div style="width:' + yuzde + '%;height:100%;background:' + (yuzde >= 80 ? 'var(--yesil)' : yuzde >= 50 ? 'var(--sari)' : 'var(--kirmizi)') + ';border-radius:4px;transition:width .5s"></div>'
+    + '</div>'
+    + '<div style="font-size:14px;font-weight:700;color:var(--laci)">' + yuzde + '%</div>'
+    + '</div>';
+
+  document.getElementById('scorecard').innerHTML = html;
+}
+
+// ── INIT ──
+document.addEventListener('DOMContentLoaded', function() {
+  modulKartlariRender();
+  sayilariYukle();
+  scorecardRender();
+});
+</script>
 </body>
 </html>
