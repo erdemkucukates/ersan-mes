@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — CRM Takip Listesi</title>
+<link rel="stylesheet" href="ersan_styles.css">
+<script src="ersan_nav.js" defer></script>
+<script src="ersan_log.js" defer></script>
+<style>
+.ozet-kartlar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+.ozet-kart {
+  background: var(--beyaz); border: 1px solid var(--border); border-radius: 8px;
+  padding: 14px 16px; border-left: 4px solid var(--mavi);
+}
+.ozet-kart.kirmizi { border-left-color: var(--kirmizi); }
+.ozet-kart.sari { border-left-color: var(--sari); }
+.ozet-kart.yesil { border-left-color: var(--yesil); }
+.ozet-kart-sayi { font-size: 22px; font-weight: 700; color: var(--laci); }
+.ozet-kart-etiket { font-size: 11px; color: var(--metin3); margin-top: 2px; }
+.takip-liste { display: flex; flex-direction: column; gap: 6px; }
+.takip-satir {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--beyaz); border: 1px solid var(--border); border-radius: 8px;
+  padding: 12px 14px; border-left: 4px solid var(--metin4);
+  transition: box-shadow .15s;
+}
+.takip-satir:hover { box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+.takip-satir.oncelik-bugun { border-left-color: var(--kirmizi); }
+.takip-satir.oncelik-hafta { border-left-color: var(--sari); }
+.takip-satir.oncelik-gelecek { border-left-color: var(--metin4); }
+.takip-icerik { flex: 1; }
+.takip-musteri { font-size: 10px; font-weight: 600; color: var(--mavi-koyu); text-transform: uppercase; }
+.takip-konu { font-size: 12px; font-weight: 600; color: var(--laci); margin: 2px 0; }
+.takip-detay { font-size: 11px; color: var(--metin3); }
+.takip-vade { font-size: 10px; font-weight: 600; }
+.takip-aksiyonlar { display: flex; gap: 4px; flex-shrink: 0; }
+.ai-brief {
+  background: var(--laci); border-radius: 8px; padding: 14px 16px;
+  margin-bottom: 16px; color: #fff;
+}
+.ai-brief-baslik { font-size: 11px; font-weight: 700; margin-bottom: 6px; }
+.ai-brief-icerik { font-size: 12px; line-height: 1.6; color: rgba(255,255,255,0.8); }
+</style>
+</head>
+<body>
+<div id="nav-alani"></div>
+<div class="icerik-alani">
+  <div class="topbar">
+    <div class="topbar-baslik">CRM — Takip Listesi</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span style="font-size:11px;color:var(--metin3);" id="tarih-etiket"></span>
+    </div>
+  </div>
+  <div class="sayfa-icerik">
+
+    <!-- AI DAILY BRIEF -->
+    <div class="ai-brief" id="ai-brief">
+      <div class="ai-brief-baslik">AI Gunluk Brifing</div>
+      <div class="ai-brief-icerik" id="ai-brief-icerik">
+        <button class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border:none;" onclick="aiGunlukBrief()">Brifing Olustur</button>
+      </div>
+    </div>
+
+    <!-- OZET KARTLAR -->
+    <div class="ozet-kartlar">
+      <div class="ozet-kart kirmizi">
+        <div class="ozet-kart-sayi" id="bugun-sayi">0</div>
+        <div class="ozet-kart-etiket">Bugunku Iletisim / Aksiyon</div>
+      </div>
+      <div class="ozet-kart sari">
+        <div class="ozet-kart-sayi" id="vadesi-gecen-sayi">0</div>
+        <div class="ozet-kart-etiket">Vadesi Gecen Aksiyonlar</div>
+      </div>
+      <div class="ozet-kart yesil">
+        <div class="ozet-kart-sayi" id="hafta-kapanis-sayi">0</div>
+        <div class="ozet-kart-etiket">Bu Hafta Kapanacak Teklifler</div>
+      </div>
+    </div>
+
+    <!-- TAKIP LISTESI -->
+    <div class="kart">
+      <div class="kart-baslik">Takip Gerektiren Isler</div>
+      <div class="takip-liste" id="takip-liste">
+        <div class="yukleniyor"><div class="spinner"></div> Yukleniyor...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- NOT EKLEME MODAL -->
+<div class="modal-overlay" id="not-modal" style="display:none;" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal">
+    <div class="modal-baslik">
+      <span>Not Ekle</span>
+      <button class="modal-kapat" onclick="document.getElementById('not-modal').style.display='none'">&times;</button>
+    </div>
+    <div class="form-grup">
+      <label class="form-label">Not</label>
+      <textarea class="form-textarea" id="not-icerik" rows="3" placeholder="Not yazin..."></textarea>
+    </div>
+    <div class="modal-alt">
+      <button class="btn btn-beyaz" onclick="document.getElementById('not-modal').style.display='none'">Iptal</button>
+      <button class="btn btn-mavi" onclick="notKaydet()">Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<!-- ERTELE MODAL -->
+<div class="modal-overlay" id="ertele-modal" style="display:none;" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal">
+    <div class="modal-baslik">
+      <span>Ertele</span>
+      <button class="modal-kapat" onclick="document.getElementById('ertele-modal').style.display='none'">&times;</button>
+    </div>
+    <div class="form-grup">
+      <label class="form-label">Yeni Tarih</label>
+      <input class="form-input" id="ertele-tarih" type="date">
+    </div>
+    <div class="modal-alt">
+      <button class="btn btn-beyaz" onclick="document.getElementById('ertele-modal').style.display='none'">Iptal</button>
+      <button class="btn btn-mavi" onclick="erteleKaydet()">Ertele</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast-el"></div>
+
+<script>
+var iletisimKayitlari = [];
+var firsatlar = [];
+var teklifler = [];
+var musteriler = [];
+var takipListesi = [];
+var aktifTakipItem = null;
+
+async function apiGet(tablo, query) {
+  var url = '/.netlify/functions/airtable?table=' + encodeURIComponent(tablo);
+  if (query) url += '&' + query;
+  var r = await fetch(url);
+  return r.json();
+}
+async function apiPatch(tablo, id, fields) {
+  var r = await fetch('/.netlify/functions/airtable', {
+    method: 'PATCH', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({table: tablo, id: id, fields: fields})
+  });
+  return r.json();
+}
+
+function toast(mesaj, tip) {
+  var el = document.getElementById('toast-el');
+  el.textContent = mesaj;
+  el.className = 'toast toast-' + (tip || 'bilgi') + ' goster';
+  setTimeout(function() { el.classList.remove('goster'); }, 3000);
+}
+
+function bugun() { return new Date().toISOString().substring(0, 10); }
+function haftaSonu() {
+  var d = new Date();
+  var gun = d.getDay();
+  var kalan = 7 - gun;
+  d.setDate(d.getDate() + kalan);
+  return d.toISOString().substring(0, 10);
+}
+function gelecekHafta() {
+  var d = new Date();
+  d.setDate(d.getDate() + 14);
+  return d.toISOString().substring(0, 10);
+}
+
+function musteriAdi(recId) {
+  if (!recId) return '-';
+  if (Array.isArray(recId)) recId = recId[0];
+  var m = musteriler.find(function(x) { return x.id === recId; });
+  return m ? (m.fields['Müşteri Adı'] || m.fields['Ad'] || m.fields['Name'] || '-') : '-';
+}
+
+async function yukle() {
+  document.getElementById('tarih-etiket').textContent = new Date().toLocaleDateString('tr-TR', {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'});
+  try {
+    var sonuclar = await Promise.all([
+      apiGet('İletişim Kayıtları', 'pageSize=100'),
+      apiGet('Fırsatlar', 'pageSize=100'),
+      apiGet('Teklifler', 'pageSize=100'),
+      apiGet('Müşteriler', 'pageSize=100')
+    ]);
+    iletisimKayitlari = (sonuclar[0] && sonuclar[0].records) || [];
+    firsatlar = (sonuclar[1] && sonuclar[1].records) || [];
+    teklifler = (sonuclar[2] && sonuclar[2].records) || [];
+    musteriler = (sonuclar[3] && sonuclar[3].records) || [];
+  } catch(e) {
+    console.error('Veri hatasi:', e);
+    iletisimKayitlari = []; firsatlar = []; teklifler = []; musteriler = [];
+  }
+  takipOlustur();
+  render();
+}
+
+function takipOlustur() {
+  takipListesi = [];
+  var bugunStr = bugun();
+  var haftaSonuStr = haftaSonu();
+  var gelecekStr = gelecekHafta();
+
+  // 1. Iletisim kayitlari — aksiyon tarihi bugun veya gecmis
+  iletisimKayitlari.forEach(function(k) {
+    var f = k.fields;
+    var aksiyonTarihi = f['Aksiyon Tarihi'] || '';
+    if (!aksiyonTarihi) return;
+    if (f['Durum'] === 'Tamamlandi') return;
+    var oncelik = 'gelecek';
+    if (aksiyonTarihi <= bugunStr) oncelik = 'bugun';
+    else if (aksiyonTarihi <= haftaSonuStr) oncelik = 'hafta';
+    else if (aksiyonTarihi > gelecekStr) return;
+
+    takipListesi.push({
+      tip: 'iletisim',
+      id: k.id,
+      tablo: 'İletişim Kayıtları',
+      musteri: musteriAdi(f['Musteri'] || f['Müşteri']),
+      konu: f['Konu'] || 'Takip',
+      detay: (f['Tür'] || f['Tur'] || '') + ' - ' + (f['Notlar'] || f['Not'] || ''),
+      vade: aksiyonTarihi,
+      oncelik: oncelik
+    });
+  });
+
+  // 2. Firsatlar — tahmini kapanis bu hafta
+  firsatlar.forEach(function(fr) {
+    var f = fr.fields;
+    var asama = f['Asama'] || f['Aşama'] || '';
+    if (asama === 'Kazanildi' || asama === 'Kaybedildi') return;
+    var kapanis = f['Tahmini Kapanış'] || f['Tahmini Kapanis'] || '';
+    if (!kapanis) return;
+    var oncelik = 'gelecek';
+    if (kapanis <= bugunStr) oncelik = 'bugun';
+    else if (kapanis <= haftaSonuStr) oncelik = 'hafta';
+    else if (kapanis > gelecekStr) return;
+
+    takipListesi.push({
+      tip: 'firsat',
+      id: fr.id,
+      tablo: 'Fırsatlar',
+      musteri: musteriAdi(f['Musteri'] || f['Müşteri']),
+      konu: (f['Başlık'] || f['Baslik'] || 'Firsat') + ' (' + asama + ')',
+      detay: 'Tutar: ' + formatTL(f['Tutar'] || f['Tahmini Tutar'] || 0) + ' - Olasilik: %' + (f['Olasılık'] || f['Olasilik'] || 0),
+      vade: kapanis,
+      oncelik: oncelik
+    });
+  });
+
+  // 3. Teklifler — gecerlilik tarihi yaklasan
+  teklifler.forEach(function(tk) {
+    var f = tk.fields;
+    var durum = f['Durum'] || '';
+    if (durum === 'Onaylandi' || durum === 'Onaylandı' || durum === 'Reddedildi' || durum === 'Iptal') return;
+    var gecerlilik = f['Gecerlilik Tarihi'] || f['Geçerlilik Tarihi'] || '';
+    if (!gecerlilik) return;
+    var oncelik = 'gelecek';
+    if (gecerlilik <= bugunStr) oncelik = 'bugun';
+    else if (gecerlilik <= haftaSonuStr) oncelik = 'hafta';
+    else if (gecerlilik > gelecekStr) return;
+
+    takipListesi.push({
+      tip: 'teklif',
+      id: tk.id,
+      tablo: 'Teklifler',
+      musteri: musteriAdi(f['Musteri'] || f['Müşteri']),
+      konu: (f['Teklif No'] || 'Teklif') + ' - Gecerlilik yaklasiyor',
+      detay: 'Durum: ' + durum + ' - Tutar: ' + formatTL(f['Toplam Tutar'] || f['Tutar'] || 0),
+      vade: gecerlilik,
+      oncelik: oncelik
+    });
+  });
+
+  // Siralama: bugun > hafta > gelecek, sonra vade tarihine gore
+  var oncelikSira = {bugun: 0, hafta: 1, gelecek: 2};
+  takipListesi.sort(function(a, b) {
+    var d = oncelikSira[a.oncelik] - oncelikSira[b.oncelik];
+    if (d !== 0) return d;
+    return a.vade < b.vade ? -1 : a.vade > b.vade ? 1 : 0;
+  });
+}
+
+function render() {
+  // Ozet kartlar
+  var bugunSayi = takipListesi.filter(function(t) { return t.oncelik === 'bugun'; }).length;
+  var vadesiGecen = takipListesi.filter(function(t) { return t.vade < bugun() && t.oncelik === 'bugun'; }).length;
+  var haftaKapanis = takipListesi.filter(function(t) { return t.tip === 'firsat' && t.oncelik === 'hafta'; }).length;
+  // Teklifler gecerlilik yaklasan da hafta kapanis sayisina ekle
+  haftaKapanis += takipListesi.filter(function(t) { return t.tip === 'teklif' && (t.oncelik === 'bugun' || t.oncelik === 'hafta'); }).length;
+
+  document.getElementById('bugun-sayi').textContent = bugunSayi;
+  document.getElementById('vadesi-gecen-sayi').textContent = vadesiGecen;
+  document.getElementById('hafta-kapanis-sayi').textContent = haftaKapanis;
+
+  // Takip listesi
+  if (takipListesi.length === 0) {
+    document.getElementById('takip-liste').innerHTML = '<div class="bos-durum">Takip gerektiren is bulunamadi. Tebrikler!</div>';
+    return;
+  }
+  var html = '';
+  takipListesi.forEach(function(t, idx) {
+    var tipBadge = t.tip === 'iletisim' ? 'badge-mavi' : t.tip === 'firsat' ? 'badge-sari' : 'badge-gri';
+    var tipLabel = t.tip === 'iletisim' ? 'Iletisim' : t.tip === 'firsat' ? 'Firsat' : 'Teklif';
+    var vadeCls = t.oncelik === 'bugun' ? 'color:var(--kirmizi)' : t.oncelik === 'hafta' ? 'color:var(--sari)' : 'color:var(--metin4)';
+    html += '<div class="takip-satir oncelik-' + t.oncelik + '">'
+      + '<div style="flex-shrink:0;"><span class="badge ' + tipBadge + '">' + tipLabel + '</span></div>'
+      + '<div class="takip-icerik">'
+      + '<div class="takip-musteri">' + t.musteri + '</div>'
+      + '<div class="takip-konu">' + t.konu + '</div>'
+      + '<div class="takip-detay">' + t.detay + '</div>'
+      + '</div>'
+      + '<div class="takip-vade" style="' + vadeCls + ';flex-shrink:0;">' + t.vade + '</div>'
+      + '<div class="takip-aksiyonlar">'
+      + '<button class="btn btn-yesil btn-sm" onclick="tamamla(' + idx + ')">Tamamlandi</button>'
+      + '<button class="btn btn-beyaz btn-sm" onclick="erteleAc(' + idx + ')">Ertele</button>'
+      + '<button class="btn btn-beyaz btn-sm" onclick="notAc(' + idx + ')">Not</button>'
+      + '</div></div>';
+  });
+  document.getElementById('takip-liste').innerHTML = html;
+}
+
+async function tamamla(idx) {
+  var item = takipListesi[idx];
+  if (!item) return;
+  try {
+    if (item.tip === 'iletisim') {
+      await apiPatch('İletişim Kayıtları', item.id, {'Durum': 'Tamamlandi'});
+    }
+    await logIslem('Tamamlandi', 'CRM Takip', item.id, item.konu, null, {tip: item.tip});
+    toast('Tamamlandi olarak isaretlendi', 'basari');
+    takipListesi.splice(idx, 1);
+    render();
+  } catch(e) { toast('Hata: ' + e.message, 'hata'); }
+}
+
+function erteleAc(idx) {
+  aktifTakipItem = takipListesi[idx];
+  document.getElementById('ertele-tarih').value = '';
+  document.getElementById('ertele-modal').style.display = 'flex';
+}
+
+async function erteleKaydet() {
+  if (!aktifTakipItem) return;
+  var yeniTarih = document.getElementById('ertele-tarih').value;
+  if (!yeniTarih) { toast('Tarih secin', 'hata'); return; }
+  try {
+    if (aktifTakipItem.tip === 'iletisim') {
+      await apiPatch('İletişim Kayıtları', aktifTakipItem.id, {'Aksiyon Tarihi': yeniTarih});
+    } else if (aktifTakipItem.tip === 'firsat') {
+      await apiPatch('Fırsatlar', aktifTakipItem.id, {'Tahmini Kapanış': yeniTarih});
+    }
+    await logIslem('Ertelendi', 'CRM Takip', aktifTakipItem.id, aktifTakipItem.konu, {vade: aktifTakipItem.vade}, {vade: yeniTarih});
+    toast('Ertelendi: ' + yeniTarih, 'basari');
+    document.getElementById('ertele-modal').style.display = 'none';
+    yukle();
+  } catch(e) { toast('Hata: ' + e.message, 'hata'); }
+}
+
+function notAc(idx) {
+  aktifTakipItem = takipListesi[idx];
+  document.getElementById('not-icerik').value = '';
+  document.getElementById('not-modal').style.display = 'flex';
+}
+
+async function notKaydet() {
+  if (!aktifTakipItem) return;
+  var not = document.getElementById('not-icerik').value;
+  if (!not) { toast('Not yazin', 'hata'); return; }
+  try {
+    await apiPatch(aktifTakipItem.tablo, aktifTakipItem.id, {'Notlar': not});
+    await logIslem('Not Eklendi', 'CRM Takip', aktifTakipItem.id, aktifTakipItem.konu, null, {not: not});
+    toast('Not kaydedildi', 'basari');
+    document.getElementById('not-modal').style.display = 'none';
+  } catch(e) { toast('Hata: ' + e.message, 'hata'); }
+}
+
+async function aiGunlukBrief() {
+  document.getElementById('ai-brief-icerik').textContent = 'Brifing hazirlaniyor...';
+  var ozet = 'Bugun: ' + bugun() + '\n';
+  ozet += 'Toplam takip: ' + takipListesi.length + '\n';
+  ozet += 'Bugun yapilacak: ' + takipListesi.filter(function(t) { return t.oncelik === 'bugun'; }).length + '\n';
+  ozet += 'Bu hafta: ' + takipListesi.filter(function(t) { return t.oncelik === 'hafta'; }).length + '\n\n';
+  ozet += 'Detaylar:\n';
+  takipListesi.slice(0, 10).forEach(function(t) {
+    ozet += '- [' + t.oncelik.toUpperCase() + '] ' + t.musteri + ': ' + t.konu + ' (vade: ' + t.vade + ')\n';
+  });
+
+  var prompt = 'Asagidaki CRM takip listesine gore gunluk brifing hazirla. Oncelikli isleri vurgula, kisa ve aksiyona donuk yaz:\n\n' + ozet;
+  try {
+    var r = await fetch('/.netlify/functions/claude', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({prompt: prompt, max_tokens: 500})
+    });
+    var d = await r.json();
+    var yanit = (d.content && d.content[0] && d.content[0].text) || d.text || 'Yanit alinamadi';
+    document.getElementById('ai-brief-icerik').innerHTML = '<pre style="white-space:pre-wrap;font-size:12px;font-family:inherit;color:rgba(255,255,255,.85);">' + yanit + '</pre>';
+  } catch(e) {
+    document.getElementById('ai-brief-icerik').textContent = 'AI hatasi: ' + e.message;
+  }
+}
+
+function formatTL(val) {
+  var n = parseFloat(val) || 0;
+  return n.toLocaleString('tr-TR', {minimumFractionDigits: 0, maximumFractionDigits: 0}) + ' TL';
+}
+
+document.addEventListener('DOMContentLoaded', function() { yukle(); });
+</script>
+</body>
+</html>

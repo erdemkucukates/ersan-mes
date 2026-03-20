@@ -3,1140 +3,692 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ersan MES — Müşteri Yönetimi</title>
+<title>Ersan MES — Musteriler</title>
 <link rel="stylesheet" href="ersan_styles.css">
 <script src="ersan_nav.js" defer></script>
 <script src="ersan_log.js" defer></script>
 <style>
-:root {
-  --bg: #f0f2f5;
-  --surface: #ffffff;
-  --surface2: #f7f8fa;
-  --border: #e2e5ea;
-  --border2: #c8cdd6;
-  --text: #1a1d23;
-  --text2: #5a6170;
-  --text3: #9aa0ad;
-  --accent: #7c3aed;
-  --accent-light: #ede9fe;
-  --accent-hover: #6d28d9;
-  --green: #059669;
-  --green-light: #d1fae5;
-  --red: #dc2626;
-  --red-light: #fee2e2;
-  --orange: #d97706;
-  --orange-light: #fef3c7;
-  --blue: #2563eb;
-  --blue-light: #dbeafe;
-  --gray: #6b7280;
-  --gray-light: #f3f4f6;
-  --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
-  --shadow-lg: 0 4px 16px rgba(0,0,0,.10);
-  --radius: 8px;
-  --mono: 'IBM Plex Mono', monospace;
-  --sans: 'IBM Plex Sans', sans-serif;
+.skor-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 32px; height: 20px; border-radius: 10px;
+  font-size: 10px; font-weight: 700; color: #fff;
 }
-
-* { box-sizing: border-box; margin: 0; padding: 0; }
-
-body {
-  font-family: var(--sans);
-  background: var(--bg);
-  color: var(--text);
-  height: 100vh;
-  overflow: hidden;
-  font-size: 13px;
-}
-
-/* ── LAYOUT ── */
-.layout {
-  display: flex;
-  height: calc(100vh - 48px);
-  margin-top: 48px;
-}
-
-/* ── LEFT PANEL ── */
-.list-panel {
-  width: 220px;
-  flex-shrink: 0;
-  background: var(--surface);
-  border-right: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-.list-header {
-  padding: 14px 14px 10px;
-  border-bottom: 1px solid var(--border);
-  background: var(--surface2);
-}
-.list-header h2 { font-size: 13px; font-weight: 600; color: var(--text); }
-.list-count { font-size: 11px; color: var(--text3); font-family: var(--mono); margin-top: 2px; }
-.list-search {
-  padding: 8px 10px;
-  border-bottom: 1px solid var(--border);
-}
-.list-search input {
-  width: 100%; padding: 6px 10px;
-  border: 1px solid var(--border); border-radius: 6px;
-  font-size: 12px; font-family: var(--sans); color: var(--text);
-  background: var(--surface2); outline: none;
-  transition: border-color .15s;
-}
-.list-search input:focus { border-color: var(--accent); }
-.list-scroll { flex: 1; overflow-y: auto; }
-.list-scroll::-webkit-scrollbar { width: 4px; }
-.list-scroll::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
-
-.liste-satir {
-  padding: 10px 14px;
-  border-bottom: 1px solid var(--border);
-  cursor: pointer;
-  transition: background .12s;
-}
-.liste-satir:hover { background: var(--surface2); }
-.liste-satir.secili { background: var(--accent-light); border-left: 3px solid var(--accent); }
-.mi-name { font-size: 12px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.mi-bottom { display: flex; justify-content: space-between; align-items: center; margin-top: 4px; }
-.mi-kod { font-size: 10px; font-family: var(--mono); color: var(--text3); }
-.mi-aktif { font-size: 9px; font-weight: 700; padding: 1px 6px; border-radius: 8px; }
-.mi-aktif.evet { background: var(--green-light); color: var(--green); }
-.mi-aktif.hayir { background: var(--gray-light); color: var(--gray); }
-
-/* ── RIGHT PANEL ── */
-.detail-panel {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  background: var(--bg);
-}
-
-.detail-toolbar {
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  padding: 10px 20px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-shrink: 0;
-}
-.detail-title { font-size: 15px; font-weight: 700; color: var(--text); }
-.detail-sub { font-size: 11px; color: var(--text3); font-family: var(--mono); }
-
-/* ── TABS ── */
-.tabs {
-  display: flex; gap: 0;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  padding: 0 20px;
-  flex-shrink: 0;
-}
+.skor-kirmizi { background: var(--kirmizi); }
+.skor-sari { background: var(--sari); }
+.skor-yesil { background: var(--yesil); }
+.tab-btns { display: flex; gap: 0; border-bottom: 1px solid var(--border); flex-shrink: 0; }
 .tab-btn {
-  padding: 10px 16px;
-  font-size: 12px; font-weight: 500;
-  color: var(--text2);
-  background: transparent; border: none;
-  border-bottom: 2px solid transparent;
-  cursor: pointer; font-family: var(--sans);
-  transition: all .15s; white-space: nowrap;
+  padding: 8px 16px; font-size: 12px; font-weight: 500;
+  color: var(--metin3); cursor: pointer; border: none; background: transparent;
+  border-bottom: 2px solid transparent; font-family: inherit; transition: all .12s;
 }
-.tab-btn:hover { color: var(--text); }
-.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
-
-.tab-content {
-  flex: 1; overflow-y: auto; padding: 20px;
-  display: none;
-}
-.tab-content.active { display: block; }
-.tab-content::-webkit-scrollbar { width: 5px; }
-.tab-content::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
-
-/* ── CARD ── */
-.card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  overflow: hidden;
-  box-shadow: var(--shadow);
-  margin-bottom: 16px;
-}
-.card-header {
-  padding: 10px 16px;
-  background: var(--surface2);
-  border-bottom: 1px solid var(--border);
-  font-size: 11px; font-weight: 600; color: var(--text2);
-  text-transform: uppercase; letter-spacing: .6px;
-  display: flex; align-items: center; justify-content: space-between;
-}
-.card-body { padding: 16px; }
-
-/* ── FORM ── */
-.form-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-.form-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
-.form-full { grid-column: 1 / -1; }
-.field-group { display: flex; flex-direction: column; gap: 4px; }
-.field-label { font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .5px; }
-.field-input {
-  border: 1px solid var(--border); border-radius: 6px;
-  padding: 7px 10px; font-size: 12px; font-family: var(--sans);
-  color: var(--text); background: var(--surface);
-  outline: none; transition: border-color .15s, box-shadow .15s; width: 100%;
-}
-.field-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(124,58,237,.08); }
-select.field-input { cursor: pointer; }
-textarea.field-input { resize: vertical; min-height: 70px; }
-.field-check { display: flex; align-items: center; gap: 8px; padding-top: 8px; }
-.field-check input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; }
-.field-check label { font-size: 12px; color: var(--text2); cursor: pointer; }
-
-/* ── BUTTONS ── */
-.btn {
-  padding: 7px 16px; border-radius: 6px; font-size: 12px;
-  font-weight: 600; cursor: pointer; border: 1px solid var(--border);
-  font-family: var(--sans); transition: all .15s; display: inline-flex;
-  align-items: center; gap: 5px; background: var(--surface); color: var(--text);
-}
-.btn:hover { background: var(--surface2); }
-.btn.primary { background: var(--accent); color: white; border-color: var(--accent); }
-.btn.primary:hover { background: var(--accent-hover); }
-.btn.success { background: var(--green); color: white; border-color: var(--green); }
-.btn.success:hover { background: #047857; }
-.btn.danger { background: var(--red); color: white; border-color: var(--red); }
-.btn.sm { padding: 4px 10px; font-size: 11px; }
-.btn:disabled { opacity: .5; cursor: not-allowed; }
-
-/* ── TABLE ── */
-.data-table { width: 100%; border-collapse: collapse; }
-.data-table th {
-  background: var(--surface2); padding: 8px 12px;
-  font-size: 10px; font-weight: 600; color: var(--text3);
-  text-transform: uppercase; letter-spacing: .5px;
-  text-align: left; border-bottom: 2px solid var(--border);
-  white-space: nowrap;
-}
-.data-table td {
-  padding: 8px 12px; border-bottom: 1px solid var(--border);
-  font-size: 12px; color: var(--text);
-}
-.data-table tr:last-child td { border-bottom: none; }
-.data-table tr:hover td { background: var(--surface2); }
-
-/* ── STAT CARDS ── */
-.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; }
-.stat-card {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 16px 18px;
-  box-shadow: var(--shadow);
-}
-.stat-label { font-size: 11px; color: var(--text3); font-weight: 500; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; }
-.stat-value { font-size: 28px; font-weight: 700; color: var(--text); font-family: var(--mono); line-height: 1; }
-.stat-sub { font-size: 11px; color: var(--text2); margin-top: 6px; }
-.stat-card.accent { border-top: 3px solid var(--accent); }
-.stat-card.green { border-top: 3px solid var(--green); }
-.stat-card.blue { border-top: 3px solid var(--blue); }
-.stat-card.orange { border-top: 3px solid var(--orange); }
-
-/* ── BADGE ── */
-.badge {
-  display: inline-flex; align-items: center;
-  padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600;
-}
-.badge-green { background: var(--green-light); color: var(--green); }
-.badge-red { background: var(--red-light); color: var(--red); }
-.badge-orange { background: var(--orange-light); color: var(--orange); }
-.badge-blue { background: var(--blue-light); color: var(--blue); }
-.badge-gray { background: var(--gray-light); color: var(--gray); }
-.badge-purple { background: var(--accent-light); color: var(--accent); }
-
-/* ── SIKAYET CARD ── */
-.sikayet-item {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 14px 16px;
-  margin-bottom: 10px; box-shadow: var(--shadow);
-}
-.si-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
-.si-no { font-family: var(--mono); font-size: 11px; color: var(--accent); font-weight: 500; }
-.si-konu { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
-.si-aciklama { font-size: 12px; color: var(--text2); line-height: 1.5; }
-.si-footer { display: flex; gap: 8px; align-items: center; margin-top: 10px; flex-wrap: wrap; }
-.si-tarih { font-size: 10px; color: var(--text3); font-family: var(--mono); }
-
-/* ── MODAL ── */
-.modal-overlay {
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,.45);
-  z-index: 1000;
-  display: none; align-items: center; justify-content: center;
-  padding: 20px;
-}
-.modal-overlay.open { display: flex; }
-.modal {
-  background: var(--surface); border-radius: 12px;
-  box-shadow: var(--shadow-lg);
-  width: 100%; max-width: 560px;
-  max-height: 90vh; overflow-y: auto;
-}
-.modal-header {
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--border);
-  display: flex; align-items: center; justify-content: space-between;
-}
-.modal-header h3 { font-size: 14px; font-weight: 700; color: var(--text); }
-.modal-close {
-  width: 28px; height: 28px; border-radius: 6px;
-  border: 1px solid var(--border); background: var(--surface);
-  cursor: pointer; display: flex; align-items: center;
-  justify-content: center; font-size: 16px; color: var(--text2);
-  transition: all .12s;
-}
-.modal-close:hover { background: var(--red-light); color: var(--red); border-color: var(--red); }
-.modal-body { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
-.modal-footer { padding: 14px 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; }
-
-/* ── AI OUTPUT ── */
-.ai-output {
-  background: #0f172a; color: #e2e8f0;
-  border-radius: var(--radius); padding: 16px;
-  font-size: 12px; line-height: 1.7;
-  font-family: var(--mono); white-space: pre-wrap;
-  max-height: 400px; overflow-y: auto;
-  margin-top: 10px;
-}
-.ai-loading {
-  display: flex; align-items: center; gap: 8px;
-  color: var(--text2); font-size: 12px; padding: 12px 0;
-}
-.spinner {
-  width: 16px; height: 16px;
-  border: 2px solid var(--border);
-  border-top-color: var(--accent);
-  border-radius: 50%;
-  animation: spin .7s linear infinite;
-  flex-shrink: 0;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-
-/* ── EMPTY STATE ── */
-.empty-state {
-  text-align: center; padding: 40px 20px; color: var(--text3);
-  display: flex; flex-direction: column; align-items: center; gap: 10px;
-}
-.empty-state-icon { font-size: 36px; opacity: .5; }
-
-/* ── TOAST ── */
-.toast {
-  position: fixed; bottom: 20px; right: 20px;
-  padding: 10px 18px; border-radius: 8px;
-  font-size: 12px; font-weight: 500; color: white;
-  box-shadow: var(--shadow-lg); z-index: 9999;
-  transition: opacity .3s; pointer-events: none;
-}
-.toast.success { background: var(--green); }
-.toast.error { background: var(--red); }
-.toast.info { background: var(--blue); }
-
-/* ── NO SELECTION ── */
-.no-selection {
-  flex: 1; display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  color: var(--text3); gap: 12px; padding: 40px;
-}
-.no-selection-icon { font-size: 48px; opacity: .3; }
-.no-selection p { font-size: 13px; text-align: center; max-width: 260px; line-height: 1.6; }
-
-/* ── RESPONSIVE ── */
-@media (max-width: 768px) {
-  .layout { flex-direction: column; height: auto; overflow: auto; }
-  .list-panel { width: 100%; height: 200px; flex-shrink: 0; }
-  .detail-panel { height: auto; }
-  .tab-content { overflow: visible; }
-  .form-grid { grid-template-columns: repeat(2, 1fr); }
-  body { overflow: auto; height: auto; }
-}
-@media (max-width: 480px) {
-  .form-grid { grid-template-columns: 1fr; }
-  .form-grid-2 { grid-template-columns: 1fr; }
-  .stat-grid { grid-template-columns: repeat(2, 1fr); }
-}
+.tab-btn.aktif { color: var(--mavi); border-bottom-color: var(--mavi); }
+.tab-icerik { display: none; padding: 16px; flex: 1; overflow-y: auto; }
+.tab-icerik.aktif { display: block; }
+.mini-tablo { width: 100%; border-collapse: collapse; margin-top: 8px; }
+.mini-tablo th { background: var(--bg2); padding: 6px 10px; font-size: 10px; font-weight: 600; color: var(--metin3); text-transform: uppercase; text-align: left; border-bottom: 1px solid var(--border); }
+.mini-tablo td { padding: 6px 10px; font-size: 12px; color: var(--metin2); border-bottom: 1px solid var(--bg2); }
+.iletisim-satir { padding: 10px 0; border-bottom: 1px solid var(--bg2); }
+.iletisim-tur { font-size: 10px; font-weight: 600; text-transform: uppercase; color: var(--mavi-koyu); }
+.iletisim-konu { font-size: 12px; color: var(--metin2); margin: 2px 0; }
+.iletisim-tarih { font-size: 10px; color: var(--metin4); }
+.firsat-kart { padding: 10px; border: 1px solid var(--border); border-radius: 6px; margin-bottom: 8px; }
+.firsat-baslik { font-size: 12px; font-weight: 600; color: var(--laci); }
+.firsat-tutar { font-size: 11px; font-weight: 600; color: var(--mavi-koyu); }
+.bar-chart-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.bar-chart-label { width: 60px; font-size: 11px; color: var(--metin3); text-align: right; }
+.bar-chart-bar { height: 18px; border-radius: 3px; background: var(--mavi); min-width: 2px; transition: width .3s; }
+.bar-chart-val { font-size: 11px; font-weight: 600; color: var(--metin2); }
 </style>
 </head>
 <body>
 <div id="nav-alani"></div>
 <div class="icerik-alani">
   <div class="topbar">
-    <div class="topbar-baslik">Musteriler</div>
+    <div class="topbar-baslik">Musteri Yonetimi</div>
     <div style="display:flex;align-items:center;gap:8px;">
-      <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
+      <button class="btn btn-mavi btn-sm" onclick="yeniMusteriModal()">+ Yeni Musteri</button>
     </div>
   </div>
   <div class="sayfa-icerik">
-
-<div class="layout">
-
-  <!-- ════ LEFT PANEL ════ -->
-  <div class="list-panel">
-    <div class="list-header">
-      <h2>Müşteriler</h2>
-      <div class="list-count" id="listCount">Yükleniyor…</div>
-    </div>
-    <div class="list-search">
-      <input type="text" id="searchInput" placeholder="Ad, kod, yetkili ara…" oninput="filterList()">
-    </div>
-    <div class="list-scroll" id="listScroll">
-      <div class="empty-state"><div class="spinner"></div></div>
-    </div>
-  </div>
-
-  <!-- ════ RIGHT PANEL ════ -->
-  <div class="detail-panel" id="detailPanel">
-
-    <!-- No selection state -->
-    <div class="no-selection" id="noSelection">
-      <div class="no-selection-icon">💬</div>
-      <p>Sol listeden bir müşteri seçin</p>
-    </div>
-
-    <!-- Toolbar -->
-    <div class="detail-toolbar" id="detailToolbar" style="display:none">
-      <div style="flex:1">
-        <div class="detail-title" id="detailTitle">—</div>
-        <div class="detail-sub" id="detailSub">—</div>
+    <div class="iki-panel">
+      <!-- SOL PANEL -->
+      <div class="sol-panel">
+        <div class="sol-panel-ust">
+          <div class="sol-panel-baslik">Musteriler</div>
+          <div id="musteri-sayi" class="liste-satir-alt" style="font-size:11px;color:var(--metin4);">0</div>
+        </div>
+        <div class="sol-arama">
+          <input type="text" id="arama-input" placeholder="Musteri ara..." oninput="filtrele()">
+        </div>
+        <div class="sol-filtre">
+          <button class="filtre-btn aktif" data-f="Tumu" onclick="filtreBtn(this)">Tumu</button>
+          <button class="filtre-btn" data-f="Aktif" onclick="filtreBtn(this)">Aktif</button>
+          <button class="filtre-btn" data-f="Riskli" onclick="filtreBtn(this)">Riskli</button>
+          <button class="filtre-btn" data-f="VIP" onclick="filtreBtn(this)">VIP</button>
+        </div>
+        <div class="sol-liste" id="musteri-liste">
+          <div class="yukleniyor"><div class="spinner"></div> Yukleniyor...</div>
+        </div>
       </div>
-    </div>
 
-    <!-- Tabs bar -->
-    <div class="tabs" id="tabsBar" style="display:none">
-      <button class="tab-btn active" onclick="switchTab('bilgiler')">Bilgiler</button>
-      <button class="tab-btn" onclick="switchTab('siparisler')">Sipariş Geçmişi</button>
-      <button class="tab-btn" onclick="switchTab('sikayetler')">Şikayetler</button>
-      <button class="tab-btn" onclick="switchTab('performans')">Performans</button>
-    </div>
-
-    <!-- ── Tab 1: Bilgiler ── -->
-    <div class="tab-content" id="tab-bilgiler" style="display:none">
-      <div class="card">
-        <div class="card-header">Müşteri Bilgileri</div>
-        <div class="card-body">
-          <div class="form-grid">
-            <div class="field-group">
-              <label class="field-label">Müşteri Adı *</label>
-              <input type="text" id="f_musteri_adi" class="field-input" placeholder="Müşteri Adı">
+      <!-- SAG PANEL -->
+      <div class="sag-panel" id="sag-panel">
+        <div class="bos-durum" id="bos-durum">
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none" style="opacity:.3;"><rect x="6" y="6" width="36" height="36" rx="4" stroke="currentColor" stroke-width="2"/><circle cx="24" cy="20" r="6" stroke="currentColor" stroke-width="2"/><path d="M12 38c0-6.627 5.373-12 12-12s12 5.373 12 12" stroke="currentColor" stroke-width="2"/></svg>
+          <p>Listeden bir musteri secin</p>
+        </div>
+        <div id="musteri-detay" style="display:none;flex-direction:column;flex:1;overflow:hidden;">
+          <div class="sag-panel-ust">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span id="detay-ad" style="font-size:14px;font-weight:600;color:var(--laci);"></span>
+              <span id="detay-skor-badge" class="skor-badge"></span>
             </div>
-            <div class="field-group">
-              <label class="field-label">Müşteri Kodu</label>
-              <input type="text" id="f_musteri_kodu" class="field-input" placeholder="MST-001">
-            </div>
-            <div class="field-group">
-              <label class="field-label">Yetkili Kişi</label>
-              <input type="text" id="f_yetkili" class="field-input" placeholder="Ad Soyad">
-            </div>
-            <div class="field-group">
-              <label class="field-label">E-posta</label>
-              <input type="email" id="f_eposta" class="field-input" placeholder="ornek@firma.com">
-            </div>
-            <div class="field-group">
-              <label class="field-label">Telefon</label>
-              <input type="text" id="f_telefon" class="field-input" placeholder="+90 5xx xxx xx xx">
-            </div>
-            <div class="field-group">
-              <label class="field-label">Ülke</label>
-              <select id="f_ulke" class="field-input">
-                <option value="">— Seçin —</option>
-                <option value="Türkiye">Türkiye</option>
-                <option value="ABD">ABD</option>
-                <option value="Almanya">Almanya</option>
-                <option value="İngiltere">İngiltere</option>
-                <option value="Diğer">Diğer</option>
-              </select>
-            </div>
-            <div class="field-group form-full">
-              <label class="field-label">Notlar</label>
-              <textarea id="f_notlar" class="field-input" rows="3" placeholder="Müşteriyle ilgili notlar…"></textarea>
-            </div>
-            <div class="field-group">
-              <label class="field-label">Durum</label>
-              <div class="field-check">
-                <input type="checkbox" id="f_aktif" checked>
-                <label for="f_aktif">Aktif Müşteri</label>
-              </div>
+            <div style="display:flex;gap:6px;">
+              <button class="btn btn-beyaz btn-sm" onclick="aiAnaliz()">AI Analiz</button>
             </div>
           </div>
-          <div style="margin-top:16px; display:flex; gap:8px; justify-content:flex-end; border-top:1px solid var(--border); padding-top:14px">
-            <button class="btn" onclick="resetForm()">Sıfırla</button>
-            <button class="btn primary" id="saveBtn" onclick="saveMusteriRecord()">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-              Kaydet / Güncelle
-            </button>
+          <div class="tab-btns">
+            <button class="tab-btn aktif" onclick="sekmeAc(this,'tab-genel')">Genel Bakis</button>
+            <button class="tab-btn" onclick="sekmeAc(this,'tab-iletisim')">Iletisim Gecmisi</button>
+            <button class="tab-btn" onclick="sekmeAc(this,'tab-firsatlar')">Firsatlar</button>
+            <button class="tab-btn" onclick="sekmeAc(this,'tab-finansal')">Finansal Ozet</button>
+          </div>
+
+          <!-- TAB 1: GENEL BAKIS -->
+          <div class="tab-icerik aktif" id="tab-genel">
+            <div class="kpi-grid" id="genel-kpiler"></div>
+            <div class="kart">
+              <div class="kart-baslik">Musteri Skoru</div>
+              <div id="skor-detay" style="font-size:12px;color:var(--metin2);"></div>
+            </div>
+            <div class="kart">
+              <div class="kart-baslik">Son 5 Siparis</div>
+              <div id="son-siparisler"></div>
+            </div>
+          </div>
+
+          <!-- TAB 2: ILETISIM GECMISI -->
+          <div class="tab-icerik" id="tab-iletisim">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+              <span style="font-size:12px;font-weight:600;color:var(--laci);">Iletisim Kayitlari</span>
+              <button class="btn btn-mavi btn-sm" onclick="iletisimModal()">+ Iletisim Kaydet</button>
+            </div>
+            <div id="iletisim-liste"></div>
+          </div>
+
+          <!-- TAB 3: FIRSATLAR -->
+          <div class="tab-icerik" id="tab-firsatlar">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+              <span style="font-size:12px;font-weight:600;color:var(--laci);">Firsatlar</span>
+              <button class="btn btn-mavi btn-sm" onclick="firsatModal()">+ Firsat Ekle</button>
+            </div>
+            <div id="firsat-liste"></div>
+          </div>
+
+          <!-- TAB 4: FINANSAL OZET -->
+          <div class="tab-icerik" id="tab-finansal">
+            <div class="kart">
+              <div class="kart-baslik">Yillik Gelir</div>
+              <div id="yillik-gelir"></div>
+            </div>
+            <div class="kart">
+              <div class="kart-baslik">Odeme Davranisi</div>
+              <div id="odeme-davranisi" style="font-size:12px;color:var(--metin2);"></div>
+            </div>
+            <div class="kart">
+              <div class="kart-baslik">Son 3 Fatura</div>
+              <div id="son-faturalar"></div>
+            </div>
           </div>
         </div>
       </div>
     </div>
-
-    <!-- ── Tab 2: Siparişler ── -->
-    <div class="tab-content" id="tab-siparisler" style="display:none">
-      <div class="card">
-        <div class="card-header">
-          <span>Satış Emirleri</span>
-          <span id="seCount" class="badge badge-purple">—</span>
-        </div>
-        <div class="card-body" style="padding:0" id="seListContainer">
-          <div class="empty-state"><div class="spinner"></div></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ── Tab 3: Şikayetler ── -->
-    <div class="tab-content" id="tab-sikayetler" style="display:none">
-      <div style="display:flex; justify-content:flex-end; margin-bottom:14px">
-        <button class="btn primary" onclick="openSikayetModal()">+ Yeni Şikayet</button>
-      </div>
-      <div id="sikayetListContainer">
-        <div class="empty-state"><div class="spinner"></div></div>
-      </div>
-    </div>
-
-    <!-- ── Tab 4: Performans ── -->
-    <div class="tab-content" id="tab-performans" style="display:none">
-      <div class="stat-grid">
-        <div class="stat-card accent">
-          <div class="stat-label">Toplam Sipariş</div>
-          <div class="stat-value" id="perf_toplam">—</div>
-          <div class="stat-sub">tüm satış emirleri</div>
-        </div>
-        <div class="stat-card green">
-          <div class="stat-label">OTD %</div>
-          <div class="stat-value" id="perf_otd">—</div>
-          <div class="stat-sub">zamanında teslimat</div>
-        </div>
-        <div class="stat-card blue">
-          <div class="stat-label">Açık Siparişler</div>
-          <div class="stat-value" id="perf_acik">—</div>
-          <div class="stat-sub">devam eden</div>
-        </div>
-        <div class="stat-card orange">
-          <div class="stat-label">Açık Şikayetler</div>
-          <div class="stat-value" id="perf_sikayet">—</div>
-          <div class="stat-sub">çözüm bekleyen</div>
-        </div>
-      </div>
-      <div id="perfNote" style="margin-top:16px; font-size:11px; color:var(--text3); text-align:center; padding:10px 0"></div>
-    </div>
-
   </div>
 </div>
 
-<!-- ════ SIKAYET MODAL ════ -->
-<div class="modal-overlay" id="sikayetModal">
+<!-- ILETISIM MODAL -->
+<div class="modal-overlay" id="iletisim-modal-overlay" style="display:none;" onclick="if(event.target===this)kapatModal('iletisim-modal-overlay')">
   <div class="modal">
-    <div class="modal-header">
-      <h3>Yeni Şikayet / Geri Bildirim</h3>
-      <button class="modal-close" onclick="closeSikayetModal()">&#215;</button>
+    <div class="modal-baslik">
+      <span>Yeni Iletisim Kaydi</span>
+      <button class="modal-kapat" onclick="kapatModal('iletisim-modal-overlay')">&times;</button>
     </div>
-    <div class="modal-body">
-      <div class="field-group">
-        <label class="field-label">Konu *</label>
-        <input type="text" id="sm_konu" class="field-input" placeholder="Şikayet konusu">
-      </div>
-      <div class="field-group">
-        <label class="field-label">Açıklama *</label>
-        <textarea id="sm_aciklama" class="field-input" rows="4" placeholder="Detaylı açıklama…"></textarea>
-      </div>
-      <div class="form-grid-2">
-        <div class="field-group">
-          <label class="field-label">Öncelik</label>
-          <select id="sm_oncelik" class="field-input">
-            <option value="Düşük">Düşük</option>
-            <option value="Orta" selected>Orta</option>
-            <option value="Yüksek">Yüksek</option>
-            <option value="Kritik">Kritik</option>
-          </select>
-        </div>
-        <div class="field-group">
-          <label class="field-label">Bağlı İş Emri (opsiyonel)</label>
-          <input type="text" id="sm_isemri" class="field-input" placeholder="IE-2026-001">
-        </div>
-      </div>
+    <div class="form-grup">
+      <label class="form-label">Iletisim Turu</label>
+      <select class="form-select" id="ilt-tur">
+        <option value="Telefon">Telefon</option>
+        <option value="E-posta">E-posta</option>
+        <option value="Toplanti">Toplanti</option>
+        <option value="Ziyaret">Ziyaret</option>
+      </select>
     </div>
-    <div class="modal-footer">
-      <button class="btn" onclick="closeSikayetModal()">İptal</button>
-      <button class="btn primary" id="sikayetSaveBtn" onclick="saveSikayet()">Kaydet</button>
+    <div class="form-grup">
+      <label class="form-label">Konu</label>
+      <input class="form-input" id="ilt-konu" placeholder="Gorusme konusu">
+    </div>
+    <div class="form-grup">
+      <label class="form-label">Notlar</label>
+      <textarea class="form-textarea" id="ilt-not" rows="3" placeholder="Detaylar..."></textarea>
+    </div>
+    <div class="form-grup">
+      <label class="form-label">Aksiyon Tarihi</label>
+      <input class="form-input" id="ilt-aksiyon" type="date">
+    </div>
+    <div class="modal-alt">
+      <button class="btn btn-beyaz" onclick="kapatModal('iletisim-modal-overlay')">Iptal</button>
+      <button class="btn btn-mavi" onclick="iletisimKaydet()">Kaydet</button>
     </div>
   </div>
 </div>
 
-<!-- ════ AI 8D MODAL ════ -->
-<div class="modal-overlay" id="aiModal">
-  <div class="modal" style="max-width:680px">
-    <div class="modal-header">
-      <h3>AI — 8D Raporu Taslağı</h3>
-      <button class="modal-close" onclick="closeAiModal()">&#215;</button>
+<!-- FIRSAT MODAL -->
+<div class="modal-overlay" id="firsat-modal-overlay" style="display:none;" onclick="if(event.target===this)kapatModal('firsat-modal-overlay')">
+  <div class="modal">
+    <div class="modal-baslik">
+      <span>Yeni Firsat</span>
+      <button class="modal-kapat" onclick="kapatModal('firsat-modal-overlay')">&times;</button>
     </div>
-    <div class="modal-body" id="aiModalContent">
-      <div class="ai-loading"><div class="spinner"></div> Claude ile 8D taslağı oluşturuluyor…</div>
+    <div class="form-grup">
+      <label class="form-label">Firsat Basligi</label>
+      <input class="form-input" id="frs-baslik" placeholder="Firsat basligi">
     </div>
-    <div class="modal-footer">
-      <button class="btn" onclick="closeAiModal()">Kapat</button>
-      <button class="btn primary" onclick="copyAiOutput()">Kopyala</button>
+    <div class="form-grid-2">
+      <div class="form-grup">
+        <label class="form-label">Tahmini Tutar (TL)</label>
+        <input class="form-input" id="frs-tutar" type="number" placeholder="0">
+      </div>
+      <div class="form-grup">
+        <label class="form-label">Olasilik (%)</label>
+        <input class="form-input" id="frs-olasilik" type="number" min="0" max="100" placeholder="50">
+      </div>
+    </div>
+    <div class="form-grup">
+      <label class="form-label">Asama</label>
+      <select class="form-select" id="frs-asama">
+        <option value="Ilk Temas">Ilk Temas</option>
+        <option value="Teklif Talebi">Teklif Talebi</option>
+        <option value="Teklif Gonderildi">Teklif Gonderildi</option>
+        <option value="Muzakere">Muzakere</option>
+        <option value="Kazanildi">Kazanildi</option>
+        <option value="Kaybedildi">Kaybedildi</option>
+      </select>
+    </div>
+    <div class="form-grup">
+      <label class="form-label">Tahmini Kapanis Tarihi</label>
+      <input class="form-input" id="frs-kapanis" type="date">
+    </div>
+    <div class="form-grup">
+      <label class="form-label">Notlar</label>
+      <textarea class="form-textarea" id="frs-not" rows="2" placeholder="Notlar..."></textarea>
+    </div>
+    <div class="modal-alt">
+      <button class="btn btn-beyaz" onclick="kapatModal('firsat-modal-overlay')">Iptal</button>
+      <button class="btn btn-mavi" onclick="firsatKaydet()">Kaydet</button>
     </div>
   </div>
 </div>
+
+<!-- TOAST -->
+<div class="toast" id="toast-el"></div>
 
 <script>
-// ═══════════════════════════════════════
-//  CONFIG
-// ═══════════════════════════════════════
-const BASE = 'app5LDgJMgocw79Ix';
-const T = {
-  musteri:  'tblPxhjJDEx0fyUQx',
-  se:       'tbl56Oj1nPaqefI60',
-  ie:       'tbl58qL39I2tv8hK4',
-  sikayet:  'Müşteri Şikayetleri',
-  personel: 'tblwG9GqnLC9oFZzb'
-};
-const PROXY = '/.netlify/functions/airtable';
+// ── GLOBALS ──
+var musteriler = [];
+var satisEmirleri = [];
+var iletisimKayitlari = [];
+var firsatlar = [];
+var faturaKayitlari = [];
+var seciliMusteri = null;
+var aktifFiltre = 'Tumu';
 
-// ═══════════════════════════════════════
-//  STATE
-// ═══════════════════════════════════════
-let allMusteriler = [];
-let filteredMusteriler = [];
-let selectedMusteri = null;
-let currentTab = 'bilgiler';
-let seCache = [];
-let sikayetCache = [];
-
-// ═══════════════════════════════════════
-//  UTILS
-// ═══════════════════════════════════════
-function showToast(msg, type = 'success') {
-  const el = document.createElement('div');
-  el.className = 'toast ' + type;
-  el.textContent = msg;
-  document.body.appendChild(el);
-  setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }, 3000);
+// ── API HELPERS ──
+async function apiGet(tablo, query) {
+  var url = '/.netlify/functions/airtable?table=' + encodeURIComponent(tablo);
+  if (query) url += '&' + query;
+  var r = await fetch(url);
+  return r.json();
+}
+async function apiPost(tablo, fields) {
+  var r = await fetch('/.netlify/functions/airtable', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({method: 'POST', path: '/v0/app5LDgJMgocw79Ix/' + encodeURIComponent(tablo), body: {fields: fields}})
+  });
+  return r.json();
+}
+async function apiPatch(tablo, id, fields) {
+  var r = await fetch('/.netlify/functions/airtable', {
+    method: 'PATCH', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({table: tablo, id: id, fields: fields})
+  });
+  return r.json();
 }
 
-function todayStr() {
-  return new Date().toISOString().slice(0, 10);
+// ── TOAST ──
+function toast(mesaj, tip) {
+  var el = document.getElementById('toast-el');
+  el.textContent = mesaj;
+  el.className = 'toast toast-' + (tip || 'bilgi') + ' goster';
+  setTimeout(function() { el.classList.remove('goster'); }, 3000);
 }
 
-function formatDate(d) {
-  if (!d) return '—';
-  return String(d).slice(0, 10);
-}
+// ── MODAL ──
+function kapatModal(id) { document.getElementById(id).style.display = 'none'; }
+function iletisimModal() { document.getElementById('iletisim-modal-overlay').style.display = 'flex'; }
+function firsatModal() { document.getElementById('firsat-modal-overlay').style.display = 'flex'; }
 
-function genSikayetNo() {
-  const year = new Date().getFullYear();
-  const seq = String(Math.floor(Math.random() * 900) + 100);
-  return 'SKA-' + year + '-' + seq;
-}
+// ── MUSTERI SKORU ──
+function musteriSkoru(musteriId) {
+  var skor = 0;
+  var musteriSE = satisEmirleri.filter(function(s) {
+    var f = s.fields;
+    var mId = f['Musteri'] || f['Müşteri'];
+    if (Array.isArray(mId)) return mId.indexOf(musteriId) >= 0;
+    return mId === musteriId;
+  });
 
-function oncelikBadge(o) {
-  const map = { 'Kritik': 'badge-red', 'Yüksek': 'badge-orange', 'Orta': 'badge-blue', 'Düşük': 'badge-gray' };
-  return '<span class="badge ' + (map[o] || 'badge-gray') + '">' + o + '</span>';
-}
+  // Siparis hacmi (max 30 puan)
+  var toplamTutar = 0;
+  musteriSE.forEach(function(s) { toplamTutar += parseFloat(s.fields['Tutar'] || s.fields['Toplam Tutar'] || 0); });
+  if (toplamTutar > 500000) skor += 30;
+  else if (toplamTutar > 200000) skor += 20;
+  else if (toplamTutar > 50000) skor += 10;
 
-function statuBadge(s) {
-  const map = {
-    'Açık': 'badge-orange',
-    'İnceleniyor': 'badge-blue',
-    'Devam Ediyor': 'badge-blue',
-    'Tamamlandı': 'badge-green',
-    'Teslim Edildi': 'badge-green',
-    'Kapatıldı': 'badge-gray',
-    'Çözüldü': 'badge-green',
-    'İptal': 'badge-gray'
-  };
-  const key = s || '—';
-  return '<span class="badge ' + (map[key] || 'badge-gray') + '">' + key + '</span>';
-}
+  // Siparis sikligi (max 25 puan)
+  if (musteriSE.length > 10) skor += 25;
+  else if (musteriSE.length > 5) skor += 15;
+  else if (musteriSE.length > 0) skor += 5;
 
-// ═══════════════════════════════════════
-//  API
-// ═══════════════════════════════════════
-async function apiCall(method, table, id, body) {
-  let url = PROXY + '?base=' + BASE + '&table=' + encodeURIComponent(table);
-  if (id) url += '&id=' + encodeURIComponent(id);
-  const opts = { method: method, headers: { 'Content-Type': 'application/json' } };
-  if (body) opts.body = JSON.stringify(body);
-  const res = await fetch(url, opts);
-  if (!res.ok) {
-    const txt = await res.text();
-    throw new Error(txt || res.statusText);
+  // Son siparis tarihi (max 25 puan)
+  var sonTarih = null;
+  musteriSE.forEach(function(s) {
+    var t = s.fields['Tarih'] || s.fields['Siparis Tarihi'] || s.createdTime;
+    if (t) { var d = new Date(t); if (!sonTarih || d > sonTarih) sonTarih = d; }
+  });
+  if (sonTarih) {
+    var gunFark = Math.floor((new Date() - sonTarih) / 86400000);
+    if (gunFark < 30) skor += 25;
+    else if (gunFark < 60) skor += 15;
+    else if (gunFark < 90) skor += 5;
   }
-  return res.json();
+
+  // Firsat var mi (max 20 puan)
+  var mFirsatlar = firsatlar.filter(function(f) {
+    var mId = f.fields['Musteri'] || f.fields['Müşteri'];
+    if (Array.isArray(mId)) return mId.indexOf(musteriId) >= 0;
+    return mId === musteriId;
+  });
+  var acikFirsat = mFirsatlar.filter(function(f) {
+    var a = f.fields['Asama'] || f.fields['Aşama'] || '';
+    return a !== 'Kazanildi' && a !== 'Kaybedildi';
+  });
+  if (acikFirsat.length > 0) skor += 20;
+  else if (mFirsatlar.length > 0) skor += 10;
+
+  return { skor: skor, toplamTutar: toplamTutar, siparisSayisi: musteriSE.length, sonTarih: sonTarih, firsatSayisi: mFirsatlar.length };
 }
 
-async function apiList(table, filterFormula) {
-  let url = PROXY + '?base=' + BASE + '&table=' + encodeURIComponent(table) + '&action=list';
-  if (filterFormula) url += '&filterByFormula=' + encodeURIComponent(filterFormula);
-  const res = await fetch(url);
-  if (!res.ok) {
-    const txt = await res.text();
-    throw new Error(txt || res.statusText);
+function skorBadgeHTML(skor) {
+  var cls = skor >= 76 ? 'skor-yesil' : skor >= 51 ? 'skor-sari' : 'skor-kirmizi';
+  return '<span class="skor-badge ' + cls + '">' + skor + '</span>';
+}
+
+// ── VIP / RISKLI KONTROLU ──
+function musteriTipi(musteriId) {
+  var bilgi = musteriSkoru(musteriId);
+  if (bilgi.toplamTutar > 500000) return 'VIP';
+  if (bilgi.sonTarih) {
+    var gun = Math.floor((new Date() - bilgi.sonTarih) / 86400000);
+    if (gun >= 90) return 'Riskli';
   }
-  const data = await res.json();
-  return data.records || [];
+  if (bilgi.siparisSayisi === 0) return 'Riskli';
+  return 'Aktif';
 }
 
-// ═══════════════════════════════════════
-//  LOAD MUSTERILER
-// ═══════════════════════════════════════
-async function loadMusteriler() {
+// ── VERI YUKLE ──
+async function yukle() {
   try {
-    const records = await apiList(T.musteri);
-    allMusteriler = records.map(r => Object.assign({ id: r.id }, r.fields));
-    filteredMusteriler = allMusteriler.slice();
-    renderList();
-    document.getElementById('listCount').textContent = allMusteriler.length + ' müşteri';
-  } catch (e) {
-    document.getElementById('listScroll').innerHTML =
-      '<div class="empty-state"><p style="color:var(--red);font-size:12px">Hata: ' + e.message + '</p></div>';
-    document.getElementById('listCount').textContent = 'Hata';
+    var sonuclar = await Promise.all([
+      apiGet('Müşteriler', 'pageSize=100'),
+      apiGet('Satış Emirleri', 'pageSize=100'),
+      apiGet('İletişim Kayıtları', 'pageSize=100'),
+      apiGet('Fırsatlar', 'pageSize=100'),
+      apiGet('Fatura Kayıtları', 'pageSize=100')
+    ]);
+    musteriler = (sonuclar[0] && sonuclar[0].records) || [];
+    satisEmirleri = (sonuclar[1] && sonuclar[1].records) || [];
+    iletisimKayitlari = (sonuclar[2] && sonuclar[2].records) || [];
+    firsatlar = (sonuclar[3] && sonuclar[3].records) || [];
+    faturaKayitlari = (sonuclar[4] && sonuclar[4].records) || [];
+  } catch(e) {
+    console.error('Veri yuklenirken hata:', e);
+    musteriler = []; satisEmirleri = []; iletisimKayitlari = []; firsatlar = []; faturaKayitlari = [];
   }
+  listeGuncelle();
 }
 
-// ═══════════════════════════════════════
-//  RENDER LIST
-// ═══════════════════════════════════════
-function renderList() {
-  const scroll = document.getElementById('listScroll');
-  if (!filteredMusteriler.length) {
-    scroll.innerHTML = '<div class="empty-state"><div class="empty-state-icon">&#128101;</div><p style="font-size:12px">Müşteri bulunamadı</p></div>';
-    return;
-  }
-  scroll.innerHTML = filteredMusteriler.map(function(m) {
-    const aktif = m['Aktif mi?'];
-    const kod = m['Müşteri Kodu'] || '—';
-    const ad = m['Müşteri Adı'] || '(isimsiz)';
-    const isActive = selectedMusteri && selectedMusteri.id === m.id ? ' secili' : '';
-    return '<div class="liste-satir' + isActive + '" onclick="selectMusteri(\'' + m.id + '\')">'
-      + '<div class="mi-name">' + ad + '</div>'
-      + '<div class="mi-bottom">'
-      + '<span class="mi-kod">' + kod + '</span>'
-      + '<span class="mi-aktif ' + (aktif ? 'evet' : 'hayir') + '">' + (aktif ? 'Aktif' : 'Pasif') + '</span>'
-      + '</div></div>';
-  }).join('');
+// ── FILTRE ──
+function filtreBtn(el) {
+  var btns = el.parentElement.querySelectorAll('.filtre-btn');
+  for (var i = 0; i < btns.length; i++) btns[i].classList.remove('aktif');
+  el.classList.add('aktif');
+  aktifFiltre = el.getAttribute('data-f');
+  listeGuncelle();
 }
 
-// ═══════════════════════════════════════
-//  FILTER
-// ═══════════════════════════════════════
-function filterList() {
-  const q = document.getElementById('searchInput').value.toLowerCase().trim();
-  if (!q) {
-    filteredMusteriler = allMusteriler.slice();
+function filtrele() { listeGuncelle(); }
+
+function listeGuncelle() {
+  var arama = (document.getElementById('arama-input').value || '').toLowerCase();
+  var filtreli = musteriler.filter(function(m) {
+    var ad = (m.fields['Müşteri Adı'] || m.fields['Ad'] || m.fields['Name'] || '').toLowerCase();
+    if (arama && ad.indexOf(arama) < 0) return false;
+    if (aktifFiltre === 'Tumu') return true;
+    var tip = musteriTipi(m.id);
+    return tip === aktifFiltre;
+  });
+
+  document.getElementById('musteri-sayi').textContent = filtreli.length;
+  var html = '';
+  if (filtreli.length === 0) {
+    html = '<div class="bos-durum">Musteri bulunamadi</div>';
   } else {
-    filteredMusteriler = allMusteriler.filter(function(m) {
-      return (m['Müşteri Adı'] || '').toLowerCase().indexOf(q) !== -1
-        || (m['Müşteri Kodu'] || '').toLowerCase().indexOf(q) !== -1
-        || (m['Yetkili Kişi'] || '').toLowerCase().indexOf(q) !== -1;
+    filtreli.forEach(function(m) {
+      var ad = m.fields['Müşteri Adı'] || m.fields['Ad'] || m.fields['Name'] || 'Isimsiz';
+      var bilgi = musteriSkoru(m.id);
+      var sonTarihStr = bilgi.sonTarih ? bilgi.sonTarih.toLocaleDateString('tr-TR') : '-';
+      var secili = seciliMusteri && seciliMusteri.id === m.id ? ' secili' : '';
+      html += '<div class="liste-satir' + secili + '" onclick="musteriSec(\'' + m.id + '\')">'
+        + '<div class="liste-satir-ad" style="display:flex;justify-content:space-between;align-items:center;">'
+        + '<span>' + ad + '</span>' + skorBadgeHTML(bilgi.skor)
+        + '</div>'
+        + '<div class="liste-satir-alt">'
+        + '<span style="font-size:10px;color:var(--metin4);">Son: ' + sonTarihStr + '</span>'
+        + '<span class="badge badge-gri" style="font-size:9px;">' + musteriTipi(m.id) + '</span>'
+        + '</div></div>';
     });
   }
-  renderList();
+  document.getElementById('musteri-liste').innerHTML = html;
 }
 
-// ═══════════════════════════════════════
-//  SELECT MUSTERI
-// ═══════════════════════════════════════
-function selectMusteri(id) {
-  selectedMusteri = allMusteriler.find(function(m) { return m.id === id; });
-  if (!selectedMusteri) return;
-
-  // Reset tab caches
-  seCache = [];
-  sikayetCache = [];
-
-  // Show panels
-  document.getElementById('noSelection').style.display = 'none';
-  document.getElementById('detailToolbar').style.display = 'flex';
-  document.getElementById('tabsBar').style.display = 'flex';
-
-  // Update toolbar
-  document.getElementById('detailTitle').textContent = selectedMusteri['Müşteri Adı'] || '—';
-  document.getElementById('detailSub').textContent = selectedMusteri['Müşteri Kodu'] || '';
-
-  // Highlight in list
-  renderList();
-
-  // Fill form
-  fillForm(selectedMusteri);
-
-  // Switch to bilgiler tab
-  switchTab('bilgiler');
-}
-
-// ═══════════════════════════════════════
-//  FILL FORM
-// ═══════════════════════════════════════
-function fillForm(m) {
-  document.getElementById('f_musteri_adi').value = m['Müşteri Adı'] || '';
-  document.getElementById('f_musteri_kodu').value = m['Müşteri Kodu'] || '';
-  document.getElementById('f_yetkili').value = m['Yetkili Kişi'] || '';
-  document.getElementById('f_eposta').value = m['E-posta'] || '';
-  document.getElementById('f_telefon').value = m['Telefon'] || '';
-  document.getElementById('f_ulke').value = m['Ülke'] || '';
-  document.getElementById('f_notlar').value = m['Notlar'] || '';
-  document.getElementById('f_aktif').checked = !!m['Aktif mi?'];
-}
-
-function resetForm() {
-  if (selectedMusteri) fillForm(selectedMusteri);
-}
-
-// ═══════════════════════════════════════
-//  SWITCH TAB
-// ═══════════════════════════════════════
-function switchTab(tab) {
-  currentTab = tab;
-  var tabNames = ['bilgiler', 'siparisler', 'sikayetler', 'performans'];
+// ── MUSTERI SEC ──
+function musteriSec(id) {
+  seciliMusteri = musteriler.find(function(m) { return m.id === id; });
+  if (!seciliMusteri) return;
+  document.getElementById('bos-durum').style.display = 'none';
+  document.getElementById('musteri-detay').style.display = 'flex';
+  listeGuncelle();
+  genelBakisYukle();
+  iletisimYukle();
+  firsatYukle();
+  finansalYukle();
+  // Reset to first tab
   var btns = document.querySelectorAll('.tab-btn');
-  btns.forEach(function(b, i) {
-    b.classList.toggle('active', tabNames[i] === tab);
-  });
-  tabNames.forEach(function(t) {
-    document.getElementById('tab-' + t).style.display = t === tab ? 'block' : 'none';
-  });
-  if (tab === 'siparisler') loadSiparisler();
-  if (tab === 'sikayetler') loadSikayetler();
-  if (tab === 'performans') loadPerformans();
+  var tabs = document.querySelectorAll('.tab-icerik');
+  for (var i = 0; i < btns.length; i++) btns[i].classList.remove('aktif');
+  for (var i = 0; i < tabs.length; i++) tabs[i].classList.remove('aktif');
+  btns[0].classList.add('aktif');
+  tabs[0].classList.add('aktif');
 }
 
-// ═══════════════════════════════════════
-//  SAVE MUSTERI (PATCH)
-// ═══════════════════════════════════════
-async function saveMusteriRecord() {
-  if (!selectedMusteri) { showToast('Lütfen önce bir müşteri seçin', 'error'); return; }
-  const btn = document.getElementById('saveBtn');
-  btn.disabled = true;
-  btn.textContent = 'Kaydediliyor…';
-
-  const fields = {
-    'Müşteri Adı':  document.getElementById('f_musteri_adi').value.trim(),
-    'Müşteri Kodu': document.getElementById('f_musteri_kodu').value.trim(),
-    'Yetkili Kişi': document.getElementById('f_yetkili').value.trim(),
-    'E-posta':      document.getElementById('f_eposta').value.trim(),
-    'Telefon':      document.getElementById('f_telefon').value.trim(),
-    'Ülke':         document.getElementById('f_ulke').value,
-    'Notlar':       document.getElementById('f_notlar').value.trim(),
-    'Aktif mi?':    document.getElementById('f_aktif').checked
-  };
-
-  try {
-    const oldFields = Object.assign({}, selectedMusteri);
-    await apiCall('PATCH', T.musteri, selectedMusteri.id, { fields: fields });
-    Object.assign(selectedMusteri, fields);
-    var idx = allMusteriler.findIndex(function(m) { return m.id === selectedMusteri.id; });
-    if (idx !== -1) Object.assign(allMusteriler[idx], fields);
-    renderList();
-    document.getElementById('detailTitle').textContent = fields['Müşteri Adı'] || '—';
-    document.getElementById('detailSub').textContent = fields['Müşteri Kodu'] || '';
-    await logIslem('Güncellendi', 'Müşteri', selectedMusteri.id, fields['Müşteri Adı'], oldFields, fields);
-    showToast('Müşteri güncellendi', 'success');
-  } catch (e) {
-    showToast('Hata: ' + e.message, 'error');
-  }
-
-  btn.disabled = false;
-  btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Kaydet / Güncelle';
+// ── SEKMELER ──
+function sekmeAc(btn, tabId) {
+  var btns = document.querySelectorAll('.tab-btn');
+  var tabs = document.querySelectorAll('.tab-icerik');
+  for (var i = 0; i < btns.length; i++) btns[i].classList.remove('aktif');
+  for (var i = 0; i < tabs.length; i++) tabs[i].classList.remove('aktif');
+  btn.classList.add('aktif');
+  document.getElementById(tabId).classList.add('aktif');
 }
 
-// ═══════════════════════════════════════
-//  LOAD SİPARİŞLER
-// ═══════════════════════════════════════
-async function loadSiparisler() {
-  const cont = document.getElementById('seListContainer');
-  if (!selectedMusteri) return;
-  if (seCache.length > 0) { renderSiparisler(seCache); return; }
+// ── TAB 1: GENEL BAKIS ──
+function genelBakisYukle() {
+  if (!seciliMusteri) return;
+  var bilgi = musteriSkoru(seciliMusteri.id);
+  var ad = seciliMusteri.fields['Müşteri Adı'] || seciliMusteri.fields['Ad'] || seciliMusteri.fields['Name'] || '';
+  document.getElementById('detay-ad').textContent = ad;
+  document.getElementById('detay-skor-badge').outerHTML = skorBadgeHTML(bilgi.skor);
 
-  cont.innerHTML = '<div class="empty-state"><div class="spinner"></div></div>';
+  // KPI kartlari
+  document.getElementById('genel-kpiler').innerHTML =
+    '<div class="kpi-kart"><div class="kpi-etiket">Toplam Ciro</div><div class="kpi-deger">' + formatTL(bilgi.toplamTutar) + '</div></div>'
+    + '<div class="kpi-kart yesil"><div class="kpi-etiket">Siparis Sayisi</div><div class="kpi-deger">' + bilgi.siparisSayisi + '</div></div>'
+    + '<div class="kpi-kart sari"><div class="kpi-etiket">Acik Firsat</div><div class="kpi-deger">' + bilgi.firsatSayisi + '</div></div>'
+    + '<div class="kpi-kart"><div class="kpi-etiket">Musteri Skoru</div><div class="kpi-deger">' + bilgi.skor + '/100</div></div>';
 
-  try {
-    const musteriAdi = selectedMusteri['Müşteri Adı'] || '';
-    const linkedIds = selectedMusteri['Satış Emirler'] || selectedMusteri['Satış Emirleri'] || [];
-    var records = [];
+  // Skor detay
+  document.getElementById('skor-detay').innerHTML =
+    '<p>Siparis Hacmi: ' + formatTL(bilgi.toplamTutar) + '</p>'
+    + '<p>Siparis Sikligi: ' + bilgi.siparisSayisi + ' adet</p>'
+    + '<p>Son Siparis: ' + (bilgi.sonTarih ? bilgi.sonTarih.toLocaleDateString('tr-TR') : 'Yok') + '</p>'
+    + '<p>Durum: <strong>' + musteriTipi(seciliMusteri.id) + '</strong></p>';
 
-    if (linkedIds.length > 0) {
-      const formula = 'OR(' + linkedIds.map(function(id) { return "RECORD_ID()='" + id + "'"; }).join(',') + ')';
-      records = await apiList(T.se, formula);
-    } else {
-      const formula = "{Müşteri}='" + musteriAdi.replace(/'/g, "\\'") + "'";
-      records = await apiList(T.se, formula);
-    }
+  // Son 5 siparis
+  var musteriSE = satisEmirleri.filter(function(s) {
+    var mId = s.fields['Musteri'] || s.fields['Müşteri'];
+    if (Array.isArray(mId)) return mId.indexOf(seciliMusteri.id) >= 0;
+    return mId === seciliMusteri.id;
+  }).slice(0, 5);
 
-    seCache = records;
-    renderSiparisler(records);
-  } catch (e) {
-    cont.innerHTML = '<div class="empty-state"><p style="color:var(--red);font-size:12px">Hata: ' + e.message + '</p></div>';
-  }
-}
-
-function renderSiparisler(records) {
-  const cont = document.getElementById('seListContainer');
-  document.getElementById('seCount').textContent = records.length;
-
-  if (!records.length) {
-    cont.innerHTML = '<div class="empty-state"><div class="empty-state-icon">&#128230;</div><p style="font-size:12px">Bu müşteriye ait sipariş bulunamadı</p></div>';
-    return;
-  }
-
-  var rows = records.map(function(r) {
-    var f = r.fields;
-    var seNo    = f['SE No'] || f['Sipariş No'] || f['No'] || r.id;
-    var parca   = Array.isArray(f['Parça']) ? f['Parça'].join(', ') : (f['Parça'] || f['Ürün'] || '—');
-    var miktar  = f['Miktar'] || f['Adet'] || '—';
-    var durum   = f['Durum'] || f['Statü'] || '—';
-    var termin  = formatDate(f['Termin'] || f['Termin Tarihi'] || f['Teslim Tarihi']);
-    return '<tr>'
-      + '<td style="font-family:var(--mono);font-size:11px;color:var(--accent)">' + seNo + '</td>'
-      + '<td>' + parca + '</td>'
-      + '<td style="text-align:center;font-family:var(--mono)">' + miktar + '</td>'
-      + '<td>' + statuBadge(durum) + '</td>'
-      + '<td style="font-family:var(--mono);font-size:11px">' + termin + '</td>'
-      + '</tr>';
-  }).join('');
-
-  cont.innerHTML = '<table class="data-table">'
-    + '<thead><tr>'
-    + '<th>SE No</th><th>Parça</th><th style="text-align:center">Miktar</th><th>Durum</th><th>Termin</th>'
-    + '</tr></thead>'
-    + '<tbody>' + rows + '</tbody>'
-    + '</table>'
-    + '<div style="padding:10px 16px;font-size:11px;color:var(--text3);text-align:right;border-top:1px solid var(--border)">'
-    + 'Toplam <strong>' + records.length + '</strong> sipariş</div>';
-}
-
-// ═══════════════════════════════════════
-//  LOAD SİKAYETLER
-// ═══════════════════════════════════════
-async function loadSikayetler() {
-  const cont = document.getElementById('sikayetListContainer');
-  if (!selectedMusteri) return;
-
-  cont.innerHTML = '<div class="empty-state"><div class="spinner"></div></div>';
-
-  try {
-    const musteriAdi = selectedMusteri['Müşteri Adı'] || '';
-    const formula = "{Müşteri}='" + musteriAdi.replace(/'/g, "\\'") + "'";
-    const records = await apiList(T.sikayet, formula);
-    sikayetCache = records;
-    renderSikayetler(records);
-  } catch (e) {
-    sikayetCache = [];
-    cont.innerHTML = '<div class="empty-state">'
-      + '<div class="empty-state-icon">&#9989;</div>'
-      + '<p style="font-size:12px;color:var(--text2)">Şikayet tablosu henüz oluşturulmamış veya erişilemiyor.<br>'
-      + '<span style="font-size:11px;color:var(--text3)">Airtable\'da "Müşteri Şikayetleri" tablosunu oluşturun.</span></p></div>';
-  }
-}
-
-function renderSikayetler(records) {
-  const cont = document.getElementById('sikayetListContainer');
-  if (!records.length) {
-    cont.innerHTML = '<div class="empty-state"><div class="empty-state-icon">&#9989;</div><p style="font-size:12px">Bu müşteriye ait şikayet kaydı yok</p></div>';
-    return;
-  }
-  cont.innerHTML = records.map(function(r) {
-    var f = r.fields;
-    var no       = f['Şikayet No'] || r.id;
-    var konu     = f['Konu'] || '—';
-    var aciklama = f['Açıklama'] || '';
-    var oncelik  = f['Öncelik'] || 'Orta';
-    var statu    = f['Statü'] || 'Açık';
-    var tarih    = formatDate(f['Tarih']);
-    // Encode aciklama for onclick attr
-    var acEnc = aciklama.substring(0, 500).replace(/'/g, '&#39;').replace(/"/g, '&quot;').replace(/\n/g, ' ');
-    var konuEnc = konu.replace(/'/g, '&#39;').replace(/"/g, '&quot;');
-    return '<div class="sikayet-item">'
-      + '<div class="si-header">'
-      + '<span class="si-no">' + no + '</span>'
-      + '<div style="display:flex;gap:6px;align-items:center">' + oncelikBadge(oncelik) + statuBadge(statu) + '</div>'
-      + '</div>'
-      + '<div class="si-konu">' + konu + '</div>'
-      + (aciklama ? '<div class="si-aciklama">' + aciklama + '</div>' : '')
-      + '<div class="si-footer">'
-      + '<span class="si-tarih">' + tarih + '</span>'
-      + '<button class="btn sm" onclick="openAiModal(\'' + r.id + '\',\'' + acEnc + '\',\'' + konuEnc + '\')">AI 8D Taslağı</button>'
-      + '</div></div>';
-  }).join('');
-}
-
-// ═══════════════════════════════════════
-//  LOAD PERFORMANS
-// ═══════════════════════════════════════
-async function loadPerformans() {
-  if (!selectedMusteri) return;
-
-  // Ensure SE data loaded
-  if (!seCache.length) {
-    try { await loadSiparisler(); } catch(e) {}
-  }
-  // Ensure sikayet data loaded
-  if (!sikayetCache.length) {
-    try { await loadSikayetler(); } catch(e) {}
-  }
-
-  var records = seCache;
-  var toplam = records.length;
-  document.getElementById('perf_toplam').textContent = toplam || '0';
-
-  var todayDate = new Date();
-  todayDate.setHours(0, 0, 0, 0);
-
-  var onTime = 0, acik = 0, completed = 0;
-  records.forEach(function(r) {
-    var f = r.fields;
-    var durum = f['Durum'] || f['Statü'] || '';
-    var terminStr = f['Termin'] || f['Termin Tarihi'] || f['Teslim Tarihi'];
-    var isCompleted = /tamamlan|kapatıl|teslim edildi/i.test(durum);
-    if (!isCompleted) {
-      acik++;
-    } else {
-      completed++;
-      if (terminStr) {
-        var termin = new Date(terminStr);
-        termin.setHours(0,0,0,0);
-        if (termin >= todayDate) onTime++;
-      }
-    }
-  });
-
-  var otd = completed > 0 ? Math.round((onTime / completed) * 100) + '%' : (toplam === 0 ? '—' : 'N/A');
-  document.getElementById('perf_otd').textContent = otd;
-  document.getElementById('perf_acik').textContent = acik;
-
-  var openSikayet = sikayetCache.filter(function(r) {
-    return (r.fields['Statü'] || 'Açık') === 'Açık';
-  }).length;
-  document.getElementById('perf_sikayet').textContent = openSikayet;
-
-  document.getElementById('perfNote').textContent =
-    'Son güncelleme: ' + new Date().toLocaleTimeString('tr-TR')
-    + ' · OTD: tamamlanan siparişlerde termin = bugün veya ileri tarih';
-}
-
-// ═══════════════════════════════════════
-//  SIKAYET MODAL
-// ═══════════════════════════════════════
-function openSikayetModal() {
-  if (!selectedMusteri) { showToast('Önce bir müşteri seçin', 'error'); return; }
-  document.getElementById('sm_konu').value = '';
-  document.getElementById('sm_aciklama').value = '';
-  document.getElementById('sm_oncelik').value = 'Orta';
-  document.getElementById('sm_isemri').value = '';
-  document.getElementById('sikayetModal').classList.add('open');
-  setTimeout(function() { document.getElementById('sm_konu').focus(); }, 100);
-}
-
-function closeSikayetModal() {
-  document.getElementById('sikayetModal').classList.remove('open');
-}
-
-async function saveSikayet() {
-  var konu     = document.getElementById('sm_konu').value.trim();
-  var aciklama = document.getElementById('sm_aciklama').value.trim();
-  var oncelik  = document.getElementById('sm_oncelik').value;
-  var isemri   = document.getElementById('sm_isemri').value.trim();
-
-  if (!konu)     { showToast('Konu zorunludur', 'error'); return; }
-  if (!aciklama) { showToast('Açıklama zorunludur', 'error'); return; }
-
-  var btn = document.getElementById('sikayetSaveBtn');
-  btn.disabled = true;
-  btn.textContent = 'Kaydediliyor…';
-
-  var sikayetNo = genSikayetNo();
-  var fields = {
-    'Şikayet No': sikayetNo,
-    'Müşteri':    selectedMusteri['Müşteri Adı'],
-    'Konu':       konu,
-    'Açıklama':   aciklama,
-    'Öncelik':    oncelik,
-    'Tarih':      todayStr(),
-    'Statü':      'Açık'
-  };
-  if (isemri) fields['Bağlı İş Emri'] = isemri;
-
-  try {
-    var res = await apiCall('POST', T.sikayet, null, { fields: fields });
-    await logIslem('Oluşturuldu', 'Müşteri Şikayetleri', res.id, sikayetNo, null, fields);
-    showToast('Şikayet kaydedildi: ' + sikayetNo, 'success');
-    closeSikayetModal();
-    sikayetCache = [];
-    await loadSikayetler();
-  } catch (e) {
-    showToast('Hata: ' + e.message, 'error');
-  }
-
-  btn.disabled = false;
-  btn.textContent = 'Kaydet';
-}
-
-// ═══════════════════════════════════════
-//  AI 8D MODAL
-// ═══════════════════════════════════════
-function openAiModal(recId, aciklama, konu) {
-  document.getElementById('aiModal').classList.add('open');
-  document.getElementById('aiModalContent').innerHTML =
-    '<div class="ai-loading"><div class="spinner"></div> Claude ile 8D taslağı oluşturuluyor…</div>';
-  generate8D(aciklama, konu);
-}
-
-function closeAiModal() {
-  document.getElementById('aiModal').classList.remove('open');
-}
-
-function copyAiOutput() {
-  var el = document.getElementById('ai-output-text');
-  if (el) {
-    navigator.clipboard.writeText(el.textContent)
-      .then(function() { showToast('Kopyalandı', 'info'); })
-      .catch(function() { showToast('Kopyalama başarısız', 'error'); });
-  }
-}
-
-async function generate8D(aciklama, konu) {
-  var prompt = 'Bu müşteri şikayeti için 8D raporu taslağı yaz:\n\nKonu: ' + konu + '\n\nAçıklama: ' + aciklama + '\n\nTürkçe olarak, D1\'den D8\'e kadar her disiplini başlık ve içerikle yaz.';
-  try {
-    var res = await fetch('/.netlify/functions/claude', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1500,
-        messages: [{ role: 'user', content: prompt }]
-      })
+  if (musteriSE.length === 0) {
+    document.getElementById('son-siparisler').innerHTML = '<div class="bos-durum">Siparis bulunamadi</div>';
+  } else {
+    var thtml = '<table class="mini-tablo"><thead><tr><th>SP No</th><th>Tarih</th><th>Tutar</th><th>Durum</th></tr></thead><tbody>';
+    musteriSE.forEach(function(s) {
+      var f = s.fields;
+      thtml += '<tr><td class="td-mono">' + (f['SE No'] || f['SP No'] || '-') + '</td>'
+        + '<td>' + (f['Tarih'] || f['Siparis Tarihi'] || '-') + '</td>'
+        + '<td>' + formatTL(f['Tutar'] || f['Toplam Tutar'] || 0) + '</td>'
+        + '<td><span class="badge badge-mavi">' + (f['Durum'] || '-') + '</span></td></tr>';
     });
-    if (!res.ok) throw new Error(await res.text());
-    var data = await res.json();
-    var text = (data.content && data.content[0] && data.content[0].text)
-      || (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content)
-      || JSON.stringify(data, null, 2);
-    document.getElementById('aiModalContent').innerHTML =
-      '<pre class="ai-output" id="ai-output-text">' + text.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</pre>';
-  } catch (e) {
-    document.getElementById('aiModalContent').innerHTML =
-      '<div style="color:var(--red);font-size:12px;padding:12px 0">Hata: ' + e.message + '</div>';
+    thtml += '</tbody></table>';
+    document.getElementById('son-siparisler').innerHTML = thtml;
   }
 }
 
-// ═══════════════════════════════════════
-//  CLOSE MODALS ON OVERLAY CLICK
-// ═══════════════════════════════════════
-document.getElementById('sikayetModal').addEventListener('click', function(e) {
-  if (e.target === this) closeSikayetModal();
-});
-document.getElementById('aiModal').addEventListener('click', function(e) {
-  if (e.target === this) closeAiModal();
-});
+// ── TAB 2: ILETISIM ──
+function iletisimYukle() {
+  if (!seciliMusteri) return;
+  var kayitlar = iletisimKayitlari.filter(function(k) {
+    var mId = k.fields['Musteri'] || k.fields['Müşteri'];
+    if (Array.isArray(mId)) return mId.indexOf(seciliMusteri.id) >= 0;
+    return mId === seciliMusteri.id;
+  });
+  if (kayitlar.length === 0) {
+    document.getElementById('iletisim-liste').innerHTML = '<div class="bos-durum">Iletisim kaydi yok</div>';
+    return;
+  }
+  var html = '';
+  kayitlar.forEach(function(k) {
+    var f = k.fields;
+    html += '<div class="iletisim-satir">'
+      + '<div class="iletisim-tur">' + (f['Tür'] || f['Tur'] || 'Diger') + '</div>'
+      + '<div class="iletisim-konu">' + (f['Konu'] || '-') + '</div>'
+      + '<div style="font-size:11px;color:var(--metin2);margin:4px 0;">' + (f['Notlar'] || f['Not'] || '') + '</div>'
+      + '<div class="iletisim-tarih">' + (f['Tarih'] || k.createdTime.substring(0, 10)) + '</div>'
+      + '</div>';
+  });
+  document.getElementById('iletisim-liste').innerHTML = html;
+}
 
-// ═══════════════════════════════════════
-//  INIT
-// ═══════════════════════════════════════
-loadMusteriler();
+async function iletisimKaydet() {
+  if (!seciliMusteri) return;
+  var fields = {
+    'Müşteri': [seciliMusteri.id],
+    'Tür': document.getElementById('ilt-tur').value,
+    'Konu': document.getElementById('ilt-konu').value,
+    'Notlar': document.getElementById('ilt-not').value,
+    'Tarih': new Date().toISOString().substring(0, 10)
+  };
+  var aksiyon = document.getElementById('ilt-aksiyon').value;
+  if (aksiyon) fields['Aksiyon Tarihi'] = aksiyon;
+  try {
+    await apiPost('İletişim Kayıtları', fields);
+    await logIslem('Olusturuldu', 'Iletisim', seciliMusteri.id, fields['Konu'], null, fields);
+    toast('Iletisim kaydi olusturuldu', 'basari');
+    kapatModal('iletisim-modal-overlay');
+    var yeni = await apiGet('İletişim Kayıtları', 'pageSize=100');
+    iletisimKayitlari = (yeni && yeni.records) || [];
+    iletisimYukle();
+  } catch(e) { toast('Hata: ' + e.message, 'hata'); }
+}
+
+// ── TAB 3: FIRSATLAR ──
+function firsatYukle() {
+  if (!seciliMusteri) return;
+  var mFirsatlar = firsatlar.filter(function(f) {
+    var mId = f.fields['Musteri'] || f.fields['Müşteri'];
+    if (Array.isArray(mId)) return mId.indexOf(seciliMusteri.id) >= 0;
+    return mId === seciliMusteri.id;
+  });
+  if (mFirsatlar.length === 0) {
+    document.getElementById('firsat-liste').innerHTML = '<div class="bos-durum">Firsat bulunamadi</div>';
+    return;
+  }
+  var html = '';
+  mFirsatlar.forEach(function(fr) {
+    var f = fr.fields;
+    var asama = f['Asama'] || f['Aşama'] || '';
+    var badgeCls = asama === 'Kazanildi' ? 'badge-yesil' : asama === 'Kaybedildi' ? 'badge-kirmizi' : 'badge-mavi';
+    html += '<div class="firsat-kart">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;">'
+      + '<span class="firsat-baslik">' + (f['Başlık'] || f['Baslik'] || '-') + '</span>'
+      + '<span class="badge ' + badgeCls + '">' + asama + '</span></div>'
+      + '<div style="margin-top:4px;font-size:11px;color:var(--metin3);">'
+      + 'Tutar: <span class="firsat-tutar">' + formatTL(f['Tutar'] || f['Tahmini Tutar'] || 0) + '</span>'
+      + ' &bull; Olasilik: ' + (f['Olasılık'] || f['Olasilik'] || 0) + '%'
+      + '</div></div>';
+  });
+  document.getElementById('firsat-liste').innerHTML = html;
+}
+
+async function firsatKaydet() {
+  if (!seciliMusteri) return;
+  var fields = {
+    'Müşteri': [seciliMusteri.id],
+    'Başlık': document.getElementById('frs-baslik').value,
+    'Tahmini Tutar': parseFloat(document.getElementById('frs-tutar').value) || 0,
+    'Olasılık': parseInt(document.getElementById('frs-olasilik').value) || 50,
+    'Aşama': document.getElementById('frs-asama').value,
+    'Tahmini Kapanış': document.getElementById('frs-kapanis').value,
+    'Notlar': document.getElementById('frs-not').value
+  };
+  try {
+    await apiPost('Fırsatlar', fields);
+    await logIslem('Olusturuldu', 'Firsat', seciliMusteri.id, fields['Başlık'], null, fields);
+    toast('Firsat eklendi', 'basari');
+    kapatModal('firsat-modal-overlay');
+    var yeni = await apiGet('Fırsatlar', 'pageSize=100');
+    firsatlar = (yeni && yeni.records) || [];
+    firsatYukle();
+  } catch(e) { toast('Hata: ' + e.message, 'hata'); }
+}
+
+// ── TAB 4: FINANSAL OZET ──
+function finansalYukle() {
+  if (!seciliMusteri) return;
+  var musteriSE = satisEmirleri.filter(function(s) {
+    var mId = s.fields['Musteri'] || s.fields['Müşteri'];
+    if (Array.isArray(mId)) return mId.indexOf(seciliMusteri.id) >= 0;
+    return mId === seciliMusteri.id;
+  });
+
+  // Yillik gelir
+  var yillikMap = {};
+  musteriSE.forEach(function(s) {
+    var tarih = s.fields['Tarih'] || s.fields['Siparis Tarihi'] || s.createdTime;
+    var yil = tarih ? new Date(tarih).getFullYear() : 'Bilinmiyor';
+    var tutar = parseFloat(s.fields['Tutar'] || s.fields['Toplam Tutar'] || 0);
+    yillikMap[yil] = (yillikMap[yil] || 0) + tutar;
+  });
+  var yillar = Object.keys(yillikMap).sort();
+  var maxTutar = 1;
+  yillar.forEach(function(y) { if (yillikMap[y] > maxTutar) maxTutar = yillikMap[y]; });
+
+  if (yillar.length === 0) {
+    document.getElementById('yillik-gelir').innerHTML = '<div class="bos-durum">Veri yok</div>';
+  } else {
+    var barHtml = '';
+    yillar.forEach(function(y) {
+      var pct = Math.round((yillikMap[y] / maxTutar) * 100);
+      barHtml += '<div class="bar-chart-row">'
+        + '<div class="bar-chart-label">' + y + '</div>'
+        + '<div class="bar-chart-bar" style="width:' + pct + '%;"></div>'
+        + '<div class="bar-chart-val">' + formatTL(yillikMap[y]) + '</div></div>';
+    });
+    document.getElementById('yillik-gelir').innerHTML = barHtml;
+  }
+
+  // Odeme davranisi
+  var mFaturalar = faturaKayitlari.filter(function(f) {
+    var mId = f.fields['Musteri'] || f.fields['Müşteri'];
+    if (Array.isArray(mId)) return mId.indexOf(seciliMusteri.id) >= 0;
+    return mId === seciliMusteri.id;
+  });
+  var geciken = mFaturalar.filter(function(f) { return (f.fields['Durum'] || '') === 'Gecikti'; }).length;
+  var toplam = mFaturalar.length;
+  document.getElementById('odeme-davranisi').innerHTML = toplam > 0
+    ? '<p>Toplam Fatura: ' + toplam + '</p><p>Geciken: ' + geciken + '</p><p>Odeme Puani: ' + (toplam > 0 ? Math.round(((toplam - geciken) / toplam) * 100) : 0) + '/100</p>'
+    : '<div class="bos-durum">Fatura verisi yok</div>';
+
+  // Son 3 fatura
+  if (mFaturalar.length === 0) {
+    document.getElementById('son-faturalar').innerHTML = '<div class="bos-durum">Fatura bulunamadi</div>';
+  } else {
+    var fHtml = '<table class="mini-tablo"><thead><tr><th>Fatura No</th><th>Tarih</th><th>Tutar</th><th>Durum</th></tr></thead><tbody>';
+    mFaturalar.slice(0, 3).forEach(function(f) {
+      var fl = f.fields;
+      fHtml += '<tr><td class="td-mono">' + (fl['Fatura No'] || '-') + '</td>'
+        + '<td>' + (fl['Tarih'] || '-') + '</td>'
+        + '<td>' + formatTL(fl['Tutar'] || 0) + '</td>'
+        + '<td><span class="badge ' + (fl['Durum'] === 'Odendi' ? 'badge-yesil' : fl['Durum'] === 'Gecikti' ? 'badge-kirmizi' : 'badge-sari') + '">' + (fl['Durum'] || '-') + '</span></td></tr>';
+    });
+    fHtml += '</tbody></table>';
+    document.getElementById('son-faturalar').innerHTML = fHtml;
+  }
+}
+
+// ── AI ANALIZ ──
+async function aiAnaliz() {
+  if (!seciliMusteri) return;
+  var ad = seciliMusteri.fields['Müşteri Adı'] || seciliMusteri.fields['Ad'] || '';
+  var bilgi = musteriSkoru(seciliMusteri.id);
+  var prompt = 'Musteri: ' + ad + '\nToplam Ciro: ' + formatTL(bilgi.toplamTutar)
+    + '\nSiparis Sayisi: ' + bilgi.siparisSayisi
+    + '\nSkor: ' + bilgi.skor + '/100'
+    + '\nDurum: ' + musteriTipi(seciliMusteri.id)
+    + '\n\nBu musteri icin CRM stratejisi oner. Kisaca 3-4 madde halinde yaz.';
+  toast('AI analiz yapiliyor...', 'bilgi');
+  try {
+    var r = await fetch('/.netlify/functions/claude', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({prompt: prompt, max_tokens: 500})
+    });
+    var data = await r.json();
+    var yanit = (data.content && data.content[0] && data.content[0].text) || data.text || 'Yanit alinamadi';
+    alert('AI Analiz:\n\n' + yanit);
+  } catch(e) { toast('AI hatasi: ' + e.message, 'hata'); }
+}
+
+// ── YENI MUSTERI ──
+function yeniMusteriModal() {
+  var ad = prompt('Musteri Adi:');
+  if (!ad) return;
+  apiPost('Müşteriler', {'Müşteri Adı': ad}).then(function() {
+    toast('Musteri eklendi', 'basari');
+    logIslem('Olusturuldu', 'Musteri', '', ad, null, {ad: ad});
+    yukle();
+  }).catch(function(e) { toast('Hata: ' + e.message, 'hata'); });
+}
+
+// ── FORMAT ──
+function formatTL(val) {
+  var n = parseFloat(val) || 0;
+  return n.toLocaleString('tr-TR', {minimumFractionDigits: 0, maximumFractionDigits: 0}) + ' TL';
+}
+
+// ── INIT ──
+document.addEventListener('DOMContentLoaded', function() { yukle(); });
 </script>
-  </div><!-- /sayfa-icerik -->
-</div><!-- /icerik-alani -->
 </body>
 </html>

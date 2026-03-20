@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — Satis Tahmini</title>
+<link rel="stylesheet" href="ersan_styles.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="ersan_nav.js" defer></script>
+<script src="ersan_log.js" defer></script>
+<style>
+.periyot-sec {
+  display: flex; gap: 0; border: 1px solid var(--border); border-radius: 6px; overflow: hidden;
+}
+.periyot-btn {
+  padding: 5px 14px; font-size: 11px; font-weight: 500;
+  border: none; cursor: pointer; background: var(--beyaz);
+  color: var(--metin3); font-family: inherit;
+}
+.periyot-btn.aktif { background: var(--mavi); color: #fff; }
+.grafik-wrap {
+  background: var(--beyaz); border: 1px solid var(--border);
+  border-radius: 8px; padding: 16px; margin-bottom: 16px;
+}
+.grafik-baslik { font-size: 12px; font-weight: 600; color: var(--laci); margin-bottom: 12px; }
+.karlilik-tablo { margin-top: 12px; }
+.karlilik-tablo td { vertical-align: middle; }
+.trend-up { color: var(--yesil); font-weight: 600; }
+.trend-down { color: var(--kirmizi); font-weight: 600; }
+.trend-flat { color: var(--metin4); font-weight: 600; }
+.oneri-badge {
+  display: inline-flex; align-items: center; padding: 2px 8px;
+  border-radius: 10px; font-size: 10px; font-weight: 600;
+}
+.oneri-buyut { background: var(--yesil-bg); color: var(--yesil-t); }
+.oneri-koru { background: var(--mavi-acik); color: var(--mavi-koyu); }
+.oneri-dikkat { background: var(--sari-bg); color: var(--sari-t); }
+.oneri-risk { background: var(--kirmizi-bg); color: var(--kirmizi-t); }
+</style>
+</head>
+<body>
+<div id="nav-alani"></div>
+<div class="icerik-alani">
+  <div class="topbar">
+    <div class="topbar-baslik">Satis Tahmini</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div class="periyot-sec">
+        <button class="periyot-btn aktif" onclick="periyotDegistir('ay',this)">Aylik</button>
+        <button class="periyot-btn" onclick="periyotDegistir('ceyrek',this)">Ceyreklik</button>
+        <button class="periyot-btn" onclick="periyotDegistir('yil',this)">Yillik</button>
+      </div>
+      <button class="btn btn-mavi btn-sm" onclick="aiTahmin()">AI Tahmin</button>
+    </div>
+  </div>
+  <div class="sayfa-icerik">
+
+    <!-- KPI -->
+    <div class="kpi-grid" id="kpi-alan"></div>
+
+    <!-- GRAFIK -->
+    <div class="grafik-wrap">
+      <div class="grafik-baslik">Hedef vs Gerceklesen</div>
+      <div style="position:relative;height:280px;">
+        <canvas id="satis-grafik"></canvas>
+      </div>
+    </div>
+
+    <!-- PIPELINE TAHMINI -->
+    <div class="tablo-wrap" style="margin-bottom:16px;">
+      <div class="tablo-baslik">
+        <span class="tablo-baslik-text">Pipeline Tahmini</span>
+        <span class="tablo-baslik-sayi" id="pipeline-sayi">0 firsat</span>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="tablo">
+          <thead>
+            <tr><th>Musteri</th><th>Firsat</th><th>Tutar</th><th>Olasilik</th><th>Agirlikli Deger</th><th>Kapanis</th></tr>
+          </thead>
+          <tbody id="pipeline-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- MUSTERI BAZLI KARLILIK -->
+    <div class="tablo-wrap" style="margin-bottom:16px;">
+      <div class="tablo-baslik">
+        <span class="tablo-baslik-text">Musteri Bazli Karlilik</span>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="tablo karlilik-tablo">
+          <thead>
+            <tr><th>Musteri</th><th>Yillik Ciro</th><th>Ort. Marj</th><th>Buyume</th><th>Oneri</th></tr>
+          </thead>
+          <tbody id="karlilik-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- AI TAHMIN -->
+    <div class="kart" id="ai-tahmin-panel" style="display:none;">
+      <div class="kart-baslik">AI Satis Tahmini</div>
+      <div id="ai-tahmin-icerik" style="font-size:12px;line-height:1.6;color:var(--metin2);"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast-el"></div>
+
+<script>
+var firsatlar = [];
+var satisEmirleri = [];
+var musteriler = [];
+var aktifPeriyot = 'ay';
+var satisGrafik = null;
+
+async function apiGet(tablo, query) {
+  var url = '/.netlify/functions/airtable?table=' + encodeURIComponent(tablo);
+  if (query) url += '&' + query;
+  var r = await fetch(url);
+  return r.json();
+}
+
+function toast(mesaj, tip) {
+  var el = document.getElementById('toast-el');
+  el.textContent = mesaj;
+  el.className = 'toast toast-' + (tip || 'bilgi') + ' goster';
+  setTimeout(function() { el.classList.remove('goster'); }, 3000);
+}
+
+function formatTL(val) {
+  var n = parseFloat(val) || 0;
+  return n.toLocaleString('tr-TR', {minimumFractionDigits: 0, maximumFractionDigits: 0}) + ' TL';
+}
+
+function musteriAdi(recId) {
+  if (!recId) return '-';
+  if (Array.isArray(recId)) recId = recId[0];
+  var m = musteriler.find(function(x) { return x.id === recId; });
+  return m ? (m.fields['Müşteri Adı'] || m.fields['Ad'] || m.fields['Name'] || '-') : '-';
+}
+
+async function yukle() {
+  try {
+    var sonuclar = await Promise.all([
+      apiGet('Fırsatlar', 'pageSize=100'),
+      apiGet('Satış Emirleri', 'pageSize=100'),
+      apiGet('Müşteriler', 'pageSize=100')
+    ]);
+    firsatlar = (sonuclar[0] && sonuclar[0].records) || [];
+    satisEmirleri = (sonuclar[1] && sonuclar[1].records) || [];
+    musteriler = (sonuclar[2] && sonuclar[2].records) || [];
+  } catch(e) {
+    console.error('Veri hatasi:', e);
+    firsatlar = []; satisEmirleri = []; musteriler = [];
+  }
+  render();
+}
+
+function periyotDegistir(p, btn) {
+  aktifPeriyot = p;
+  var btns = btn.parentElement.querySelectorAll('.periyot-btn');
+  for (var i = 0; i < btns.length; i++) btns[i].classList.remove('aktif');
+  btn.classList.add('aktif');
+  render();
+}
+
+function render() {
+  renderKPI();
+  renderGrafik();
+  renderPipeline();
+  renderKarlilik();
+}
+
+function renderKPI() {
+  var toplamGerceklesen = 0;
+  var buYilCiro = 0;
+  var buYil = new Date().getFullYear();
+  satisEmirleri.forEach(function(s) {
+    var tutar = parseFloat(s.fields['Tutar'] || s.fields['Toplam Tutar'] || 0);
+    toplamGerceklesen += tutar;
+    var tarih = s.fields['Tarih'] || s.fields['Siparis Tarihi'] || s.createdTime;
+    if (tarih && new Date(tarih).getFullYear() === buYil) buYilCiro += tutar;
+  });
+  var pipelineDeger = 0;
+  var agirlikliDeger = 0;
+  firsatlar.forEach(function(f) {
+    var fl = f.fields;
+    var asama = fl['Asama'] || fl['Aşama'] || '';
+    if (asama !== 'Kazanildi' && asama !== 'Kaybedildi') {
+      var tutar = parseFloat(fl['Tutar'] || fl['Tahmini Tutar'] || 0);
+      var olasilik = parseInt(fl['Olasılık'] || fl['Olasilik'] || 0);
+      pipelineDeger += tutar;
+      agirlikliDeger += tutar * olasilik / 100;
+    }
+  });
+
+  document.getElementById('kpi-alan').innerHTML =
+    '<div class="kpi-kart"><div class="kpi-etiket">Bu Yil Ciro</div><div class="kpi-deger">' + formatTL(buYilCiro) + '</div></div>'
+    + '<div class="kpi-kart"><div class="kpi-etiket">Pipeline Degeri</div><div class="kpi-deger">' + formatTL(pipelineDeger) + '</div></div>'
+    + '<div class="kpi-kart yesil"><div class="kpi-etiket">Agirlikli Tahmin</div><div class="kpi-deger">' + formatTL(agirlikliDeger) + '</div></div>'
+    + '<div class="kpi-kart sari"><div class="kpi-etiket">Toplam Ciro</div><div class="kpi-deger">' + formatTL(toplamGerceklesen) + '</div></div>';
+}
+
+function renderGrafik() {
+  var simdi = new Date();
+  var labels = [];
+  var gerceklesen = [];
+  var hedef = [];
+
+  if (aktifPeriyot === 'ay') {
+    for (var i = 5; i >= 0; i--) {
+      var d = new Date(simdi.getFullYear(), simdi.getMonth() - i, 1);
+      var ay = d.toLocaleDateString('tr-TR', {month: 'short', year: '2-digit'});
+      labels.push(ay);
+      var ayTutar = 0;
+      satisEmirleri.forEach(function(s) {
+        var tarih = s.fields['Tarih'] || s.fields['Siparis Tarihi'] || s.createdTime;
+        if (tarih) {
+          var sd = new Date(tarih);
+          if (sd.getMonth() === d.getMonth() && sd.getFullYear() === d.getFullYear()) {
+            ayTutar += parseFloat(s.fields['Tutar'] || s.fields['Toplam Tutar'] || 0);
+          }
+        }
+      });
+      gerceklesen.push(ayTutar);
+      hedef.push(ayTutar * 1.15); // Hedef: gerceklesen + %15
+    }
+  } else if (aktifPeriyot === 'ceyrek') {
+    var buYil = simdi.getFullYear();
+    for (var q = 1; q <= 4; q++) {
+      labels.push('Q' + q + ' ' + buYil);
+      var qTutar = 0;
+      var qAylar = [(q-1)*3, (q-1)*3+1, (q-1)*3+2];
+      satisEmirleri.forEach(function(s) {
+        var tarih = s.fields['Tarih'] || s.fields['Siparis Tarihi'] || s.createdTime;
+        if (tarih) {
+          var sd = new Date(tarih);
+          if (sd.getFullYear() === buYil && qAylar.indexOf(sd.getMonth()) >= 0) {
+            qTutar += parseFloat(s.fields['Tutar'] || s.fields['Toplam Tutar'] || 0);
+          }
+        }
+      });
+      gerceklesen.push(qTutar);
+      hedef.push(qTutar * 1.15);
+    }
+  } else {
+    for (var y = simdi.getFullYear() - 2; y <= simdi.getFullYear(); y++) {
+      labels.push(String(y));
+      var yTutar = 0;
+      satisEmirleri.forEach(function(s) {
+        var tarih = s.fields['Tarih'] || s.fields['Siparis Tarihi'] || s.createdTime;
+        if (tarih && new Date(tarih).getFullYear() === y) {
+          yTutar += parseFloat(s.fields['Tutar'] || s.fields['Toplam Tutar'] || 0);
+        }
+      });
+      gerceklesen.push(yTutar);
+      hedef.push(yTutar * 1.15);
+    }
+  }
+
+  if (satisGrafik) satisGrafik.destroy();
+  var ctx = document.getElementById('satis-grafik').getContext('2d');
+  satisGrafik = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [
+        { label: 'Hedef', data: hedef, backgroundColor: '#cbd5e1', borderRadius: 4 },
+        { label: 'Gerceklesen', data: gerceklesen, backgroundColor: '#378ADD', borderRadius: 4 }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top', labels: { font: { size: 11 } } }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: function(val) {
+              if (val >= 1000000) return (val / 1000000).toFixed(1) + 'M';
+              if (val >= 1000) return (val / 1000).toFixed(0) + 'K';
+              return val;
+            },
+            font: { size: 10 }
+          }
+        },
+        x: { ticks: { font: { size: 10 } } }
+      }
+    }
+  });
+}
+
+function renderPipeline() {
+  var acik = firsatlar.filter(function(f) {
+    var a = f.fields['Asama'] || f.fields['Aşama'] || '';
+    return a !== 'Kazanildi' && a !== 'Kaybedildi';
+  });
+  document.getElementById('pipeline-sayi').textContent = acik.length + ' firsat';
+
+  if (acik.length === 0) {
+    document.getElementById('pipeline-tbody').innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--metin4);">Acik firsat yok</td></tr>';
+    return;
+  }
+
+  // Agirlikli degere gore sirala
+  acik.sort(function(a, b) {
+    var aVal = (parseFloat(a.fields['Tutar'] || a.fields['Tahmini Tutar'] || 0)) * (parseInt(a.fields['Olasılık'] || a.fields['Olasilik'] || 0)) / 100;
+    var bVal = (parseFloat(b.fields['Tutar'] || b.fields['Tahmini Tutar'] || 0)) * (parseInt(b.fields['Olasılık'] || b.fields['Olasilik'] || 0)) / 100;
+    return bVal - aVal;
+  });
+
+  var html = '';
+  acik.forEach(function(f) {
+    var fl = f.fields;
+    var tutar = parseFloat(fl['Tutar'] || fl['Tahmini Tutar'] || 0);
+    var olasilik = parseInt(fl['Olasılık'] || fl['Olasilik'] || 0);
+    var agirlikli = tutar * olasilik / 100;
+    html += '<tr>'
+      + '<td>' + musteriAdi(fl['Musteri'] || fl['Müşteri']) + '</td>'
+      + '<td style="font-weight:600;">' + (fl['Başlık'] || fl['Baslik'] || '-') + '</td>'
+      + '<td>' + formatTL(tutar) + '</td>'
+      + '<td><span class="badge ' + (olasilik >= 70 ? 'badge-yesil' : olasilik >= 40 ? 'badge-sari' : 'badge-kirmizi') + '">%' + olasilik + '</span></td>'
+      + '<td style="font-weight:600;color:var(--mavi-koyu);">' + formatTL(agirlikli) + '</td>'
+      + '<td>' + (fl['Tahmini Kapanış'] || fl['Tahmini Kapanis'] || '-') + '</td></tr>';
+  });
+  document.getElementById('pipeline-tbody').innerHTML = html;
+}
+
+function renderKarlilik() {
+  var musteriMap = {};
+  var buYil = new Date().getFullYear();
+  var gecenYil = buYil - 1;
+
+  satisEmirleri.forEach(function(s) {
+    var mId = s.fields['Musteri'] || s.fields['Müşteri'];
+    if (Array.isArray(mId)) mId = mId[0];
+    if (!mId) return;
+    if (!musteriMap[mId]) musteriMap[mId] = {buYil: 0, gecenYil: 0, toplamMarj: 0, siparisSayisi: 0};
+    var tutar = parseFloat(s.fields['Tutar'] || s.fields['Toplam Tutar'] || 0);
+    var marj = parseFloat(s.fields['Marj'] || s.fields['Kar Marji'] || 15);
+    var tarih = s.fields['Tarih'] || s.fields['Siparis Tarihi'] || s.createdTime;
+    if (tarih) {
+      var yil = new Date(tarih).getFullYear();
+      if (yil === buYil) musteriMap[mId].buYil += tutar;
+      if (yil === gecenYil) musteriMap[mId].gecenYil += tutar;
+    }
+    musteriMap[mId].toplamMarj += marj;
+    musteriMap[mId].siparisSayisi++;
+  });
+
+  var ids = Object.keys(musteriMap);
+  if (ids.length === 0) {
+    document.getElementById('karlilik-tbody').innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--metin4);">Veri yok</td></tr>';
+    return;
+  }
+
+  // Buyume sirasina gore sirala
+  ids.sort(function(a, b) { return musteriMap[b].buYil - musteriMap[a].buYil; });
+
+  var html = '';
+  ids.forEach(function(mId) {
+    var d = musteriMap[mId];
+    var ortMarj = d.siparisSayisi > 0 ? Math.round(d.toplamMarj / d.siparisSayisi) : 0;
+    var buyume = d.gecenYil > 0 ? Math.round(((d.buYil - d.gecenYil) / d.gecenYil) * 100) : (d.buYil > 0 ? 100 : 0);
+    var trendCls = buyume > 0 ? 'trend-up' : buyume < 0 ? 'trend-down' : 'trend-flat';
+    var trendIcon = buyume > 0 ? '&#9650;' : buyume < 0 ? '&#9660;' : '&#9644;';
+    var oneri = '';
+    if (buyume > 20 && d.buYil > 100000) oneri = '<span class="oneri-badge oneri-buyut">Buyut</span>';
+    else if (buyume >= 0) oneri = '<span class="oneri-badge oneri-koru">Koru</span>';
+    else if (buyume > -20) oneri = '<span class="oneri-badge oneri-dikkat">Dikkat</span>';
+    else oneri = '<span class="oneri-badge oneri-risk">Risk</span>';
+
+    html += '<tr>'
+      + '<td style="font-weight:600;">' + musteriAdi(mId) + '</td>'
+      + '<td>' + formatTL(d.buYil) + '</td>'
+      + '<td>%' + ortMarj + '</td>'
+      + '<td><span class="' + trendCls + '">' + trendIcon + ' %' + Math.abs(buyume) + '</span></td>'
+      + '<td>' + oneri + '</td></tr>';
+  });
+  document.getElementById('karlilik-tbody').innerHTML = html;
+}
+
+async function aiTahmin() {
+  toast('AI tahmin hazirlaniyor...', 'bilgi');
+  var pipelineOzet = '';
+  var acik = firsatlar.filter(function(f) {
+    var a = f.fields['Asama'] || f.fields['Aşama'] || '';
+    return a !== 'Kazanildi' && a !== 'Kaybedildi';
+  });
+  acik.forEach(function(f) {
+    var fl = f.fields;
+    pipelineOzet += musteriAdi(fl['Musteri'] || fl['Müşteri']) + ': '
+      + formatTL(fl['Tutar'] || fl['Tahmini Tutar'] || 0) + ' (%' + (fl['Olasılık'] || fl['Olasilik'] || 0) + ')\n';
+  });
+
+  var toplamCiro = 0;
+  satisEmirleri.forEach(function(s) { toplamCiro += parseFloat(s.fields['Tutar'] || s.fields['Toplam Tutar'] || 0); });
+
+  var prompt = 'CNC imalat firmasi satis tahmini:\n'
+    + 'Toplam gecmis ciro: ' + formatTL(toplamCiro) + '\n'
+    + 'Acik pipeline:\n' + (pipelineOzet || 'Yok') + '\n'
+    + 'Musteri sayisi: ' + musteriler.length + '\n\n'
+    + 'Onumuzdeki 3 ay icin satis tahmini yap, riskleri ve firsatlari belirt. 5 madde halinde yaz.';
+
+  try {
+    var r = await fetch('/.netlify/functions/claude', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({prompt: prompt, max_tokens: 600})
+    });
+    var d = await r.json();
+    var yanit = (d.content && d.content[0] && d.content[0].text) || d.text || 'Yanit alinamadi';
+    document.getElementById('ai-tahmin-icerik').innerHTML = '<pre style="white-space:pre-wrap;font-family:inherit;">' + yanit + '</pre>';
+    document.getElementById('ai-tahmin-panel').style.display = 'block';
+  } catch(e) { toast('AI hatasi: ' + e.message, 'hata'); }
+}
+
+document.addEventListener('DOMContentLoaded', function() { yukle(); });
+</script>
+</body>
+</html>
