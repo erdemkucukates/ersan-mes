@@ -1107,6 +1107,7 @@ function stlOlcuStr(s) {
 async function saveSTL() {
   try {
     var count = 0;
+    var hatalar = [];
     for (var ki=0; ki<window._stlKalemler.length; ki++) {
       var kalem = window._stlKalemler[ki];
       for (var ri=0; ri<kalem.rows.length; ri++) {
@@ -1115,9 +1116,9 @@ async function saveSTL() {
         var bugun = new Date().toISOString().split('T')[0];
         var acl = s.aciliyet || 'Normal';
         var ihtiyacT = acl === 'Normal' ? new Date(Date.now()+7*86400000).toISOString().split('T')[0] : bugun;
-        await fetch('/.netlify/functions/airtable',{
+        var res = await fetch('/.netlify/functions/airtable',{
           method:'POST',headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({method:'POST',path:'/v0/'+BASE+'/'+encodeURIComponent('Satınalma Talepleri'),body:{fields:{
+          body:JSON.stringify({method:'POST',path:'/v0/'+BASE+'/tblHmfCvNZq0qNtb1',body:{fields:{
             'Talep No': window._stlPrNo || '',
             'SE No': [kalem.seId],
             'Kalem Adı': kalem.parcaAdi,
@@ -1134,13 +1135,26 @@ async function saveSTL() {
             'Talep Tarihi': bugun
           }}})
         });
-        count++;
+        var data = await res.json();
+        if (data.error) {
+          console.error('STL kayit hatasi:', JSON.stringify(data.error));
+          hatalar.push(kalem.parcaAdi + ': ' + (data.error.message || JSON.stringify(data.error)));
+        } else {
+          count++;
+        }
       }
     }
     document.getElementById('stl-modal').remove();
-    toast(count+' satinalma talebi olusturuldu');
+    if (hatalar.length > 0) {
+      toast('Hata: ' + hatalar[0], 'err');
+      console.error('Tum hatalar:', hatalar);
+    } else {
+      toast(count+' satinalma talebi olusturuldu');
+    }
+    // Detay panelini yenile
+    if (window._currentGroup) selectGroup(window._currentGroup.spNo);
     logIslem('Oluşturuldu', 'Satınalma', null, window._currentGroup?.spNo, null, {adet:count});
-  } catch(e) { toast('Hata: '+e.message); }
+  } catch(e) { toast('Hata: '+e.message, 'err'); console.error('saveSTL exception:', e); }
 }
 
 // ── IS EMRI MODAL ──
