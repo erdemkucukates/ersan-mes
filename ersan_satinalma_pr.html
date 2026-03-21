@@ -123,7 +123,7 @@
     <div style="background:var(--beyaz);border:1px solid var(--border);border-radius:0 0 8px 8px;overflow:hidden;">
       <div style="padding:8px 14px;border-bottom:1px solid var(--border);background:var(--bg2);display:flex;align-items:center;justify-content:space-between"><span style="font-size:12px;color:var(--metin4)"><b id="liste-count">0</b> kayit</span></div>
       <div style="overflow-x:auto">
-        <table class="pr-tablo"><thead><tr><th style="width:120px">PR No</th><th>Aciklama / Kategori</th><th>Tip</th><th>Is Emri</th><th>Aciliyet</th><th>Ihtiyac Tarihi</th><th style="width:80px"></th></tr></thead><tbody id="pr-tbody"></tbody></table>
+        <table class="pr-tablo"><thead><tr><th style="width:120px">PR No</th><th style="width:120px">Siparis Kalemi</th><th>Aciklama / Kategori</th><th>Tip</th><th>Is Emri</th><th>Aciliyet</th><th>Ihtiyac Tarihi</th><th style="width:80px"></th></tr></thead><tbody id="pr-tbody"></tbody></table>
       </div>
     </div>
     <!-- Footer -->
@@ -171,7 +171,7 @@ async function veriYukle() {
     tedarikciler = tdData.records || [];
     kpiGuncelle(); listeyiUygula();
     if (woParam) { await modalAc(); var w = document.getElementById('f-wo-no'); if(w){w.value=woParam;w.style.background='#f0fdf4';w.style.color='#166534';} }
-  } catch(e) { var prTbody = document.getElementById('pr-tbody'); if(prTbody) prTbody.innerHTML = '<tr><td colspan="7" style="padding:16px;color:var(--kirmizi);font-size:12px;">Hata: '+e.message+'</td></tr>'; }
+  } catch(e) { var prTbody = document.getElementById('pr-tbody'); if(prTbody) prTbody.innerHTML = '<tr><td colspan="8" style="padding:16px;color:var(--kirmizi);font-size:12px;">Hata: '+e.message+'</td></tr>'; }
 }
 
 function kpiGuncelle() {
@@ -210,7 +210,7 @@ function tabloRender(liste) {
   var lcEl = document.getElementById('liste-count'); if(lcEl) lcEl.textContent = liste.length;
 
   if(!liste.length){
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--metin4);font-size:13px;">Kayit bulunamadi</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--metin4);font-size:13px;">Kayit bulunamadi</td></tr>';
     return;
   }
 
@@ -224,19 +224,28 @@ function tabloRender(liste) {
 
   tbody.innerHTML = sirali.map(function(r){
     var f = r.fields;
-    var prNo = f['Talep No']||r.id.substring(0,8);
+    var prNo = f['Talep No'] || '-';
     var tip = f['PR Tipi']||f['Talep Tipi']||'-';
     var wo = f['Is Emri No']||'-';
     var acil = f['Aciliyet']||'Normal';
     var tarih = trTarih(f['Ihtiyac Tarihi']);
     var kat = f['Kategori']||f['Kalem Ad\u0131']||'-';
     var acikl = tip==='Genel Alim'?kat:(f['Kalem Ad\u0131']||kat);
+    // Siparis kalem kodu: SE No linked field'dan cek
+    var seNolar = f['SE No'] || [];
+    var seKalemKodu = '-';
+    if (seNolar.length > 0) {
+      // SE No linked record ID — siparisler listesinden SE No'yu bul
+      var seRec = siparisler.find(function(s){ return s.id === seNolar[0]; });
+      seKalemKodu = seRec ? (seRec.fields['SE No'] || '-') : '-';
+    }
     var pc = acil==='Kritik'?'p-k':acil==='Y\u00FCksek'||acil==='Yuksek'?'p-y':'';
     var brd = acil==='Kritik'?'brd-k':acil==='Y\u00FCksek'||acil==='Yuksek'?'brd-y':'brd-n';
     var acilCls = acil==='Kritik'?'badge-kirmizi':acil==='Y\u00FCksek'||acil==='Yuksek'?'badge-sari':'badge-gri';
     var isSel = seciliPR === r.id;
     return '<tr class="'+pc+(isSel?' sel-row':'')+'" onclick="prSatirSec(\''+r.id+'\')" style="cursor:pointer">'+
       '<td class="'+brd+'"><span style="font-family:monospace;font-size:11px;font-weight:600;color:var(--mavi-koyu)">'+escH(prNo)+'</span></td>'+
+      '<td style="font-family:monospace;font-size:11px;color:var(--metin3)">'+escH(seKalemKodu)+'</td>'+
       '<td>'+escH(acikl)+'</td>'+
       '<td style="color:var(--metin3)">'+escH(tip)+'</td>'+
       '<td style="font-family:monospace;font-size:11px;color:var(--metin3)">'+escH(wo)+'</td>'+
