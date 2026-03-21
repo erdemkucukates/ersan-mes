@@ -32,6 +32,13 @@
     <div class="list-search">
       <input type="text" placeholder="Teklif no veya müşteri ara..." id="search-input" oninput="filterList()">
     </div>
+    <div style="padding:2px 12px;display:flex;align-items:center;gap:6px;">
+      <label style="font-size:10px;color:var(--text3);display:flex;align-items:center;gap:4px;cursor:pointer;">
+        <input type="checkbox" id="chk-aktif-versiyon" checked onchange="sadeceAktifVersiyon=this.checked;filterList();" style="cursor:pointer;width:13px;height:13px;">
+        Sadece Aktif Versiyonlar
+      </label>
+    </div>
+    <div id="gecerlilik-banner" style="display:none;margin:4px 12px;padding:6px 10px;background:#fef3c7;border:1px solid #fcd34d;border-radius:6px;font-size:11px;color:#92400e;"></div>
     <div class="list-scroll" id="quote-list">
       <div class="loading"><div class="spinner"></div> Yükleniyor...</div>
     </div>
@@ -116,7 +123,9 @@ const statusColors = {
   'Gönderildi': 'status-Gönderildi',
   'Onaylandı': 'status-Onaylandı',
   'Reddedildi': 'status-Reddedildi',
+  'Revize Edildi': 'status-Reddedildi',
 };
+let sadeceAktifVersiyon = true; // Varsayılan: Revize Edildi olanları gizle
 
 function toast(msg, type='success') {
   const el = document.createElement('div');
@@ -178,33 +187,89 @@ async function loadAll() {
 // ── RENDER LIST ──
 function renderList() {
   const el = document.getElementById('quote-list');
-  document.getElementById('list-count').textContent = `${filteredQuotes.length} teklif`;
 
-  if (!filteredQuotes.length) {
+  // Aktif versiyon filtresi
+  var gosterilecek = filteredQuotes;
+  if (sadeceAktifVersiyon) {
+    gosterilecek = filteredQuotes.filter(function(q) { return q.fields['Durum'] !== 'Revize Edildi'; });
+  }
+
+  document.getElementById('list-count').textContent = gosterilecek.length + ' teklif';
+
+  // Geçerlilik uyarısı banner
+  var bugun = new Date(); bugun.setHours(0,0,0,0);
+  var yakinlar = quotes.filter(function(q) {
+    var d = q.fields['Durum'];
+    if (d === 'Reddedildi' || d === 'Revize Edildi' || d === 'Onaylandı') return false;
+    var gt = q.fields['Geçerlilik Tarihi'];
+    if (!gt) return false;
+    var diff = Math.floor((new Date(gt) - bugun) / 86400000);
+    return diff >= 0 && diff <= 3;
+  });
+  var banner = document.getElementById('gecerlilik-banner');
+  if (banner) {
+    if (yakinlar.length > 0) {
+      banner.style.display = 'block';
+      banner.innerHTML = '&#9888; ' + yakinlar.length + ' teklif ' + (yakinlar.length === 1 ? '' : '') + '3 gun icinde gecerliligi doluyor!';
+    } else {
+      banner.style.display = 'none';
+    }
+  }
+
+  if (!gosterilecek.length) {
     el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:12px;">Teklif bulunamadı</div>';
     return;
   }
 
-  el.innerHTML = filteredQuotes.map(q => {
-    const f = q.fields;
-    const no = f['Teklif No'] || '—';
-    const musteri = f['Müşteri']?.[0] ? getMusteriName(f['Müşteri'][0]) : '—';
-    const durum = f['Durum'] || 'Taslak';
-    const tarih = fmtDate(f['Teklif Tarihi']);
-    const tutar = f['Toplam Tutar'] ? fmt(f['Toplam Tutar']) + ' ' + (f['Para Birimi']||'TL') : '—';
-    const active = q.id === activeId ? ' secili' : '';
+  el.innerHTML = gosterilecek.map(function(q) {
+    var f = q.fields;
+    var no = f['Teklif No'] || '—';
+    var musteri = f['Müşteri']?.[0] ? getMusteriName(f['Müşteri'][0]) : '—';
+    var durum = f['Durum'] || 'Taslak';
+    var tarih = fmtDate(f['Teklif Tarihi']);
+    var tutar = f['Toplam Tutar'] ? fmt(f['Toplam Tutar']) + ' ' + (f['Para Birimi']||'TL') : '—';
+    var active = q.id === activeId ? ' secili' : '';
 
-    return `<div class="liste-satir${active}" onclick="loadDetail('${q.id}')">
-      <div class="qi-top">
-        <span class="qi-no">${no}</span>
-        <span class="qi-status ${statusColors[durum]||'status-Taslak'}">${durum}</span>
-      </div>
-      <div class="qi-musteri">${musteri}</div>
-      <div class="qi-bottom">
-        <span class="qi-tarih">${tarih}</span>
-        <span class="qi-tutar">${tutar}</span>
-      </div>
-    </div>`;
+    // Revizyon badge
+    var revBadge = '';
+    var rev = parseInt(f['Revizyon']) || 0;
+    if (rev > 1 && f['Ana Teklif No']) {
+      revBadge = ' <span style="background:#ede9fe;color:#7c3aed;font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;">R' + rev + '</span>';
+    }
+
+    // Opacity for revised
+    var rowStyle = durum === 'Revize Edildi' ? ' style="opacity:0.5;"' : '';
+
+    // Geçerlilik uyarısı
+    var gecerlilikBadge = '';
+    if (f['Geçerlilik Tarihi'] && durum !== 'Reddedildi' && durum !== 'Revize Edildi' && durum !== 'Onaylandı') {
+      var gt = new Date(f['Geçerlilik Tarihi']);
+      var diff = Math.floor((gt - bugun) / 86400000);
+      if (diff < 0) {
+        gecerlilikBadge = ' <span style="background:#fee2e2;color:#dc2626;font-size:9px;font-weight:600;padding:1px 5px;border-radius:4px;">Suresi Gecmis</span>';
+      } else if (diff <= 3) {
+        gecerlilikBadge = ' <span style="color:#d97706;font-size:10px;" title="' + (diff+1) + ' gun kaldi">&#9888;</span>';
+      }
+    }
+    var tarihStyle = '';
+    if (f['Geçerlilik Tarihi'] && durum !== 'Reddedildi' && durum !== 'Revize Edildi' && durum !== 'Onaylandı') {
+      var gt2 = new Date(f['Geçerlilik Tarihi']);
+      var diff2 = Math.floor((gt2 - bugun) / 86400000);
+      if (diff2 < 0) tarihStyle = 'color:#dc2626;font-weight:600;';
+      else if (diff2 <= 3) tarihStyle = 'color:#d97706;font-weight:600;';
+    }
+
+    return '<div class="liste-satir' + active + '"' + rowStyle + ' onclick="loadDetail(\'' + q.id + '\')">' +
+      '<div class="qi-top">' +
+        '<span class="qi-no">' + no + revBadge + '</span>' +
+        '<span class="qi-status ' + (statusColors[durum]||'status-Taslak') + '">' + durum + '</span>' +
+      '</div>' +
+      '<div class="qi-musteri">' + musteri + '</div>' +
+      '<div class="qi-bottom">' +
+        '<span class="qi-tarih" style="' + tarihStyle + '">' + tarih + gecerlilikBadge + '</span>' +
+        '<span class="qi-tutar">' + tutar + '</span>' +
+      '</div>' +
+    '</div>';
   }).join('');
 }
 
@@ -422,6 +487,7 @@ function renderDetail(q) {
                 <option ${durum==='Gönderildi'?'selected':''}>Gönderildi</option>
                 <option ${durum==='Onaylandı'?'selected':''}>Onaylandı</option>
                 <option ${durum==='Reddedildi'?'selected':''}>Reddedildi</option>
+                <option ${durum==='Revize Edildi'?'selected':''}>Revize Edildi</option>
               </select>
             </div>
             <div class="field-group">
@@ -485,6 +551,9 @@ function renderDetail(q) {
         </div>
       </div>
 
+      <!-- Revizyon Geçmişi -->
+      <div id="revizyon-gecmisi-card" style="display:none;"></div>
+
     </div><!-- end scroll -->
 
     <!-- DURUM BUTTONS -->
@@ -492,17 +561,76 @@ function renderDetail(q) {
       <span class="durum-label">Teklif Durumu:</span>
       <span class="qi-status ${statusColors[durum]}" style="font-size:12px;">${durum}</span>
       <span style="flex:1"></span>
-      <button class="toolbar-btn warn" onclick="setDurum('${q.id}','Taslak')">↩ Revize Et</button>
+      <button class="toolbar-btn warn" onclick="revizeEt('${q.id}')">↩ Revize Et</button>
       <button class="toolbar-btn success" onclick="setDurum('${q.id}','Onaylandı')">✓ Onaylandı</button>
       <button class="toolbar-btn danger" onclick="setDurum('${q.id}','Reddedildi')">✕ Reddedildi</button>
       <button class="toolbar-btn" onclick="setDurum('${q.id}','Gönderildi')">
         <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 6.5h9M7.5 3l4 3.5-4 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
         Gönderildi
       </button>
+      ${durum === 'Onaylandı' ? `<button class="toolbar-btn" id="btn-hatirlatma-${q.id}" onclick="musteriyeHatirlatma('${q.id}')" style="background:#0ea5e9;color:white;border-color:#0ea5e9;">
+        &#x1F4E7; Musteriye Hatirlatma Gonder
+      </button>` : ''}
     </div>`}
   `;
 
   renderItems();
+  renderRevizyonGecmisi(q);
+}
+
+// ── RENDER REVIZYON GECMISİ ──
+function renderRevizyonGecmisi(q) {
+  var card = document.getElementById('revizyon-gecmisi-card');
+  if (!card) return;
+  var f = q.fields;
+  var anaTeklifNo = f['Ana Teklif No'] || f['Teklif No'] || '';
+  if (!anaTeklifNo) { card.style.display = 'none'; return; }
+
+  // Find all records with same Ana Teklif No
+  var ilgili = quotes.filter(function(r) {
+    return (r.fields['Ana Teklif No'] || r.fields['Teklif No']) === anaTeklifNo;
+  });
+
+  // Only show if there are multiple revisions
+  if (ilgili.length <= 1) { card.style.display = 'none'; return; }
+
+  // Sort by revision number
+  ilgili.sort(function(a, b) {
+    return (parseInt(a.fields['Revizyon']) || 1) - (parseInt(b.fields['Revizyon']) || 1);
+  });
+
+  var html = '<div class="card"><div class="card-header">' +
+    '<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1v5.5H11" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><circle cx="6.5" cy="6.5" r="5.5" stroke="currentColor" stroke-width="1.3"/></svg> ' +
+    'Revizyon Gecmisi (' + ilgili.length + ' versiyon)</div><div class="card-body">' +
+    '<table style="width:100%;border-collapse:collapse;font-size:12px;">' +
+    '<thead><tr style="background:var(--surface2);">' +
+    '<th style="padding:6px 10px;text-align:left;font-size:10px;font-weight:600;color:var(--text3);">Rev</th>' +
+    '<th style="padding:6px 10px;text-align:left;font-size:10px;font-weight:600;color:var(--text3);">Teklif No</th>' +
+    '<th style="padding:6px 10px;text-align:left;font-size:10px;font-weight:600;color:var(--text3);">Tarih</th>' +
+    '<th style="padding:6px 10px;text-align:left;font-size:10px;font-weight:600;color:var(--text3);">Durum</th>' +
+    '<th style="padding:6px 10px;text-align:center;font-size:10px;font-weight:600;color:var(--text3);"></th>' +
+    '</tr></thead><tbody>';
+
+  ilgili.forEach(function(r) {
+    var rf = r.fields;
+    var rev = parseInt(rf['Revizyon']) || 1;
+    var isCurrent = r.id === q.id;
+    var rowBg = isCurrent ? 'background:#ede9fe;' : '';
+    var durum = rf['Durum'] || 'Taslak';
+    html += '<tr style="border-top:1px solid var(--border);' + rowBg + '">' +
+      '<td style="padding:8px 10px;font-weight:700;">R' + rev + (isCurrent ? ' &#9668;' : '') + '</td>' +
+      '<td style="padding:8px 10px;font-family:var(--mono);font-size:11px;">' + (rf['Teklif No']||'—') + '</td>' +
+      '<td style="padding:8px 10px;">' + fmtDate(rf['Teklif Tarihi']) + '</td>' +
+      '<td style="padding:8px 10px;"><span class="qi-status ' + (statusColors[durum]||'status-Taslak') + '" style="font-size:11px;">' + durum + '</span></td>' +
+      '<td style="padding:8px 10px;text-align:center;">' +
+        (isCurrent ? '<span style="font-size:10px;color:var(--text3);">Mevcut</span>' :
+         '<button class="toolbar-btn" style="padding:3px 10px;font-size:10px;" onclick="loadDetail(\'' + r.id + '\')">Goruntule</button>') +
+      '</td></tr>';
+  });
+
+  html += '</tbody></table></div></div>';
+  card.innerHTML = html;
+  card.style.display = 'block';
 }
 
 // ── RENDER ITEMS ──
@@ -1833,6 +1961,107 @@ function loadScript(src) {
     s.src = src; s.onload = res; s.onerror = rej;
     document.head.appendChild(s);
   });
+}
+
+// ── REVİZE ET ──
+function revizeEt(teklifId) {
+  var rec = null;
+  for (var i = 0; i < quotes.length; i++) {
+    if (quotes[i].id === teklifId) { rec = quotes[i]; break; }
+  }
+  if (!rec) return;
+  var f = rec.fields;
+  var teklifNo = f['Teklif No'] || '';
+
+  if (!confirm(teklifNo + ' revize edilsin mi? Yeni versiyon olusturulacak.')) return;
+
+  var mevcutRev = parseInt(f['Revizyon']) || 1;
+  var anaTeklifNo = f['Ana Teklif No'] || teklifNo;
+  var yeniRevNo = mevcutRev + 1;
+
+  // Teklif No formula olduğu için yazmıyoruz — sadece Revizyon ve Ana Teklif No yazılır
+  var yeniFields = {};
+  var kopyaAlanlar = ['Müşteri', 'Para Birimi', 'Vade Süresi (Gün)', 'Teklif Notu', 'Dosya No', 'Hazırlayan'];
+  for (var k = 0; k < kopyaAlanlar.length; k++) {
+    if (f[kopyaAlanlar[k]] !== undefined) yeniFields[kopyaAlanlar[k]] = f[kopyaAlanlar[k]];
+  }
+  yeniFields['Ana Teklif No'] = anaTeklifNo;
+  yeniFields['Revizyon'] = yeniRevNo;
+  yeniFields['Durum'] = 'Taslak';
+  yeniFields['Teklif Tarihi'] = new Date().toISOString().split('T')[0];
+
+  // Geçerlilik: +7 gün
+  var gecDate = new Date();
+  gecDate.setDate(gecDate.getDate() + 7);
+  yeniFields['Geçerlilik Tarihi'] = gecDate.toISOString().split('T')[0];
+
+  // POST new teklif, then PATCH old as Revize Edildi
+  api('POST', TABLES.teklifler, {fields: yeniFields}).then(function(newRec) {
+    var newId = newRec.id;
+
+    // Copy kalemler to new teklif
+    var kalemPromises = currentItems.map(function(item) {
+      var kFields = {
+        'Stok Kodu': item.stokKodu || null,
+        'Malzeme No': item.malzemeNo || null,
+        'Parça Adı': item.parcaAdi || '',
+        'Miktar': item.miktar || 0,
+        'Birim': item.birim || 'Adet',
+        'Birim Fiyat': item.birimFiyat || 0,
+        'İskonto': item.iskonto || 0,
+        'Notlar': item.aciklama || null,
+        'Teklifler': [newId],
+      };
+      if (item.teslim && !isNaN(parseInt(item.teslim))) {
+        kFields['Teklif Süresi (Gün)'] = parseInt(item.teslim);
+      }
+      return api('POST', TABLES.kalemler, {fields: kFields});
+    });
+
+    return Promise.all(kalemPromises).then(function() {
+      // Also set Ana Teklif No on old record if it didn't have one
+      var patchFields = { 'Durum': 'Revize Edildi' };
+      if (!f['Ana Teklif No']) patchFields['Ana Teklif No'] = anaTeklifNo;
+      return api('PATCH', TABLES.teklifler, {fields: patchFields}, teklifId);
+    }).then(function() {
+      toast(teklifNo + ' revize edildi — R' + yeniRevNo + ' olusturuldu');
+      if (typeof logIslem === 'function') logIslem('TEKLIF_REVIZE', teklifNo + ' → R' + yeniRevNo);
+      return loadAll();
+    }).then(function() {
+      activeId = newId;
+      return loadDetail(newId);
+    });
+  }).catch(function(e) { toast('Hata: ' + e.message, 'error'); });
+}
+
+// ── MÜŞTERİYE HATIRLATMA ──
+function musteriyeHatirlatma(teklifId) {
+  var rec = quotes.find(function(r) { return r.id === teklifId; });
+  if (!rec) return;
+  var f = rec.fields;
+
+  if (!confirm('Musteriye hatirlatma gonderilsin mi?')) return;
+
+  // Set Hatirlatma Gond field
+  api('PATCH', TABLES.teklifler, {fields: {'Hatirlatma Gond': true}}, teklifId).then(function() {
+    var btn = document.getElementById('btn-hatirlatma-' + teklifId);
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '&#10003; Gonderildi';
+      btn.style.background = '#6b7280';
+      btn.style.borderColor = '#6b7280';
+    }
+    toast('Hatirlatma gonderildi — ' + (f['Teklif No']||''));
+    if (typeof logIslem === 'function') logIslem('HATIRLATMA', f['Teklif No']||'', null, null, null, {teklifId: teklifId});
+  }).catch(function(e) { toast('Hata: ' + e.message, 'error'); });
+}
+
+// ── API POST/PATCH HELPERS (shorthand) ──
+function apiPost(table, fields) {
+  return api('POST', table, {fields: fields});
+}
+function apiPatch(table, id, fields) {
+  return api('PATCH', table, {fields: fields}, id);
 }
 
 // ── INIT ──

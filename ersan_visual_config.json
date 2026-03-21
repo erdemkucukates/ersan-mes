@@ -79,6 +79,24 @@
       "canliUrl": "/ersan_satinalma_grn.html",
       "viewport": { "width": 1280, "height": 900 },
       "bekle": ".grn-tbl"
+    },
+    {
+      "id": "musteriler",
+      "canliUrl": "/ersan_musteriler.html",
+      "viewport": { "width": 1280, "height": 900 },
+      "bekle": ".td-grid"
+    },
+    {
+      "id": "sevkiyat",
+      "canliUrl": "/ersan_sevkiyat.html",
+      "viewport": { "width": 1280, "height": 900 },
+      "bekle": ".two-col"
+    },
+    {
+      "id": "teklif",
+      "canliUrl": "/ersan_teklif.html",
+      "viewport": { "width": 1280, "height": 900 },
+      "bekle": "#teklif-liste"
     }
   ]
 }

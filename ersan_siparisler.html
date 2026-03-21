@@ -141,6 +141,87 @@
 .pill-tam { background: var(--yesil-bg); color: var(--yesil-t); }
 .pill-ips { background: var(--kirmizi-bg); color: var(--kirmizi-t); }
 .pill-ksv { background: var(--sari-bg); color: var(--sari-t); }
+.po-chip {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 600;
+  background: #ede9fe;
+  color: #6d28d9;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.musteri-po-alani {
+  padding: 6px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  background: var(--bg2);
+}
+.musteri-po-alani label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--metin3);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+.musteri-po-alani input {
+  flex: 1;
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  font-size: 12px;
+  font-family: 'Courier New', monospace;
+  color: var(--metin2);
+  background: var(--beyaz);
+  max-width: 240px;
+}
+.musteri-po-alani input:focus {
+  outline: none;
+  border-color: var(--mavi);
+}
+.musteri-po-alani .po-hint {
+  font-size: 10px;
+  color: var(--metin4);
+  font-style: italic;
+}
+.sevkiyat-bilgi {
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--border);
+  background: #f0fdf4;
+  flex-shrink: 0;
+}
+.sevkiyat-bilgi-baslik {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--metin3);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-bottom: 4px;
+}
+.sevkiyat-bilgi-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr) auto;
+  gap: 6px;
+  align-items: center;
+}
+.sevkiyat-bilgi-grid label {
+  font-size: 10px;
+  color: var(--metin3);
+  display: block;
+}
+.sevkiyat-bilgi-grid .v {
+  font-size: 12px;
+  color: var(--metin2);
+  font-weight: 500;
+}
 
 /* Sağ panel */
 .sp-sag {
@@ -476,7 +557,7 @@
       <span class="sp-sayi" id="sb-count">yukleniyor...</span>
     </div>
     <div class="sp-arama">
-      <input id="search" placeholder="SE no veya parca ara..." oninput="filterList()">
+      <input id="search" placeholder="SE no, parca veya PO no ara..." oninput="filterList()">
     </div>
     <div class="sp-filtreler">
       <button class="sp-ft on" onclick="setFilter(this,'Tumu')">Tumu</button>
@@ -502,6 +583,7 @@ var BASE = 'app5LDgJMgocw79Ix';
 var TABLES = { se: 'tbl56Oj1nPaqefI60', ie: 'tbl58qL39I2tv8hK4' };
 
 var records = [], currentFilter = 'Tumu', selectedSP = null, selectedKalemIdx = null;
+var musteriPoMap = JSON.parse(localStorage.getItem('musteriPoMap') || '{}');
 var pdfDoc = null, pdfZoom = 1.2, pdfRotation = 0, pdfCurrentUrl = null;
 var pdfRotationCache = JSON.parse(sessionStorage.getItem('pdfRotationCache') || '{}');
 var YOGUNLUK = {'Celik':7.85,'Paslanmaz':7.93,'Aluminyum':2.70,'Titanyum':4.51,'Bronz':8.89,'Pirinc':8.50,'Bakir':8.96};
@@ -589,6 +671,7 @@ async function loadList() {
       pageOffset = d.offset || '';
     } while (pageOffset);
     records = all;
+    syncMusteriPoFromRecords();
     filterList();
     var params = new URLSearchParams(window.location.search);
     var hedefSP = params.get('sp');
@@ -615,7 +698,8 @@ function filterList() {
     var f = r.fields;
     var durum = f['Durum']||'Beklemede';
     var mf = currentFilter==='Tumu' || durum===currentFilter || durum===({'Uretimde':'Üretimde','Tamamlandi':'Tamamlandı'}[currentFilter]||currentFilter);
-    var mq = !q || (f['SE No']||'').toLowerCase().includes(q) || (f['Parça Adı']||'').toLowerCase().includes(q) || (f['Parça No']||'').toLowerCase().includes(q);
+    var poNo = musteriPoMap[spParent(f['SE No']||r.id)] || '';
+    var mq = !q || (f['SE No']||'').toLowerCase().includes(q) || (f['Parça Adı']||'').toLowerCase().includes(q) || (f['Parça No']||'').toLowerCase().includes(q) || poNo.toLowerCase().includes(q);
     return mf && mq;
   });
 
@@ -636,6 +720,7 @@ function filterList() {
       '<span class="pill '+pillClass(g.durum)+'">'+g.durum+'</span>'+
       '</div>'+
       '<div class="sp-item-ad">'+g.parcalar.slice(0,2).join(', ').substring(0,45)+'</div>'+
+      (musteriPoMap[g.spNo] ? '<div class="po-chip">MUSTERI PO: '+musteriPoMap[g.spNo]+'</div>' : '')+
       '</div>';
   }).join('');
 }
@@ -653,6 +738,9 @@ function selectGroup(spNo) {
 function renderMain(g) {
   var main = document.getElementById('main');
   var firstDurum = g.durum;
+  var isSevkReady = (firstDurum === 'Tamamlandı' || firstDurum === 'Tamamlandi' || firstDurum === 'Kısmi Sevk' || firstDurum === 'Kismi Sevk');
+  var currentPO = musteriPoMap[g.spNo] || '';
+  var sevkBilgi = sevkiyatBilgiMap[g.spNo] || null;
 
   main.innerHTML =
     '<div class="sp-ust-bar">'+
@@ -662,11 +750,26 @@ function renderMain(g) {
     '<div class="sp-ust-sag">'+
     '<button class="sp-btn sp-btn-sari" id="stl-btn">Satinalma Talebi</button>'+
     '<button class="sp-btn sp-btn-mavi" id="ie-btn">Is Emri Ac</button>'+
+    (isSevkReady ? '<button class="sp-btn" id="sevk-btn" style="background:var(--yesil);color:#fff;border-color:var(--yesil);">&#x1F69A; Sevkiyat Olustur</button>' : '')+
     '<select id="durum-sel" style="padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;" onchange="updateAllDurum(this.value)">'+
     ['Beklemede','Üretimde','Tamamlandı','Kısmi Sevk','İptal'].map(function(d){ return '<option'+(d===firstDurum?' selected':'')+'>'+d+'</option>'; }).join('')+
     '</select>'+
     '<button class="sp-btn sp-btn-kirmizi" id="del-btn">Sil</button>'+
     '</div></div>'+
+    '<div class="musteri-po-alani">'+
+    '<label>Musteri PO No</label>'+
+    '<input id="musteri-po-input" value="'+currentPO.replace(/"/g,'&quot;')+'" placeholder="Musterinin kendi siparis numarasi..." onchange="saveMusteriPO(\''+g.spNo+'\',this.value)">'+
+    '<span class="po-hint">Irsaliye ve faturada gorunecek</span>'+
+    '</div>'+
+    (sevkBilgi ?
+    '<div class="sevkiyat-bilgi">'+
+    '<div class="sevkiyat-bilgi-baslik">Sevkiyat Bilgileri</div>'+
+    '<div class="sevkiyat-bilgi-grid">'+
+    '<div><label>Sevkiyat No</label><div class="v" style="font-family:monospace">'+sevkBilgi.no+'</div></div>'+
+    '<div><label>Sevk Tarihi</label><div class="v">'+sevkBilgi.tarih+'</div></div>'+
+    '<div><label>Durum</label><div class="v"><span class="pill pill-ure" style="font-size:10px;">&#x1F69A; '+sevkBilgi.durum+'</span></div></div>'+
+    '<div><a href="ersan_sevkiyat.html?sp='+g.spNo+'" class="sp-btn sp-btn-mavi" style="font-size:10px;">Sevkiyat Detayi &rarr;</a></div>'+
+    '</div></div>' : '')+
     '<div class="sp-govde">'+
     '<div class="kalem-baslik"><span>Kalem</span><span>Parca adi</span><span>Parca no</span><span>Rev</span><span>Miktar</span><span>Termin</span><span>Teknik resim</span></div>'+
     '<div class="kalem-liste" id="kalem-list"></div>'+
@@ -702,6 +805,8 @@ function renderMain(g) {
     if (ieBtn) ieBtn.onclick = function() { openIEModal(g); };
     var delBtn = document.getElementById('del-btn');
     if (delBtn) delBtn.onclick = function() { deleteGroup(g.spNo); };
+    var sevkBtn = document.getElementById('sevk-btn');
+    if (sevkBtn) sevkBtn.onclick = function() { sevkiyatOlustur(g.spNo); };
   }, 0);
 }
 
@@ -1270,6 +1375,48 @@ async function saveIE(g) {
     toast('Hata: ' + e.message);
     if (btn) { btn.disabled = false; btn.textContent = 'Is Emirlerini Olustur'; }
   }
+}
+
+// ── MUSTERI PO NO ──
+var sevkiyatBilgiMap = {};
+
+function saveMusteriPO(spNo, val) {
+  val = (val || '').trim();
+  if (val) {
+    musteriPoMap[spNo] = val;
+  } else {
+    delete musteriPoMap[spNo];
+  }
+  localStorage.setItem('musteriPoMap', JSON.stringify(musteriPoMap));
+  // Also save to each kalem in Airtable
+  var g = window._currentGroup;
+  if (g) {
+    g.kalemler.forEach(function(r) {
+      apiPatch('Satış Emirleri', r.id, {'Müşteri PO No': val || ''}).catch(function(e) {
+        console.warn('PO kayit hatasi:', e.message);
+      });
+    });
+  }
+  filterList();
+  toast(val ? 'Musteri PO kaydedildi: ' + val : 'Musteri PO silindi');
+}
+
+function sevkiyatOlustur(spNo) {
+  window.location.href = 'ersan_sevkiyat.html?sp=' + encodeURIComponent(spNo);
+}
+
+// Load musteriPoMap from Airtable records on data load
+function syncMusteriPoFromRecords() {
+  var groups = buildGroups(records);
+  groups.forEach(function(g) {
+    var poFromAT = '';
+    g.kalemler.forEach(function(r) {
+      var p = r.fields['Müşteri PO No'];
+      if (p && !poFromAT) poFromAT = p;
+    });
+    if (poFromAT) musteriPoMap[g.spNo] = poFromAT;
+  });
+  localStorage.setItem('musteriPoMap', JSON.stringify(musteriPoMap));
 }
 
 loadList();
