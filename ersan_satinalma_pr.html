@@ -108,7 +108,7 @@ async function veriYukle() {
     var tdData = await apiGet('Tedarik\u00E7iler (OTL)', '');
     tedarikciler = tdData.records || [];
     kpiGuncelle(); filtrele();
-    if (woParam) { await modalAc(); var w = document.getElementById('f-wo-no'); if(w){w.value=woParam;w.className='f-inp f-inp-linked';} }
+    if (woParam) { await modalAc(); var w = document.getElementById('f-wo-no'); if(w){w.value=woParam;w.style.background='#f0fdf4';w.style.color='#166534';} }
   } catch(e) { document.getElementById('pr-liste').innerHTML = '<div style="padding:16px;color:var(--kirmizi);font-size:12px;">Hata: '+e.message+'</div>'; }
 }
 
@@ -194,16 +194,19 @@ async function modalAc() {
     '<div style="display:flex;border-bottom:1px solid var(--border);margin-bottom:14px;">'+
     '<button class="pr-tab aktif" id="tab-siparis" onclick="modalSekmeGecis(\'siparis\',this)">Siparise Bagli</button>'+
     '<button class="pr-tab" id="tab-genel" onclick="modalSekmeGecis(\'genel\',this)">Genel Alim</button></div>'+
-    // Ortak ust kisim: Aciliyet + Ihtiyac Tarihi + WO No (tedarikci satir bazli)
-    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px;">'+
+    // Ortak ust kisim: Aciliyet + Ihtiyac Tarihi
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">'+
     '<div class="f-grp"><div class="f-lbl">Aciliyet</div><select class="f-inp" id="f-aciliyet" onchange="aciliyetDegisti()"><option>Normal</option><option>Y\u00FCksek</option><option>Kritik</option></select></div>'+
-    '<div class="f-grp"><div class="f-lbl">Ihtiyac Tarihi</div><input type="date" class="f-inp f-inp-auto" id="f-ihtiyac" value="'+bugunP7+'"></div>'+
-    '<div class="f-grp"><div class="f-lbl">Is Emri No</div><input class="f-inp" id="f-wo-no" placeholder="Otomatik veya manuel"></div></div>'+
+    '<div class="f-grp"><div class="f-lbl">Ihtiyac Tarihi</div><input type="date" class="f-inp f-inp-auto" id="f-ihtiyac" value="'+bugunP7+'"></div></div>'+
     // Siparis bagli icerik
-    '<div id="sekme-siparis"><div class="f-grp"><div class="f-lbl">Siparis Sec</div><select class="f-inp" id="f-siparis" onchange="spSecildi()">'+
+    '<div id="sekme-siparis">'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">'+
+    '<div class="f-grp"><div class="f-lbl">Siparis Sec</div><select class="f-inp" id="f-siparis" onchange="spSecildi()">'+
     '<option value="">-- Siparis --</option>'+siparisler.map(function(s){ var f=s.fields; return '<option value="'+s.id+'" data-parca="'+(f['Par\u00E7a Ad\u0131']||'')+'" data-wo="'+(f['\u0130\u015F Emirleri']||[]).join(',')+'" data-seno="'+(f['SE No']||'')+'">'+
     (f['SE No']||s.id)+' - '+(f['Par\u00E7a Ad\u0131']||'')+'</option>'; }).join('')+
-    '</select></div><div id="stl-body"></div></div>'+
+    '</select></div>'+
+    '<div class="f-grp"><div class="f-lbl">Is Emri No</div><input class="f-inp" id="f-wo-no" readonly disabled style="background:var(--bg2);color:var(--metin3);cursor:not-allowed;" placeholder="Siparis secilince otomatik dolar"></div>'+
+    '</div><div id="stl-body"></div></div>'+
     // Genel alim icerik
     '<div id="sekme-genel" style="display:none">'+
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">'+
@@ -250,16 +253,17 @@ function aciliyetDegisti() {
 }
 
 // ── SIPARIS BAGLI: Mevcut STL modali mantigiyla ayni ──
-function spSecildi() {
+async function spSecildi() {
   var sel = document.getElementById('f-siparis');
   var opt = sel.options[sel.selectedIndex];
-  if (!sel.value) { document.getElementById('stl-body').innerHTML=''; _stlKalemler=[]; return; }
+  var woInp = document.getElementById('f-wo-no');
+  if (!sel.value) {
+    document.getElementById('stl-body').innerHTML=''; _stlKalemler=[];
+    if (woInp) { woInp.value=''; woInp.style.background='var(--bg2)'; woInp.style.color='var(--metin3)'; }
+    return;
+  }
   var spId = sel.value;
   var seNo = opt.dataset.seno || '';
-  var wo = opt.dataset.wo || '';
-  // WO otomatik doldur
-  var woInp = document.getElementById('f-wo-no');
-  if (woInp && wo) { woInp.value = wo; woInp.className = 'f-inp f-inp-linked'; }
 
   // Siparis kalemlerini bul (ayni SE grubundakiler)
   var kalemler = siparisler.filter(function(s) {
@@ -277,6 +281,36 @@ function spSecildi() {
     };
   });
   renderSTL();
+
+  // Bagli Is Emrini Airtable'dan sorgula
+  if (woInp) {
+    woInp.value = 'Sorgulanıyor...';
+    woInp.style.background = 'var(--bg2)';
+    woInp.style.color = 'var(--metin4)';
+    try {
+      // Secilen siparis kalemlerinin ID'leriyle IE tablosunda ara
+      var seIds = kalemler.map(function(k){return k.id});
+      var ieData = await apiGet('\u0130\u015F Emirleri', 'pageSize=100');
+      var ieRecs = (ieData.records||[]).filter(function(ie) {
+        var bagli = ie.fields['SE No'] || ie.fields['Sat\u0131\u015F Emirleri'] || [];
+        return bagli.some(function(sid){return seIds.indexOf(sid)>=0});
+      });
+      if (ieRecs.length > 0) {
+        var ieNolar = ieRecs.map(function(r){return r.fields['IE No']||r.id}).join(', ');
+        woInp.value = ieNolar;
+        woInp.style.background = '#f0fdf4';
+        woInp.style.color = '#166534';
+      } else {
+        woInp.value = 'Henuz IE olusturulmamis';
+        woInp.style.background = '#fefce8';
+        woInp.style.color = '#854d0e';
+      }
+    } catch(e) {
+      woInp.value = 'IE sorgulanamadi';
+      woInp.style.background = 'var(--bg2)';
+      woInp.style.color = 'var(--metin4)';
+    }
+  }
 }
 
 function addSTLRow(ki) { _stlKalemler[ki].rows.push({tip:'Hammadde',malzemeTipi:'Mil',malzemeCinsi:'',yogunluk:'Celik',cap:'',boy:'',ic_cap:'',en:'',kalinlik:'',spec:'',tedarikciId:'',tedarikciAdi:''}); renderSTL(); }
