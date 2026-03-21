@@ -929,14 +929,19 @@ async function deleteGroup(spNo) {
 }
 
 // ── SATINALMA TALEBI MODAL ──
-function openSTLModal(g) {
+async function openSTLModal(g) {
   var existing = document.getElementById('stl-modal'); if(existing) existing.remove();
+  // PR kodu uret
+  var prNo = '';
+  try { prNo = await kodUret('PR'); } catch(e) { prNo = 'PR-' + new Date().getFullYear().toString().slice(-2) + '-XXXXX'; }
+  window._stlPrNo = prNo;
+
   window._stlKalemler = g.kalemler.map(function(r) {
     var f = r.fields;
     return {
       seId: r.id, parcaAdi: f['Parça Adı']||'', miktar: f['Miktar']||0, birim: f['Birim']||'Adet',
       seNo: f['SE No']||'',
-      rows: [{tip:'Hammadde',malzemeTipi:'Mil',malzemeCinsi:'',yogunluk:'Celik',cap:'',boy:'',ic_cap:'',en:'',kalinlik:'',spec:''}]
+      rows: [{tip:'Hammadde',malzemeTipi:'Mil',malzemeCinsi:'',yogunluk:'Celik',cap:'',boy:'',ic_cap:'',en:'',kalinlik:'',spec:'',aciliyet:'Normal'}]
     };
   });
   var modal = document.createElement('div');
@@ -945,7 +950,9 @@ function openSTLModal(g) {
   modal.innerHTML = '<div class="sp-modal">'+
     '<div class="sp-modal-head">'+
     '<div><div class="sp-modal-title">Satinalma Talebi — '+g.spNo+'</div>'+
-    '<div class="sp-modal-sub">'+g.kalemler.length+' kalem</div></div>'+
+    '<div style="display:flex;align-items:center;gap:8px;margin-top:4px;">'+
+    '<span style="font-family:monospace;font-size:13px;font-weight:700;color:var(--mavi-koyu);">'+prNo+'</span>'+
+    '<span class="sp-modal-sub">'+g.kalemler.length+' kalem</span></div></div>'+
     '<button class="sp-modal-kapat" id="stl-close">&times;</button>'+
     '</div>'+
     '<div class="sp-modal-body" id="stl-body"></div>'+
@@ -960,7 +967,7 @@ function openSTLModal(g) {
 }
 
 function addSTLRow(kalemIdx) {
-  window._stlKalemler[kalemIdx].rows.push({tip:'Hammadde',malzemeTipi:'Mil',malzemeCinsi:'',yogunluk:'Celik',cap:'',boy:'',ic_cap:'',en:'',kalinlik:'',spec:''});
+  window._stlKalemler[kalemIdx].rows.push({tip:'Hammadde',malzemeTipi:'Mil',malzemeCinsi:'',yogunluk:'Celik',cap:'',boy:'',ic_cap:'',en:'',kalinlik:'',spec:'',aciliyet:'Normal'});
   renderSTL();
 }
 
@@ -1037,11 +1044,17 @@ function renderSTL() {
     var rowsHtml = '';
     kalem.rows.forEach(function(row, ri) {
       var uid = ki+'_'+ri;
+      var aciliyetRenk = row.aciliyet==='Kritik'?'color:var(--kirmizi)':row.aciliyet==='Y\u00FCksek'?'color:var(--sari)':'';
       rowsHtml += '<div style="position:relative;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:8px;margin-bottom:6px;">'+
         '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">'+
         '<span style="font-size:10px;font-weight:600;color:var(--metin3);">'+(ri+1)+'. '+(row.tip==='Fason'?'Fason':'Hammadde')+'</span>'+
+        '<div style="display:flex;align-items:center;gap:6px;">'+
+        '<select id="stl-acl-'+uid+'" style="padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-size:10px;font-weight:600;font-family:inherit;'+aciliyetRenk+'" onchange="window._stlKalemler['+ki+'].rows['+ri+'].aciliyet=this.value;renderSTL()">'+
+        '<option'+(row.aciliyet==='Normal'?' selected':'')+'>Normal</option>'+
+        '<option'+(row.aciliyet==='Y\u00FCksek'?' selected':'')+' style="color:var(--sari)">Y\u00FCksek</option>'+
+        '<option'+(row.aciliyet==='Kritik'?' selected':'')+' style="color:var(--kirmizi)">Kritik</option></select>'+
         '<button onclick="removeSTLRow('+ki+','+ri+')" style="background:transparent;border:none;color:var(--kirmizi);font-size:12px;cursor:pointer;">Sil</button>'+
-        '</div>'+
+        '</div></div>'+
         renderSTLRow(row, uid)+
         '</div>';
     });
@@ -1099,9 +1112,13 @@ async function saveSTL() {
       for (var ri=0; ri<kalem.rows.length; ri++) {
         var s = kalem.rows[ri];
         var kg = s.tip==='Hammadde' ? calcKg(s.malzemeTipi, s, kalem.miktar) : 0;
+        var bugun = new Date().toISOString().split('T')[0];
+        var acl = s.aciliyet || 'Normal';
+        var ihtiyacT = acl === 'Normal' ? new Date(Date.now()+7*86400000).toISOString().split('T')[0] : bugun;
         await fetch('/.netlify/functions/airtable',{
           method:'POST',headers:{'Content-Type':'application/json'},
           body:JSON.stringify({method:'POST',path:'/v0/'+BASE+'/'+encodeURIComponent('Satınalma Talepleri'),body:{fields:{
+            'Talep No': window._stlPrNo || '',
             'SE No': [kalem.seId],
             'Kalem Adı': kalem.parcaAdi,
             'Talep Tipi': s.tip,
@@ -1110,7 +1127,11 @@ async function saveSTL() {
             'Birim': kalem.birim||'Adet',
             'Ölçü': s.tip==='Hammadde'?stlOlcuStr(s):(s.spec||''),
             'Tahmini kg': kg>0?parseFloat(kg.toFixed(3)):null,
-            'Durum':'Taslak'
+            'Durum':'Onay Bekliyor',
+            'PR Tipi': 'Siparise Bagli',
+            'Aciliyet': acl,
+            'Ihtiyac Tarihi': ihtiyacT,
+            'Talep Tarihi': bugun
           }}})
         });
         count++;
