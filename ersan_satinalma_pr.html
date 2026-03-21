@@ -256,7 +256,7 @@ function tabloRender(liste) {
   if (!tbody) return;
 
   var bekS = talepler.filter(function(r){var d=r.fields['Durum']||'Taslak';return d==='Taslak'||d==='Onay Bekliyor'||d.indexOf('Onayland')>=0}).length;
-  var rfqS = talepler.filter(function(r){return (r.fields['Durum']||'').indexOf('RFQ')>=0}).length;
+  var rfqS = talepler.filter(function(r){var d=r.fields['Durum']||'';return d==='Gönderildi'||d==='G\u00f6nderildi'||d.indexOf('Teklif')>=0||d.indexOf('RFQ')>=0}).length;
   var tnB = document.getElementById('tn-bekleyen'); if(tnB) tnB.textContent = bekS||'';
   var tnR = document.getElementById('tn-rfq'); if(tnR) tnR.textContent = rfqS||'';
 
@@ -369,7 +369,7 @@ function listeyiUygula() {
     var durum = f['Durum']||'Taslak';
     var durumOk = false;
     if(aktifSekme==='bekleyen'){durumOk = durum==='Taslak'||durum==='Onay Bekliyor'||durum.indexOf('Onayland')>=0;}
-    else{durumOk = durum.indexOf('RFQ')>=0;}
+    else{durumOk = durum==='Gönderildi'||durum==='G\u00f6nderildi'||durum.indexOf('Teklif')>=0||durum.indexOf('RFQ')>=0;}
     if(!durumOk) return false;
     if(tip && (f['PR Tipi']||'')!==tip) return false;
     if(kat && (f['Kategori']||f['Talep Tipi']||'')!==kat) return false;
