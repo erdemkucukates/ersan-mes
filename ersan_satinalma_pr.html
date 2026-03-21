@@ -708,12 +708,14 @@ async function durumGuncelle(id, durum) {
 }
 async function rfqDonustur(id) {
   var r = talepler.find(function(t){return t.id===id});
-  var prNo = r?r.fields['Talep No']:'';
-  if (!confirm(prNo+' icin RFQ olusturulsun mu?')) return;
+  var prNo = r ? r.fields['Talep No'] : '';
+  var talepTipi = r ? (r.fields['Talep Tipi'] || '') : '';
   try {
     await apiPatch(TABLO, id, {'Durum':'RFQ Olusturuldu'});
     if (typeof logIslem==='function') logIslem('PR_RFQ_DONUSTURULDU','Satinalma',id,prNo,null,{});
-    window.location.href = 'ersan_satinalma_rfq.html?pr='+encodeURIComponent(prNo);
+    var url = 'ersan_satinalma_rfq.html?pr=' + encodeURIComponent(prNo);
+    if (talepTipi) url += '&tip=' + encodeURIComponent(talepTipi);
+    window.location.href = url;
   } catch(e) { alert('Hata: '+e.message); }
 }
 

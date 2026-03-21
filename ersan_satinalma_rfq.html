@@ -248,8 +248,8 @@
 
       <!-- TIP SECIMI -->
       <div class="rfq-tip-wrap">
-        <button class="rfq-tip-btn secili" onclick="rfqTipDegis('hammadde',this)">Hammadde</button>
-        <button class="rfq-tip-btn" onclick="rfqTipDegis('fason',this)">Fason Islem</button>
+        <button class="rfq-tip-btn secili" data-tip="hammadde" onclick="rfqTipDegis('hammadde',this)">Hammadde</button>
+        <button class="rfq-tip-btn" data-tip="fason" onclick="rfqTipDegis('fason',this)">Fason Islem</button>
       </div>
 
       <!-- TALEP BLOKLARI -->
@@ -473,6 +473,20 @@ function rfqModalAc(opts) {
     // PR varsa, ilgili talepleri otomatik yukle
     if (opts.prNo) {
       rfqPRKalemleriYukle(opts.prNo);
+    }
+    // PR'dan gelen tip varsa otomatik sec ve butonlari kilitle
+    if (opts.talepTipiSabit) {
+      var sabitTip = opts.talepTipiSabit.toLowerCase();
+      if (sabitTip === 'fason') { rfqState.tip = 'fason'; }
+      else { rfqState.tip = 'hammadde'; }
+      var tipBtns2 = document.querySelectorAll('.rfq-tip-btn');
+      for (var j = 0; j < tipBtns2.length; j++) {
+        tipBtns2[j].classList.remove('secili');
+        if (tipBtns2[j].dataset.tip === rfqState.tip) tipBtns2[j].classList.add('secili');
+        // PR'dan geliyorsa tip degistirmeyi engelle
+        tipBtns2[j].style.opacity = '0.5';
+        tipBtns2[j].style.pointerEvents = 'none';
+      }
     }
   });
 
@@ -862,11 +876,16 @@ function rfqGonder() {
 document.addEventListener('DOMContentLoaded', function() {
   var urlParams = new URLSearchParams(window.location.search);
   var prParam = urlParams.get('pr');
+  var tipParam = urlParams.get('tip'); // Hammadde veya Fason — PR'dan otomatik gelir
   if (prParam) {
     var prBadge = document.getElementById('pr-badge');
     if (prBadge) { prBadge.textContent = 'PR: ' + prParam; prBadge.style.display = 'inline-block'; }
-    // Auto-open modal with PR context
-    rfqModalAc({ prNo: prParam });
+    var opts = { prNo: prParam };
+    // PR'dan gelen tip varsa otomatik sec, kullaniciya secim birakma
+    if (tipParam) {
+      opts.talepTipiSabit = tipParam; // 'Hammadde' veya 'Fason'
+    }
+    rfqModalAc(opts);
   }
 });
 </script>
