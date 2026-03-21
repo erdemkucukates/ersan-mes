@@ -8,30 +8,27 @@
 <script src="ersan_nav.js" defer></script>
 <script src="ersan_log.js" defer></script>
 <style>
-.pr-layout{display:flex;gap:12px;height:calc(100vh - 52px - 32px)}
+.pr-layout{display:flex;gap:12px;height:calc(100vh - 52px - 80px)}
 .pr-sol{width:320px;flex-shrink:0;background:var(--beyaz);border:1px solid var(--border);border-radius:8px;display:flex;flex-direction:column;overflow:hidden}
 .pr-sag{flex:1;background:var(--beyaz);border:1px solid var(--border);border-radius:8px;overflow-y:auto;padding:16px}
-.pr-tabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0}
 .pr-tab{flex:1;padding:8px;font-size:12px;font-weight:600;text-align:center;cursor:pointer;border-bottom:2px solid transparent;color:var(--metin3);background:transparent;border-top:none;border-left:none;border-right:none;font-family:inherit}
 .pr-tab.aktif{color:var(--mavi);border-bottom-color:var(--mavi);background:var(--mavi-acik)}
-.f-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
-.f-row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px}
-.f-grp{display:flex;flex-direction:column;gap:3px}
-.f-lbl{font-size:10px;font-weight:600;color:var(--metin3);text-transform:uppercase;letter-spacing:.3px}
-.f-inp{width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;color:var(--metin2);background:var(--beyaz);font-family:inherit}
+.f-grp{margin-bottom:8px}.f-lbl{font-size:10px;font-weight:600;color:var(--metin3);text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px;display:block}
+.f-inp{width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;color:var(--metin2);background:var(--beyaz);font-family:inherit}
 .f-inp:focus{outline:none;border-color:var(--mavi);box-shadow:0 0 0 3px rgba(55,138,221,.1)}
-.f-inp-linked{background:#f0fdf4;border-color:#86efac;color:#166534}
 .f-inp-auto{background:#f0f9ff;border-color:#93c5fd;color:#1e40af}
-.kalem-tablo{width:100%;border-collapse:collapse;margin-top:8px}
-.kalem-tablo th{background:var(--bg2);padding:6px 8px;font-size:10px;font-weight:600;color:var(--metin3);text-transform:uppercase;text-align:left;border-bottom:1px solid var(--border)}
-.kalem-tablo td{padding:5px 8px;border-bottom:1px solid var(--bg2);font-size:12px}
-.kalem-tablo input,.kalem-tablo select{width:100%;padding:4px 6px;border:1px solid var(--border);border-radius:4px;font-size:12px;font-family:inherit}
-.modal-overlay{position:fixed;inset:0;background:rgba(15,39,68,.5);z-index:500;display:flex;align-items:center;justify-content:center}
-.modal-box{background:var(--beyaz);border-radius:10px;width:90%;max-width:740px;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)}
-.modal-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border)}
-.modal-title{font-size:14px;font-weight:600;color:var(--laci)}
-.modal-body{padding:18px}
-.modal-foot{display:flex;justify-content:flex-end;gap:8px;padding:12px 18px;border-top:1px solid var(--border)}
+.f-inp-linked{background:#f0fdf4;border-color:#86efac;color:#166534}
+.modal-ov{position:fixed;inset:0;background:rgba(15,39,68,.5);z-index:500;display:flex;align-items:center;justify-content:center}
+.modal-bx{background:var(--beyaz);border-radius:10px;width:92%;max-width:780px;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.modal-hd{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border)}
+.modal-bd{padding:18px}
+.modal-ft{display:flex;justify-content:flex-end;gap:8px;padding:12px 18px;border-top:1px solid var(--border)}
+.stl-inp{width:100%;padding:4px 6px;border:1px solid var(--border);border-radius:6px;font-size:11px;font-family:inherit}
+.stl-lbl{font-size:10px;color:var(--metin3);margin-bottom:2px}
+.kalem-tbl{width:100%;border-collapse:collapse;margin-top:6px}
+.kalem-tbl th{background:var(--bg2);padding:5px 8px;font-size:10px;font-weight:600;color:var(--metin3);text-transform:uppercase;text-align:left;border-bottom:1px solid var(--border)}
+.kalem-tbl td{padding:4px 8px;border-bottom:1px solid var(--bg2);font-size:12px}
+.kalem-tbl input,.kalem-tbl select{width:100%;padding:4px 6px;border:1px solid var(--border);border-radius:4px;font-size:11px;font-family:inherit}
 </style>
 </head>
 <body>
@@ -46,10 +43,10 @@
   </div>
   <div class="sayfa-icerik">
     <div class="kpi-grid" style="margin-bottom:12px">
-      <div class="kpi-kart"><div class="kpi-etiket">Toplam Talep</div><div class="kpi-deger" id="kpi-toplam">-</div></div>
+      <div class="kpi-kart"><div class="kpi-etiket">Toplam</div><div class="kpi-deger" id="kpi-toplam">-</div></div>
       <div class="kpi-kart sari"><div class="kpi-etiket">Onay Bekleyen</div><div class="kpi-deger" id="kpi-onay">-</div></div>
       <div class="kpi-kart yesil"><div class="kpi-etiket">Onaylanan</div><div class="kpi-deger" id="kpi-onayli">-</div></div>
-      <div class="kpi-kart"><div class="kpi-etiket">RFQ Olustrulan</div><div class="kpi-deger" id="kpi-rfq">-</div></div>
+      <div class="kpi-kart"><div class="kpi-etiket">RFQ</div><div class="kpi-deger" id="kpi-rfq">-</div></div>
     </div>
     <div class="pr-layout">
       <div class="pr-sol">
@@ -58,12 +55,12 @@
           <span id="pr-sayi" style="font-size:11px;color:var(--metin4);"></span>
         </div>
         <div style="padding:8px 12px;border-bottom:1px solid var(--border);flex-shrink:0;">
-          <input type="text" id="pr-arama" placeholder="PR no, siparis ara..." oninput="filtrele()" style="width:100%;padding:5px 8px;border:1px solid var(--border);border-radius:5px;font-size:12px;font-family:inherit;">
+          <input type="text" id="pr-arama" placeholder="PR no, malzeme ara..." oninput="filtrele()" style="width:100%;padding:5px 8px;border:1px solid var(--border);border-radius:5px;font-size:12px;font-family:inherit;">
         </div>
         <div style="display:flex;border-bottom:1px solid var(--border);flex-shrink:0;">
           <button class="pr-tab aktif" onclick="durumFiltre('Tumu',this)">Tumu</button>
           <button class="pr-tab" onclick="durumFiltre('Onay Bekliyor',this)">Bekleyen</button>
-          <button class="pr-tab" onclick="durumFiltre('Onaylandi',this)">Onayli</button>
+          <button class="pr-tab" onclick="durumFiltre('Onayland',this)">Onayli</button>
           <button class="pr-tab" onclick="durumFiltre('RFQ',this)">RFQ</button>
         </div>
         <div id="pr-liste" style="flex:1;overflow-y:auto;"></div>
@@ -74,365 +71,411 @@
     </div>
   </div>
 </div>
-
-<!-- MODAL -->
 <div id="pr-modal" style="display:none"></div>
 
 <script>
 var BASE = 'app5LDgJMgocw79Ix';
 var TABLO = 'Sat\u0131nalma Talepleri';
-var talepler = [];
-var filtrelenmis = [];
-var seciliId = null;
-var aktifDurum = 'Tumu';
-var siparisler = [];
-var tedarikciler = [];
+var talepler = [], filtrelenmis = [], seciliId = null, aktifDurum = 'Tumu';
+var siparisler = [], tedarikciler = [];
+var YOGUNLUK = {'Celik':7.85,'Paslanmaz':7.93,'Aluminyum':2.70,'Titanyum':4.51,'Bronz':8.89,'Pirinc':8.50,'Bakir':8.96};
+var YOGUNLUK_KEYS = Object.keys(YOGUNLUK);
+var FASON_ISLEMLER = ['Isil Islem','Induksiyon','Nitrasyon','Sementasyon','Taslama','Boyama','Kaplama','Diger'];
 
 async function apiGet(tablo, query) {
   var url = '/.netlify/functions/airtable?table=' + encodeURIComponent(tablo);
   if (query) url += '&' + query;
-  var r = await fetch(url);
-  return r.json();
+  var r = await fetch(url); return r.json();
 }
 async function apiPost(tablo, fields) {
-  var r = await fetch('/.netlify/functions/airtable', {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({method:'POST', path:'/v0/' + BASE + '/' + encodeURIComponent(tablo), body:{fields:fields}})
-  });
+  var r = await fetch('/.netlify/functions/airtable', { method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({method:'POST', path:'/v0/'+BASE+'/'+encodeURIComponent(tablo), body:{fields:fields}}) });
   return r.json();
 }
 async function apiPatch(tablo, id, fields) {
-  var r = await fetch('/.netlify/functions/airtable', {
-    method:'PATCH', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({table:tablo, id:id, fields:fields})
-  });
+  var r = await fetch('/.netlify/functions/airtable', { method:'PATCH', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({table:tablo, id:id, fields:fields}) });
   return r.json();
 }
 
 async function veriYukle() {
   try {
-    // Is emrinden yonlendirme kontrolu
     var woParam = new URLSearchParams(window.location.search).get('wo');
-
     var data = await apiGet(TABLO, 'pageSize=100&sort[0][field]=Talep%20Tarihi&sort[0][direction]=desc');
-    talepler = (data.records || []);
-
+    talepler = data.records || [];
     var spData = await apiGet('Sat\u0131\u015F Emirleri', 'pageSize=100&sort[0][field]=SE%20No&sort[0][direction]=desc');
     siparisler = spData.records || [];
-
-    var tdData = await apiGet('Tedarik\u00E7iler (OTL)', 'filterByFormula=' + encodeURIComponent("{Aktif}=TRUE()"));
+    var tdData = await apiGet('Tedarik\u00E7iler (OTL)', '');
     tedarikciler = tdData.records || [];
-
-    kpiGuncelle();
-    filtrele();
-
-    if (woParam) {
-      await modalAc();
-      var woInp = document.getElementById('f-wo-no');
-      if (woInp) {
-        woInp.value = woParam;
-        woInp.className = 'f-inp f-inp-linked';
-      }
-    }
-  } catch(e) {
-    document.getElementById('pr-liste').innerHTML = '<div style="padding:16px;color:var(--kirmizi);font-size:12px;">Yukleme hatasi: ' + e.message + '</div>';
-  }
+    kpiGuncelle(); filtrele();
+    if (woParam) { await modalAc(); var w = document.getElementById('f-wo-no'); if(w){w.value=woParam;w.className='f-inp f-inp-linked';} }
+  } catch(e) { document.getElementById('pr-liste').innerHTML = '<div style="padding:16px;color:var(--kirmizi);font-size:12px;">Hata: '+e.message+'</div>'; }
 }
 
 function kpiGuncelle() {
   document.getElementById('kpi-toplam').textContent = talepler.length;
   document.getElementById('kpi-onay').textContent = talepler.filter(function(r){return r.fields['Durum']==='Onay Bekliyor'}).length;
-  document.getElementById('kpi-onayli').textContent = talepler.filter(function(r){return r.fields['Durum']==='Onayland\u0131'}).length;
+  document.getElementById('kpi-onayli').textContent = talepler.filter(function(r){return (r.fields['Durum']||'').indexOf('Onayland')>=0}).length;
   document.getElementById('kpi-rfq').textContent = talepler.filter(function(r){return (r.fields['Durum']||'').indexOf('RFQ')>=0}).length;
 }
-
-function durumFiltre(durum, btn) {
-  aktifDurum = durum;
-  document.querySelectorAll('.pr-tab').forEach(function(b){b.classList.remove('aktif')});
-  btn.classList.add('aktif');
-  filtrele();
-}
-
+function durumFiltre(d, btn) { aktifDurum=d; document.querySelectorAll('.pr-tab').forEach(function(b){b.classList.remove('aktif')}); btn.classList.add('aktif'); filtrele(); }
 function filtrele() {
-  var q = (document.getElementById('pr-arama').value || '').toLowerCase();
+  var q = (document.getElementById('pr-arama').value||'').toLowerCase();
   filtrelenmis = talepler.filter(function(r) {
-    var f = r.fields;
-    var durumOk = aktifDurum === 'Tumu' || (f['Durum']||'').indexOf(aktifDurum) >= 0;
-    var aramaOk = !q || (f['Talep No']||'').toLowerCase().indexOf(q) >= 0 || (f['Kalem Ad\u0131']||'').toLowerCase().indexOf(q) >= 0;
-    return durumOk && aramaOk;
+    var f=r.fields; var dOk = aktifDurum==='Tumu' || (f['Durum']||'').indexOf(aktifDurum)>=0;
+    var aOk = !q || (f['Talep No']||'').toLowerCase().indexOf(q)>=0 || (f['Kalem Ad\u0131']||'').toLowerCase().indexOf(q)>=0;
+    return dOk && aOk;
   });
   listeRender();
 }
-
 function listeRender() {
   var el = document.getElementById('pr-liste');
   document.getElementById('pr-sayi').textContent = filtrelenmis.length + ' talep';
-  if (!filtrelenmis.length) {
-    el.innerHTML = '<div class="bos-durum" style="padding:20px"><p>Talep bulunamadi</p></div>';
-    return;
-  }
+  if (!filtrelenmis.length) { el.innerHTML = '<div class="bos-durum" style="padding:20px"><p>Talep yok</p></div>'; return; }
   el.innerHTML = filtrelenmis.map(function(r) {
-    var f = r.fields;
-    var secili = r.id === seciliId ? ' secili' : '';
-    var durum = f['Durum'] || 'Taslak';
-    var durumCls = durum === 'Onayland\u0131' ? 'badge-yesil' : durum === 'Onay Bekliyor' ? 'badge-sari' : durum.indexOf('RFQ') >= 0 ? 'badge-mavi' : 'badge-gri';
-    var acil = (f['Aciliyet'] === 'Kritik' || f['Aciliyet'] === 'Y\u00FCksek');
-    return '<div class="liste-satir' + secili + '" onclick="talepSec(\'' + r.id + '\')" style="' + (acil ? 'border-left:3px solid var(--kirmizi);' : '') + '">' +
-      '<div class="liste-satir-no">' + (f['Talep No'] || r.id.substring(0,8)) + '</div>' +
-      '<div class="liste-satir-ad">' + (f['Kalem Ad\u0131'] || f['Kategori'] || 'Talep') + '</div>' +
-      '<div class="liste-satir-alt"><span style="font-size:10px;color:var(--metin4)">' + (f['Talep Tarihi'] || '') + '</span><span class="badge ' + durumCls + '">' + durum + '</span></div>' +
-      '</div>';
+    var f=r.fields, secili = r.id===seciliId?' secili':'', durum = f['Durum']||'Taslak';
+    var cls = durum.indexOf('Onayland')>=0?'badge-yesil':durum==='Onay Bekliyor'?'badge-sari':durum.indexOf('RFQ')>=0?'badge-mavi':'badge-gri';
+    var acil = f['Aciliyet']==='Kritik'||f['Aciliyet']==='Y\u00FCksek';
+    return '<div class="liste-satir'+secili+'" onclick="talepSec(\''+r.id+'\')" style="'+(acil?'border-left:3px solid var(--kirmizi);':'')+'">'+
+      '<div class="liste-satir-no">'+(f['Talep No']||r.id.substring(0,8))+'</div>'+
+      '<div class="liste-satir-ad">'+(f['Kalem Ad\u0131']||f['Kategori']||'Talep')+'</div>'+
+      '<div class="liste-satir-alt"><span style="font-size:10px;color:var(--metin4)">'+(f['Talep Tarihi']||'')+'</span><span class="badge '+cls+'">'+durum+'</span></div></div>';
   }).join('');
 }
-
 function talepSec(id) {
-  seciliId = id;
-  listeRender();
-  var r = talepler.find(function(t){return t.id === id});
-  if (!r) return;
-  var f = r.fields;
-  var durum = f['Durum'] || 'Taslak';
-  var durumCls = durum === 'Onayland\u0131' ? 'badge-yesil' : durum === 'Onay Bekliyor' ? 'badge-sari' : 'badge-gri';
-
-  var html = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">' +
-    '<div><span style="font-family:monospace;font-size:16px;font-weight:600;color:var(--laci);">' + (f['Talep No']||'') + '</span> <span class="badge ' + durumCls + '" style="margin-left:8px;">' + durum + '</span></div>' +
+  seciliId = id; listeRender();
+  var r = talepler.find(function(t){return t.id===id}); if (!r) return;
+  var f = r.fields, durum = f['Durum']||'Taslak';
+  var cls = durum.indexOf('Onayland')>=0?'badge-yesil':durum==='Onay Bekliyor'?'badge-sari':'badge-gri';
+  var html = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">'+
+    '<div><span style="font-family:monospace;font-size:16px;font-weight:600;color:var(--laci);">'+(f['Talep No']||'')+'</span> <span class="badge '+cls+'" style="margin-left:8px;">'+durum+'</span></div>'+
     '<div style="display:flex;gap:6px;">';
-
-  if (durum === 'Onay Bekliyor') {
-    html += '<button class="btn btn-yesil btn-sm" onclick="durumGuncelle(\'' + r.id + '\',\'Onayland\u0131\')">Onayla</button>';
-    html += '<button class="btn btn-kirmizi btn-sm" onclick="durumGuncelle(\'' + r.id + '\',\'Reddedildi\')">Reddet</button>';
-  }
-  if (durum === 'Onayland\u0131') {
-    html += '<button class="btn btn-mavi btn-sm" onclick="rfqDonustur(\'' + r.id + '\')">RFQ Olustur</button>';
-  }
+  if (durum==='Onay Bekliyor') { html += '<button class="btn btn-yesil btn-sm" onclick="durumGuncelle(\''+r.id+'\',\'Onayland\u0131\')">Onayla</button><button class="btn btn-kirmizi btn-sm" onclick="durumGuncelle(\''+r.id+'\',\'Reddedildi\')">Reddet</button>'; }
+  if (durum.indexOf('Onayland')>=0) { html += '<button class="btn btn-mavi btn-sm" onclick="rfqDonustur(\''+r.id+'\')">RFQ Olustur</button>'; }
   html += '</div></div>';
-
-  html += '<div class="kart"><div class="kart-baslik">Talep Bilgileri</div>';
-  html += '<div class="f-row3">';
-  html += '<div class="f-grp"><div class="f-lbl">PR Tipi</div><div style="font-size:13px;color:var(--metin2)">' + (f['PR Tipi']||'-') + '</div></div>';
-  html += '<div class="f-grp"><div class="f-lbl">Kategori</div><div style="font-size:13px;color:var(--metin2)">' + (f['Kategori']||'-') + '</div></div>';
-  html += '<div class="f-grp"><div class="f-lbl">Aciliyet</div><div style="font-size:13px;color:var(--metin2)">' + (f['Aciliyet']||'-') + '</div></div>';
+  html += '<div class="kart"><div class="kart-baslik">Talep Bilgileri</div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">';
+  html += '<div class="f-grp"><div class="f-lbl">PR Tipi</div><div style="font-size:13px">'+(f['PR Tipi']||'-')+'</div></div>';
+  html += '<div class="f-grp"><div class="f-lbl">Kategori</div><div style="font-size:13px">'+(f['Kategori']||f['Talep Tipi']||'-')+'</div></div>';
+  html += '<div class="f-grp"><div class="f-lbl">Aciliyet</div><div style="font-size:13px">'+(f['Aciliyet']||'-')+'</div></div>';
+  html += '<div class="f-grp"><div class="f-lbl">Talep Tarihi</div><div style="font-size:13px">'+(f['Talep Tarihi']||'-')+'</div></div>';
+  html += '<div class="f-grp"><div class="f-lbl">Ihtiyac Tarihi</div><div style="font-size:13px">'+(f['Ihtiyac Tarihi']||'-')+'</div></div>';
+  html += '<div class="f-grp"><div class="f-lbl">Is Emri No</div><div style="font-size:13px;font-family:monospace">'+(f['Is Emri No']||'-')+'</div></div>';
+  html += '<div class="f-grp"><div class="f-lbl">Siparis No</div><div style="font-size:13px;font-family:monospace">'+(f['Siparis No']||'-')+'</div></div>';
   html += '</div>';
-  html += '<div class="f-row3">';
-  html += '<div class="f-grp"><div class="f-lbl">Talep Eden</div><div style="font-size:13px;color:var(--metin2)">' + (f['Talep Eden']||'-') + '</div></div>';
-  html += '<div class="f-grp"><div class="f-lbl">Talep Tarihi</div><div style="font-size:13px;color:var(--metin2)">' + (f['Talep Tarihi']||'-') + '</div></div>';
-  html += '<div class="f-grp"><div class="f-lbl">Ihtiyac Tarihi</div><div style="font-size:13px;color:var(--metin2)">' + (f['Ihtiyac Tarihi']||'-') + '</div></div>';
+  if (f['Notlar']) { html += '<div class="f-grp" style="margin-top:8px"><div class="f-lbl">Notlar / Kalemler</div><pre style="font-size:12px;color:var(--metin2);white-space:pre-wrap;margin:0">'+(f['Notlar']||'')+'</pre></div>'; }
   html += '</div>';
-  html += '<div class="f-row">';
-  html += '<div class="f-grp"><div class="f-lbl">Siparis No</div><div style="font-size:13px;color:var(--metin2);font-family:monospace">' + (f['Siparis No']||'-') + '</div></div>';
-  html += '<div class="f-grp"><div class="f-lbl">Is Emri No</div><div style="font-size:13px;color:var(--metin2);font-family:monospace">' + (f['Is Emri No']||'-') + '</div></div>';
-  html += '</div>';
-  if (f['Notlar']) {
-    html += '<div class="f-grp" style="margin-top:8px"><div class="f-lbl">Notlar</div><div style="font-size:13px;color:var(--metin2)">' + f['Notlar'] + '</div></div>';
-  }
-  html += '</div>';
-
   document.getElementById('pr-detay').innerHTML = html;
 }
 
-// MODAL
-var modalKalemler = [];
+// ══ MODAL ══
+var _stlKalemler = []; // siparis bagli kalemler
+var _genelKalemler = []; // genel alim kalemleri
+var _modalSekme = 'siparis';
+var _prNo = '';
 
 async function modalAc() {
-  var prNo = '';
-  try { prNo = await kodUret('PR'); } catch(e) { prNo = 'PR-' + new Date().getFullYear().toString().slice(-2) + '-XXXXX'; }
-
-  modalKalemler = [{ malzeme:'', miktar:1, birim:'Adet', aciklama:'' }];
-
-  var tdOpts = '<option value="">-- Tedarikci Sec --</option>' + tedarikciler.map(function(t){
-    return '<option value="' + t.id + '">' + (t.fields['Tedarik\u00E7i Ad\u0131']||'') + '</option>';
-  }).join('');
-
-  var spOpts = '<option value="">-- Siparis Sec --</option>' + siparisler.map(function(s){
-    return '<option value="' + s.id + '" data-parca="' + (s.fields['Par\u00E7a Ad\u0131']||'') + '" data-wo="' + (s.fields['\u0130\u015F Emirleri']||'') + '">' + (s.fields['SE No']||s.id) + ' - ' + (s.fields['Par\u00E7a Ad\u0131']||'') + '</option>';
-  }).join('');
+  try { _prNo = await kodUret('PR'); } catch(e) { _prNo = 'PR-' + new Date().getFullYear().toString().slice(-2) + '-XXXXX'; }
+  _stlKalemler = [];
+  _genelKalemler = [{ aciklama:'', miktar:1, birim:'Adet' }];
+  _modalSekme = 'siparis';
 
   var bugun = new Date().toISOString().split('T')[0];
-  var bugunPlus7 = new Date(Date.now() + 7*86400000).toISOString().split('T')[0];
+  var bugunP7 = new Date(Date.now()+7*86400000).toISOString().split('T')[0];
+  var tdOpts = '<option value="">-- Tedarikci --</option>' + tedarikciler.map(function(t){ return '<option value="'+t.id+'">'+(t.fields['Tedarik\u00E7i Ad\u0131']||'')+'</option>'; }).join('');
 
-  var html = '<div class="modal-overlay" onclick="if(event.target===this)modalKapat()">' +
-    '<div class="modal-box">' +
-    '<div class="modal-head"><div class="modal-title">Yeni Satinalma Talebi</div><button onclick="modalKapat()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--metin3)">&times;</button></div>' +
-    '<div class="modal-body">' +
-    '<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;padding:10px 14px;background:var(--bg2);border-radius:8px;">' +
-    '<span style="font-family:monospace;font-size:16px;font-weight:700;color:var(--laci)">' + prNo + '</span>' +
-    '<span class="badge badge-sari">Onay Bekliyor</span>' +
-    '</div>' +
-
+  var html = '<div class="modal-ov" onclick="if(event.target===this)modalKapat()"><div class="modal-bx">'+
+    '<div class="modal-hd"><div style="font-size:14px;font-weight:600;color:var(--laci)">Yeni Satinalma Talebi</div><button onclick="modalKapat()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--metin3)">&times;</button></div>'+
+    '<div class="modal-bd">'+
+    // PR No + durum
+    '<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;padding:10px 14px;background:var(--bg2);border-radius:8px;">'+
+    '<span style="font-family:monospace;font-size:16px;font-weight:700;color:var(--laci)">'+_prNo+'</span>'+
+    '<span class="badge badge-sari">Onay Bekliyor</span></div>'+
     // Sekmeler
-    '<div class="pr-tabs" style="margin-bottom:12px">' +
-    '<button class="pr-tab aktif" onclick="modalSekme(\'siparis\',this)">Siparise Bagli</button>' +
-    '<button class="pr-tab" onclick="modalSekme(\'genel\',this)">Genel Alim</button>' +
-    '</div>' +
-
-    '<div id="modal-siparis">' +
-    '<div class="f-row">' +
-    '<div class="f-grp"><div class="f-lbl">Siparis</div><select class="f-inp" id="f-siparis" onchange="siparisSecildi(this)">' + spOpts + '</select></div>' +
-    '<div class="f-grp"><div class="f-lbl">WO No</div><input class="f-inp" id="f-wo-no" placeholder="Otomatik gelir" readonly></div>' +
-    '</div>' +
-    '</div>' +
-
-    '<div id="modal-genel" style="display:none">' +
-    '<div class="f-row">' +
-    '<div class="f-grp"><div class="f-lbl">Kategori</div><select class="f-inp" id="f-kategori"><option>Hammadde</option><option>Fason</option><option>Hizmet</option><option>Sarf Malzeme</option><option>Yedek Parca</option></select></div>' +
-    '<div class="f-grp"><div class="f-lbl">Gerekce</div><input class="f-inp" id="f-gerekce" placeholder="Neden gerekli?"></div>' +
-    '</div>' +
-    '</div>' +
-
-    '<div class="f-row3">' +
-    '<div class="f-grp"><div class="f-lbl">Aciliyet</div><select class="f-inp" id="f-aciliyet" onchange="aciliyetDegisti(this)"><option>Normal</option><option>Y\u00FCksek</option><option>Kritik</option></select></div>' +
-    '<div class="f-grp"><div class="f-lbl">Ihtiyac Tarihi</div><input type="date" class="f-inp f-inp-auto" id="f-ihtiyac" value="' + bugunPlus7 + '"></div>' +
-    '<div class="f-grp"><div class="f-lbl">Tercih Edilen Tedarikci</div><select class="f-inp" id="f-tedarikci">' + tdOpts + '</select></div>' +
-    '</div>' +
-
-    '<div style="margin-top:12px"><div class="f-lbl" style="margin-bottom:6px">Talep Kalemleri</div>' +
-    '<div id="kalem-alani"></div>' +
-    '<button onclick="kalemEkle()" style="margin-top:6px;padding:5px 12px;border:1px dashed var(--border);border-radius:6px;background:transparent;color:var(--metin3);font-size:12px;cursor:pointer;font-family:inherit;width:100%">+ Kalem Ekle</button>' +
-    '</div>' +
-
-    '<div class="f-grp" style="margin-top:12px"><div class="f-lbl">Notlar</div><textarea class="f-inp" id="f-notlar" rows="2" placeholder="Ek aciklama..."></textarea></div>' +
-
-    '</div>' +
-    '<div class="modal-foot">' +
-    '<button class="btn btn-beyaz" onclick="modalKapat()">Iptal</button>' +
-    '<button class="btn btn-mavi" onclick="talepKaydet(\'' + prNo + '\')">Talebi Kaydet</button>' +
-    '</div></div></div>';
+    '<div style="display:flex;border-bottom:1px solid var(--border);margin-bottom:14px;">'+
+    '<button class="pr-tab aktif" id="tab-siparis" onclick="modalSekmeGecis(\'siparis\',this)">Siparise Bagli</button>'+
+    '<button class="pr-tab" id="tab-genel" onclick="modalSekmeGecis(\'genel\',this)">Genel Alim</button></div>'+
+    // Ortak ust kisim: Aciliyet + Ihtiyac Tarihi + Tedarikci + WO No
+    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:14px;">'+
+    '<div class="f-grp"><div class="f-lbl">Aciliyet</div><select class="f-inp" id="f-aciliyet" onchange="aciliyetDegisti()"><option>Normal</option><option>Y\u00FCksek</option><option>Kritik</option></select></div>'+
+    '<div class="f-grp"><div class="f-lbl">Ihtiyac Tarihi</div><input type="date" class="f-inp f-inp-auto" id="f-ihtiyac" value="'+bugunP7+'"></div>'+
+    '<div class="f-grp"><div class="f-lbl">Tercih Edilen Tedarikci</div><select class="f-inp" id="f-tedarikci">'+tdOpts+'</select></div>'+
+    '<div class="f-grp"><div class="f-lbl">Is Emri No</div><input class="f-inp" id="f-wo-no" placeholder="Otomatik veya manuel"></div></div>'+
+    // Siparis bagli icerik
+    '<div id="sekme-siparis"><div class="f-grp"><div class="f-lbl">Siparis Sec</div><select class="f-inp" id="f-siparis" onchange="spSecildi()">'+
+    '<option value="">-- Siparis --</option>'+siparisler.map(function(s){ var f=s.fields; return '<option value="'+s.id+'" data-parca="'+(f['Par\u00E7a Ad\u0131']||'')+'" data-wo="'+(f['\u0130\u015F Emirleri']||[]).join(',')+'" data-seno="'+(f['SE No']||'')+'">'+
+    (f['SE No']||s.id)+' - '+(f['Par\u00E7a Ad\u0131']||'')+'</option>'; }).join('')+
+    '</select></div><div id="stl-body"></div></div>'+
+    // Genel alim icerik
+    '<div id="sekme-genel" style="display:none">'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">'+
+    '<div class="f-grp"><div class="f-lbl">Kategori</div><select class="f-inp" id="f-kategori"><option>Hammadde</option><option>Fason</option><option>Hizmet</option><option>Sarf Malzeme</option><option>Yedek Parca</option></select></div>'+
+    '<div class="f-grp"><div class="f-lbl">Gerekce</div><input class="f-inp" id="f-gerekce" placeholder="Neden gerekli?"></div></div>'+
+    '<div class="f-lbl">Talep Kalemleri</div><div id="genel-kalem-alani"></div>'+
+    '<button onclick="genelKalemEkle()" style="margin-top:6px;padding:5px 12px;border:1px dashed var(--border);border-radius:6px;background:transparent;color:var(--metin3);font-size:12px;cursor:pointer;font-family:inherit;width:100%">+ Kalem Ekle</button>'+
+    '</div>'+
+    // Notlar
+    '<div class="f-grp" style="margin-top:14px"><div class="f-lbl">Notlar</div><textarea class="f-inp" id="f-notlar" rows="2" placeholder="Ek aciklama..."></textarea></div>'+
+    '</div>'+
+    '<div class="modal-ft"><button class="btn btn-beyaz" onclick="modalKapat()">Iptal</button><button class="btn btn-mavi" onclick="talepKaydet()">Talebi Kaydet</button></div>'+
+    '</div></div>';
 
   document.getElementById('pr-modal').innerHTML = html;
   document.getElementById('pr-modal').style.display = 'block';
-  kalemlerRender();
+  genelKalemlerRender();
 }
 
-function modalKapat() {
-  document.getElementById('pr-modal').style.display = 'none';
-  document.getElementById('pr-modal').innerHTML = '';
-}
+function modalKapat() { document.getElementById('pr-modal').style.display='none'; document.getElementById('pr-modal').innerHTML=''; }
 
-function modalSekme(sekme, btn) {
+function modalSekmeGecis(sekme, btn) {
+  _modalSekme = sekme;
   document.querySelectorAll('#pr-modal .pr-tab').forEach(function(b){b.classList.remove('aktif')});
   btn.classList.add('aktif');
-  document.getElementById('modal-siparis').style.display = sekme === 'siparis' ? 'block' : 'none';
-  document.getElementById('modal-genel').style.display = sekme === 'genel' ? 'block' : 'none';
+  document.getElementById('sekme-siparis').style.display = sekme==='siparis'?'block':'none';
+  document.getElementById('sekme-genel').style.display = sekme==='genel'?'block':'none';
 }
 
-function siparisSecildi(sel) {
-  var opt = sel.options[sel.selectedIndex];
-  var woNo = opt.dataset.wo || '';
-  var woInp = document.getElementById('f-wo-no');
-  if (woInp && woNo) {
-    woInp.value = woNo;
-    woInp.className = 'f-inp f-inp-linked';
-  }
-}
-
-function aciliyetDegisti(sel) {
+function aciliyetDegisti() {
+  var sel = document.getElementById('f-aciliyet');
   var ihtiyac = document.getElementById('f-ihtiyac');
-  if (!ihtiyac) return;
+  if (!sel||!ihtiyac) return;
   if (sel.value === 'Normal') {
-    var d = new Date(); d.setDate(d.getDate() + 7);
+    var d = new Date(); d.setDate(d.getDate()+7);
     ihtiyac.value = d.toISOString().split('T')[0];
     ihtiyac.className = 'f-inp f-inp-auto';
+    ihtiyac.style.borderColor = '';
   } else {
     ihtiyac.value = new Date().toISOString().split('T')[0];
     ihtiyac.className = 'f-inp';
-    ihtiyac.style.borderColor = sel.value === 'Kritik' ? 'var(--kirmizi)' : 'var(--sari)';
+    ihtiyac.style.borderColor = sel.value==='Kritik'?'var(--kirmizi)':'var(--sari)';
   }
 }
 
-function kalemEkle() {
-  modalKalemler.push({ malzeme:'', miktar:1, birim:'Adet', aciklama:'' });
-  kalemlerRender();
-}
-function kalemSil(idx) {
-  modalKalemler.splice(idx, 1);
-  if (modalKalemler.length === 0) modalKalemler.push({ malzeme:'', miktar:1, birim:'Adet', aciklama:'' });
-  kalemlerRender();
+// ── SIPARIS BAGLI: Mevcut STL modali mantigiyla ayni ──
+function spSecildi() {
+  var sel = document.getElementById('f-siparis');
+  var opt = sel.options[sel.selectedIndex];
+  if (!sel.value) { document.getElementById('stl-body').innerHTML=''; _stlKalemler=[]; return; }
+  var spId = sel.value;
+  var seNo = opt.dataset.seno || '';
+  var wo = opt.dataset.wo || '';
+  // WO otomatik doldur
+  var woInp = document.getElementById('f-wo-no');
+  if (woInp && wo) { woInp.value = wo; woInp.className = 'f-inp f-inp-linked'; }
+
+  // Siparis kalemlerini bul (ayni SE grubundakiler)
+  var kalemler = siparisler.filter(function(s) {
+    var sn = s.fields['SE No']||'';
+    if (!seNo) return s.id === spId;
+    var parent = sn.split('-').slice(0,3).join('-');
+    var selParent = seNo.split('-').slice(0,3).join('-');
+    return parent === selParent;
+  });
+
+  _stlKalemler = kalemler.map(function(r) {
+    var f = r.fields;
+    return { seId: r.id, parcaAdi: f['Par\u00E7a Ad\u0131']||'', miktar: f['Miktar']||0, birim: f['Birim']||'Adet', seNo: f['SE No']||'',
+      rows: [{tip:'Hammadde',malzemeTipi:'Mil',malzemeCinsi:'',yogunluk:'Celik',cap:'',boy:'',ic_cap:'',en:'',kalinlik:'',spec:''}]
+    };
+  });
+  renderSTL();
 }
 
-function kalemlerRender() {
-  var el = document.getElementById('kalem-alani');
-  if (!el) return;
-  var html = '<table class="kalem-tablo"><thead><tr><th>#</th><th>Malzeme / Hizmet</th><th style="width:70px">Miktar</th><th style="width:80px">Birim</th><th>Aciklama</th><th style="width:30px"></th></tr></thead><tbody>';
-  modalKalemler.forEach(function(k, i) {
-    html += '<tr>' +
-      '<td style="text-align:center;font-weight:600;color:var(--metin3)">' + (i+1) + '</td>' +
-      '<td><input value="' + (k.malzeme||'') + '" oninput="modalKalemler[' + i + '].malzeme=this.value" placeholder="Malzeme adi"></td>' +
-      '<td><input type="number" value="' + (k.miktar||1) + '" min="1" oninput="modalKalemler[' + i + '].miktar=parseFloat(this.value)||1"></td>' +
-      '<td><select onchange="modalKalemler[' + i + '].birim=this.value"><option ' + (k.birim==='Adet'?'selected':'') + '>Adet</option><option ' + (k.birim==='Kg'?'selected':'') + '>Kg</option><option ' + (k.birim==='Mt'?'selected':'') + '>Mt</option><option ' + (k.birim==='Tk'?'selected':'') + '>Tk</option><option ' + (k.birim==='Lt'?'selected':'') + '>Lt</option></select></td>' +
-      '<td><input value="' + (k.aciklama||'') + '" oninput="modalKalemler[' + i + '].aciklama=this.value" placeholder="Olcu, spec..."></td>' +
-      '<td><button onclick="kalemSil(' + i + ')" style="background:none;border:none;color:var(--kirmizi);cursor:pointer;font-size:14px">&times;</button></td>' +
-      '</tr>';
+function addSTLRow(ki) { _stlKalemler[ki].rows.push({tip:'Hammadde',malzemeTipi:'Mil',malzemeCinsi:'',yogunluk:'Celik',cap:'',boy:'',ic_cap:'',en:'',kalinlik:'',spec:''}); renderSTL(); }
+function removeSTLRow(ki,ri) { _stlKalemler[ki].rows.splice(ri,1); renderSTL(); }
+
+function calcKg(tip, s, adet) {
+  var rho=YOGUNLUK[s.yogunluk]||7.85, gram=0;
+  if(tip==='Mil'){var r2=(parseFloat(s.cap)||0)/2/10,h2=(parseFloat(s.boy)||0)/10;gram=Math.PI*r2*r2*h2*rho;}
+  else if(tip==='Boru'){var rd2=(parseFloat(s.cap)||0)/2/10,ri2=(parseFloat(s.ic_cap)||0)/2/10,h3=(parseFloat(s.boy)||0)/10;gram=Math.PI*(rd2*rd2-ri2*ri2)*h3*rho;}
+  else if(tip==='Lama'){gram=((parseFloat(s.en)||0)/10)*((parseFloat(s.kalinlik)||0)/10)*((parseFloat(s.boy)||0)/10)*rho;}
+  else if(tip==='Sac'){gram=((parseFloat(s.en)||0)/10)*((parseFloat(s.boy)||0)/10)*((parseFloat(s.kalinlik)||0)/10)*rho;}
+  return gram/1000*(adet||1);
+}
+function stlOlcuStr(s) {
+  if(s.malzemeTipi==='Mil') return 'O'+(s.cap||'?')+'x'+(s.boy||'?')+'mm';
+  if(s.malzemeTipi==='Boru') return 'O'+(s.cap||'?')+'/'+(s.ic_cap||'?')+'x'+(s.boy||'?')+'mm';
+  if(s.malzemeTipi==='Lama') return (s.en||'?')+'x'+(s.kalinlik||'?')+'x'+(s.boy||'?')+'mm';
+  if(s.malzemeTipi==='Sac') return (s.en||'?')+'x'+(s.boy||'?')+'x'+(s.kalinlik||'?')+'mm';
+  return '';
+}
+
+function renderSTLRow(s, uid) {
+  var kg = s.tip==='Hammadde' ? calcKg(s.malzemeTipi, s, 1) : 0;
+  var html = '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">';
+  html += '<div><div class="stl-lbl">TIP</div><select id="stl-tip-'+uid+'" class="stl-inp"><option'+(s.tip==='Hammadde'?' selected':'')+'>Hammadde</option><option'+(s.tip==='Fason'?' selected':'')+'>Fason</option></select></div>';
+  if(s.tip==='Hammadde'){
+    html += '<div><div class="stl-lbl">MALZEME TIPI</div><select id="stl-mtyp-'+uid+'" class="stl-inp">'+['Mil','Boru','Lama','Sac'].map(function(t){return '<option'+(s.malzemeTipi===t?' selected':'')+'>'+t+'</option>';}).join('')+'</select></div>';
+    html += '<div><div class="stl-lbl">YOGUNLUK</div><select id="stl-yog-'+uid+'" class="stl-inp">'+YOGUNLUK_KEYS.map(function(k){return '<option'+(s.yogunluk===k?' selected':'')+'>'+k+'</option>';}).join('')+'</select></div>';
+    html += '<div><div class="stl-lbl">MALZEME CINSI</div><input id="stl-mc-'+uid+'" class="stl-inp" value="'+(s.malzemeCinsi||'')+'" placeholder="AISI 4140"></div>';
+    if(s.malzemeTipi==='Mil'){
+      html += '<div><div class="stl-lbl">CAP (mm)</div><input id="stl-cap-'+uid+'" type="number" class="stl-inp" value="'+(s.cap||'')+'" placeholder="150"></div>';
+      html += '<div><div class="stl-lbl">BOY (mm)</div><input id="stl-boy-'+uid+'" type="number" class="stl-inp" value="'+(s.boy||'')+'" placeholder="200"></div>';
+    } else if(s.malzemeTipi==='Boru'){
+      html += '<div><div class="stl-lbl">DIS CAP</div><input id="stl-cap-'+uid+'" type="number" class="stl-inp" value="'+(s.cap||'')+'"></div>';
+      html += '<div><div class="stl-lbl">IC CAP</div><input id="stl-ic-'+uid+'" type="number" class="stl-inp" value="'+(s.ic_cap||'')+'"></div>';
+      html += '<div><div class="stl-lbl">BOY</div><input id="stl-boy-'+uid+'" type="number" class="stl-inp" value="'+(s.boy||'')+'"></div>';
+    } else if(s.malzemeTipi==='Lama'){
+      html += '<div><div class="stl-lbl">EN</div><input id="stl-en-'+uid+'" type="number" class="stl-inp" value="'+(s.en||'')+'"></div>';
+      html += '<div><div class="stl-lbl">KALINLIK</div><input id="stl-kal-'+uid+'" type="number" class="stl-inp" value="'+(s.kalinlik||'')+'"></div>';
+      html += '<div><div class="stl-lbl">BOY</div><input id="stl-boy-'+uid+'" type="number" class="stl-inp" value="'+(s.boy||'')+'"></div>';
+    } else if(s.malzemeTipi==='Sac'){
+      html += '<div><div class="stl-lbl">EN</div><input id="stl-en-'+uid+'" type="number" class="stl-inp" value="'+(s.en||'')+'"></div>';
+      html += '<div><div class="stl-lbl">BOY</div><input id="stl-boy-'+uid+'" type="number" class="stl-inp" value="'+(s.boy||'')+'"></div>';
+      html += '<div><div class="stl-lbl">KALINLIK</div><input id="stl-kal-'+uid+'" type="number" class="stl-inp" value="'+(s.kalinlik||'')+'"></div>';
+    }
+    html += '<div id="stl-kg-'+uid+'" style="grid-column:1/-1;background:var(--yesil-bg);border-radius:6px;padding:4px 8px;font-size:11px;color:var(--yesil-t);font-weight:600;display:'+(kg>0?'block':'none')+';">'+(kg>0?'Tahmini: '+kg.toFixed(2)+' kg/adet':'')+'</div>';
+  } else {
+    html += '<div><div class="stl-lbl">ISLEM TIPI</div><select id="stl-mc-'+uid+'" class="stl-inp">'+FASON_ISLEMLER.map(function(t){return '<option'+(s.malzemeCinsi===t?' selected':'')+'>'+t+'</option>';}).join('')+'</select></div>';
+    html += '<div><div class="stl-lbl">SARTNAME</div><input id="stl-spec-'+uid+'" class="stl-inp" value="'+(s.spec||'')+'" placeholder="58-60 HRC"></div>';
+  }
+  html += '</div>';
+  return html;
+}
+
+function renderSTL() {
+  var body = document.getElementById('stl-body');
+  if (!body) return;
+  body.innerHTML = '';
+  _stlKalemler.forEach(function(kalem, ki) {
+    var div = document.createElement('div');
+    div.style.cssText = 'border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px;';
+    var seNo = kalem.seNo.split('-').pop() || (ki+1);
+    var header = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--bg);">'+
+      '<span style="font-size:12px;font-weight:600;color:var(--mavi-koyu);">Kalem '+seNo+'</span>'+
+      '<span style="font-size:12px;font-weight:500;">'+kalem.parcaAdi+'</span>'+
+      '<span style="font-size:11px;color:var(--metin4);">'+kalem.miktar+' '+kalem.birim+'</span></div>';
+    var rowsHtml = '';
+    kalem.rows.forEach(function(row, ri) {
+      var uid = ki+'_'+ri;
+      rowsHtml += '<div style="position:relative;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:8px;margin-bottom:6px;">'+
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">'+
+        '<span style="font-size:10px;font-weight:600;color:var(--metin3);">'+(ri+1)+'. '+(row.tip==='Fason'?'Fason':'Hammadde')+'</span>'+
+        '<button onclick="removeSTLRow('+ki+','+ri+')" style="background:transparent;border:none;color:var(--kirmizi);font-size:12px;cursor:pointer;">Sil</button></div>'+
+        renderSTLRow(row, uid)+'</div>';
+    });
+    rowsHtml += '<button onclick="addSTLRow('+ki+')" style="width:100%;padding:5px;border:1px dashed var(--metin4);border-radius:6px;background:transparent;color:var(--metin3);font-size:11px;cursor:pointer;font-family:inherit;">+ Talep Satiri Ekle</button>';
+    div.innerHTML = header + rowsHtml;
+    body.appendChild(div);
+    // Event listeners
+    kalem.rows.forEach(function(row, ri) {
+      var uid = ki+'_'+ri;
+      setTimeout(function() {
+        var tipSel = document.getElementById('stl-tip-'+uid);
+        if(tipSel) tipSel.onchange=function(){kalem.rows[ri].tip=this.value;if(this.value==='Fason')kalem.rows[ri].malzemeTipi='Fason';renderSTL();};
+        var mtypSel = document.getElementById('stl-mtyp-'+uid);
+        if(mtypSel) mtypSel.onchange=function(){kalem.rows[ri].malzemeTipi=this.value;renderSTL();};
+        var yogSel = document.getElementById('stl-yog-'+uid);
+        if(yogSel) yogSel.onchange=function(){kalem.rows[ri].yogunluk=this.value;kgHesapla(uid,ki,ri);};
+        ['mc','cap','ic','boy','en','kal','spec'].forEach(function(fld){
+          var el=document.getElementById('stl-'+fld+'-'+uid); if(!el) return;
+          var map={mc:'malzemeCinsi',cap:'cap',ic:'ic_cap',boy:'boy',en:'en',kal:'kalinlik',spec:'spec'};
+          if(fld==='mc'&&kalem.rows[ri].tip==='Fason'){el.onchange=function(){kalem.rows[ri].malzemeCinsi=this.value;};}
+          else{el.oninput=function(){kalem.rows[ri][map[fld]]=this.value;if(['cap','ic','boy','en','kal'].indexOf(fld)>=0)kgHesapla(uid,ki,ri);};}
+        });
+      }, 0);
+    });
+  });
+}
+var _kgTimer=null;
+function kgHesapla(uid,ki,ri){clearTimeout(_kgTimer);_kgTimer=setTimeout(function(){var s=_stlKalemler[ki].rows[ri];if(!s)return;var kg=calcKg(s.malzemeTipi,s,1);var el=document.getElementById('stl-kg-'+uid);if(el){el.textContent=kg>0?'Tahmini: '+kg.toFixed(2)+' kg/adet':'';el.style.display=kg>0?'block':'none';}},500);}
+
+// ── GENEL ALIM KALEMLERI ──
+function genelKalemEkle() { _genelKalemler.push({aciklama:'',miktar:1,birim:'Adet'}); genelKalemlerRender(); }
+function genelKalemSil(i) { _genelKalemler.splice(i,1); if(!_genelKalemler.length) _genelKalemler.push({aciklama:'',miktar:1,birim:'Adet'}); genelKalemlerRender(); }
+function genelKalemlerRender() {
+  var el = document.getElementById('genel-kalem-alani'); if(!el) return;
+  var html = '<table class="kalem-tbl"><thead><tr><th>#</th><th>Aciklama</th><th style="width:70px">Miktar</th><th style="width:80px">Birim</th><th style="width:30px"></th></tr></thead><tbody>';
+  _genelKalemler.forEach(function(k,i){
+    html += '<tr><td style="text-align:center;font-weight:600;color:var(--metin3)">'+(i+1)+'</td>'+
+      '<td><input value="'+(k.aciklama||'')+'" oninput="_genelKalemler['+i+'].aciklama=this.value" placeholder="Malzeme/hizmet aciklamasi"></td>'+
+      '<td><input type="number" value="'+(k.miktar||1)+'" min="1" oninput="_genelKalemler['+i+'].miktar=parseFloat(this.value)||1"></td>'+
+      '<td><select onchange="_genelKalemler['+i+'].birim=this.value"><option'+(k.birim==='Adet'?' selected':'')+'>Adet</option><option'+(k.birim==='Kg'?' selected':'')+'>Kg</option><option'+(k.birim==='Mt'?' selected':'')+'>Mt</option><option'+(k.birim==='Tk'?' selected':'')+'>Tk</option><option'+(k.birim==='Lt'?' selected':'')+'>Lt</option></select></td>'+
+      '<td><button onclick="genelKalemSil('+i+')" style="background:none;border:none;color:var(--kirmizi);cursor:pointer;font-size:14px">&times;</button></td></tr>';
   });
   html += '</tbody></table>';
   el.innerHTML = html;
 }
 
-async function talepKaydet(prNo) {
+// ── KAYDET ──
+async function talepKaydet() {
   try {
-    var siparisSekme = document.getElementById('modal-siparis').style.display !== 'none';
-    var fields = {
-      'Talep No': prNo,
-      'Talep Tarihi': new Date().toISOString().split('T')[0],
-      'Durum': 'Onay Bekliyor',
-      'Aciliyet': document.getElementById('f-aciliyet').value,
-      'Ihtiyac Tarihi': document.getElementById('f-ihtiyac').value,
-      'Notlar': document.getElementById('f-notlar').value || '',
-      'Kalem Sayisi': modalKalemler.length,
-    };
-
-    if (siparisSekme) {
-      fields['PR Tipi'] = 'Siparise Bagli';
-      var spSel = document.getElementById('f-siparis');
-      if (spSel && spSel.value) {
-        fields['Siparis No'] = spSel.options[spSel.selectedIndex].text.split(' - ')[0];
+    var bugun = new Date().toISOString().split('T')[0];
+    if (_modalSekme === 'siparis' && _stlKalemler.length > 0) {
+      // Siparis bagli: her kalem icin ayri satinalma talebi (mevcut STL mantigiyla)
+      var count = 0;
+      for (var ki=0; ki<_stlKalemler.length; ki++) {
+        var kalem = _stlKalemler[ki];
+        for (var ri=0; ri<kalem.rows.length; ri++) {
+          var s = kalem.rows[ri];
+          var kg = s.tip==='Hammadde' ? calcKg(s.malzemeTipi, s, kalem.miktar) : 0;
+          await apiPost(TABLO, {
+            'Talep No': _prNo,
+            'SE No': [kalem.seId],
+            'Kalem Ad\u0131': kalem.parcaAdi,
+            'Talep Tipi': s.tip,
+            'Malzeme \u0130\u015Flem': s.tip==='Fason'?(s.malzemeCinsi||''):(s.malzemeTipi+' - '+(s.malzemeCinsi||'')),
+            'Miktar': kalem.miktar||0,
+            'Birim': kalem.birim||'Adet',
+            '\u00D6l\u00E7\u00FC': s.tip==='Hammadde'?stlOlcuStr(s):(s.spec||''),
+            'Tahmini kg': kg>0?parseFloat(kg.toFixed(3)):null,
+            'Durum': 'Onay Bekliyor',
+            'PR Tipi': 'Siparise Bagli',
+            'Aciliyet': document.getElementById('f-aciliyet').value,
+            'Ihtiyac Tarihi': document.getElementById('f-ihtiyac').value,
+            'Is Emri No': document.getElementById('f-wo-no').value||'',
+            'Talep Tarihi': bugun,
+          });
+          count++;
+        }
       }
-      fields['Is Emri No'] = document.getElementById('f-wo-no').value || '';
+      if (typeof logIslem === 'function') logIslem('PR_OLUSTURULDU', 'Satinalma', null, _prNo, null, {kalem:count});
+      modalKapat(); await veriYukle();
+      toast(count + ' satinalma talebi olusturuldu');
     } else {
-      fields['PR Tipi'] = 'Genel Alim';
-      fields['Kategori'] = document.getElementById('f-kategori').value;
+      // Genel alim: tek kayit, kalemler notlara yazilir
+      var kalemOzet = _genelKalemler.map(function(k,i){return (i+1)+'. '+(k.aciklama||'?')+' x'+k.miktar+' '+k.birim;}).join('\n');
+      var notlar = (document.getElementById('f-notlar').value||'');
+      if (kalemOzet) notlar = (notlar?notlar+'\n\n':'') + 'Kalemler:\n' + kalemOzet;
+      var res = await apiPost(TABLO, {
+        'Talep No': _prNo,
+        'Durum': 'Onay Bekliyor',
+        'PR Tipi': 'Genel Alim',
+        'Kategori': document.getElementById('f-kategori').value,
+        'Aciliyet': document.getElementById('f-aciliyet').value,
+        'Ihtiyac Tarihi': document.getElementById('f-ihtiyac').value,
+        'Is Emri No': document.getElementById('f-wo-no').value||'',
+        'Talep Tarihi': bugun,
+        'Kalem Sayisi': _genelKalemler.length,
+        'Notlar': notlar,
+      });
+      if (res.error) throw new Error(res.error.type||res.error.message||JSON.stringify(res.error));
+      if (typeof logIslem === 'function') logIslem('PR_OLUSTURULDU', 'Satinalma', res.id, _prNo, null, {});
+      modalKapat(); await veriYukle();
+      toast('Satinalma talebi olusturuldu');
     }
+  } catch(e) { alert('Kaydetme hatasi: ' + e.message); }
+}
 
-    // Kalem bilgilerini notlara ekle
-    var kalemOzet = modalKalemler.map(function(k, i) {
-      return (i+1) + '. ' + (k.malzeme||'?') + ' x' + k.miktar + ' ' + k.birim + (k.aciklama ? ' (' + k.aciklama + ')' : '');
-    }).join('\n');
-    fields['Notlar'] = (fields['Notlar'] ? fields['Notlar'] + '\n\n' : '') + 'Kalemler:\n' + kalemOzet;
-
-    var res = await apiPost(TABLO, fields);
-    if (res.error) throw new Error(res.error.type || res.error.message || JSON.stringify(res.error));
-
-    if (typeof logIslem === 'function') {
-      logIslem('PR_OLUSTURULDU', 'Satinalma', res.id, prNo, null, fields);
-    }
-
-    modalKapat();
-    await veriYukle();
-    talepSec(res.id);
-  } catch(e) {
-    alert('Kaydetme hatasi: ' + e.message);
-  }
+function toast(msg) {
+  var el = document.createElement('div');
+  el.style.cssText = 'position:fixed;bottom:20px;right:20px;padding:10px 16px;border-radius:8px;font-size:13px;font-weight:500;color:#fff;background:var(--mavi);z-index:9999;opacity:0;transform:translateY(10px);transition:all .3s;pointer-events:none;';
+  el.textContent = msg; document.body.appendChild(el);
+  setTimeout(function(){el.style.opacity='1';el.style.transform='translateY(0)';},10);
+  setTimeout(function(){el.remove();},3000);
 }
 
 async function durumGuncelle(id, durum) {
-  try {
-    await apiPatch(TABLO, id, { 'Durum': durum });
-    await veriYukle();
-    talepSec(id);
-  } catch(e) { alert('Hata: ' + e.message); }
+  try { await apiPatch(TABLO, id, {'Durum':durum}); await veriYukle(); talepSec(id); } catch(e) { alert('Hata: '+e.message); }
 }
-
 async function rfqDonustur(id) {
-  var r = talepler.find(function(t){return t.id === id});
-  if (!r) return;
-  var prNo = r.fields['Talep No'] || '';
-  if (!confirm(prNo + ' icin RFQ olusturulsun mu?')) return;
+  var r = talepler.find(function(t){return t.id===id});
+  var prNo = r?r.fields['Talep No']:'';
+  if (!confirm(prNo+' icin RFQ olusturulsun mu?')) return;
   try {
-    await apiPatch(TABLO, id, { 'Durum': 'RFQ Olusturuldu' });
-    if (typeof logIslem === 'function') {
-      logIslem('PR_RFQ_DONUSTURULDU', 'Satinalma', id, prNo, null, {});
-    }
-    window.location.href = 'ersan_satinalma_rfq.html?pr=' + encodeURIComponent(prNo);
-  } catch(e) { alert('Hata: ' + e.message); }
+    await apiPatch(TABLO, id, {'Durum':'RFQ Olusturuldu'});
+    if (typeof logIslem==='function') logIslem('PR_RFQ_DONUSTURULDU','Satinalma',id,prNo,null,{});
+    window.location.href = 'ersan_satinalma_rfq.html?pr='+encodeURIComponent(prNo);
+  } catch(e) { alert('Hata: '+e.message); }
 }
 
 document.addEventListener('DOMContentLoaded', veriYukle);
