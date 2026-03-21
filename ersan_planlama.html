@@ -623,6 +623,10 @@ function updateSTLOzet() {
 }
 
 async function saveSTL(seId) {
+  // PR No uret
+  let prNo = '';
+  try { prNo = await kodUret('PR'); } catch(e) { prNo = 'PR-' + new Date().getFullYear().toString().slice(-2) + '-XXXXX'; }
+
   const tumSatirlar = [];
   stlKalemler.forEach((k, ki) => {
     k.altSatirlar.forEach((s, ai) => {
@@ -633,6 +637,7 @@ async function saveSTL(seId) {
         s.malzemeTipi === 'Sac' ? `${s.en||'—'}x${s.boy||'—'}x${s.kalinlik||'—'}mm` : (s.spec||'');
       const kg = kgHesapla(s);
       tumSatirlar.push({
+        'Talep No': prNo,
         'SE No': [seId],
         'Talep Tipi': s.tip,
         'Kalem Adı': k.kalemAdi||'',
@@ -642,6 +647,7 @@ async function saveSTL(seId) {
         'Ölçü': olcu||null,
         'Tahmini kg': kg > 0 ? parseFloat((kg*(s.miktar||1)).toFixed(3)) : null,
         'Durum': 'Taslak',
+        'Talep Tarihi': new Date().toISOString().split('T')[0],
       });
     });
   });

@@ -78,7 +78,7 @@ var aktifTip = 'tumu';
 var seciliId = null;
 
 var SEKME_DURUMLARI = {
-  talepler: ['Taslak'],
+  talepler: ['Taslak', 'Onay Bekliyor'],
   karsilastirma: ['Teklif Alindi', 'Teklif Alındı'],
   gonderildi: ['Gonderildi', 'Gönderildi'],
   teklif_alindi: ['Teklif Alindi', 'Teklif Alındı'],
@@ -238,7 +238,7 @@ function talepSec(id) {
   html += '<div style="flex:1;"></div>';
 
   // Butonlar duruma gore
-  if (durum === 'Taslak') {
+  if (durum === 'Taslak' || durum === 'Onay Bekliyor') {
     html += '<button class="btn btn-mavi btn-sm" onclick="openRFQSingle(\'' + id + '\',\'' + seId + '\')">RFQ Gonder</button>';
   }
   if (durum !== 'Onaylandı') {
