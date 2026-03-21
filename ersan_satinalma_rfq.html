@@ -847,13 +847,27 @@ var seListAll = [];
 // PAGE-LEVEL DATA LOADING & RENDERING
 // ══════════════════════════════════════════
 
+function tedarikciAdiGetir(recIdOrArr) {
+  if (!recIdOrArr) return '—';
+  var id = Array.isArray(recIdOrArr) ? recIdOrArr[0] : recIdOrArr;
+  if (!id) return '—';
+  // Eger zaten ad ise (recXXX formatinda degilse) direkt dondur
+  if (typeof id === 'string' && id.indexOf('rec') !== 0) return id;
+  for (var i = 0; i < tedarikciListAll.length; i++) {
+    if (tedarikciListAll[i].id === id) return tedarikciListAll[i].fields['Tedarikçi Adı'] || id;
+  }
+  return id;
+}
+
 function veriYukle() {
   Promise.all([
     apiGet(T_STL, 'pageSize=100&sort%5B0%5D%5Bfield%5D=Talep%20No&sort%5B0%5D%5Bdirection%5D=desc'),
-    apiGet(T_MUZ, 'pageSize=100')
+    apiGet(T_MUZ, 'pageSize=100'),
+    apiGet(T_TD, 'pageSize=100&fields%5B%5D=Tedarik%C3%A7i%20Ad%C4%B1')
   ]).then(function(results) {
     tumTalepler = results[0].records || [];
     muzakereler = results[1].records || [];
+    tedarikciListAll = results[2].records || [];
     kpiGuncelle();
     badgeGuncelle();
     taleplerRender(tumTalepler);
@@ -1135,7 +1149,7 @@ function karsilastirmaRender() {
     for (var t = 0; t < seciliGrup.kalemler.length; t++) {
       var tf = seciliGrup.kalemler[t].fields;
       var fiyat = tf['Teklif Fiyatı'] || 0;
-      var tedarikciAd = tf['Seçilen Tedarikçi'] || tf['Tedarikçi Email'] || '—';
+      var tedarikciAd = tedarikciAdiGetir(tf['Seçilen Tedarikçi']) !== '—' ? tedarikciAdiGetir(tf['Seçilen Tedarikçi']) : (tf['Tedarikçi Email'] || '—');
       teklifler.push({
         id: seciliGrup.kalemler[t].id,
         tedarikci: tedarikciAd,
@@ -1280,11 +1294,20 @@ function pazarlikKaydet(talepNo) {
 
 function kazananSec(recId, fiyat, tedarikciAd) {
   if (!recId) return;
+  // Tedarikci adini record ID'ye cevir (linked record alani)
+  var tdRecId = null;
+  for (var i = 0; i < tedarikciListAll.length; i++) {
+    if ((tedarikciListAll[i].fields['Tedarikçi Adı'] || '') === tedarikciAd) {
+      tdRecId = tedarikciListAll[i].id;
+      break;
+    }
+  }
   var fields = {
     'Durum': 'Onaylandı',
-    'Seçilen Tedarikçi': tedarikciAd,
     'Onay Fiyatı': fiyat
   };
+  if (tdRecId) fields['Seçilen Tedarikçi'] = [tdRecId];
+  else if (tedarikciAd && tedarikciAd.indexOf('rec') === 0) fields['Seçilen Tedarikçi'] = [tedarikciAd];
   apiPatch(T_STL, recId, fields).then(function() {
     toast(tedarikciAd + ' kazanan olarak secildi');
     veriYukle();
@@ -1390,7 +1413,7 @@ function onayliRender() {
     html += '<div class="ust">' + escHtml(f['Talep No'] || '—') + '</div>';
     html += '<div class="alt">' + escHtml(f['Kalem Adı'] || '') + ' — ' + escHtml(f['Malzeme İşlem'] || '') + '</div>';
     html += '<div class="alt" style="margin-top:4px;">';
-    html += '<strong>Tedarikci:</strong> ' + escHtml(f['Seçilen Tedarikçi'] || '—');
+    html += '<strong>Tedarikci:</strong> ' + escHtml(tedarikciAdiGetir(f['Seçilen Tedarikçi']));
     if (f['Teslim Süresi Gün']) html += ' &middot; <strong>Teslim:</strong> ' + f['Teslim Süresi Gün'] + ' gun';
     if (f['Tedarikçi Vade Önerisi']) html += ' &middot; <strong>Vade:</strong> ' + escHtml(f['Tedarikçi Vade Önerisi']);
     html += '</div>';
