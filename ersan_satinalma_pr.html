@@ -59,7 +59,8 @@
 .filter-toggle-btn.has-filter{border-color:#93c5fd;background:#dbeafe;color:#1e40af}
 .filter-toggle-btn .fb-cnt{font-size:10px;background:#1a2b47;color:#fff;padding:0 5px;border-radius:8px;font-weight:600}
 .pr-tablo{width:100%;border-collapse:collapse}
-.pr-tablo thead th{background:var(--bg2);padding:7px 10px;font-size:10px;font-weight:600;color:var(--metin3);text-transform:uppercase;text-align:left;border-bottom:1px solid var(--border)}
+.pr-tablo thead th{background:var(--bg2);padding:7px 10px;font-size:10px;font-weight:600;color:var(--metin3);text-transform:uppercase;text-align:left;border-bottom:1px solid var(--border);user-select:none}
+.pr-tablo thead th[onclick]:hover{background:var(--border);color:var(--laci)}
 .pr-tablo tbody td{padding:8px 10px;font-size:12px;color:var(--metin2);border-bottom:1px solid var(--bg2);cursor:pointer}
 .pr-tablo tbody tr:hover td{background:var(--bg2)}
 .pr-tablo tr.p-k td{background:#fff5f5}
@@ -123,7 +124,7 @@
     <div style="background:var(--beyaz);border:1px solid var(--border);border-radius:0 0 8px 8px;overflow:hidden;">
       <div style="padding:8px 14px;border-bottom:1px solid var(--border);background:var(--bg2);display:flex;align-items:center;justify-content:space-between"><span style="font-size:12px;color:var(--metin4)"><b id="liste-count">0</b> kayit</span></div>
       <div style="overflow-x:auto">
-        <table class="pr-tablo"><thead><tr><th style="width:32px;text-align:center"><input type="checkbox" id="chk-hepsi" onchange="tumunuSec(this.checked)"></th><th style="width:75px">Tarih</th><th style="width:110px">PR No</th><th style="width:110px">Siparis Kalemi</th><th>Aciklama</th><th>M.Cinsi</th><th>M.Tipi</th><th style="text-align:center">Olcu 1</th><th style="text-align:center">Olcu 2</th><th style="text-align:center">Olcu 3</th><th>Aciliyet</th><th style="width:80px"></th></tr></thead><tbody id="pr-tbody"></tbody></table>
+        <table class="pr-tablo"><thead><tr><th style="width:32px;text-align:center"><input type="checkbox" id="chk-hepsi" onchange="tumunuSec(this.checked)"></th><th style="width:75px;cursor:pointer" onclick="sirala('tarih')">Tarih <span id="sort-tarih"></span></th><th style="width:110px;cursor:pointer" onclick="sirala('prNo')">PR No <span id="sort-prNo"></span></th><th style="width:110px;cursor:pointer" onclick="sirala('seKalem')">Siparis Kalemi <span id="sort-seKalem"></span></th><th style="cursor:pointer" onclick="sirala('aciklama')">Aciklama <span id="sort-aciklama"></span></th><th style="cursor:pointer" onclick="sirala('mCinsi')">M.Cinsi <span id="sort-mCinsi"></span></th><th style="cursor:pointer" onclick="sirala('mTipi')">M.Tipi <span id="sort-mTipi"></span></th><th style="text-align:center;cursor:pointer" onclick="sirala('o1')">Olcu 1 <span id="sort-o1"></span></th><th style="text-align:center;cursor:pointer" onclick="sirala('o2')">Olcu 2 <span id="sort-o2"></span></th><th style="text-align:center;cursor:pointer" onclick="sirala('o3')">Olcu 3 <span id="sort-o3"></span></th><th style="cursor:pointer" onclick="sirala('aciliyet')">Aciliyet <span id="sort-aciliyet"></span></th><th style="width:80px"></th></tr></thead><tbody id="pr-tbody"></tbody></table>
       </div>
     </div>
     <!-- Footer -->
@@ -141,6 +142,8 @@ var acilSet = {};
 var seciliPR = null;
 var seciliIds = [];
 var drawerAcikMi = false;
+var sortKol = null;  // aktif siralama sutunu
+var sortYon = 0;     // 0=yok, 1=artan, -1=azalan
 var YOGUNLUK = {'Celik':7.85,'Paslanmaz':7.93,'Aluminyum':2.70,'Titanyum':4.51,'Bronz':8.89,'Pirinc':8.50,'Bakir':8.96};
 var YOGUNLUK_KEYS = Object.keys(YOGUNLUK);
 var FASON_ISLEMLER = ['Isil Islem','Induksiyon','Nitrasyon','Sementasyon','Taslama','Boyama','Kaplama','Diger'];
@@ -215,6 +218,39 @@ function secimGuncelle() {
   if(spEl) spEl.textContent = n>0 ? n+' talep secili' : '\u2014';
 }
 
+// ── SIRALAMA ──
+function sirala(kol) {
+  if(sortKol===kol){sortYon=sortYon===1?-1:sortYon===-1?0:1;}
+  else{sortKol=kol;sortYon=1;}
+  // ok isaretlerini guncelle
+  ['tarih','prNo','seKalem','aciklama','mCinsi','mTipi','o1','o2','o3','aciliyet'].forEach(function(k){
+    var el=document.getElementById('sort-'+k);
+    if(el) el.textContent = k===sortKol?(sortYon===1?'\u25B2':sortYon===-1?'\u25BC':''):'';
+  });
+  listeyiUygula();
+}
+function satirDeger(f, kol) {
+  if(kol==='tarih') return f['Talep Tarihi']||'';
+  if(kol==='prNo') return f['Talep No']||'';
+  if(kol==='seKalem'){
+    var seN=f['SE No']||[];if(!seN.length)return'';
+    var sr=siparisler.find(function(s){return s.id===seN[0];});
+    return sr?(sr.fields['SE No']||''):'';
+  }
+  if(kol==='aciklama') return f['Kalem Ad\u0131']||f['Kategori']||'';
+  var mi=f['Malzeme \u0130\u015Flem']||'';var p=mi.split(' - ');
+  if(kol==='mCinsi') return (p[1]||mi).trim();
+  if(kol==='mTipi') return (p[0]||'').trim();
+  var olcu=f['\u00D6l\u00E7\u00FC']||'';var tip=(p[0]||'').trim().toLowerCase();
+  var o1='',o2='',o3='';
+  if(tip==='mil'){var mm=olcu.match(/[\u00D8\u00F8]?([\d.]+)\s*[x\u00D7]\s*([\d.]+)/);if(mm){o1=mm[1];o2='0';o3=mm[2];}}
+  else if(tip==='boru'){var mm=olcu.match(/[\u00D8\u00F8]?([\d.]+)\s*\/\s*[\u00D8\u00F8]?([\d.]+)\s*[x\u00D7]\s*([\d.]+)/);if(mm){o1=mm[1];o2=mm[2];o3=mm[3];}}
+  else{var mm=olcu.match(/([\d.]+)\s*[x\u00D7]\s*([\d.]+)\s*[x\u00D7]\s*([\d.]+)/);if(mm){o1=mm[1];o2=mm[2];o3=mm[3];}}
+  if(kol==='o1')return o1;if(kol==='o2')return o2;if(kol==='o3')return o3;
+  if(kol==='aciliyet'){var m={'Kritik':0,'Y\u00FCksek':1,'Yuksek':1};return m[f['Aciliyet']]!==undefined?m[f['Aciliyet']]:2;}
+  return '';
+}
+
 function tabloRender(liste) {
   var tbody = document.getElementById('pr-tbody');
   if (!tbody) return;
@@ -246,13 +282,28 @@ function tabloRender(liste) {
     return;
   }
 
-  // Siralama: Kritik > Yuksek > Normal
-  var sirali = liste.slice().sort(function(a,b){
-    var map = {'Kritik':0,'Y\u00FCksek':1,'Yuksek':1};
-    var va = map[a.fields['Aciliyet']] !== undefined ? map[a.fields['Aciliyet']] : 2;
-    var vb = map[b.fields['Aciliyet']] !== undefined ? map[b.fields['Aciliyet']] : 2;
-    return va - vb;
-  });
+  // Siralama
+  var sirali = liste.slice();
+  if(sortKol && sortYon!==0){
+    sirali.sort(function(a,b){
+      var va=satirDeger(a.fields,sortKol);
+      var vb=satirDeger(b.fields,sortKol);
+      // Sayi mi kontrol
+      var na=parseFloat(va),nb=parseFloat(vb);
+      var cmp;
+      if(!isNaN(na)&&!isNaN(nb)){cmp=na-nb;}
+      else{cmp=String(va).localeCompare(String(vb),'tr');}
+      return cmp*sortYon;
+    });
+  } else {
+    // Default: Kritik > Yuksek > Normal
+    sirali.sort(function(a,b){
+      var map = {'Kritik':0,'Y\u00FCksek':1,'Yuksek':1};
+      var va = map[a.fields['Aciliyet']] !== undefined ? map[a.fields['Aciliyet']] : 2;
+      var vb = map[b.fields['Aciliyet']] !== undefined ? map[b.fields['Aciliyet']] : 2;
+      return va - vb;
+    });
+  }
 
   tbody.innerHTML = sirali.map(function(r){
     var f = r.fields;
