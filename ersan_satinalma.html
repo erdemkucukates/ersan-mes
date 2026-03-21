@@ -28,28 +28,27 @@
       <button class="filtre-btn" onclick="sekmeGecis('onaylandi',this)">Onaylandi <span id="s-onaylandi" class="badge badge-gri" style="margin-left:4px;">0</span></button>
     </div>
 
-    <!-- UST-ALT LAYOUT -->
-    <div style="display:flex;flex-direction:column;gap:10px;height:calc(100vh - 52px - 80px);">
+    <!-- IKI PANEL LAYOUT -->
+    <div style="display:flex;gap:12px;height:calc(100vh - 52px - 80px);">
 
-      <!-- UST: TABLO -->
-      <div style="flex:1;min-height:180px;background:var(--beyaz);border:1px solid var(--border);border-radius:8px;display:flex;flex-direction:column;overflow:hidden;">
-        <div style="display:flex;align-items:center;gap:8px;padding:6px 12px;border-bottom:1px solid var(--border);flex-wrap:wrap;">
-          <input type="text" id="satinalma-arama" placeholder="PR no, malzeme, SE ara..." oninput="filtreleListeyi()" style="width:220px;padding:5px 8px;border:1px solid var(--border);border-radius:5px;font-size:12px;background:var(--bg2);font-family:inherit;color:var(--metin2);">
+      <!-- SOL PANEL -->
+      <div style="width:300px;flex-shrink:0;background:var(--beyaz);border:1px solid var(--border);border-radius:8px;display:flex;flex-direction:column;overflow:hidden;">
+        <div style="padding:8px 12px;border-bottom:1px solid var(--border);">
+          <input type="text" id="satinalma-arama" placeholder="SE no, malzeme ara..." oninput="filtreleListeyi()" style="width:100%;padding:5px 8px;border:1px solid var(--border);border-radius:5px;font-size:12px;background:var(--bg2);font-family:inherit;color:var(--metin2);">
+        </div>
+        <div style="display:flex;border-bottom:1px solid var(--border);">
           <button class="filtre-btn aktif" onclick="tipFiltre('tumu',this)">Tumu</button>
           <button class="filtre-btn" onclick="tipFiltre('hammadde',this)">Hammadde</button>
           <button class="filtre-btn" onclick="tipFiltre('fason',this)">Fason</button>
-          <div style="flex:1;"></div>
-          <span id="secim-sayac" style="font-size:11px;color:var(--metin3);display:none;">0 secili</span>
-          <button id="toplu-rfq-btn" class="btn btn-mavi btn-sm" onclick="topluRFQ()" style="display:none;font-size:11px;padding:4px 10px;">Secilenlere RFQ Gonder</button>
         </div>
-        <div id="talep-liste" style="flex:1;overflow:auto;">
+        <div id="talep-liste" style="flex:1;overflow-y:auto;">
           <div class="yukleniyor"><div class="spinner"></div><span>Yukleniyor...</span></div>
         </div>
       </div>
 
-      <!-- ALT: DETAY -->
-      <div id="talep-detay" style="flex:1;min-height:180px;background:var(--beyaz);border:1px solid var(--border);border-radius:8px;overflow-y:auto;padding:16px;">
-        <div class="bos-durum"><p>Tablodan bir talep secin</p></div>
+      <!-- SAG PANEL -->
+      <div id="talep-detay" style="flex:1;background:var(--beyaz);border:1px solid var(--border);border-radius:8px;overflow-y:auto;padding:16px;">
+        <div class="bos-durum"><p>Listeden bir talep secin</p></div>
       </div>
 
     </div>
@@ -77,7 +76,6 @@ var muzakereler = [];
 var aktifSekme = 'talepler';
 var aktifTip = 'tumu';
 var seciliId = null;
-var seciliIds = [];
 
 var SEKME_DURUMLARI = {
   talepler: ['Taslak'],
@@ -170,114 +168,27 @@ function filtreleListeyi() {
   sekmeSayacGuncelle();
 }
 
-// ── MALZEME & OLCU PARSE ──
-function parseMalzeme(mi) {
-  if (!mi) return {tip:'', cinsi:''};
-  var p = mi.split(' - ');
-  return {tip: (p[0]||'').trim(), cinsi: (p[1]||'').trim()};
-}
-function parseOlcu(olcu, tip) {
-  if (!olcu) return {o1:'',o2:'',o3:''};
-  tip = (tip||'').toLowerCase();
-  var m;
-  if (tip === 'mil') {
-    m = olcu.match(/[Øø]?([\d.]+)\s*[x×]\s*([\d.]+)/);
-    return m ? {o1:m[1], o2:'0', o3:m[2]} : {o1:olcu, o2:'', o3:''};
-  }
-  if (tip === 'boru') {
-    m = olcu.match(/[Øø]?([\d.]+)\s*\/\s*[Øø]?([\d.]+)\s*[x×]\s*([\d.]+)/);
-    return m ? {o1:m[1], o2:m[2], o3:m[3]} : {o1:olcu, o2:'', o3:''};
-  }
-  // Lama, Sac, diger: EnxBoyxYukseklik
-  m = olcu.match(/([\d.]+)\s*[x×]\s*([\d.]+)\s*[x×]\s*([\d.]+)/);
-  if (m) return {o1:m[1], o2:m[2], o3:m[3]};
-  m = olcu.match(/([\d.]+)\s*[x×]\s*([\d.]+)/);
-  if (m) return {o1:m[1], o2:m[2], o3:''};
-  return {o1:olcu, o2:'', o3:''};
-}
-function olcuBaslik(tip) {
-  tip = (tip||'').toLowerCase();
-  if (tip === 'mil') return ['Cap','—','Boy'];
-  if (tip === 'boru') return ['Dis Cap','Ic Cap','Boy'];
-  if (tip === 'lama') return ['En','Boy','Yukseklik'];
-  if (tip === 'sac') return ['En','Boy','Kalinlik'];
-  return ['Olcu 1','Olcu 2','Olcu 3'];
-}
-
-// ── SECIM ──
-function toggleSecim(id, checked) {
-  if (checked) { if (seciliIds.indexOf(id)<0) seciliIds.push(id); }
-  else { seciliIds = seciliIds.filter(function(x){return x!==id;}); }
-  secimGuncelle();
-}
-function tumunuSec(checked) {
-  if (checked) { seciliIds = filtrelenmis.map(function(r){return r.id;}); }
-  else { seciliIds = []; }
-  listeRender();
-}
-function secimGuncelle() {
-  var n = seciliIds.length;
-  var el = document.getElementById('secim-sayac');
-  var btn = document.getElementById('toplu-rfq-btn');
-  if (el) { el.style.display = n>0?'inline':'none'; el.textContent = n+' secili'; }
-  if (btn) { btn.style.display = n>0?'inline-block':'none'; }
-}
-
 // ── LISTE RENDER ──
 function listeRender() {
   var el = document.getElementById('talep-liste');
   if (!filtrelenmis.length) {
     el.innerHTML = '<div class="bos-durum" style="padding:20px"><p>Kayit bulunamadi</p></div>';
-    secimGuncelle();
     return;
   }
-  var thS = 'padding:5px 6px;text-align:left;white-space:nowrap;font-size:10px;font-weight:600;color:var(--metin3);text-transform:uppercase;letter-spacing:.3px;';
-  var html = '<table style="width:100%;border-collapse:collapse;font-size:11px;">';
-  html += '<thead><tr style="background:var(--bg2);position:sticky;top:0;z-index:1;">';
-  html += '<th style="width:28px;padding:5px 4px;text-align:center;"><input type="checkbox" onchange="tumunuSec(this.checked)" id="chk-hepsi"></th>';
-  html += '<th style="'+thS+'">Tarih</th>';
-  html += '<th style="'+thS+'">PR No</th>';
-  html += '<th style="'+thS+'">Kalem</th>';
-  html += '<th style="'+thS+'">M.Cinsi</th>';
-  html += '<th style="'+thS+'">M.Tipi</th>';
-  html += '<th style="'+thS+'text-align:center;">Olcu 1</th>';
-  html += '<th style="'+thS+'text-align:center;">Olcu 2</th>';
-  html += '<th style="'+thS+'text-align:center;">Olcu 3</th>';
-  html += '<th style="'+thS+'text-align:center;">Miktar</th>';
-  html += '<th style="'+thS+'text-align:center;">Durum</th>';
-  html += '</tr></thead><tbody>';
-
+  var html = '';
   for (var i = 0; i < filtrelenmis.length; i++) {
     var r = filtrelenmis[i];
     var f = r.fields;
-    var aktif = r.id === seciliId;
-    var checked = seciliIds.indexOf(r.id) >= 0;
+    var secili = r.id === seciliId ? ' secili' : '';
     var durum = f['Durum'] || 'Taslak';
     var durumClass = durum === 'Taslak' ? 'badge-gri' : durum === 'Onaylandı' ? 'badge-yesil' : (durum === 'Teklif Alındı' || durum === 'Teklif Alindi') ? 'badge-mavi' : 'badge-sari';
-    var tarih = fmtDate(f['Talep Tarihi']);
-    var prNo = f['Talep No'] || '';
-    var kalem = f['Kalem Adı'] || '';
-    var parsed = parseMalzeme(f['Malzeme İşlem'] || '');
-    var olc = parseOlcu(f['Ölçü'] || '', parsed.tip);
-    var tdS = 'padding:4px 6px;';
-
-    html += '<tr onclick="talepSec(\''+r.id+'\')" style="cursor:pointer;border-bottom:1px solid var(--border);'+(aktif?'background:var(--mavi-bg);':'')+'">';
-    html += '<td style="padding:4px;text-align:center;" onclick="event.stopPropagation()"><input type="checkbox" '+(checked?'checked':'')+' onchange="toggleSecim(\''+r.id+'\',this.checked)"></td>';
-    html += '<td style="'+tdS+'white-space:nowrap;color:var(--metin3);font-size:10px;">'+tarih+'</td>';
-    html += '<td style="'+tdS+'font-family:monospace;font-weight:600;color:var(--mavi-koyu);white-space:nowrap;">'+(prNo||'—')+'</td>';
-    html += '<td style="'+tdS+'max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+kalem+'">'+kalem+'</td>';
-    html += '<td style="'+tdS+'white-space:nowrap;">'+parsed.cinsi+'</td>';
-    html += '<td style="'+tdS+'white-space:nowrap;">'+parsed.tip+'</td>';
-    html += '<td style="'+tdS+'text-align:center;font-family:monospace;">'+olc.o1+'</td>';
-    html += '<td style="'+tdS+'text-align:center;font-family:monospace;">'+olc.o2+'</td>';
-    html += '<td style="'+tdS+'text-align:center;font-family:monospace;">'+olc.o3+'</td>';
-    html += '<td style="'+tdS+'text-align:center;font-family:monospace;white-space:nowrap;">'+(f['Miktar']||'')+' '+(f['Birim']||'')+'</td>';
-    html += '<td style="'+tdS+'text-align:center;"><span class="badge '+durumClass+'" style="font-size:10px;">'+durum+'</span></td>';
-    html += '</tr>';
+    html += '<div class="liste-satir' + secili + '" onclick="talepSec(\'' + r.id + '\')">' +
+      '<div class="liste-satir-no">' + (f['Talep No'] || f['Kalem Adı'] || r.id) + '</div>' +
+      '<div class="liste-satir-ad">' + (f['Malzeme İşlem'] || f['Kalem Adı'] || '') + ' ' + (f['Miktar'] || '') + ' ' + (f['Birim'] || '') + '</div>' +
+      '<div class="liste-satir-alt"><span style="font-size:10px;color:var(--metin4)">' + (f['Talep Tipi'] || '') + '</span><span class="badge ' + durumClass + '">' + durum + '</span></div>' +
+      '</div>';
   }
-  html += '</tbody></table>';
   el.innerHTML = html;
-  secimGuncelle();
 }
 
 // ── SEKME SAYAC GUNCELLE ──
@@ -443,65 +354,6 @@ function gosterKarsilastirma(r) {
   html += '</div>';
 
   document.getElementById('talep-detay').innerHTML = html;
-}
-
-// ── TOPLU RFQ ──
-function topluRFQ() {
-  if (!seciliIds.length) { toast('Talep secin', 'err'); return; }
-  var seciliRecs = [];
-  for (var i=0;i<records.length;i++) {
-    if (seciliIds.indexOf(records[i].id)>=0) seciliRecs.push(records[i]);
-  }
-  var tedList = '';
-  for (var i = 0; i < tedarikci.length; i++) {
-    var t = tedarikci[i];
-    var email = t.fields['E-posta'] || '';
-    var ad = (t.fields['Tedarikçı Adı'] || t.fields['Tedarikçi Adı'] || '').replace(/"/g, '&quot;');
-    tedList += '<div style="display:flex;align-items:center;gap:10px;padding:6px 12px;border:1px solid var(--border);border-radius:6px;margin-bottom:4px;">' +
-      '<input type="checkbox" data-adi="'+ad+'" data-email="'+email+'" style="width:15px;height:15px;"'+ (!email?' disabled title="E-posta yok"':'')+'>'+
-      '<div style="flex:1;"><div style="font-size:12px;font-weight:500;">'+ad+'</div><div style="font-size:10px;color:var(--metin3);">'+(email||'E-posta yok')+'</div></div></div>';
-  }
-  var ozet = seciliRecs.map(function(r){return '<div style="font-size:11px;padding:3px 0;border-bottom:1px solid var(--border);">'+(r.fields['Talep No']||'—')+' — '+(r.fields['Kalem Adı']||'')+' — '+(r.fields['Malzeme İşlem']||'')+'</div>';}).join('');
-
-  var modal = document.createElement('div');
-  modal.className = 'modal-overlay';
-  modal.id = 'toplu-rfq-modal';
-  modal.innerHTML = '<div class="modal" style="max-width:520px;">'+
-    '<div class="modal-baslik"><span>Toplu RFQ — '+seciliIds.length+' talep</span><button class="modal-kapat" onclick="this.closest(\'.modal-overlay\').remove()">&times;</button></div>'+
-    '<div style="max-height:120px;overflow-y:auto;margin-bottom:10px;background:var(--bg2);border-radius:6px;padding:8px 12px;">'+ozet+'</div>'+
-    '<div style="font-size:11px;font-weight:600;color:var(--metin3);margin-bottom:6px;">Tedarikci Secin</div>'+tedList+
-    '<div id="toplu-rfq-result" style="margin-top:8px;"></div>'+
-    '<div class="modal-alt"><button class="btn btn-beyaz" onclick="this.closest(\'.modal-overlay\').remove()">Iptal</button>'+
-    '<button class="btn btn-mavi" onclick="topluRFQGonder()">Gonder</button></div></div>';
-  document.body.appendChild(modal);
-}
-function topluRFQGonder() {
-  var checkboxes = document.querySelectorAll('#toplu-rfq-modal input[type=checkbox]:checked');
-  if (!checkboxes.length) { toast('Tedarikci secin', 'err'); return; }
-  var emails = []; var adlar = [];
-  for (var i=0;i<checkboxes.length;i++) {
-    if(checkboxes[i].dataset.email) emails.push(checkboxes[i].dataset.email);
-    adlar.push(checkboxes[i].dataset.adi);
-  }
-  if (!emails.length) { toast('Secilen tedarikcilerin e-posta adresi yok', 'err'); return; }
-
-  var promises = [];
-  for (var i=0;i<seciliIds.length;i++) {
-    var token = Date.now()+'-'+Math.random().toString(36).slice(2,9);
-    promises.push(apiFn('PATCH', T.stl, {fields:{'Durum':'Gönderildi','Tedarikçi Email':emails.join(', '),'Token':token}}, seciliIds[i]));
-  }
-  Promise.all(promises).then(function() {
-    for (var i=0;i<seciliIds.length;i++) {
-      for (var j=0;j<records.length;j++) {
-        if (records[j].id===seciliIds[i]) { records[j].fields['Durum']='Gönderildi'; break; }
-      }
-    }
-    document.getElementById('toplu-rfq-result').innerHTML = '<div style="background:var(--yesil-bg);color:var(--yesil-t);padding:8px 12px;border-radius:6px;font-size:12px;">'+seciliIds.length+' talep '+adlar.join(', ')+' tedarikciye gonderildi</div>';
-    seciliIds = [];
-    filtreleListeyi();
-    toast(adlar.length+' tedarikciye toplu RFQ gonderildi');
-    setTimeout(function(){ var m=document.querySelector('.modal-overlay'); if(m)m.remove(); }, 2000);
-  }).catch(function(e) { toast('Hata: '+e.message, 'err'); });
 }
 
 // ── LOAD ALL ──
