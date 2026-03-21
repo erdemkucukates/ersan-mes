@@ -313,132 +313,315 @@
   font-weight: 500;
 }
 
-/* ── KARSILASTIRMA ── */
-.rfq-karsilastir-grid {
-  display: grid;
-  grid-template-columns: 280px 1fr;
-  gap: 16px;
-  min-height: 300px;
+/* ── KARSILASTIRMA v2 ── */
+.cft-chip-bar {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 10px;
+  margin-bottom: 12px;
+  scrollbar-width: thin;
 }
-.rfq-karsilastir-sol {
-  border-right: 1px solid var(--border);
-  padding-right: 16px;
-  max-height: 65vh;
-  overflow-y: auto;
-}
-.rfq-karsilastir-sol-item {
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  margin-bottom: 6px;
+.cft-chip {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+  color: #6b7280;
   cursor: pointer;
-  transition: all .1s;
+  white-space: nowrap;
+  min-width: 160px;
+  font-family: inherit;
+  transition: all .15s;
+  position: relative;
 }
-.rfq-karsilastir-sol-item:hover { border-color: var(--mavi); background: var(--mavi-acik); }
-.rfq-karsilastir-sol-item.secili { border-color: var(--mavi); background: #dbeafe; }
-.rfq-karsilastir-sol-item .baslik {
-  font-size: 12px;
+.cft-chip:hover { border-color: var(--mavi); background: var(--mavi-acik); }
+.cft-chip.on { background: #1a2b47; color: #fff; border-color: #1a2b47; }
+.cft-chip-no { font-size: 12px; font-weight: 700; font-family: 'Consolas','Courier New',monospace; }
+.cft-chip-mal { font-size: 10px; opacity: .85; }
+.cft-chip-badge {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  font-size: 9px;
+  font-weight: 700;
+  background: rgba(255,255,255,.2);
+  padding: 1px 6px;
+  border-radius: 8px;
+}
+.cft-chip:not(.on) .cft-chip-badge { background: #e5e7eb; color: #6b7280; }
+
+/* ── OZET SERIDI ── */
+.cft-ozet {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+.cft-ozet-item {
+  padding: 8px 12px;
+  border-right: 1px solid #e5e7eb;
+}
+.cft-ozet-item:last-child { border-right: none; }
+.cft-ozet-item label {
+  display: block;
+  font-size: 9px;
   font-weight: 600;
-  color: var(--laci);
-  font-family: monospace;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: .3px;
+  margin-bottom: 2px;
 }
-.rfq-karsilastir-sol-item .alt {
+.cft-ozet-item span { font-size: 12px; font-weight: 600; color: var(--metin); }
+
+/* ── AKIS CUBUGU ── */
+.cft-akis {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 14px;
+}
+.cft-akis-step {
+  flex: 1;
+  padding: 7px 10px;
+  border-radius: 6px;
   font-size: 11px;
-  color: var(--metin3);
-  margin-top: 2px;
+  font-weight: 600;
+  text-align: center;
+  background: #f3f4f6;
+  color: #9ca3af;
+}
+.cft-akis-step span { display: block; font-size: 9px; font-weight: 400; margin-top: 1px; }
+.cft-akis-step.done { background: #f0fdf4; color: #065f46; }
+.cft-akis-step.active { background: #1a2b47; color: #fff; }
+
+/* ── IKI SUTUN LAYOUT ── */
+.cft-iki-sutun {
+  display: grid;
+  grid-template-columns: 1fr 290px;
+  gap: 14px;
+  align-items: flex-start;
 }
 
-.rfq-karsilastir-sag {
-  max-height: 65vh;
-  overflow-y: auto;
-}
-
-/* ── TEKLIF KARSILASTIRMA TABLOSU ── */
-.rfq-kars-tablo {
+/* ── KARSILASTIRMA TABLOSU (transposed) ── */
+.cft-tablo {
   width: 100%;
   border-collapse: collapse;
   font-size: 12px;
-  margin-bottom: 16px;
-}
-.rfq-kars-tablo th {
-  padding: 8px 10px;
-  text-align: left;
-  font-weight: 600;
-  color: var(--metin3);
-  font-size: 10px;
-  text-transform: uppercase;
-  border-bottom: 2px solid var(--border);
-  background: var(--bg2);
-}
-.rfq-kars-tablo td {
-  padding: 8px 10px;
-  border-bottom: 1px solid var(--border);
-}
-.rfq-kars-tablo .en-dusuk { background: #f0fdf4; color: var(--yesil); font-weight: 700; }
-.rfq-kars-tablo .en-yuksek { background: #fef2f2; color: var(--kirmizi); }
-.rfq-kars-tablo .kazanan-satir { background: #dbeafe; border-left: 3px solid var(--mavi); }
-
-/* ── PAZARLIK PANEL ── */
-.rfq-pazarlik-panel {
-  border: 1px solid var(--border);
+  border: 1px solid #e5e7eb;
   border-radius: 8px;
-  padding: 16px;
-  margin-top: 16px;
-  background: var(--bg2);
+  overflow: hidden;
 }
-.rfq-pazarlik-panel h4 {
+.cft-tablo th, .cft-tablo td {
+  padding: 8px 10px;
+  border-bottom: 1px solid #e5e7eb;
+  text-align: left;
+}
+.cft-tablo th.cft-th-best { background: #065f46; color: #fff; }
+.cft-tablo th.cft-th-mid { background: #1e40af; color: #fff; }
+.cft-tablo th.cft-th-high { background: #6b7280; color: #fff; }
+.cft-tablo th.cft-th-label { background: #f9fafb; color: #6b7280; font-size: 10px; text-transform: uppercase; font-weight: 600; width: 120px; }
+.cft-tablo .cft-sub { display: block; font-size: 9px; font-weight: 400; opacity: .8; }
+.cft-tablo .cft-best-cell { background: #f0fdf4; }
+.cft-tablo .cft-fiyat-best { color: #059669; font-weight: 700; font-size: 13px; }
+.cft-tablo .cft-fiyat-worst { color: #dc2626; }
+.cft-tablo .cft-diff { font-size: 10px; color: #dc2626; display: block; }
+
+/* ── KARAR SATIRI ── */
+.cft-karar-btn {
+  padding: 5px 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+.cft-karar-btn.kazanan { background: #059669; color: #fff; }
+.cft-karar-btn.kazanan:hover { background: #047857; }
+.cft-karar-btn.pazarlik { background: #f59e0b; color: #fff; }
+.cft-karar-btn.pazarlik:hover { background: #d97706; }
+.cft-karar-btn.kazandi { background: #d1fae5; color: #065f46; cursor: default; }
+
+/* ── TASARRUF BAR ── */
+.cft-tasarruf-bar {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  margin-top: 10px;
+  overflow: hidden;
+}
+.cft-tasarruf-bar-item {
+  padding: 8px 12px;
+  text-align: center;
+  border-right: 1px solid #e5e7eb;
+}
+.cft-tasarruf-bar-item:last-child { border-right: none; }
+.cft-tasarruf-bar-item label {
+  display: block;
+  font-size: 9px;
+  font-weight: 600;
+  color: #9ca3af;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+.cft-tasarruf-bar-item .val { font-size: 13px; font-weight: 700; }
+.cft-tasarruf-bar-item .val.yesil { color: #059669; }
+.cft-tasarruf-bar-item .val.mavi { color: #1e40af; }
+
+/* ── PAZARLIK PANELI ── */
+.cft-paz-panel {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+  font-size: 12px;
+}
+.cft-paz-head {
+  background: #1a2b47;
+  color: #fff;
+  padding: 10px 14px;
   font-size: 13px;
   font-weight: 600;
-  color: var(--laci);
-  margin-bottom: 12px;
 }
-.rfq-pazarlik-row {
+.cft-paz-body { padding: 12px; }
+
+/* TD tabs */
+.cft-paz-tabs {
   display: flex;
-  gap: 12px;
-  align-items: flex-end;
+  gap: 4px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+.cft-paz-tab {
+  padding: 4px 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  background: #fff;
+  color: #6b7280;
+  cursor: pointer;
+  font-family: inherit;
+}
+.cft-paz-tab.on { background: #1a2b47; color: #fff; border-color: #1a2b47; }
+
+/* Current price box */
+.cft-paz-mevcut {
+  background: #f3f4f6;
+  border-radius: 6px;
+  padding: 8px 10px;
   margin-bottom: 10px;
 }
-.rfq-pazarlik-row .form-grup { flex: 1; }
-.rfq-pazarlik-row .form-grup label {
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--metin3);
-  text-transform: uppercase;
-  display: block;
-  margin-bottom: 3px;
+.cft-paz-mevcut .lbl { font-size: 10px; color: #6b7280; font-weight: 600; text-transform: uppercase; }
+.cft-paz-mevcut .fiyat { font-size: 15px; font-weight: 700; color: var(--metin); margin-top: 2px; }
+.cft-paz-mevcut .detay { font-size: 10px; color: #9ca3af; margin-top: 2px; }
+
+/* Target price input */
+.cft-paz-hedef-input {
+  width: 100%;
+  padding: 8px 10px;
+  background: #eff6ff;
+  border: 1px solid #93c5fd;
+  border-radius: 6px;
+  color: #1e40af;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  box-sizing: border-box;
 }
-.rfq-pazarlik-row .form-grup input,
-.rfq-pazarlik-row .form-grup textarea {
+.cft-paz-hedef-input:focus { outline: none; border-color: #3b82f6; }
+
+/* Savings box */
+.cft-paz-tasarruf {
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  margin: 8px 0;
+  text-align: center;
+}
+.cft-paz-tasarruf.pozitif { background: #f0fdf4; color: #059669; }
+.cft-paz-tasarruf.negatif { background: #fef2f2; color: #dc2626; }
+.cft-paz-tasarruf.bos { background: #f3f4f6; color: #9ca3af; }
+
+/* Message textarea */
+.cft-paz-mesaj {
   width: 100%;
   padding: 6px 10px;
-  border: 1px solid var(--border);
+  border: 1px solid #e5e7eb;
   border-radius: 6px;
   font-size: 12px;
   font-family: inherit;
+  resize: vertical;
+  box-sizing: border-box;
 }
-.rfq-tasarruf {
-  font-size: 12px;
-  color: var(--yesil);
-  font-weight: 600;
-  padding: 4px 0;
-}
-.rfq-muzakere-gecmis {
+.cft-paz-mesaj:focus { outline: none; border-color: #93c5fd; }
+
+/* History bubbles */
+.cft-paz-gecmis {
   max-height: 200px;
   overflow-y: auto;
   margin-top: 10px;
 }
-.rfq-muzakere-item {
-  padding: 8px 10px;
-  border-left: 3px solid var(--mavi);
-  margin-bottom: 6px;
-  background: var(--beyaz);
-  border-radius: 0 6px 6px 0;
+.cft-paz-bubble {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+  align-items: flex-start;
+}
+.cft-paz-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.cft-paz-avatar.biz { background: #1a2b47; color: #fff; }
+.cft-paz-avatar.td { background: #dbeafe; color: #1e40af; }
+.cft-paz-bubble-icerik {
+  flex: 1;
+  background: #f9fafb;
+  border-radius: 6px;
+  padding: 6px 10px;
   font-size: 11px;
 }
-.rfq-muzakere-item .tarih {
-  color: var(--metin4);
-  font-size: 10px;
+.cft-paz-bubble-icerik .tarih { font-size: 9px; color: #9ca3af; margin-bottom: 2px; }
+.cft-paz-bubble-icerik .hedef { color: #1e40af; font-weight: 600; margin-top: 2px; }
+
+/* Footer buttons */
+.cft-paz-footer {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
 }
+.cft-paz-btn {
+  flex: 1;
+  padding: 7px 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: center;
+}
+.cft-paz-btn.primary { background: #1e40af; color: #fff; }
+.cft-paz-btn.primary:hover { background: #1e3a8a; }
+.cft-paz-btn.secondary { background: #f3f4f6; color: #374151; border: 1px solid #e5e7eb; }
+.cft-paz-btn.secondary:hover { background: #e5e7eb; }
+
+/* Label util */
+.cft-lbl { font-size: 10px; font-weight: 600; color: #6b7280; text-transform: uppercase; display: block; margin-bottom: 3px; }
 
 /* ── ONAY KART ── */
 .rfq-onay-kart {
@@ -1085,6 +1268,8 @@ function talepDetayGoster(no) {
 // TAB 2 — FIYAT KARSILASTIRMA
 // ══════════════════════════════════════════
 
+var cftAktifTd = 0; // pazarlik panelinde secili tedarikci indexi
+
 function karsilastirmaRender() {
   var el = document.getElementById('karsilastirma-icerik');
   if (!el) return;
@@ -1097,10 +1282,7 @@ function karsilastirmaRender() {
     if (durum === 'Teklif Alındı' || (f['Teklif Fiyatı'] && f['Teklif Fiyatı'] > 0)) {
       var no = f['Talep No'] || '';
       if (no && !teklifNolar[no]) {
-        teklifNolar[no] = {
-          no: no,
-          kalemler: []
-        };
+        teklifNolar[no] = { no: no, kalemler: [] };
       }
       if (no) teklifNolar[no].kalemler.push(tumTalepler[i]);
     }
@@ -1109,148 +1291,297 @@ function karsilastirmaRender() {
   var noList = Object.keys(teklifNolar);
 
   if (noList.length === 0) {
-    el.innerHTML = '<div class="rfq-bos"><div class="rfq-bos-icon">&#128200;</div><div class="rfq-bos-title">Karsilastirilacak teklif yok</div><div class="rfq-bos-desc">Tedarikcilerden teklif geldikce burada gorunecek</div></div>';
+    el.innerHTML = '<div class="rfq-bos"><div class="rfq-bos-icon">&#128200;</div><div class="rfq-bos-title">Karşılaştırılacak teklif yok</div><div class="rfq-bos-desc">Tedarikçilerden teklif geldikçe burada görünecek</div></div>';
     return;
   }
 
-  // Secili yoksa ilkini sec
   if (!seciliKarsilastirmaNo || !teklifNolar[seciliKarsilastirmaNo]) {
     seciliKarsilastirmaNo = noList[0];
   }
 
-  // Sol liste + sag detay
-  var html = '<div class="rfq-karsilastir-grid">';
+  var html = '';
 
-  // SOL PANEL — talep no listesi
-  html += '<div class="rfq-karsilastir-sol">';
+  // ── A) CHIP BAR ──
+  html += '<div class="cft-chip-bar">';
   for (var n = 0; n < noList.length; n++) {
     var gr = teklifNolar[noList[n]];
-    var secili = (noList[n] === seciliKarsilastirmaNo) ? ' secili' : '';
-    var kalemSayi = gr.kalemler.length;
-    var kalemAd = gr.kalemler[0] ? (gr.kalemler[0].fields['Kalem Adı'] || '') : '';
-    html += '<div class="rfq-karsilastir-sol-item' + secili + '" onclick="seciliKarsilastirmaNo=\'' + escHtml(noList[n]) + '\';karsilastirmaRender()">';
-    html += '<div class="baslik">' + escHtml(noList[n]) + '</div>';
-    html += '<div class="alt">' + escHtml(kalemAd) + (kalemSayi > 1 ? ' +' + (kalemSayi - 1) + ' kalem' : '') + '</div>';
-    html += '</div>';
+    var onCls = (noList[n] === seciliKarsilastirmaNo) ? ' on' : '';
+    var ilkF = gr.kalemler[0] ? gr.kalemler[0].fields : {};
+    var chipMal = ilkF['Malzeme Cinsi'] || ilkF['Malzeme İşlem'] || ilkF['Kalem Adı'] || '';
+    var toplam = 0;
+    for (var ci = 0; ci < gr.kalemler.length; ci++) { if (gr.kalemler[ci].fields['Teklif Fiyatı'] > 0) toplam++; }
+    html += '<button class="cft-chip' + onCls + '" onclick="seciliKarsilastirmaNo=\'' + escHtml(noList[n]) + '\';cftAktifTd=0;karsilastirmaRender()">';
+    html += '<span class="cft-chip-no">' + escHtml(noList[n]) + '</span>';
+    html += '<span class="cft-chip-mal">' + escHtml(chipMal) + '</span>';
+    html += '<span class="cft-chip-badge">' + toplam + '/' + gr.kalemler.length + '</span>';
+    html += '</button>';
   }
   html += '</div>';
 
-  // SAG PANEL — karsilastirma tablosu
-  html += '<div class="rfq-karsilastir-sag">';
-
+  // Secili grup verilerini hazirla
   var seciliGrup = teklifNolar[seciliKarsilastirmaNo];
-  if (seciliGrup) {
-    // Teklif bilgilerini topla — her kayit bir tedarikci yaniti olabilir
-    var teklifler = [];
-    var enDusuk = Infinity;
-    var enYuksek = 0;
-    var enDusukIdx = -1;
+  if (!seciliGrup) { el.innerHTML = html; return; }
 
-    for (var t = 0; t < seciliGrup.kalemler.length; t++) {
-      var tf = seciliGrup.kalemler[t].fields;
-      var fiyat = tf['Teklif Fiyatı'] || 0;
-      var tedarikciAd = tedarikciAdiGetir(tf['Seçilen Tedarikçi']) !== '—' ? tedarikciAdiGetir(tf['Seçilen Tedarikçi']) : (tf['Tedarikçi Email'] || '—');
-      teklifler.push({
-        id: seciliGrup.kalemler[t].id,
-        tedarikci: tedarikciAd,
-        kalemAdi: tf['Kalem Adı'] || '',
-        malzeme: tf['Malzeme İşlem'] || '',
-        malzemeCinsi: tf['Malzeme Cinsi'] || '',
-        olcu: tf['Ölçü'] || '',
-        tedarikciOlculeri: tf['Tedarikçi Ölçüleri'] || '',
-        miktar: tf['Miktar'] || 0,
-        birim: tf['Birim'] || '',
-        fiyat: fiyat,
-        fiyatBirimi: tf['Fiyat Birimi'] || 'TL/kg',
-        teslimGun: tf['Teslim Süresi Gün'] || 0,
-        vade: tf['Tedarikçi Vade Önerisi'] || '',
-        not: tf['Tedarikçi Notu'] || '',
-        durum: tf['Durum'] || '',
-        yanitTarihi: tf['Yanıt Tarihi'] || ''
-      });
-      if (fiyat > 0 && fiyat < enDusuk) { enDusuk = fiyat; enDusukIdx = teklifler.length - 1; }
-      if (fiyat > enYuksek) { enYuksek = fiyat; }
-    }
+  var teklifler = [];
+  var enDusuk = Infinity;
+  var enYuksek = 0;
+  var enDusukIdx = -1;
 
-    html += '<h3 style="font-size:14px;color:var(--laci);margin-bottom:12px;">' + escHtml(seciliKarsilastirmaNo) + ' — Teklif Karsilastirma</h3>';
-
-    html += '<table class="rfq-kars-tablo"><thead><tr>';
-    html += '<th>Tedarikci</th>';
-    html += '<th>Kalem</th>';
-    html += '<th>Fiyat</th>';
-    html += '<th>Birim</th>';
-    html += '<th>Teslim (Gun)</th>';
-    html += '<th>Vade</th>';
-    html += '<th>Not</th>';
-    html += '<th>Yanit Tarihi</th>';
-    html += '<th>Islem</th>';
-    html += '</tr></thead><tbody>';
-
-    for (var r = 0; r < teklifler.length; r++) {
-      var row = teklifler[r];
-      var rowCls = '';
-      var fiyatCls = '';
-      if (row.fiyat > 0) {
-        if (row.fiyat <= enDusuk) { rowCls = ''; fiyatCls = ' class="en-dusuk"'; }
-        else if (row.fiyat >= enYuksek && enYuksek !== enDusuk) { fiyatCls = ' class="en-yuksek"'; }
-      }
-      if (row.durum === 'Onaylandı') rowCls = ' class="kazanan-satir"';
-
-      html += '<tr' + (rowCls ? ' ' + rowCls : '') + '>';
-      html += '<td style="font-weight:500;">' + escHtml(row.tedarikci) + '</td>';
-      html += '<td>' + escHtml(row.kalemAdi) + '<br><span style="font-size:10px;color:var(--metin4);">' + escHtml(row.malzeme) + '</span></td>';
-      html += '<td' + fiyatCls + '>' + (row.fiyat ? row.fiyat.toLocaleString('tr-TR') + ' TL' : '—') + '</td>';
-      html += '<td>' + escHtml(row.fiyatBirimi) + '</td>';
-      html += '<td>' + (row.teslimGun || '—') + '</td>';
-      html += '<td>' + escHtml(row.vade || '—') + '</td>';
-      html += '<td style="max-width:140px;font-size:11px;">' + escHtml(row.not || '—') + '</td>';
-      html += '<td>' + formatTarih(row.yanitTarihi) + '</td>';
-      html += '<td>';
-      if (row.durum !== 'Onaylandı') {
-        html += '<button class="btn btn-yesil btn-sm" onclick="event.stopPropagation();kazananSec(\'' + row.id + '\',' + row.fiyat + ',\'' + escHtml(row.tedarikci) + '\')">Sec</button>';
-      } else {
-        html += '<span class="badge badge-yesil">Kazanan</span>';
-      }
-      html += '</td></tr>';
-    }
-    html += '</tbody></table>';
-
-    // PAZARLIK PANEL
-    html += '<div class="rfq-pazarlik-panel">';
-    html += '<h4>Pazarlik / Muzakere</h4>';
-    html += '<div class="rfq-pazarlik-row">';
-    html += '<div class="form-grup"><label>Mevcut En Dusuk Fiyat</label><input type="text" readonly value="' + (enDusuk < Infinity ? enDusuk.toLocaleString('tr-TR') + ' TL' : '—') + '" style="background:#f1f5f9;"></div>';
-    html += '<div class="form-grup"><label>Hedef Fiyat (TL)</label><input type="number" id="paz-hedef-fiyat" placeholder="0" oninput="pazTasarrufHesapla(' + (enDusuk < Infinity ? enDusuk : 0) + ')"></div>';
-    html += '<div class="form-grup"><label>Tasarruf</label><div class="rfq-tasarruf" id="paz-tasarruf">—</div></div>';
-    html += '</div>';
-    html += '<div class="rfq-pazarlik-row">';
-    html += '<div class="form-grup" style="flex:2;"><label>Mesaj</label><textarea id="paz-mesaj" rows="2" placeholder="Pazarlik mesaji..." style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;"></textarea></div>';
-    html += '<div style="padding-bottom:4px;"><button class="btn btn-mavi btn-sm" onclick="pazarlikKaydet(\'' + escHtml(seciliKarsilastirmaNo) + '\')">Kaydet</button></div>';
-    html += '</div>';
-
-    // Muzakere gecmisi
-    var ilgiliMuz = muzakereler.filter(function(m) {
-      return (m.fields['Talep No'] || '') === seciliKarsilastirmaNo;
+  for (var t = 0; t < seciliGrup.kalemler.length; t++) {
+    var tf = seciliGrup.kalemler[t].fields;
+    var fiyat = tf['Teklif Fiyatı'] || 0;
+    var tedarikciAd = tedarikciAdiGetir(tf['Seçilen Tedarikçi']) !== '—' ? tedarikciAdiGetir(tf['Seçilen Tedarikçi']) : (tf['Tedarikçi Email'] || '—');
+    teklifler.push({
+      id: seciliGrup.kalemler[t].id,
+      tedarikci: tedarikciAd,
+      kalemAdi: tf['Kalem Adı'] || '',
+      malzeme: tf['Malzeme İşlem'] || '',
+      malzemeCinsi: tf['Malzeme Cinsi'] || '',
+      olcu: tf['Ölçü'] || '',
+      tedarikciOlculeri: tf['Tedarikçi Ölçüleri'] || '',
+      miktar: tf['Miktar'] || 0,
+      birim: tf['Birim'] || '',
+      fiyat: fiyat,
+      fiyatBirimi: tf['Fiyat Birimi'] || 'TL/kg',
+      teslimGun: tf['Teslim Süresi Gün'] || 0,
+      vade: tf['Tedarikçi Vade Önerisi'] || '',
+      not: tf['Tedarikçi Notu'] || '',
+      durum: tf['Durum'] || '',
+      yanitTarihi: tf['Yanıt Tarihi'] || ''
     });
-    if (ilgiliMuz.length > 0) {
-      html += '<div style="font-size:11px;font-weight:600;color:var(--metin3);margin-top:12px;margin-bottom:6px;">Muzakere Gecmisi</div>';
-      html += '<div class="rfq-muzakere-gecmis">';
-      for (var m = 0; m < ilgiliMuz.length; m++) {
-        var mf = ilgiliMuz[m].fields;
-        html += '<div class="rfq-muzakere-item">';
-        html += '<div class="tarih">' + formatTarih(mf['Tarih'] || '') + '</div>';
-        html += '<div>' + escHtml(mf['Mesaj'] || mf['Not'] || '') + '</div>';
-        if (mf['Hedef Fiyat']) html += '<div style="margin-top:2px;color:var(--mavi);font-weight:500;">Hedef: ' + mf['Hedef Fiyat'] + ' TL</div>';
-        html += '</div>';
-      }
-      html += '</div>';
-    }
-
-    html += '</div>'; // pazarlik-panel
+    if (fiyat > 0 && fiyat < enDusuk) { enDusuk = fiyat; enDusukIdx = teklifler.length - 1; }
+    if (fiyat > enYuksek) { enYuksek = fiyat; }
   }
 
-  html += '</div>'; // sag
-  html += '</div>'; // grid
+  // Fiyata gore sirala (dusukten yuksege)
+  var siraIdx = [];
+  for (var si = 0; si < teklifler.length; si++) siraIdx.push(si);
+  siraIdx.sort(function(a, b) {
+    var fa = teklifler[a].fiyat || Infinity;
+    var fb = teklifler[b].fiyat || Infinity;
+    return fa - fb;
+  });
+
+  // Ilk kalem bilgisi (ozet icin)
+  var ozetF = teklifler[0] || {};
+
+  // ── B) OZET SERIDI ──
+  html += '<div class="cft-ozet">';
+  html += '<div class="cft-ozet-item"><label>PR No</label><span style="color:#059669;font-family:monospace">' + escHtml(seciliKarsilastirmaNo) + '</span></div>';
+  html += '<div class="cft-ozet-item"><label>Kalem</label><span>' + escHtml(ozetF.kalemAdi || '—') + '</span></div>';
+  html += '<div class="cft-ozet-item"><label>Malzeme</label><span>' + escHtml(ozetF.malzemeCinsi || ozetF.malzeme || '—') + '</span></div>';
+  html += '<div class="cft-ozet-item"><label>Ölçü</label><span>' + escHtml(ozetF.olcu || '—') + '</span></div>';
+  html += '<div class="cft-ozet-item"><label>Miktar</label><span>' + (ozetF.miktar || '—') + ' ' + escHtml(ozetF.birim || '') + '</span></div>';
+  html += '</div>';
+
+  // ── C) AKIS CUBUGU ──
+  var varKazanan = false;
+  for (var ak = 0; ak < teklifler.length; ak++) { if (teklifler[ak].durum === 'Onaylandı') varKazanan = true; }
+  var adim3Cls = varKazanan ? 'done' : 'active';
+  var adim4Cls = varKazanan ? 'done' : '';
+  var adim5Cls = '';
+
+  html += '<div class="cft-akis">';
+  html += '<div class="cft-akis-step done">RFQ Gönderildi<span>Tamamlandı</span></div>';
+  html += '<div class="cft-akis-step done">Teklifler Alındı<span>Tamamlandı</span></div>';
+  html += '<div class="cft-akis-step ' + adim3Cls + '">Karşılaştırma<span>' + (varKazanan ? 'Tamamlandı' : 'Devam ediyor') + '</span></div>';
+  html += '<div class="cft-akis-step ' + adim4Cls + '">Kazanan Seçimi<span>' + (varKazanan ? 'Tamamlandı' : 'Bekliyor') + '</span></div>';
+  html += '<div class="cft-akis-step ' + adim5Cls + '">PO Oluşturuldu<span>—</span></div>';
+  html += '</div>';
+
+  // ── D) IKI SUTUN LAYOUT ──
+  html += '<div class="cft-iki-sutun">';
+
+  // ── SOL: KARSILASTIRMA TABLOSU (transposed) ──
+  html += '<div>';
+  html += '<table class="cft-tablo">';
+
+  // Header row — bos + tedarikci sutunlari
+  html += '<thead><tr><th class="cft-th-label"></th>';
+  for (var hi = 0; hi < siraIdx.length; hi++) {
+    var hRow = teklifler[siraIdx[hi]];
+    var thCls = 'cft-th-high';
+    var thLabel = 'Pahalı';
+    if (hi === 0 && hRow.fiyat > 0) { thCls = 'cft-th-best'; thLabel = '★ En Uygun'; }
+    else if (hi === siraIdx.length - 1 && siraIdx.length > 2) { thCls = 'cft-th-high'; thLabel = 'Pahalı'; }
+    else if (hi > 0) { thCls = 'cft-th-mid'; thLabel = 'Orta'; }
+    if (siraIdx.length === 1) { thCls = 'cft-th-best'; thLabel = 'Tek Teklif'; }
+    if (siraIdx.length === 2 && hi === 1) { thCls = 'cft-th-high'; thLabel = 'Pahalı'; }
+    if (hRow.durum === 'Onaylandı') { thCls = 'cft-th-best'; thLabel = '✓ Kazanan'; }
+    html += '<th class="' + thCls + '">' + escHtml(hRow.tedarikci) + '<span class="cft-sub">' + thLabel + '</span></th>';
+  }
+  html += '</tr></thead><tbody>';
+
+  // Satir: Teklif Edilen Tip
+  html += '<tr><td class="cft-th-label">Teklif Edilen Tip</td>';
+  for (var ri = 0; ri < siraIdx.length; ri++) {
+    var rr = teklifler[siraIdx[ri]];
+    var bestCls = (ri === 0) ? ' cft-best-cell' : '';
+    html += '<td class="' + bestCls + '">' + escHtml(rr.malzemeCinsi || rr.malzeme || '—') + '</td>';
+  }
+  html += '</tr>';
+
+  // Satir: Teklif Olculeri
+  html += '<tr><td class="cft-th-label">Teklif Ölçüleri</td>';
+  for (var ri = 0; ri < siraIdx.length; ri++) {
+    var rr = teklifler[siraIdx[ri]];
+    var bestCls = (ri === 0) ? ' cft-best-cell' : '';
+    html += '<td class="' + bestCls + '">' + escHtml(rr.tedarikciOlculeri || rr.olcu || '—') + '</td>';
+  }
+  html += '</tr>';
+
+  // Satir: Birim Fiyat
+  html += '<tr><td class="cft-th-label">Birim Fiyat</td>';
+  for (var ri = 0; ri < siraIdx.length; ri++) {
+    var rr = teklifler[siraIdx[ri]];
+    var bestCls = (ri === 0) ? ' cft-best-cell' : '';
+    var fCls = '';
+    if (rr.fiyat > 0 && ri === 0) fCls = ' cft-fiyat-best';
+    else if (rr.fiyat > 0 && ri === siraIdx.length - 1 && siraIdx.length > 1) fCls = ' cft-fiyat-worst';
+    html += '<td class="' + bestCls + fCls + '">' + (rr.fiyat ? rr.fiyat.toLocaleString('tr-TR') + ' ' + escHtml(rr.fiyatBirimi) : '—') + '</td>';
+  }
+  html += '</tr>';
+
+  // Satir: Toplam Fiyat
+  var enDusukToplam = (enDusuk < Infinity && teklifler[enDusukIdx]) ? enDusuk * (teklifler[enDusukIdx].miktar || 1) : 0;
+  html += '<tr><td class="cft-th-label">Toplam Fiyat</td>';
+  for (var ri = 0; ri < siraIdx.length; ri++) {
+    var rr = teklifler[siraIdx[ri]];
+    var bestCls = (ri === 0) ? ' cft-best-cell' : '';
+    var toplam = rr.fiyat * (rr.miktar || 1);
+    var toplamStr = toplam > 0 ? toplam.toLocaleString('tr-TR') + ' TL' : '—';
+    var diffStr = '';
+    if (ri > 0 && toplam > 0 && enDusukToplam > 0) {
+      var diff = toplam - enDusukToplam;
+      if (diff > 0) diffStr = '<span class="cft-diff">+' + diff.toLocaleString('tr-TR') + ' ₺</span>';
+    }
+    var fCls2 = (ri === 0 && toplam > 0) ? ' cft-fiyat-best' : '';
+    html += '<td class="' + bestCls + fCls2 + '" style="' + (ri === 0 ? 'font-size:14px;font-weight:700;' : '') + '">' + toplamStr + diffStr + '</td>';
+  }
+  html += '</tr>';
+
+  // Satir: Odeme Vadesi
+  html += '<tr><td class="cft-th-label">Ödeme Vadesi</td>';
+  for (var ri = 0; ri < siraIdx.length; ri++) {
+    var rr = teklifler[siraIdx[ri]];
+    var bestCls = (ri === 0) ? ' cft-best-cell' : '';
+    html += '<td class="' + bestCls + '">' + escHtml(rr.vade ? rr.vade + ' gün' : '—') + '</td>';
+  }
+  html += '</tr>';
+
+  // Satir: Teslim Suresi
+  html += '<tr><td class="cft-th-label">Teslim Süresi</td>';
+  for (var ri = 0; ri < siraIdx.length; ri++) {
+    var rr = teklifler[siraIdx[ri]];
+    var bestCls = (ri === 0) ? ' cft-best-cell' : '';
+    html += '<td class="' + bestCls + '">' + (rr.teslimGun ? rr.teslimGun + ' iş günü' : '—') + '</td>';
+  }
+  html += '</tr>';
+
+  // Satir: Not
+  html += '<tr><td class="cft-th-label">Not</td>';
+  for (var ri = 0; ri < siraIdx.length; ri++) {
+    var rr = teklifler[siraIdx[ri]];
+    var bestCls = (ri === 0) ? ' cft-best-cell' : '';
+    html += '<td class="' + bestCls + '" style="font-size:11px;">' + escHtml(rr.not || '—') + '</td>';
+  }
+  html += '</tr>';
+
+  // Satir: Karar butonlari
+  html += '<tr><td class="cft-th-label">Karar</td>';
+  for (var ri = 0; ri < siraIdx.length; ri++) {
+    var rr = teklifler[siraIdx[ri]];
+    var bestCls = (ri === 0) ? ' cft-best-cell' : '';
+    html += '<td class="' + bestCls + '">';
+    if (rr.durum === 'Onaylandı') {
+      html += '<button class="cft-karar-btn kazandi">✓ Kazanan</button>';
+    } else if (ri === 0 && rr.fiyat > 0) {
+      html += '<button class="cft-karar-btn kazanan" onclick="event.stopPropagation();kazananSec(\'' + rr.id + '\',' + rr.fiyat + ',\'' + escHtml(rr.tedarikci) + '\')">✓ Kazanan Seç → PO</button>';
+    } else {
+      html += '<button class="cft-karar-btn pazarlik" onclick="cftAktifTd=' + siraIdx[ri] + ';karsilastirmaRender()">Pazarlık Et</button>';
+    }
+    html += '</td>';
+  }
+  html += '</tr>';
+
+  html += '</tbody></table>';
+
+  // ── TASARRUF BAR ──
+  var tasarrufTutar = (enYuksek > 0 && enDusuk < Infinity) ? (enYuksek - enDusuk) : 0;
+  var teklifSayisi = teklifler.length;
+  var durumText = varKazanan ? 'Kazanan seçildi' : 'Değerlendirme devam ediyor';
+  html += '<div class="cft-tasarruf-bar">';
+  html += '<div class="cft-tasarruf-bar-item"><label>Potansiyel Tasarruf</label><span class="val yesil">' + (tasarrufTutar > 0 ? tasarrufTutar.toLocaleString('tr-TR') + ' ₺' : '—') + '</span></div>';
+  html += '<div class="cft-tasarruf-bar-item"><label>Teklif Sayısı</label><span class="val mavi">' + teklifSayisi + ' tedarikçi</span></div>';
+  html += '<div class="cft-tasarruf-bar-item"><label>Durum</label><span class="val">' + durumText + '</span></div>';
+  html += '</div>';
+
+  html += '</div>'; // sol column end
+
+  // ── SAG: PAZARLIK PANELI ──
+  if (cftAktifTd >= teklifler.length) cftAktifTd = 0;
+  var aktifTek = teklifler[cftAktifTd] || teklifler[0];
+
+  html += '<div class="cft-paz-panel">';
+  html += '<div class="cft-paz-head">Pazarlık Paneli</div>';
+  html += '<div class="cft-paz-body">';
+
+  // TD tabs
+  html += '<div class="cft-paz-tabs">';
+  for (var pi = 0; pi < teklifler.length; pi++) {
+    var tabOn = (pi === cftAktifTd) ? ' on' : '';
+    html += '<button class="cft-paz-tab' + tabOn + '" onclick="cftAktifTd=' + pi + ';karsilastirmaRender()">' + escHtml(teklifler[pi].tedarikci) + '</button>';
+  }
+  html += '</div>';
+
+  // Mevcut fiyat
+  html += '<div class="cft-paz-mevcut">';
+  html += '<div class="lbl">' + escHtml(aktifTek.tedarikci) + '</div>';
+  html += '<div class="fiyat">' + (aktifTek.fiyat ? aktifTek.fiyat.toLocaleString('tr-TR') + ' ' + escHtml(aktifTek.fiyatBirimi) : '—') + '</div>';
+  html += '<div class="detay">' + (aktifTek.vade ? 'Vade: ' + aktifTek.vade + ' gün' : '') + (aktifTek.teslimGun ? ' · Teslim: ' + aktifTek.teslimGun + ' gün' : '') + '</div>';
+  html += '</div>';
+
+  // Hedef fiyat
+  html += '<label class="cft-lbl">Hedef Fiyat (TL)</label>';
+  html += '<input type="number" class="cft-paz-hedef-input" id="paz-hedef-fiyat" placeholder="0.00" oninput="pazTasarrufHesapla(' + (aktifTek.fiyat || 0) + ')">';
+
+  // Tasarruf kutusu
+  html += '<div class="cft-paz-tasarruf bos" id="paz-tasarruf">—</div>';
+
+  // Mesaj
+  html += '<label class="cft-lbl" style="margin-top:8px;">Mesaj</label>';
+  html += '<textarea class="cft-paz-mesaj" id="paz-mesaj" rows="3" placeholder="Pazarlık mesajı..."></textarea>';
+
+  // Muzakere gecmisi
+  var ilgiliMuz = muzakereler.filter(function(m) {
+    return (m.fields['Talep No'] || '') === seciliKarsilastirmaNo;
+  });
+  if (ilgiliMuz.length > 0) {
+    html += '<div style="font-size:10px;font-weight:600;color:#6b7280;margin-top:10px;margin-bottom:6px;text-transform:uppercase;">Müzakere Geçmişi</div>';
+    html += '<div class="cft-paz-gecmis">';
+    for (var m = 0; m < ilgiliMuz.length; m++) {
+      var mf = ilgiliMuz[m].fields;
+      html += '<div class="cft-paz-bubble">';
+      html += '<div class="cft-paz-avatar biz">E</div>';
+      html += '<div class="cft-paz-bubble-icerik">';
+      html += '<div class="tarih">' + formatTarih(mf['Tarih'] || '') + '</div>';
+      html += '<div>' + escHtml(mf['Mesaj'] || mf['Not'] || '') + '</div>';
+      if (mf['Hedef Fiyat']) html += '<div class="hedef">Hedef: ' + mf['Hedef Fiyat'] + ' TL</div>';
+      html += '</div></div>';
+    }
+    html += '</div>';
+  }
+
+  // Footer butonlar
+  html += '<div class="cft-paz-footer">';
+  html += '<button class="cft-paz-btn primary" onclick="pazarlikKaydet(\'' + escHtml(seciliKarsilastirmaNo) + '\')">Teklif Gönder →</button>';
+  html += '<button class="cft-paz-btn secondary" onclick="pazarlikKaydet(\'' + escHtml(seciliKarsilastirmaNo) + '\')">Not Kaydet</button>';
+  html += '</div>';
+
+  html += '</div>'; // paz-body
+  html += '</div>'; // paz-panel
+
+  html += '</div>'; // cft-iki-sutun
 
   el.innerHTML = html;
 }
@@ -1258,15 +1589,20 @@ function karsilastirmaRender() {
 function pazTasarrufHesapla(mevcutFiyat) {
   var hedef = parseFloat(document.getElementById('paz-hedef-fiyat').value) || 0;
   var el = document.getElementById('paz-tasarruf');
-  if (!el || !mevcutFiyat || !hedef) { if (el) el.textContent = '—'; return; }
+  if (!el) return;
+  if (!mevcutFiyat || !hedef) {
+    el.textContent = '—';
+    el.className = 'cft-paz-tasarruf bos';
+    return;
+  }
   var fark = mevcutFiyat - hedef;
   var yuzde = ((fark / mevcutFiyat) * 100).toFixed(1);
   if (fark > 0) {
-    el.textContent = fark.toLocaleString('tr-TR') + ' TL (%' + yuzde + ' tasarruf)';
-    el.style.color = 'var(--yesil)';
+    el.textContent = fark.toLocaleString('tr-TR') + ' TL tasarruf (%' + yuzde + ')';
+    el.className = 'cft-paz-tasarruf pozitif';
   } else {
-    el.textContent = 'Hedef mevcut fiyattan yuksek';
-    el.style.color = 'var(--kirmizi)';
+    el.textContent = 'Hedef mevcut fiyattan yüksek';
+    el.className = 'cft-paz-tasarruf negatif';
   }
 }
 
