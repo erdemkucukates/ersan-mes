@@ -55,6 +55,30 @@
       "canliUrl": "/ersan_satinalma.html",
       "viewport": { "width": 1280, "height": 900 },
       "bekle": "#talep-liste"
+    },
+    {
+      "id": "po",
+      "canliUrl": "/ersan_satinalma_po.html",
+      "viewport": { "width": 1280, "height": 900 },
+      "bekle": ".two-col"
+    },
+    {
+      "id": "tedarikciler",
+      "canliUrl": "/ersan_tedarikciler.html",
+      "viewport": { "width": 1280, "height": 900 },
+      "bekle": ".td-grid"
+    },
+    {
+      "id": "fatura",
+      "canliUrl": "/ersan_satinalma_fatura.html",
+      "viewport": { "width": 1280, "height": 900 },
+      "bekle": ".tbl"
+    },
+    {
+      "id": "grn",
+      "canliUrl": "/ersan_satinalma_grn.html",
+      "viewport": { "width": 1280, "height": 900 },
+      "bekle": ".grn-tbl"
     }
   ]
 }

@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — Ön Kabul (GRN)</title>
+<link rel="stylesheet" href="ersan_styles.css">
+<script src="ersan_nav.js" defer></script>
+<script src="ersan_log.js" defer></script>
+<style>
+/* ── KPI ROW ── */
+.kpi-row { display:flex; gap:12px; margin-bottom:16px; flex-wrap:wrap; }
+.kpi { flex:1; min-width:160px; background:#fff; border:1px solid var(--border); border-radius:8px; padding:14px 16px; border-top:3px solid var(--border2); }
+.kpi.s1 { border-top-color: var(--sari); }
+.kpi.s2 { border-top-color: var(--yesil); }
+.kpi.s3 { border-top-color: var(--kirmizi); }
+.kpi.s4 { border-top-color: #f59e0b; }
+.kpi-val { font-size:28px; font-weight:700; color:var(--laci); }
+.kpi-lbl { font-size:11px; color:var(--metin3); margin-top:2px; }
+
+/* ── BADGES ── */
+.bdg { display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:600; white-space:nowrap; }
+.b-grn { background:#dcfce7; color:#065f46; }
+.b-amr { background:#fef3c7; color:#92400e; }
+.b-red { background:#fee2e2; color:#991b1b; }
+.b-blu { background:#dbeafe; color:#1e40af; }
+.b-gray { background:#f1f5f9; color:#475569; }
+
+/* ── BUTTONS ── */
+.btn { display:inline-flex; align-items:center; gap:6px; padding:8px 16px; border:none; border-radius:6px; font-size:13px; font-weight:600; cursor:pointer; font-family:inherit; transition:all .15s; }
+.btn:hover { opacity:0.85; }
+.btn-g { background:#059669; color:#fff; }
+.btn-b { background:var(--mavi); color:#fff; }
+.btn-p { background:var(--laci); color:#fff; }
+.btn-warn { background:#d97706; color:#fff; }
+.btn-red { background:#dc2626; color:#fff; }
+.btn-sm { padding:6px 12px; font-size:12px; }
+.btn-outline { background:#fff; border:1px solid var(--border); color:var(--metin2); }
+.btn-outline:hover { background:var(--bg); }
+
+/* ── CARD ── */
+.card { background:#fff; border:1px solid var(--border); border-radius:8px; margin-bottom:16px; overflow:hidden; }
+.card-head { padding:12px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.card-title { font-size:13px; font-weight:700; color:var(--laci); }
+.card-body { padding:16px; }
+
+/* ── GRN FORM HEADER ── */
+.grn-header { background:#1a2b47; color:#fff; border-radius:8px 8px 0 0; padding:14px 20px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; }
+.grn-header-no { font-size:18px; font-weight:700; font-family:'Cascadia Code','Fira Code',monospace; letter-spacing:0.5px; }
+.grn-header-info { font-size:12px; color:rgba(255,255,255,0.7); }
+.grn-header-ref { display:flex; gap:6px; margin-top:4px; }
+.grn-header-ref .bdg { font-size:10px; }
+
+/* ── INFO BOX ── */
+.info-box { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; padding:14px 20px; background:#f9fafb; border:1px solid var(--border); border-top:none; }
+.ib-row { display:flex; flex-direction:column; gap:2px; }
+.ib-k { font-size:10px; font-weight:600; color:var(--metin3); text-transform:uppercase; letter-spacing:0.5px; }
+.ib-v { font-size:13px; font-weight:500; color:var(--laci); }
+.ib-v input, .ib-v select { width:100%; padding:5px 8px; border:1px solid var(--border); border-radius:5px; font-size:13px; font-family:inherit; color:var(--metin); }
+.ib-v input[readonly] { background:#f0fdf4; border-color:#6ee7b7; color:#065f46; font-weight:600; }
+
+/* ── GRN TABLE ── */
+.grn-tbl { width:100%; border-collapse:collapse; font-size:13px; }
+.grn-tbl th { background:#f8fafc; padding:8px 10px; text-align:left; font-size:11px; font-weight:600; color:var(--metin3); text-transform:uppercase; letter-spacing:0.3px; border-bottom:2px solid var(--border); }
+.grn-tbl td { padding:8px 10px; border-bottom:1px solid var(--border); vertical-align:middle; }
+.grn-tbl tr:hover { background:#f8fafc; }
+.grn-tbl tr.row-red { background:#fff5f5; }
+.grn-tbl .mono { font-family:'Cascadia Code','Fira Code',monospace; font-size:12px; }
+
+/* ── GRN INPUTS ── */
+.grn-inp { width:65px; padding:5px 6px; border-radius:5px; font-size:13px; font-family:'Cascadia Code',monospace; text-align:center; border:1px solid var(--border); }
+.grn-inp.kabul { border-color:#6ee7b7; background:#f0fdf4; color:#065f46; font-weight:600; }
+.grn-inp.red { border-color:#fca5a5; background:#fff5f5; color:#991b1b; font-weight:600; }
+.grn-inp:focus { outline:none; box-shadow:0 0 0 2px rgba(55,138,221,0.3); }
+
+/* ── GRN SELECT ── */
+.grn-sel { padding:4px 6px; border:1px solid var(--border); border-radius:5px; font-size:11px; font-family:inherit; cursor:pointer; }
+
+/* ── PROGRESS BAR ── */
+.prog-bar { height:4px; background:#e5e7eb; border-radius:2px; overflow:hidden; margin-top:4px; }
+.prog-fill { height:100%; border-radius:2px; transition:width .3s; }
+.prog-fill.full { background:#059669; }
+.prog-fill.partial { background:#f59e0b; }
+.prog-fill.zero { background:#dc2626; }
+
+/* ── BANNERS ── */
+.grn-banner { background:#f0fdf4; border:1px solid #6ee7b7; border-radius:8px; padding:12px 16px; font-size:13px; color:#065f46; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+.late-banner { background:#fff5f5; border:1px solid #fca5a5; border-radius:8px; padding:12px 16px; font-size:13px; color:#991b1b; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+
+/* ── HISTORY TABLE ── */
+.tbl { width:100%; border-collapse:collapse; font-size:13px; }
+.tbl th { background:#f8fafc; padding:8px 10px; text-align:left; font-size:11px; font-weight:600; color:var(--metin3); text-transform:uppercase; border-bottom:2px solid var(--border); }
+.tbl td { padding:8px 10px; border-bottom:1px solid var(--border); }
+.tbl tr:hover { background:#f8fafc; }
+.tbl tr.row-partial { background:#fffbeb; }
+.tbl tr.row-reject { background:#fef2f2; }
+.tbl .mono { font-family:'Cascadia Code','Fira Code',monospace; font-size:12px; }
+.tbl .muted { color:var(--metin4); }
+
+/* ── EMPTY STATE ── */
+.bos-durum { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:60px 20px; color:var(--metin3); }
+.bos-durum-ikon { font-size:48px; opacity:0.3; margin-bottom:12px; }
+.bos-durum-baslik { font-size:16px; font-weight:600; color:var(--laci); margin-bottom:6px; }
+
+/* ── NOTE AREA ── */
+.grn-note { width:100%; min-height:60px; padding:10px 12px; border:1px solid var(--border); border-radius:6px; font-size:13px; font-family:inherit; resize:vertical; color:var(--metin2); }
+.grn-note:focus { outline:none; border-color:var(--mavi); box-shadow:0 0 0 2px rgba(55,138,221,0.15); }
+
+/* ── DECISION BUTTONS ── */
+.grn-actions { display:flex; gap:10px; padding:16px 0; flex-wrap:wrap; }
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px) {
+  .info-box { grid-template-columns:repeat(2,1fr); }
+}
+@media(max-width:600px) {
+  .info-box { grid-template-columns:1fr; }
+  .kpi-row { flex-direction:column; }
+}
+</style>
+</head>
+<body>
+<div id="nav-alani"></div>
+<div class="icerik-alani">
+  <div class="topbar">
+    <div>
+      <div class="topbar-baslik">Ön Kabul (GRN)</div>
+      <div style="font-size:11px;color:var(--metin4);margin-top:1px;">Goods Receipt Note</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button class="btn btn-b btn-sm" onclick="yeniGrnBaslat()">+ Yeni GRN</button>
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
+    </div>
+  </div>
+  <div class="sayfa-icerik">
+
+    <!-- KPI ROW -->
+    <div class="kpi-row">
+      <div class="kpi s1"><div class="kpi-val" id="kpi-bekleyen">0</div><div class="kpi-lbl">Bekleyen PO</div></div>
+      <div class="kpi s2"><div class="kpi-val" id="kpi-kabul">0</div><div class="kpi-lbl">Kabul Edildi</div></div>
+      <div class="kpi s3"><div class="kpi-val" id="kpi-red">0</div><div class="kpi-lbl">Red / Karantina</div></div>
+      <div class="kpi s4"><div class="kpi-val" id="kpi-kismi">0</div><div class="kpi-lbl">Kısmi Kabul</div></div>
+    </div>
+
+    <!-- BANNER AREA -->
+    <div id="banner-area"></div>
+
+    <!-- GRN FORM -->
+    <div id="grn-form-area"></div>
+
+    <!-- GRN HISTORY -->
+    <div id="grn-gecmis-area" style="margin-top:20px;"></div>
+
+  </div>
+</div>
+
+<div id="toast-wrap" style="position:fixed;bottom:20px;right:20px;z-index:9999;"></div>
+
+<!-- PO SECIM MODAL -->
+<div id="po-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:700;display:none;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:10px;width:560px;max-width:95vw;max-height:80vh;overflow:hidden;display:flex;flex-direction:column;">
+    <div style="padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+      <div style="font-size:14px;font-weight:700;color:var(--laci);">PO Seç — GRN Oluştur</div>
+      <button onclick="kapatPoModal()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--metin3);">&times;</button>
+    </div>
+    <div style="padding:12px 18px;border-bottom:1px solid var(--border);">
+      <input type="text" id="po-modal-ara" placeholder="PO no, malzeme, tedarikçi ara..." oninput="poModalFiltre()" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;">
+    </div>
+    <div id="po-modal-liste" style="flex:1;overflow-y:auto;padding:8px 18px;"></div>
+  </div>
+</div>
+
+<script>
+var BASE = 'app5LDgJMgocw79Ix';
+var T_STL = 'tblHmfCvNZq0qNtb1';
+var T_TD = 'tblEI6683Im5AXj36';
+
+var poList = [];
+var tdList = [];
+var seciliPO = null;
+var aktifGrnNo = '';
+var grnGecmis = [];
+
+// ── API ──
+function apiGet(tbl, q) {
+  return fetch('/.netlify/functions/airtable', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({method:'GET', path:'/v0/'+BASE+'/'+tbl+'?'+(q||'')})
+  }).then(function(r){ return r.json(); });
+}
+function apiPatch(tbl, id, fields) {
+  return fetch('/.netlify/functions/airtable', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({method:'PATCH', path:'/v0/'+BASE+'/'+tbl+'/'+id, body:{fields:fields}})
+  }).then(function(r){ return r.json(); });
+}
+
+// ── HELPERS ──
+function escHtml(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function formatTarih(d) {
+  if (!d) return '—';
+  try { var dt = new Date(d); return ('0'+dt.getDate()).slice(-2)+'.'+('0'+(dt.getMonth()+1)).slice(-2)+'.'+dt.getFullYear(); }
+  catch(e) { return d; }
+}
+function fmt(n) { return n ? Number(n).toLocaleString('tr-TR', {minimumFractionDigits:2}) : '—'; }
+function tedarikciAdiGetir(recIdOrArr) {
+  if (!recIdOrArr) return '—';
+  var id = Array.isArray(recIdOrArr) ? recIdOrArr[0] : recIdOrArr;
+  if (!id) return '—';
+  if (typeof id === 'string' && id.indexOf('rec') !== 0) return id;
+  for (var i = 0; i < tdList.length; i++) {
+    if (tdList[i].id === id) return tdList[i].fields['Tedarikçi Adı'] || id;
+  }
+  return id;
+}
+function toast(msg, type) {
+  type = type || 'ok';
+  var el = document.createElement('div');
+  el.style.cssText = 'padding:10px 16px;border-radius:8px;font-size:13px;font-weight:500;color:#fff;margin-top:8px;opacity:0;transform:translateY(10px);transition:all .3s;';
+  el.style.background = type === 'err' ? 'var(--kirmizi)' : type === 'inf' ? 'var(--mavi)' : 'var(--yesil)';
+  el.textContent = msg;
+  document.getElementById('toast-wrap').appendChild(el);
+  setTimeout(function(){ el.style.opacity='1'; el.style.transform='translateY(0)'; }, 50);
+  setTimeout(function(){ el.remove(); }, 3500);
+}
+function bugunStr() {
+  var d = new Date();
+  return d.getFullYear() + '-' + ('0'+(d.getMonth()+1)).slice(-2) + '-' + ('0'+d.getDate()).slice(-2);
+}
+
+// ── VERI YUKLE ──
+function veriYukle() {
+  var p1 = apiGet(T_STL, 'pageSize=100').then(function(data){
+    poList = (data.records || []);
+    // offset ile ek sayfa
+    if (data.offset) {
+      return apiGet(T_STL, 'pageSize=100&offset='+data.offset).then(function(d2){
+        poList = poList.concat(d2.records || []);
+      });
+    }
+  });
+  var p2 = apiGet(T_TD, 'pageSize=100&fields%5B%5D=Tedarik%C3%A7i%20Ad%C4%B1').then(function(data){
+    tdList = data.records || [];
+  });
+
+  Promise.all([p1, p2]).then(function(){
+    kpiGuncelle();
+    gecmisYukle();
+    urlParametreKontrol();
+  }).catch(function(err){
+    console.error('Veri yuklenemedi:', err);
+    toast('Veri yuklenemedi: ' + err.message, 'err');
+  });
+}
+
+// ── KPI GUNCELLE ──
+function kpiGuncelle() {
+  var bekleyen = 0, kabul = 0, red = 0, kismi = 0;
+  for (var i = 0; i < poList.length; i++) {
+    var d = poList[i].fields['Durum'] || '';
+    var grn = poList[i].fields['GRN Durum'] || '';
+    if (d === 'Onaylandı' || d === 'Onaylandi' || d === 'Gönderildi' || d === 'Gonderildi') {
+      if (grn === 'Kabul') kabul++;
+      else if (grn === 'Red') red++;
+      else if (grn === 'Kısmi Kabul' || grn === 'Kismi') kismi++;
+      else bekleyen++;
+    }
+  }
+  document.getElementById('kpi-bekleyen').textContent = bekleyen;
+  document.getElementById('kpi-kabul').textContent = kabul;
+  document.getElementById('kpi-red').textContent = red;
+  document.getElementById('kpi-kismi').textContent = kismi;
+}
+
+// ── URL PARAMETRE KONTROL ──
+function urlParametreKontrol() {
+  var params = new URLSearchParams(window.location.search);
+  var poParam = params.get('po');
+  var grnParam = params.get('grn');
+
+  if (poParam) {
+    // PO id ile gel
+    var found = null;
+    for (var i = 0; i < poList.length; i++) {
+      if (poList[i].id === poParam || (poList[i].fields['Talep No'] || '') === poParam) {
+        found = poList[i]; break;
+      }
+    }
+    if (found) {
+      formDoldur(found);
+    } else {
+      bosForm('PO bulunamadı: ' + poParam);
+    }
+  } else if (grnParam) {
+    // GRN no ile gel — kayıtlı GRN'i bul
+    var found2 = null;
+    for (var i = 0; i < poList.length; i++) {
+      if ((poList[i].fields['GRN No'] || '') === grnParam) {
+        found2 = poList[i]; break;
+      }
+    }
+    if (found2) {
+      formDoldur(found2);
+    } else {
+      bosForm('GRN bulunamadı: ' + grnParam);
+    }
+  } else {
+    bosForm();
+  }
+}
+
+// ── BOS FORM (empty state) ──
+function bosForm(msg) {
+  var area = document.getElementById('grn-form-area');
+  area.innerHTML = '<div class="card"><div class="bos-durum">' +
+    '<div class="bos-durum-ikon">&#128230;</div>' +
+    '<div class="bos-durum-baslik">' + (msg || 'Ön Kabul İşlemi Başlatın') + '</div>' +
+    '<div style="font-size:13px;margin-bottom:16px;">PO seçin veya "+ Yeni GRN" butonuna tıklayın</div>' +
+    '<button class="btn btn-b" onclick="yeniGrnBaslat()">+ Yeni GRN Oluştur</button>' +
+    '</div></div>';
+}
+
+// ── YENI GRN BASLAT (PO seçim modal) ──
+function yeniGrnBaslat() {
+  var modal = document.getElementById('po-modal');
+  modal.style.display = 'flex';
+  document.getElementById('po-modal-ara').value = '';
+  poModalFiltre();
+}
+function kapatPoModal() {
+  document.getElementById('po-modal').style.display = 'none';
+}
+function poModalFiltre() {
+  var q = (document.getElementById('po-modal-ara').value || '').toLowerCase();
+  var uygunlar = poList.filter(function(r){
+    var d = r.fields['Durum'] || '';
+    var grnD = r.fields['GRN Durum'] || '';
+    var uygun = (d === 'Onaylandı' || d === 'Onaylandi' || d === 'Gönderildi' || d === 'Gonderildi') && grnD !== 'Kabul' && grnD !== 'Red';
+    if (!uygun) return false;
+    if (!q) return true;
+    var f = r.fields;
+    return (f['Talep No'] || '').toLowerCase().indexOf(q) >= 0 ||
+      (f['Kalem Adı'] || '').toLowerCase().indexOf(q) >= 0 ||
+      (f['Malzeme İşlem'] || '').toLowerCase().indexOf(q) >= 0 ||
+      tedarikciAdiGetir(f['Seçilen Tedarikçi']).toLowerCase().indexOf(q) >= 0;
+  });
+
+  var el = document.getElementById('po-modal-liste');
+  if (!uygunlar.length) {
+    el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--metin3);">Bekleyen PO bulunamadı</div>';
+    return;
+  }
+  var html = '';
+  for (var i = 0; i < uygunlar.length; i++) {
+    var r = uygunlar[i];
+    var f = r.fields;
+    html += '<div onclick="poSec(\''+r.id+'\')" style="padding:10px 12px;border:1px solid var(--border);border-radius:6px;margin-bottom:6px;cursor:pointer;transition:all .15s;" onmouseover="this.style.borderColor=\'var(--mavi)\'" onmouseout="this.style.borderColor=\'var(--border)\'">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;">' +
+      '<span style="font-weight:600;font-family:monospace;font-size:13px;color:var(--laci);">' + escHtml(f['Talep No'] || r.id) + '</span>' +
+      '<span class="bdg b-blu">' + escHtml(f['Durum'] || '') + '</span>' +
+      '</div>' +
+      '<div style="font-size:12px;color:var(--metin2);margin-top:3px;">' + escHtml(f['Kalem Adı'] || f['Malzeme İşlem'] || '') + ' — ' + (f['Miktar'] || 0) + ' ' + escHtml(f['Birim'] || 'ad') + '</div>' +
+      '<div style="font-size:11px;color:var(--metin4);margin-top:2px;">' + escHtml(tedarikciAdiGetir(f['Seçilen Tedarikçi'])) + '</div>' +
+      '</div>';
+  }
+  el.innerHTML = html;
+}
+function poSec(id) {
+  kapatPoModal();
+  var r = null;
+  for (var i = 0; i < poList.length; i++) {
+    if (poList[i].id === id) { r = poList[i]; break; }
+  }
+  if (r) formDoldur(r);
+}
+
+// ── FORM DOLDUR ──
+function formDoldur(record) {
+  seciliPO = record;
+  var f = record.fields;
+  var poNo = f['Talep No'] || record.id;
+  var tdAdi = tedarikciAdiGetir(f['Seçilen Tedarikçi']);
+  var teslimTarihi = f['Teslim Süresi Gün'] ? '—' : '—';
+  var grnNo = f['GRN No'] || '';
+  var grnDurum = f['GRN Durum'] || '';
+  var readonlyMode = grnDurum === 'Kabul' || grnDurum === 'Red';
+
+  // GRN no yoksa üret
+  if (!grnNo) {
+    aktifGrnNo = 'GRN-' + String(new Date().getFullYear()).slice(-2) + '-' + String(Math.floor(10000 + Math.random() * 90000));
+  } else {
+    aktifGrnNo = grnNo;
+  }
+
+  var kalemAdi = f['Kalem Adı'] || f['Malzeme İşlem'] || '—';
+  var olcu = f['Ölçü'] || '—';
+  var miktar = f['Miktar'] || 0;
+  var birim = f['Birim'] || 'ad';
+  var gelenSaved = f['GRN Gelen Miktar'] || '';
+  var redSaved = f['GRN Red Miktar'] || '';
+  var cocSaved = f['GRN CoC'] || '';
+  var notSaved = f['GRN Not'] || '';
+
+  var area = document.getElementById('grn-form-area');
+  var html = '';
+
+  // ── HEADER ──
+  html += '<div class="grn-header">';
+  html += '<div><div class="grn-header-no">' + escHtml(aktifGrnNo) + '</div>';
+  html += '<div class="grn-header-info">' + escHtml(poNo) + ' &middot; ' + escHtml(tdAdi) + '</div>';
+  html += '<div class="grn-header-ref">';
+  html += '<span class="bdg b-blu">' + escHtml(poNo) + '</span>';
+  if (f['SE No'] && f['SE No'][0]) html += '<span class="bdg b-gray">SE</span>';
+  html += '</div></div>';
+  html += '<div style="display:flex;gap:6px;">';
+  if (!readonlyMode) {
+    html += '<button class="btn btn-outline btn-sm" style="color:#fff;border-color:rgba(255,255,255,0.3);" onclick="window.print()">Yazdır</button>';
+  }
+  if (readonlyMode) {
+    html += '<span class="bdg ' + (grnDurum === 'Kabul' ? 'b-grn' : 'b-red') + '" style="font-size:13px;padding:4px 12px;">' + escHtml(grnDurum) + '</span>';
+  }
+  html += '</div></div>';
+
+  // ── TESLIM BILGILERI ──
+  html += '<div class="info-box">';
+  html += '<div class="ib-row"><div class="ib-k">GRN No</div><div class="ib-v"><input type="text" id="grn-no-inp" value="' + escHtml(aktifGrnNo) + '" readonly></div></div>';
+  html += '<div class="ib-row"><div class="ib-k">Teslim Tarihi</div><div class="ib-v"><input type="date" id="grn-tarih" value="' + (f['GRN Tarih'] || bugunStr()) + '"' + (readonlyMode ? ' readonly style="background:var(--bg2);"' : '') + '></div></div>';
+  html += '<div class="ib-row"><div class="ib-k">Teslim Alan</div><div class="ib-v"><input type="text" id="grn-teslim-alan" value="' + escHtml(f['GRN Teslim Alan'] || 'Erdem Küçükateş') + '" placeholder="Ad soyad"' + (readonlyMode ? ' readonly style="background:var(--bg2);"' : '') + '></div></div>';
+  html += '<div class="ib-row"><div class="ib-k">İrsaliye No</div><div class="ib-v"><input type="text" id="grn-irsaliye" value="' + escHtml(f['GRN İrsaliye'] || '') + '" placeholder="İrsaliye numarası"' + (readonlyMode ? ' readonly style="background:var(--bg2);"' : '') + '></div></div>';
+  html += '</div>';
+
+  // ── KALEM KONTROL TABLOSU ──
+  html += '<div class="card" style="border-top:none;border-radius:0 0 8px 8px;">';
+  html += '<div class="card-head"><div class="card-title">Kalem Kontrol</div></div>';
+  html += '<div style="overflow-x:auto;">';
+  html += '<table class="grn-tbl">';
+  html += '<thead><tr><th>Malzeme</th><th>Ölçü / Spec</th><th>PO Miktarı</th><th>Gelen Miktar</th><th>Red / Karantina</th><th>CoC / Belge</th><th>Durum</th></tr></thead>';
+  html += '<tbody>';
+
+  // Tek kalem (Satınalma Talepleri her kayıt tek kalem)
+  var gelenVal = gelenSaved !== '' ? Number(gelenSaved) : '';
+  var redVal = redSaved !== '' ? Number(redSaved) : 0;
+  var cocVal = cocSaved || '';
+  var rowClass = gelenVal === 0 ? ' class="row-red"' : '';
+
+  html += '<tr id="grn-row-0"' + rowClass + '>';
+  html += '<td><div style="font-weight:500;">' + escHtml(kalemAdi) + '</div><div style="font-size:11px;color:var(--metin4);">' + escHtml(f['Talep Tipi'] || '') + '</div></td>';
+  html += '<td class="mono">' + escHtml(olcu) + '</td>';
+  html += '<td class="mono" style="font-weight:600;">' + miktar + ' ' + escHtml(birim) + '</td>';
+  html += '<td><input type="number" class="grn-inp kabul" id="grn-gelen-0" value="' + (gelenVal !== '' ? gelenVal : '') + '" min="0" max="' + (miktar * 2) + '" placeholder="0" oninput="satirGuncelle(0,' + miktar + ')"' + (readonlyMode ? ' readonly' : '') + '></td>';
+  html += '<td><input type="number" class="grn-inp red" id="grn-red-0" value="' + redVal + '" min="0" placeholder="0" oninput="satirGuncelle(0,' + miktar + ')"' + (readonlyMode ? ' readonly' : '') + '></td>';
+  html += '<td><select class="grn-sel" id="grn-coc-0" onchange="cocDegisti(0)"' + (readonlyMode ? ' disabled' : '') + '>' +
+    '<option value="">Seçin</option>' +
+    '<option value="var"' + (cocVal === 'var' ? ' selected' : '') + '>✓ CoC Var</option>' +
+    '<option value="eksik"' + (cocVal === 'eksik' ? ' selected' : '') + '>⚠ Eksik</option>' +
+    '<option value="yok"' + (cocVal === 'yok' ? ' selected' : '') + '>✕ Yok</option>' +
+    '</select></td>';
+  html += '<td id="grn-durum-0">—</td>';
+  html += '</tr>';
+  html += '<tr><td colspan="7" style="padding:2px 10px 8px;"><div class="prog-bar"><div class="prog-fill" id="grn-prog-0" style="width:0%;"></div></div></td></tr>';
+
+  html += '</tbody></table></div></div>';
+
+  // ── COC UYARI BANNER ──
+  html += '<div id="coc-uyari" style="display:none;"></div>';
+
+  // ── KONTROL NOTU ──
+  html += '<div class="card">';
+  html += '<div class="card-head"><div class="card-title">Kontrol Notu</div></div>';
+  html += '<div class="card-body"><textarea class="grn-note" id="grn-not" placeholder="Varsa kontrol notları, gözlemler..."' + (readonlyMode ? ' readonly style="background:var(--bg2);"' : '') + '>' + escHtml(notSaved) + '</textarea></div>';
+  html += '</div>';
+
+  // ── KARAR BUTONLARI ──
+  if (!readonlyMode) {
+    html += '<div class="grn-actions">';
+    html += '<button class="btn btn-g" onclick="kabulEt()">✓ Kabul Et → Stoka Al</button>';
+    html += '<button class="btn btn-warn" onclick="kismiKabul()">⚠ Kısmi Kabul</button>';
+    html += '<button class="btn btn-red" onclick="redNcr()">✕ Red → NCR Aç</button>';
+    html += '</div>';
+  } else {
+    html += '<div class="grn-banner">Bu GRN işlemi tamamlanmış. Durum: <strong style="margin-left:4px;">' + escHtml(grnDurum) + '</strong></div>';
+  }
+
+  area.innerHTML = html;
+
+  // İlk durum hesapla
+  if (gelenVal !== '') {
+    satirGuncelle(0, miktar);
+  }
+  cocDegisti(0);
+}
+
+// ── SATIR GUNCELLE (gelen/red degistiginde) ──
+function satirGuncelle(idx, poMiktar) {
+  var gelen = Number(document.getElementById('grn-gelen-' + idx).value) || 0;
+  var red = Number(document.getElementById('grn-red-' + idx).value) || 0;
+  var row = document.getElementById('grn-row-' + idx);
+  var durumEl = document.getElementById('grn-durum-' + idx);
+  var progEl = document.getElementById('grn-prog-' + idx);
+
+  // row color
+  if (row) {
+    row.className = gelen === 0 ? 'row-red' : '';
+  }
+
+  // durum badge
+  var net = gelen - red;
+  var html = '';
+  if (gelen === 0) {
+    html = '<span class="bdg b-red">Bekleniyor</span>';
+  } else if (red > 0 && net <= 0) {
+    html = '<span class="bdg b-red">Red</span>';
+  } else if (gelen >= poMiktar && red === 0) {
+    html = '<span class="bdg b-grn">✓ Tam</span>';
+  } else if (gelen < poMiktar || red > 0) {
+    html = '<span class="bdg b-amr">⚠ Kısmi</span>';
+  } else {
+    html = '<span class="bdg b-grn">✓ Tam</span>';
+  }
+  durumEl.innerHTML = html;
+
+  // progress bar
+  var pct = poMiktar > 0 ? Math.min(100, Math.round((net / poMiktar) * 100)) : 0;
+  if (pct < 0) pct = 0;
+  var cls = pct >= 100 ? 'full' : pct > 0 ? 'partial' : 'zero';
+  progEl.style.width = Math.max(pct, 2) + '%';
+  progEl.className = 'prog-fill ' + cls;
+}
+
+// ── COC DEGISTI ──
+function cocDegisti(idx) {
+  var val = document.getElementById('grn-coc-' + idx) ? document.getElementById('grn-coc-' + idx).value : '';
+  var uyari = document.getElementById('coc-uyari');
+  if (val === 'yok') {
+    uyari.innerHTML = '<div class="late-banner">⚠ CoC / Sertifika eksik — Kalite departmanına bildirim gerekli. AS9100 uygunluk sorunu oluşabilir.</div>';
+    uyari.style.display = 'block';
+  } else {
+    uyari.style.display = 'none';
+  }
+}
+
+// ── FORM DEGERLERINI AL ──
+function formDegerleriAl() {
+  return {
+    grnNo: aktifGrnNo,
+    tarih: document.getElementById('grn-tarih') ? document.getElementById('grn-tarih').value : bugunStr(),
+    teslimAlan: document.getElementById('grn-teslim-alan') ? document.getElementById('grn-teslim-alan').value : '',
+    irsaliye: document.getElementById('grn-irsaliye') ? document.getElementById('grn-irsaliye').value : '',
+    gelen: Number(document.getElementById('grn-gelen-0') ? document.getElementById('grn-gelen-0').value : 0) || 0,
+    red: Number(document.getElementById('grn-red-0') ? document.getElementById('grn-red-0').value : 0) || 0,
+    coc: document.getElementById('grn-coc-0') ? document.getElementById('grn-coc-0').value : '',
+    not: document.getElementById('grn-not') ? document.getElementById('grn-not').value : ''
+  };
+}
+
+// ── KABUL ET ──
+function kabulEt() {
+  if (!seciliPO) { toast('Önce PO seçin', 'err'); return; }
+  var v = formDegerleriAl();
+  var poMiktar = seciliPO.fields['Miktar'] || 0;
+
+  if (v.gelen <= 0) {
+    toast('Gelen miktar girilmeli', 'err');
+    return;
+  }
+  if (v.gelen < poMiktar) {
+    toast('Gelen miktar PO miktarından az — Kısmi Kabul kullanın', 'err');
+    return;
+  }
+
+  var fields = {
+    'GRN No': v.grnNo,
+    'GRN Durum': 'Kabul',
+    'GRN Tarih': v.tarih,
+    'GRN Teslim Alan': v.teslimAlan,
+    'GRN İrsaliye': v.irsaliye,
+    'GRN Gelen Miktar': v.gelen,
+    'GRN Red Miktar': v.red,
+    'GRN CoC': v.coc,
+    'GRN Not': v.not
+  };
+
+  apiPatch(T_STL, seciliPO.id, fields).then(function(res){
+    if (res.error) { toast('Hata: ' + (res.error.message || res.error), 'err'); return; }
+    // Update local
+    for (var k in fields) { seciliPO.fields[k] = fields[k]; }
+    toast('GRN kaydedildi — Kabul Edildi ✓');
+    logIslem('GRN_KABUL', 'GRN', seciliPO.id, v.grnNo, null, fields);
+    kpiGuncelle();
+    gecmisYukle();
+    formDoldur(seciliPO);
+
+    // Success banner
+    document.getElementById('banner-area').innerHTML = '<div class="grn-banner">✓ ' + escHtml(v.grnNo) + ' kabul edildi. <a href="ersan_satinalma_fatura.html" style="color:#065f46;font-weight:600;text-decoration:underline;margin-left:8px;">Fatura Eşleştir →</a></div>';
+    setTimeout(function(){ document.getElementById('banner-area').innerHTML = ''; }, 8000);
+  }).catch(function(err){
+    toast('Kayıt hatası: ' + err.message, 'err');
+  });
+}
+
+// ── KISMI KABUL ──
+function kismiKabul() {
+  if (!seciliPO) { toast('Önce PO seçin', 'err'); return; }
+  var v = formDegerleriAl();
+
+  if (v.gelen <= 0) {
+    toast('Gelen miktar girilmeli', 'err');
+    return;
+  }
+
+  var fields = {
+    'GRN No': v.grnNo,
+    'GRN Durum': 'Kısmi Kabul',
+    'GRN Tarih': v.tarih,
+    'GRN Teslim Alan': v.teslimAlan,
+    'GRN İrsaliye': v.irsaliye,
+    'GRN Gelen Miktar': v.gelen,
+    'GRN Red Miktar': v.red,
+    'GRN CoC': v.coc,
+    'GRN Not': v.not
+  };
+
+  apiPatch(T_STL, seciliPO.id, fields).then(function(res){
+    if (res.error) { toast('Hata: ' + (res.error.message || res.error), 'err'); return; }
+    for (var k in fields) { seciliPO.fields[k] = fields[k]; }
+    toast('Kısmi kabul kaydedildi ⚠');
+    logIslem('GRN_KISMI', 'GRN', seciliPO.id, v.grnNo, null, fields);
+    kpiGuncelle();
+    gecmisYukle();
+    formDoldur(seciliPO);
+  }).catch(function(err){
+    toast('Kayıt hatası: ' + err.message, 'err');
+  });
+}
+
+// ── RED → NCR AC ──
+function redNcr() {
+  if (!seciliPO) { toast('Önce PO seçin', 'err'); return; }
+  var v = formDegerleriAl();
+
+  if (!confirm('Bu kalemi RED edip NCR kaydı oluşturulacak. Onaylıyor musunuz?')) return;
+
+  var fields = {
+    'GRN No': v.grnNo,
+    'GRN Durum': 'Red',
+    'GRN Tarih': v.tarih,
+    'GRN Teslim Alan': v.teslimAlan,
+    'GRN İrsaliye': v.irsaliye,
+    'GRN Gelen Miktar': v.gelen,
+    'GRN Red Miktar': v.red || v.gelen,
+    'GRN CoC': v.coc,
+    'GRN Not': v.not
+  };
+
+  apiPatch(T_STL, seciliPO.id, fields).then(function(res){
+    if (res.error) { toast('Hata: ' + (res.error.message || res.error), 'err'); return; }
+    for (var k in fields) { seciliPO.fields[k] = fields[k]; }
+    toast('Red kaydedildi — NCR oluşturuluyor...');
+    logIslem('GRN_RED_NCR', 'GRN', seciliPO.id, v.grnNo, null, fields);
+    kpiGuncelle();
+    gecmisYukle();
+    formDoldur(seciliPO);
+
+    // NCR sayfasına yönlendir
+    document.getElementById('banner-area').innerHTML = '<div class="late-banner">✕ ' + escHtml(v.grnNo) + ' red edildi. <a href="ersan_ncr.html" style="color:#991b1b;font-weight:600;text-decoration:underline;margin-left:8px;">NCR Kaydı Aç →</a></div>';
+  }).catch(function(err){
+    toast('Kayıt hatası: ' + err.message, 'err');
+  });
+}
+
+// ── GECMIS YUKLE VE RENDER ──
+function gecmisYukle() {
+  grnGecmis = poList.filter(function(r){
+    return r.fields['GRN No'] && r.fields['GRN Durum'];
+  });
+  // Tarihe göre sırala (en yeni üstte)
+  grnGecmis.sort(function(a, b){
+    var da = a.fields['GRN Tarih'] || '';
+    var db = b.fields['GRN Tarih'] || '';
+    return da > db ? -1 : da < db ? 1 : 0;
+  });
+  gecmisRender();
+}
+
+function gecmisRender() {
+  var area = document.getElementById('grn-gecmis-area');
+  if (!grnGecmis.length) {
+    area.innerHTML = '<div class="card"><div class="card-head"><div class="card-title">GRN Geçmişi</div></div>' +
+      '<div class="card-body" style="text-align:center;color:var(--metin4);padding:24px;">Henüz GRN kaydı yok</div></div>';
+    return;
+  }
+
+  var html = '<div class="card"><div class="card-head"><div class="card-title">GRN Geçmişi</div><span class="bdg b-gray">' + grnGecmis.length + ' kayıt</span></div>';
+  html += '<div style="overflow-x:auto;"><table class="tbl">';
+  html += '<thead><tr><th>GRN No</th><th>PO No</th><th>Tedarikçi</th><th>Teslim Tarihi</th><th>Miktar</th><th>Sonuç</th><th>İşlem</th></tr></thead>';
+  html += '<tbody>';
+
+  for (var i = 0; i < grnGecmis.length; i++) {
+    var r = grnGecmis[i];
+    var f = r.fields;
+    var durum = f['GRN Durum'] || '';
+    var rowCls = durum === 'Red' ? ' class="row-reject"' : (durum === 'Kısmi Kabul' || durum === 'Kismi') ? ' class="row-partial"' : '';
+    var durumBdg = durum === 'Kabul' ? 'b-grn' : durum === 'Red' ? 'b-red' : 'b-amr';
+
+    html += '<tr' + rowCls + '>';
+    html += '<td class="mono" style="font-weight:600;">' + escHtml(f['GRN No']) + '</td>';
+    html += '<td class="mono">' + escHtml(f['Talep No'] || r.id) + '</td>';
+    html += '<td>' + escHtml(tedarikciAdiGetir(f['Seçilen Tedarikçi'])) + '</td>';
+    html += '<td>' + formatTarih(f['GRN Tarih']) + '</td>';
+    html += '<td class="mono">' + (f['GRN Gelen Miktar'] || 0) + ' / ' + (f['Miktar'] || 0) + ' ' + escHtml(f['Birim'] || '') + '</td>';
+    html += '<td><span class="bdg ' + durumBdg + '">' + escHtml(durum) + '</span></td>';
+    html += '<td><button class="btn btn-outline btn-sm" onclick="grnDetayAc(\'' + r.id + '\')">Görüntüle</button></td>';
+    html += '</tr>';
+  }
+
+  html += '</tbody></table></div></div>';
+  area.innerHTML = html;
+}
+
+function grnDetayAc(id) {
+  var r = null;
+  for (var i = 0; i < poList.length; i++) {
+    if (poList[i].id === id) { r = poList[i]; break; }
+  }
+  if (r) {
+    formDoldur(r);
+    window.scrollTo({top:0, behavior:'smooth'});
+  }
+}
+
+// ── SAYFA YUKLE ──
+document.addEventListener('DOMContentLoaded', function(){
+  veriYukle();
+});
+</script>
+</body>
+</html>

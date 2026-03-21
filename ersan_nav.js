@@ -15,7 +15,7 @@ var ERSAN_NAV = [
     { label: 'Sat\u0131nalma Sipari\u015Fleri', href: 'ersan_satinalma_po.html' },
     { label: 'Tedarik\u00E7iler',          href: 'ersan_tedarikciler.html' },
     { label: 'Sat\u0131nalma Faturalar\u0131',  href: 'ersan_satinalma_fatura.html' },
-    { label: '\u00D6n Kabul',              href: 'ersan_on_kabul.html' },
+    { label: '\u00D6n Kabul (GRN)',         href: 'ersan_satinalma_grn.html' },
   ]},
   { group: 'Stok Y\u00F6netimi', collapsed: false, items: [
     { label: 'Stok Durumu',      href: 'ersan_stok.html' },

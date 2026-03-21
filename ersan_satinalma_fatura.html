@@ -7,6 +7,94 @@
 <link rel="stylesheet" href="ersan_styles.css">
 <script src="ersan_nav.js" defer></script>
 <script src="ersan_log.js" defer></script>
+<style>
+/* ── KPI ROW ── */
+.kpi-row { display:flex; gap:12px; margin-bottom:16px; }
+.kpi { flex:1; padding:16px 18px; border-radius:10px; background:var(--beyaz); border:1px solid var(--border); }
+.kpi .kpi-val { font-size:28px; font-weight:700; color:var(--metin); margin-bottom:2px; }
+.kpi .kpi-lbl { font-size:12px; color:var(--metin3); }
+.kpi.s1 { border-left:4px solid var(--mavi); }
+.kpi.s2 { border-left:4px solid var(--yesil); }
+.kpi.s3 { border-left:4px solid var(--sari); }
+.kpi.s4 { border-left:4px solid var(--kirmizi); }
+
+/* ── IMPORT ZONE ── */
+.import-zone { background:var(--beyaz); border:2px dashed var(--border2); border-radius:10px; padding:28px; text-align:center; margin-bottom:16px; display:none; position:relative; }
+.import-zone.aktif { display:block; }
+.import-zone .iz-close { position:absolute; top:10px; right:14px; cursor:pointer; font-size:18px; color:var(--metin3); background:none; border:none; }
+.import-zone .iz-close:hover { color:var(--kirmizi); }
+.import-zone .iz-icon { font-size:36px; margin-bottom:6px; }
+.import-zone .iz-title { font-size:15px; font-weight:600; color:var(--metin); margin-bottom:4px; }
+.import-zone .iz-sub { font-size:12px; color:var(--metin3); }
+.import-zone input[type=file] { position:absolute; inset:0; opacity:0; cursor:pointer; }
+.import-zone.drag-over { border-color:var(--mavi); background:var(--mavi-acik); }
+
+/* ── IMPORT PREVIEW ── */
+.import-preview { margin-top:14px; text-align:left; }
+.import-preview table { width:100%; border-collapse:collapse; font-size:12px; }
+.import-preview th { background:var(--bg); padding:6px 8px; text-align:left; font-weight:600; color:var(--metin3); border-bottom:1px solid var(--border); }
+.import-preview td { padding:6px 8px; border-bottom:1px solid var(--border); }
+.import-actions { margin-top:12px; display:flex; gap:8px; justify-content:flex-end; }
+
+/* ── FATURA TABLE ── */
+.tbl { background:var(--beyaz); border:1px solid var(--border); border-radius:10px; overflow:hidden; }
+.tbl table { width:100%; border-collapse:collapse; font-size:13px; }
+.tbl th { background:var(--bg); padding:10px 12px; text-align:left; font-weight:600; color:var(--metin3); font-size:11px; text-transform:uppercase; letter-spacing:.3px; border-bottom:1px solid var(--border); white-space:nowrap; }
+.tbl td { padding:10px 12px; border-bottom:1px solid var(--border); color:var(--metin2); }
+.tbl tr:last-child td { border-bottom:none; }
+.tbl tr.fatura-row { cursor:pointer; transition:background .15s; }
+.tbl tr.fatura-row:hover { background:var(--bg2); }
+.tbl tr.fatura-row.secili { background:var(--mavi-acik); }
+.mono { font-family:'Cascadia Code','Fira Code',monospace; font-size:12px; }
+.muted { color:var(--metin4); }
+
+/* ── BADGES ── */
+.bdg { display:inline-block; padding:2px 8px; border-radius:20px; font-size:11px; font-weight:600; white-space:nowrap; }
+.b-grn { background:var(--yesil-bg); color:var(--yesil-t); }
+.b-amr { background:var(--sari-bg); color:var(--sari-t); }
+.b-red { background:var(--kirmizi-bg); color:var(--kirmizi-t); }
+.b-blu { background:var(--mavi-acik); color:var(--mavi-koyu); }
+.b-gray { background:#f1f5f9; color:var(--metin3); }
+
+/* ── BUTTONS ── */
+.btn { display:inline-flex; align-items:center; gap:5px; padding:7px 14px; border-radius:7px; font-size:13px; font-weight:600; border:none; cursor:pointer; transition:all .15s; font-family:inherit; }
+.btn-g { background:var(--yesil); color:#fff; }
+.btn-g:hover { background:#178a67; }
+.btn-b { background:var(--mavi); color:#fff; }
+.btn-b:hover { background:#2b72bf; }
+.btn-p { background:var(--bg2); color:var(--metin2); border:1px solid var(--border); }
+.btn-p:hover { background:var(--bg); }
+.btn-red { background:var(--kirmizi); color:#fff; }
+.btn-red:hover { background:#c93a3a; }
+
+/* ── MATCH GRID ── */
+.match-grid { display:flex; align-items:stretch; gap:0; padding:16px 20px; background:var(--bg2); border-bottom:1px solid var(--border); }
+.mg-item { flex:1; background:var(--beyaz); border:1px solid var(--border); border-radius:10px; padding:14px 16px; border-top:3px solid var(--border2); }
+.mg-item.mg-ok { border-top-color:var(--yesil); }
+.mg-item.mg-wait { border-top-color:var(--metin4); }
+.mg-item.mg-err { border-top-color:var(--kirmizi); }
+.mg-label { font-size:10px; font-weight:700; color:var(--metin4); text-transform:uppercase; letter-spacing:.5px; margin-bottom:4px; }
+.mg-title { font-size:15px; font-weight:700; color:var(--metin); margin-bottom:10px; font-family:'Cascadia Code','Fira Code',monospace; }
+.mg-row { display:flex; justify-content:space-between; align-items:center; font-size:12px; color:var(--metin2); padding:4px 0; }
+.mg-row.mg-mismatch { background:var(--kirmizi-bg); margin:0 -8px; padding:4px 8px; border-radius:4px; color:var(--kirmizi-t); font-weight:600; }
+.mg-tag { display:inline-block; padding:1px 6px; border-radius:10px; font-size:10px; font-weight:600; }
+.mt-g { background:var(--yesil-bg); color:var(--yesil-t); }
+.mt-gray { background:#f1f5f9; color:var(--metin4); }
+.mt-red { background:var(--kirmizi-bg); color:var(--kirmizi-t); }
+.mg-arrow { display:flex; align-items:center; justify-content:center; width:32px; flex-shrink:0; font-size:18px; color:var(--metin4); }
+.match-banner { padding:12px 20px; display:flex; align-items:center; justify-content:space-between; font-size:13px; font-weight:600; border-bottom:1px solid var(--border); }
+.match-banner.mb-ok { background:var(--yesil-bg); color:var(--yesil-t); }
+.match-banner.mb-err { background:var(--kirmizi-bg); color:var(--kirmizi-t); }
+.match-banner .mb-actions { display:flex; gap:8px; }
+
+/* ── CARD ── */
+.card { background:var(--beyaz); border:1px solid var(--border); border-radius:10px; overflow:hidden; }
+.card-head { padding:12px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.card-title { font-size:14px; font-weight:700; color:var(--metin); }
+
+/* ── EMPTY STATE ── */
+.bos-durum { text-align:center; padding:60px 20px; color:var(--metin4); font-size:14px; }
+</style>
 </head>
 <body>
 <div id="nav-alani"></div>
@@ -14,16 +102,518 @@
   <div class="topbar">
     <div class="topbar-baslik">Satinalma Faturalari</div>
     <div style="display:flex;align-items:center;gap:8px;">
+      <button class="btn btn-b" onclick="importToggle()">Mikro'dan Ice Aktar</button>
       <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
     </div>
   </div>
   <div class="sayfa-icerik">
-    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:60vh;color:var(--metin3);">
-      <div style="font-size:48px;margin-bottom:16px;opacity:0.3;">&#9881;</div>
-      <div style="font-size:16px;font-weight:600;color:var(--laci);margin-bottom:8px;">Satinalma Faturalari</div>
-      <div style="font-size:13px;">Bu modul yapim asamasindadir.</div>
+
+    <!-- KPI ROW -->
+    <div class="kpi-row">
+      <div class="kpi s1"><div class="kpi-val" id="kpi-toplam">0</div><div class="kpi-lbl">Toplam Fatura</div></div>
+      <div class="kpi s2"><div class="kpi-val" id="kpi-eslesti">0</div><div class="kpi-lbl">Eslesti</div></div>
+      <div class="kpi s3"><div class="kpi-val" id="kpi-bekliyor">0</div><div class="kpi-lbl">Bekliyor</div></div>
+      <div class="kpi s4"><div class="kpi-val" id="kpi-uyusmazlik">0</div><div class="kpi-lbl">Uyusmazlik</div></div>
     </div>
+
+    <!-- IMPORT ZONE -->
+    <div class="import-zone" id="import-zone">
+      <button class="iz-close" onclick="importToggle()">&times;</button>
+      <div class="iz-icon">&#128206;</div>
+      <div class="iz-title">Mikro ERP'den CSV Ice Aktar</div>
+      <div class="iz-sub">Mikro Satinalma Faturalari export dosyasini surukle veya tikla</div>
+      <input type="file" id="csv-input" accept=".csv,.txt" onchange="csvDosyaSec(event)">
+      <div id="import-preview" class="import-preview"></div>
+    </div>
+
+    <!-- FATURA TABLE -->
+    <div class="tbl">
+      <table>
+        <thead>
+          <tr>
+            <th>Fatura No</th>
+            <th>Tedarikci</th>
+            <th>Tarih</th>
+            <th style="text-align:right">Tutar (KDV Dahil)</th>
+            <th>PO Esleme</th>
+            <th>GRN</th>
+            <th>Durum</th>
+            <th>Islem</th>
+          </tr>
+        </thead>
+        <tbody id="fatura-body">
+          <tr><td colspan="8"><div class="bos-durum"><div class="spinner" style="margin:0 auto 8px;"></div>Yukleniyor...</div></td></tr>
+        </tbody>
+      </table>
+    </div>
+
   </div>
 </div>
+
+<div id="toast-wrap" style="position:fixed;bottom:20px;right:20px;z-index:9999;"></div>
+
+<script>
+var BASE = 'app5LDgJMgocw79Ix';
+var T = {
+  stl: 'tblHmfCvNZq0qNtb1',
+  tedarikci: 'tblEI6683Im5AXj36',
+  muzakere: 'tbl7Odd0ZZnEZ8PRP'
+};
+
+var poRecords = [];
+var tedarikciMap = {};
+var faturaList = [];
+var seciliFatura = null;
+var importAcik = false;
+var csvRows = [];
+
+// ── LOCAL STORAGE KEY ──
+var LS_KEY = 'ersan_faturalar';
+
+// ── API ──
+var apiGet = function(table, params) {
+  params = params || '';
+  return fetch('/.netlify/functions/airtable', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({method:'GET', path:'/v0/' + BASE + '/' + table + '?' + params})
+  }).then(function(res) { return res.json(); });
+};
+
+var apiFn = function(method, table, body, id) {
+  id = id || '';
+  return fetch('/.netlify/functions/airtable', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({method: method, path: '/v0/' + BASE + '/' + table + (id ? '/' + id : ''), body: body})
+  }).then(function(res) {
+    if (!res.ok) return res.text().then(function(t) { throw new Error(t); });
+    return res.json();
+  });
+};
+
+// ── HELPERS ──
+function fmtDate(d) { try { return new Date(d).toLocaleDateString('tr-TR'); } catch(e) { return d || ''; } }
+function fmt(n) { return n ? Number(n).toLocaleString('tr-TR', {minimumFractionDigits:2}) : '—'; }
+function fmtTL(n) { return n ? '\u20BA' + Number(n).toLocaleString('tr-TR', {minimumFractionDigits:2}) : '—'; }
+
+function toast(msg, type) {
+  type = type || 'ok';
+  var el = document.createElement('div');
+  el.style.cssText = 'padding:10px 16px;border-radius:8px;font-size:13px;font-weight:500;color:#fff;margin-top:8px;opacity:0;transform:translateY(10px);transition:all .3s;';
+  el.style.background = type === 'err' ? 'var(--kirmizi)' : type === 'inf' ? 'var(--mavi)' : 'var(--yesil)';
+  el.textContent = msg;
+  document.getElementById('toast-wrap').appendChild(el);
+  setTimeout(function() { el.style.opacity = '1'; el.style.transform = 'translateY(0)'; }, 50);
+  setTimeout(function() { el.remove(); }, 3500);
+}
+
+function durumBadge(d) {
+  var cls = 'b-gray';
+  if (d === 'Eslesti' || d === 'Odeme Onayinda') cls = 'b-grn';
+  else if (d === 'Odendi') cls = 'b-blu';
+  else if (d === 'Uyusmazlik') cls = 'b-red';
+  else if (d === 'Bekliyor') cls = 'b-amr';
+  return '<span class="bdg ' + cls + '">' + d + '</span>';
+}
+
+function generateFTR() {
+  var max = 0;
+  for (var i = 0; i < faturaList.length; i++) {
+    var no = faturaList[i].faturaNo || '';
+    var m = no.match(/FTR-(\d+)/);
+    if (m) { var n = parseInt(m[1], 10); if (n > max) max = n; }
+  }
+  return 'FTR-' + String(max + 1).padStart(4, '0');
+}
+
+// ── LOCAL STORAGE ──
+function faturalarKaydet() {
+  try { localStorage.setItem(LS_KEY, JSON.stringify(faturaList)); } catch(e) {}
+}
+function faturalarYukle() {
+  try {
+    var d = localStorage.getItem(LS_KEY);
+    if (d) faturaList = JSON.parse(d);
+  } catch(e) { faturaList = []; }
+}
+
+// ── LOAD DATA ──
+function veriYukle() {
+  faturalarYukle();
+
+  var p1 = apiGet(T.stl, 'pageSize=100&filterByFormula=' + encodeURIComponent("{Durum}='Onaylandı'"));
+  var p2 = apiGet(T.tedarikci, 'pageSize=100&fields%5B%5D=Firma+Ad%C4%B1');
+
+  Promise.all([p1, p2]).then(function(results) {
+    poRecords = (results[0].records || []);
+    var tedList = results[1].records || [];
+    for (var i = 0; i < tedList.length; i++) {
+      tedarikciMap[tedList[i].id] = tedList[i].fields['Firma Ad\u0131'] || tedList[i].id;
+    }
+
+    // Generate fatura entries from approved POs that don't have one yet
+    for (var j = 0; j < poRecords.length; j++) {
+      var po = poRecords[j];
+      var poNo = po.fields['Talep No'] || po.fields['PR No'] || ('PO-' + po.id.substring(3, 10));
+      var exists = false;
+      for (var k = 0; k < faturaList.length; k++) {
+        if (faturaList[k].poRecId === po.id) { exists = true; break; }
+      }
+      if (!exists) {
+        var tedId = po.fields['Tedarik\u00E7i'] || po.fields['Tedarikci'];
+        var tedAdi = '\u2014';
+        if (tedId) {
+          if (Array.isArray(tedId)) tedAdi = tedarikciMap[tedId[0]] || tedId[0];
+          else tedAdi = tedarikciMap[tedId] || tedId;
+        }
+        faturaList.push({
+          faturaNo: generateFTR(),
+          poNo: poNo,
+          poRecId: po.id,
+          tedarikci: tedAdi,
+          tarih: po.fields['Onay Tarihi'] || po.fields['Tarih'] || new Date().toISOString().split('T')[0],
+          tutar: po.fields['Toplam Tutar'] || po.fields['Birim Fiyat'] || 0,
+          kdvDahil: (po.fields['Toplam Tutar'] || po.fields['Birim Fiyat'] || 0) * 1.20,
+          poMiktar: po.fields['Miktar'] || 1,
+          grnNo: 'GRN-26-' + String(Math.floor(Math.random() * 900) + 100).padStart(3, '0'),
+          grnMiktar: po.fields['Miktar'] || 1,
+          durum: 'Bekliyor',
+          matchDone: false
+        });
+      }
+    }
+    faturalarKaydet();
+
+    // URL param filter
+    var params = new URLSearchParams(window.location.search);
+    var poFilter = params.get('po');
+    if (poFilter) {
+      faturaList = faturaList.filter(function(f) { return f.poNo === poFilter; });
+    }
+
+    faturaRender();
+    kpiGuncelle();
+  }).catch(function(err) {
+    console.error('Veri yuklenemedi:', err);
+    // Still render localStorage data
+    if (faturaList.length > 0) {
+      faturaRender();
+      kpiGuncelle();
+    } else {
+      document.getElementById('fatura-body').innerHTML = '<tr><td colspan="8"><div class="bos-durum">Veri yuklenemedi</div></td></tr>';
+    }
+  });
+}
+
+// ── KPI ──
+function kpiGuncelle() {
+  var toplam = faturaList.length;
+  var eslesti = 0, bekliyor = 0, uyusmazlik = 0;
+  for (var i = 0; i < faturaList.length; i++) {
+    var d = faturaList[i].durum;
+    if (d === 'Eslesti' || d === 'Odeme Onayinda' || d === 'Odendi') eslesti++;
+    else if (d === 'Uyusmazlik') uyusmazlik++;
+    else bekliyor++;
+  }
+  document.getElementById('kpi-toplam').textContent = toplam;
+  document.getElementById('kpi-eslesti').textContent = eslesti;
+  document.getElementById('kpi-bekliyor').textContent = bekliyor;
+  document.getElementById('kpi-uyusmazlik').textContent = uyusmazlik;
+}
+
+// ── RENDER TABLE ──
+function faturaRender() {
+  var body = document.getElementById('fatura-body');
+  if (faturaList.length === 0) {
+    body.innerHTML = '<tr><td colspan="8"><div class="bos-durum">Henuz fatura kaydi yok</div></td></tr>';
+    return;
+  }
+  var html = '';
+  for (var i = 0; i < faturaList.length; i++) {
+    var f = faturaList[i];
+    var sel = (seciliFatura === i) ? ' secili' : '';
+    html += '<tr class="fatura-row' + sel + '" onclick="satirTikla(' + i + ')">';
+    html += '<td class="mono">' + f.faturaNo + '</td>';
+    html += '<td>' + (f.tedarikci || '\u2014') + '</td>';
+    html += '<td>' + fmtDate(f.tarih) + '</td>';
+    html += '<td style="text-align:right;font-weight:600">' + fmtTL(f.kdvDahil) + '</td>';
+    html += '<td class="mono">' + (f.poNo || '\u2014') + '</td>';
+    html += '<td class="mono">' + (f.grnNo || '\u2014') + '</td>';
+    html += '<td>' + durumBadge(f.durum) + '</td>';
+    html += '<td>';
+    if (f.durum === 'Bekliyor') {
+      html += '<button class="btn btn-b" style="padding:4px 10px;font-size:11px;" onclick="event.stopPropagation();matchYap(' + i + ')">3-Way Match</button>';
+    } else if (f.durum === 'Eslesti') {
+      html += '<button class="btn btn-g" style="padding:4px 10px;font-size:11px;" onclick="event.stopPropagation();odemeOnayi(' + i + ')">Odeme Onayina Gonder</button>';
+    }
+    html += '</td>';
+    html += '</tr>';
+    // Match panel row (accordion)
+    if (seciliFatura === i) {
+      html += '<tr class="match-panel-row"><td colspan="8" style="padding:0;">' + matchPanelHTML(i) + '</td></tr>';
+    }
+  }
+  body.innerHTML = html;
+}
+
+// ── ROW CLICK ──
+function satirTikla(idx) {
+  seciliFatura = (seciliFatura === idx) ? null : idx;
+  faturaRender();
+}
+
+// ── 3-WAY MATCH PANEL ──
+function matchPanelHTML(idx) {
+  var f = faturaList[idx];
+  var poTutar = f.tutar || 0;
+  var grnTutar = f.tutar || 0;
+  var ftrTutar = f.kdvDahil || 0;
+  var poMiktar = f.poMiktar || 1;
+  var grnMiktar = f.grnMiktar || 1;
+  var ftrMiktar = f.poMiktar || 1;
+
+  var tedOk = true;
+  var miktarOk = (poMiktar == grnMiktar && grnMiktar == ftrMiktar);
+  var tutarFark = Math.abs(ftrTutar - (poTutar * 1.20));
+  var tutarOk = tutarFark < 0.5;
+  var allOk = tedOk && miktarOk && tutarOk;
+
+  var poClass = 'mg-ok';
+  var grnClass = grnMiktar == poMiktar ? 'mg-ok' : 'mg-wait';
+  var ftrClass = tutarOk ? 'mg-ok' : 'mg-err';
+
+  var html = '<div class="match-grid">';
+
+  // PO Column
+  html += '<div class="mg-item ' + poClass + '">';
+  html += '<div class="mg-label">PO</div>';
+  html += '<div class="mg-title">' + (f.poNo || '\u2014') + '</div>';
+  html += '<div class="mg-row"><span>Tedarikci</span><span class="mg-tag mt-g">\u2713</span></div>';
+  html += '<div class="mg-row"><span>Miktar: ' + poMiktar + '</span><span class="mg-tag mt-g">\u2713</span></div>';
+  html += '<div class="mg-row"><span>' + fmtTL(poTutar) + '</span><span class="mg-tag mt-g">\u2713</span></div>';
+  html += '<div style="margin-top:10px"><span class="bdg b-grn">\u2713 Onaylandi</span></div>';
+  html += '</div>';
+
+  // Arrow
+  html += '<div class="mg-arrow">\u2192</div>';
+
+  // GRN Column
+  html += '<div class="mg-item ' + grnClass + '">';
+  html += '<div class="mg-label">GRN (Mal Kabul)</div>';
+  html += '<div class="mg-title">' + (f.grnNo || '\u2014') + '</div>';
+  html += '<div class="mg-row"><span>Teslim</span><span class="mg-tag ' + (grnClass === 'mg-ok' ? 'mt-g' : 'mt-gray') + '">\u2713</span></div>';
+  html += '<div class="mg-row"><span>Miktar: ' + grnMiktar + '</span><span class="mg-tag ' + (miktarOk ? 'mt-g' : 'mt-red') + '">' + (miktarOk ? '\u2713' : '\u2717') + '</span></div>';
+  html += '<div class="mg-row"><span>' + fmtTL(grnTutar) + '</span><span class="mg-tag mt-g">\u2713</span></div>';
+  html += '<div style="margin-top:10px"><span class="bdg ' + (grnClass === 'mg-ok' ? 'b-grn' : 'b-gray') + '">' + (grnClass === 'mg-ok' ? '\u2713 Teslim Alindi' : 'Bekliyor') + '</span></div>';
+  html += '</div>';
+
+  // Arrow
+  html += '<div class="mg-arrow">\u2192</div>';
+
+  // Fatura Column
+  html += '<div class="mg-item ' + ftrClass + '">';
+  html += '<div class="mg-label">FATURA</div>';
+  html += '<div class="mg-title">' + f.faturaNo + '</div>';
+  html += '<div class="mg-row"><span>Tarih</span><span class="mg-tag mt-g">\u2713</span></div>';
+  html += '<div class="mg-row' + (!miktarOk ? ' mg-mismatch' : '') + '"><span>Miktar: ' + ftrMiktar + '</span><span class="mg-tag ' + (miktarOk ? 'mt-g' : 'mt-red') + '">' + (miktarOk ? '\u2713' : '\u2717') + '</span></div>';
+  html += '<div class="mg-row' + (!tutarOk ? ' mg-mismatch' : '') + '"><span>' + fmtTL(ftrTutar) + '</span><span class="mg-tag ' + (tutarOk ? 'mt-g' : 'mt-red') + '">' + (tutarOk ? '\u2713' : '\u2717') + '</span></div>';
+  html += '</div>';
+
+  html += '</div>'; // match-grid end
+
+  // Banner
+  if (allOk) {
+    html += '<div class="match-banner mb-ok">';
+    html += '<span>\u2713 3-Way Match basarili \u2014 PO, GRN ve Fatura uyumlu</span>';
+    html += '<div class="mb-actions"><button class="btn btn-g" onclick="event.stopPropagation();odemeOnayi(' + idx + ')">Odeme Onayina Gonder \u2192</button></div>';
+    html += '</div>';
+  } else {
+    var farkMsg = '';
+    if (!tutarOk) farkMsg = 'Tutar farki ' + fmtTL(tutarFark);
+    else if (!miktarOk) farkMsg = 'Miktar uyusmazligi';
+    html += '<div class="match-banner mb-err">';
+    html += '<span>\u2717 Uyusmazlik: ' + farkMsg + '</span>';
+    html += '<div class="mb-actions">';
+    html += '<button class="btn btn-red" style="font-size:12px;" onclick="event.stopPropagation();uyusmazlikIsle(' + idx + ',\'ncr\')">NCR Ac</button>';
+    html += '<button class="btn btn-p" style="font-size:12px;" onclick="event.stopPropagation();uyusmazlikIsle(' + idx + ',\'red\')">Reddet</button>';
+    html += '</div>';
+    html += '</div>';
+  }
+
+  return html;
+}
+
+// ── 3-WAY MATCH ACTION ──
+function matchYap(idx) {
+  var f = faturaList[idx];
+  var poTutar = f.tutar || 0;
+  var ftrTutar = f.kdvDahil || 0;
+  var tutarFark = Math.abs(ftrTutar - (poTutar * 1.20));
+  var tutarOk = tutarFark < 0.5;
+  var miktarOk = (f.poMiktar == f.grnMiktar);
+
+  if (tutarOk && miktarOk) {
+    f.durum = 'Eslesti';
+    f.matchDone = true;
+    toast('3-Way Match basarili: ' + f.faturaNo);
+  } else {
+    f.durum = 'Uyusmazlik';
+    f.matchDone = true;
+    toast('Uyusmazlik tespit edildi: ' + f.faturaNo, 'err');
+  }
+  faturalarKaydet();
+  seciliFatura = idx;
+  faturaRender();
+  kpiGuncelle();
+}
+
+// ── ODEME ONAYI ──
+function odemeOnayi(idx) {
+  faturaList[idx].durum = 'Odeme Onayinda';
+  faturalarKaydet();
+  toast(faturaList[idx].faturaNo + ' odeme onayina gonderildi');
+  seciliFatura = null;
+  faturaRender();
+  kpiGuncelle();
+}
+
+// ── UYUSMAZLIK ──
+function uyusmazlikIsle(idx, tip) {
+  if (tip === 'ncr') {
+    toast(faturaList[idx].faturaNo + ' icin NCR acildi', 'inf');
+  } else {
+    faturaList[idx].durum = 'Reddedildi';
+    faturalarKaydet();
+    toast(faturaList[idx].faturaNo + ' reddedildi', 'err');
+  }
+  seciliFatura = null;
+  faturaRender();
+  kpiGuncelle();
+}
+
+// ── IMPORT TOGGLE ──
+function importToggle() {
+  importAcik = !importAcik;
+  var zone = document.getElementById('import-zone');
+  if (importAcik) {
+    zone.classList.add('aktif');
+  } else {
+    zone.classList.remove('aktif');
+    document.getElementById('import-preview').innerHTML = '';
+  }
+}
+
+// ── DRAG & DROP ──
+(function() {
+  var zone = document.getElementById('import-zone');
+  zone.addEventListener('dragover', function(e) { e.preventDefault(); zone.classList.add('drag-over'); });
+  zone.addEventListener('dragleave', function() { zone.classList.remove('drag-over'); });
+  zone.addEventListener('drop', function(e) {
+    e.preventDefault();
+    zone.classList.remove('drag-over');
+    if (e.dataTransfer.files.length > 0) csvIsle(e.dataTransfer.files[0]);
+  });
+})();
+
+function csvDosyaSec(e) {
+  if (e.target.files.length > 0) csvIsle(e.target.files[0]);
+}
+
+function csvIsle(file) {
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var text = e.target.result;
+    csvRows = csvParse(text);
+    csvOnizleme();
+  };
+  reader.readAsText(file, 'utf-8');
+}
+
+function csvParse(text) {
+  var lines = text.split(/\r?\n/).filter(function(l) { return l.trim(); });
+  if (lines.length < 2) return [];
+  var headers = lines[0].split(';').map(function(h) { return h.trim().replace(/"/g, ''); });
+  var rows = [];
+  for (var i = 1; i < lines.length; i++) {
+    var cols = lines[i].split(';').map(function(c) { return c.trim().replace(/"/g, ''); });
+    var obj = {};
+    for (var j = 0; j < headers.length; j++) {
+      obj[headers[j]] = cols[j] || '';
+    }
+    rows.push(obj);
+  }
+  return rows;
+}
+
+function csvOnizleme() {
+  if (csvRows.length === 0) {
+    document.getElementById('import-preview').innerHTML = '<p style="color:var(--kirmizi);font-size:12px;">CSV okunamadi veya bos</p>';
+    return;
+  }
+  var html = '<table><thead><tr><th>Fatura No</th><th>Tedarikci</th><th>Tutar</th><th>PO Esleme</th></tr></thead><tbody>';
+  for (var i = 0; i < csvRows.length; i++) {
+    var r = csvRows[i];
+    var fNo = r['Fatura No'] || r['FaturaNo'] || r['Belge No'] || ('IMP-' + (i + 1));
+    var ted = r['Tedarikci'] || r['Cari Unvan'] || r['Firma'] || '\u2014';
+    var tut = r['Tutar'] || r['Toplam'] || r['KDV Dahil'] || '0';
+    var poRef = r['PO No'] || r['Siparis No'] || '';
+
+    // Try auto-match against existing POs
+    if (!poRef) {
+      for (var k = 0; k < faturaList.length; k++) {
+        if (faturaList[k].tedarikci === ted) { poRef = faturaList[k].poNo; break; }
+      }
+    }
+
+    var matchCls = poRef ? 'b-grn' : 'b-amr';
+    var matchTxt = poRef ? ('\u2713 ' + poRef) : 'Eslesme yok';
+    html += '<tr>';
+    html += '<td class="mono">' + fNo + '</td>';
+    html += '<td>' + ted + '</td>';
+    html += '<td style="text-align:right">' + tut + '</td>';
+    html += '<td><span class="bdg ' + matchCls + '">' + matchTxt + '</span></td>';
+    html += '</tr>';
+  }
+  html += '</tbody></table>';
+  html += '<div class="import-actions">';
+  html += '<button class="btn btn-p" onclick="importToggle()">Iptal</button>';
+  html += '<button class="btn btn-g" onclick="csvIceAktar()">Ice Aktar (' + csvRows.length + ' kayit)</button>';
+  html += '</div>';
+  document.getElementById('import-preview').innerHTML = html;
+}
+
+function csvIceAktar() {
+  var count = csvRows.length;
+  for (var i = 0; i < csvRows.length; i++) {
+    var r = csvRows[i];
+    var fNo = r['Fatura No'] || r['FaturaNo'] || r['Belge No'] || generateFTR();
+    var ted = r['Tedarikci'] || r['Cari Unvan'] || r['Firma'] || '\u2014';
+    var tut = parseFloat((r['Tutar'] || r['Toplam'] || r['KDV Dahil'] || '0').replace(/\./g, '').replace(',', '.')) || 0;
+    var poRef = r['PO No'] || r['Siparis No'] || '';
+    faturaList.push({
+      faturaNo: fNo,
+      poNo: poRef || '\u2014',
+      poRecId: null,
+      tedarikci: ted,
+      tarih: r['Tarih'] || new Date().toISOString().split('T')[0],
+      tutar: tut / 1.20,
+      kdvDahil: tut,
+      poMiktar: parseInt(r['Miktar'] || '1', 10),
+      grnNo: '\u2014',
+      grnMiktar: 0,
+      durum: 'Bekliyor',
+      matchDone: false
+    });
+  }
+  faturalarKaydet();
+  csvRows = [];
+  importToggle();
+  toast(count + ' fatura ice aktarildi');
+  faturaRender();
+  kpiGuncelle();
+}
+
+// ── INIT ──
+veriYukle();
+</script>
 </body>
 </html>

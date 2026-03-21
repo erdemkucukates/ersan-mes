@@ -7,35 +7,687 @@
 <link rel="stylesheet" href="ersan_styles.css">
 <script src="ersan_nav.js" defer></script>
 <script src="ersan_log.js" defer></script>
+<style>
+/* KPI Row */
+.kpi-row { display:flex; gap:12px; margin-bottom:16px; }
+.kpi { flex:1; background:var(--beyaz); border:1px solid var(--border); border-radius:10px; padding:14px 16px; }
+.kpi-ust { font-size:11px; color:var(--metin3); text-transform:uppercase; letter-spacing:.3px; margin-bottom:4px; }
+.kpi-deger { font-size:26px; font-weight:700; color:var(--metin); }
+.kpi.s1 { border-left:3px solid var(--mavi); }
+.kpi.s2 { border-left:3px solid var(--yesil); }
+.kpi.s3 { border-left:3px solid var(--sari); }
+.kpi.s4 { border-left:3px solid var(--kirmizi); }
+
+/* Filter Bar */
+.filtre-bar { display:flex; gap:8px; align-items:center; margin-bottom:16px; flex-wrap:wrap; }
+.filtre-bar input[type="text"] { flex:1; min-width:200px; padding:7px 12px; border:1px solid var(--border); border-radius:6px; font-size:13px; font-family:inherit; background:var(--beyaz); color:var(--metin2); }
+.filtre-bar select { padding:7px 12px; border:1px solid var(--border); border-radius:6px; font-size:13px; font-family:inherit; background:var(--beyaz); color:var(--metin2); cursor:pointer; }
+
+/* Supplier Grid */
+.td-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:14px; padding-bottom:20px; }
+@media(max-width:1200px) { .td-grid { grid-template-columns:repeat(2, 1fr); } }
+@media(max-width:768px)  { .td-grid { grid-template-columns:1fr; } }
+
+/* Supplier Card */
+.td-kart { background:var(--beyaz); border:1px solid var(--border); border-radius:10px; overflow:hidden; cursor:pointer; transition:box-shadow .2s, border-color .2s; position:relative; }
+.td-kart:hover { box-shadow:0 4px 16px rgba(15,39,68,.1); border-color:var(--mavi); }
+.td-kart.kara-liste { background:#fafafa; border-color:var(--kirmizi); opacity:.85; }
+.tdk-head { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:var(--bg2); border-bottom:1px solid var(--border); }
+.tdk-adi { font-size:14px; font-weight:700; color:var(--metin); }
+.tdk-sub { font-size:11px; color:var(--metin3); margin-top:2px; }
+.tdk-icon { width:32px; height:32px; border-radius:8px; background:var(--mavi-acik); display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
+.tdk-body { padding:12px 16px 14px; }
+.tdk-row { display:flex; justify-content:space-between; padding:3px 0; font-size:12px; }
+.tdk-k { color:var(--metin3); }
+.tdk-v { color:var(--metin); font-weight:500; }
+
+/* Puan Bar */
+.puan-bar { height:6px; background:var(--border); border-radius:3px; margin:8px 0 4px; overflow:hidden; }
+.puan-fill { height:100%; border-radius:3px; transition:width .5s; }
+
+/* Badges */
+.bdg { display:inline-block; font-size:10px; font-weight:600; padding:2px 8px; border-radius:4px; margin-right:4px; margin-top:6px; }
+.b-grn { background:var(--yesil-bg); color:var(--yesil-t); }
+.b-amr { background:var(--sari-bg); color:var(--sari-t); }
+.b-red { background:var(--kirmizi-bg); color:var(--kirmizi-t); }
+.b-gray { background:#f1f5f9; color:var(--metin3); }
+
+/* Buttons */
+.btn { display:inline-flex; align-items:center; gap:4px; padding:7px 14px; border:none; border-radius:6px; font-size:13px; font-weight:600; font-family:inherit; cursor:pointer; transition:background .15s; }
+.btn-p { background:var(--mavi); color:#fff; }
+.btn-p:hover { background:var(--mavi-koyu); }
+.btn-g { background:var(--border); color:var(--metin2); }
+.btn-g:hover { background:var(--border2); }
+.btn-red { background:var(--kirmizi); color:#fff; }
+.btn-red:hover { background:#c0392b; }
+
+/* Modal */
+.modal-bg { position:fixed; inset:0; background:rgba(15,39,68,.45); z-index:700; display:none; align-items:center; justify-content:center; }
+.modal-bg.acik { display:flex; }
+.modal-kutu { background:var(--beyaz); border-radius:12px; width:620px; max-width:95vw; max-height:90vh; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 16px 48px rgba(15,39,68,.2); }
+.modal-ust { display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--border); }
+.modal-ust h3 { font-size:16px; color:var(--metin); }
+.modal-kapat { width:28px; height:28px; border:none; background:var(--bg); border-radius:6px; cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center; color:var(--metin3); }
+.modal-kapat:hover { background:var(--border); }
+.modal-govde { flex:1; overflow-y:auto; padding:20px; }
+.modal-alt { display:flex; justify-content:flex-end; gap:8px; padding:14px 20px; border-top:1px solid var(--border); }
+
+/* Tabs */
+.tab-bar { display:flex; border-bottom:1px solid var(--border); margin-bottom:16px; }
+.tab-btn { padding:8px 16px; font-size:12px; font-weight:600; color:var(--metin3); background:none; border:none; border-bottom:2px solid transparent; cursor:pointer; font-family:inherit; }
+.tab-btn.aktif { color:var(--mavi); border-bottom-color:var(--mavi); }
+.tab-icerik { display:none; }
+.tab-icerik.aktif { display:block; }
+
+/* Info Box */
+.info-box { background:var(--bg2); border:1px solid var(--border); border-radius:8px; padding:14px 16px; margin-bottom:12px; }
+.ib-row { display:flex; justify-content:space-between; padding:5px 0; font-size:13px; border-bottom:1px solid var(--border); }
+.ib-row:last-child { border-bottom:none; }
+.ib-k { color:var(--metin3); }
+.ib-v { color:var(--metin); font-weight:600; }
+
+/* Form */
+.form-grup { margin-bottom:12px; }
+.form-grup label { display:block; font-size:11px; font-weight:600; color:var(--metin3); margin-bottom:4px; text-transform:uppercase; }
+.form-grup input, .form-grup select, .form-grup textarea { width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:6px; font-size:13px; font-family:inherit; background:var(--beyaz); color:var(--metin2); }
+.form-grup textarea { resize:vertical; min-height:60px; }
+.form-iki { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.chk-row { display:flex; align-items:center; gap:8px; font-size:13px; color:var(--metin2); margin-bottom:6px; }
+.chk-row input[type="checkbox"] { width:16px; height:16px; accent-color:var(--mavi); }
+
+/* PO Table */
+.po-tablo { width:100%; font-size:12px; border-collapse:collapse; }
+.po-tablo th { text-align:left; padding:6px 8px; background:var(--bg); color:var(--metin3); font-weight:600; border-bottom:1px solid var(--border); }
+.po-tablo td { padding:6px 8px; border-bottom:1px solid var(--border); color:var(--metin2); }
+.po-tablo tr:hover td { background:var(--bg2); }
+
+/* Empty & Loading */
+.bos-grid { text-align:center; padding:60px 20px; color:var(--metin4); font-size:14px; grid-column:1/-1; }
+.yukleniyor { display:flex; align-items:center; justify-content:center; gap:8px; padding:40px; color:var(--metin3); font-size:13px; grid-column:1/-1; }
+.spinner { width:20px; height:20px; border:2px solid var(--border); border-top-color:var(--mavi); border-radius:50%; animation:spin .6s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+</style>
 </head>
 <body>
 <div id="nav-alani"></div>
 <div class="icerik-alani">
   <div class="topbar">
-    <div class="topbar-baslik">Tedarikciler</div>
+    <div class="topbar-baslik">Tedarikçiler</div>
     <div style="display:flex;align-items:center;gap:8px;">
+      <button class="btn btn-p" onclick="yeniTdModal()">+ Yeni Tedarikçi</button>
       <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
     </div>
   </div>
   <div class="sayfa-icerik">
 
-<div style="max-width:960px;margin:0 auto;padding:3rem 1.5rem;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;">
-  <div style="font-size:56px;margin-bottom:1.5rem;">🏢</div>
-  <h1 style="font-size:24px;font-weight:600;color:var(--text);margin-bottom:.5rem;">Tedarikçiler</h1>
-  <span style="font-size:11px;font-weight:500;background:var(--accent-light);color:var(--accent);padding:3px 10px;border-radius:20px;margin-bottom:1.25rem;display:inline-block;">AS9100 §8.4</span>
-  <p style="font-size:14px;color:var(--text3);text-align:center;max-width:420px;line-height:1.7;margin-bottom:2rem;">Tedarikçi kartları, grup yönetimi, performans takibi, toplu RFQ. Bu modül geliştirme aşamasındadır.</p>
-  <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.25rem 1.5rem;max-width:480px;width:100%;">
-    <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.875rem;">Planlanacak özellikler</div>
-    <div style="display:flex;align-items:center;gap:10px;padding:.5rem 0;border-top:1px solid var(--border);font-size:13px;color:var(--text2);">○ Airtable tablo bağlantısı</div>
-    <div style="display:flex;align-items:center;gap:10px;padding:.5rem 0;border-top:1px solid var(--border);font-size:13px;color:var(--text2);">○ Liste ve detay görünümü</div>
-    <div style="display:flex;align-items:center;gap:10px;padding:.5rem 0;border-top:1px solid var(--border);font-size:13px;color:var(--text2);">○ Form ve kayıt yönetimi</div>
-    <div style="display:flex;align-items:center;gap:10px;padding:.5rem 0;border-top:1px solid var(--border);font-size:13px;color:var(--text2);">○ PDF / rapor çıktısı</div>
-    <div style="display:flex;align-items:center;gap:10px;padding:.5rem 0;border-top:1px solid var(--border);font-size:13px;color:var(--text2);">○ Diğer modüllerle entegrasyon</div>
-  </div>
-  <a href="index.html" style="margin-top:1.5rem;font-size:13px;color:var(--accent);text-decoration:none;">← Ana sayfaya dön</a>
-</div>
+    <!-- KPI Row -->
+    <div class="kpi-row">
+      <div class="kpi s1"><div class="kpi-ust">Toplam Tedarikçi</div><div class="kpi-deger" id="kpi-toplam">0</div></div>
+      <div class="kpi s2"><div class="kpi-ust">Onaylı</div><div class="kpi-deger" id="kpi-onayli">0</div></div>
+      <div class="kpi s3"><div class="kpi-ust">Değerlendirmede</div><div class="kpi-deger" id="kpi-deger">0</div></div>
+      <div class="kpi s4"><div class="kpi-ust">Kara Liste</div><div class="kpi-deger" id="kpi-kara">0</div></div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="filtre-bar">
+      <input type="text" id="arama" placeholder="Tedarikçi adı, e-posta, şehir ara..." oninput="filtreUygula()">
+      <select id="f-kategori" onchange="filtreUygula()">
+        <option value="">Tüm Kategoriler</option>
+        <option value="Hammadde">Hammadde</option>
+        <option value="Fason">Fason</option>
+        <option value="Test">Test</option>
+        <option value="Hizmet">Hizmet</option>
+      </select>
+      <select id="f-durum" onchange="filtreUygula()">
+        <option value="">Tüm Durumlar</option>
+        <option value="Onaylı">Onaylı</option>
+        <option value="Değerlendirmede">Değerlendirmede</option>
+        <option value="Kara Liste">Kara Liste</option>
+      </select>
+    </div>
+
+    <!-- Card Grid -->
+    <div class="td-grid" id="td-grid">
+      <div class="yukleniyor"><div class="spinner"></div><span>Yükleniyor...</span></div>
+    </div>
 
   </div>
 </div>
+
+<!-- DETAY MODAL -->
+<div class="modal-bg" id="detay-modal">
+  <div class="modal-kutu">
+    <div class="modal-ust">
+      <h3 id="dm-baslik">Tedarikçi Detayı</h3>
+      <button class="modal-kapat" onclick="modalKapat('detay-modal')">&times;</button>
+    </div>
+    <div class="modal-govde">
+      <div class="tab-bar" id="dm-tabs">
+        <button class="tab-btn aktif" onclick="tabGecis('t-genel',this)">Genel Bilgiler</button>
+        <button class="tab-btn" onclick="tabGecis('t-perf',this)">Performans</button>
+        <button class="tab-btn" onclick="tabGecis('t-belge',this)">Belgeler</button>
+        <button class="tab-btn" onclick="tabGecis('t-po',this)">PO Geçmişi</button>
+      </div>
+      <!-- Tab: Genel -->
+      <div class="tab-icerik aktif" id="t-genel">
+        <div class="form-iki">
+          <div class="form-grup"><label>Tedarikçi Adı</label><input type="text" id="fd-adi"></div>
+          <div class="form-grup"><label>Tedarikçi Kodu</label><input type="text" id="fd-kod"></div>
+        </div>
+        <div class="form-iki">
+          <div class="form-grup"><label>Kategori</label>
+            <select id="fd-kategori">
+              <option value="">Seçiniz</option>
+              <option value="Hammadde">Hammadde</option>
+              <option value="Fason">Fason</option>
+              <option value="Test">Test</option>
+              <option value="Hizmet">Hizmet</option>
+            </select>
+          </div>
+          <div class="form-grup"><label>Şehir</label><input type="text" id="fd-sehir"></div>
+        </div>
+        <div class="form-iki">
+          <div class="form-grup"><label>E-posta</label><input type="email" id="fd-email"></div>
+          <div class="form-grup"><label>Telefon</label><input type="text" id="fd-tel"></div>
+        </div>
+        <div class="form-iki">
+          <div class="form-grup"><label>Vade (gün)</label><input type="number" id="fd-vade"></div>
+          <div class="form-grup"><label>Durum</label>
+            <select id="fd-durum">
+              <option value="Onaylı">Onaylı</option>
+              <option value="Değerlendirmede">Değerlendirmede</option>
+              <option value="Kara Liste">Kara Liste</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:flex;gap:24px;margin:8px 0;">
+          <label class="chk-row"><input type="checkbox" id="fd-as9100"> AS9100 Sertifikalı</label>
+          <label class="chk-row"><input type="checkbox" id="fd-coc"> CoC Sağlıyor</label>
+        </div>
+        <div class="form-grup"><label>Notlar</label><textarea id="fd-not"></textarea></div>
+      </div>
+      <!-- Tab: Performans -->
+      <div class="tab-icerik" id="t-perf">
+        <div class="info-box" id="perf-box">
+          <div class="ib-row"><span class="ib-k">Toplam Sipariş Tutarı</span><span class="ib-v" id="pf-tutar">—</span></div>
+          <div class="ib-row"><span class="ib-k">Sipariş Sayısı</span><span class="ib-v" id="pf-sayi">—</span></div>
+          <div class="ib-row"><span class="ib-k">Ort. Teslim Süresi</span><span class="ib-v" id="pf-teslim">—</span></div>
+          <div class="ib-row"><span class="ib-k">Zamanında Teslimat</span><span class="ib-v" id="pf-zamaninda">—</span></div>
+          <div class="ib-row"><span class="ib-k">Performans Puanı</span><span class="ib-v" id="pf-puan">—</span></div>
+        </div>
+        <div style="padding:10px 0;color:var(--metin4);font-size:12px;">Performans puanı, teslimat, kalite ve fiyat parametrelerine göre hesaplanır.</div>
+      </div>
+      <!-- Tab: Belgeler -->
+      <div class="tab-icerik" id="t-belge">
+        <div class="info-box">
+          <div class="ib-row"><span class="ib-k">AS9100 Sertifikası</span><span class="ib-v" id="bl-as9100">—</span></div>
+          <div class="ib-row"><span class="ib-k">ISO 9001</span><span class="ib-v" id="bl-iso">—</span></div>
+          <div class="ib-row"><span class="ib-k">CoC Durumu</span><span class="ib-v" id="bl-coc">—</span></div>
+        </div>
+        <p style="font-size:12px;color:var(--metin4);margin-top:12px;">Belge yükleme özelliği ilerleyen sürümlerde eklenecektir.</p>
+      </div>
+      <!-- Tab: PO Geçmişi -->
+      <div class="tab-icerik" id="t-po">
+        <div id="po-liste">
+          <p style="color:var(--metin4);font-size:13px;">Yükleniyor...</p>
+        </div>
+      </div>
+    </div>
+    <div class="modal-alt">
+      <button class="btn btn-g" onclick="modalKapat('detay-modal')">Kapat</button>
+      <button class="btn btn-red" id="dm-kara-btn" onclick="karaListeToggle()" style="display:none;">Kara Listeye Al</button>
+      <button class="btn btn-p" onclick="kaydet()">Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<!-- YENI TEDARIKCI MODAL -->
+<div class="modal-bg" id="yeni-modal">
+  <div class="modal-kutu" style="width:520px;">
+    <div class="modal-ust">
+      <h3>Yeni Tedarikçi</h3>
+      <button class="modal-kapat" onclick="modalKapat('yeni-modal')">&times;</button>
+    </div>
+    <div class="modal-govde">
+      <div class="form-iki">
+        <div class="form-grup"><label>Tedarikçi Adı *</label><input type="text" id="yn-adi"></div>
+        <div class="form-grup"><label>Tedarikçi Kodu</label><input type="text" id="yn-kod"></div>
+      </div>
+      <div class="form-iki">
+        <div class="form-grup"><label>Kategori</label>
+          <select id="yn-kategori">
+            <option value="">Seçiniz</option>
+            <option value="Hammadde">Hammadde</option>
+            <option value="Fason">Fason</option>
+            <option value="Test">Test</option>
+            <option value="Hizmet">Hizmet</option>
+          </select>
+        </div>
+        <div class="form-grup"><label>Şehir</label><input type="text" id="yn-sehir"></div>
+      </div>
+      <div class="form-iki">
+        <div class="form-grup"><label>E-posta</label><input type="email" id="yn-email"></div>
+        <div class="form-grup"><label>Telefon</label><input type="text" id="yn-tel"></div>
+      </div>
+      <div class="form-grup"><label>Notlar</label><textarea id="yn-not"></textarea></div>
+    </div>
+    <div class="modal-alt">
+      <button class="btn btn-g" onclick="modalKapat('yeni-modal')">İptal</button>
+      <button class="btn btn-p" onclick="yeniKaydet()">Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-wrap" style="position:fixed;bottom:20px;right:20px;z-index:9999;"></div>
+
+<script>
+var BASE = 'app5LDgJMgocw79Ix';
+var T_TD = 'tblEI6683Im5AXj36';
+var T_STL = 'tblHmfCvNZq0qNtb1';
+
+var tdList = [];
+var filtrelenmis = [];
+var seciliRec = null;
+
+// ── API ──
+var apiGet = function(table, params) {
+  params = params || '';
+  return fetch('/.netlify/functions/airtable', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({method:'GET', path:'/v0/' + BASE + '/' + table + '?' + params})
+  }).then(function(res) { return res.json(); });
+};
+
+var apiPost = function(table, fields) {
+  return fetch('/.netlify/functions/airtable', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({method:'POST', path:'/v0/' + BASE + '/' + table, body:{fields: fields}})
+  }).then(function(res) {
+    if (!res.ok) return res.text().then(function(t) { throw new Error(t); });
+    return res.json();
+  });
+};
+
+var apiPatch = function(table, id, fields) {
+  return fetch('/.netlify/functions/airtable', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({method:'PATCH', path:'/v0/' + BASE + '/' + table + '/' + id, body:{fields: fields}})
+  }).then(function(res) {
+    if (!res.ok) return res.text().then(function(t) { throw new Error(t); });
+    return res.json();
+  });
+};
+
+var apiDelete = function(table, id) {
+  return fetch('/.netlify/functions/airtable', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({method:'DELETE', path:'/v0/' + BASE + '/' + table + '/' + id})
+  }).then(function(res) {
+    if (!res.ok) return res.text().then(function(t) { throw new Error(t); });
+    return res.json();
+  });
+};
+
+// ── HELPERS ──
+function fmtDate(d) { try { return new Date(d).toLocaleDateString('tr-TR'); } catch(e) { return d || '—'; } }
+function fmt(n) { return n ? Number(n).toLocaleString('tr-TR', {minimumFractionDigits:2}) : '—'; }
+function f(rec, key) { return (rec && rec.fields && rec.fields[key] != null) ? rec.fields[key] : ''; }
+
+function toast(msg, type) {
+  type = type || 'ok';
+  var el = document.createElement('div');
+  el.style.cssText = 'padding:10px 16px;border-radius:8px;font-size:13px;font-weight:500;color:#fff;margin-top:8px;opacity:0;transform:translateY(10px);transition:all .3s;';
+  el.style.background = type === 'err' ? 'var(--kirmizi)' : type === 'inf' ? 'var(--mavi)' : 'var(--yesil)';
+  el.textContent = msg;
+  document.getElementById('toast-wrap').appendChild(el);
+  setTimeout(function() { el.style.opacity = '1'; el.style.transform = 'translateY(0)'; }, 50);
+  setTimeout(function() { el.remove(); }, 3500);
+}
+
+function puanRenk(p) {
+  if (p >= 85) return 'var(--yesil)';
+  if (p >= 65) return 'var(--sari)';
+  return 'var(--kirmizi)';
+}
+
+function durumBadge(d) {
+  if (!d) return '<span class="bdg b-gray">Belirsiz</span>';
+  if (d === 'Onaylı') return '<span class="bdg b-grn">Onaylı</span>';
+  if (d === 'Değerlendirmede') return '<span class="bdg b-amr">Değerlendirmede</span>';
+  if (d === 'Kara Liste') return '<span class="bdg b-red">Kara Liste</span>';
+  return '<span class="bdg b-gray">' + d + '</span>';
+}
+
+// ── DATA LOAD ──
+function veriYukle() {
+  document.getElementById('td-grid').innerHTML = '<div class="yukleniyor"><div class="spinner"></div><span>Yükleniyor...</span></div>';
+  apiGet(T_TD, 'pageSize=100&sort%5B0%5D%5Bfield%5D=Tedarik%C3%A7i%20Ad%C4%B1&sort%5B0%5D%5Bdirection%5D=asc').then(function(data) {
+    tdList = (data && data.records) ? data.records : [];
+    kpiGuncelle();
+    filtreUygula();
+  }).catch(function(err) {
+    document.getElementById('td-grid').innerHTML = '<div class="bos-grid">Veri yüklenemedi: ' + err.message + '</div>';
+  });
+}
+
+// ── KPI ──
+function kpiGuncelle() {
+  var toplam = tdList.length;
+  var onayli = 0, deger = 0, kara = 0;
+  for (var i = 0; i < tdList.length; i++) {
+    var d = f(tdList[i], 'Durum');
+    if (d === 'Onaylı') onayli++;
+    else if (d === 'Değerlendirmede') deger++;
+    else if (d === 'Kara Liste') kara++;
+  }
+  document.getElementById('kpi-toplam').textContent = toplam;
+  document.getElementById('kpi-onayli').textContent = onayli;
+  document.getElementById('kpi-deger').textContent = deger;
+  document.getElementById('kpi-kara').textContent = kara;
+}
+
+// ── FILTER ──
+function filtreUygula() {
+  var arama = document.getElementById('arama').value.toLowerCase().trim();
+  var fKat = document.getElementById('f-kategori').value;
+  var fDur = document.getElementById('f-durum').value;
+
+  filtrelenmis = [];
+  for (var i = 0; i < tdList.length; i++) {
+    var rec = tdList[i];
+    var adi = (f(rec, 'Tedarikçi Adı') || '').toLowerCase();
+    var email = (f(rec, 'E-posta') || '').toLowerCase();
+    var sehir = (f(rec, 'Şehir') || '').toLowerCase();
+    var kod = (f(rec, 'Tedarikçi Kodu') || '').toLowerCase();
+    var kat = f(rec, 'Kategori') || '';
+    var dur = f(rec, 'Durum') || '';
+
+    if (arama && adi.indexOf(arama) === -1 && email.indexOf(arama) === -1 && sehir.indexOf(arama) === -1 && kod.indexOf(arama) === -1) continue;
+    if (fKat && kat !== fKat) continue;
+    if (fDur && dur !== fDur) continue;
+    filtrelenmis.push(rec);
+  }
+  kartRender();
+}
+
+// ── RENDER CARDS ──
+function kartRender() {
+  var grid = document.getElementById('td-grid');
+  if (filtrelenmis.length === 0) {
+    grid.innerHTML = '<div class="bos-grid">Tedarikçi bulunamadı</div>';
+    return;
+  }
+  var html = '';
+  for (var i = 0; i < filtrelenmis.length; i++) {
+    var rec = filtrelenmis[i];
+    var adi = f(rec, 'Tedarikçi Adı') || 'İsimsiz';
+    var kat = f(rec, 'Kategori') || '';
+    var sehir = f(rec, 'Şehir') || '';
+    var dur = f(rec, 'Durum') || '';
+    var puan = Number(f(rec, 'Puan')) || 0;
+    var vade = f(rec, 'Vade') || '';
+    var topTutar = Number(f(rec, 'Toplam Tutar')) || 0;
+    var sonTeslim = f(rec, 'Son Teslim');
+    var as9100 = f(rec, 'AS9100');
+    var coc = f(rec, 'CoC');
+    var karaListe = (dur === 'Kara Liste');
+
+    var subParts = [];
+    if (kat) subParts.push(kat);
+    if (sehir) subParts.push(sehir);
+    var subText = subParts.join(' · ') || '—';
+
+    html += '<div class="td-kart' + (karaListe ? ' kara-liste' : '') + '" onclick="detayAc(\'' + rec.id + '\')">';
+    html += '<div class="tdk-head"><div><div class="tdk-adi">' + adi + '</div><div class="tdk-sub">' + subText + '</div></div><div class="tdk-icon">🏭</div></div>';
+    html += '<div class="tdk-body">';
+    if (kat) html += '<div class="tdk-row"><span class="tdk-k">Kategori</span><span class="tdk-v">' + kat + '</span></div>';
+    if (vade) html += '<div class="tdk-row"><span class="tdk-k">Vade</span><span class="tdk-v">' + vade + ' gün</span></div>';
+    if (topTutar) html += '<div class="tdk-row"><span class="tdk-k">Toplam</span><span class="tdk-v">₺' + fmt(topTutar) + '</span></div>';
+    if (sonTeslim) html += '<div class="tdk-row"><span class="tdk-k">Son Teslim</span><span class="tdk-v">' + fmtDate(sonTeslim) + '</span></div>';
+
+    // Puan bar
+    html += '<div class="puan-bar"><div class="puan-fill" style="width:' + puan + '%;background:' + puanRenk(puan) + ';"></div></div>';
+    html += '<div class="tdk-row"><span class="tdk-k">Performans Puanı</span><span class="tdk-v" style="color:' + puanRenk(puan) + ';">' + (puan || '—') + '/100</span></div>';
+
+    // Badges
+    var badges = '';
+    if (as9100) badges += '<span class="bdg b-grn">✓ AS9100</span>';
+    if (coc) badges += '<span class="bdg b-grn">✓ CoC</span>';
+    badges += durumBadge(dur);
+    html += '<div style="margin-top:4px;">' + badges + '</div>';
+
+    html += '</div></div>';
+  }
+  grid.innerHTML = html;
+}
+
+// ── DETAIL MODAL ──
+function detayAc(id) {
+  seciliRec = null;
+  for (var i = 0; i < tdList.length; i++) {
+    if (tdList[i].id === id) { seciliRec = tdList[i]; break; }
+  }
+  if (!seciliRec) return;
+
+  var ff = seciliRec.fields;
+  document.getElementById('dm-baslik').textContent = ff['Tedarikçi Adı'] || 'Tedarikçi Detayı';
+
+  // Genel tab
+  document.getElementById('fd-adi').value = ff['Tedarikçi Adı'] || '';
+  document.getElementById('fd-kod').value = ff['Tedarikçi Kodu'] || '';
+  document.getElementById('fd-kategori').value = ff['Kategori'] || '';
+  document.getElementById('fd-sehir').value = ff['Şehir'] || '';
+  document.getElementById('fd-email').value = ff['E-posta'] || '';
+  document.getElementById('fd-tel').value = ff['Telefon'] || '';
+  document.getElementById('fd-vade').value = ff['Vade'] || '';
+  document.getElementById('fd-durum').value = ff['Durum'] || 'Değerlendirmede';
+  document.getElementById('fd-as9100').checked = !!ff['AS9100'];
+  document.getElementById('fd-coc').checked = !!ff['CoC'];
+  document.getElementById('fd-not').value = ff['Notlar'] || '';
+
+  // Kara liste button
+  var karaBtn = document.getElementById('dm-kara-btn');
+  karaBtn.style.display = 'inline-flex';
+  if (ff['Durum'] === 'Kara Liste') {
+    karaBtn.textContent = 'Kara Listeden Çıkar';
+    karaBtn.className = 'btn btn-g';
+  } else {
+    karaBtn.textContent = 'Kara Listeye Al';
+    karaBtn.className = 'btn btn-red';
+  }
+
+  // Performans tab
+  var puan = Number(ff['Puan']) || 0;
+  var topTutar = Number(ff['Toplam Tutar']) || 0;
+  document.getElementById('pf-tutar').textContent = topTutar ? '₺' + fmt(topTutar) : '—';
+  document.getElementById('pf-sayi').textContent = ff['Sipariş Sayısı'] || '—';
+  document.getElementById('pf-teslim').textContent = ff['Ort Teslim'] ? ff['Ort Teslim'] + ' gün' : '—';
+  document.getElementById('pf-zamaninda').textContent = ff['Zamanında %'] ? '%' + ff['Zamanında %'] : '—';
+  document.getElementById('pf-puan').innerHTML = '<span style="color:' + puanRenk(puan) + ';">' + (puan || '—') + '/100</span>';
+
+  // Belgeler tab
+  document.getElementById('bl-as9100').textContent = ff['AS9100'] ? 'Var' : 'Yok';
+  document.getElementById('bl-as9100').style.color = ff['AS9100'] ? 'var(--yesil)' : 'var(--metin4)';
+  document.getElementById('bl-iso').textContent = '—';
+  document.getElementById('bl-coc').textContent = ff['CoC'] ? 'Sağlıyor' : 'Sağlamıyor';
+  document.getElementById('bl-coc').style.color = ff['CoC'] ? 'var(--yesil)' : 'var(--metin4)';
+
+  // PO tab - load
+  poYukle(seciliRec.id, ff['Tedarikçi Adı'] || '');
+
+  // Reset tabs to first
+  tabGecis('t-genel', document.querySelector('#dm-tabs .tab-btn'));
+
+  document.getElementById('detay-modal').classList.add('acik');
+}
+
+// ── PO LOAD ──
+function poYukle(tdId, tdAdi) {
+  var poDiv = document.getElementById('po-liste');
+  poDiv.innerHTML = '<p style="color:var(--metin4);font-size:13px;">Yükleniyor...</p>';
+
+  var filterFormula = encodeURIComponent('FIND("' + tdAdi.replace(/"/g, '\\"') + '", {Seçilen Tedarikçi})');
+  apiGet(T_STL, 'pageSize=50&filterByFormula=' + filterFormula + '&sort%5B0%5D%5Bfield%5D=Created&sort%5B0%5D%5Bdirection%5D=desc').then(function(data) {
+    var recs = (data && data.records) ? data.records : [];
+    if (recs.length === 0) {
+      poDiv.innerHTML = '<p style="color:var(--metin4);font-size:13px;">Bu tedarikçiye ait satınalma talebi bulunamadı.</p>';
+      return;
+    }
+    var html = '<table class="po-tablo"><thead><tr><th>Talep No</th><th>Malzeme</th><th>Durum</th><th>Tutar</th><th>Tarih</th></tr></thead><tbody>';
+    for (var i = 0; i < recs.length; i++) {
+      var r = recs[i].fields;
+      html += '<tr>';
+      html += '<td>' + (r['Talep No'] || r['PR No'] || '—') + '</td>';
+      html += '<td>' + (r['Malzeme'] || r['Açıklama'] || '—') + '</td>';
+      html += '<td>' + durumBadge(r['Durum'] || '') + '</td>';
+      html += '<td>' + (r['Tutar'] ? '₺' + fmt(r['Tutar']) : '—') + '</td>';
+      html += '<td>' + fmtDate(r['Created'] || '') + '</td>';
+      html += '</tr>';
+    }
+    html += '</tbody></table>';
+    poDiv.innerHTML = html;
+  }).catch(function() {
+    poDiv.innerHTML = '<p style="color:var(--kirmizi);font-size:13px;">PO verileri yüklenemedi.</p>';
+  });
+}
+
+// ── TABS ──
+function tabGecis(tabId, btn) {
+  var tabs = document.querySelectorAll('#dm-tabs .tab-btn');
+  var icerikler = document.querySelectorAll('.tab-icerik');
+  for (var i = 0; i < tabs.length; i++) tabs[i].classList.remove('aktif');
+  for (var j = 0; j < icerikler.length; j++) icerikler[j].classList.remove('aktif');
+  btn.classList.add('aktif');
+  document.getElementById(tabId).classList.add('aktif');
+}
+
+// ── SAVE (UPDATE) ──
+function kaydet() {
+  if (!seciliRec) return;
+  var fields = {
+    'Tedarikçi Adı': document.getElementById('fd-adi').value.trim(),
+    'Tedarikçi Kodu': document.getElementById('fd-kod').value.trim(),
+    'E-posta': document.getElementById('fd-email').value.trim(),
+    'Telefon': document.getElementById('fd-tel').value.trim(),
+    'Durum': document.getElementById('fd-durum').value,
+    'Notlar': document.getElementById('fd-not').value.trim()
+  };
+  // Optional fields - only include if non-empty
+  var kat = document.getElementById('fd-kategori').value;
+  if (kat) fields['Kategori'] = kat;
+  var sehir = document.getElementById('fd-sehir').value.trim();
+  if (sehir) fields['Şehir'] = sehir;
+  var vade = document.getElementById('fd-vade').value;
+  if (vade) fields['Vade'] = Number(vade);
+  fields['AS9100'] = document.getElementById('fd-as9100').checked;
+  fields['CoC'] = document.getElementById('fd-coc').checked;
+
+  apiPatch(T_TD, seciliRec.id, fields).then(function(updated) {
+    toast('Tedarikçi güncellendi');
+    // Update local data
+    for (var i = 0; i < tdList.length; i++) {
+      if (tdList[i].id === seciliRec.id) {
+        tdList[i] = updated;
+        break;
+      }
+    }
+    kpiGuncelle();
+    filtreUygula();
+    modalKapat('detay-modal');
+  }).catch(function(err) {
+    toast('Hata: ' + err.message, 'err');
+  });
+}
+
+// ── KARA LISTE TOGGLE ──
+function karaListeToggle() {
+  if (!seciliRec) return;
+  var mevcut = seciliRec.fields['Durum'];
+  var yeniDurum = (mevcut === 'Kara Liste') ? 'Onaylı' : 'Kara Liste';
+  var msg = (yeniDurum === 'Kara Liste')
+    ? 'Bu tedarikçi kara listeye alınacak. Emin misiniz?'
+    : 'Bu tedarikçi kara listeden çıkarılacak. Emin misiniz?';
+  if (!confirm(msg)) return;
+
+  apiPatch(T_TD, seciliRec.id, {'Durum': yeniDurum}).then(function(updated) {
+    toast(yeniDurum === 'Kara Liste' ? 'Tedarikçi kara listeye alındı' : 'Tedarikçi kara listeden çıkarıldı');
+    for (var i = 0; i < tdList.length; i++) {
+      if (tdList[i].id === seciliRec.id) { tdList[i] = updated; break; }
+    }
+    kpiGuncelle();
+    filtreUygula();
+    modalKapat('detay-modal');
+  }).catch(function(err) {
+    toast('Hata: ' + err.message, 'err');
+  });
+}
+
+// ── NEW SUPPLIER ──
+function yeniTdModal() {
+  document.getElementById('yn-adi').value = '';
+  document.getElementById('yn-kod').value = '';
+  document.getElementById('yn-kategori').value = '';
+  document.getElementById('yn-sehir').value = '';
+  document.getElementById('yn-email').value = '';
+  document.getElementById('yn-tel').value = '';
+  document.getElementById('yn-not').value = '';
+  document.getElementById('yeni-modal').classList.add('acik');
+}
+
+function yeniKaydet() {
+  var adi = document.getElementById('yn-adi').value.trim();
+  if (!adi) { toast('Tedarikçi adı zorunludur', 'err'); return; }
+
+  var fields = {
+    'Tedarikçi Adı': adi,
+    'Durum': 'Değerlendirmede'
+  };
+  var kod = document.getElementById('yn-kod').value.trim();
+  if (kod) fields['Tedarikçi Kodu'] = kod;
+  var kat = document.getElementById('yn-kategori').value;
+  if (kat) fields['Kategori'] = kat;
+  var sehir = document.getElementById('yn-sehir').value.trim();
+  if (sehir) fields['Şehir'] = sehir;
+  var email = document.getElementById('yn-email').value.trim();
+  if (email) fields['E-posta'] = email;
+  var tel = document.getElementById('yn-tel').value.trim();
+  if (tel) fields['Telefon'] = tel;
+  var notVal = document.getElementById('yn-not').value.trim();
+  if (notVal) fields['Notlar'] = notVal;
+
+  apiPost(T_TD, fields).then(function(created) {
+    toast('Yeni tedarikçi oluşturuldu');
+    tdList.push(created);
+    kpiGuncelle();
+    filtreUygula();
+    modalKapat('yeni-modal');
+  }).catch(function(err) {
+    toast('Hata: ' + err.message, 'err');
+  });
+}
+
+// ── MODAL HELPERS ──
+function modalKapat(id) {
+  document.getElementById(id).classList.remove('acik');
+}
+
+// Close modal on backdrop click
+document.addEventListener('click', function(e) {
+  if (e.target.classList.contains('modal-bg') && e.target.classList.contains('acik')) {
+    e.target.classList.remove('acik');
+  }
+});
+
+// Close modal on Escape
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    var modals = document.querySelectorAll('.modal-bg.acik');
+    for (var i = 0; i < modals.length; i++) modals[i].classList.remove('acik');
+  }
+});
+
+// ── INIT ──
+veriYukle();
+</script>
 </body>
 </html>
