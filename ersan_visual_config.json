@@ -1,0 +1,60 @@
+{
+  "baseUrl": "https://ersan-mes.netlify.app",
+  "referansKlasor": "visual_tests/baseline",
+  "ekrangoruntusKlasor": "visual_tests/screenshots",
+  "raporKlasor": "visual_tests/reports",
+  "esikYuzdesi": 5,
+  "sayfalar": [
+    {
+      "id": "satinalma_pr",
+      "canliUrl": "/ersan_satinalma_pr.html",
+      "viewport": { "width": 1280, "height": 900 },
+      "bekle": "#pr-tbody"
+    },
+    {
+      "id": "rfq_talepler",
+      "canliUrl": "/ersan_satinalma_rfq.html",
+      "viewport": { "width": 1280, "height": 900 },
+      "bekle": "#panel-talepler"
+    },
+    {
+      "id": "rfq_karsilastirma",
+      "canliUrl": "/ersan_satinalma_rfq.html",
+      "sekme": "karsilastirma",
+      "viewport": { "width": 1280, "height": 900 },
+      "bekle": "#panel-karsilastirma"
+    },
+    {
+      "id": "rfq_bekliyor",
+      "canliUrl": "/ersan_satinalma_rfq.html",
+      "sekme": "bekliyor",
+      "viewport": { "width": 1280, "height": 900 },
+      "bekle": "#panel-bekliyor"
+    },
+    {
+      "id": "rfq_onayli",
+      "canliUrl": "/ersan_satinalma_rfq.html",
+      "sekme": "onayli",
+      "viewport": { "width": 1280, "height": 900 },
+      "bekle": "#panel-onayli"
+    },
+    {
+      "id": "siparisler",
+      "canliUrl": "/ersan_siparisler.html",
+      "viewport": { "width": 1280, "height": 900 },
+      "bekle": "#sp-list"
+    },
+    {
+      "id": "planlama",
+      "canliUrl": "/ersan_planlama.html",
+      "viewport": { "width": 1280, "height": 900 },
+      "bekle": "#se-list"
+    },
+    {
+      "id": "satinalma",
+      "canliUrl": "/ersan_satinalma.html",
+      "viewport": { "width": 1280, "height": 900 },
+      "bekle": "#talep-liste"
+    }
+  ]
+}
