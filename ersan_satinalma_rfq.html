@@ -272,7 +272,10 @@
   letter-spacing: 0.3px;
   border-bottom: 2px solid var(--border);
   background: var(--bg2);
+  user-select: none;
 }
+.rfq-tablo thead th[onclick] { cursor: pointer; }
+.rfq-tablo thead th[onclick]:hover { background: var(--border); color: var(--laci); }
 .rfq-tablo tbody tr {
   border-bottom: 1px solid var(--border);
   cursor: pointer;
@@ -681,6 +684,14 @@ var tumTalepler = [];
 var muzakereler = [];
 var seciliKarsilastirmaNo = null;
 
+// ── SIRALAMA + CHECKBOX STATE ──
+var rfqSortKol = null;
+var rfqSortYon = 0; // 0=yok, 1=artan, -1=azalan
+var rfqSeciliIds = [];
+var bekSortKol = null;
+var bekSortYon = 0;
+var bekSeciliIds = [];
+
 // ── API HELPERS ──
 function apiGet(tablo, query) {
   var url = '/.netlify/functions/airtable?table=' + encodeURIComponent(tablo);
@@ -736,6 +747,68 @@ function formatTarih(str) {
 
 function escHtml(s) {
   return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// ── SIRALAMA FONKSIYONLARI ──
+function rfqSirala(kol) {
+  if (rfqSortKol === kol) { rfqSortYon = rfqSortYon === 1 ? -1 : rfqSortYon === -1 ? 0 : 1; }
+  else { rfqSortKol = kol; rfqSortYon = 1; }
+  taleplerRender(tumTalepler);
+}
+function bekSirala(kol) {
+  if (bekSortKol === kol) { bekSortYon = bekSortYon === 1 ? -1 : bekSortYon === -1 ? 0 : 1; }
+  else { bekSortKol = kol; bekSortYon = 1; }
+  bekliyorRender();
+}
+function sortOkIsaret(prefix, kol) {
+  return (prefix === 'rfq' ? rfqSortKol : bekSortKol) === kol
+    ? ((prefix === 'rfq' ? rfqSortYon : bekSortYon) === 1 ? ' \u25B2' : (prefix === 'rfq' ? rfqSortYon : bekSortYon) === -1 ? ' \u25BC' : '')
+    : '';
+}
+function siraliDizi(arr, kolFn, yon) {
+  if (!yon) return arr;
+  return arr.slice().sort(function(a, b) {
+    var va = kolFn(a), vb = kolFn(b);
+    var na = parseFloat(va), nb = parseFloat(vb);
+    var cmp;
+    if (!isNaN(na) && !isNaN(nb)) { cmp = na - nb; }
+    else { cmp = String(va || '').localeCompare(String(vb || ''), 'tr'); }
+    return cmp * yon;
+  });
+}
+
+// ── CHECKBOX FONKSIYONLARI ──
+function rfqToggleSec(id, checked) {
+  if (checked) { if (rfqSeciliIds.indexOf(id) < 0) rfqSeciliIds.push(id); }
+  else { rfqSeciliIds = rfqSeciliIds.filter(function(x) { return x !== id; }); }
+  rfqSecimGuncelle();
+}
+function rfqTumunuSec(checked) {
+  var chks = document.querySelectorAll('#talepler-icerik .rfq-tablo tbody input[type=checkbox]');
+  rfqSeciliIds = [];
+  if (checked) { chks.forEach(function(c) { c.checked = true; var m = c.getAttribute('onchange').match(/'([^']+)'/); if (m) rfqSeciliIds.push(m[1]); }); }
+  else { chks.forEach(function(c) { c.checked = false; }); }
+  rfqSecimGuncelle();
+}
+function rfqSecimGuncelle() {
+  var el = document.getElementById('rfq-secim-info');
+  if (el) { el.style.display = rfqSeciliIds.length > 0 ? 'inline' : 'none'; el.textContent = rfqSeciliIds.length + ' secili'; }
+}
+function bekToggleSec(id, checked) {
+  if (checked) { if (bekSeciliIds.indexOf(id) < 0) bekSeciliIds.push(id); }
+  else { bekSeciliIds = bekSeciliIds.filter(function(x) { return x !== id; }); }
+  bekSecimGuncelle();
+}
+function bekTumunuSec(checked) {
+  var chks = document.querySelectorAll('#bekliyor-icerik .rfq-tablo tbody input[type=checkbox]');
+  bekSeciliIds = [];
+  if (checked) { chks.forEach(function(c) { c.checked = true; var m = c.getAttribute('onchange').match(/'([^']+)'/); if (m) bekSeciliIds.push(m[1]); }); }
+  else { chks.forEach(function(c) { c.checked = false; }); }
+  bekSecimGuncelle();
+}
+function bekSecimGuncelle() {
+  var el = document.getElementById('bek-secim-info');
+  if (el) { el.style.display = bekSeciliIds.length > 0 ? 'inline' : 'none'; el.textContent = bekSeciliIds.length + ' secili'; }
 }
 
 // ── YOGUNLUK CONFIGS ──
@@ -909,19 +982,35 @@ function taleplerRender(liste) {
 
   var noList = Object.keys(gruplar);
 
-  var html = '<table class="rfq-tablo"><thead><tr>';
-  html += '<th>Talep No</th>';
-  html += '<th>Kalem</th>';
-  html += '<th>Malzeme</th>';
+  var html = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span id="rfq-secim-info" style="font-size:11px;color:var(--metin3);display:none;">0 secili</span></div>';
+  html += '<table class="rfq-tablo"><thead><tr>';
+  html += '<th style="width:32px;text-align:center"><input type="checkbox" onchange="rfqTumunuSec(this.checked)"></th>';
+  html += '<th onclick="rfqSirala(\'no\')">Talep No' + sortOkIsaret('rfq','no') + '</th>';
+  html += '<th onclick="rfqSirala(\'kalem\')">Kalem' + sortOkIsaret('rfq','kalem') + '</th>';
+  html += '<th onclick="rfqSirala(\'malzeme\')">Malzeme' + sortOkIsaret('rfq','malzeme') + '</th>';
   html += '<th>Tedarikci Durum</th>';
-  html += '<th>Talep Tarihi</th>';
-  html += '<th>Durum</th>';
-  html += '<th>En Dusuk Fiyat</th>';
+  html += '<th onclick="rfqSirala(\'tarih\')">Talep Tarihi' + sortOkIsaret('rfq','tarih') + '</th>';
+  html += '<th onclick="rfqSirala(\'durum\')">Durum' + sortOkIsaret('rfq','durum') + '</th>';
+  html += '<th onclick="rfqSirala(\'fiyat\')">En Dusuk Fiyat' + sortOkIsaret('rfq','fiyat') + '</th>';
   html += '<th>Islem</th>';
   html += '</tr></thead><tbody>';
 
-  for (var n = 0; n < noList.length; n++) {
-    var gr = gruplar[noList[n]];
+  // Siralama
+  var grArr = noList.map(function(k) { return gruplar[k]; });
+  if (rfqSortKol && rfqSortYon !== 0) {
+    grArr = siraliDizi(grArr, function(gr) {
+      if (rfqSortKol === 'no') return gr.no;
+      if (rfqSortKol === 'kalem') return gr.kalemler[0] ? (gr.kalemler[0].fields['Kalem Adı'] || '') : '';
+      if (rfqSortKol === 'malzeme') return gr.kalemler[0] ? (gr.kalemler[0].fields['Malzeme İşlem'] || '') : '';
+      if (rfqSortKol === 'tarih') return gr.talepTarihi || '';
+      if (rfqSortKol === 'durum') return gr.durum || '';
+      if (rfqSortKol === 'fiyat') return gr.enDusukFiyat || 999999;
+      return '';
+    }, rfqSortYon);
+  }
+
+  for (var n = 0; n < grArr.length; n++) {
+    var gr = grArr[n];
     var kalemAdlari = [];
     var malzemeler = [];
     for (var k = 0; k < gr.kalemler.length; k++) {
@@ -939,7 +1028,10 @@ function taleplerRender(liste) {
 
     var tdDurum = gr.yanitSayisi + '/' + (gr.toplamTedarikci || '?');
 
+    var grId = gr.kalemler[0] ? gr.kalemler[0].id : gr.no;
+    var grChk = rfqSeciliIds.indexOf(grId) >= 0;
     html += '<tr onclick="talepDetayGoster(\'' + escHtml(gr.no) + '\')">';
+    html += '<td style="text-align:center" onclick="event.stopPropagation()"><input type="checkbox" ' + (grChk ? 'checked' : '') + ' onchange="rfqToggleSec(\'' + escHtml(grId) + '\',this.checked)"></td>';
     html += '<td class="mono">' + aciliyetIcon + escHtml(gr.no) + '</td>';
     html += '<td>' + escHtml(kalemStr) + '</td>';
     html += '<td>' + escHtml(malzStr) + '</td>';
@@ -1221,23 +1313,44 @@ function bekliyorRender() {
   var bugun = new Date();
   bugun.setHours(0,0,0,0);
 
-  var html = '<table class="rfq-tablo"><thead><tr>';
-  html += '<th>Talep No</th>';
-  html += '<th>Kalem</th>';
-  html += '<th>Malzeme</th>';
-  html += '<th>Tedarikci</th>';
-  html += '<th>Gonderim Tarihi</th>';
-  html += '<th>Bekleme (Gun)</th>';
+  var html = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span id="bek-secim-info" style="font-size:11px;color:var(--metin3);display:none;">0 secili</span></div>';
+  html += '<table class="rfq-tablo"><thead><tr>';
+  html += '<th style="width:32px;text-align:center"><input type="checkbox" onchange="bekTumunuSec(this.checked)"></th>';
+  html += '<th onclick="bekSirala(\'no\')">Talep No' + sortOkIsaret('bek','no') + '</th>';
+  html += '<th onclick="bekSirala(\'kalem\')">Kalem' + sortOkIsaret('bek','kalem') + '</th>';
+  html += '<th onclick="bekSirala(\'malzeme\')">Malzeme' + sortOkIsaret('bek','malzeme') + '</th>';
+  html += '<th onclick="bekSirala(\'tedarikci\')">Tedarikci' + sortOkIsaret('bek','tedarikci') + '</th>';
+  html += '<th onclick="bekSirala(\'tarih\')">Gonderim Tarihi' + sortOkIsaret('bek','tarih') + '</th>';
+  html += '<th onclick="bekSirala(\'bekleme\')">Bekleme (Gun)' + sortOkIsaret('bek','bekleme') + '</th>';
   html += '<th>Durum</th>';
   html += '</tr></thead><tbody>';
 
-  for (var i = 0; i < bekleyenler.length; i++) {
-    var f = bekleyenler[i].fields;
+  // Siralama
+  var bekSirali = bekleyenler.slice();
+  if (bekSortKol && bekSortYon !== 0) {
+    var bugunMs = bugun.getTime();
+    bekSirali = siraliDizi(bekSirali, function(r) {
+      var bf = r.fields;
+      if (bekSortKol === 'no') return bf['Talep No'] || '';
+      if (bekSortKol === 'kalem') return bf['Kalem Adı'] || '';
+      if (bekSortKol === 'malzeme') return bf['Malzeme İşlem'] || '';
+      if (bekSortKol === 'tedarikci') return bf['Tedarikçi Email'] || '';
+      if (bekSortKol === 'tarih') return bf['Talep Tarihi'] || '';
+      if (bekSortKol === 'bekleme') { var t = bf['Talep Tarihi'] ? new Date(bf['Talep Tarihi']) : null; return t ? Math.floor((bugunMs - t.getTime()) / 86400000) : 0; }
+      return '';
+    }, bekSortYon);
+  }
+
+  for (var i = 0; i < bekSirali.length; i++) {
+    var f = bekSirali[i].fields;
     var talepTarih = f['Talep Tarihi'] ? new Date(f['Talep Tarihi']) : null;
     var beklemeGun = talepTarih ? Math.floor((bugun - talepTarih) / 86400000) : 0;
     var gecikmi = beklemeGun > 7;
 
+    var bekId = bekSirali[i].id;
+    var bekChk = bekSeciliIds.indexOf(bekId) >= 0;
     html += '<tr style="' + (gecikmi ? 'background:#fef2f2;' : '') + '">';
+    html += '<td style="text-align:center"><input type="checkbox" ' + (bekChk ? 'checked' : '') + ' onchange="bekToggleSec(\'' + bekId + '\',this.checked)"></td>';
     html += '<td class="mono">' + escHtml(f['Talep No'] || '—') + '</td>';
     html += '<td>' + escHtml(f['Kalem Adı'] || '—') + '</td>';
     html += '<td>' + escHtml(f['Malzeme İşlem'] || '—') + '</td>';
