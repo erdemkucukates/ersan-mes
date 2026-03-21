@@ -7,6 +7,209 @@
 <link rel="stylesheet" href="ersan_styles.css">
 <script src="ersan_nav.js" defer></script>
 <script src="ersan_log.js" defer></script>
+<style>
+/* ── RFQ MODAL ── */
+.rfq-modal-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(15,39,68,0.55);
+  z-index: 600;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 40px;
+  overflow-y: auto;
+}
+.rfq-modal-backdrop.acik { display: flex; }
+
+.rfq-modal {
+  background: var(--beyaz);
+  border-radius: 12px;
+  width: 96%;
+  max-width: 900px;
+  max-height: calc(100vh - 80px);
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  margin-bottom: 40px;
+}
+.rfq-modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: var(--beyaz);
+  z-index: 2;
+  border-radius: 12px 12px 0 0;
+}
+.rfq-modal-head-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--laci);
+}
+.rfq-modal-body { padding: 20px; }
+.rfq-modal-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 14px 20px;
+  border-top: 1px solid var(--border);
+  position: sticky;
+  bottom: 0;
+  background: var(--beyaz);
+  border-radius: 0 0 12px 12px;
+}
+
+/* ── TALEP BLOK ── */
+.rfq-talep-blok {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px;
+  margin-bottom: 12px;
+  background: var(--bg2);
+  position: relative;
+}
+.rfq-talep-blok-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.rfq-talep-blok-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--laci);
+}
+.rfq-talep-blok-sil {
+  background: none;
+  border: none;
+  color: var(--kirmizi);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.rfq-talep-blok-sil:hover { background: var(--kirmizi-bg); }
+
+/* ── TEKLIF DONUK (frozen ref) ── */
+.rfq-teklif-blok-frozen {
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  background: #f0fdf4;
+}
+.rfq-teklif-blok-frozen .label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--metin3);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.rfq-teklif-blok-frozen .val {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--metin);
+}
+
+/* ── TEDARIKCI LISTESI ── */
+.rfq-td-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+.rfq-td-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 16px;
+  font-size: 11px;
+  font-weight: 500;
+  background: var(--mavi-acik);
+  color: var(--mavi-koyu);
+}
+.rfq-td-chip .sil-x {
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--mavi);
+  margin-left: 2px;
+}
+.rfq-td-chip .sil-x:hover { color: var(--kirmizi); }
+
+/* ── TIP SELECTOR ── */
+.rfq-tip-wrap {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.rfq-tip-btn {
+  flex: 1;
+  padding: 8px 12px;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  background: var(--beyaz);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--metin2);
+  text-align: center;
+  transition: all .15s;
+  font-family: inherit;
+}
+.rfq-tip-btn.secili {
+  border-color: var(--mavi);
+  background: var(--mavi-acik);
+  color: var(--mavi-koyu);
+  font-weight: 600;
+}
+
+/* ── OLCU GRID ── */
+.rfq-olcu-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 8px;
+  margin-top: 8px;
+}
+.rfq-olcu-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.rfq-olcu-item label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--metin3);
+  text-transform: uppercase;
+}
+.rfq-olcu-item input {
+  padding: 5px 8px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  font-size: 12px;
+  font-family: inherit;
+  color: var(--metin2);
+}
+.rfq-olcu-item input:focus {
+  outline: none;
+  border-color: var(--mavi);
+}
+
+/* ── SECTION HEADER ── */
+.rfq-section-header {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--laci);
+  margin: 16px 0 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+</style>
 </head>
 <body>
 <div id="nav-alani"></div>
@@ -14,27 +217,656 @@
   <div class="topbar">
     <div class="topbar-baslik">Satinalma Teklifleri <span id="pr-badge" style="display:none;font-size:12px;padding:3px 10px;border-radius:4px;background:#dbeafe;color:#1e40af;font-weight:600;margin-left:12px;"></span></div>
     <div style="display:flex;align-items:center;gap:8px;">
+      <button class="btn btn-mavi" onclick="rfqModalAc()">+ Yeni RFQ</button>
       <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
     </div>
   </div>
   <div class="sayfa-icerik">
-    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:60vh;color:var(--metin3);">
-      <div style="font-size:48px;margin-bottom:16px;opacity:0.3;">&#9881;</div>
-      <div style="font-size:16px;font-weight:600;color:var(--laci);margin-bottom:8px;">Satinalma Teklifleri</div>
-      <div style="font-size:13px;">Bu modul yapim asamasindadir.</div>
+    <div id="rfq-liste-alani">
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:40vh;color:var(--metin3);">
+        <div style="font-size:48px;margin-bottom:16px;opacity:0.3;">&#9881;</div>
+        <div style="font-size:16px;font-weight:600;color:var(--laci);margin-bottom:8px;">Satinalma Teklifleri (RFQ)</div>
+        <div style="font-size:13px;">RFQ listesi ve karsilastirma tablosu yakin zamanda eklenecek.</div>
+        <div style="font-size:12px;color:var(--metin4);margin-top:8px;">Simdilik "+ Yeni RFQ" butonu ile teklif talebi olusturabilirsiniz.</div>
+      </div>
     </div>
   </div>
 </div>
+
+<div id="toast-wrap" style="position:fixed;bottom:20px;right:20px;z-index:9999;"></div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- RFQ MODAL                               -->
+<!-- ═══════════════════════════════════════ -->
+<div class="rfq-modal-backdrop" id="rfq-modal-backdrop">
+  <div class="rfq-modal">
+    <div class="rfq-modal-head">
+      <div class="rfq-modal-head-title" id="rfq-modal-title">Yeni RFQ Talebi</div>
+      <button class="modal-kapat" onclick="rfqModalKapat()">&times;</button>
+    </div>
+    <div class="rfq-modal-body" id="rfq-modal-body">
+
+      <!-- TIP SECIMI -->
+      <div class="rfq-tip-wrap">
+        <button class="rfq-tip-btn secili" onclick="rfqTipDegis('hammadde',this)">Hammadde</button>
+        <button class="rfq-tip-btn" onclick="rfqTipDegis('fason',this)">Fason Islem</button>
+      </div>
+
+      <!-- TALEP BLOKLARI -->
+      <div id="rfq-talep-listesi"></div>
+
+      <!-- EKLE BUTONLARI -->
+      <div style="display:flex;gap:8px;margin-top:8px;margin-bottom:16px;">
+        <button class="btn btn-beyaz btn-sm" onclick="rfqTekilEkleModal()">+ Kalem Ekle</button>
+        <button class="btn btn-beyaz btn-sm" onclick="rfqGrupEkleModal()">+ SE Grubundan Ekle</button>
+      </div>
+
+      <!-- TEDARIKCI SECIMI -->
+      <div class="rfq-section-header">Tedarikciler</div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;">
+        <select class="form-select" id="rfq-td-select" style="flex:1;font-size:12px;">
+          <option value="">— Tedarikci secin —</option>
+        </select>
+        <button class="btn btn-beyaz btn-sm" onclick="rfqTdEkle()">Ekle</button>
+      </div>
+      <div class="rfq-td-list" id="rfq-td-list"></div>
+
+      <!-- NOTLAR -->
+      <div class="rfq-section-header">Not / Aciklama</div>
+      <textarea class="form-textarea" id="rfq-not" rows="3" placeholder="Tedarikicye iletilecek ek bilgi..." style="font-size:12px;"></textarea>
+
+      <!-- TEKLIF DONUKLERI (referans bilgi) -->
+      <div id="rfq-teklif-donuk-alani" style="margin-top:16px;"></div>
+
+    </div>
+    <div class="rfq-modal-foot">
+      <button class="btn btn-beyaz" onclick="rfqModalKapat()">Iptal</button>
+      <button class="btn btn-beyaz" onclick="rfqTaslakKaydet()" id="rfq-taslak-btn">Taslak Kaydet</button>
+      <button class="btn btn-mavi" onclick="rfqGonder()" id="rfq-gonder-btn">RFQ Gonder</button>
+    </div>
+  </div>
+</div>
+
+<!-- GRUP EKLEME MODALI -->
+<div class="modal-overlay" id="rfq-grup-modal" style="display:none;">
+  <div class="modal" style="max-width:600px;">
+    <div class="modal-baslik">
+      <span>SE Grubundan Kalem Ekle</span>
+      <button class="modal-kapat" onclick="document.getElementById('rfq-grup-modal').style.display='none'">&times;</button>
+    </div>
+    <div style="margin-bottom:10px;">
+      <input type="text" class="form-input" id="rfq-grup-arama" placeholder="SE no ara..." oninput="rfqGrupFiltre()" style="font-size:12px;">
+    </div>
+    <div id="rfq-grup-liste" style="max-height:300px;overflow-y:auto;"></div>
+    <div class="modal-alt">
+      <button class="btn btn-beyaz" onclick="document.getElementById('rfq-grup-modal').style.display='none'">Iptal</button>
+      <button class="btn btn-mavi" onclick="rfqGrupSecimEkle()">Secilenleri Ekle</button>
+    </div>
+  </div>
+</div>
+
+<!-- TEKIL EKLEME MODALI -->
+<div class="modal-overlay" id="rfq-tekil-modal" style="display:none;">
+  <div class="modal" style="max-width:500px;">
+    <div class="modal-baslik">
+      <span>Manuel Kalem Ekle</span>
+      <button class="modal-kapat" onclick="document.getElementById('rfq-tekil-modal').style.display='none'">&times;</button>
+    </div>
+    <div class="form-grid-2">
+      <div class="form-grup">
+        <label class="form-label">Kalem Adi</label>
+        <input type="text" class="form-input" id="rfq-tekil-ad" placeholder="Ornek: 1.4404 Boru">
+      </div>
+      <div class="form-grup">
+        <label class="form-label">Malzeme / Islem</label>
+        <input type="text" class="form-input" id="rfq-tekil-malzeme" placeholder="Malzeme cinsi veya islem">
+      </div>
+      <div class="form-grup">
+        <label class="form-label">Olcu / Spec</label>
+        <input type="text" class="form-input" id="rfq-tekil-olcu" placeholder="D60x3x6000mm">
+      </div>
+      <div class="form-grup">
+        <label class="form-label">Miktar</label>
+        <input type="number" class="form-input" id="rfq-tekil-miktar" placeholder="0" min="0" step="1">
+      </div>
+      <div class="form-grup">
+        <label class="form-label">Birim</label>
+        <select class="form-select" id="rfq-tekil-birim">
+          <option>Adet</option>
+          <option>kg</option>
+          <option>metre</option>
+          <option>paket</option>
+        </select>
+      </div>
+      <div class="form-grup">
+        <label class="form-label">Tahmini kg</label>
+        <input type="number" class="form-input" id="rfq-tekil-kg" placeholder="0" min="0" step="0.1">
+      </div>
+    </div>
+    <div class="modal-alt">
+      <button class="btn btn-beyaz" onclick="document.getElementById('rfq-tekil-modal').style.display='none'">Iptal</button>
+      <button class="btn btn-mavi" onclick="rfqTekilEkleKaydet()">Ekle</button>
+    </div>
+  </div>
+</div>
+
 <script>
+var BASE = 'app5LDgJMgocw79Ix';
+var T_STL = 'tblHmfCvNZq0qNtb1';
+var T_SE  = 'tbl56Oj1nPaqefI60';
+var T_TD  = 'tblEI6683Im5AXj36';
+
+// ── API HELPERS ──
+function apiGet(tablo, query) {
+  var url = '/.netlify/functions/airtable?table=' + encodeURIComponent(tablo);
+  if (query) url += '&' + query;
+  return fetch(url).then(function(r) { return r.json(); });
+}
+function apiPost(tablo, fields) {
+  return fetch('/.netlify/functions/airtable', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({method:'POST', path:'/v0/' + BASE + '/' + encodeURIComponent(tablo), body:{fields:fields}})
+  }).then(function(r) { return r.json(); });
+}
+function apiPatch(tablo, id, fields) {
+  return fetch('/.netlify/functions/airtable', {
+    method: 'PATCH',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({table: tablo, id: id, fields: fields})
+  }).then(function(r) { return r.json(); });
+}
+
+// ── HELPERS ──
+function toast(msg, type) {
+  type = type || 'ok';
+  var el = document.createElement('div');
+  el.style.cssText = 'padding:10px 16px;border-radius:8px;font-size:13px;font-weight:500;color:#fff;margin-top:8px;opacity:0;transform:translateY(10px);transition:all .3s;';
+  el.style.background = type === 'err' ? 'var(--kirmizi)' : type === 'inf' ? 'var(--mavi)' : 'var(--yesil)';
+  el.textContent = msg;
+  var wrap = document.getElementById('toast-wrap');
+  if (wrap) wrap.appendChild(el);
+  setTimeout(function() { el.style.opacity = '1'; el.style.transform = 'translateY(0)'; }, 50);
+  setTimeout(function() { el.remove(); }, 3500);
+}
+
+// ── YOGUNLUK CONFIGS ──
+var RFQ_YOGUNLUK = {
+  '1.4404': 7.98, '1.4571': 7.98, '1.4301': 7.93,
+  '316L': 7.98, '304': 7.93, '316': 7.98,
+  'St37': 7.85, 'St52': 7.85, 'S235': 7.85, 'S355': 7.85,
+  'C45': 7.85, '42CrMo4': 7.85,
+  'Al': 2.71, '6061': 2.71, '7075': 2.81,
+  'CuZn': 8.47, 'Pirinc': 8.47,
+  'Titanyum': 4.51, 'Ti6Al4V': 4.43
+};
+
+var RFQ_OLCU = {
+  boru:   ['Dis Cap (mm)', 'Et Kalinligi (mm)', 'Boy (mm)'],
+  mil:    ['Cap (mm)', 'Boy (mm)'],
+  levha:  ['En (mm)', 'Boy (mm)', 'Kalinlik (mm)'],
+  profil: ['A (mm)', 'B (mm)', 'Et (mm)', 'Boy (mm)'],
+  diger:  ['Olcu / Spec']
+};
+
+// ── STATE ──
+var rfqState = {
+  tip: 'hammadde',
+  kalemler: [],
+  tedarikciler: [],
+  not: '',
+  prNo: null,
+  editId: null
+};
+
+var tedarikciListAll = [];
+var seListAll = [];
+
+// ── TEDARIKCI & SE LISTESI YUKLE ──
+function rfqVerileriYukle() {
+  return Promise.all([
+    apiGet(T_TD, 'pageSize=100'),
+    apiGet(T_SE, 'pageSize=100')
+  ]).then(function(results) {
+    tedarikciListAll = (results[0].records || []);
+    seListAll = (results[1].records || []);
+    rfqTdSelectDoldur();
+  }).catch(function(e) {
+    console.error('RFQ veri yukleme hatasi:', e);
+  });
+}
+
+function rfqTdSelectDoldur() {
+  var sel = document.getElementById('rfq-td-select');
+  if (!sel) return;
+  var html = '<option value="">— Tedarikci secin —</option>';
+  for (var i = 0; i < tedarikciListAll.length; i++) {
+    var t = tedarikciListAll[i];
+    var ad = (t.fields['Tedarikçi Adı'] || '').replace(/"/g, '&quot;');
+    var email = t.fields['E-posta'] || '';
+    html += '<option value="' + t.id + '" data-ad="' + ad + '" data-email="' + email + '">' + ad + (email ? ' (' + email + ')' : ' (e-posta yok)') + '</option>';
+  }
+  sel.innerHTML = html;
+}
+
+// ── MODAL AC / KAPAT ──
+function rfqModalAc(opts) {
+  opts = opts || {};
+  rfqState.tip = 'hammadde';
+  rfqState.kalemler = [];
+  rfqState.tedarikciler = [];
+  rfqState.not = '';
+  rfqState.prNo = opts.prNo || null;
+  rfqState.editId = null;
+
+  // Tip butonlarini sifirla
+  var tipBtns = document.querySelectorAll('.rfq-tip-btn');
+  for (var i = 0; i < tipBtns.length; i++) {
+    tipBtns[i].classList.remove('secili');
+    if (i === 0) tipBtns[i].classList.add('secili');
+  }
+
+  document.getElementById('rfq-not').value = '';
+  document.getElementById('rfq-modal-title').textContent = opts.prNo ? 'RFQ Talebi — PR: ' + opts.prNo : 'Yeni RFQ Talebi';
+
+  rfqVerileriYukle().then(function() {
+    // PR varsa, ilgili talepleri otomatik yukle
+    if (opts.prNo) {
+      rfqPRKalemleriYukle(opts.prNo);
+    }
+  });
+
+  rfqTalepGridRender();
+  rfqTdListRender();
+  rfqTeklifDonukRender();
+  document.getElementById('rfq-modal-backdrop').classList.add('acik');
+}
+
+function rfqModalKapat() {
+  document.getElementById('rfq-modal-backdrop').classList.remove('acik');
+}
+
+// ── PR KALEMLERI YUKLE ──
+function rfqPRKalemleriYukle(prNo) {
+  apiGet(T_STL, 'filter=' + encodeURIComponent("{Talep No}='" + prNo + "'")).then(function(d) {
+    var recs = d.records || [];
+    for (var i = 0; i < recs.length; i++) {
+      var f = recs[i].fields;
+      rfqState.kalemler.push({
+        id: recs[i].id,
+        ad: f['Kalem Adı'] || '',
+        malzeme: f['Malzeme İşlem'] || '',
+        olcu: f['Ölçü'] || '',
+        miktar: f['Miktar'] || 0,
+        birim: f['Birim'] || 'Adet',
+        kg: f['Tahmini kg'] || 0,
+        seId: (f['SE No'] || [])[0] || ''
+      });
+    }
+    rfqTalepGridRender();
+  }).catch(function(e) {
+    console.error('PR kalemleri yukleme hatasi:', e);
+  });
+}
+
+// ── TIP DEGIS ──
+function rfqTipDegis(tip, btn) {
+  rfqState.tip = tip;
+  var btns = document.querySelectorAll('.rfq-tip-btn');
+  for (var i = 0; i < btns.length; i++) { btns[i].classList.remove('secili'); }
+  btn.classList.add('secili');
+}
+
+// ── TALEP GRID RENDER ──
+function rfqTalepGridRender() {
+  var el = document.getElementById('rfq-talep-listesi');
+  if (!el) return;
+
+  if (rfqState.kalemler.length === 0) {
+    el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--metin4);font-size:12px;border:1px dashed var(--border);border-radius:8px;">Henuz kalem eklenmedi. "+ Kalem Ekle" veya "+ SE Grubundan Ekle" butonlarini kullanin.</div>';
+    return;
+  }
+
+  var html = '';
+  for (var i = 0; i < rfqState.kalemler.length; i++) {
+    var k = rfqState.kalemler[i];
+    html += '<div class="rfq-talep-blok">';
+    html += '<div class="rfq-talep-blok-head">';
+    html += '<div class="rfq-talep-blok-title">' + (i + 1) + '. ' + (k.ad || 'Kalem') + '</div>';
+    html += '<button class="rfq-talep-blok-sil" onclick="rfqKalemSil(' + i + ')" title="Kalemi kaldir">&times;</button>';
+    html += '</div>';
+    html += '<div class="form-grid-3" style="font-size:12px;">';
+    html += '<div><span style="color:var(--metin3);font-size:10px;">MALZEME</span><br>' + (k.malzeme || '—') + '</div>';
+    html += '<div><span style="color:var(--metin3);font-size:10px;">OLCU</span><br>' + (k.olcu || '—') + '</div>';
+    html += '<div><span style="color:var(--metin3);font-size:10px;">MIKTAR</span><br>' + (k.miktar || 0) + ' ' + (k.birim || '') + (k.kg ? ' (~' + k.kg + ' kg)' : '') + '</div>';
+    html += '</div>';
+    html += '</div>';
+  }
+  el.innerHTML = html;
+}
+
+// ── KALEM SIL ──
+function rfqKalemSil(idx) {
+  rfqState.kalemler.splice(idx, 1);
+  rfqTalepGridRender();
+}
+
+// ── TEKLIF DONUK RENDER (referans bilgi) ──
+function rfqTeklifDonukRender() {
+  var el = document.getElementById('rfq-teklif-donuk-alani');
+  if (!el) return;
+
+  if (rfqState.kalemler.length === 0) {
+    el.innerHTML = '';
+    return;
+  }
+
+  var html = '<div class="rfq-section-header">Referans Bilgi (Tedarikci Gorecek)</div>';
+  for (var i = 0; i < rfqState.kalemler.length; i++) {
+    var k = rfqState.kalemler[i];
+    html += '<div class="rfq-teklif-blok-frozen">';
+    html += '<div style="display:flex;gap:16px;flex-wrap:wrap;">';
+    html += '<div><span class="label">KALEM</span><div class="val">' + (k.ad || '—') + '</div></div>';
+    html += '<div><span class="label">MALZEME</span><div class="val">' + (k.malzeme || '—') + '</div></div>';
+    html += '<div><span class="label">OLCU</span><div class="val">' + (k.olcu || '—') + '</div></div>';
+    html += '<div><span class="label">MIKTAR</span><div class="val">' + (k.miktar || 0) + ' ' + (k.birim || '') + '</div></div>';
+    html += '</div></div>';
+  }
+  el.innerHTML = html;
+}
+
+// ── TEDARIKCI EKLEME ──
+function rfqTdEkle() {
+  var sel = document.getElementById('rfq-td-select');
+  if (!sel || !sel.value) { toast('Tedarikci secin', 'err'); return; }
+  var opt = sel.options[sel.selectedIndex];
+  var id = sel.value;
+  var ad = opt.getAttribute('data-ad') || '';
+  var email = opt.getAttribute('data-email') || '';
+
+  // Zaten eklenmis mi?
+  for (var i = 0; i < rfqState.tedarikciler.length; i++) {
+    if (rfqState.tedarikciler[i].id === id) {
+      toast('Bu tedarikci zaten eklendi', 'inf');
+      return;
+    }
+  }
+
+  rfqState.tedarikciler.push({id: id, ad: ad, email: email});
+  sel.value = '';
+  rfqTdListRender();
+}
+
+// ── TEDARIKCI LISTESI RENDER ──
+function rfqTdListRender() {
+  var el = document.getElementById('rfq-td-list');
+  if (!el) return;
+
+  if (rfqState.tedarikciler.length === 0) {
+    el.innerHTML = '<span style="font-size:11px;color:var(--metin4);">Henuz tedarikci eklenmedi</span>';
+    return;
+  }
+
+  var html = '';
+  for (var i = 0; i < rfqState.tedarikciler.length; i++) {
+    var t = rfqState.tedarikciler[i];
+    html += '<span class="rfq-td-chip">' + t.ad + (t.email ? '' : ' (e-posta yok)') + '<span class="sil-x" onclick="rfqTdSil(' + i + ')">&times;</span></span>';
+  }
+  el.innerHTML = html;
+}
+
+// ── TEDARIKCI SIL ──
+function rfqTdSil(idx) {
+  rfqState.tedarikciler.splice(idx, 1);
+  rfqTdListRender();
+}
+
+// ── GRUP EKLEME MODAL ──
+function rfqGrupEkleModal() {
+  var el = document.getElementById('rfq-grup-modal');
+  if (el) el.style.display = 'flex';
+
+  var liste = document.getElementById('rfq-grup-liste');
+  if (!liste) return;
+
+  if (seListAll.length === 0) {
+    liste.innerHTML = '<div style="padding:16px;text-align:center;color:var(--metin4);font-size:12px;">SE kaydi bulunamadi</div>';
+    return;
+  }
+
+  rfqGrupListeRender(seListAll);
+}
+
+function rfqGrupListeRender(kayitlar) {
+  var liste = document.getElementById('rfq-grup-liste');
+  if (!liste) return;
+
+  var html = '';
+  for (var i = 0; i < kayitlar.length; i++) {
+    var r = kayitlar[i];
+    var f = r.fields;
+    var seNo = f['SE No'] || '—';
+    var parcaAd = f['Parça Adı'] || '';
+    var malzeme = f['Hammadde'] || f['Malzeme'] || '';
+    html += '<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--border);">';
+    html += '<input type="checkbox" value="' + r.id + '" data-seno="' + seNo.replace(/"/g, '&quot;') + '" data-parca="' + parcaAd.replace(/"/g, '&quot;') + '" data-malzeme="' + malzeme.replace(/"/g, '&quot;') + '" style="width:15px;height:15px;">';
+    html += '<div style="flex:1;"><div style="font-size:12px;font-weight:500;font-family:monospace;color:var(--mavi-koyu);">' + seNo + '</div>';
+    html += '<div style="font-size:11px;color:var(--metin2);">' + parcaAd + (malzeme ? ' - ' + malzeme : '') + '</div></div></div>';
+  }
+  liste.innerHTML = html || '<div style="padding:16px;text-align:center;color:var(--metin4);font-size:12px;">Sonuc bulunamadi</div>';
+}
+
+function rfqGrupFiltre() {
+  var q = (document.getElementById('rfq-grup-arama').value || '').toLowerCase();
+  if (!q) {
+    rfqGrupListeRender(seListAll);
+    return;
+  }
+  var filtered = seListAll.filter(function(r) {
+    var f = r.fields;
+    return (f['SE No'] || '').toLowerCase().indexOf(q) >= 0 ||
+           (f['Parça Adı'] || '').toLowerCase().indexOf(q) >= 0;
+  });
+  rfqGrupListeRender(filtered);
+}
+
+function rfqGrupSecimEkle() {
+  var checkboxes = document.querySelectorAll('#rfq-grup-liste input[type=checkbox]:checked');
+  if (!checkboxes.length) { toast('En az bir kalem secin', 'err'); return; }
+
+  for (var i = 0; i < checkboxes.length; i++) {
+    var cb = checkboxes[i];
+    rfqState.kalemler.push({
+      id: null,
+      ad: cb.getAttribute('data-parca') || '',
+      malzeme: cb.getAttribute('data-malzeme') || '',
+      olcu: '',
+      miktar: 1,
+      birim: 'Adet',
+      kg: 0,
+      seId: cb.value
+    });
+  }
+
+  document.getElementById('rfq-grup-modal').style.display = 'none';
+  rfqTalepGridRender();
+  rfqTeklifDonukRender();
+  toast(checkboxes.length + ' kalem eklendi');
+}
+
+// ── TEKIL EKLEME MODAL ──
+function rfqTekilEkleModal() {
+  document.getElementById('rfq-tekil-modal').style.display = 'flex';
+  document.getElementById('rfq-tekil-ad').value = '';
+  document.getElementById('rfq-tekil-malzeme').value = '';
+  document.getElementById('rfq-tekil-olcu').value = '';
+  document.getElementById('rfq-tekil-miktar').value = '';
+  document.getElementById('rfq-tekil-kg').value = '';
+  document.getElementById('rfq-tekil-birim').value = 'Adet';
+}
+
+function rfqTekilEkleKaydet() {
+  var ad = document.getElementById('rfq-tekil-ad').value.trim();
+  var malzeme = document.getElementById('rfq-tekil-malzeme').value.trim();
+  var olcu = document.getElementById('rfq-tekil-olcu').value.trim();
+  var miktar = parseFloat(document.getElementById('rfq-tekil-miktar').value) || 0;
+  var birim = document.getElementById('rfq-tekil-birim').value;
+  var kg = parseFloat(document.getElementById('rfq-tekil-kg').value) || 0;
+
+  if (!ad) { toast('Kalem adi giriniz', 'err'); return; }
+
+  rfqState.kalemler.push({
+    id: null,
+    ad: ad,
+    malzeme: malzeme,
+    olcu: olcu,
+    miktar: miktar,
+    birim: birim,
+    kg: kg,
+    seId: ''
+  });
+
+  document.getElementById('rfq-tekil-modal').style.display = 'none';
+  rfqTalepGridRender();
+  rfqTeklifDonukRender();
+  toast('Kalem eklendi');
+}
+
+// ── TASLAK KAYDET ──
+function rfqTaslakKaydet() {
+  if (rfqState.kalemler.length === 0) {
+    toast('En az bir kalem ekleyin', 'err');
+    return;
+  }
+
+  var btn = document.getElementById('rfq-taslak-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Kaydediliyor...'; }
+
+  var promises = [];
+  for (var i = 0; i < rfqState.kalemler.length; i++) {
+    var k = rfqState.kalemler[i];
+    var fields = {
+      'Kalem Adı': k.ad,
+      'Malzeme İşlem': k.malzeme,
+      'Ölçü': k.olcu,
+      'Miktar': k.miktar,
+      'Birim': k.birim,
+      'Tahmini kg': k.kg,
+      'Talep Tipi': rfqState.tip === 'hammadde' ? 'Hammadde' : 'Fason',
+      'Durum': 'Taslak'
+    };
+    if (k.seId) fields['SE No'] = [k.seId];
+
+    if (k.id) {
+      promises.push(apiPatch(T_STL, k.id, fields));
+    } else {
+      promises.push(apiPost(T_STL, fields));
+    }
+  }
+
+  Promise.all(promises).then(function() {
+    toast('Taslak kaydedildi (' + rfqState.kalemler.length + ' kalem)');
+    if (btn) { btn.disabled = false; btn.textContent = 'Taslak Kaydet'; }
+    if (typeof logIslem === 'function') {
+      logIslem('Taslak', 'RFQ', '', rfqState.kalemler.length + ' kalem', null, {tip: rfqState.tip});
+    }
+  }).catch(function(e) {
+    toast('Kayit hatasi: ' + e.message, 'err');
+    if (btn) { btn.disabled = false; btn.textContent = 'Taslak Kaydet'; }
+  });
+}
+
+// ── RFQ GONDER ──
+function rfqGonder() {
+  if (rfqState.kalemler.length === 0) {
+    toast('En az bir kalem ekleyin', 'err');
+    return;
+  }
+  if (rfqState.tedarikciler.length === 0) {
+    toast('En az bir tedarikci secin', 'err');
+    return;
+  }
+
+  // E-postasi olan var mi kontrol et
+  var emailliTd = rfqState.tedarikciler.filter(function(t) { return t.email; });
+  if (emailliTd.length === 0) {
+    toast('Secilen tedarikcilerin e-posta adresi yok', 'err');
+    return;
+  }
+
+  var btn = document.getElementById('rfq-gonder-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Gonderiliyor...'; }
+
+  var notText = (document.getElementById('rfq-not') || {}).value || '';
+  var emails = [];
+  var adlar = [];
+  for (var i = 0; i < rfqState.tedarikciler.length; i++) {
+    if (rfqState.tedarikciler[i].email) emails.push(rfqState.tedarikciler[i].email);
+    adlar.push(rfqState.tedarikciler[i].ad);
+  }
+
+  // Oncelikle kodUret ile RFQ kodu al
+  var rfqKod = '';
+  var kodPromise;
+  if (typeof kodUret === 'function') {
+    kodPromise = kodUret('RFQ').then(function(kod) { rfqKod = kod; });
+  } else {
+    rfqKod = 'RFQ-' + Date.now();
+    kodPromise = Promise.resolve();
+  }
+
+  kodPromise.then(function() {
+    var token = Date.now() + '-' + Math.random().toString(36).slice(2, 9);
+
+    // Her kalem icin STL kaydini guncelle veya olustur
+    var promises = [];
+    for (var i = 0; i < rfqState.kalemler.length; i++) {
+      var k = rfqState.kalemler[i];
+      var fields = {
+        'Kalem Adı': k.ad,
+        'Malzeme İşlem': k.malzeme,
+        'Ölçü': k.olcu,
+        'Miktar': k.miktar,
+        'Birim': k.birim,
+        'Tahmini kg': k.kg,
+        'Talep Tipi': rfqState.tip === 'hammadde' ? 'Hammadde' : 'Fason',
+        'Durum': 'Gönderildi',
+        'Tedarikçi Email': emails.join(', '),
+        'Token': token,
+        'Talep No': rfqKod
+      };
+      if (k.seId) fields['SE No'] = [k.seId];
+
+      if (k.id) {
+        promises.push(apiPatch(T_STL, k.id, fields));
+      } else {
+        promises.push(apiPost(T_STL, fields));
+      }
+    }
+
+    return Promise.all(promises);
+  }).then(function() {
+    toast(adlar.length + ' tedarikciye RFQ gonderildi: ' + rfqKod, 'ok');
+    if (btn) { btn.disabled = false; btn.textContent = 'RFQ Gonder'; }
+    if (typeof logIslem === 'function') {
+      logIslem('Gönderildi', 'RFQ', rfqKod, adlar.join(', '), null, {kalemSayi: rfqState.kalemler.length, tedarikciler: adlar});
+    }
+    setTimeout(function() { rfqModalKapat(); }, 1500);
+  }).catch(function(e) {
+    toast('Gonderim hatasi: ' + e.message, 'err');
+    if (btn) { btn.disabled = false; btn.textContent = 'RFQ Gonder'; }
+  });
+}
+
+// ── INIT ──
 document.addEventListener('DOMContentLoaded', function() {
   var urlParams = new URLSearchParams(window.location.search);
   var prParam = urlParams.get('pr');
   if (prParam) {
     var prBadge = document.getElementById('pr-badge');
-    if (prBadge) {
-      prBadge.textContent = 'PR: ' + prParam;
-      prBadge.style.display = 'inline-block';
-    }
+    if (prBadge) { prBadge.textContent = 'PR: ' + prParam; prBadge.style.display = 'inline-block'; }
+    // Auto-open modal with PR context
+    rfqModalAc({ prNo: prParam });
   }
 });
 </script>

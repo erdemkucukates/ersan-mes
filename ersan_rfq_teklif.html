@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan — Tedarikci Teklif Formu</title>
+<style>
+:root {
+  --laci: #0f2744;
+  --mavi: #378ADD;
+  --mavi-acik: #E6F1FB;
+  --mavi-koyu: #0C447C;
+  --beyaz: #ffffff;
+  --bg: #f0f4f8;
+  --bg2: #f8fafc;
+  --border: #e2e8f0;
+  --metin: #0f2744;
+  --metin2: #334155;
+  --metin3: #64748b;
+  --metin4: #94a3b8;
+  --yesil: #1D9E75;
+  --yesil-bg: #EAF3DE;
+  --yesil-t: #085041;
+  --kirmizi: #E24B4A;
+  --kirmizi-bg: #FCEBEB;
+  --sari: #BA7517;
+  --sari-bg: #FAEEDA;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--metin2);
+  font-size: 14px;
+  line-height: 1.5;
+}
+.td-page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+.td-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+.td-header-logo {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--laci);
+  margin-bottom: 4px;
+}
+.td-header-sub {
+  font-size: 12px;
+  color: var(--metin3);
+}
+.td-card {
+  background: var(--beyaz);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.td-card-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--laci);
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.td-ref-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.td-ref-item {
+  padding: 8px 12px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 6px;
+}
+.td-ref-item .label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--yesil-t);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.td-ref-item .val {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--metin);
+  margin-top: 2px;
+}
+.td-input-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.td-input-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.td-input-item label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--metin3);
+  text-transform: uppercase;
+}
+.td-input-item input,
+.td-input-item select,
+.td-input-item textarea {
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--metin2);
+  background: var(--mavi-acik);
+  transition: border-color .15s;
+}
+.td-input-item input:focus,
+.td-input-item select:focus,
+.td-input-item textarea:focus {
+  outline: none;
+  border-color: var(--mavi);
+  box-shadow: 0 0 0 3px rgba(55,138,221,0.1);
+}
+.td-input-item input.hata { border-color: var(--kirmizi); background: var(--kirmizi-bg); }
+.td-input-item input.ok { border-color: var(--yesil); }
+.td-input-item input[readonly] {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+  color: var(--metin3);
+}
+.td-fiyat-wrap {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+}
+.td-fiyat-wrap input { flex: 1; }
+.td-fiyat-wrap select { width: 100px; }
+.td-kg-hesap {
+  padding: 10px 14px;
+  background: var(--sari-bg);
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--sari);
+  margin-top: 10px;
+}
+.td-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all .15s;
+  font-family: inherit;
+  width: 100%;
+}
+.td-btn-mavi { background: var(--mavi); color: #fff; }
+.td-btn-mavi:hover { background: var(--mavi-koyu); }
+.td-btn-mavi:disabled { opacity: 0.5; cursor: not-allowed; }
+.td-success {
+  text-align: center;
+  padding: 40px 20px;
+}
+.td-success-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+}
+.td-success-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--yesil-t);
+  margin-bottom: 8px;
+}
+.td-success-text {
+  font-size: 14px;
+  color: var(--metin3);
+}
+.td-hata-msg {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--kirmizi);
+}
+.td-hata-msg .icon { font-size: 48px; margin-bottom: 12px; }
+.td-hata-msg .title { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+.td-hata-msg .detail { font-size: 13px; color: var(--metin3); }
+.spinner {
+  width: 24px; height: 24px;
+  border: 3px solid var(--border);
+  border-top-color: var(--mavi);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+  margin: 0 auto 12px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.td-loading {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--metin3);
+  font-size: 14px;
+}
+.td-kalem-sep {
+  border-top: 2px dashed var(--border);
+  margin: 16px 0;
+}
+@media (max-width: 600px) {
+  .td-ref-grid, .td-input-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="td-page" id="td-app">
+  <div class="td-header">
+    <div class="td-header-logo">ERSAN ENDUSTRIYEL</div>
+    <div class="td-header-sub">Fiyat Teklif Formu</div>
+  </div>
+  <div class="td-loading" id="td-loading">
+    <div class="spinner"></div>
+    <div>Teklif bilgileri yukleniyor...</div>
+  </div>
+</div>
+
+<script>
+var BASE_ID = 'app5LDgJMgocw79Ix';
+var T_STL = 'tblHmfCvNZq0qNtb1';
+
+var params = new URLSearchParams(window.location.search);
+var TOKEN = params.get('token') || '';
+var RECORD_ID = params.get('rid') || '';
+var rfqData = null;
+var submitted = false;
+
+// ── YOGUNLUK ──
+var YOGUNLUK = {
+  '1.4404': 7.98, '1.4571': 7.98, '1.4301': 7.93,
+  '316L': 7.98, '304': 7.93, '316': 7.98,
+  'St37': 7.85, 'St52': 7.85, 'S235': 7.85, 'S355': 7.85,
+  'C45': 7.85, '42CrMo4': 7.85,
+  'Al': 2.71, '6061': 2.71, '7075': 2.81,
+  'Pirinc': 8.47, 'Titanyum': 4.51
+};
+
+// ── API ──
+function apiGetRec(id) {
+  return fetch('/.netlify/functions/airtable', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({method:'GET', path:'/v0/' + BASE_ID + '/' + T_STL + '/' + id})
+  }).then(function(r) { return r.json(); });
+}
+function apiPatchRec(id, fields) {
+  return fetch('/.netlify/functions/airtable', {
+    method: 'PATCH',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({table: T_STL, id: id, fields: fields})
+  }).then(function(r) { return r.json(); });
+}
+
+// ── HATA GOSTER ──
+function showError(msg) {
+  document.getElementById('td-loading').style.display = 'none';
+  var app = document.getElementById('td-app');
+  var div = document.createElement('div');
+  div.className = 'td-card';
+  div.innerHTML = '<div class="td-hata-msg"><div class="icon">&#9888;</div><div class="title">Hata</div><div class="detail">' + msg + '</div></div>';
+  app.appendChild(div);
+}
+
+// ── BASARILI GOSTER ──
+function showSuccess() {
+  var app = document.getElementById('td-app');
+  // Mevcut formu temizle, sadece header ve success goster
+  var cards = app.querySelectorAll('.td-card');
+  for (var i = 0; i < cards.length; i++) { cards[i].remove(); }
+
+  var div = document.createElement('div');
+  div.className = 'td-card';
+  div.innerHTML = '<div class="td-success">' +
+    '<div class="td-success-icon">&#10004;</div>' +
+    '<div class="td-success-title">Teklifiniz Alindi!</div>' +
+    '<div class="td-success-text">Teklifiniz basariyla kaydedildi. Degerlendirme sonucu tarafimizdan iletilecektir.<br>Tesekkur ederiz.</div>' +
+    '</div>';
+  app.appendChild(div);
+}
+
+// ── ZATEN YANITLANMIS ──
+function showAlreadySubmitted() {
+  document.getElementById('td-loading').style.display = 'none';
+  var app = document.getElementById('td-app');
+  var div = document.createElement('div');
+  div.className = 'td-card';
+  div.innerHTML = '<div class="td-success">' +
+    '<div class="td-success-icon">&#9989;</div>' +
+    '<div class="td-success-title">Teklif Daha Once Gonderildi</div>' +
+    '<div class="td-success-text">Bu teklif talebi icin daha once yanit gonderilmistir.</div>' +
+    '</div>';
+  app.appendChild(div);
+}
+
+// ── KG HESAPLA ──
+function kgHesapla() {
+  var sekil = (document.getElementById('td-sekil') || {}).value || 'diger';
+  var yogunluk = 7.85;
+
+  // Malzeme cinsinden yogunluk bul
+  var malzemeCinsi = (document.getElementById('td-malzeme-cinsi') || {}).value || '';
+  var keys = Object.keys(YOGUNLUK);
+  for (var i = 0; i < keys.length; i++) {
+    if (malzemeCinsi.indexOf(keys[i]) >= 0) {
+      yogunluk = YOGUNLUK[keys[i]];
+      break;
+    }
+  }
+
+  var kg = 0;
+  var miktar = parseFloat((document.getElementById('td-miktar') || {}).value) || 1;
+
+  if (sekil === 'boru') {
+    var disCap = parseFloat((document.getElementById('td-dis-cap') || {}).value) || 0;
+    var et = parseFloat((document.getElementById('td-et') || {}).value) || 0;
+    var boy = parseFloat((document.getElementById('td-boy') || {}).value) || 0;
+    if (disCap > 0 && et > 0 && boy > 0) {
+      var icCap = disCap - 2 * et;
+      kg = (Math.PI / 4) * ((disCap * disCap) - (icCap * icCap)) * boy / 1000000000 * yogunluk * 1000;
+    }
+  } else if (sekil === 'mil') {
+    var cap = parseFloat((document.getElementById('td-cap') || {}).value) || 0;
+    var boyMil = parseFloat((document.getElementById('td-boy') || {}).value) || 0;
+    if (cap > 0 && boyMil > 0) {
+      kg = (Math.PI / 4) * cap * cap * boyMil / 1000000000 * yogunluk * 1000;
+    }
+  } else if (sekil === 'levha') {
+    var en = parseFloat((document.getElementById('td-en') || {}).value) || 0;
+    var boyLev = parseFloat((document.getElementById('td-boy') || {}).value) || 0;
+    var kalinlik = parseFloat((document.getElementById('td-kalinlik') || {}).value) || 0;
+    if (en > 0 && boyLev > 0 && kalinlik > 0) {
+      kg = en * boyLev * kalinlik / 1000000000 * yogunluk * 1000;
+    }
+  }
+
+  var toplamKg = kg * miktar;
+  var el = document.getElementById('td-kg-sonuc');
+  if (el) {
+    if (toplamKg > 0) {
+      el.textContent = 'Tahmini agirlik: ' + toplamKg.toFixed(2) + ' kg (birim: ' + kg.toFixed(3) + ' kg x ' + miktar + ' adet)';
+      el.style.display = 'block';
+    } else {
+      el.style.display = 'none';
+    }
+  }
+
+  var kgInput = document.getElementById('td-kg-input');
+  if (kgInput && toplamKg > 0) {
+    kgInput.value = toplamKg.toFixed(2);
+  }
+
+  return toplamKg;
+}
+
+// ── DOGRULA ──
+function dogrula() {
+  var hatalar = [];
+  var fiyat = parseFloat((document.getElementById('td-fiyat') || {}).value);
+  var teslim = parseInt((document.getElementById('td-teslim') || {}).value);
+
+  if (!fiyat || fiyat <= 0) hatalar.push('Birim fiyat girilmeli');
+  if (!teslim || teslim <= 0) hatalar.push('Teslim suresi girilmeli');
+
+  // Min/max dogrulama
+  var fiyatEl = document.getElementById('td-fiyat');
+  if (fiyatEl) {
+    if (fiyat > 0) {
+      fiyatEl.classList.remove('hata');
+      fiyatEl.classList.add('ok');
+    } else {
+      fiyatEl.classList.add('hata');
+      fiyatEl.classList.remove('ok');
+    }
+  }
+  var teslimEl = document.getElementById('td-teslim');
+  if (teslimEl) {
+    if (teslim > 0 && teslim <= 365) {
+      teslimEl.classList.remove('hata');
+      teslimEl.classList.add('ok');
+    } else {
+      teslimEl.classList.add('hata');
+      teslimEl.classList.remove('ok');
+    }
+  }
+
+  return hatalar;
+}
+
+// ── FORM RENDER ──
+function renderForm() {
+  document.getElementById('td-loading').style.display = 'none';
+  var app = document.getElementById('td-app');
+  var f = rfqData;
+
+  // Referans bilgi karti
+  var refHtml = '<div class="td-card">';
+  refHtml += '<div class="td-card-title">Talep Bilgisi (Referans)</div>';
+  refHtml += '<div class="td-ref-grid">';
+  refHtml += '<div class="td-ref-item"><div class="label">TALEP NO</div><div class="val">' + (f['Talep No'] || '—') + '</div></div>';
+  refHtml += '<div class="td-ref-item"><div class="label">TALEP TIPI</div><div class="val">' + (f['Talep Tipi'] || '—') + '</div></div>';
+  refHtml += '<div class="td-ref-item"><div class="label">MALZEME / ISLEM</div><div class="val">' + (f['Malzeme İşlem'] || '—') + '</div></div>';
+  refHtml += '<div class="td-ref-item"><div class="label">OLCU / SPEC</div><div class="val">' + (f['Ölçü'] || '—') + '</div></div>';
+  refHtml += '<div class="td-ref-item"><div class="label">MIKTAR</div><div class="val">' + (f['Miktar'] || 0) + ' ' + (f['Birim'] || '') + '</div></div>';
+  refHtml += '<div class="td-ref-item"><div class="label">TAHMINI KG</div><div class="val">' + (f['Tahmini kg'] ? f['Tahmini kg'] + ' kg' : '—') + '</div></div>';
+  refHtml += '</div></div>';
+
+  // Tedarikci giris karti
+  var inputHtml = '<div class="td-card">';
+  inputHtml += '<div class="td-card-title">Teklif Bilgileriniz</div>';
+  inputHtml += '<div class="td-input-grid">';
+
+  // Malzeme cinsi
+  inputHtml += '<div class="td-input-item"><label>Malzeme Cinsi / Marka</label><input type="text" id="td-malzeme-cinsi" placeholder="Ornek: 1.4404 DKP" oninput="kgHesapla()"></div>';
+
+  // Sekil (kg hesabi icin)
+  inputHtml += '<div class="td-input-item"><label>Sekil</label><select id="td-sekil" onchange="sekilDegisti()">';
+  inputHtml += '<option value="diger">Diger</option><option value="boru">Boru</option><option value="mil">Mil / Cubuk</option><option value="levha">Levha / Plaka</option>';
+  inputHtml += '</select></div>';
+
+  inputHtml += '</div>';
+
+  // Olcu alanlari (dinamik)
+  inputHtml += '<div id="td-olcu-alanlari" style="margin-top:10px;"></div>';
+
+  // Kg hesaplama sonucu
+  inputHtml += '<div class="td-kg-hesap" id="td-kg-sonuc" style="display:none;"></div>';
+  inputHtml += '<input type="hidden" id="td-kg-input" value="0">';
+  inputHtml += '<input type="hidden" id="td-miktar" value="' + (f['Miktar'] || 1) + '">';
+
+  inputHtml += '<div class="td-kalem-sep"></div>';
+
+  // Fiyat
+  inputHtml += '<div class="td-input-grid" style="margin-top:10px;">';
+  inputHtml += '<div class="td-input-item"><label>Birim Fiyat *</label><div class="td-fiyat-wrap"><input type="number" id="td-fiyat" placeholder="0.00" step="0.01" min="0" oninput="dogrula()"><select id="td-fiyat-birimi"><option>TL/kg</option><option>TL/Adet</option><option>TL/metre</option><option>USD/kg</option><option>EUR/kg</option></select></div></div>';
+  inputHtml += '<div class="td-input-item"><label>Teslim Suresi (Gun) *</label><input type="number" id="td-teslim" placeholder="0" min="1" max="365" oninput="dogrula()"></div>';
+  inputHtml += '<div class="td-input-item"><label>Vade Onerisi (Gun)</label><input type="number" id="td-vade" placeholder="30" value="30" min="0" max="180"></div>';
+  inputHtml += '<div class="td-input-item"><label>Gecerlilik Tarihi</label><input type="date" id="td-gecerlilik"></div>';
+  inputHtml += '</div>';
+
+  // Not
+  inputHtml += '<div class="td-input-item" style="margin-top:12px;"><label>Notunuz (opsiyonel)</label><textarea id="td-not" rows="3" placeholder="Ek bilgi, kosullar, alternatif oneriniz..." style="width:100%;"></textarea></div>';
+
+  // Gonder butonu
+  inputHtml += '<div style="margin-top:20px;"><button class="td-btn td-btn-mavi" id="td-gonder-btn" onclick="teklifGonder()">Teklifi Gonder</button></div>';
+  inputHtml += '</div>';
+
+  app.insertAdjacentHTML('beforeend', refHtml + inputHtml);
+
+  // Default gecerlilik tarihi (30 gun sonra)
+  var gecerlilik = new Date();
+  gecerlilik.setDate(gecerlilik.getDate() + 30);
+  var gecEl = document.getElementById('td-gecerlilik');
+  if (gecEl) gecEl.value = gecerlilik.toISOString().split('T')[0];
+}
+
+// ── SEKIL DEGISTI ──
+function sekilDegisti() {
+  var sekil = (document.getElementById('td-sekil') || {}).value || 'diger';
+  var el = document.getElementById('td-olcu-alanlari');
+  if (!el) return;
+
+  var html = '<div class="td-input-grid">';
+  if (sekil === 'boru') {
+    html += '<div class="td-input-item"><label>Dis Cap (mm)</label><input type="number" id="td-dis-cap" placeholder="0" min="0" step="0.1" oninput="kgHesapla()"></div>';
+    html += '<div class="td-input-item"><label>Et Kalinligi (mm)</label><input type="number" id="td-et" placeholder="0" min="0" step="0.1" oninput="kgHesapla()"></div>';
+    html += '<div class="td-input-item"><label>Boy (mm)</label><input type="number" id="td-boy" placeholder="0" min="0" step="1" oninput="kgHesapla()"></div>';
+  } else if (sekil === 'mil') {
+    html += '<div class="td-input-item"><label>Cap (mm)</label><input type="number" id="td-cap" placeholder="0" min="0" step="0.1" oninput="kgHesapla()"></div>';
+    html += '<div class="td-input-item"><label>Boy (mm)</label><input type="number" id="td-boy" placeholder="0" min="0" step="1" oninput="kgHesapla()"></div>';
+  } else if (sekil === 'levha') {
+    html += '<div class="td-input-item"><label>En (mm)</label><input type="number" id="td-en" placeholder="0" min="0" step="0.1" oninput="kgHesapla()"></div>';
+    html += '<div class="td-input-item"><label>Boy (mm)</label><input type="number" id="td-boy" placeholder="0" min="0" step="1" oninput="kgHesapla()"></div>';
+    html += '<div class="td-input-item"><label>Kalinlik (mm)</label><input type="number" id="td-kalinlik" placeholder="0" min="0" step="0.1" oninput="kgHesapla()"></div>';
+  } else {
+    html += '<div class="td-input-item" style="grid-column:1/-1;"><label>Olcu / Spec</label><input type="text" id="td-olcu-serbest" placeholder="Serbest giris..."></div>';
+  }
+  html += '</div>';
+  el.innerHTML = html;
+
+  // Onceki kg sonucunu sifirla
+  var kgSonuc = document.getElementById('td-kg-sonuc');
+  if (kgSonuc) kgSonuc.style.display = 'none';
+}
+
+// ── TEKLIF GONDER ──
+function teklifGonder() {
+  if (submitted) return;
+
+  var hatalar = dogrula();
+  if (hatalar.length > 0) {
+    alert('Lutfen eksikleri tamamlayin:\n- ' + hatalar.join('\n- '));
+    return;
+  }
+
+  var btn = document.getElementById('td-gonder-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Gonderiliyor...'; }
+
+  var fiyat = parseFloat(document.getElementById('td-fiyat').value) || 0;
+  var birim = (document.getElementById('td-fiyat-birimi') || {}).value || 'TL/kg';
+  var teslim = parseInt((document.getElementById('td-teslim') || {}).value) || 0;
+  var vade = parseInt((document.getElementById('td-vade') || {}).value) || 30;
+  var gecerlilik = (document.getElementById('td-gecerlilik') || {}).value || '';
+  var not = (document.getElementById('td-not') || {}).value || '';
+  var malzemeCinsi = (document.getElementById('td-malzeme-cinsi') || {}).value || '';
+  var kgVal = parseFloat((document.getElementById('td-kg-input') || {}).value) || 0;
+
+  // Olcu bilgisi derle
+  var sekil = (document.getElementById('td-sekil') || {}).value || 'diger';
+  var olcuStr = '';
+  if (sekil === 'boru') {
+    var dc = (document.getElementById('td-dis-cap') || {}).value || '';
+    var et = (document.getElementById('td-et') || {}).value || '';
+    var boy = (document.getElementById('td-boy') || {}).value || '';
+    olcuStr = 'D' + dc + 'x' + et + 'x' + boy + 'mm';
+  } else if (sekil === 'mil') {
+    var cap = (document.getElementById('td-cap') || {}).value || '';
+    var boy2 = (document.getElementById('td-boy') || {}).value || '';
+    olcuStr = 'D' + cap + 'x' + boy2 + 'mm';
+  } else if (sekil === 'levha') {
+    var en = (document.getElementById('td-en') || {}).value || '';
+    var boy3 = (document.getElementById('td-boy') || {}).value || '';
+    var kal = (document.getElementById('td-kalinlik') || {}).value || '';
+    olcuStr = en + 'x' + boy3 + 'x' + kal + 'mm';
+  } else {
+    olcuStr = (document.getElementById('td-olcu-serbest') || {}).value || '';
+  }
+
+  var fields = {
+    'Teklif Fiyatı': fiyat,
+    'Fiyat Birimi': birim,
+    'Teslim Süresi Gün': teslim,
+    'Tedarikçi Vade Önerisi': vade,
+    'Tedarikçi Notu': not,
+    'Malzeme Cinsi': malzemeCinsi,
+    'Tedarikçi Ölçüleri': olcuStr,
+    'Durum': 'Teklif Alındı',
+    'Yanıt Tarihi': new Date().toISOString().split('T')[0]
+  };
+  if (gecerlilik) fields['Geçerlilik Tarihi'] = gecerlilik;
+  if (kgVal > 0) fields['Tedarikçi Kg'] = kgVal;
+
+  apiPatchRec(RECORD_ID, fields).then(function(res) {
+    if (res.error) throw new Error(JSON.stringify(res.error));
+    submitted = true;
+    showSuccess();
+  }).catch(function(e) {
+    alert('Gonderim hatasi: ' + e.message);
+    if (btn) { btn.disabled = false; btn.textContent = 'Teklifi Gonder'; }
+  });
+}
+
+// ── INIT ──
+function init() {
+  if (!TOKEN || !RECORD_ID) {
+    showError('Gecersiz link. Lutfen e-postanizdaki linki kullanin.');
+    return;
+  }
+
+  apiGetRec(RECORD_ID).then(function(data) {
+    if (data.error || !data.fields) {
+      showError('Teklif talebi bulunamadi. Link gecersiz veya suresi dolmus olabilir.');
+      return;
+    }
+
+    rfqData = data.fields;
+
+    // Token dogrula
+    if (rfqData['Token'] !== TOKEN) {
+      showError('Guvenlik hatasi: Gecersiz token.');
+      return;
+    }
+
+    // Daha once yanitlanmis mi?
+    if (rfqData['Durum'] === 'Teklif Alındı' || rfqData['Durum'] === 'Teklif Alindi' ||
+        rfqData['Durum'] === 'Onaylandı' || rfqData['Durum'] === 'Onaylandi') {
+      showAlreadySubmitted();
+      return;
+    }
+
+    renderForm();
+  }).catch(function(e) {
+    showError('Baglanti hatasi: ' + e.message);
+  });
+}
+
+init();
+</script>
+</body>
+</html>
