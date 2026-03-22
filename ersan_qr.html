@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ersan MES — QR Etiketler</title>
+<link rel="stylesheet" href="utils/sidebar.css">
 <link rel="stylesheet" href="ersan_styles.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<link rel="stylesheet" href="utils/sidebar.css">
 <script src="utils/sidebar.js" defer></script>
 <script src="ersan_log.js" defer></script>
 <style>
@@ -113,9 +113,10 @@
 }
 </style>
 </head>
-<body>
+<body data-page="stok-qr">
+<div class="app">
 <div id="sb-mount"></div>
-<div class="icerik-alani">
+<div class="icerik-alani main">
   <div class="topbar">
     <div>
       <div class="topbar-baslik">QR Etiketler</div>
@@ -648,7 +649,7 @@ function topluEtiketYazdir(etiketler) {
     '.etiket{border:1px dashed #ccc;padding:4mm;margin-bottom:2mm}' +
     '.no{font-size:12px;font-weight:bold;color:#1a2b47}' +
     '.qr{margin:3px auto;width:80px;height:80px}' +
-    '</style></head><body>';
+    '</style></head><body data-page="stok-qr">';
   for (var i = 0; i < etiketler.length; i++) {
     html += '<div class="etiket">' +
       '<div>ERSAN ENDUSTRIYEL MAKINE</div>' +
@@ -685,7 +686,7 @@ function etiketYazdir(icerik, baslik) {
   w.document.write('.chip{font-size:7px;padding:1px 4px;border-radius:2px;background:#e5e7eb;color:#333}');
   w.document.write('.chip.done{background:#d1fae5;color:#065f46}');
   w.document.write('.chip.active{background:#1a2b47;color:#fff}');
-  w.document.write('</style></head><body>');
+  w.document.write('</style></head><body data-page="stok-qr">');
   w.document.write('<div class="firma">ERSAN ENDUSTRIYEL MAKINE</div>');
   w.document.write('<div class="no">' + baslik + '</div>');
   w.document.write('<div id="qr" class="qr"></div>');

@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ersan MES — Uygunsuzluk Raporu (NCR)</title>
-<link rel="stylesheet" href="ersan_styles.css">
 <link rel="stylesheet" href="utils/sidebar.css">
+<link rel="stylesheet" href="ersan_styles.css">
 <script src="utils/sidebar.js" defer></script>
 <script src="ersan_log.js" defer></script>
 <style>
@@ -124,9 +124,10 @@
 @keyframes fadeIn { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:none} }
 </style>
 </head>
-<body>
+<body data-page="kalite-ncr">
+<div class="app">
 <div id="sb-mount"></div>
-<div class="icerik-alani">
+<div class="icerik-alani main">
   <div class="topbar">
     <div class="topbar-baslik">Uygunsuzluk Raporu (NCR)</div>
     <div style="display:flex;align-items:center;gap:8px;">

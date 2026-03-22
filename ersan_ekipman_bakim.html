@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ersan MES — Bakım Planı (PM)</title>
-<link rel="stylesheet" href="ersan_styles.css">
 <link rel="stylesheet" href="utils/sidebar.css">
+<link rel="stylesheet" href="ersan_styles.css">
 <script src="utils/sidebar.js" defer></script>
 <script src="ersan_log.js" defer></script>
 <style>
@@ -72,9 +72,10 @@
 .pm-sag-ft{padding:12px 16px;border-top:1px solid var(--border);flex-shrink:0;display:flex;justify-content:flex-end;gap:8px}
 </style>
 </head>
-<body>
+<body data-page="ekipman-bakim">
+<div class="app">
 <div id="sb-mount"></div>
-<div class="icerik-alani">
+<div class="icerik-alani main">
   <div class="topbar">
     <div class="topbar-baslik">Bakim Plani (PM)</div>
     <div style="display:flex;align-items:center;gap:8px;">

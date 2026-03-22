@@ -4,14 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ersan MES — Sevkiyat &amp; CoC</title>
-<link rel="stylesheet" href="ersan_styles.css">
 <link rel="stylesheet" href="utils/sidebar.css">
+<link rel="stylesheet" href="ersan_styles.css">
 <script src="utils/sidebar.js" defer></script>
 <script src="ersan_log.js" defer></script>
 </head>
-<body>
+<body data-page="satis-sevkiyat">
+<div class="app">
 <div id="sb-mount"></div>
-<div class="icerik-alani">
+<div class="icerik-alani main">
   <div class="topbar">
     <div class="topbar-baslik">Sevkiyat</div>
     <div style="display:flex;align-items:center;gap:8px;">
@@ -733,7 +734,7 @@ function printIrsaliye() {
   w.document.write('.sig-area{display:flex;justify-content:space-between;margin-top:40px;}');
   w.document.write('.sig-block{text-align:center;width:200px;} .sig-line{border-top:1px solid #1a1a1a;margin-top:50px;padding-top:4px;}');
   w.document.write('@media print{body{margin:15mm;}}');
-  w.document.write('</style></head><body>');
+  w.document.write('</style></head><body data-page="satis-sevkiyat">');
   w.document.write('<div class="header">');
   w.document.write('<div><div class="company">ERSAN ENDÜSTRİYEL MAKİNA SAN. TİC. LTD. ŞTİ.<small>Başiskele Sanayi Sitesi, Kocaeli, Türkiye</small></div></div>');
   w.document.write('<div><div class="title">İRSALİYE</div><div style="text-align:right;font-size:10px;color:#5a6170;">Delivery Note</div></div>');

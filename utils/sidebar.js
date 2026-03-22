@@ -1,4 +1,4 @@
-/* ERSAN MES — sidebar.js v1.0
+/* ERSAN MES — sidebar.js v1.1
    Injects sidebar into <div id="sb-mount"></div>
    Requires: utils/sidebar.css */
 
@@ -44,6 +44,23 @@
       { page: 'kalite-capa', file: 'ersan_kalite_capa.html', label: 'CAPA (8D)', ic: '\uD83D\uDD27' },
       { page: 'kalite-kalibrasyon', file: 'ersan_kalite_kalibrasyon.html', label: 'Kalibrasyon', ic: '\uD83D\uDCCF' }
     ]},
+    { id: 'risk', title: 'Risk & FMEA', iso: '\u00A76.1', icon: '\u26A0\uFE0F', dot: '#ef4444', items: [
+      { page: 'risk-fmea', file: 'ersan_risk_fmea.html', label: 'Risk & FMEA', ic: '\uD83D\uDCCA' }
+    ]},
+    { id: 'denetim', title: '\u0130\u00E7 Denetim', iso: '\u00A79.2', icon: '\uD83D\uDD0E', dot: '#ef4444', items: [
+      { page: 'denetim-panel', file: 'ersan_denetim_panel.html', label: 'Denetim Paneli', ic: '\uD83D\uDCCA' },
+      { page: 'denetim-plan', file: 'ersan_denetim_plan.html', label: 'Denetim Plan\u0131', ic: '\uD83D\uDCC5' },
+      { page: 'denetim-yurutme', file: 'ersan_denetim_yurutme.html', label: 'Denetim Y\u00FCr\u00FCtme', ic: '\u25B6\uFE0F' },
+      { page: 'bulgular', file: 'ersan_bulgular.html', label: 'Bulgular', ic: '\uD83D\uDCCB' },
+      { page: 'denetim-capa', file: 'ersan_denetim_capa.html', label: 'CAPA', ic: '\uD83D\uDD27' },
+      { page: 'denetim-raporlar', file: 'ersan_denetim_raporlar.html', label: 'Raporlar', ic: '\uD83D\uDCC4' }
+    ]},
+    { id: 'ygg', title: 'YGG', iso: '\u00A79.3', icon: '\uD83D\uDCCB', dot: '#8b5cf6', items: [
+      { page: 'ygg', file: 'ersan_ygg.html', label: 'YGG', ic: '\uD83D\uDCCB' }
+    ]},
+    { id: 'kpi', title: 'KPI Dashboard', iso: '\u00A79.1', icon: '\uD83D\uDCCA', dot: '#f59e0b', items: [
+      { page: 'kpi-dashboard', file: 'ersan_anasayfa.html', label: 'KPI Dashboard', ic: '\uD83D\uDCCA' }
+    ]},
     { id: 'ekipman', title: 'Ekipman & Bak\u0131m', iso: '\u00A77.1.3', icon: '\uD83D\uDD29', dot: '#8b5cf6', items: [
       { page: 'ekipman-dashboard', file: 'ersan_ekipman_dashboard.html', label: 'Dashboard', ic: '\uD83D\uDCCA' },
       { page: 'ekipman-defteri', file: 'ersan_ekipman_defteri.html', label: 'Ekipman Defteri', ic: '\uD83D\uDCD6' },
@@ -70,21 +87,7 @@
       { page: 'tedarikci-fatura', file: 'ersan_tedarikci_fatura.html', label: 'Tedarik\u00E7i Faturalar\u0131', ic: '\uD83E\uDDFE' },
       { page: 'nakit-akis', file: 'ersan_nakit_akis.html', label: 'Nakit Ak\u0131\u015F\u0131', ic: '\uD83D\uDCB8' },
       { page: 'mutabakat', file: 'ersan_mutabakat.html', label: 'Mutabakat', ic: '\u2696\uFE0F' }
-    ]},
-    { id: 'denetim', title: '\u0130\u00E7 Denetim', iso: '\u00A79.2', icon: '\uD83D\uDD0E', dot: '#ef4444', items: [
-      { page: 'denetim-panel', file: 'ersan_denetim_panel.html', label: 'Denetim Paneli', ic: '\uD83D\uDCCA' },
-      { page: 'denetim-plan', file: 'ersan_denetim_plan.html', label: 'Denetim Plan\u0131', ic: '\uD83D\uDCC5' },
-      { page: 'denetim-yurutme', file: 'ersan_denetim_yurutme.html', label: 'Denetim Y\u00FCr\u00FCtme', ic: '\u25B6\uFE0F' },
-      { page: 'bulgular', file: 'ersan_bulgular.html', label: 'Bulgular', ic: '\uD83D\uDCCB' },
-      { page: 'denetim-capa', file: 'ersan_denetim_capa.html', label: 'CAPA', ic: '\uD83D\uDD27' },
-      { page: 'denetim-raporlar', file: 'ersan_denetim_raporlar.html', label: 'Raporlar', ic: '\uD83D\uDCC4' }
     ]}
-  ];
-
-  var FUTURE = [
-    { label: 'Risk & FMEA (\u00A76.1)', faz: 2 },
-    { label: 'YGG (\u00A79.3)', faz: 2 },
-    { label: 'KPI Dashboard (\u00A79.1)', faz: 3 }
   ];
 
   /* ── Navigate ── */
@@ -167,18 +170,6 @@
       h += '</div>';
     }
 
-    // Future modules
-    h += '<div class="sb-sec-div"><span class="sb-sec-div-line"></span><span class="sb-sec-div-lbl">Gelecek Mod\u00FCller</span><span class="sb-sec-div-line"></span></div>';
-    for (var f = 0; f < FUTURE.length; f++) {
-      var fi = FUTURE[f];
-      var cls = fi.faz === 2 ? 'faz2' : 'faz3';
-      var fcls = fi.faz === 2 ? 'f2' : 'f3';
-      h += '<div class="sb-ni ' + cls + '">';
-      h += '<span class="sb-ni-ic">\uD83D\uDD12</span>';
-      h += '<span class="sb-ni-txt">' + fi.label + '</span>';
-      h += '<span class="sb-faz ' + fcls + '">Faz ' + fi.faz + '</span></div>';
-    }
-
     // Bottom actions
     h += '<div class="sb-bot">';
     h += '<div class="sb-bot-item" onclick="sbGit(\'ersan_sistem.html\')"><span>\u2699\uFE0F</span> Sistem Ayarlar\u0131</div>';
@@ -247,6 +238,24 @@
     if (!mount) return;
     mount.className = 'sb';
     mount.innerHTML = buildHTML();
+
+    // Layout fix
+    var appEl = mount.closest('.app') || mount.parentElement;
+    if (appEl) {
+      appEl.style.display = 'flex';
+      appEl.style.flexDirection = 'row';
+      appEl.style.height = '100vh';
+      appEl.style.width = '100vw';
+      appEl.style.overflow = 'hidden';
+    }
+    var mainEl = appEl ? (appEl.querySelector('.main') || appEl.querySelector('.icerik-alani')) : null;
+    if (mainEl) {
+      mainEl.style.flex = '1 1 0';
+      mainEl.style.minWidth = '0';
+      mainEl.style.height = '100vh';
+      mainEl.style.overflowY = 'auto';
+    }
+
     sbHighlight();
     sbClock();
     setInterval(sbClock, 30000);

@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ersan MES — Mutabakat</title>
-<link rel="stylesheet" href="ersan_styles.css">
 <link rel="stylesheet" href="utils/sidebar.css">
+<link rel="stylesheet" href="ersan_styles.css">
 <script src="utils/sidebar.js" defer></script>
 <script src="ersan_log.js" defer></script>
 <style>
@@ -57,9 +57,10 @@
 @media(max-width:600px){.kpi-row{grid-template-columns:1fr;}}
 </style>
 </head>
-<body>
+<body data-page="finans-mutabakat">
+<div class="app">
 <div id="sb-mount"></div>
-<div class="icerik-alani">
+<div class="icerik-alani main">
   <div class="topbar">
     <div class="topbar-baslik">Mutabakat</div>
     <div style="display:flex;align-items:center;gap:8px;">
@@ -392,7 +393,7 @@ function mektupYazdir() {
   var win = window.open('', '_blank', 'width=800,height=1000');
   win.document.write('<html><head><title>Mutabakat Mektubu</title>');
   win.document.write('<style>body{font-family:serif;padding:40px;color:#1a1a1a;line-height:1.8;}</style>');
-  win.document.write('</head><body>');
+  win.document.write('</head><body data-page="finans-mutabakat">');
   win.document.write(icerik);
   win.document.write('</body></html>');
   win.document.close();

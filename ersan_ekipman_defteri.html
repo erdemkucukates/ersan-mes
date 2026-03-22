@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ersan MES — Ekipman Defteri</title>
-<link rel="stylesheet" href="ersan_styles.css">
 <link rel="stylesheet" href="utils/sidebar.css">
+<link rel="stylesheet" href="ersan_styles.css">
 <script src="utils/sidebar.js" defer></script>
 <script src="ersan_log.js" defer></script>
 <style>
@@ -103,9 +103,10 @@
 .stok-yok { color:var(--kirmizi-t); }
 </style>
 </head>
-<body>
+<body data-page="ekipman-defteri">
+<div class="app">
 <div id="sb-mount"></div>
-<div class="icerik-alani">
+<div class="icerik-alani main">
   <div class="topbar">
     <div class="topbar-baslik">Ekipman Defteri</div>
     <div style="display:flex;align-items:center;gap:8px;">
@@ -687,7 +688,7 @@ function qrYazdir() {
     '.ad{font-size:14px;color:#555;margin-bottom:16px;}' +
     '.qr{width:150px;height:150px;margin:0 auto;border:2px solid #ccc;display:flex;align-items:center;justify-content:center;font-size:10px;color:#999;}' +
     '.footer{margin-top:16px;font-size:10px;color:#999;}</style></head>' +
-    '<body><div class="kod">' + kod + '</div><div class="ad">' + ad + '</div>' +
+    '<body data-page="ekipman-defteri"><div class="kod">' + kod + '</div><div class="ad">' + ad + '</div>' +
     '<div class="qr">QR Code</div>' +
     '<div class="footer">Ersan MES — Ekipman Etiketi</div>' +
     '<script>setTimeout(function(){window.print();},500);<\/script></body></html>'

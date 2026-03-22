@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ersan MES — Palet / Traveler</title>
-<link rel="stylesheet" href="ersan_styles.css">
 <link rel="stylesheet" href="utils/sidebar.css">
+<link rel="stylesheet" href="ersan_styles.css">
 <script src="utils/sidebar.js" defer></script>
 <script src="ersan_log.js" defer></script>
 <style>
@@ -143,9 +143,10 @@
 }
 </style>
 </head>
-<body>
+<body data-page="stok-qr">
+<div class="app">
 <div id="sb-mount"></div>
-<div class="icerik-alani">
+<div class="icerik-alani main">
   <div class="topbar">
     <div class="topbar-baslik">Palet / Traveler</div>
     <div style="display:flex;align-items:center;gap:8px;">
@@ -958,7 +959,7 @@ function qrYazdir(trvNo) {
   var w = window.open('', '_blank', 'width=400,height=300');
   w.document.write('<html><head><title>QR - ' + trvNo + '</title>');
   w.document.write('<style>body{font-family:monospace;text-align:center;padding:20px;}h2{font-size:16px;margin:8px 0;}img{margin:12px 0;}.info{font-size:11px;color:#666;}</style>');
-  w.document.write('</head><body>');
+  w.document.write('</head><body data-page="stok-qr">');
   w.document.write('<h2>ERSAN MES</h2>');
   w.document.write('<img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' + encodeURIComponent('https://ersan-mes.netlify.app/ersan_palet.html?trv=' + trvNo) + '" width="150" height="150">');
   w.document.write('<h2>' + trvNo + '</h2>');
@@ -998,7 +999,7 @@ function termalYazdir() {
   html += '.chip{font-size:7px;padding:1px 3px;border-radius:2px;background:#e5e7eb}';
   html += '.chip.done{background:#d1fae5;color:#065f46}';
   html += '.chip.active{background:#1a2b47;color:#fff}';
-  html += '</style></head><body>';
+  html += '</style></head><body data-page="stok-qr">';
 
   hedef.forEach(function(t, i) {
     var no = t.f['Traveler No'] || t.f['TRV No'] || '-';

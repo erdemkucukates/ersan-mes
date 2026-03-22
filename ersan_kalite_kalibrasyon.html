@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ersan MES — Kalibrasyon Yönetimi</title>
-<link rel="stylesheet" href="ersan_styles.css">
 <link rel="stylesheet" href="utils/sidebar.css">
+<link rel="stylesheet" href="ersan_styles.css">
 <script src="utils/sidebar.js" defer></script>
 <script src="ersan_log.js" defer></script>
 <style>
@@ -105,9 +105,10 @@
 @keyframes spin { to { transform:rotate(360deg); } }
 </style>
 </head>
-<body>
+<body data-page="kalite-kalibrasyon">
+<div class="app">
 <div id="sb-mount"></div>
-<div class="icerik-alani">
+<div class="icerik-alani main">
   <div class="topbar">
     <div class="topbar-baslik">Kalibrasyon Yönetimi</div>
     <div style="display:flex;align-items:center;gap:8px;">
@@ -629,7 +630,7 @@ function qrYazdir(eqpId) {
   var w = window.open('', '_blank', 'width=400,height=300');
   w.document.write('<html><head><title>QR — ' + eqp.no + '</title>');
   w.document.write('<style>body{font-family:monospace;padding:20px;text-align:center;} .no{font-size:24px;font-weight:bold;margin:10px 0;} .info{font-size:12px;color:#333;margin:4px 0;} .line{border-top:1px dashed #ccc;margin:10px 0;}</style>');
-  w.document.write('</head><body>');
+  w.document.write('</head><body data-page="kalite-kalibrasyon">');
   w.document.write('<div class="no">' + eqp.no + '</div>');
   w.document.write('<div class="info">' + escapeHtml(eqp.ad) + '</div>');
   w.document.write('<div class="info">' + escapeHtml(eqp.marka || '') + ' ' + escapeHtml(eqp.model || '') + '</div>');

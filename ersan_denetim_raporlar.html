@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ersan MES — Denetim Raporları</title>
-<link rel="stylesheet" href="ersan_styles.css">
 <link rel="stylesheet" href="utils/sidebar.css">
+<link rel="stylesheet" href="ersan_styles.css">
 <script src="utils/sidebar.js" defer></script>
 <script src="ersan_log.js" defer></script>
 <style>
@@ -66,9 +66,10 @@
 .summary-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;}
 </style>
 </head>
-<body>
+<body data-page="denetim-raporlar">
+<div class="app">
 <div id="sb-mount"></div>
-<div class="icerik-alani">
+<div class="icerik-alani main">
   <div class="topbar">
     <div class="topbar-baslik">Denetim Raporları</div>
     <div class="topbar-actions">
@@ -391,7 +392,7 @@ function openPrintWindow(rapor) {
   w.document.write('.ozet{background:#f7fafc;border-radius:8px;padding:16px;font-size:13px;line-height:1.6;margin-top:16px;}');
   w.document.write('.footer{margin-top:40px;font-size:10px;color:#a0aec0;text-align:center;border-top:1px solid #edf2f7;padding-top:12px;}');
   w.document.write('@media print{body{padding:20px;}}');
-  w.document.write('</style></head><body>');
+  w.document.write('</style></head><body data-page="denetim-raporlar">');
   w.document.write('<h1>Ersan MES — ' + esc(tipLabel) + '</h1>');
   w.document.write('<div class="meta">' + esc(rapor.no) + ' | ' + formatTarih(rapor.tarih) + ' | Durum: ' + esc(rapor.durum) + '</div>');
   w.document.write('<div class="row"><span class="lbl">Rapor Başlığı</span><span class="val">' + esc(rapor.baslik) + '</span></div>');
@@ -475,7 +476,7 @@ function printSummary() {
   w.document.write('.s-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #edf2f7;font-size:14px;}');
   w.document.write('.s-label{color:#718096;font-weight:600;}.s-val{color:#0f2744;font-weight:700;}');
   w.document.write('.summary-actions{display:none;}');
-  w.document.write('</style></head><body>');
+  w.document.write('</style></head><body data-page="denetim-raporlar">');
   w.document.write('<h2>Ersan MES — Yönetim Özeti Raporu</h2>');
   w.document.write(content);
   w.document.write('</body></html>');

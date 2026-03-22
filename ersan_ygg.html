@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ersan MES — Yönetim Gözden Geçirme</title>
-<link rel="stylesheet" href="ersan_styles.css">
 <link rel="stylesheet" href="utils/sidebar.css">
+<link rel="stylesheet" href="ersan_styles.css">
 <script src="utils/sidebar.js" defer></script>
 <script src="ersan_log.js" defer></script>
 <style>
@@ -95,9 +95,10 @@
 .aksiyon-btn.tamam { background:var(--yesil); color:#fff; border-color:var(--yesil); }
 </style>
 </head>
-<body>
+<body data-page="ygg-toplanti">
+<div class="app">
 <div id="sb-mount"></div>
-<div class="icerik-alani">
+<div class="icerik-alani main">
   <div class="topbar">
     <div class="topbar-baslik">Yonetim Gozden Gecirme (YGG)</div>
     <div style="display:flex;align-items:center;gap:8px;">
