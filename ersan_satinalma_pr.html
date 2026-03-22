@@ -29,9 +29,7 @@
 .kalem-tbl th{background:var(--bg2);padding:5px 8px;font-size:10px;font-weight:600;color:var(--metin3);text-transform:uppercase;text-align:left;border-bottom:1px solid var(--border)}
 .kalem-tbl td{padding:4px 8px;border-bottom:1px solid var(--bg2);font-size:12px}
 .kalem-tbl input,.kalem-tbl select{width:100%;padding:4px 6px;border:1px solid var(--border);border-radius:4px;font-size:11px;font-family:inherit}
-.tab .tb-n{font-size:10px;padding:1px 6px;border-radius:8px;font-weight:600;margin-left:4px}
-.tb-amr{background:#FAEEDA;color:#854F0B}
-.tb-blu{background:#E6F1FB;color:#185FA5}
+/* tab badge styles moved to .pr-tab-badge */
 .kritik-banner{display:none;padding:7px 14px;background:#FCEBEB;border-bottom:1px solid #F09595;font-size:12px;color:#791F1F;font-weight:500;align-items:center;gap:8px}
 .kritik-banner.show{display:flex}
 .kritik-dot{width:7px;height:7px;border-radius:50%;background:#E24B4A;flex-shrink:0}
@@ -59,10 +57,7 @@
 .filter-toggle-btn.has-filter{border-color:#93c5fd;background:#dbeafe;color:#1e40af}
 .filter-toggle-btn .fb-cnt{font-size:10px;background:#1a2b47;color:#fff;padding:0 5px;border-radius:8px;font-weight:600}
 .pr-tablo{width:100%;border-collapse:collapse}
-.pr-tablo thead th{background:var(--bg2);padding:7px 10px;font-size:10px;font-weight:600;color:var(--metin3);text-transform:uppercase;text-align:left;border-bottom:1px solid var(--border);user-select:none}
-.pr-tablo thead th[onclick]:hover{background:var(--border);color:var(--laci)}
-.pr-tablo tbody td{padding:8px 10px;font-size:12px;color:var(--metin2);border-bottom:1px solid var(--bg2);cursor:pointer}
-.pr-tablo tbody tr:hover td{background:var(--bg2)}
+.pr-tablo thead th{text-align:left;user-select:none}
 .pr-tablo tr.p-k td{background:#fff5f5}
 .pr-tablo tr.p-k:hover td{background:#fee2e2}
 .pr-tablo tr.p-y td{background:#fffbeb}
@@ -74,8 +69,34 @@
 .list-footer{padding:10px 14px;border-top:1px solid var(--border);background:var(--bg2);display:flex;align-items:center;justify-content:space-between}
 .lf-info{font-size:12px;color:var(--metin4)}
 .lf-info b{color:var(--laci)}
-.rfq-quick-btn{font-size:12px;padding:6px 14px;background:var(--laci);color:#fff;border:none;border-radius:5px;cursor:pointer;opacity:.4;pointer-events:none;transition:opacity .15s;font-family:inherit}
+.rfq-quick-btn{/* base styles moved to override block below */}
 .rfq-quick-btn.ready{opacity:1;pointer-events:auto}
+
+/* ── PR Page Visual Overrides ── */
+.pr-kpi{background:#fff !important;border:1px solid #e5e7eb !important;border-radius:8px !important;padding:10px 14px !important}
+.pr-kpi-label{font-size:10px !important;text-transform:uppercase;letter-spacing:.04em;color:#6b7280 !important;font-weight:500 !important}
+.pr-kpi-num{font-size:22px !important;font-weight:700 !important;color:#111827 !important}
+
+.pr-search-inp{font-size:12px;padding:7px 12px;border:1px solid #d1d5db;border-radius:6px;background:#fff;color:#111827;outline:none}
+.pr-search-inp:focus{border-color:#1a2b47}
+
+.pr-tab-btn{flex:1;padding:9px 8px;font-size:13px;font-weight:500;text-align:center;cursor:pointer;border:none;background:transparent;color:#6b7280;border-bottom:2px solid transparent;display:flex;align-items:center;justify-content:center;gap:6px;font-family:inherit}
+.pr-tab-active{color:#1a2b47;border-bottom:2px solid #1a2b47}
+.pr-tab-badge{background:#fef3c7;color:#92400e;font-size:10px;padding:1px 6px;border-radius:10px;font-weight:600}
+
+.pr-tablo thead th{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:#9ca3af;background:#f9fafb;border-bottom:1px solid #e5e7eb;padding:8px 12px}
+.pr-tablo thead th[onclick]:hover{background:#f3f4f6;color:#1a2b47}
+.pr-tablo tbody td{padding:9px 12px;font-size:12px;border-bottom:1px solid #f3f4f6;color:#374151;cursor:pointer}
+.pr-tablo tbody tr:hover td{background:#fafafa}
+
+.pr-rfq-btn{font-size:11px;padding:4px 10px;border-radius:5px;background:#dbeafe;color:#1e40af;border:1px solid #93c5fd;cursor:pointer;font-family:inherit}
+.pr-rfq-btn:hover{background:#bfdbfe}
+
+.rfq-quick-btn{font-size:12px;padding:8px 18px;background:#1a2b47;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-family:inherit;opacity:.4;pointer-events:none;transition:opacity .15s}
+
+.pr-acil-normal{background:#f3f4f6;color:#6b7280;font-size:10px;padding:2px 8px;border-radius:12px;display:inline-block}
+.pr-acil-yuksek{background:#fef3c7;color:#92400e;font-size:10px;padding:2px 8px;border-radius:12px;display:inline-block}
+.pr-acil-kritik{background:#fee2e2;color:#991b1b;font-size:10px;padding:2px 8px;border-radius:12px;display:inline-block}
 </style>
 </head>
 <body>
@@ -90,14 +111,14 @@
   </div>
   <div class="sayfa-icerik">
     <div class="kpi-grid" style="margin-bottom:12px">
-      <div class="kpi-kart"><div class="kpi-etiket">Toplam</div><div class="kpi-deger" id="kpi-toplam">-</div></div>
-      <div class="kpi-kart sari"><div class="kpi-etiket">Onay Bekleyen</div><div class="kpi-deger" id="kpi-onay">-</div></div>
-      <div class="kpi-kart yesil"><div class="kpi-etiket">Onaylanan</div><div class="kpi-deger" id="kpi-onayli">-</div></div>
-      <div class="kpi-kart"><div class="kpi-etiket">RFQ</div><div class="kpi-deger" id="kpi-rfq">-</div></div>
+      <div class="kpi-kart pr-kpi" style="border-top:3px solid #3b82f6"><div class="kpi-etiket pr-kpi-label">Toplam</div><div class="kpi-deger pr-kpi-num" id="kpi-toplam">-</div></div>
+      <div class="kpi-kart pr-kpi" style="border-top:3px solid #f59e0b"><div class="kpi-etiket pr-kpi-label">Onay Bekleyen</div><div class="kpi-deger pr-kpi-num" id="kpi-onay">-</div></div>
+      <div class="kpi-kart pr-kpi" style="border-top:3px solid #10b981"><div class="kpi-etiket pr-kpi-label">Onaylanan</div><div class="kpi-deger pr-kpi-num" id="kpi-onayli">-</div></div>
+      <div class="kpi-kart pr-kpi" style="border-top:3px solid #8b5cf6"><div class="kpi-etiket pr-kpi-label">RFQ</div><div class="kpi-deger pr-kpi-num" id="kpi-rfq">-</div></div>
     </div>
     <!-- Arama + Filtre -->
     <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
-      <input type="text" id="pr-arama" placeholder="PR no, malzeme, WO ara..." oninput="listeyiUygula()" style="flex:1;font-size:13px;padding:7px 12px;border:1px solid #d1d5db;border-radius:6px;background:#fff;color:#111827;outline:none;font-family:inherit">
+      <input type="text" id="pr-arama" placeholder="PR no, malzeme, WO ara..." oninput="listeyiUygula()" class="pr-search-inp" style="flex:1;font-family:inherit">
       <button class="filter-toggle-btn" id="filter-toggle" onclick="drawerToggle()">Filtrele <span class="fb-cnt" id="filter-count" style="display:none"></span></button>
     </div>
     <!-- Filtre Drawer -->
@@ -115,8 +136,8 @@
     <div class="chip-row" id="chip-row"></div>
     <!-- Sekmeler -->
     <div style="display:flex;border-bottom:1px solid var(--border);margin-bottom:0">
-      <button id="tab-bekleyen" style="flex:1;padding:9px 8px;font-size:13px;font-weight:500;text-align:center;cursor:pointer;border:none;background:transparent;color:var(--laci);border-bottom:2px solid var(--laci);display:flex;align-items:center;justify-content:center;gap:6px;font-family:inherit" onclick="sekmeAyarla('bekleyen',this)">Bekleyen <span class="tb-n tb-amr" id="tn-bekleyen"></span></button>
-      <button id="tab-rfq" style="flex:1;padding:9px 8px;font-size:13px;font-weight:500;text-align:center;cursor:pointer;border:none;background:transparent;color:var(--metin3);border-bottom:2px solid transparent;display:flex;align-items:center;justify-content:center;gap:6px;font-family:inherit" onclick="sekmeAyarla('rfq',this)">RFQ Gonderildi <span class="tb-n tb-blu" id="tn-rfq"></span></button>
+      <button id="tab-bekleyen" class="pr-tab-btn pr-tab-active" onclick="sekmeAyarla('bekleyen',this)">Bekleyen <span class="pr-tab-badge" id="tn-bekleyen"></span></button>
+      <button id="tab-rfq" class="pr-tab-btn" onclick="sekmeAyarla('rfq',this)">RFQ Gonderildi <span class="pr-tab-badge" id="tn-rfq"></span></button>
     </div>
     <!-- Kritik Banner -->
     <div class="kritik-banner" id="kritik-banner"><div class="kritik-dot"></div><span id="kritik-txt"></span></div>
@@ -334,7 +355,7 @@ function tabloRender(liste) {
 
     var pc = acil==='Kritik'?'p-k':acil==='Y\u00FCksek'||acil==='Yuksek'?'p-y':'';
     var brd = acil==='Kritik'?'brd-k':acil==='Y\u00FCksek'||acil==='Yuksek'?'brd-y':'brd-n';
-    var acilCls = acil==='Kritik'?'badge-kirmizi':acil==='Y\u00FCksek'||acil==='Yuksek'?'badge-sari':'badge-gri';
+    var acilCls = acil==='Kritik'?'pr-acil-kritik':acil==='Y\u00FCksek'||acil==='Yuksek'?'pr-acil-yuksek':'pr-acil-normal';
     var isSel = seciliPR === r.id;
     var isChk = seciliIds.indexOf(r.id)>=0;
     return '<tr class="'+pc+(isSel?' sel-row':'')+'" onclick="prSatirSec(\''+r.id+'\')" style="cursor:pointer">'+
@@ -348,9 +369,9 @@ function tabloRender(liste) {
       '<td style="text-align:center;font-family:monospace;font-size:11px">'+escH(o1)+'</td>'+
       '<td style="text-align:center;font-family:monospace;font-size:11px">'+escH(o2)+'</td>'+
       '<td style="text-align:center;font-family:monospace;font-size:11px">'+escH(o3)+'</td>'+
-      '<td><span class="badge '+acilCls+'">'+escH(acil)+'</span></td>'+
+      '<td><span class="'+acilCls+'">'+escH(acil)+'</span></td>'+
       '<td style="text-align:right">'+
-      '<button class="btn btn-sm btn-beyaz" onclick="event.stopPropagation();rfqDonustur(\''+r.id+'\')" style="padding:3px 8px;font-size:10px">RFQ</button>'+
+      '<button class="pr-rfq-btn" onclick="event.stopPropagation();rfqDonustur(\''+r.id+'\')">RFQ</button>'+
       '</td></tr>';
   }).join('');
   secimGuncelle();
@@ -397,9 +418,9 @@ function sekmeAyarla(sekme, el) {
   aktifSekme = sekme;
   ['tab-bekleyen','tab-rfq'].forEach(function(id){
     var t=document.getElementById(id);
-    if(t){t.style.color='var(--metin3)';t.style.borderBottom='2px solid transparent';}
+    if(t){t.classList.remove('pr-tab-active');}
   });
-  el.style.color='var(--laci)'; el.style.borderBottom='2px solid var(--laci)';
+  el.classList.add('pr-tab-active');
   seciliPR = null; prSatirSec(null);
   listeyiUygula();
 }
