@@ -1,0 +1,1286 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ersan MES — ECN Değişiklik Yönetimi</title>
+<link rel="stylesheet" href="utils/sidebar.css">
+<style>/* LAYOUT FIX v3 */
+html,body{height:100%;margin:0;padding:0;overflow:hidden}
+.app{display:flex!important;flex-direction:row!important;height:100vh!important;width:100vw!important;overflow:hidden!important}
+#sb-mount,.sb{width:210px!important;min-width:210px!important;max-width:210px!important;flex-shrink:0!important;height:100vh!important;overflow-y:scroll!important;overflow-x:hidden!important}
+.main,.icerik-alani{flex:1 1 0!important;min-width:0!important;height:100vh!important;overflow:hidden!important;display:flex!important;flex-direction:column!important}
+.main>.tb,.main>.topbar,.main>[class*="topbar"]{flex-shrink:0!important}
+</style>
+<style>/* PAGE CSS */
+*{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,-apple-system,sans-serif}
+
+/* Buttons */
+.btn{font-size:11px;padding:5px 12px;border-radius:6px;border:1px solid #e2e8f0;background:#fff;color:#475569;cursor:pointer;font-weight:500;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;transition:all .12s}
+.btn:hover{background:#f8fafc;border-color:#cbd5e1}
+.btn-p{background:#1a2b47;color:#fff;border-color:#1a2b47}.btn-p:hover{background:#243d66}
+.btn-g{background:#d1fae5;color:#065f46;border-color:#6ee7b7}.btn-g:hover{background:#a7f3d0}
+.btn-b{background:#dbeafe;color:#1e40af;border-color:#93c5fd}
+.btn-warn{background:#fef3c7;color:#92400e;border-color:#fcd34d}
+.btn-red{background:#fee2e2;color:#991b1b;border-color:#fca5a5}.btn-red:hover{background:#fecaca}
+
+/* Badges */
+.bdg{display:inline-flex;align-items:center;gap:3px;font-size:10px;padding:2px 8px;border-radius:12px;font-weight:600;white-space:nowrap}
+.bdg::before{content:'';width:4px;height:4px;border-radius:50%;flex-shrink:0}
+.b-grn::before{background:#10b981}.b-grn{background:#d1fae5;color:#065f46}
+.b-amr::before{background:#f59e0b}.b-amr{background:#fef3c7;color:#92400e}
+.b-red::before{background:#ef4444}.b-red{background:#fee2e2;color:#991b1b}
+.b-blu::before{background:#3b82f6}.b-blu{background:#dbeafe;color:#1e40af}
+.b-gray::before{background:#94a3b8}.b-gray{background:#f1f5f9;color:#64748b}
+.b-pur::before{background:#8b5cf6}.b-pur{background:#ede9fe;color:#5b21b6}
+.b-teal::before{background:#0d9488}.b-teal{background:#ccfbf1;color:#0f766e}
+
+/* Layout */
+.topbar{background:#fff;border-bottom:1px solid #e2e8f0;padding:0 18px;height:50px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:10px}
+.tb-title{font-size:15px;font-weight:700;color:#1a2b47}
+.tb-sub{font-size:11px;color:#94a3b8;margin-left:6px;font-weight:400}
+.content{flex:1;overflow-y:auto;padding:16px 18px}
+
+/* KPI Cards */
+.kpi-row{display:grid;gap:12px;margin-bottom:16px}
+.kpi{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px 16px;border-top:3px solid;position:relative;overflow:hidden;cursor:pointer;transition:box-shadow .12s}
+.kpi:hover{box-shadow:0 4px 12px rgba(0,0,0,.08)}
+.kpi::after{content:'';position:absolute;right:-10px;top:-10px;width:60px;height:60px;border-radius:50%;opacity:.06}
+.kpi.s1{border-top-color:#3b82f6}.kpi.s1::after{background:#3b82f6}
+.kpi.s2{border-top-color:#f59e0b}.kpi.s2::after{background:#f59e0b}
+.kpi.s3{border-top-color:#ef4444}.kpi.s3::after{background:#ef4444}
+.kpi.s4{border-top-color:#10b981}.kpi.s4::after{background:#10b981}
+.kpi.s5{border-top-color:#8b5cf6}.kpi.s5::after{background:#8b5cf6}
+.kpi label{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#94a3b8;display:block;margin-bottom:4px;font-weight:600}
+.kpi .num{font-size:24px;font-weight:800;color:#0f172a;line-height:1}
+.kpi .det{font-size:10px;color:#94a3b8;margin-top:3px}
+
+/* Card & Table */
+.card{background:#fff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;margin-bottom:14px}
+.card-head{padding:12px 16px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;background:#fafafa}
+.card-title{font-size:12px;font-weight:700;color:#334155;display:flex;align-items:center;gap:6px}
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{text-align:left;padding:9px 14px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#94a3b8;background:#f8fafc;border-bottom:1px solid #e2e8f0;white-space:nowrap}
+.tbl td{padding:10px 14px;border-bottom:1px solid #f1f5f9;color:#334155;vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:#f8fafc;cursor:pointer}
+.tbl tr.warn td{background:#fffbeb}
+.mono{font-family:monospace;font-size:11px;font-weight:700;color:#1a2b47}
+.muted{color:#94a3b8;font-size:11px}
+
+/* ECN Step Flow */
+.ecn-akis{display:flex;gap:0;margin-bottom:0;overflow:hidden;border-radius:10px;border:1px solid #e2e8f0}
+.ecn-adim{flex:1;padding:12px 14px;background:#fff;border-right:1px solid #e2e8f0;position:relative;cursor:pointer;transition:all .12s}
+.ecn-adim:last-child{border-right:none}
+.ecn-adim.on{background:#1a2b47;color:#fff}
+.ecn-adim.tamam{background:#f0fdf4}
+.ecn-adim.aktif{background:#fffbeb}
+.ecn-adim-no{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;opacity:.5;margin-bottom:3px}
+.ecn-adim.on .ecn-adim-no{opacity:.6;color:#f59e0b}
+.ecn-adim-adi{font-size:11px;font-weight:700;color:inherit}
+.ecn-adim.on .ecn-adim-adi{color:#fff}
+.ecn-adim-cnt{font-size:10px;opacity:.6;margin-top:2px}
+
+/* ECN Detail Grid */
+.ecn-detay-grid{display:grid;grid-template-columns:1fr 340px;gap:14px;min-height:0}
+.ecn-sol{display:flex;flex-direction:column;gap:12px}
+.ecn-sag{display:flex;flex-direction:column;gap:12px}
+
+/* Etkilenen Dokuman */
+.etk-dok-list{display:flex;flex-direction:column;gap:6px}
+.etk-dok{display:flex;align-items:center;gap:8px;padding:8px 10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;cursor:pointer;transition:all .12s}
+.etk-dok:hover{border-color:#1a2b47;background:#fff}
+.etk-dok-tip{width:28px;height:28px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.td-dwg{background:#dbeafe;color:#1e40af}
+.td-bom{background:#d1fae5;color:#065f46}
+.td-prg{background:#ede9fe;color:#5b21b6}
+.td-tes{background:#fef3c7;color:#92400e}
+.td-fai{background:#ccfbf1;color:#0f766e}
+.td-diger{background:#f1f5f9;color:#64748b}
+.etk-dok-bilgi{flex:1}
+.etk-dok-no{font-size:11px;font-weight:700;color:#334155;font-family:monospace}
+.etk-dok-adi{font-size:10px;color:#94a3b8;margin-top:1px}
+.etk-dok-rev{display:flex;align-items:center;gap:4px;font-size:10px}
+.rev-eski{color:#94a3b8;text-decoration:line-through}
+.rev-ok{color:#94a3b8;font-size:9px}
+.rev-yeni{color:#065f46;font-weight:700}
+
+/* Onay Zinciri */
+.doz-adim{display:flex;gap:12px;padding:12px 0}
+.doz-adim:not(:last-child){border-bottom:1px dashed #e2e8f0}
+.doz-ikon-wrap{display:flex;flex-direction:column;align-items:center;gap:0;width:32px;flex-shrink:0}
+.doz-ikon{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;border:2px solid}
+.doz-ikon.tamam{background:#d1fae5;border-color:#6ee7b7;color:#065f46}
+.doz-ikon.aktif{background:#fef3c7;border-color:#fcd34d;color:#92400e}
+.doz-ikon.bekle{background:#f8fafc;border-color:#e2e8f0;color:#94a3b8}
+.doz-cizgi{width:2px;flex:1;background:#e2e8f0;min-height:16px}
+.doz-icerik{flex:1}
+.doz-rol{font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em}
+.doz-kisi{font-size:12px;font-weight:600;color:#334155;margin-top:1px}
+.doz-tarih{font-size:10px;color:#94a3b8;margin-top:2px}
+.doz-aksiyon{margin-top:6px;display:flex;gap:6px}
+
+/* Form */
+.fl{display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#94a3b8;margin-bottom:4px}
+.fi{width:100%;font-size:12px;padding:7px 10px;border:1px solid #e2e8f0;border-radius:6px;background:#fff;color:#0f172a;outline:none}
+.fi:focus{border-color:#1a2b47}
+.fi-ro{background:#f8fafc;color:#94a3b8;border-color:#f1f5f9}
+.fi-sel{width:100%;font-size:12px;padding:7px 10px;border:1px solid #e2e8f0;border-radius:6px;background:#fff;color:#334155;outline:none}
+.fg2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.fg3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px}
+
+/* Durum Chips */
+.chip-bar{background:#fff;border-bottom:1px solid #e2e8f0;padding:8px 18px;display:flex;align-items:center;gap:6px;flex-shrink:0;flex-wrap:wrap}
+.chip{font-size:11px;padding:4px 12px;border-radius:16px;border:1px solid #e2e8f0;background:#fff;color:#64748b;cursor:pointer;font-weight:500;transition:all .12s;display:inline-flex;align-items:center;gap:4px}
+.chip:hover{border-color:#cbd5e1;background:#f8fafc}
+.chip.active{background:#1a2b47;color:#fff;border-color:#1a2b47}
+.chip .chip-cnt{font-size:9px;background:rgba(255,255,255,.2);padding:1px 5px;border-radius:8px;font-weight:700}
+.chip.active .chip-cnt{background:rgba(255,255,255,.2)}
+.chip:not(.active) .chip-cnt{background:#f1f5f9;color:#94a3b8}
+.chip-bar .arama-wrap{margin-left:auto}
+.chip-bar .arama-wrap input{font-size:11px;padding:5px 10px 5px 28px;border:1px solid #e2e8f0;border-radius:6px;background:#f8fafc url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85zm-5.242.156a5 5 0 1 1 0-10 5 5 0 0 1 0 10z'/%3E%3C/svg%3E") 8px center no-repeat;width:180px;outline:none;color:#334155}
+
+/* Aktivite timeline */
+.akt-item{display:flex;gap:10px;padding:10px 0}
+.akt-item:not(:last-child){border-bottom:1px solid #f1f5f9}
+.akt-dot{width:8px;height:8px;border-radius:50%;margin-top:4px;flex-shrink:0}
+.akt-dot.sys{background:#3b82f6}
+.akt-dot.usr{background:#10b981}
+.akt-dot.warn{background:#f59e0b}
+.akt-dot.err{background:#ef4444}
+.akt-body{flex:1}
+.akt-msg{font-size:11px;color:#334155}
+.akt-meta{font-size:10px;color:#94a3b8;margin-top:2px}
+
+/* Avatar */
+.avatar{width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
+
+/* Modal */
+.modal-ov{display:none;position:fixed;inset:0;background:rgba(15,23,42,.65);z-index:500;align-items:flex-start;justify-content:center;padding:24px 16px 48px;overflow-y:auto;backdrop-filter:blur(4px)}
+.modal-ov.open{display:flex}
+.modal-box{background:#fff;border-radius:12px;width:100%;max-width:760px;overflow:hidden;box-shadow:0 32px 80px rgba(0,0,0,.28);animation:mIn .22s cubic-bezier(.16,1,.3,1)}
+.modal-box.wide{max-width:1000px}
+@keyframes mIn{from{opacity:0;transform:translateY(-20px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+.m-head{background:#1a2b47;padding:16px 20px;display:flex;align-items:flex-start;justify-content:space-between}
+.m-title{font-size:14px;font-weight:700;color:#fff}
+.m-sub{font-size:11px;color:rgba(255,255,255,.5);margin-top:3px}
+.m-x{font-size:18px;color:rgba(255,255,255,.4);cursor:pointer;border:none;background:transparent;transition:color .12s;line-height:1}
+.m-x:hover{color:#fff}
+.m-body{padding:18px 20px;max-height:72vh;overflow-y:auto;background:#f8fafc}
+.m-foot{padding:12px 20px;border-top:1px solid #e2e8f0;background:#fff;display:flex;align-items:center;justify-content:space-between;gap:8px}
+
+/* Toast */
+.toast{position:fixed;bottom:28px;right:28px;z-index:999;background:#1a2b47;color:#fff;padding:12px 18px;border-radius:10px;font-size:12px;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,.25);transform:translateY(90px);opacity:0;transition:all .35s cubic-bezier(.16,1,.3,1);display:flex;align-items:center;gap:8px;max-width:340px}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.green{background:#065f46}
+.toast.orange{background:#92400e}
+
+/* Checkbox group */
+.chk-group{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.chk-group label{font-size:11px;color:#334155;display:flex;align-items:center;gap:4px;cursor:pointer;font-weight:500}
+.chk-group input[type=checkbox]{accent-color:#1a2b47}
+
+/* Yukleniyor */
+.yukleniyor{text-align:center;padding:48px 20px;color:#94a3b8;font-size:12px}
+.spinner{width:24px;height:24px;border:3px solid #e2e8f0;border-top-color:#1a2b47;border-radius:50%;animation:spin .6s linear infinite;margin:0 auto 10px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Bos */
+.bos{text-align:center;padding:32px 20px;color:#94a3b8;font-size:12px}
+</style>
+</head>
+<body data-page="ecn">
+<div class="app">
+  <div id="sb-mount"></div>
+  <div class="main">
+
+    <!-- ===== LIST VIEW ===== -->
+    <div id="sayfa-liste">
+      <div class="topbar">
+        <div style="display:flex;align-items:center;gap:6px">
+          <span class="tb-title">&#x1F4DD; Değişiklik Yönetimi</span>
+          <span class="tb-sub">§8.5.6 · ECN</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <button class="btn btn-warn" onclick="durumFiltre('Onay Bekleniyor')">&#x23F3; Onay Bekleyenler <span id="onay-bekleyen-cnt" class="chip-cnt" style="margin-left:2px">0</span></button>
+          <button class="btn" onclick="ecnExport()">&#x2B07; Excel</button>
+          <button class="btn btn-p" onclick="modalAc('yeni-ecn-modal')">+ Yeni ECN</button>
+        </div>
+      </div>
+
+      <div class="chip-bar">
+        <span class="chip active" data-ecn-filtre="Tümü" onclick="durumFiltre('Tümü')">Tümü <span class="chip-cnt" id="chip-tumu">0</span></span>
+        <span class="chip" data-ecn-filtre="Taslak" onclick="durumFiltre('Taslak')">Taslak <span class="chip-cnt" id="chip-taslak">0</span></span>
+        <span class="chip" data-ecn-filtre="İncelemede" onclick="durumFiltre('İncelemede')">İncelemede <span class="chip-cnt" id="chip-incelemede">0</span></span>
+        <span class="chip" data-ecn-filtre="Onay Bekleniyor" onclick="durumFiltre('Onay Bekleniyor')">Onay Bekleniyor <span class="chip-cnt" id="chip-onay">0</span></span>
+        <span class="chip" data-ecn-filtre="Uygulanıyor" onclick="durumFiltre('Uygulanıyor')">Uygulanıyor <span class="chip-cnt" id="chip-uygulamada">0</span></span>
+        <span class="chip" data-ecn-filtre="Tamamlandı" onclick="durumFiltre('Tamamlandı')">Tamamlandı <span class="chip-cnt" id="chip-tamam">0</span></span>
+        <div class="arama-wrap">
+          <input type="text" id="ecn-arama" placeholder="ECN ara..." oninput="araFiltre(this.value)">
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="kpi-row" style="grid-template-columns:repeat(5,1fr)">
+          <div class="kpi s1" id="kpi-toplam"><label>Toplam ECN (Yıllık)</label><div class="num">0</div><div class="det">2026 yılı</div></div>
+          <div class="kpi s2" id="kpi-onay"><label>Onay Bekleyen</label><div class="num">0</div><div class="det">beklemede</div></div>
+          <div class="kpi s4" id="kpi-sure"><label>Ort. Çözüm Süresi</label><div class="num">-</div><div class="det">gün</div></div>
+          <div class="kpi s5" id="kpi-dwg"><label>Etkilenen DWG</label><div class="num">0</div><div class="det">doküman</div></div>
+          <div class="kpi s3" id="kpi-red"><label>Reddedilen</label><div class="num">0</div><div class="det">ECN</div></div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <span class="card-title">&#x1F4CB; ECN Listesi</span>
+            <span class="muted" id="liste-sayac">0 kayıt</span>
+          </div>
+          <div style="overflow-x:auto">
+            <table class="tbl">
+              <thead>
+                <tr>
+                  <th>ECN No</th>
+                  <th>Başlık</th>
+                  <th>Tip</th>
+                  <th>Etkilenen</th>
+                  <th>Talep Eden</th>
+                  <th>Oluşturma</th>
+                  <th>Durum / Adım</th>
+                  <th>Öncelik</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="ecn-tbody">
+                <tr><td colspan="9"><div class="yukleniyor"><div class="spinner"></div> Yükleniyor...</div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== DETAIL VIEW ===== -->
+    <div id="sayfa-detay" style="display:none">
+      <div class="topbar">
+        <div style="display:flex;align-items:center;gap:10px">
+          <button class="btn" onclick="geriGit()">&#x2190; Geri</button>
+          <span class="mono" style="font-size:14px" id="det-ecn-no"></span>
+          <span style="font-size:13px;font-weight:600;color:#334155" id="det-baslik"></span>
+          <span id="det-durum-bdg"></span>
+          <span id="det-oncelik-bdg"></span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <button class="btn btn-warn" id="btn-onayla" style="display:none" onclick="modalAc('onay-modal')">&#x270D; Onayla / Reddet</button>
+          <button class="btn" onclick="pdfCikti()">&#x1F4C4; PDF Çıktı</button>
+        </div>
+      </div>
+
+      <div style="padding:12px 18px 0;flex-shrink:0">
+        <div class="ecn-akis" id="adim-cubugu">
+          <div class="ecn-adim"><div class="ecn-adim-no">Adım 1</div><div class="ecn-adim-adi">Talep</div><div class="ecn-adim-cnt"></div></div>
+          <div class="ecn-adim"><div class="ecn-adim-no">Adım 2</div><div class="ecn-adim-adi">İnceleme</div><div class="ecn-adim-cnt"></div></div>
+          <div class="ecn-adim"><div class="ecn-adim-no">Adım 3</div><div class="ecn-adim-adi">Onay</div><div class="ecn-adim-cnt"></div></div>
+          <div class="ecn-adim"><div class="ecn-adim-no">Adım 4</div><div class="ecn-adim-adi">Uygulama</div><div class="ecn-adim-cnt"></div></div>
+          <div class="ecn-adim"><div class="ecn-adim-no">Adım 5</div><div class="ecn-adim-adi">Kapanış</div><div class="ecn-adim-cnt"></div></div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="ecn-detay-grid">
+          <div class="ecn-sol">
+            <!-- ECN Bilgileri -->
+            <div class="card">
+              <div class="card-head"><span class="card-title">&#x1F4CB; ECN Bilgileri</span></div>
+              <div style="padding:14px 16px">
+                <div class="fg2">
+                  <div><label class="fl">ECN No</label><input class="fi fi-ro" id="d-ecn-no" readonly></div>
+                  <div><label class="fl">Tip</label><input class="fi fi-ro" id="d-tip" readonly></div>
+                </div>
+                <div class="fg2">
+                  <div><label class="fl">Talep Eden</label><input class="fi fi-ro" id="d-talep-eden" readonly></div>
+                  <div><label class="fl">Oluşturma Tarihi</label><input class="fi fi-ro" id="d-tarih" readonly></div>
+                </div>
+                <div class="fg2">
+                  <div><label class="fl">Öncelik</label><input class="fi fi-ro" id="d-oncelik" readonly></div>
+                  <div><label class="fl">Hedef Tarih</label><input class="fi fi-ro" id="d-hedef" readonly></div>
+                </div>
+                <div class="fg2">
+                  <div><label class="fl">Parça No</label><input class="fi fi-ro" id="d-parca" readonly></div>
+                  <div><label class="fl">Müşteri Ref</label><input class="fi fi-ro" id="d-musteri-ref" readonly></div>
+                </div>
+                <div style="margin-bottom:12px">
+                  <label class="fl">Başlık</label><input class="fi fi-ro" id="d-baslik-f" readonly>
+                </div>
+                <div>
+                  <label class="fl">Açıklama</label><textarea class="fi fi-ro" id="d-aciklama" rows="3" readonly style="resize:vertical"></textarea>
+                </div>
+              </div>
+            </div>
+
+            <!-- Etkilenen Dokümanlar -->
+            <div class="card">
+              <div class="card-head">
+                <span class="card-title">&#x1F4C4; Etkilenen Dokümanlar</span>
+                <button class="btn" onclick="modalAc('dok-ekleme-modal')">+ Doküman Ekle</button>
+              </div>
+              <div style="padding:12px 16px">
+                <div class="etk-dok-list" id="dok-listesi">
+                  <div class="bos">Henüz doküman eklenmemiş</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="ecn-sag">
+            <!-- Onay Zinciri -->
+            <div class="card">
+              <div class="card-head"><span class="card-title">&#x2705; Onay Zinciri</span></div>
+              <div style="padding:8px 16px" id="onay-zinciri-wrap">
+                <div class="bos">Yükleniyor...</div>
+              </div>
+            </div>
+
+            <!-- Aktivite -->
+            <div class="card">
+              <div class="card-head"><span class="card-title">&#x1F4AC; Aktivite</span></div>
+              <div style="padding:8px 16px" id="aktivite-wrap">
+                <div class="bos">Henüz aktivite yok</div>
+              </div>
+              <div style="padding:10px 16px;border-top:1px solid #f1f5f9;display:flex;gap:6px">
+                <input class="fi" id="akt-not-input" placeholder="Not ekle...">
+                <button class="btn btn-p" onclick="aktiviteNotEkle()">Gönder</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===== MODALS ===== -->
+
+<!-- Yeni ECN Modal -->
+<div class="modal-ov" id="yeni-ecn-modal" onclick="if(event.target===this)modalKapa('yeni-ecn-modal')">
+  <div class="modal-box">
+    <div class="m-head">
+      <div><div class="m-title">+ Yeni ECN Talebi</div><div class="m-sub">Mühendislik değişiklik bildirimi oluştur</div></div>
+      <button class="m-x" onclick="modalKapa('yeni-ecn-modal')">&times;</button>
+    </div>
+    <div class="m-body">
+      <div class="fg2">
+        <div>
+          <label class="fl">Değişiklik Tipi</label>
+          <select class="fi-sel" id="ye-tip">
+            <option value="">Seçin...</option>
+            <option>Tasarım Değişikliği</option>
+            <option>Malzeme Değişikliği</option>
+            <option>Proses Değişikliği</option>
+            <option>Dokümantasyon</option>
+            <option>Müşteri Talebi</option>
+            <option>İç İyileştirme</option>
+          </select>
+        </div>
+        <div>
+          <label class="fl">Öncelik</label>
+          <select class="fi-sel" id="ye-oncelik">
+            <option value="">Seçin...</option>
+            <option>Kritik</option>
+            <option>Yüksek</option>
+            <option>Orta</option>
+            <option>Düşük</option>
+          </select>
+        </div>
+      </div>
+      <div style="margin-bottom:12px">
+        <label class="fl">Başlık</label>
+        <input class="fi" id="ye-baslik" placeholder="Değişiklik başlığı">
+      </div>
+      <div style="margin-bottom:12px">
+        <label class="fl">Açıklama</label>
+        <textarea class="fi" id="ye-aciklama" rows="3" placeholder="Değişikliğin detaylı açıklaması..."></textarea>
+      </div>
+      <div class="fg2">
+        <div><label class="fl">Parça No</label><input class="fi" id="ye-parca" placeholder="ör: ERS-1001"></div>
+        <div><label class="fl">Müşteri Referansı</label><input class="fi" id="ye-musteri-ref" placeholder="ör: PO-12345"></div>
+      </div>
+      <div class="fg2">
+        <div><label class="fl">Hedef Tarih</label><input class="fi" id="ye-hedef-tarih" type="date"></div>
+        <div><label class="fl">FAI Gerekli mi?</label>
+          <select class="fi-sel" id="ye-fai-gerekli">
+            <option>Hayır</option>
+            <option>Evet</option>
+          </select>
+        </div>
+      </div>
+      <label class="fl">Etkilenen Doküman Tipleri</label>
+      <div class="chk-group">
+        <label><input type="checkbox" id="ye-chk-dwg"> Teknik Çizim (DWG)</label>
+        <label><input type="checkbox" id="ye-chk-bom"> Malzeme Listesi (BOM)</label>
+        <label><input type="checkbox" id="ye-chk-prg"> CNC Program</label>
+        <label><input type="checkbox" id="ye-chk-tes"> Test Talimatı</label>
+        <label><input type="checkbox" id="ye-chk-fai"> FAI Raporu</label>
+      </div>
+      <div class="fg2">
+        <div><label class="fl">Etkilenen Çizim Sayısı</label><input class="fi" id="ye-dwg-say" type="number" min="0" value="0"></div>
+        <div></div>
+      </div>
+    </div>
+    <div class="m-foot">
+      <button class="btn" onclick="modalKapa('yeni-ecn-modal')">İptal</button>
+      <button class="btn btn-p" onclick="ecnKaydet()">&#x1F4BE; ECN Oluştur</button>
+    </div>
+  </div>
+</div>
+
+<!-- Onay Modal -->
+<div class="modal-ov" id="onay-modal" onclick="if(event.target===this)modalKapa('onay-modal')">
+  <div class="modal-box" style="max-width:480px">
+    <div class="m-head">
+      <div><div class="m-title">Onay / Ret Kararı</div><div class="m-sub" id="onay-modal-sub">ECN onay adımı</div></div>
+      <button class="m-x" onclick="modalKapa('onay-modal')">&times;</button>
+    </div>
+    <div class="m-body">
+      <div style="margin-bottom:12px">
+        <label class="fl">Karar Notu</label>
+        <textarea class="fi" id="onay-notu" rows="4" placeholder="Onay veya ret gerekçenizi yazın..."></textarea>
+      </div>
+    </div>
+    <div class="m-foot">
+      <button class="btn btn-red" onclick="onayKaydet('reddet')">&#x2717; Reddet</button>
+      <button class="btn btn-g" onclick="onayKaydet('onayla')">&#x2713; Onayla</button>
+    </div>
+  </div>
+</div>
+
+<!-- Doküman Ekleme Modal -->
+<div class="modal-ov" id="dok-ekleme-modal" onclick="if(event.target===this)modalKapa('dok-ekleme-modal')">
+  <div class="modal-box" style="max-width:520px">
+    <div class="m-head">
+      <div><div class="m-title">Etkilenen Doküman Ekle</div><div class="m-sub">ECN kapsamındaki dokümanı tanımla</div></div>
+      <button class="m-x" onclick="modalKapa('dok-ekleme-modal')">&times;</button>
+    </div>
+    <div class="m-body">
+      <div style="margin-bottom:12px">
+        <label class="fl">Doküman Tipi</label>
+        <select class="fi-sel" id="dok-tip">
+          <option value="">Seçin...</option>
+          <option>DWG</option>
+          <option>BOM</option>
+          <option>CNC Program</option>
+          <option>Test Talimatı</option>
+          <option>FAI</option>
+          <option>Kontrol Planı</option>
+          <option>Diğer</option>
+        </select>
+      </div>
+      <div class="fg2">
+        <div><label class="fl">Doküman No</label><input class="fi" id="dok-no" placeholder="ör: DWG-1001-A"></div>
+        <div><label class="fl">Doküman Adı</label><input class="fi" id="dok-adi" placeholder="ör: Gövde Parçası"></div>
+      </div>
+      <div class="fg2">
+        <div><label class="fl">Eski Revizyon</label><input class="fi" id="dok-eski-rev" placeholder="ör: A"></div>
+        <div><label class="fl">Yeni Revizyon</label><input class="fi" id="dok-yeni-rev" placeholder="ör: B"></div>
+      </div>
+    </div>
+    <div class="m-foot">
+      <button class="btn" onclick="modalKapa('dok-ekleme-modal')">İptal</button>
+      <button class="btn btn-p" onclick="dokEkle()">+ Ekle</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="utils/sidebar.js"></script>
+<script>
+/* ===== HELPERS ===== */
+var BASE='app5LDgJMgocw79Ix';
+
+function apiGet(tablo){
+  return fetch('/.netlify/functions/airtable?table='+encodeURIComponent(tablo)+'&pageSize=100').then(function(r){return r.json();});
+}
+function apiPost(tablo,fields){
+  return fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'POST',path:'/v0/'+BASE+'/'+encodeURIComponent(tablo),body:{fields:fields}})}).then(function(r){return r.json();});
+}
+function apiPatch(tablo,id,fields){
+  return fetch('/.netlify/functions/airtable',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({table:tablo,id:id,fields:fields})}).then(function(r){return r.json();});
+}
+function escHtml(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function toast(msg,cls){var t=document.getElementById('toast');t.textContent=msg;t.className='toast '+(cls||'');t.classList.add('show');setTimeout(function(){t.classList.remove('show');},3000);}
+function logIslem(tip,detay){
+  fetch('/.netlify/functions/airtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'POST',path:'/v0/'+BASE+'/Sistem%20Log',body:{fields:{'Tip':tip,'Detay':detay,'Tarih':new Date().toISOString().split('T')[0],'Kullanici':localStorage.getItem('ersan_kullanici')||'Sistem'}}})}).catch(function(){});
+}
+function modalAc(id){document.getElementById(id).classList.add('open');}
+function modalKapa(id){document.getElementById(id).classList.remove('open');}
+
+/* ===== DATA ===== */
+var ecnListesi=[], dokListesi=[], onayListesi=[], aktListesi=[];
+var aktifEcnId=null;
+var filtreliEcn=[];
+var aktifFiltre='Tümü';
+var aramaMetni='';
+var ECN_ADIMLAR=['Talep','İnceleme','Onay','Uygulama','Kapanış'];
+
+var tipRenk={
+  'Tasarım Değişikliği':'b-pur',
+  'Malzeme Değişikliği':'b-blu',
+  'Proses Değişikliği':'b-teal',
+  'Dokümantasyon':'b-gray',
+  'Müşteri Talebi':'b-amr',
+  'İç İyileştirme':'b-grn'
+};
+
+var oncelikRenk={
+  'Kritik':'b-red',
+  'Yüksek':'b-amr',
+  'Orta':'b-blu',
+  'Düşük':'b-gray'
+};
+
+var durumRenk={
+  'Taslak':'b-gray',
+  'İncelemede':'b-blu',
+  'Onay Bekleniyor':'b-amr',
+  'Uygulanıyor':'b-teal',
+  'Tamamlandı':'b-grn',
+  'Reddedildi':'b-red'
+};
+
+var avatarRenkler=[
+  {bg:'#1a2b47',fg:'#f59e0b'},
+  {bg:'#065f46',fg:'#6ee7b7'},
+  {bg:'#5b21b6',fg:'#ddd6fe'}
+];
+
+function avatarHarfleri(ad){
+  var parcalar=(ad||'').split(' ');
+  return (parcalar[0]?parcalar[0][0]:'')+(parcalar[1]?parcalar[1][0]:'');
+}
+
+function avatarRenk(ad){
+  var hash=0;
+  for(var i=0;i<(ad||'').length;i++){hash+=ad.charCodeAt(i);}
+  return avatarRenkler[hash%avatarRenkler.length];
+}
+
+var ONAY_ROLLER=['Mühendislik','Kalite','Üretim','Satınalma','Genel Müdür'];
+
+/* ===== SAYFA GECİS ===== */
+function sayfaGec(sayfa){
+  document.getElementById('sayfa-liste').style.display=sayfa==='liste'?'':'none';
+  document.getElementById('sayfa-detay').style.display=sayfa==='detay'?'':'none';
+}
+
+/* ===== VERİ YUKLE ===== */
+function veriYukle(){
+  Promise.all([
+    apiGet('ECN_Talepleri'),
+    apiGet('ECN_Dokumanlari'),
+    apiGet('ECN_Onay_Zinciri'),
+    apiGet('ECN_Aktiviteler')
+  ]).then(function(sonuclar){
+    ecnListesi=(sonuclar[0].records||[]).map(function(r){return {id:r.id,f:r.fields||{}};});
+    dokListesi=(sonuclar[1].records||[]).map(function(r){return {id:r.id,f:r.fields||{}};});
+    onayListesi=(sonuclar[2].records||[]).map(function(r){return {id:r.id,f:r.fields||{}};});
+    aktListesi=(sonuclar[3].records||[]).map(function(r){return {id:r.id,f:r.fields||{}};});
+
+    kpiHesapla();
+    durumChipSayilariGuncelle();
+    filtreUygula();
+
+    /* URL param check */
+    var params=new URLSearchParams(window.location.search);
+    var ecnParam=params.get('ecn');
+    var durumParam=params.get('durum');
+    if(ecnParam){
+      var bulunan=ecnListesi.filter(function(e){return e.f['ECN No']===ecnParam;});
+      if(bulunan.length>0){ecnDetayAc(bulunan[0].id);return;}
+    }
+    if(durumParam){durumFiltre(durumParam);}
+  }).catch(function(err){
+    console.error('Veri yükleme hatası:',err);
+    document.getElementById('ecn-tbody').innerHTML='<tr><td colspan="9" style="text-align:center;padding:32px;color:#ef4444">Veri yüklenemedi</td></tr>';
+  });
+}
+
+/* ===== KPI ===== */
+function kpiHesapla(){
+  var yil=new Date().getFullYear().toString();
+  var yillikEcn=ecnListesi.filter(function(e){return (e.f['Tarih']||'').indexOf(yil)===0;});
+  var onayBekleyen=ecnListesi.filter(function(e){return e.f['Durum']==='Onay Bekleniyor';});
+  var reddedilen=ecnListesi.filter(function(e){return e.f['Durum']==='Reddedildi';});
+  var tamamlanan=ecnListesi.filter(function(e){return e.f['Durum']==='Tamamlandı';});
+
+  /* Ort sure */
+  var toplamGun=0,sureSayac=0;
+  tamamlanan.forEach(function(e){
+    if(e.f['Tarih']&&e.f['Kapanış Tarihi']){
+      var bas=new Date(e.f['Tarih']);
+      var bit=new Date(e.f['Kapanış Tarihi']);
+      var fark=Math.round((bit-bas)/(1000*60*60*24));
+      if(fark>=0){toplamGun+=fark;sureSayac++;}
+    }
+  });
+  var ortSure=sureSayac>0?Math.round(toplamGun/sureSayac):'-';
+
+  /* Etkilenen DWG */
+  var dwgSay=dokListesi.filter(function(d){return d.f['Tip']==='DWG';}).length;
+
+  document.querySelector('#kpi-toplam .num').textContent=yillikEcn.length;
+  document.querySelector('#kpi-onay .num').textContent=onayBekleyen.length;
+  document.querySelector('#kpi-sure .num').textContent=ortSure;
+  document.querySelector('#kpi-dwg .num').textContent=dwgSay;
+  document.querySelector('#kpi-red .num').textContent=reddedilen.length;
+
+  document.getElementById('onay-bekleyen-cnt').textContent=onayBekleyen.length;
+}
+
+/* ===== DURUM CHIP SAYILARI ===== */
+function durumChipSayilariGuncelle(){
+  document.getElementById('chip-tumu').textContent=ecnListesi.length;
+  document.getElementById('chip-taslak').textContent=ecnListesi.filter(function(e){return e.f['Durum']==='Taslak';}).length;
+  document.getElementById('chip-incelemede').textContent=ecnListesi.filter(function(e){return e.f['Durum']==='İncelemede';}).length;
+  document.getElementById('chip-onay').textContent=ecnListesi.filter(function(e){return e.f['Durum']==='Onay Bekleniyor';}).length;
+  document.getElementById('chip-uygulamada').textContent=ecnListesi.filter(function(e){return e.f['Durum']==='Uygulanıyor';}).length;
+  document.getElementById('chip-tamam').textContent=ecnListesi.filter(function(e){return e.f['Durum']==='Tamamlandı';}).length;
+}
+
+/* ===== FİLTRE ===== */
+function durumFiltre(durum){
+  aktifFiltre=durum;
+  /* chip active */
+  var chips=document.querySelectorAll('.chip[data-ecn-filtre]');
+  for(var i=0;i<chips.length;i++){
+    chips[i].classList.toggle('active',chips[i].getAttribute('data-ecn-filtre')===durum);
+  }
+  filtreUygula();
+}
+
+function araFiltre(metin){
+  aramaMetni=(metin||'').toLowerCase();
+  filtreUygula();
+}
+
+function filtreUygula(){
+  var liste=ecnListesi.slice();
+
+  if(aktifFiltre&&aktifFiltre!=='Tümü'){
+    liste=liste.filter(function(e){return e.f['Durum']===aktifFiltre;});
+  }
+
+  if(aramaMetni){
+    liste=liste.filter(function(e){
+      var haystack=((e.f['ECN No']||'')+(e.f['Başlık']||'')+(e.f['Talep Eden']||'')+(e.f['Tip']||'')).toLowerCase();
+      return haystack.indexOf(aramaMetni)!==-1;
+    });
+  }
+
+  /* Sıralama: en yeni önce */
+  liste.sort(function(a,b){
+    return (b.f['Tarih']||'').localeCompare(a.f['Tarih']||'');
+  });
+
+  filtreliEcn=liste;
+  ecnTabloRender(liste);
+}
+
+/* ===== TABLO RENDER ===== */
+function ecnTabloRender(liste){
+  var tbody=document.getElementById('ecn-tbody');
+  document.getElementById('liste-sayac').textContent=liste.length+' kayıt';
+
+  if(liste.length===0){
+    tbody.innerHTML='<tr><td colspan="9"><div class="bos">Kayıt bulunamadı</div></td></tr>';
+    return;
+  }
+
+  var html='';
+  for(var i=0;i<liste.length;i++){
+    var e=liste[i];
+    var f=e.f;
+    var ecnNo=escHtml(f['ECN No']||'-');
+    var baslik=escHtml(f['Başlık']||'-');
+    var tip=f['Tip']||'-';
+    var tipCls=tipRenk[tip]||'b-gray';
+    var durum=f['Durum']||'Taslak';
+    var durumCls=durumRenk[durum]||'b-gray';
+    var adim=f['Aktif Adım']||'Talep';
+    var oncelik=f['Öncelik']||'-';
+    var oncelikCls=oncelikRenk[oncelik]||'b-gray';
+    var talepEden=f['Talep Eden']||'-';
+    var tarih=f['Tarih']||'-';
+    var isWarn=durum==='Onay Bekleniyor'?' warn':'';
+
+    /* Etkilenen dokümanlar */
+    var ecnDoklar=dokListesi.filter(function(d){return d.f['ECN_ID']===e.id||(d.f['ECN No']&&d.f['ECN No']===f['ECN No']);});
+    var dokBadges='';
+    var tipSayac={};
+    ecnDoklar.forEach(function(d){
+      var dt=d.f['Tip']||'Diğer';
+      tipSayac[dt]=(tipSayac[dt]||0)+1;
+    });
+    var tipKeys=Object.keys(tipSayac);
+    for(var t=0;t<tipKeys.length;t++){
+      var dtip=tipKeys[t];
+      var dtipCls='td-'+(dtip==='DWG'?'dwg':dtip==='BOM'?'bom':dtip==='CNC Program'?'prg':dtip==='Test Talimatı'?'tes':dtip==='FAI'?'fai':'diger');
+      dokBadges+='<span style="display:inline-flex;align-items:center;gap:2px;font-size:9px;padding:1px 5px;border-radius:4px;font-weight:700" class="'+dtipCls+'">'+escHtml(dtip)+' '+tipSayac[dtip]+'</span> ';
+    }
+    if(!dokBadges) dokBadges='<span class="muted">-</span>';
+
+    /* Avatar */
+    var ar=avatarRenk(talepEden);
+    var avatarHtml='<span class="avatar" style="background:'+ar.bg+';color:'+ar.fg+'">'+escHtml(avatarHarfleri(talepEden))+'</span>';
+
+    html+='<tr class="'+isWarn+'" onclick="ecnDetayAc(\''+e.id+'\')">';
+    html+='<td><span class="mono">'+ecnNo+'</span></td>';
+    html+='<td style="max-width:200px"><div style="font-weight:600;font-size:12px;color:#334155;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+baslik+'</div><div class="muted" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escHtml(f['Açıklama']||'').substring(0,60)+'</div></td>';
+    html+='<td><span class="bdg '+tipCls+'">'+escHtml(tip)+'</span></td>';
+    html+='<td>'+dokBadges+'</td>';
+    html+='<td><div style="display:flex;align-items:center;gap:6px">'+avatarHtml+'<span style="font-size:11px">'+escHtml(talepEden)+'</span></div></td>';
+    html+='<td class="muted">'+escHtml(tarih)+'</td>';
+    html+='<td><span class="bdg '+durumCls+'">'+escHtml(durum)+'</span><div class="muted" style="margin-top:2px;font-size:9px">'+escHtml(adim)+'</div></td>';
+    html+='<td><span class="bdg '+oncelikCls+'">'+escHtml(oncelik)+'</span></td>';
+    html+='<td><button class="btn" style="font-size:10px" onclick="event.stopPropagation();ecnDetayAc(\''+e.id+'\')">Aç &rarr;</button></td>';
+    html+='</tr>';
+  }
+  tbody.innerHTML=html;
+}
+
+/* ===== ECN DETAY AC ===== */
+function ecnDetayAc(ecnId){
+  aktifEcnId=ecnId;
+  var ecn=ecnListesi.filter(function(e){return e.id===ecnId;})[0];
+  if(!ecn){toast('ECN bulunamadı','orange');return;}
+
+  var f=ecn.f;
+  sayfaGec('detay');
+
+  /* Topbar */
+  document.getElementById('det-ecn-no').textContent=f['ECN No']||'-';
+  document.getElementById('det-baslik').textContent=f['Başlık']||'-';
+
+  var durum=f['Durum']||'Taslak';
+  var durumCls=durumRenk[durum]||'b-gray';
+  document.getElementById('det-durum-bdg').innerHTML='<span class="bdg '+durumCls+'">'+escHtml(durum)+'</span>';
+
+  var oncelik=f['Öncelik']||'-';
+  var oncelikCls=oncelikRenk[oncelik]||'b-gray';
+  document.getElementById('det-oncelik-bdg').innerHTML='<span class="bdg '+oncelikCls+'">'+escHtml(oncelik)+'</span>';
+
+  /* Onayla butonu */
+  document.getElementById('btn-onayla').style.display=(durum==='Onay Bekleniyor'||durum==='İncelemede')?'':'none';
+
+  /* Form fields */
+  document.getElementById('d-ecn-no').value=f['ECN No']||'';
+  document.getElementById('d-tip').value=f['Tip']||'';
+  document.getElementById('d-talep-eden').value=f['Talep Eden']||'';
+  document.getElementById('d-tarih').value=f['Tarih']||'';
+  document.getElementById('d-oncelik').value=f['Öncelik']||'';
+  document.getElementById('d-hedef').value=f['Hedef Tarih']||'';
+  document.getElementById('d-parca').value=f['Parça No']||'';
+  document.getElementById('d-musteri-ref').value=f['Müşteri Ref']||'';
+  document.getElementById('d-baslik-f').value=f['Başlık']||'';
+  document.getElementById('d-aciklama').value=f['Açıklama']||'';
+
+  /* Adım çubuğu */
+  adimCubuguDoldur(ecn);
+
+  /* Etkilenen dokümanlar */
+  var ecnDoklar=dokListesi.filter(function(d){return d.f['ECN_ID']===ecnId||(d.f['ECN No']&&d.f['ECN No']===f['ECN No']);});
+  etkilenenDokRender(ecnDoklar);
+
+  /* Onay zinciri */
+  var ecnOnaylar=onayListesi.filter(function(o){return o.f['ECN_ID']===ecnId||(o.f['ECN No']&&o.f['ECN No']===f['ECN No']);});
+  ecnOnaylar.sort(function(a,b){return (a.f['Sıra']||0)-(b.f['Sıra']||0);});
+  onayZinciriRender(ecnOnaylar,ecn);
+
+  /* Aktivite */
+  var ecnAkt=aktListesi.filter(function(a){return a.f['ECN_ID']===ecnId||(a.f['ECN No']&&a.f['ECN No']===f['ECN No']);});
+  ecnAkt.sort(function(a,b){return (b.f['Tarih']||'').localeCompare(a.f['Tarih']||'');});
+  aktiviteRender(ecnAkt);
+
+  /* Onay modal sub */
+  document.getElementById('onay-modal-sub').textContent=(f['ECN No']||'')+' — '+(f['Aktif Adım']||'');
+}
+
+/* ===== ADIM CUBUĞU ===== */
+function adimCubuguDoldur(ecn){
+  var adimlar=document.querySelectorAll('#adim-cubugu .ecn-adim');
+  var aktifAdim=ecn.f['Aktif Adım']||'Talep';
+  var aktifIdx=ECN_ADIMLAR.indexOf(aktifAdim);
+  if(aktifIdx===-1) aktifIdx=0;
+  var durum=ecn.f['Durum']||'Taslak';
+
+  for(var i=0;i<adimlar.length;i++){
+    adimlar[i].classList.remove('on','tamam','aktif');
+    var cnt=adimlar[i].querySelector('.ecn-adim-cnt');
+    if(durum==='Tamamlandı'){
+      adimlar[i].classList.add('tamam');
+      cnt.textContent='✓ Tamamlandı';
+    } else if(durum==='Reddedildi'){
+      if(i<=aktifIdx){
+        adimlar[i].classList.add(i<aktifIdx?'tamam':'');
+        cnt.textContent=i===aktifIdx?'✗ Reddedildi':'✓';
+      } else {
+        cnt.textContent='';
+      }
+    } else if(i<aktifIdx){
+      adimlar[i].classList.add('tamam');
+      cnt.textContent='✓ Tamamlandı';
+    } else if(i===aktifIdx){
+      adimlar[i].classList.add('on');
+      cnt.textContent='● Aktif';
+    } else {
+      cnt.textContent='Bekliyor';
+    }
+  }
+}
+
+/* ===== ETKİLENEN DOK RENDER ===== */
+function etkilenenDokRender(doklar){
+  var wrap=document.getElementById('dok-listesi');
+  if(doklar.length===0){
+    wrap.innerHTML='<div class="bos">Henüz doküman eklenmemiş</div>';
+    return;
+  }
+
+  var html='';
+  for(var i=0;i<doklar.length;i++){
+    var d=doklar[i].f;
+    var tip=d['Tip']||'Diğer';
+    var tipKisa=tip==='CNC Program'?'PRG':tip==='Test Talimatı'?'TES':tip==='Kontrol Planı'?'KP':tip.substring(0,3).toUpperCase();
+    var tipCls='td-'+(tip==='DWG'?'dwg':tip==='BOM'?'bom':tip==='CNC Program'?'prg':tip==='Test Talimatı'?'tes':tip==='FAI'?'fai':'diger');
+    var eskiRev=d['Eski Rev']||'-';
+    var yeniRev=d['Yeni Rev']||'-';
+
+    html+='<div class="etk-dok">';
+    html+='<div class="etk-dok-tip '+tipCls+'">'+escHtml(tipKisa)+'</div>';
+    html+='<div class="etk-dok-bilgi">';
+    html+='<div class="etk-dok-no">'+escHtml(d['Doküman No']||'-')+'</div>';
+    html+='<div class="etk-dok-adi">'+escHtml(d['Doküman Adı']||'-')+'</div>';
+    html+='</div>';
+    html+='<div class="etk-dok-rev">';
+    html+='<span class="rev-eski">'+escHtml(eskiRev)+'</span>';
+    html+='<span class="rev-ok">&rarr;</span>';
+    html+='<span class="rev-yeni">'+escHtml(yeniRev)+'</span>';
+    html+='</div>';
+    html+='</div>';
+  }
+  wrap.innerHTML=html;
+}
+
+/* ===== ONAY ZİNCİRİ RENDER ===== */
+function onayZinciriRender(onaylar,ecn){
+  var wrap=document.getElementById('onay-zinciri-wrap');
+
+  if(onaylar.length===0){
+    /* Varsayılan roller göster */
+    var html='';
+    for(var i=0;i<ONAY_ROLLER.length;i++){
+      html+='<div class="doz-adim">';
+      html+='<div class="doz-ikon-wrap"><div class="doz-ikon bekle">'+(i+1)+'</div>';
+      if(i<ONAY_ROLLER.length-1) html+='<div class="doz-cizgi"></div>';
+      html+='</div>';
+      html+='<div class="doz-icerik"><div class="doz-rol">'+escHtml(ONAY_ROLLER[i])+'</div><div class="doz-kisi muted">Atanmamış</div></div>';
+      html+='</div>';
+    }
+    wrap.innerHTML=html;
+    return;
+  }
+
+  var html='';
+  for(var i=0;i<onaylar.length;i++){
+    var o=onaylar[i].f;
+    var karar=o['Karar']||'';
+    var ikonCls=karar==='Onaylandı'?'tamam':karar==='Reddedildi'?'aktif':(o['Aktif']?'aktif':'bekle');
+    var ikonChar=karar==='Onaylandı'?'✓':karar==='Reddedildi'?'✗':(i+1);
+
+    html+='<div class="doz-adim">';
+    html+='<div class="doz-ikon-wrap"><div class="doz-ikon '+ikonCls+'">'+ikonChar+'</div>';
+    if(i<onaylar.length-1) html+='<div class="doz-cizgi"></div>';
+    html+='</div>';
+    html+='<div class="doz-icerik">';
+    html+='<div class="doz-rol">'+escHtml(o['Rol']||ONAY_ROLLER[i]||'Adım '+(i+1))+'</div>';
+    html+='<div class="doz-kisi">'+escHtml(o['Onaylayan']||'Atanmamış')+'</div>';
+    if(karar){
+      html+='<div class="doz-tarih">'+escHtml(karar)+' — '+escHtml(o['Karar Tarihi']||'')+'</div>';
+      if(o['Not']) html+='<div class="muted" style="margin-top:2px;font-style:italic">'+escHtml(o['Not'])+'</div>';
+    } else if(o['Aktif']){
+      html+='<div class="doz-tarih" style="color:#f59e0b">⏳ Karar bekleniyor</div>';
+    } else {
+      html+='<div class="doz-tarih">Sıra bekleniyor</div>';
+    }
+    html+='</div></div>';
+  }
+  wrap.innerHTML=html;
+}
+
+/* ===== AKTİVİTE RENDER ===== */
+function aktiviteRender(aktiviteler){
+  var wrap=document.getElementById('aktivite-wrap');
+  if(aktiviteler.length===0){
+    wrap.innerHTML='<div class="bos">Henüz aktivite yok</div>';
+    return;
+  }
+
+  var html='';
+  for(var i=0;i<aktiviteler.length;i++){
+    var a=aktiviteler[i].f;
+    var tip=a['Tip']||'sys';
+    var dotCls=tip==='onay'?'sys':tip==='red'?'err':tip==='not'?'usr':tip==='uyari'?'warn':'sys';
+    html+='<div class="akt-item">';
+    html+='<div class="akt-dot '+dotCls+'"></div>';
+    html+='<div class="akt-body">';
+    html+='<div class="akt-msg">'+escHtml(a['Mesaj']||'-')+'</div>';
+    html+='<div class="akt-meta">'+escHtml(a['Kullanıcı']||'Sistem')+' — '+escHtml(a['Tarih']||'')+'</div>';
+    html+='</div></div>';
+  }
+  wrap.innerHTML=html;
+}
+
+/* ===== ONAY KAYDET ===== */
+function onayKaydet(karar){
+  if(!aktifEcnId){toast('ECN seçili değil','orange');return;}
+  var ecn=ecnListesi.filter(function(e){return e.id===aktifEcnId;})[0];
+  if(!ecn){toast('ECN bulunamadı','orange');return;}
+
+  var not=document.getElementById('onay-notu').value.trim();
+  if(!not){toast('Lütfen karar notu yazın','orange');return;}
+
+  var ecnOnaylar=onayListesi.filter(function(o){return o.f['ECN_ID']===aktifEcnId||(o.f['ECN No']&&o.f['ECN No']===ecn.f['ECN No']);});
+  ecnOnaylar.sort(function(a,b){return (a.f['Sıra']||0)-(b.f['Sıra']||0);});
+
+  /* Aktif onay adımını bul */
+  var aktifOnay=null;
+  for(var i=0;i<ecnOnaylar.length;i++){
+    if(!ecnOnaylar[i].f['Karar']){aktifOnay=ecnOnaylar[i];break;}
+  }
+
+  if(!aktifOnay){toast('Onaylanacak adım bulunamadı','orange');return;}
+
+  var kararDeger=karar==='onayla'?'Onaylandı':'Reddedildi';
+  var bugun=new Date().toISOString().split('T')[0];
+  var kullanici=localStorage.getItem('ersan_kullanici')||'Erdem Küçükateş';
+
+  /* Onay kaydını güncelle */
+  apiPatch('ECN_Onay_Zinciri',aktifOnay.id,{
+    'Karar':kararDeger,
+    'Karar Tarihi':bugun,
+    'Not':not,
+    'Onaylayan':kullanici
+  }).then(function(){
+    /* Aktivite ekle */
+    var aktMesaj=kararDeger==='Onaylandı'?
+      (aktifOnay.f['Rol']||'Adım')+' onayı verildi: '+not:
+      (aktifOnay.f['Rol']||'Adım')+' reddetti: '+not;
+    return apiPost('ECN_Aktiviteler',{
+      'ECN_ID':aktifEcnId,
+      'ECN No':ecn.f['ECN No']||'',
+      'Tip':karar==='onayla'?'onay':'red',
+      'Mesaj':aktMesaj,
+      'Kullanıcı':kullanici,
+      'Tarih':bugun
+    });
+  }).then(function(){
+    /* ECN durumunu güncelle */
+    if(karar==='onayla'){
+      /* Sonraki adıma geç */
+      var aktifAdimIdx=ECN_ADIMLAR.indexOf(ecn.f['Aktif Adım']||'Talep');
+      var sonrakiIdx=aktifAdimIdx+1;
+      var yeniDurum,yeniAdim;
+
+      if(sonrakiIdx>=ECN_ADIMLAR.length){
+        yeniDurum='Tamamlandı';
+        yeniAdim='Kapanış';
+      } else {
+        yeniAdim=ECN_ADIMLAR[sonrakiIdx];
+        if(yeniAdim==='İnceleme') yeniDurum='İncelemede';
+        else if(yeniAdim==='Onay') yeniDurum='Onay Bekleniyor';
+        else if(yeniAdim==='Uygulama') yeniDurum='Uygulanıyor';
+        else if(yeniAdim==='Kapanış') yeniDurum='Tamamlandı';
+        else yeniDurum=ecn.f['Durum'];
+      }
+
+      var patchFields={'Durum':yeniDurum,'Aktif Adım':yeniAdim};
+      if(yeniDurum==='Tamamlandı') patchFields['Kapanış Tarihi']=bugun;
+
+      /* Sonraki onay adımını aktif et */
+      var sonrakiOnay=ecnOnaylar.filter(function(o){return !o.f['Karar']&&o.id!==aktifOnay.id;})[0];
+      var promises=[apiPatch('ECN_Talepleri',aktifEcnId,patchFields)];
+      if(sonrakiOnay){
+        promises.push(apiPatch('ECN_Onay_Zinciri',sonrakiOnay.id,{'Aktif':true}));
+      }
+
+      logIslem('ECN_ONAYLANDI',ecn.f['ECN No']+' — '+ecn.f['Aktif Adım']+' onaylandı');
+      return Promise.all(promises);
+    } else {
+      logIslem('ECN_REDDEDILDI',ecn.f['ECN No']+' — '+ecn.f['Aktif Adım']+' reddedildi');
+      return apiPatch('ECN_Talepleri',aktifEcnId,{'Durum':'Reddedildi'});
+    }
+  }).then(function(){
+    modalKapa('onay-modal');
+    document.getElementById('onay-notu').value='';
+    toast(karar==='onayla'?'Onay kaydedildi':'ECN reddedildi',karar==='onayla'?'green':'orange');
+    veriYukle();
+    setTimeout(function(){ecnDetayAc(aktifEcnId);},500);
+  }).catch(function(err){
+    console.error('Onay hatası:',err);
+    toast('Hata: '+err.message,'orange');
+  });
+}
+
+/* ===== ECN KAYDET (YENİ) ===== */
+function ecnKaydet(){
+  var tip=document.getElementById('ye-tip').value;
+  var oncelik=document.getElementById('ye-oncelik').value;
+  var baslik=document.getElementById('ye-baslik').value.trim();
+  var aciklama=document.getElementById('ye-aciklama').value.trim();
+  var parca=document.getElementById('ye-parca').value.trim();
+  var musteriRef=document.getElementById('ye-musteri-ref').value.trim();
+  var hedefTarih=document.getElementById('ye-hedef-tarih').value;
+  var faiGerekli=document.getElementById('ye-fai-gerekli').value;
+  var dwgSay=parseInt(document.getElementById('ye-dwg-say').value)||0;
+
+  if(!tip){toast('Değişiklik tipi seçin','orange');return;}
+  if(!oncelik){toast('Öncelik seçin','orange');return;}
+  if(!baslik){toast('Başlık girin','orange');return;}
+
+  /* ECN No üret */
+  var yil=new Date().getFullYear();
+  var mevcutYillik=ecnListesi.filter(function(e){return (e.f['ECN No']||'').indexOf('ECN-'+yil)===0;});
+  var sira=mevcutYillik.length+1;
+  var ecnNo='ECN-'+yil+'-'+('000'+sira).slice(-3);
+
+  var bugun=new Date().toISOString().split('T')[0];
+  var kullanici=localStorage.getItem('ersan_kullanici')||'Erdem Küçükateş';
+
+  /* Etkilenen tipler */
+  var etkTipler=[];
+  if(document.getElementById('ye-chk-dwg').checked) etkTipler.push('DWG');
+  if(document.getElementById('ye-chk-bom').checked) etkTipler.push('BOM');
+  if(document.getElementById('ye-chk-prg').checked) etkTipler.push('CNC Program');
+  if(document.getElementById('ye-chk-tes').checked) etkTipler.push('Test Talimatı');
+  if(document.getElementById('ye-chk-fai').checked) etkTipler.push('FAI');
+
+  var fields={
+    'ECN No':ecnNo,
+    'Başlık':baslik,
+    'Tip':tip,
+    'Öncelik':oncelik,
+    'Açıklama':aciklama,
+    'Parça No':parca,
+    'Müşteri Ref':musteriRef,
+    'Hedef Tarih':hedefTarih||undefined,
+    'FAI Gerekli':faiGerekli,
+    'DWG Sayısı':dwgSay,
+    'Etkilenen Tipler':etkTipler.join(', '),
+    'Durum':'Taslak',
+    'Aktif Adım':'Talep',
+    'Tarih':bugun,
+    'Talep Eden':kullanici
+  };
+
+  /* Undefined alanları temizle */
+  var cleanFields={};
+  var fKeys=Object.keys(fields);
+  for(var k=0;k<fKeys.length;k++){
+    if(fields[fKeys[k]]!==undefined&&fields[fKeys[k]]!==''){
+      cleanFields[fKeys[k]]=fields[fKeys[k]];
+    }
+  }
+
+  apiPost('ECN_Talepleri',cleanFields).then(function(res){
+    if(res.error){throw new Error(res.error.message||'Kayıt hatası');}
+    var yeniId=res.id;
+
+    /* 5 onay kaydı oluştur */
+    var onayPromises=[];
+    for(var i=0;i<ONAY_ROLLER.length;i++){
+      onayPromises.push(apiPost('ECN_Onay_Zinciri',{
+        'ECN_ID':yeniId,
+        'ECN No':ecnNo,
+        'Rol':ONAY_ROLLER[i],
+        'Sıra':i+1,
+        'Aktif':i===0,
+        'Karar':'',
+        'Onaylayan':'',
+        'Karar Tarihi':'',
+        'Not':''
+      }));
+    }
+
+    /* İlk aktivite */
+    onayPromises.push(apiPost('ECN_Aktiviteler',{
+      'ECN_ID':yeniId,
+      'ECN No':ecnNo,
+      'Tip':'sys',
+      'Mesaj':ecnNo+' numaralı ECN talebi oluşturuldu — '+tip,
+      'Kullanıcı':kullanici,
+      'Tarih':bugun
+    }));
+
+    logIslem('ECN_OLUSTURULDU',ecnNo+' — '+baslik);
+
+    return Promise.all(onayPromises);
+  }).then(function(){
+    modalKapa('yeni-ecn-modal');
+    /* Formu temizle */
+    document.getElementById('ye-tip').value='';
+    document.getElementById('ye-oncelik').value='';
+    document.getElementById('ye-baslik').value='';
+    document.getElementById('ye-aciklama').value='';
+    document.getElementById('ye-parca').value='';
+    document.getElementById('ye-musteri-ref').value='';
+    document.getElementById('ye-hedef-tarih').value='';
+    document.getElementById('ye-fai-gerekli').value='Hayır';
+    document.getElementById('ye-dwg-say').value='0';
+    document.getElementById('ye-chk-dwg').checked=false;
+    document.getElementById('ye-chk-bom').checked=false;
+    document.getElementById('ye-chk-prg').checked=false;
+    document.getElementById('ye-chk-tes').checked=false;
+    document.getElementById('ye-chk-fai').checked=false;
+
+    toast('ECN başarıyla oluşturuldu','green');
+    veriYukle();
+  }).catch(function(err){
+    console.error('ECN kayıt hatası:',err);
+    toast('Hata: '+err.message,'orange');
+  });
+}
+
+/* ===== DOK EKLE ===== */
+function dokEkle(){
+  if(!aktifEcnId){toast('Önce bir ECN açın','orange');return;}
+  var ecn=ecnListesi.filter(function(e){return e.id===aktifEcnId;})[0];
+  if(!ecn){toast('ECN bulunamadı','orange');return;}
+
+  var tip=document.getElementById('dok-tip').value;
+  var no=document.getElementById('dok-no').value.trim();
+  var adi=document.getElementById('dok-adi').value.trim();
+  var eskiRev=document.getElementById('dok-eski-rev').value.trim();
+  var yeniRev=document.getElementById('dok-yeni-rev').value.trim();
+
+  if(!tip){toast('Doküman tipi seçin','orange');return;}
+  if(!no){toast('Doküman no girin','orange');return;}
+
+  apiPost('ECN_Dokumanlari',{
+    'ECN_ID':aktifEcnId,
+    'ECN No':ecn.f['ECN No']||'',
+    'Tip':tip,
+    'Doküman No':no,
+    'Doküman Adı':adi,
+    'Eski Rev':eskiRev,
+    'Yeni Rev':yeniRev
+  }).then(function(res){
+    if(res.error){throw new Error(res.error.message||'Kayıt hatası');}
+    modalKapa('dok-ekleme-modal');
+    document.getElementById('dok-tip').value='';
+    document.getElementById('dok-no').value='';
+    document.getElementById('dok-adi').value='';
+    document.getElementById('dok-eski-rev').value='';
+    document.getElementById('dok-yeni-rev').value='';
+    toast('Doküman eklendi','green');
+    veriYukle();
+    setTimeout(function(){ecnDetayAc(aktifEcnId);},500);
+  }).catch(function(err){
+    console.error('Doküman ekleme hatası:',err);
+    toast('Hata: '+err.message,'orange');
+  });
+}
+
+/* ===== AKTİVİTE NOT EKLE ===== */
+function aktiviteNotEkle(){
+  if(!aktifEcnId){toast('Önce bir ECN açın','orange');return;}
+  var ecn=ecnListesi.filter(function(e){return e.id===aktifEcnId;})[0];
+  if(!ecn) return;
+
+  var mesaj=document.getElementById('akt-not-input').value.trim();
+  if(!mesaj){toast('Not boş olamaz','orange');return;}
+
+  var bugun=new Date().toISOString().split('T')[0];
+  var kullanici=localStorage.getItem('ersan_kullanici')||'Erdem Küçükateş';
+
+  apiPost('ECN_Aktiviteler',{
+    'ECN_ID':aktifEcnId,
+    'ECN No':ecn.f['ECN No']||'',
+    'Tip':'not',
+    'Mesaj':mesaj,
+    'Kullanıcı':kullanici,
+    'Tarih':bugun
+  }).then(function(res){
+    if(res.error){throw new Error(res.error.message||'Kayıt hatası');}
+    document.getElementById('akt-not-input').value='';
+    toast('Not eklendi','green');
+    veriYukle();
+    setTimeout(function(){ecnDetayAc(aktifEcnId);},500);
+  }).catch(function(err){
+    toast('Hata: '+err.message,'orange');
+  });
+}
+
+/* ===== ECN EXPORT (CSV) ===== */
+function ecnExport(){
+  var liste=filtreliEcn.length>0?filtreliEcn:ecnListesi;
+  if(liste.length===0){toast('Dışa aktarılacak kayıt yok','orange');return;}
+
+  var csv='\uFEFF"ECN No","Başlık","Tip","Durum","Öncelik","Talep Eden","Tarih","Hedef Tarih","Parça No"\n';
+  for(var i=0;i<liste.length;i++){
+    var f=liste[i].f;
+    csv+='"'+escCsv(f['ECN No']||'')+'",'
+      +'"'+escCsv(f['Başlık']||'')+'",'
+      +'"'+escCsv(f['Tip']||'')+'",'
+      +'"'+escCsv(f['Durum']||'')+'",'
+      +'"'+escCsv(f['Öncelik']||'')+'",'
+      +'"'+escCsv(f['Talep Eden']||'')+'",'
+      +'"'+escCsv(f['Tarih']||'')+'",'
+      +'"'+escCsv(f['Hedef Tarih']||'')+'",'
+      +'"'+escCsv(f['Parça No']||'')+'"\n';
+  }
+
+  var blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url;
+  a.download='ECN_Liste_'+new Date().toISOString().split('T')[0]+'.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('Excel dışa aktarıldı','green');
+}
+
+function escCsv(s){return String(s).replace(/"/g,'""');}
+
+/* ===== PDF CIKTI ===== */
+function pdfCikti(){
+  toast('PDF çıktı hazırlanıyor...','');
+  setTimeout(function(){window.print();},300);
+}
+
+/* ===== GERİ GİT ===== */
+function geriGit(){
+  aktifEcnId=null;
+  sayfaGec('liste');
+  /* URL temizle */
+  if(window.history.replaceState){
+    window.history.replaceState(null,null,window.location.pathname);
+  }
+}
+
+/* ===== ESC / OVERLAY ===== */
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'){
+    var modals=document.querySelectorAll('.modal-ov.open');
+    for(var i=0;i<modals.length;i++){
+      modals[i].classList.remove('open');
+    }
+  }
+});
+
+/* ===== INIT ===== */
+document.addEventListener('DOMContentLoaded',function(){
+  sayfaGec('liste');
+  veriYukle();
+});
+</script>
+</body>
+</html>

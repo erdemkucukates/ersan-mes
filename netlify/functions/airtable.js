@@ -29,6 +29,7 @@ var COUNTER_MAP = {
   'DEN':'DEN_COUNTER', 'BLG':'BLG_COUNTER', 'RPR':'RPR_COUNTER',
   'SKT':'SKT_COUNTER', 'TDE':'TDE_COUNTER', 'YGG':'YGG_COUNTER', 'RSK':'RSK_COUNTER',
   'EQP':'EQP_COUNTER', 'QRN':'QRN_COUNTER',
+  'ECN':'ECN_COUNTER', 'MM':'MM_COUNTER',
 };
 
 async function generateCode(prefix, padLength) {

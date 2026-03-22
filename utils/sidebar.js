@@ -29,7 +29,8 @@
       { page: 'sayim', file: 'ersan_sayim.html', label: 'Say\u0131m', ic: '\uD83D\uDD22' },
       { page: 'atolye-harita', file: 'ersan_atolye_harita.html', label: 'At\u00F6lye Haritas\u0131', ic: '\uD83D\uDDFA\uFE0F' },
       { page: 'qr', file: 'ersan_qr.html', label: 'QR Etiketler', ic: '\uD83D\uDCF1' },
-      { page: 'palet', file: 'ersan_palet.html', label: 'Palet / Traveler', ic: '\uD83D\uDEE4\uFE0F' }
+      { page: 'palet', file: 'ersan_palet.html', label: 'Palet / Traveler', ic: '\uD83D\uDEE4\uFE0F' },
+      { page: 'musteri-mulku', file: 'ersan_musteri_mulku.html', label: 'M\u00FC\u015Fteri M\u00FClk\u00FC', ic: '\uD83C\uDFF7\uFE0F' }
     ]},
     { id: 'uretim', title: '\u00DCretim', iso: '\u00A78.5.1', icon: '\u2699\uFE0F', dot: '#3b82f6', items: [
       { page: 'isemirleri', file: 'ersan_isemirleri.html', label: '\u0130\u015F Emirleri', ic: '\uD83D\uDCC4' },
@@ -37,6 +38,7 @@
       { page: 'atolye', file: 'ersan_atolye.html', label: 'At\u00F6lye', ic: '\uD83D\uDD27' }
     ]},
     { id: 'kalite', title: 'Kalite', iso: '\u00A78.4-10.2', icon: '\u2714\uFE0F', dot: '#10b981', items: [
+      { page: 'ecn', file: 'ersan_ecn.html', label: 'De\u011Fi\u015Fiklik (ECN)', ic: '\uD83D\uDCDD' },
       { page: 'kalite-iqc', file: 'ersan_kalite_iqc.html', label: 'Girdi Kalite (IQC)', ic: '\uD83D\uDD0D' },
       { page: 'kalite-fai', file: 'ersan_kalite_fai.html', label: '\u0130lk Par\u00E7a (FAI)', ic: '\uD83C\uDFC6' },
       { page: 'kalite-ipqc', file: 'ersan_kalite_ipqc.html', label: 'S\u00FCre\u00E7 \u0130\u00E7i (IPQC)', ic: '\uD83D\uDCCF' },
@@ -59,7 +61,8 @@
       { page: 'ygg', file: 'ersan_ygg.html', label: 'YGG', ic: '\uD83D\uDCCB' }
     ]},
     { id: 'kpi', title: 'KPI Dashboard', iso: '\u00A79.1', icon: '\uD83D\uDCCA', dot: '#f59e0b', items: [
-      { page: 'kpi-dashboard', file: 'ersan_anasayfa.html', label: 'KPI Dashboard', ic: '\uD83D\uDCCA' }
+      { page: 'kpi-dashboard', file: 'ersan_anasayfa.html', label: 'KPI Dashboard', ic: '\uD83D\uDCCA' },
+      { page: 'kpi-panel', file: 'ersan_kpi_panel.html', label: 'Y\u00F6netim KPI', ic: '\uD83D\uDCCA' }
     ]},
     { id: 'ekipman', title: 'Ekipman & Bak\u0131m', iso: '\u00A77.1.3', icon: '\uD83D\uDD29', dot: '#8b5cf6', items: [
       { page: 'ekipman-dashboard', file: 'ersan_ekipman_dashboard.html', label: 'Dashboard', ic: '\uD83D\uDCCA' },

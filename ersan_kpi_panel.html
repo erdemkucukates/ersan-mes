@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Ersan MES — Yonetim KPI</title>
+  <!-- LAYOUT FIX v3 -->
+  <link rel="stylesheet" href="utils/sidebar.css">
+  <style>html,body{height:100%;margin:0;padding:0;overflow:hidden}.app{display:flex!important;flex-direction:row!important;height:100vh!important;width:100vw!important;overflow:hidden!important}#sb-mount,.sb{width:210px!important;min-width:210px!important;max-width:210px!important;flex-shrink:0!important;height:100vh!important;overflow-y:scroll!important;overflow-x:hidden!important}.main,.icerik-alani{flex:1 1 0!important;min-width:0!important;height:100vh!important;overflow:hidden!important;display:flex!important;flex-direction:column!important}.main>.tb,.main>.topbar,.main>[class*="topbar"]{flex-shrink:0!important}</style>
+  <!-- /LAYOUT FIX -->
+  <style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,-apple-system,sans-serif}
+
+/* Buttons */
+.btn{font-size:11px;padding:5px 12px;border-radius:6px;border:1px solid #e2e8f0;background:#fff;color:#475569;cursor:pointer;font-weight:500;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;transition:all .12s}
+.btn:hover{background:#f8fafc;border-color:#cbd5e1}
+.btn-p{background:#1a2b47;color:#fff;border-color:#1a2b47}
+.btn-p:hover{background:#243d66}
+.btn-g{background:#d1fae5;color:#065f46;border-color:#6ee7b7}
+.btn-b{background:#dbeafe;color:#1e40af;border-color:#93c5fd}
+.btn-warn{background:#fef3c7;color:#92400e;border-color:#fcd34d}
+.btn-red{background:#fee2e2;color:#991b1b;border-color:#fca5a5}
+
+/* Badges */
+.bdg{display:inline-flex;align-items:center;gap:3px;font-size:10px;padding:2px 8px;border-radius:12px;font-weight:600;white-space:nowrap}
+.bdg::before{content:'';width:4px;height:4px;border-radius:50%;flex-shrink:0}
+.b-grn::before{background:#10b981}.b-grn{background:#d1fae5;color:#065f46}
+.b-amr::before{background:#f59e0b}.b-amr{background:#fef3c7;color:#92400e}
+.b-red::before{background:#ef4444}.b-red{background:#fee2e2;color:#991b1b}
+.b-blu::before{background:#3b82f6}.b-blu{background:#dbeafe;color:#1e40af}
+.b-gray::before{background:#94a3b8}.b-gray{background:#f1f5f9;color:#64748b}
+.b-pur::before{background:#8b5cf6}.b-pur{background:#ede9fe;color:#5b21b6}
+.b-teal::before{background:#0d9488}.b-teal{background:#ccfbf1;color:#0f766e}
+
+/* Topbar */
+.topbar{background:#fff;border-bottom:1px solid #e2e8f0;padding:0 18px;height:50px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:10px}
+.tb-title{font-size:15px;font-weight:700;color:#1a2b47}
+.tb-sub{font-size:11px;color:#94a3b8;margin-left:6px;font-weight:400}
+.content{flex:1;overflow-y:auto;padding:16px 18px}
+
+/* Card */
+.card{background:#fff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;margin-bottom:14px}
+.card-head{padding:12px 16px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;background:#fafafa}
+.card-title{font-size:12px;font-weight:700;color:#334155;display:flex;align-items:center;gap:6px}
+.muted{color:#94a3b8;font-size:11px}
+.up{color:#10b981}.dn{color:#ef4444}.nt{color:#f59e0b}
+
+/* Kaynak Chips */
+.kaynak-bar-wrap{background:#fff;border-bottom:1px solid #e2e8f0;padding:8px 18px;flex-shrink:0}
+.kaynak-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:0;align-items:center}
+.kaynak-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:20px;border:1px solid;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s}
+.kc-grn{background:#f0fdf4;border-color:#6ee7b7;color:#065f46}
+.kc-amr{background:#fffbeb;border-color:#fcd34d;color:#92400e}
+.kc-red{background:#fff8f8;border-color:#fca5a5;color:#991b1b}
+.kc-blu{background:#eff6ff;border-color:#93c5fd;color:#1e40af}
+.kc-pur{background:#f5f3ff;border-color:#c4b5fd;color:#5b21b6}
+.kc-teal{background:#f0fdfa;border-color:#5eead4;color:#0f766e}
+.kc-dot{width:7px;height:7px;border-radius:50%;background:currentColor;opacity:.7}
+
+/* Halka Skor SVG */
+.halka-wrap{display:flex;justify-content:center;align-items:center;gap:28px;padding:20px;background:#fff;border-radius:10px;border:1px solid #e2e8f0;margin-bottom:14px;flex-wrap:wrap}
+.halka-item{display:flex;flex-direction:column;align-items:center;gap:8px}
+.halka-svg{width:90px;height:90px}
+.halka-pct{font-size:16px;font-weight:800;fill:#0f172a}
+.halka-lbl{font-size:10px;font-weight:600;color:#94a3b8;text-align:center;max-width:80px;line-height:1.3}
+.halka-track{fill:none;stroke:#f1f5f9;stroke-width:8}
+.halka-fill{fill:none;stroke-width:8;stroke-linecap:round;transform:rotate(-90deg);transform-origin:center;transition:stroke-dashoffset .6s cubic-bezier(.16,1,.3,1)}
+
+/* Modul Kart Grid */
+.modul-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.modul-kart{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:14px;cursor:pointer;transition:all .15s;position:relative;overflow:hidden}
+.modul-kart:hover{border-color:#1a2b47;box-shadow:0 4px 16px rgba(0,0,0,.08)}
+.mk-ikon{font-size:20px;margin-bottom:8px}
+.mk-adi{font-size:11px;font-weight:700;color:#334155;margin-bottom:4px}
+.mk-as9100{font-size:9px;color:#94a3b8;margin-bottom:8px;font-family:monospace}
+.mk-durum{display:flex;align-items:center;gap:6px;font-size:11px}
+.mk-bar-wrap{margin-top:8px;height:4px;background:#f1f5f9;border-radius:2px;overflow:hidden}
+.mk-bar{height:100%;border-radius:2px;transition:width .5s}
+.mk-stat{display:flex;justify-content:space-between;font-size:10px;color:#94a3b8;margin-top:4px}
+.mk-acil{position:absolute;top:8px;right:8px;font-size:9px;background:#fee2e2;color:#991b1b;padding:2px 6px;border-radius:4px;font-weight:700}
+
+/* Hedef Tablosu */
+.hedef-header{display:flex;align-items:center;gap:10px;padding:8px 14px;border-bottom:1px solid #e2e8f0;background:#f8fafc}
+.hedef-header span{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:#94a3b8}
+.hedef-satir{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid #f1f5f9}
+.hedef-satir:last-child{border-bottom:none}
+.hedef-adi{flex:0 0 180px;font-size:11px;font-weight:600;color:#334155}
+.hedef-modul{flex:0 0 100px;font-size:10px;color:#94a3b8}
+.hedef-bar-wrap{flex:1;height:8px;background:#f1f5f9;border-radius:4px;overflow:hidden}
+.hedef-bar{height:100%;border-radius:4px;transition:width .6s}
+.hedef-pct{flex:0 0 36px;text-align:right;font-size:11px;font-weight:700}
+.hedef-hedef{flex:0 0 60px;text-align:right;font-size:10px;color:#94a3b8}
+.hedef-trend{flex:0 0 28px;font-size:12px;text-align:center}
+
+/* Uyari Akisi */
+.uyari-akis{display:flex;flex-direction:column;gap:6px}
+.uyari-item{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:8px;border:1px solid;cursor:pointer;transition:opacity .12s}
+.uyari-item:hover{opacity:.8}
+.ui-krit{background:#fff8f8;border-color:#fca5a5}
+.ui-warn{background:#fffbeb;border-color:#fcd34d}
+.ui-info{background:#eff6ff;border-color:#93c5fd}
+.uyari-ikon{font-size:14px;margin-top:1px;flex-shrink:0}
+.uyari-icerik{flex:1}
+.uyari-baslik{font-size:11px;font-weight:600;color:#334155}
+.uyari-detay{font-size:10px;color:#94a3b8;margin-top:2px}
+.uyari-link{font-size:10px;font-weight:600;color:#2563eb;margin-top:3px;display:block;text-decoration:none}
+.uyari-zaman{font-size:9px;color:#94a3b8;white-space:nowrap;margin-top:2px}
+
+/* Two column layout */
+.iki-kolon{display:grid;grid-template-columns:1fr 360px;gap:14px}
+@media(max-width:1100px){.iki-kolon{grid-template-columns:1fr}}
+
+/* Toast */
+.toast{position:fixed;bottom:28px;right:28px;z-index:999;background:#1a2b47;color:#fff;padding:12px 18px;border-radius:10px;font-size:12px;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,.25);transform:translateY(90px);opacity:0;transition:all .35s cubic-bezier(.16,1,.3,1);display:flex;align-items:center;gap:8px;max-width:340px}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.green{background:#065f46}
+.toast.orange{background:#92400e}
+
+/* Modal */
+.modal-ov{display:none;position:fixed;inset:0;background:rgba(15,23,42,.65);z-index:500;align-items:flex-start;justify-content:center;padding:24px 16px 48px;overflow-y:auto;backdrop-filter:blur(4px)}
+.modal-ov.open{display:flex}
+.modal-box{background:#fff;border-radius:12px;width:100%;max-width:760px;overflow:hidden;box-shadow:0 32px 80px rgba(0,0,0,.28);animation:mIn .22s cubic-bezier(.16,1,.3,1)}
+@keyframes mIn{from{opacity:0;transform:translateY(-20px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+.m-head{background:#1a2b47;padding:16px 20px;display:flex;align-items:flex-start;justify-content:space-between}
+.m-title{font-size:14px;font-weight:700;color:#fff}
+.m-sub{font-size:11px;color:rgba(255,255,255,.5);margin-top:3px}
+.m-x{font-size:18px;color:rgba(255,255,255,.4);cursor:pointer;border:none;background:transparent;transition:color .12s;line-height:1}
+.m-x:hover{color:#fff}
+.m-body{padding:18px 20px;max-height:72vh;overflow-y:auto;background:#f8fafc}
+.m-foot{padding:12px 20px;border-top:1px solid #e2e8f0;background:#fff;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.fl{display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#94a3b8;margin-bottom:4px}
+.fi{width:100%;font-size:12px;padding:7px 10px;border:1px solid #e2e8f0;border-radius:6px;background:#fff;color:#0f172a;outline:none;transition:border-color .12s}
+.fi:focus{border-color:#1a2b47}
+.fi-sel{width:100%;font-size:12px;padding:7px 10px;border:1px solid #e2e8f0;border-radius:6px;background:#fff;color:#334155;outline:none}
+.fg2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+
+.kaynak-lbl{font-size:11px;font-weight:600;color:#94a3b8;margin-right:4px}
+.hedef-foot{padding:10px 14px;border-top:1px solid #f1f5f9}
+  </style>
+</head>
+<body data-page="kpi-panel">
+<div class="app">
+  <div id="sb-mount"></div>
+  <div class="main">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div style="display:flex;align-items:center">
+        <span class="tb-title">&#x1F4CA; Yonetim KPI Paneli</span>
+        <span class="tb-sub">&sect;9.1 &middot; Tum modullerden beslenir</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <select id="sel-donem" class="fi-sel" style="width:120px" onchange="donemDegistir()">
+          <option value="2026-Q1">2026-Q1</option>
+          <option value="2026-Q2">2026-Q2</option>
+          <option value="2026-Q3">2026-Q3</option>
+          <option value="2026-Q4">2026-Q4</option>
+          <option value="2025-Q4">2025-Q4</option>
+        </select>
+        <select id="sel-modul" class="fi-sel" style="width:120px" onchange="modulFiltre()">
+          <option value="Tum">Tum</option>
+          <option value="Kalite">Kalite</option>
+          <option value="Uretim">Uretim</option>
+          <option value="Satinalma">Satinalma</option>
+        </select>
+        <button class="btn btn-b" onclick="raporIndir()">&#x2B07; Rapor Indir</button>
+        <button class="btn btn-g" onclick="yggHazirla()">&#x1F4CB; YGG Hazirla</button>
+      </div>
+    </div>
+
+    <!-- KAYNAK CHIPS -->
+    <div class="kaynak-bar-wrap">
+      <div class="kaynak-bar">
+        <span class="kaynak-lbl">Veri Kaynaklari:</span>
+        <span class="kaynak-chip kc-blu" id="chip-ic-denetim" onclick="location.href='ersan_denetim.html'"><span class="kc-dot"></span> Ic Denetim <span id="chip-ic-denetim-say">0</span></span>
+        <span class="kaynak-chip kc-pur" id="chip-capa" onclick="location.href='ersan_duzeltici.html'"><span class="kc-dot"></span> CAPA <span id="chip-capa-say">0</span></span>
+        <span class="kaynak-chip kc-amr" id="chip-bulgular" onclick="location.href='ersan_kalite.html'"><span class="kc-dot"></span> Bulgular <span id="chip-bulgular-say">0</span></span>
+        <span class="kaynak-chip kc-red" id="chip-sikayetler" onclick="location.href='ersan_musteri.html'"><span class="kc-dot"></span> Sikayetler <span id="chip-sikayetler-say">0</span></span>
+        <span class="kaynak-chip kc-teal" id="chip-tedarikci" onclick="location.href='ersan_tedarikciler.html'"><span class="kc-dot"></span> Tedarikci <span id="chip-tedarikci-say">0</span></span>
+        <span class="kaynak-chip kc-grn" id="chip-ygg" onclick="location.href='ersan_ygg.html'"><span class="kc-dot"></span> YGG <span id="chip-ygg-say">0</span></span>
+      </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content">
+
+      <!-- HALKA SKORLAR -->
+      <div class="halka-wrap">
+        <div class="halka-item">
+          <svg class="halka-svg" viewBox="0 0 90 90">
+            <circle class="halka-track" cx="45" cy="45" r="36"/>
+            <circle class="halka-fill" id="halka-fill-as9100" cx="45" cy="45" r="36" stroke="#3b82f6" stroke-dasharray="226.2" stroke-dashoffset="226.2"/>
+            <text x="45" y="50" text-anchor="middle" class="halka-pct" id="halka-num-as9100">%0</text>
+          </svg>
+          <div class="halka-lbl">AS9100 Uyumu</div>
+        </div>
+        <div class="halka-item">
+          <svg class="halka-svg" viewBox="0 0 90 90">
+            <circle class="halka-track" cx="45" cy="45" r="36"/>
+            <circle class="halka-fill" id="halka-fill-kalite" cx="45" cy="45" r="36" stroke="#10b981" stroke-dasharray="226.2" stroke-dashoffset="226.2"/>
+            <text x="45" y="50" text-anchor="middle" class="halka-pct" id="halka-num-kalite">%0</text>
+          </svg>
+          <div class="halka-lbl">Kalite Hedef</div>
+        </div>
+        <div class="halka-item">
+          <svg class="halka-svg" viewBox="0 0 90 90">
+            <circle class="halka-track" cx="45" cy="45" r="36"/>
+            <circle class="halka-fill" id="halka-fill-otl" cx="45" cy="45" r="36" stroke="#8b5cf6" stroke-dasharray="226.2" stroke-dashoffset="226.2"/>
+            <text x="45" y="50" text-anchor="middle" class="halka-pct" id="halka-num-otl">%0</text>
+          </svg>
+          <div class="halka-lbl">OTL (Zamaninda Teslimat)</div>
+        </div>
+        <div class="halka-item">
+          <svg class="halka-svg" viewBox="0 0 90 90">
+            <circle class="halka-track" cx="45" cy="45" r="36"/>
+            <circle class="halka-fill" id="halka-fill-mem" cx="45" cy="45" r="36" stroke="#f59e0b" stroke-dasharray="226.2" stroke-dashoffset="226.2"/>
+            <text x="45" y="50" text-anchor="middle" class="halka-pct" id="halka-num-mem">%0</text>
+          </svg>
+          <div class="halka-lbl">Musteri Memnuniyeti</div>
+        </div>
+        <div class="halka-item">
+          <svg class="halka-svg" viewBox="0 0 90 90">
+            <circle class="halka-track" cx="45" cy="45" r="36"/>
+            <circle class="halka-fill" id="halka-fill-capa" cx="45" cy="45" r="36" stroke="#ef4444" stroke-dasharray="226.2" stroke-dashoffset="226.2"/>
+            <text x="45" y="50" text-anchor="middle" class="halka-pct" id="halka-num-capa">%0</text>
+          </svg>
+          <div class="halka-lbl">CAPA Kapanis</div>
+        </div>
+        <div class="halka-item">
+          <svg class="halka-svg" viewBox="0 0 90 90">
+            <circle class="halka-track" cx="45" cy="45" r="36"/>
+            <circle class="halka-fill" id="halka-fill-tedarikci" cx="45" cy="45" r="36" stroke="#0d9488" stroke-dasharray="226.2" stroke-dashoffset="226.2"/>
+            <text x="45" y="50" text-anchor="middle" class="halka-pct" id="halka-num-tedarikci">%0</text>
+          </svg>
+          <div class="halka-lbl">Tedarikci Ort Skor</div>
+        </div>
+      </div>
+
+      <!-- IKI KOLON -->
+      <div class="iki-kolon">
+
+        <!-- SOL KOLON -->
+        <div>
+          <!-- MODUL OZETI -->
+          <div class="card">
+            <div class="card-head">
+              <span class="card-title">&#x1F517; Modul Ozeti</span>
+              <span class="muted" id="modul-ozet-info">6 modul</span>
+            </div>
+            <div style="padding:12px 16px">
+              <div class="modul-grid" id="modul-grid"></div>
+            </div>
+          </div>
+
+          <!-- KALITE HEDEFLERI -->
+          <div class="card">
+            <div class="card-head">
+              <span class="card-title">&#x1F3AF; &sect;9.1.1 Kalite Hedefleri</span>
+              <button class="btn" onclick="modalAc('hedef-modal')">+ Hedef Ekle</button>
+            </div>
+            <div class="hedef-header">
+              <span style="flex:0 0 180px">Hedef</span>
+              <span style="flex:0 0 100px">Modul</span>
+              <span style="flex:1">Ilerleme</span>
+              <span style="flex:0 0 36px;text-align:right">Gercek</span>
+              <span style="flex:0 0 60px;text-align:right">Hedef</span>
+              <span style="flex:0 0 28px;text-align:center">Trend</span>
+            </div>
+            <div id="hedef-tablo-body"></div>
+            <div class="hedef-foot" id="hedef-foot" style="display:none">
+              <span class="muted" id="hedef-ozet"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- SAG KOLON -->
+        <div>
+          <div class="card">
+            <div class="card-head">
+              <span class="card-title">&#x1F514; Aksiyon Gerektirenler</span>
+              <span class="bdg b-red" id="uyari-say">0</span>
+            </div>
+            <div style="padding:12px 16px">
+              <div class="uyari-akis" id="uyari-akis">
+                <div class="muted" style="text-align:center;padding:20px">Yukleniyor...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- HEDEF EKLE MODAL -->
+<div class="modal-ov" id="hedef-modal">
+  <div class="modal-box" style="max-width:560px">
+    <div class="m-head">
+      <div>
+        <div class="m-title">Yeni Kalite Hedefi Ekle</div>
+        <div class="m-sub">&sect;9.1.1 - KPI Hedef Tanimlama</div>
+      </div>
+      <button class="m-x" onclick="modalKapa('hedef-modal')">&times;</button>
+    </div>
+    <div class="m-body">
+      <div style="margin-bottom:12px">
+        <label class="fl">Hedef Adi</label>
+        <input class="fi" id="h-baslik" placeholder="Orn: Uygunsuzluk Orani">
+      </div>
+      <div class="fg2">
+        <div>
+          <label class="fl">Modul</label>
+          <select class="fi-sel" id="h-modul">
+            <option value="Kalite">Kalite</option>
+            <option value="Satis">Satis</option>
+            <option value="Satinalma">Satinalma</option>
+            <option value="Uretim">Uretim</option>
+            <option value="Finans">Finans</option>
+            <option value="Genel">Genel</option>
+          </select>
+        </div>
+        <div>
+          <label class="fl">Hedef Deger</label>
+          <input class="fi" id="h-hedef" type="number" step="0.1" placeholder="95">
+        </div>
+      </div>
+      <div class="fg2">
+        <div>
+          <label class="fl">Kosul Tipi</label>
+          <select class="fi-sel" id="h-tip">
+            <option value=">=">&#x2265; (Buyuk esit)</option>
+            <option value="<=">&#x2264; (Kucuk esit)</option>
+            <option value="=">=  (Esit)</option>
+          </select>
+        </div>
+        <div>
+          <label class="fl">Birim</label>
+          <input class="fi" id="h-birim" placeholder="%, gun, adet">
+        </div>
+      </div>
+      <div class="fg2">
+        <div>
+          <label class="fl">Kaynak Tablo</label>
+          <input class="fi" id="h-kaynak_tablo" placeholder="Orn: Muayene_Kayitlari">
+        </div>
+        <div>
+          <label class="fl">Kaynak Alan</label>
+          <input class="fi" id="h-kaynak_alan" placeholder="Orn: Sonuc">
+        </div>
+      </div>
+    </div>
+    <div class="m-foot">
+      <span class="muted">Hedef YGG raporuna dahil edilir</span>
+      <div style="display:flex;gap:8px">
+        <button class="btn" onclick="modalKapa('hedef-modal')">Iptal</button>
+        <button class="btn btn-p" onclick="hedefKaydet()">&#x1F4BE; Kaydet</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script src="utils/sidebar.js"></script>
+<script>
+var BASE = 'app5LDgJMgocw79Ix';
+var kpiVeriler = {};
+var aktifDonem = '2026-Q1';
+
+/* ── HELPERS ── */
+function apiGet(tablo) {
+  return fetch('/.netlify/functions/airtable?table=' + encodeURIComponent(tablo) + '&pageSize=100').then(function(r) { return r.json(); });
+}
+
+function apiPost(tablo, fields) {
+  return fetch('/.netlify/functions/airtable', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ method: 'POST', path: '/v0/' + BASE + '/' + encodeURIComponent(tablo), body: { fields: fields } })
+  }).then(function(r) { return r.json(); });
+}
+
+function apiPatch(tablo, id, fields) {
+  return fetch('/.netlify/functions/airtable', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ table: tablo, id: id, fields: fields })
+  }).then(function(r) { return r.json(); });
+}
+
+function escHtml(s) {
+  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function toast(msg, cls) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + (cls || '');
+  t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 3000);
+}
+
+function logIslem(tip, detay) {
+  fetch('/.netlify/functions/airtable', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      method: 'POST',
+      path: '/v0/' + BASE + '/Sistem%20Log',
+      body: {
+        fields: {
+          'Tip': tip,
+          'Detay': detay,
+          'Tarih': new Date().toISOString().split('T')[0],
+          'Kullanici': localStorage.getItem('ersan_kullanici') || 'Sistem'
+        }
+      }
+    })
+  }).catch(function() {});
+}
+
+function kodUret(prefix) {
+  return fetch('/.netlify/functions/airtable', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'generateCode', prefix: prefix })
+  }).then(function(r) { return r.json(); }).then(function(d) {
+    if (!d.kod) throw new Error('Kod uretilemedi');
+    return d.kod;
+  });
+}
+
+function modalAc(id) { document.getElementById(id).classList.add('open'); }
+function modalKapa(id) { document.getElementById(id).classList.remove('open'); }
+
+function halkaGuncelle(id, pct, renk) {
+  var fill = document.getElementById('halka-fill-' + id);
+  var num = document.getElementById('halka-num-' + id);
+  if (!fill || !num) return;
+  var clamped = Math.max(0, Math.min(100, pct));
+  var offset = 226.2 * (1 - clamped / 100);
+  fill.style.strokeDashoffset = offset;
+  fill.style.stroke = renk;
+  num.textContent = '%' + Math.round(pct);
+}
+
+function csvIndir(rows, filename) {
+  var csv = rows.map(function(r) {
+    return r.map(function(c) { return '"' + String(c == null ? '' : c).replace(/"/g, '""') + '"'; }).join(',');
+  }).join('\n');
+  var blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+}
+
+function gunFarki(tarih1, tarih2) {
+  var d1 = new Date(tarih1);
+  var d2 = new Date(tarih2 || new Date().toISOString().split('T')[0]);
+  return Math.floor((d2 - d1) / (1000 * 60 * 60 * 24));
+}
+
+/* ── DONEM / FILTRE ── */
+function donemDegistir() {
+  aktifDonem = document.getElementById('sel-donem').value;
+  halkaSkoriHesapla();
+  hedefTabloRender();
+  uyariAkisiRender();
+}
+
+function modulFiltre() {
+  var sec = document.getElementById('sel-modul').value;
+  var kartlar = document.querySelectorAll('.modul-kart');
+  kartlar.forEach(function(k) {
+    if (sec === 'Tum') { k.style.display = ''; return; }
+    var modul = k.getAttribute('data-kategori') || '';
+    k.style.display = modul === sec ? '' : 'none';
+  });
+}
+
+/* ── VERI YUKLEME ── */
+function veriYukle() {
+  Promise.all([
+    apiGet('Denetimler'),
+    apiGet('Bulgular'),
+    apiGet('CAPA'),
+    apiGet('Musteri_Sikayetleri'),
+    apiGet('Tedarikci_Degerlendirme'),
+    apiGet('Satis_Emirleri'),
+    apiGet('Musteri_Mulku'),
+    apiGet('ECN_Talepleri'),
+    apiGet('KPI_Hedefleri')
+  ]).then(function(res) {
+    kpiVeriler = {
+      denetimler: (res[0].records || []).map(function(r) { return Object.assign({ id: r.id }, r.fields); }),
+      bulgular: (res[1].records || []).map(function(r) { return Object.assign({ id: r.id }, r.fields); }),
+      capa: (res[2].records || []).map(function(r) { return Object.assign({ id: r.id }, r.fields); }),
+      sikayetler: (res[3].records || []).map(function(r) { return Object.assign({ id: r.id }, r.fields); }),
+      tedDeg: (res[4].records || []).map(function(r) { return Object.assign({ id: r.id }, r.fields); }),
+      siparisler: (res[5].records || []).map(function(r) { return Object.assign({ id: r.id }, r.fields); }),
+      mm: (res[6].records || []).map(function(r) { return Object.assign({ id: r.id }, r.fields); }),
+      ecn: (res[7].records || []).map(function(r) { return Object.assign({ id: r.id }, r.fields); }),
+      hedefler: (res[8].records || []).map(function(r) { return Object.assign({ id: r.id }, r.fields); })
+    };
+    halkaSkoriHesapla();
+    kaynakChipleriGuncelle();
+    modulGridRender();
+    hedefTabloRender();
+    uyariAkisiRender();
+    toast('KPI verileri yuklendi', 'green');
+  }).catch(function(err) {
+    console.error('KPI veri yukleme hatasi:', err);
+    toast('Veri yukleme hatasi!', 'orange');
+  });
+}
+
+/* ── HALKA SKORLARI ── */
+function halkaSkoriHesapla() {
+  var d = kpiVeriler;
+  if (!d.denetimler) return;
+
+  // 1. AS9100 Uyumu — avg Uyumluluk_Skoru from tamamlanan denetimler
+  var tamamDenetim = d.denetimler.filter(function(r) { return r.Durum === 'Tamamlandi' || r.Durum === 'Tamamland\u0131'; });
+  var as9100Pct = 0;
+  if (tamamDenetim.length > 0) {
+    var toplamSkor = tamamDenetim.reduce(function(t, r) { return t + (parseFloat(r.Uyumluluk_Skoru) || 0); }, 0);
+    as9100Pct = Math.round(toplamSkor / tamamDenetim.length);
+  }
+  halkaGuncelle('as9100', as9100Pct, '#3b82f6');
+
+  // 2. Kalite Hedef — karsilanan hedef orani
+  var sabitHedefler = hedefListesiOlustur();
+  var karsilananSayisi = 0;
+  sabitHedefler.forEach(function(h) {
+    if (h.karsilandi) karsilananSayisi++;
+  });
+  var kalitePct = sabitHedefler.length > 0 ? Math.round((karsilananSayisi / sabitHedefler.length) * 100) : 0;
+  halkaGuncelle('kalite', kalitePct, '#10b981');
+
+  // 3. OTL — Teslim_Durumu === 'Zamaninda' orani
+  var teslimEdilen = d.siparisler.filter(function(r) { return r.Teslim_Durumu; });
+  var zamaninda = teslimEdilen.filter(function(r) { return r.Teslim_Durumu === 'Zamaninda' || r.Teslim_Durumu === 'Zaman\u0131nda'; });
+  var otlPct = teslimEdilen.length > 0 ? Math.round((zamaninda.length / teslimEdilen.length) * 100) : 0;
+  halkaGuncelle('otl', otlPct, '#8b5cf6');
+
+  // 4. Musteri Memnuniyeti — avg Memnuniyet_Skoru / 5 * 100
+  var memSkorlu = d.sikayetler.filter(function(r) { return r.Memnuniyet_Skoru != null; });
+  var memPct = 0;
+  if (memSkorlu.length > 0) {
+    var memToplam = memSkorlu.reduce(function(t, r) { return t + (parseFloat(r.Memnuniyet_Skoru) || 0); }, 0);
+    memPct = Math.round((memToplam / memSkorlu.length) / 5 * 100);
+  }
+  halkaGuncelle('mem', memPct, '#f59e0b');
+
+  // 5. CAPA Kapanis — kapatilan + 30 gun icinde orani
+  var kapatilan = d.capa.filter(function(r) { return r.Durum === 'Kapatildi' || r.Durum === 'Kapat\u0131ld\u0131'; });
+  var zamanindaKapanan = kapatilan.filter(function(r) {
+    if (!r.Acilma_Tarihi || !r.Kapatilma_Tarihi) return false;
+    return gunFarki(r.Acilma_Tarihi, r.Kapatilma_Tarihi) <= 30;
+  });
+  var capaPct = kapatilan.length > 0 ? Math.round((zamanindaKapanan.length / kapatilan.length) * 100) : 0;
+  halkaGuncelle('capa', capaPct, '#ef4444');
+
+  // 6. Tedarikci Ort Skor — avg Genel_Agirlikli_Skor
+  var tedSkorlu = d.tedDeg.filter(function(r) { return r.Genel_Agirlikli_Skor != null; });
+  var tedPct = 0;
+  if (tedSkorlu.length > 0) {
+    var tedToplam = tedSkorlu.reduce(function(t, r) { return t + (parseFloat(r.Genel_Agirlikli_Skor) || 0); }, 0);
+    tedPct = Math.round(tedToplam / tedSkorlu.length);
+  }
+  halkaGuncelle('tedarikci', tedPct, '#0d9488');
+}
+
+/* ── KAYNAK CHIPLERI ── */
+function kaynakChipleriGuncelle() {
+  var d = kpiVeriler;
+  if (!d.denetimler) return;
+
+  document.getElementById('chip-ic-denetim-say').textContent = d.denetimler.length;
+  document.getElementById('chip-capa-say').textContent = d.capa.length;
+  document.getElementById('chip-bulgular-say').textContent = d.bulgular.length;
+  document.getElementById('chip-sikayetler-say').textContent = d.sikayetler.length;
+  document.getElementById('chip-tedarikci-say').textContent = d.tedDeg.length;
+
+  // YGG chip count not loaded separately — show 0 or denetim count
+  document.getElementById('chip-ygg-say').textContent = '-';
+}
+
+/* ── MODUL GRID ── */
+function modulGridRender() {
+  var d = kpiVeriler;
+  if (!d.denetimler) return;
+
+  var moduller = [
+    {
+      key: 'denetim', ikon: '\uD83D\uDD0D', adi: 'Ic Denetim', as9100: '\u00A79.2.2',
+      kategori: 'Kalite',
+      veri: d.denetimler,
+      toplam: d.denetimler.length,
+      tamamlanan: d.denetimler.filter(function(r) { return r.Durum === 'Tamamlandi' || r.Durum === 'Tamamland\u0131'; }).length,
+      acil: d.denetimler.filter(function(r) { return r.Durum === 'Gecikti' || r.Durum === 'Gecikmi\u015F'; }).length,
+      link: 'ersan_denetim.html'
+    },
+    {
+      key: 'capa', ikon: '\u2699\uFE0F', adi: 'CAPA', as9100: '\u00A710.2',
+      kategori: 'Kalite',
+      veri: d.capa,
+      toplam: d.capa.length,
+      tamamlanan: d.capa.filter(function(r) { return r.Durum === 'Kapatildi' || r.Durum === 'Kapat\u0131ld\u0131'; }).length,
+      acil: d.capa.filter(function(r) { return r.Durum === 'Gecikti' || r.Durum === 'Gecikmi\u015F'; }).length,
+      link: 'ersan_duzeltici.html'
+    },
+    {
+      key: 'bulgular', ikon: '\uD83D\uDCCB', adi: 'KMT Bulgulari', as9100: '\u00A78.5.2',
+      kategori: 'Kalite',
+      veri: d.bulgular,
+      toplam: d.bulgular.length,
+      tamamlanan: d.bulgular.filter(function(r) { return r.Durum === 'Kapatildi' || r.Durum === 'Kapat\u0131ld\u0131' || r.Durum === 'Tamamlandi'; }).length,
+      acil: d.bulgular.filter(function(r) {
+        if (!r.Acilma_Tarihi) return false;
+        return r.Durum !== 'Kapatildi' && r.Durum !== 'Kapat\u0131ld\u0131' && r.Durum !== 'Tamamlandi' && gunFarki(r.Acilma_Tarihi) > 30;
+      }).length,
+      link: 'ersan_kalite.html'
+    },
+    {
+      key: 'ygg', ikon: '\uD83D\uDCC8', adi: 'YGG', as9100: '\u00A79.3',
+      kategori: 'Kalite',
+      veri: [],
+      toplam: 0,
+      tamamlanan: 0,
+      acil: 0,
+      link: 'ersan_ygg.html'
+    },
+    {
+      key: 'sikayet', ikon: '\uD83D\uDCE2', adi: 'Musteri Sikayetleri', as9100: '\u00A79.1.2',
+      kategori: 'Kalite',
+      veri: d.sikayetler,
+      toplam: d.sikayetler.length,
+      tamamlanan: d.sikayetler.filter(function(r) { return r.Durum === 'Kapatildi' || r.Durum === 'Kapat\u0131ld\u0131' || r.Durum === 'Cozuldu'; }).length,
+      acil: d.sikayetler.filter(function(r) { return r.Oncelik === 'Kritik' || r.Oncelik === 'Yuksek'; }).length,
+      link: 'ersan_musteri.html'
+    },
+    {
+      key: 'tedarikci', ikon: '\uD83C\uDFED', adi: 'Tedarikci Degerlendirme', as9100: '\u00A78.4',
+      kategori: 'Satinalma',
+      veri: d.tedDeg,
+      toplam: d.tedDeg.length,
+      tamamlanan: d.tedDeg.filter(function(r) { return r.Genel_Agirlikli_Skor >= 70; }).length,
+      acil: d.tedDeg.filter(function(r) { return r.Sinif === 'D' || (r.Genel_Agirlikli_Skor != null && r.Genel_Agirlikli_Skor < 50); }).length,
+      link: 'ersan_tedarikciler.html'
+    }
+  ];
+
+  var grid = document.getElementById('modul-grid');
+  var html = '';
+
+  moduller.forEach(function(m) {
+    var oran = m.toplam > 0 ? Math.round((m.tamamlanan / m.toplam) * 100) : 0;
+    var barRenk = oran >= 80 ? '#10b981' : (oran >= 50 ? '#f59e0b' : '#ef4444');
+    var durumBdg = oran >= 80 ? 'b-grn' : (oran >= 50 ? 'b-amr' : 'b-red');
+    var durumTxt = oran >= 80 ? 'Iyi' : (oran >= 50 ? 'Orta' : 'Dikkat');
+
+    html += '<div class="modul-kart" data-modul="' + m.key + '" data-kategori="' + m.kategori + '" onclick="location.href=\'' + m.link + '\'">';
+    if (m.acil > 0) {
+      html += '<span class="mk-acil">' + m.acil + ' acil</span>';
+    }
+    html += '<div class="mk-ikon">' + m.ikon + '</div>';
+    html += '<div class="mk-adi">' + escHtml(m.adi) + '</div>';
+    html += '<div class="mk-as9100">' + escHtml(m.as9100) + '</div>';
+    html += '<div class="mk-durum"><span class="bdg ' + durumBdg + '">' + durumTxt + '</span></div>';
+    html += '<div class="mk-bar-wrap"><div class="mk-bar" style="width:' + oran + '%;background:' + barRenk + '"></div></div>';
+    html += '<div class="mk-stat"><span>' + m.tamamlanan + '/' + m.toplam + '</span><span>%' + oran + '</span></div>';
+    html += '</div>';
+  });
+
+  grid.innerHTML = html;
+}
+
+/* ── HEDEF HESAPLAMA ── */
+function hedefListesiOlustur() {
+  var d = kpiVeriler;
+  if (!d.denetimler) return [];
+
+  // Sabit 6 hedef hesapla
+  // 1. Uygunsuzluk Orani <=2%
+  var toplamMuayene = d.bulgular.length || 1;
+  var uygunsuz = d.bulgular.filter(function(r) { return r.Tip === 'Major' || r.Tip === 'Minor'; }).length;
+  var uygunsuzOran = Math.round((uygunsuz / toplamMuayene) * 100 * 10) / 10;
+
+  // 2. OTL >=95%
+  var teslimEdilen = d.siparisler.filter(function(r) { return r.Teslim_Durumu; });
+  var zamaninda = teslimEdilen.filter(function(r) { return r.Teslim_Durumu === 'Zamaninda' || r.Teslim_Durumu === 'Zaman\u0131nda'; });
+  var otlOran = teslimEdilen.length > 0 ? Math.round((zamaninda.length / teslimEdilen.length) * 100 * 10) / 10 : 0;
+
+  // 3. Tedarikci OTL >=90%
+  var tedOtlSkorlu = d.tedDeg.filter(function(r) { return r.Teslimat_Skoru != null; });
+  var tedOtl = tedOtlSkorlu.length > 0 ? Math.round(tedOtlSkorlu.reduce(function(t, r) { return t + (parseFloat(r.Teslimat_Skoru) || 0); }, 0) / tedOtlSkorlu.length * 10) / 10 : 0;
+
+  // 4. CAPA Kapanis >=85%
+  var kapatilan = d.capa.filter(function(r) { return r.Durum === 'Kapatildi' || r.Durum === 'Kapat\u0131ld\u0131'; });
+  var capaOran = d.capa.length > 0 ? Math.round((kapatilan.length / d.capa.length) * 100 * 10) / 10 : 0;
+
+  // 5. Musteri Memnuniyeti >=4.0
+  var memSkorlu = d.sikayetler.filter(function(r) { return r.Memnuniyet_Skoru != null; });
+  var memOrt = memSkorlu.length > 0 ? Math.round(memSkorlu.reduce(function(t, r) { return t + (parseFloat(r.Memnuniyet_Skoru) || 0); }, 0) / memSkorlu.length * 10) / 10 : 0;
+
+  // 6. Ic Denetim Skoru >=90%
+  var tamamDenetim = d.denetimler.filter(function(r) { return r.Durum === 'Tamamlandi' || r.Durum === 'Tamamland\u0131'; });
+  var denSkor = tamamDenetim.length > 0 ? Math.round(tamamDenetim.reduce(function(t, r) { return t + (parseFloat(r.Uyumluluk_Skoru) || 0); }, 0) / tamamDenetim.length * 10) / 10 : 0;
+
+  return [
+    { adi: 'Uygunsuzluk Orani', modul: 'Kalite', gercek: uygunsuzOran, hedef: 2, tip: '<=', birim: '%', karsilandi: uygunsuzOran <= 2 },
+    { adi: 'OTL (Zamaninda Teslimat)', modul: 'Uretim', gercek: otlOran, hedef: 95, tip: '>=', birim: '%', karsilandi: otlOran >= 95 },
+    { adi: 'Tedarikci OTL', modul: 'Satinalma', gercek: tedOtl, hedef: 90, tip: '>=', birim: '%', karsilandi: tedOtl >= 90 },
+    { adi: 'CAPA Kapanis Orani', modul: 'Kalite', gercek: capaOran, hedef: 85, tip: '>=', birim: '%', karsilandi: capaOran >= 85 },
+    { adi: 'Musteri Memnuniyeti', modul: 'Kalite', gercek: memOrt, hedef: 4.0, tip: '>=', birim: '/5', karsilandi: memOrt >= 4.0 },
+    { adi: 'Ic Denetim Skoru', modul: 'Kalite', gercek: denSkor, hedef: 90, tip: '>=', birim: '%', karsilandi: denSkor >= 90 }
+  ];
+}
+
+/* ── HEDEF TABLO RENDER ── */
+function hedefTabloRender() {
+  var hedefler = hedefListesiOlustur();
+  var container = document.getElementById('hedef-tablo-body');
+  if (!container) return;
+
+  // Airtable'dan gelen ekstra hedefler
+  var ekHedefler = (kpiVeriler.hedefler || []);
+  ekHedefler.forEach(function(h) {
+    hedefler.push({
+      adi: h.Baslik || h.Hedef_Adi || '-',
+      modul: h.Modul || 'Genel',
+      gercek: parseFloat(h.Gercek_Deger) || 0,
+      hedef: parseFloat(h.Hedef_Deger) || 100,
+      tip: h.Kosul_Tipi || '>=',
+      birim: h.Birim || '%',
+      karsilandi: false,
+      fromAirtable: true
+    });
+    var last = hedefler[hedefler.length - 1];
+    if (last.tip === '>=') last.karsilandi = last.gercek >= last.hedef;
+    else if (last.tip === '<=') last.karsilandi = last.gercek <= last.hedef;
+    else last.karsilandi = last.gercek === last.hedef;
+  });
+
+  var html = '';
+  var karsilananSay = 0;
+
+  hedefler.forEach(function(h) {
+    // Progress bar orani
+    var barPct = 0;
+    if (h.tip === '<=') {
+      // Daha dusuk = daha iyi
+      barPct = h.hedef > 0 ? Math.min(100, Math.max(0, Math.round((1 - (h.gercek / (h.hedef * 3))) * 100))) : 100;
+      if (h.gercek <= h.hedef) barPct = 100;
+    } else {
+      barPct = h.hedef > 0 ? Math.min(100, Math.round((h.gercek / h.hedef) * 100)) : 0;
+    }
+
+    var barRenk = h.karsilandi ? '#10b981' : (barPct >= 60 ? '#f59e0b' : '#ef4444');
+    var trend = h.karsilandi ? '\u2191' : (barPct >= 60 ? '\u2192' : '\u2193');
+    var trendCls = h.karsilandi ? 'up' : (barPct >= 60 ? 'nt' : 'dn');
+    if (h.karsilandi) karsilananSay++;
+
+    html += '<div class="hedef-satir">';
+    html += '<span class="hedef-adi">' + escHtml(h.adi) + '</span>';
+    html += '<span class="hedef-modul">' + escHtml(h.modul) + '</span>';
+    html += '<div class="hedef-bar-wrap"><div class="hedef-bar" style="width:' + barPct + '%;background:' + barRenk + '"></div></div>';
+    html += '<span class="hedef-pct" style="color:' + barRenk + '">' + h.gercek + '' + escHtml(h.birim) + '</span>';
+    html += '<span class="hedef-hedef">' + h.tip + ' ' + h.hedef + escHtml(h.birim) + '</span>';
+    html += '<span class="hedef-trend ' + trendCls + '">' + trend + '</span>';
+    html += '</div>';
+  });
+
+  container.innerHTML = html;
+
+  // Footer ozet
+  var foot = document.getElementById('hedef-foot');
+  var ozet = document.getElementById('hedef-ozet');
+  if (foot && ozet && hedefler.length > 0) {
+    foot.style.display = '';
+    ozet.textContent = karsilananSay + '/' + hedefler.length + ' hedef karsilandi (%' + Math.round((karsilananSay / hedefler.length) * 100) + ')';
+  }
+}
+
+/* ── UYARI AKISI ── */
+function uyariAkisiRender() {
+  var d = kpiVeriler;
+  if (!d.capa) return;
+
+  var uyarilar = [];
+  var bugun = new Date().toISOString().split('T')[0];
+
+  // 1. Gecikmis CAPA'lar
+  d.capa.forEach(function(c) {
+    if (c.Durum === 'Gecikti' || c.Durum === 'Gecikmi\u015F') {
+      uyarilar.push({
+        tip: 'krit',
+        ikon: '\u26A0\uFE0F',
+        baslik: 'Gecikmis CAPA: ' + escHtml(c.CAPA_No || c.Baslik || 'Tanimsiz'),
+        detay: 'Durum: ' + escHtml(c.Durum) + (c.Sorumlu ? ' \u00B7 Sorumlu: ' + escHtml(c.Sorumlu) : ''),
+        link: 'ersan_duzeltici.html',
+        linkTxt: 'CAPA sayfasina git',
+        zaman: c.Hedef_Tarih || ''
+      });
+    }
+  });
+
+  // 2. 30+ gun acik KMT bulgulari
+  d.bulgular.forEach(function(b) {
+    if (b.Durum === 'Kapatildi' || b.Durum === 'Kapat\u0131ld\u0131' || b.Durum === 'Tamamlandi') return;
+    if (b.Acilma_Tarihi && gunFarki(b.Acilma_Tarihi) > 30) {
+      uyarilar.push({
+        tip: 'warn',
+        ikon: '\uD83D\uDCCB',
+        baslik: '30+ gun acik bulgu: ' + escHtml(b.Bulgu_No || b.Baslik || '-'),
+        detay: gunFarki(b.Acilma_Tarihi) + ' gundur acik',
+        link: 'ersan_kalite.html',
+        linkTxt: 'Bulgulara git',
+        zaman: b.Acilma_Tarihi
+      });
+    }
+  });
+
+  // 3. D seviye tedarikci
+  d.tedDeg.forEach(function(t) {
+    if (t.Sinif === 'D' || (t.Genel_Agirlikli_Skor != null && t.Genel_Agirlikli_Skor < 50)) {
+      uyarilar.push({
+        tip: 'krit',
+        ikon: '\uD83C\uDFED',
+        baslik: 'D Sinifi Tedarikci: ' + escHtml(t.Tedarikci_Adi || t.Tedarikci || '-'),
+        detay: 'Skor: ' + (t.Genel_Agirlikli_Skor || 0) + '/100 \u00B7 Sinif: ' + escHtml(t.Sinif || '-'),
+        link: 'ersan_tedarikciler.html',
+        linkTxt: 'Tedarikci sayfasi',
+        zaman: t.Degerlendirme_Tarihi || ''
+      });
+    }
+  });
+
+  // 4. Onay bekleyen ECN
+  d.ecn.forEach(function(e) {
+    if (e.Durum === 'Onay Bekliyor' || e.Durum === 'Beklemede') {
+      uyarilar.push({
+        tip: 'info',
+        ikon: '\uD83D\uDCDD',
+        baslik: 'Onay bekleyen ECN: ' + escHtml(e.ECN_No || e.Baslik || '-'),
+        detay: escHtml(e.Aciklama || 'Detay yok'),
+        link: 'ersan_kalite.html',
+        linkTxt: 'ECN detayina git',
+        zaman: e.Talep_Tarihi || ''
+      });
+    }
+  });
+
+  // 5. Plansiz denetim ayi - mevcut ay icin planlanmis denetim var mi
+  var buAy = new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).replace(/^(\d)$/, '0$1');
+  var buAyDenetim = d.denetimler.filter(function(den) {
+    return den.Planlanan_Tarih && den.Planlanan_Tarih.substring(0, 7) === buAy;
+  });
+  if (buAyDenetim.length === 0) {
+    uyarilar.push({
+      tip: 'warn',
+      ikon: '\uD83D\uDD0D',
+      baslik: 'Bu ay icin planlanmis denetim yok',
+      detay: buAy + ' donemi icin ic denetim planlanmali',
+      link: 'ersan_denetim.html',
+      linkTxt: 'Denetim planlama',
+      zaman: bugun
+    });
+  }
+
+  // 6. Hedef alti OTL
+  var teslimEdilen = d.siparisler.filter(function(r) { return r.Teslim_Durumu; });
+  var zamaninda = teslimEdilen.filter(function(r) { return r.Teslim_Durumu === 'Zamaninda' || r.Teslim_Durumu === 'Zaman\u0131nda'; });
+  var otlOran = teslimEdilen.length > 0 ? Math.round((zamaninda.length / teslimEdilen.length) * 100) : 0;
+  if (otlOran < 95 && teslimEdilen.length > 0) {
+    uyarilar.push({
+      tip: 'warn',
+      ikon: '\u23F0',
+      baslik: 'OTL hedef altinda: %' + otlOran + ' (hedef: %95)',
+      detay: zamaninda.length + '/' + teslimEdilen.length + ' siparis zamaninda teslim',
+      link: 'ersan_siparisler.html',
+      linkTxt: 'Siparislere git',
+      zaman: bugun
+    });
+  }
+
+  // Render
+  var container = document.getElementById('uyari-akis');
+  document.getElementById('uyari-say').textContent = uyarilar.length;
+
+  if (uyarilar.length === 0) {
+    container.innerHTML = '<div style="text-align:center;padding:24px"><div style="font-size:28px;margin-bottom:8px">\u2705</div><div class="muted">Aksiyon gerektiren uyari yok</div></div>';
+    return;
+  }
+
+  var html = '';
+  uyarilar.forEach(function(u) {
+    var cls = u.tip === 'krit' ? 'ui-krit' : (u.tip === 'warn' ? 'ui-warn' : 'ui-info');
+    html += '<div class="uyari-item ' + cls + '">';
+    html += '<span class="uyari-ikon">' + u.ikon + '</span>';
+    html += '<div class="uyari-icerik">';
+    html += '<div class="uyari-baslik">' + u.baslik + '</div>';
+    html += '<div class="uyari-detay">' + u.detay + '</div>';
+    html += '<a class="uyari-link" href="' + u.link + '">' + u.linkTxt + ' \u2192</a>';
+    html += '</div>';
+    if (u.zaman) {
+      html += '<span class="uyari-zaman">' + escHtml(u.zaman) + '</span>';
+    }
+    html += '</div>';
+  });
+
+  container.innerHTML = html;
+}
+
+/* ── HEDEF KAYDET ── */
+function hedefKaydet() {
+  var baslik = document.getElementById('h-baslik').value.trim();
+  var modul = document.getElementById('h-modul').value;
+  var hedef = document.getElementById('h-hedef').value;
+  var tip = document.getElementById('h-tip').value;
+  var birim = document.getElementById('h-birim').value.trim();
+  var kaynakTablo = document.getElementById('h-kaynak_tablo').value.trim();
+  var kaynakAlan = document.getElementById('h-kaynak_alan').value.trim();
+
+  if (!baslik || !hedef) {
+    toast('Hedef adi ve deger zorunlu!', 'orange');
+    return;
+  }
+
+  var fields = {
+    'Baslik': baslik,
+    'Modul': modul,
+    'Hedef_Deger': parseFloat(hedef),
+    'Kosul_Tipi': tip,
+    'Birim': birim || '%',
+    'Kaynak_Tablo': kaynakTablo,
+    'Kaynak_Alan': kaynakAlan,
+    'Donem': aktifDonem,
+    'Olusturma_Tarihi': new Date().toISOString().split('T')[0]
+  };
+
+  apiPost('KPI_Hedefleri', fields).then(function(res) {
+    if (res.id || (res.records && res.records.length > 0)) {
+      toast('Hedef kaydedildi', 'green');
+      modalKapa('hedef-modal');
+      logIslem('KPI', 'Yeni hedef eklendi: ' + baslik);
+      // Formu temizle
+      document.getElementById('h-baslik').value = '';
+      document.getElementById('h-hedef').value = '';
+      document.getElementById('h-birim').value = '';
+      document.getElementById('h-kaynak_tablo').value = '';
+      document.getElementById('h-kaynak_alan').value = '';
+      // Veriyi yenile
+      veriYukle();
+    } else {
+      toast('Kayit hatasi!', 'orange');
+      console.error('Hedef kayit hatasi:', res);
+    }
+  }).catch(function(err) {
+    toast('Kayit hatasi: ' + err.message, 'orange');
+  });
+}
+
+/* ── RAPOR INDIR (CSV) ── */
+function raporIndir() {
+  var hedefler = hedefListesiOlustur();
+  var rows = [['Hedef', 'Modul', 'Gercek Deger', 'Hedef Deger', 'Birim', 'Kosul', 'Durum']];
+
+  hedefler.forEach(function(h) {
+    rows.push([
+      h.adi,
+      h.modul,
+      h.gercek,
+      h.hedef,
+      h.birim,
+      h.tip,
+      h.karsilandi ? 'KARSILANDI' : 'KARSILANMADI'
+    ]);
+  });
+
+  // Halka skorlari
+  rows.push([]);
+  rows.push(['--- HALKA SKORLARI ---']);
+  var numEl;
+  var halkalar = ['as9100', 'kalite', 'otl', 'mem', 'capa', 'tedarikci'];
+  var halkaLabels = ['AS9100 Uyumu', 'Kalite Hedef', 'OTL', 'Musteri Memnuniyeti', 'CAPA Kapanis', 'Tedarikci Ort Skor'];
+  halkalar.forEach(function(h, i) {
+    numEl = document.getElementById('halka-num-' + h);
+    rows.push([halkaLabels[i], numEl ? numEl.textContent : '-']);
+  });
+
+  // Uyarilar
+  rows.push([]);
+  rows.push(['--- UYARILAR ---']);
+  var uyariItems = document.querySelectorAll('.uyari-item');
+  uyariItems.forEach(function(item) {
+    var baslik = item.querySelector('.uyari-baslik');
+    var detay = item.querySelector('.uyari-detay');
+    rows.push([baslik ? baslik.textContent : '', detay ? detay.textContent : '']);
+  });
+
+  var tarih = new Date().toISOString().split('T')[0];
+  csvIndir(rows, 'KPI_Rapor_' + aktifDonem + '_' + tarih + '.csv');
+  toast('Rapor indirildi', 'green');
+  logIslem('KPI', 'KPI raporu indirildi: ' + aktifDonem);
+}
+
+/* ── YGG HAZIRLA ── */
+function yggHazirla() {
+  if (!confirm('Yonetim Gozden Gecirme (YGG) kaydi olusturulsun mu?')) return;
+
+  kodUret('YGG').then(function(kod) {
+    var fields = {
+      'YGG_No': kod,
+      'Donem': aktifDonem,
+      'Tarih': new Date().toISOString().split('T')[0],
+      'Durum': 'Hazirlaniyor',
+      'Hazirlayan': localStorage.getItem('ersan_kullanici') || 'Sistem'
+    };
+
+    return apiPost('YGG_Kayitlari', fields).then(function(res) {
+      if (res.id || (res.records && res.records.length > 0)) {
+        toast('YGG kaydi olusturuldu: ' + kod, 'green');
+        logIslem('YGG', 'YGG kaydi olusturuldu: ' + kod);
+        setTimeout(function() {
+          location.href = 'ersan_ygg.html';
+        }, 1200);
+      } else {
+        toast('YGG olusturma hatasi', 'orange');
+        console.error('YGG hata:', res);
+      }
+    });
+  }).catch(function(err) {
+    toast('YGG hatasi: ' + err.message, 'orange');
+    console.error('YGG hata:', err);
+  });
+}
+
+/* ── MODAL ESC ── */
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.modal-ov.open').forEach(function(m) { m.classList.remove('open'); });
+  }
+});
+
+/* ── INIT ── */
+document.addEventListener('DOMContentLoaded', function() {
+  veriYukle();
+});
+</script>
+</body>
+</html>

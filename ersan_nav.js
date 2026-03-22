@@ -27,6 +27,7 @@ var ERSAN_NAV = [
     { label: 'At\u00F6lye Haritas\u0131',   href: 'ersan_atolye_harita.html' },
     { label: 'QR Etiketler',      href: 'ersan_qr.html' },
     { label: 'Palet / Traveller', href: 'ersan_palet.html' },
+    { label: 'M\u00FC\u015Fteri M\u00FClk\u00FC',  href: 'ersan_musteri_mulku.html' },
   ]},
   { group: 'Tedarik', collapsed: false, items: [
     { label: 'Girdi Kalite', href: 'ersan_girdi_kalite.html' },
@@ -40,6 +41,10 @@ var ERSAN_NAV = [
     group: 'Kalite',
     collapsed: false,
     subgroups: [
+      { label: 'Y\u00F6netim', collapsed: false, items: [
+        { label: 'Y\u00F6netim KPI',       href: 'ersan_kpi_panel.html' },
+        { label: 'De\u011Fi\u015Fiklik (ECN)',     href: 'ersan_ecn.html' },
+      ]},
       { label: 'Muayene', collapsed: false, items: [
         { label: 'Girdi Kalite (IQC)',   href: 'ersan_kalite_iqc.html' },
         { label: '\u0130lk Par\u00E7a (FAI)',     href: 'ersan_kalite_fai.html' },
