@@ -49,8 +49,8 @@ html,body{height:100%;margin:0;padding:0}
 .sb-grp.open .sb-grp-arr{transform:rotate(90deg)}
 .sb-grp>span:nth-child(2){flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
-.sb-children{overflow:hidden;max-height:9999px!important;transition:max-height .3s ease}
-.sb-children.closed{max-height:0!important}
+.sb-children{overflow:visible;max-height:none;transition:none}
+.sb-children.closed{overflow:hidden!important;max-height:0!important;transition:max-height .2s ease!important}
 
 .sb-ni{display:flex;align-items:center;gap:6px;padding:5px 11px 5px 30px;cursor:pointer;color:rgba(255,255,255,.45);font-size:10.5px;transition:.1s;border-left:2px solid transparent;min-height:27px;line-height:1.35}
 .sb-ni:hover{background:rgba(255,255,255,.04);color:rgba(255,255,255,.8)}
