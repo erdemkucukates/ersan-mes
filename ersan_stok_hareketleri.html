@@ -95,6 +95,7 @@
       <div style="font-size:11px;color:var(--metin4);margin-top:1px;">Inventory Movements</div>
     </div>
     <div style="display:flex;align-items:center;gap:8px;">
+      <button class="btn btn-outline btn-sm" onclick="excelIndir()">&#128196; Excel</button>
       <button class="btn btn-g btn-sm" onclick="modalAc('Giris')">+ Manuel Giris</button>
       <button class="btn btn-r btn-sm" onclick="modalAc('Cikis')">- Manuel Cikis</button>
       <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
@@ -104,11 +105,11 @@
 
     <!-- KPI ROW -->
     <div class="kpi-row">
-      <div class="kpi s-giris"><div class="kpi-val" id="kpi-giris">0</div><div class="kpi-lbl">Bu Ay Giris</div></div>
-      <div class="kpi s-cikis"><div class="kpi-val" id="kpi-cikis">0</div><div class="kpi-lbl">Bu Ay Cikis</div></div>
-      <div class="kpi s-transfer"><div class="kpi-val" id="kpi-transfer">0</div><div class="kpi-lbl">Bu Ay Transfer</div></div>
-      <div class="kpi s-duzeltme"><div class="kpi-val" id="kpi-duzeltme">0</div><div class="kpi-lbl">Bu Ay Duzeltme</div></div>
-      <div class="kpi s-fire"><div class="kpi-val" id="kpi-fire">0</div><div class="kpi-lbl">Bu Ay Fire</div></div>
+      <div class="kpi s-giris"><div class="kpi-val" id="kpi-giris">0</div><div class="kpi-lbl">Bu Ay Giris</div><div class="kpi-alt" id="kpi-giris-alt" style="font-size:10px;color:var(--metin4);margin-top:2px;"></div></div>
+      <div class="kpi s-cikis"><div class="kpi-val" id="kpi-cikis">0</div><div class="kpi-lbl">Bu Ay Cikis</div><div class="kpi-alt" id="kpi-cikis-alt" style="font-size:10px;color:var(--metin4);margin-top:2px;"></div></div>
+      <div class="kpi s-transfer"><div class="kpi-val" id="kpi-transfer">0</div><div class="kpi-lbl">Bu Ay Transfer</div><div class="kpi-alt" id="kpi-transfer-alt" style="font-size:10px;color:var(--metin4);margin-top:2px;"></div></div>
+      <div class="kpi s-duzeltme"><div class="kpi-val" id="kpi-duzeltme">0</div><div class="kpi-lbl">Bu Ay Duzeltme</div><div class="kpi-alt" id="kpi-duzeltme-alt" style="font-size:10px;color:var(--metin4);margin-top:2px;"></div></div>
+      <div class="kpi s-fire"><div class="kpi-val" id="kpi-fire">0</div><div class="kpi-lbl">Bu Ay Fire</div><div class="kpi-alt" id="kpi-fire-alt" style="font-size:10px;color:var(--metin4);margin-top:2px;"></div></div>
     </div>
 
     <!-- FILTRE BAR -->
@@ -336,10 +337,20 @@ function kpiGuncelle() {
   });
 
   var giris = 0, cikis = 0, transfer = 0, duzeltme = 0, fire = 0;
+  var girisGrn = 0, cikisWo = 0, transferKonum = 0;
   buAy.forEach(function(h) {
-    if (h.tip === 'Giris') giris++;
-    else if (h.tip === 'Cikis') cikis++;
-    else if (h.tip === 'Transfer') transfer++;
+    if (h.tip === 'Giris') {
+      giris++;
+      if ((h.referans || '').indexOf('GRN') >= 0) girisGrn++;
+    }
+    else if (h.tip === 'Cikis') {
+      cikis++;
+      if ((h.referans || '').indexOf('WO') >= 0) cikisWo++;
+    }
+    else if (h.tip === 'Transfer') {
+      transfer++;
+      transferKonum++;
+    }
     else if (h.tip === 'Duzeltme') duzeltme++;
     else if (h.tip === 'Fire') fire++;
   });
@@ -349,6 +360,12 @@ function kpiGuncelle() {
   document.getElementById('kpi-transfer').textContent = transfer;
   document.getElementById('kpi-duzeltme').textContent = duzeltme;
   document.getElementById('kpi-fire').textContent = fire;
+
+  document.getElementById('kpi-giris-alt').textContent = 'GRN kaynakli: ' + girisGrn;
+  document.getElementById('kpi-cikis-alt').textContent = 'WO kaynakli: ' + cikisWo;
+  document.getElementById('kpi-transfer-alt').textContent = 'Konum degisim: ' + transferKonum;
+  document.getElementById('kpi-duzeltme-alt').textContent = duzeltme > 0 ? 'Stok duzeltme' : '';
+  document.getElementById('kpi-fire-alt').textContent = fire > 0 ? 'Fire/hurda' : '';
 }
 
 // ── FILTRE ──
@@ -405,9 +422,19 @@ function listeRender() {
 
     var refLink = '';
     if (h.referans) {
-      if (h.referans.indexOf('GRN-') === 0) {
-        refLink = '<a href="ersan_satinalma_grn.html?grn=' + encodeURIComponent(h.referans)
-          + '" style="color:var(--mavi);text-decoration:none;font-size:11px;">' + h.referans + '</a>';
+      if (h.referans.indexOf('GRN-') >= 0) {
+        var grnMatch = h.referans.match(/GRN-\d{2}-\d{3,5}/);
+        var grnNo = grnMatch ? grnMatch[0] : h.referans;
+        refLink = '<a href="ersan_satinalma_grn.html?grn=' + encodeURIComponent(grnNo)
+          + '" style="color:var(--mavi);text-decoration:none;font-size:11px;font-family:\'Cascadia Code\',monospace;">' + grnNo + '</a>';
+      } else if (h.referans.indexOf('WO-') >= 0) {
+        var woMatch = h.referans.match(/WO-\d{2}-\d{3,5}/);
+        var woNo = woMatch ? woMatch[0] : h.referans;
+        refLink = '<a href="#" onclick="event.preventDefault();toast(\'WO detayi: ' + woNo + '\')" style="color:var(--mavi);text-decoration:none;font-size:11px;font-family:\'Cascadia Code\',monospace;">' + woNo + '</a>';
+      } else if (h.referans.indexOf('NCR-') >= 0) {
+        var ncrMatch = h.referans.match(/NCR-\d{2}-\d{3}/);
+        var ncrNo = ncrMatch ? ncrMatch[0] : h.referans;
+        refLink = '<a href="#" onclick="event.preventDefault();toast(\'NCR detayi: ' + ncrNo + '\')" style="color:#991b1b;text-decoration:none;font-size:11px;font-family:\'Cascadia Code\',monospace;">' + ncrNo + '</a>';
       } else {
         refLink = '<span style="font-size:11px;color:var(--metin4);">' + h.referans + '</span>';
       }
@@ -514,6 +541,24 @@ function hareketKaydet() {
   filtrele();
   modalKapat();
   toast(tip + ' hareketi kaydedildi: ' + yeniHareket.no, 'ok');
+}
+
+// ── EXCEL INDIR ──
+function excelIndir() {
+  var csv = 'Hareket No;Tip;Lot No;Malzeme;Miktar;Birim;Konum;Referans;Tarih;Kullanici\n';
+  var liste = filtrelenmis.length > 0 ? filtrelenmis : hareketler;
+  liste.forEach(function(h) {
+    csv += (h.no || '') + ';' + (h.tip || '') + ';' + (h.lotNo || '') + ';'
+      + (h.malzeme || '') + ';' + h.miktar + ';' + (h.birim || '') + ';'
+      + (h.konum || '') + ';' + (h.referans || '') + ';'
+      + (h.tarih || '') + ';' + (h.kullanici || '') + '\n';
+  });
+  var blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'stok_hareketleri_' + new Date().toISOString().slice(0, 10).replace(/-/g, '') + '.csv';
+  a.click();
+  toast('Excel indirildi');
 }
 
 // ── TOAST ──

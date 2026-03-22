@@ -32,7 +32,15 @@
 .konum-kart .kk-icon{font-size:18px;}
 .konum-kart .kk-name{font-size:12px;font-weight:600;color:var(--laci);}
 .konum-kart .kk-count{font-size:11px;background:var(--bg2);border-radius:10px;padding:1px 8px;color:var(--metin3);font-weight:600;}
-.konum-kart .kk-items{font-size:10px;color:var(--metin4);line-height:1.5;max-height:40px;overflow:hidden;}
+.konum-kart .kk-items{font-size:10px;color:var(--metin4);line-height:1.5;max-height:80px;overflow:hidden;}
+.konum-kart.karantina-kart{border-color:#fca5a5;background:#fff8f8;}
+.konum-kart .kk-item-row{display:flex;align-items:center;gap:6px;margin-bottom:3px;}
+.konum-kart .kk-item-row .coc-dot{width:6px;height:6px;border-radius:50%;display:inline-block;}
+.konum-kart .kk-footer{display:flex;justify-content:space-between;align-items:center;margin-top:6px;padding-top:6px;border-top:1px solid var(--border);font-size:10px;color:var(--metin4);}
+.konum-kart .kk-footer a{color:var(--mavi);text-decoration:none;font-weight:600;font-size:10px;}
+.konum-kart .kk-footer a:hover{text-decoration:underline;}
+.konum-kart .ncr-uyari{display:flex;align-items:center;gap:4px;font-size:10px;color:#991b1b;font-weight:600;margin-top:4px;}
+.konum-kart .ncr-uyari a{color:#991b1b;text-decoration:underline;font-size:10px;}
 .tbl{width:100%;border-collapse:collapse;font-size:12px;}
 .tbl th{background:var(--bg2);font-weight:600;color:var(--metin3);padding:8px 10px;text-align:left;border-bottom:2px solid var(--border);white-space:nowrap;position:sticky;top:0;z-index:1;}
 .tbl td{padding:7px 10px;border-bottom:1px solid var(--border);color:var(--metin2);vertical-align:middle;}
@@ -51,6 +59,31 @@
 .b-gray{background:#f1f5f9;color:#475569;}
 .btn-row{display:flex;gap:6px;flex-wrap:wrap;}
 .stok-tablo-wrap{background:#fff;border:1px solid var(--border);border-radius:8px;overflow:auto;max-height:calc(100vh - 420px);}
+/* ── LOT DETAY MODAL ── */
+.lot-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:700;display:none;align-items:center;justify-content:center;}
+.lot-modal-bg.goster{display:flex;}
+.lot-modal{background:#fff;border-radius:10px;width:560px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,0.2);}
+.lot-modal-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);}
+.lot-modal-head h3{font-size:15px;font-weight:700;color:var(--laci);margin:0;}
+.lot-modal-kapat{background:none;border:none;font-size:18px;cursor:pointer;color:var(--metin3);padding:4px;}
+.lot-modal-tabs{display:flex;border-bottom:1px solid var(--border);padding:0 20px;}
+.lot-modal-tab{padding:10px 16px;font-size:12px;font-weight:600;color:var(--metin3);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;}
+.lot-modal-tab.aktif{color:var(--mavi);border-bottom-color:var(--mavi);}
+.lot-modal-tab:hover{color:var(--laci);}
+.lot-modal-body{padding:16px 20px;}
+.lot-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.lot-info-box{background:var(--bg2);border-radius:6px;padding:8px 10px;}
+.lot-info-box .lbl{font-size:10px;font-weight:600;color:var(--metin4);text-transform:uppercase;letter-spacing:0.3px;}
+.lot-info-box .val{font-size:13px;font-weight:500;color:var(--laci);margin-top:2px;}
+.lot-hareket-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;}
+.lot-hareket-row:last-child{border-bottom:none;}
+.lot-hareket-ikon{width:24px;height:24px;min-width:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;}
+.grn-link,.wo-link{color:var(--mavi);text-decoration:none;cursor:pointer;font-family:'Cascadia Code','Fira Code',monospace;font-size:11px;}
+.grn-link:hover,.wo-link:hover{text-decoration:underline;}
+.tbl-header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border);background:#fff;border-radius:8px 8px 0 0;}
+.tbl-header-title{font-size:13px;font-weight:600;color:var(--laci);}
+.tbl-header-actions{display:flex;gap:6px;}
+.tbl tr[data-lot-id]{cursor:pointer;}
 @media(max-width:900px){
   .kpi-row{grid-template-columns:repeat(2,1fr);}
   .konum-grid{grid-template-columns:repeat(2,1fr);}
@@ -116,6 +149,13 @@
 
     <!-- STOK TABLO -->
     <div class="stok-tablo-wrap">
+      <div class="tbl-header">
+        <span class="tbl-header-title">Stok Listesi</span>
+        <div class="tbl-header-actions">
+          <button class="btn btn-beyaz btn-sm" style="padding:4px 10px;font-size:11px;" onclick="excelIndir()">&#128196; Excel</button>
+          <button class="btn btn-beyaz btn-sm" style="padding:4px 10px;font-size:11px;" onclick="window.print()">&#128424; Stok Raporu</button>
+        </div>
+      </div>
       <table class="tbl">
         <thead>
           <tr>
@@ -225,6 +265,21 @@
       <button class="btn btn-beyaz btn-sm" onclick="closeModal('transfer')">Iptal</button>
       <button class="btn btn-mavi btn-sm" id="t-kaydet-btn" onclick="kaydetTransfer()">Kaydet</button>
     </div>
+  </div>
+</div>
+
+<!-- LOT DETAY MODAL -->
+<div class="lot-modal-bg" id="lot-modal-bg" onclick="if(event.target===this)lotModalKapat()">
+  <div class="lot-modal">
+    <div class="lot-modal-head">
+      <h3 id="lot-modal-baslik">LOT-26-XXXX — Malzeme</h3>
+      <button class="lot-modal-kapat" onclick="lotModalKapat()">&times;</button>
+    </div>
+    <div class="lot-modal-tabs">
+      <div class="lot-modal-tab aktif" data-tab="bilgiler" onclick="lotTabDegistir('bilgiler')">Bilgiler</div>
+      <div class="lot-modal-tab" data-tab="hareketler" onclick="lotTabDegistir('hareketler')">Hareket Gecmisi</div>
+    </div>
+    <div class="lot-modal-body" id="lot-modal-icerik"></div>
   </div>
 </div>
 
@@ -424,22 +479,67 @@ function konumKartlariRender() {
   for (var k = 0; k < KONUMLAR.length; k++) {
     var kon = KONUMLAR[k];
     var count = 0;
-    var items = [];
+    var konLotlar = [];
+    var sonTarih = '';
     for (var i = 0; i < lotlar.length; i++) {
       var lk = (lotlar[i].konum || '');
       if (lk.indexOf(kon.kod) >= 0 || lk.indexOf(kon.ad) >= 0 || (kon.kod === 'KR-02' && (lotlar[i].durum || '').toLowerCase().indexOf('karantina') >= 0)) {
         count++;
-        if (items.length < 3) items.push(lotlar[i].malzeme || lotlar[i].lotNo);
+        konLotlar.push(lotlar[i]);
+        if (lotlar[i].tarih && lotlar[i].tarih > sonTarih) sonTarih = lotlar[i].tarih;
       }
     }
     var isAktif = aktifKonum === kon.kod ? ' aktif' : '';
-    var bgTint = kon.kod === 'KR-02' ? 'background:#fef2f2;' : '';
-    html += '<div class="konum-kart' + isAktif + '" style="border-left-color:' + kon.renk + ';' + bgTint + '" onclick="konumFiltre(\'' + kon.kod + '\')">';
+    var isKarantina = kon.kod === 'KR-02';
+    var kartClass = 'konum-kart' + isAktif + (isKarantina ? ' karantina-kart' : '');
+    html += '<div class="' + kartClass + '" style="border-left-color:' + kon.renk + ';" onclick="konumFiltre(\'' + kon.kod + '\')">';
     html += '<div class="kk-head"><span class="kk-icon">' + kon.icon + '</span><span class="kk-name">' + kon.kod + ' ' + kon.ad + '</span><span class="kk-count">' + count + '</span></div>';
-    html += '<div class="kk-items">' + (items.length > 0 ? items.join(', ') : '<span style="color:var(--metin4);">Bos</span>') + '</div>';
+
+    // Malzeme satirlari (max 4)
+    html += '<div class="kk-items">';
+    if (konLotlar.length > 0) {
+      var gosterilecek = konLotlar.slice(0, 4);
+      for (var m = 0; m < gosterilecek.length; m++) {
+        var lot = gosterilecek[m];
+        var cocDot = lot.coc ? '#059669' : '#dc2626';
+        var pct = lot.minStok > 0 ? Math.min(100, Math.round((lot.miktar / lot.minStok) * 100)) : 100;
+        var barColor = pct >= 50 ? '#059669' : pct >= 20 ? '#f59e0b' : '#dc2626';
+        html += '<div class="kk-item-row">';
+        html += '<span class="coc-dot" style="background:' + cocDot + ';" title="CoC: ' + (lot.coc ? 'Var' : 'Eksik') + '"></span>';
+        html += '<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + (lot.lotNo || '') + ' — ' + (lot.malzeme || '') + '">' + (lot.lotNo || '') + ' ' + (lot.malzeme || '') + '</span>';
+        html += '</div>';
+        html += '<div style="height:3px;background:#f3f4f6;border-radius:2px;overflow:hidden;margin-top:2px;margin-bottom:4px;"><div style="height:100%;width:' + pct + '%;background:' + barColor + ';border-radius:2px;"></div></div>';
+      }
+      if (konLotlar.length > 4) {
+        html += '<span style="color:var(--metin4);font-size:9px;">+' + (konLotlar.length - 4) + ' daha...</span>';
+      }
+    } else {
+      html += '<span style="color:var(--metin4);">Bos</span>';
+    }
+    html += '</div>';
+
+    // Karantina NCR uyari
+    if (isKarantina && count > 0) {
+      html += '<div class="ncr-uyari">&#9888; ' + count + ' kalem karantinada <a href="ersan_kalite_iqc.html?lot=' + encodeURIComponent((konLotlar[0] || {}).lotNo || '') + '" onclick="event.stopPropagation();">NCR Ac &rarr;</a></div>';
+    }
+
+    // Footer
+    html += '<div class="kk-footer">';
+    html += '<span>' + (sonTarih ? 'Son giris: ' + fmtDate(sonTarih) : '') + '</span>';
+    html += '<a href="#" onclick="event.stopPropagation();konumDetay(\'' + kon.kod + '\')">Detay &rarr;</a>';
+    html += '</div>';
+
     html += '</div>';
   }
   grid.innerHTML = html;
+}
+
+function konumDetay(kod) {
+  aktifKonum = kod;
+  document.getElementById('f-konum').value = kod;
+  filtrele();
+  konumKartlariRender();
+  document.querySelector('.stok-tablo-wrap').scrollIntoView({behavior:'smooth'});
 }
 
 function konumFiltre(kod) {
@@ -508,7 +608,22 @@ function tabloRender() {
     else if (dr.indexOf('rezerve') >= 0) durumCls = 'b-amr';
     else if (dr.indexOf('tukendi') >= 0) durumCls = 'b-gray';
 
-    html += '<tr' + trClass + '>';
+    // GRN link
+    var grnHtml = '—';
+    if (l.grn) {
+      if ((l.grn || '').indexOf('GRN') >= 0) {
+        grnHtml = '<a class="grn-link" href="ersan_satinalma_grn.html?grn=' + encodeURIComponent(l.grn) + '" onclick="event.stopPropagation();">' + l.grn + '</a>';
+      } else {
+        grnHtml = '<span class="mono muted">' + l.grn + '</span>';
+      }
+    }
+    // WO link
+    var woHtml = '—';
+    if (l.wo) {
+      woHtml = '<a class="wo-link" href="#" onclick="event.stopPropagation();toast(\'WO detayi: ' + l.wo + '\',\'inf\')">' + l.wo + '</a>';
+    }
+
+    html += '<tr' + trClass + ' data-lot-id="' + l.id + '" onclick="lotDetayAc(\'' + l.id + '\')">';
     html += '<td class="mono">' + (l.lotNo || '—') + '</td>';
     html += '<td>' + (l.malzeme || '—') + '</td>';
     html += '<td><span class="bdg b-blu">' + (l.tip || '—') + '</span></td>';
@@ -516,13 +631,13 @@ function tabloRender() {
     html += '<td style="font-weight:600;' + (isLow ? 'color:var(--kirmizi);' : '') + '">' + l.miktar + '</td>';
     html += '<td class="muted">' + (l.birim || '') + '</td>';
     html += '<td>' + cocBdg + '</td>';
-    html += '<td class="mono muted">' + (l.grn || '—') + '</td>';
-    html += '<td class="mono muted">' + (l.wo || '—') + '</td>';
+    html += '<td>' + grnHtml + '</td>';
+    html += '<td>' + woHtml + '</td>';
     html += '<td class="muted">' + fmtDate(l.tarih) + '</td>';
     html += '<td><span class="bdg ' + durumCls + '">' + (l.durum || 'Depoda') + '</span></td>';
     html += '<td>';
-    html += '<button class="btn btn-beyaz btn-sm" style="padding:2px 8px;font-size:10px;" onclick="openModal(\'cikis\',\'' + l.id + '\')">Cikis</button> ';
-    html += '<button class="btn btn-beyaz btn-sm" style="padding:2px 8px;font-size:10px;" onclick="openModal(\'transfer\',\'' + l.id + '\')">Transfer</button>';
+    html += '<button class="btn btn-beyaz btn-sm" style="padding:2px 8px;font-size:10px;" onclick="event.stopPropagation();openModal(\'cikis\',\'' + l.id + '\')">Cikis</button> ';
+    html += '<button class="btn btn-beyaz btn-sm" style="padding:2px 8px;font-size:10px;" onclick="event.stopPropagation();openModal(\'transfer\',\'' + l.id + '\')">Transfer</button>';
     html += '</td>';
     html += '</tr>';
   }
@@ -758,6 +873,144 @@ function kaydetTransfer() {
       btn.disabled = false; btn.textContent = 'Kaydet';
     });
   }
+}
+
+// ── EXCEL INDIR ──
+function excelIndir() {
+  var csv = 'Lot No;Malzeme;Tip;Konum;Miktar;Birim;CoC;GRN;WO;Tarih;Durum\n';
+  var liste = filtrelenmis.length > 0 ? filtrelenmis : lotlar;
+  liste.forEach(function(s) {
+    csv += (s.lotNo || '') + ';' + (s.malzeme || '') + ';' + (s.tip || '') + ';'
+      + (s.konum || '') + ';' + s.miktar + ';' + (s.birim || '') + ';'
+      + (s.coc ? 'Var' : 'Yok') + ';' + (s.grn || '') + ';' + (s.wo || '') + ';'
+      + fmtDate(s.tarih) + ';' + (s.durum || '') + '\n';
+  });
+  var blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'stok_durumu_' + new Date().toISOString().slice(0, 10).replace(/-/g, '') + '.csv';
+  a.click();
+  toast('Excel indirildi', 'ok');
+}
+
+// ── LOT DETAY MODAL ──
+var aktifLotDetay = null;
+var aktifLotTab = 'bilgiler';
+
+function lotDetayAc(lotId) {
+  var lot = null;
+  for (var i = 0; i < lotlar.length; i++) { if (lotlar[i].id === lotId) { lot = lotlar[i]; break; } }
+  if (!lot) return;
+  aktifLotDetay = lot;
+  aktifLotTab = 'bilgiler';
+
+  document.getElementById('lot-modal-baslik').textContent = (lot.lotNo || 'LOT') + ' — ' + (lot.malzeme || 'Malzeme');
+
+  // Reset tab UI
+  var tabs = document.querySelectorAll('.lot-modal-tab');
+  for (var t = 0; t < tabs.length; t++) {
+    tabs[t].className = 'lot-modal-tab' + (tabs[t].getAttribute('data-tab') === 'bilgiler' ? ' aktif' : '');
+  }
+
+  lotBilgilerRender();
+  document.getElementById('lot-modal-bg').classList.add('goster');
+}
+
+function lotModalKapat() {
+  document.getElementById('lot-modal-bg').classList.remove('goster');
+  aktifLotDetay = null;
+}
+
+function lotTabDegistir(tab) {
+  aktifLotTab = tab;
+  var tabs = document.querySelectorAll('.lot-modal-tab');
+  for (var t = 0; t < tabs.length; t++) {
+    tabs[t].className = 'lot-modal-tab' + (tabs[t].getAttribute('data-tab') === tab ? ' aktif' : '');
+  }
+  if (tab === 'bilgiler') {
+    lotBilgilerRender();
+  } else {
+    lotHareketlerRender();
+  }
+}
+
+function lotBilgilerRender() {
+  var lot = aktifLotDetay;
+  if (!lot) return;
+  var el = document.getElementById('lot-modal-icerik');
+
+  var cocBdg = lot.coc ? '<span class="bdg b-grn">Var</span>' : '<span class="bdg b-red">Eksik</span>';
+  var durumCls = 'b-grn';
+  var dr = (lot.durum || '').toLowerCase();
+  if (dr.indexOf('karantina') >= 0) durumCls = 'b-red';
+  else if (dr.indexOf('rezerve') >= 0) durumCls = 'b-amr';
+  else if (dr.indexOf('tukendi') >= 0) durumCls = 'b-gray';
+
+  var grnVal = lot.grn ? ((lot.grn.indexOf('GRN') >= 0) ? '<a class="grn-link" href="ersan_satinalma_grn.html?grn=' + encodeURIComponent(lot.grn) + '">' + lot.grn + '</a>' : lot.grn) : '—';
+  var woVal = lot.wo ? '<a class="wo-link" href="#" onclick="toast(\'WO detayi: ' + lot.wo + '\',\'inf\')">' + lot.wo + '</a>' : '—';
+
+  el.innerHTML = '<div class="lot-info-grid">'
+    + '<div class="lot-info-box"><div class="lbl">Lot No</div><div class="val mono">' + (lot.lotNo || '—') + '</div></div>'
+    + '<div class="lot-info-box"><div class="lbl">Malzeme</div><div class="val">' + (lot.malzeme || '—') + '</div></div>'
+    + '<div class="lot-info-box"><div class="lbl">Tip</div><div class="val"><span class="bdg b-blu">' + (lot.tip || '—') + '</span></div></div>'
+    + '<div class="lot-info-box"><div class="lbl">Konum</div><div class="val">' + (lot.konum || '—') + '</div></div>'
+    + '<div class="lot-info-box"><div class="lbl">Miktar</div><div class="val" style="font-weight:700;">' + lot.miktar + ' ' + (lot.birim || '') + '</div></div>'
+    + '<div class="lot-info-box"><div class="lbl">Min Stok</div><div class="val">' + (lot.minStok > 0 ? lot.minStok + ' ' + (lot.birim || '') : '—') + '</div></div>'
+    + '<div class="lot-info-box"><div class="lbl">CoC</div><div class="val">' + cocBdg + '</div></div>'
+    + '<div class="lot-info-box"><div class="lbl">Durum</div><div class="val"><span class="bdg ' + durumCls + '">' + (lot.durum || 'Depoda') + '</span></div></div>'
+    + '<div class="lot-info-box"><div class="lbl">GRN / Kaynak</div><div class="val">' + grnVal + '</div></div>'
+    + '<div class="lot-info-box"><div class="lbl">WO / Is Emri</div><div class="val">' + woVal + '</div></div>'
+    + '<div class="lot-info-box"><div class="lbl">Giris Tarihi</div><div class="val">' + fmtDate(lot.tarih) + '</div></div>'
+    + '<div class="lot-info-box"><div class="lbl">Notlar</div><div class="val">' + (lot.notlar || '—') + '</div></div>'
+    + '</div>';
+}
+
+function lotHareketlerRender() {
+  var lot = aktifLotDetay;
+  if (!lot) return;
+  var el = document.getElementById('lot-modal-icerik');
+
+  // Try to fetch from WIP table for this lot
+  apiGet(T_WIP, 'pageSize=50&filterByFormula=' + encodeURIComponent('{Lot No}="' + (lot.lotNo || '') + '"')).then(function(data) {
+    var records = data.records || [];
+    if (records.length === 0) {
+      el.innerHTML = '<div style="text-align:center;padding:30px;color:var(--metin4);">'
+        + '<div style="font-size:32px;opacity:0.3;margin-bottom:8px;">&#128230;</div>'
+        + '<div style="font-size:13px;font-weight:600;color:var(--laci);margin-bottom:4px;">Henuz hareket yok</div>'
+        + '<div style="font-size:11px;">Bu lot icin hareket gecmisi bulunamadi.</div></div>';
+      return;
+    }
+
+    var tipCfg = {
+      'Giris': {ikon:'\u2193',bg:'#d1fae5',renk:'#065f46'},
+      'Cikis': {ikon:'\u2191',bg:'#fee2e2',renk:'#991b1b'},
+      'Transfer': {ikon:'\u21C4',bg:'#dbeafe',renk:'#1e40af'}
+    };
+
+    var html = '';
+    records.sort(function(a,b) { return (b.fields['Created'] || '').localeCompare(a.fields['Created'] || ''); });
+    for (var i = 0; i < records.length; i++) {
+      var f = records[i].fields;
+      var hareket = f['Hareket'] || 'Giris';
+      var cfg = tipCfg[hareket] || tipCfg['Giris'];
+      var tarih = f['Created'] || f['Tarih'] || '';
+      html += '<div class="lot-hareket-row">';
+      html += '<div class="lot-hareket-ikon" style="background:' + cfg.bg + ';color:' + cfg.renk + ';">' + cfg.ikon + '</div>';
+      html += '<div style="flex:1;"><span style="font-weight:600;font-size:12px;">' + hareket + '</span>';
+      html += '<span class="muted" style="margin-left:8px;">' + (f['Miktar'] || '') + ' ' + (f['Birim'] || '') + '</span>';
+      if (f['Notlar']) html += '<div class="muted">' + f['Notlar'] + '</div>';
+      html += '</div>';
+      html += '<div class="muted">' + fmtDate(tarih) + '</div>';
+      html += '</div>';
+    }
+    el.innerHTML = html;
+  }).catch(function() {
+    el.innerHTML = '<div style="text-align:center;padding:30px;color:var(--metin4);">'
+      + '<div style="font-size:13px;">Hareket gecmisi yuklenemedi.</div></div>';
+  });
+
+  // Show loading while fetching
+  el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--metin4);"><div class="spinner" style="margin:0 auto 8px;"></div>Yukleniyor...</div>';
 }
 
 // ── URL PARAMS ──

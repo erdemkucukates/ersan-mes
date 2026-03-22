@@ -15,20 +15,74 @@
 .trv-card { border:1px solid #e5e7eb; border-radius:8px; overflow:hidden; background:#fff; transition:all .12s; }
 .trv-card:hover { border-color:#93c5fd; box-shadow:0 2px 8px rgba(0,0,0,.06); }
 .trv-card.highlight { border-color:#3b82f6; box-shadow:0 0 0 2px rgba(59,130,246,.2); }
-.trv-head { padding:10px 12px; background:#f9fafb; border-bottom:1px solid #e5e7eb; display:flex; align-items:center; justify-content:space-between; }
-.trv-no { font-size:12px; font-weight:700; color:#1a2b47; font-family:monospace; }
+.trv-head { padding:12px 14px; background:#1a2b47; display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.trv-head-left { flex:1; min-width:0; }
+.trv-no { font-size:14px; font-weight:700; color:#fff; font-family:monospace; }
+.trv-head-sub { font-size:10px; color:rgba(255,255,255,.7); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.trv-head-right { display:flex; align-items:center; gap:6px; flex-shrink:0; }
+.trv-head-qr { width:48px; height:48px; background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2); border-radius:4px; display:flex; align-items:center; justify-content:center; font-size:8px; color:rgba(255,255,255,.5); }
+.trv-head-btn { font-size:9px; padding:3px 8px; border-radius:4px; border:1px solid rgba(255,255,255,.3); background:transparent; color:#fff; cursor:pointer; white-space:nowrap; }
+.trv-head-btn:hover { background:rgba(255,255,255,.1); }
 .trv-body { padding:10px 12px; }
 .trv-title { font-size:12px; font-weight:600; color:#1a2b47; margin-bottom:4px; }
 .trv-info { font-size:11px; color:#6b7280; margin-bottom:8px; }
 
+/* Genel bilgiler grid */
+.trv-bilgi-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:1px; background:#e5e7eb; border-radius:6px; overflow:hidden; margin-bottom:8px; }
+.trv-bilgi-item { background:#fff; padding:6px 8px; text-align:center; }
+.trv-bilgi-label { font-size:9px; color:#6b7280; text-transform:uppercase; letter-spacing:.5px; }
+.trv-bilgi-val { font-size:11px; font-weight:600; color:#1a2b47; margin-top:1px; }
+.trv-bilgi-val.termin-gecmis { color:#dc2626; font-weight:700; }
+
+/* Operasyon akisi seridi */
+.op-flow { display:flex; align-items:center; gap:2px; overflow-x:auto; padding:8px 0; margin:4px 0; }
+.op-flow-step { flex-shrink:0; border-radius:6px; padding:6px 10px; font-size:10px; text-align:center; min-width:80px; cursor:pointer; transition:all .12s; position:relative; }
+.op-flow-step:hover { transform:translateY(-1px); box-shadow:0 2px 6px rgba(0,0,0,.1); }
+.op-flow-done { background:#d1fae5; color:#065f46; border:1px solid #a7f3d0; }
+.op-flow-active { background:#1a2b47; color:#fff; border:1px solid #1a2b47; }
+.op-flow-pending { background:#f3f4f6; color:#9ca3af; border:1px solid #e5e7eb; }
+.op-flow-fason { background:#ede9fe; color:#5b21b6; border:1px solid #c4b5fd; }
+.op-flow-name { font-weight:600; font-size:10px; }
+.op-flow-detail { font-size:8px; margin-top:2px; opacity:.8; }
+.op-flow-arrow { color:#d1d5db; font-size:14px; flex-shrink:0; }
+
+/* Lot chipleri */
+.lot-chips { display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; }
+.lot-chip { display:inline-flex; align-items:center; gap:4px; padding:4px 10px; border-radius:6px; border:1px solid #e5e7eb; background:#f9fafb; font-size:11px; cursor:pointer; transition:all .1s; }
+.lot-chip:hover { border-color:#93c5fd; background:#eff6ff; }
+.lot-chip-no { font-family:monospace; font-weight:600; color:#1a2b47; }
+.lot-chip-lot { font-weight:700; color:#3b82f6; }
+.lot-chip-adet { color:#6b7280; }
+.lot-chip-konum { font-size:9px; padding:1px 5px; border-radius:3px; background:#dbeafe; color:#1e40af; }
+
+/* Termal etiket onizleme */
+.termal-prev { width:180px; border:1px solid #d1d5db; border-radius:4px; padding:8px; background:#fff; font-family:monospace; font-size:8px; color:#1a2b47; margin:12px auto; }
+.termal-prev .tp-firma { font-size:6px; text-transform:uppercase; letter-spacing:1px; color:#6b7280; margin-bottom:3px; }
+.termal-prev .tp-no { font-size:11px; font-weight:700; margin-bottom:3px; }
+.termal-prev .tp-qr { width:40px; height:40px; background:#f3f4f6; border:1px dashed #d1d5db; display:flex; align-items:center; justify-content:center; font-size:7px; color:#9ca3af; margin:3px 0; }
+.termal-prev .tp-info { font-size:7px; color:#374151; line-height:1.5; }
+.termal-prev .tp-chips { display:flex; gap:2px; flex-wrap:wrap; margin-top:3px; }
+.termal-prev .tp-chip { font-size:6px; padding:1px 3px; border-radius:2px; background:#e5e7eb; color:#374151; }
+.termal-prev .tp-chip.done { background:#d1fae5; color:#065f46; }
+.termal-prev .tp-chip.active { background:#1a2b47; color:#fff; }
+.termal-prev .tp-date { font-size:7px; color:#9ca3af; margin-top:3px; }
+
+/* Fason PR banner */
+.fason-banner { display:flex; align-items:center; gap:8px; padding:10px 14px; background:#fffbeb; border:1px solid #fde68a; border-radius:6px; margin:8px 0; font-size:12px; color:#92400e; }
+.fason-banner-btn { padding:4px 12px; border-radius:4px; font-size:11px; font-weight:600; cursor:pointer; border:none; }
+.fason-banner-btn.evet { background:#1a2b47; color:#fff; }
+.fason-banner-btn.evet:hover { background:#243b5c; }
+.fason-banner-btn.hayir { background:#fff; color:#374151; border:1px solid #d1d5db; }
+.fason-banner-btn.hayir:hover { background:#f3f4f6; }
+
 /* Durum badge */
 .trv-durum { font-size:10px; padding:2px 8px; border-radius:10px; font-weight:600; white-space:nowrap; }
-.trv-durum-bekliyor { background:#f3f4f6; color:#6b7280; }
-.trv-durum-uretimde { background:#dbeafe; color:#1d4ed8; }
-.trv-durum-fai { background:#fef3c7; color:#92400e; }
-.trv-durum-fason { background:#ede9fe; color:#5b21b6; }
-.trv-durum-tamamlandi { background:#d1fae5; color:#065f46; }
-.trv-durum-iptal { background:#fee2e2; color:#991b1b; text-decoration:line-through; }
+.trv-durum-bekliyor { background:rgba(255,255,255,.15); color:rgba(255,255,255,.8); }
+.trv-durum-uretimde { background:#3b82f6; color:#fff; }
+.trv-durum-fai { background:#f59e0b; color:#fff; }
+.trv-durum-fason { background:#8b5cf6; color:#fff; }
+.trv-durum-tamamlandi { background:#10b981; color:#fff; }
+.trv-durum-iptal { background:#ef4444; color:#fff; text-decoration:line-through; }
 
 /* Operasyon adimlari */
 .op-list { margin:8px 0; }
@@ -418,11 +472,18 @@ function kartHTML(t) {
   var lot = t.f['Lot'] || t.f['Lot Harfi'] || '';
   var miktar = t.f['Miktar'] || t.f['Adet'] || '';
   var birim = t.f['Birim'] || 'Adet';
+  var malzeme = t.f['Malzeme'] || t.f['Malzeme Cinsi'] || '';
+  var konum = t.f['Konum'] || t.f['Lokasyon'] || '';
+  var termin = t.f['Termin'] || t.f['Termin Tarihi'] || '';
+  var siparis = t.f['Siparis No'] || t.f['SP No'] || '';
   var ops = parseOps(t);
 
   var woId = woIDBul(t);
   var wo = woBilgiBul(woId);
   var woNo = wo ? (wo.f['IE No'] || wo.f['WO No'] || wo.f['No'] || '') : '';
+  var woMiktar = wo ? (wo.f['Miktar'] || wo.f['Adet'] || '') : '';
+  if (!malzeme && wo) malzeme = wo.f['Malzeme'] || wo.f['Malzeme Cinsi'] || '';
+  if (!parca && wo) parca = wo.f['Parca Adi'] || wo.f['Parça Adı'] || wo.f['Açıklama'] || '';
 
   var durumClass = durumClassBul(durum);
 
@@ -434,46 +495,73 @@ function kartHTML(t) {
   });
   var pct = ops.length > 0 ? Math.round((done / ops.length) * 100) : 0;
 
+  // Termin gecmis mi
+  var terminGecmis = false;
+  if (termin) {
+    var bugun = new Date().toISOString().slice(0, 10);
+    if (termin < bugun && durum.toLowerCase().indexOf('tamamlan') === -1) terminGecmis = true;
+  }
+
   var h = '';
   h += '<div class="trv-card" data-trv-no="' + escHtml(no) + '" id="trv-' + escHtml(no) + '">';
 
-  // Head
+  // Head — lacivert header
   h += '<div class="trv-head">';
-  h += '<span class="trv-no">' + escHtml(no) + '</span>';
+  h += '<div class="trv-head-left">';
+  h += '<div class="trv-no">' + escHtml(no) + '</div>';
+  h += '<div class="trv-head-sub">' + escHtml(woNo) + (parca ? ' &middot; ' + escHtml(parca) : '') + (siparis ? ' &middot; ' + escHtml(siparis) : '') + (lot ? ' &middot; Lot ' + escHtml(lot) + (miktar && woMiktar ? ' (' + miktar + '/' + woMiktar + ' ' + escHtml(birim) + ')' : '') : '') + '</div>';
+  h += '</div>';
+  h += '<div class="trv-head-right">';
+  h += '<div class="trv-head-qr">[QR]</div>';
   h += '<span class="trv-durum ' + durumClass + '">' + escHtml(durum) + '</span>';
+  h += '<button class="trv-head-btn" onclick="event.stopPropagation();qrYazdir(\'' + escHtml(no) + '\')">&#128424; Yazdir</button>';
+  h += '<button class="trv-head-btn" onclick="event.stopPropagation();detayGoster(\'' + t.id + '\')">Detay</button>';
+  h += '</div>';
+  h += '</div>';
+
+  // Genel Bilgiler Grid
+  h += '<div class="trv-bilgi-grid">';
+  h += '<div class="trv-bilgi-item"><div class="trv-bilgi-label">Parca Adi</div><div class="trv-bilgi-val">' + escHtml(parca || '-') + '</div></div>';
+  h += '<div class="trv-bilgi-item"><div class="trv-bilgi-label">Malzeme</div><div class="trv-bilgi-val">' + escHtml(malzeme || '-') + '</div></div>';
+  h += '<div class="trv-bilgi-item"><div class="trv-bilgi-label">Lot Adet</div><div class="trv-bilgi-val">' + (miktar || '-') + (woMiktar ? '/' + woMiktar : '') + '</div></div>';
+  h += '<div class="trv-bilgi-item"><div class="trv-bilgi-label">Konum</div><div class="trv-bilgi-val">' + escHtml(konum || '-') + '</div></div>';
+  h += '<div class="trv-bilgi-item"><div class="trv-bilgi-label">Termin</div><div class="trv-bilgi-val' + (terminGecmis ? ' termin-gecmis' : '') + '">' + (termin || '-') + (terminGecmis ? ' !' : '') + '</div></div>';
   h += '</div>';
 
   // Body
   h += '<div class="trv-body">';
-  if (parca) h += '<div class="trv-title">' + escHtml(parca) + '</div>';
-  h += '<div class="trv-info">' + escHtml(woNo) + (lot ? ' &middot; Lot ' + escHtml(lot) : '') + (miktar ? ' &middot; ' + miktar + ' ' + escHtml(birim) : '') + '</div>';
 
-  // Operasyonlar
+  // Operasyon Akisi Seridi
   if (ops.length > 0) {
-    h += '<div style="font-size:10px;font-weight:600;color:#6b7280;margin-bottom:4px;">Operasyonlar:</div>';
-    h += '<div class="op-list">';
+    h += '<div class="op-flow">';
     ops.forEach(function(op, idx) {
       var opDurum = (op.durum || 'pending').toLowerCase();
       var tip = (op.tip || '').toLowerCase();
-      var dotClass = 'op-pending';
-      var icon = '&#9675;';
+      var stepClass = 'op-flow-pending';
+      var detail = 'Planli';
+      var icon = '';
 
       if (opDurum === 'done' || opDurum === 'tamamlandi' || opDurum === 'tamamlandı') {
-        dotClass = 'op-done';
-        icon = '&#10003;';
+        stepClass = 'op-flow-done';
+        detail = (op.tarih || '') + (op.sure ? ' (' + op.sure + ')' : '');
+        if (op.operator) detail += '<br>' + op.operator;
+        icon = ' &#10003;';
       } else if (opDurum === 'active' || opDurum === 'aktif') {
-        dotClass = 'op-active';
-        icon = '&#9654;';
+        stepClass = 'op-flow-active';
+        detail = 'Su an';
+        icon = ' &#9654;';
       } else if (tip === 'fason') {
-        dotClass = 'op-fason';
-        icon = '&#9670;';
+        stepClass = 'op-flow-fason';
+        detail = 'Dis Fason';
+        icon = ' &rarr; Auto PR';
       }
 
+      if (idx > 0) h += '<span class="op-flow-arrow">&rarr;</span>';
+
       var opAdi = op.adi || op.ad || op.name || ('Op' + ((idx + 1) * 10));
-      h += '<div class="op-step" onclick="opTikla(\'' + t.id + '\',' + idx + ')" title="Tamamlamak icin tikla">';
-      h += '<span class="op-dot ' + dotClass + '">' + icon + '</span>';
-      h += '<span style="flex:1;">' + escHtml(opAdi) + '</span>';
-      if (tip === 'fason') h += '<span style="font-size:9px;color:#7c3aed;font-weight:600;">FASON</span>';
+      h += '<div class="op-flow-step ' + stepClass + '" onclick="opTikla(\'' + t.id + '\',' + idx + ')" title="' + escHtml(opAdi) + '">';
+      h += '<div class="op-flow-name">' + escHtml(opAdi) + icon + '</div>';
+      h += '<div class="op-flow-detail">' + detail + '</div>';
       h += '</div>';
     });
     h += '</div>';
@@ -541,10 +629,13 @@ function opTamamla(trvId, opIdx) {
     if ((sonraki.durum || 'pending') === 'pending') {
       sonraki.durum = 'active';
     }
-    // Fason kontrolu
+    // Fason kontrolu — auto PR banner
     if ((sonraki.tip || '').toLowerCase() === 'fason') {
+      var fasonAdi = sonraki.adi || sonraki.ad || 'Op';
+      var fasonTrvId = trvId;
+      var fasonTrvNo = trv.f['Traveler No'] || trv.f['TRV No'] || '';
       setTimeout(function() {
-        alert('Dikkat: Siradaki operasyon (' + (sonraki.adi || 'Op') + ') FASON dis kaynaktir. Satin alma talebi olusturmayi unutmayin.');
+        fasonPRBannerGoster(fasonTrvId, fasonTrvNo, fasonAdi);
       }, 300);
     }
   }
@@ -680,7 +771,12 @@ function lotBolAc(trvId) {
   var no = trv.f['Traveler No'] || trv.f['TRV No'] || '-';
   var miktar = trv.f['Miktar'] || trv.f['Adet'] || 0;
   var birim = trv.f['Birim'] || 'Adet';
-  document.getElementById('bol-mevcut').textContent = no + ' \u00B7 ' + miktar + ' ' + birim;
+  document.getElementById('bol-mevcut').innerHTML = no + ' &middot; ' + miktar + ' ' + birim;
+  // Show existing lot siblings
+  var chipHtml = lotChipleriniGoster(trvId);
+  if (chipHtml) {
+    document.getElementById('bol-mevcut').innerHTML += '<div style="margin-top:8px;font-size:11px;font-weight:600;color:#6b7280;">Mevcut Lotlar:</div>' + chipHtml;
+  }
   document.getElementById('bol-sayi').value = '2';
   bolOnizle();
   modalAc('modal-bol');
@@ -837,6 +933,17 @@ function detayGoster(trvId) {
     html += '</table>';
   }
 
+  // Lot kardes chipleri
+  var lotHtml = lotChipleriniGoster(trvId);
+  if (lotHtml) {
+    html += '<div style="margin-top:16px;font-size:12px;font-weight:600;color:#1a2b47;margin-bottom:8px;">Iliskili Lotlar</div>';
+    html += lotHtml;
+  }
+
+  // Termal etiket onizleme
+  html += '<div style="margin-top:16px;font-size:12px;font-weight:600;color:#1a2b47;margin-bottom:8px;">Termal Etiket Onizleme</div>';
+  html += termalEtiketOnizle(trv);
+
   document.getElementById('detay-icerik').innerHTML = html;
   modalAc('modal-detay');
 }
@@ -861,7 +968,86 @@ function qrYazdir(trvNo) {
 }
 
 function termalYazdir() {
-  alert('Termal yazici entegrasyonu henuz aktif degil. QR butonunu kullanarak tekil yazdirim yapabilirsiniz.');
+  if (tumTravelerler.length === 0) { alert('Yazdirilacak traveler bulunamadi.'); return; }
+  var secim = prompt('Yazdirilacak Traveler No girin (veya "hepsi" yazin):', 'hepsi');
+  if (!secim) return;
+
+  var hedef = [];
+  if (secim.toLowerCase() === 'hepsi') {
+    hedef = tumTravelerler;
+  } else {
+    hedef = tumTravelerler.filter(function(t) {
+      var tNo = (t.f['Traveler No'] || t.f['TRV No'] || '').toLowerCase();
+      return tNo.indexOf(secim.toLowerCase()) > -1;
+    });
+  }
+
+  if (hedef.length === 0) { alert('Eslesen traveler bulunamadi.'); return; }
+
+  var w = window.open('', '_blank');
+  var html = '<html><head><style>';
+  html += '@media print{body{margin:0}.etiket{page-break-inside:avoid}}';
+  html += 'body{font-family:monospace;font-size:10px;width:80mm;padding:2mm}';
+  html += '.etiket{border:1px dashed #ccc;padding:4mm;margin-bottom:2mm}';
+  html += '.firma{font-size:7px;text-transform:uppercase;letter-spacing:1px;color:#666}';
+  html += '.no{font-size:13px;font-weight:bold;color:#1a2b47;margin:2px 0}';
+  html += '.info{font-size:9px;line-height:1.5;color:#333}';
+  html += '.qr{margin:3px 0;width:80px;height:80px}';
+  html += '.chips{display:flex;gap:2px;flex-wrap:wrap;margin-top:2px}';
+  html += '.chip{font-size:7px;padding:1px 3px;border-radius:2px;background:#e5e7eb}';
+  html += '.chip.done{background:#d1fae5;color:#065f46}';
+  html += '.chip.active{background:#1a2b47;color:#fff}';
+  html += '</style></head><body>';
+
+  hedef.forEach(function(t, i) {
+    var no = t.f['Traveler No'] || t.f['TRV No'] || '-';
+    var parca = t.f['Parca Adi'] || t.f['Parça Adı'] || t.f['Açıklama'] || '';
+    var lot = t.f['Lot'] || t.f['Lot Harfi'] || '';
+    var miktar = t.f['Miktar'] || t.f['Adet'] || '';
+    var siparis = t.f['Siparis No'] || t.f['SP No'] || '';
+    var ops = parseOps(t);
+    var woId = woIDBul(t);
+    var wo = woBilgiBul(woId);
+    var woNo = wo ? (wo.f['IE No'] || wo.f['WO No'] || wo.f['No'] || '') : '';
+
+    html += '<div class="etiket">';
+    html += '<div class="firma">ERSAN ENDUSTRIYEL MAKINE</div>';
+    html += '<div class="no">' + no + '</div>';
+    html += '<div class="qr" id="qr-t-' + i + '"></div>';
+    html += '<div class="info">';
+    if (parca) html += 'Parca: ' + parca + '<br>';
+    if (woNo) html += 'IE: ' + woNo + '<br>';
+    if (lot) html += 'Lot: ' + lot + ' | ' + miktar + '<br>';
+    html += 'Standart: AS9100<br>';
+    if (siparis) html += 'Siparis: ' + siparis + '<br>';
+    html += '</div>';
+    if (ops.length > 0) {
+      html += '<div class="chips">';
+      ops.forEach(function(op) {
+        var d = (op.durum || '').toLowerCase();
+        var cls = 'chip';
+        if (d === 'done' || d === 'tamamlandi' || d === 'tamamlandı') cls += ' done';
+        else if (d === 'active' || d === 'aktif') cls += ' active';
+        html += '<span class="' + cls + '">' + (op.adi || op.ad || 'Op') + '</span>';
+      });
+      html += '</div>';
+    }
+    html += '<div style="font-size:8px;color:#999;margin-top:2px;">' + new Date().toLocaleDateString('tr-TR') + '</div>';
+    html += '</div>';
+  });
+
+  var veriler = hedef.map(function(t) {
+    return JSON.stringify({ tip: 'TRAVELER', no: t.f['Traveler No'] || t.f['TRV No'] || t.id, url: 'https://ersan-mes.netlify.app/ersan_palet.html?id=' + t.id });
+  });
+
+  html += '<scr' + 'ipt src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></scr' + 'ipt>';
+  html += '<scr' + 'ipt>';
+  html += 'var veriler=' + JSON.stringify(veriler) + ';';
+  html += 'setTimeout(function(){for(var i=0;i<veriler.length;i++){new QRCode(document.getElementById("qr-t-"+i),{text:veriler[i],width:80,height:80})}setTimeout(function(){window.print()},400)},300);';
+  html += '</scr' + 'ipt></body></html>';
+
+  w.document.write(html);
+  w.document.close();
 }
 
 // ========== URL PARAMS ==========
@@ -906,6 +1092,132 @@ function modalAc(id) {
 
 function modalKapat(id) {
   document.getElementById(id).classList.remove('acik');
+}
+
+// ========== FASON PR BANNER ==========
+function fasonPRBannerGoster(trvId, trvNo, fasonAdi) {
+  // Remove existing banner if any
+  var existing = document.getElementById('fason-banner');
+  if (existing) existing.remove();
+
+  var banner = document.createElement('div');
+  banner.id = 'fason-banner';
+  banner.className = 'fason-banner';
+  banner.innerHTML = '&#9888; Sonraki adim dis fason: <strong>' + escHtml(fasonAdi) + '</strong>. Otomatik PR olusturulsun mu? ' +
+    '<button class="fason-banner-btn evet" onclick="fasonPROlustur(\'' + trvId + '\',\'' + escHtml(trvNo) + '\',\'' + escHtml(fasonAdi) + '\')">Evet</button> ' +
+    '<button class="fason-banner-btn hayir" onclick="this.parentElement.remove()">Hayir</button>';
+
+  // Insert banner at top of content area
+  var alan = document.getElementById('trv-alan');
+  if (alan) alan.parentNode.insertBefore(banner, alan);
+}
+
+function fasonPROlustur(trvId, trvNo, fasonAdi) {
+  var trv = tumTravelerler.filter(function(t) { return t.id === trvId; })[0];
+  var woId = trv ? woIDBul(trv) : '';
+  var parca = trv ? (trv.f['Parca Adi'] || trv.f['Parça Adı'] || trv.f['Açıklama'] || '') : '';
+
+  var fields = {
+    'Talep Aciklama': 'Fason islem: ' + fasonAdi + ' | Traveler: ' + trvNo + (parca ? ' | Parca: ' + parca : ''),
+    'Talep Tipi': 'Fason',
+    'Durum': 'Bekliyor',
+    'Talep Tarihi': new Date().toISOString().slice(0, 10)
+  };
+
+  fetch(API, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ method: 'POST', path: '/v0/app5LDgJMgocw79Ix/Sat%C4%B1nalma%20Talepleri', body: { fields: fields } })
+  }).then(function(r) { return r.json(); }).then(function(d) {
+    if (d.error) {
+      alert('PR olusturulamadi: ' + (d.error.message || d.error));
+      return;
+    }
+    if (typeof logIslem === 'function') {
+      logIslem('FASON_PR_OLUSTURULDU', 'Satinalma', d.id, trvNo, null, { fason: fasonAdi });
+    }
+    alert('Fason PR olusturuldu: ' + fasonAdi);
+    var banner = document.getElementById('fason-banner');
+    if (banner) banner.remove();
+  }).catch(function(err) {
+    alert('PR olusturma hatasi: ' + err.message);
+  });
+}
+
+// ========== LOT CHIP RENDER ==========
+function lotChipleriniGoster(trvId) {
+  var trv = tumTravelerler.filter(function(t) { return t.id === trvId; })[0];
+  if (!trv) return '';
+
+  var no = trv.f['Traveler No'] || trv.f['TRV No'] || '';
+  var parts = no.split('-');
+  var base = parts.slice(0, -1).join('-');
+
+  // Find sibling lots
+  var kardesler = tumTravelerler.filter(function(t) {
+    var tNo = t.f['Traveler No'] || t.f['TRV No'] || '';
+    var tParts = tNo.split('-');
+    var tBase = tParts.slice(0, -1).join('-');
+    return tBase === base && tNo !== no;
+  });
+
+  if (kardesler.length === 0) return '';
+
+  var html = '<div class="lot-chips">';
+  kardesler.forEach(function(k) {
+    var kNo = k.f['Traveler No'] || k.f['TRV No'] || '';
+    var kLot = k.f['Lot'] || k.f['Lot Harfi'] || '';
+    var kMiktar = k.f['Miktar'] || k.f['Adet'] || '';
+    var kKonum = k.f['Konum'] || k.f['Lokasyon'] || '';
+    html += '<span class="lot-chip" onclick="document.getElementById(\'trv-' + escHtml(kNo) + '\')&&document.getElementById(\'trv-' + escHtml(kNo) + '\').scrollIntoView({behavior:\'smooth\',block:\'center\'})">';
+    html += '<span class="lot-chip-no">' + escHtml(kNo) + '</span>';
+    if (kLot) html += '<span class="lot-chip-lot">' + escHtml(kLot) + '</span>';
+    if (kMiktar) html += '<span class="lot-chip-adet">' + kMiktar + ' ad</span>';
+    if (kKonum) html += '<span class="lot-chip-konum">' + escHtml(kKonum) + '</span>';
+    html += '</span>';
+  });
+  html += '</div>';
+  return html;
+}
+
+// ========== TERMAL ETIKET ONIZLEME ==========
+function termalEtiketOnizle(t) {
+  var no = t.f['Traveler No'] || t.f['TRV No'] || '-';
+  var parca = t.f['Parca Adi'] || t.f['Parça Adı'] || t.f['Açıklama'] || '';
+  var lot = t.f['Lot'] || t.f['Lot Harfi'] || '';
+  var miktar = t.f['Miktar'] || t.f['Adet'] || '';
+  var birim = t.f['Birim'] || 'Adet';
+  var siparis = t.f['Siparis No'] || t.f['SP No'] || '';
+  var ops = parseOps(t);
+  var woId = woIDBul(t);
+  var wo = woBilgiBul(woId);
+  var woNo = wo ? (wo.f['IE No'] || wo.f['WO No'] || wo.f['No'] || '') : '';
+
+  var html = '<div class="termal-prev">';
+  html += '<div class="tp-firma">ERSAN ENDUSTRIYEL MAKINE</div>';
+  html += '<div class="tp-no">' + escHtml(no) + '</div>';
+  html += '<div class="tp-qr">[QR]</div>';
+  html += '<div class="tp-info">';
+  if (parca) html += 'Parca: ' + escHtml(parca) + '<br>';
+  if (woNo) html += 'IE: ' + escHtml(woNo) + '<br>';
+  if (lot) html += 'Lot: ' + escHtml(lot) + ' | ' + miktar + ' ' + escHtml(birim) + '<br>';
+  html += 'Standart: AS9100<br>';
+  if (siparis) html += 'Siparis: ' + escHtml(siparis) + '<br>';
+  html += '</div>';
+  if (ops.length > 0) {
+    html += '<div class="tp-chips">';
+    ops.forEach(function(op) {
+      var d = (op.durum || '').toLowerCase();
+      var cls = 'tp-chip';
+      if (d === 'done' || d === 'tamamlandi' || d === 'tamamlandı') cls += ' done';
+      else if (d === 'active' || d === 'aktif') cls += ' active';
+      html += '<span class="' + cls + '">' + escHtml(op.adi || op.ad || 'Op') + '</span>';
+    });
+    html += '</div>';
+  }
+  html += '<div class="tp-date">' + new Date().toLocaleDateString('tr-TR') + '</div>';
+  html += '</div>';
+  return html;
 }
 
 // ========== YARDIMCI ==========
