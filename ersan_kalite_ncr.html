@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — Uygunsuzluk Raporu (NCR)</title>
+<link rel="stylesheet" href="ersan_styles.css">
+<script src="ersan_nav.js" defer></script>
+<script src="ersan_log.js" defer></script>
+<style>
+.ncr-split { display:flex; gap:12px; height:calc(100vh - 52px - 32px - 80px); }
+.ncr-sol {
+  width:260px; flex-shrink:0; background:var(--beyaz); border:1px solid var(--border);
+  border-radius:8px; display:flex; flex-direction:column; overflow:hidden;
+}
+.ncr-sol-ust {
+  padding:10px 12px; border-bottom:1px solid var(--border); flex-shrink:0;
+}
+.ncr-sol-ust h3 { font-size:12px; font-weight:600; color:var(--laci); margin-bottom:6px; }
+.ncr-arama {
+  width:100%; padding:5px 8px; border:1px solid var(--border); border-radius:5px;
+  font-size:12px; color:var(--metin2); background:var(--bg2); font-family:inherit;
+}
+.ncr-arama:focus { outline:none; border-color:var(--mavi); }
+.ncr-filtre {
+  display:flex; gap:0; border-bottom:1px solid var(--border); flex-shrink:0;
+}
+.ncr-filtre-btn {
+  flex:1; padding:6px 4px; font-size:10px; font-weight:500; color:var(--metin3);
+  background:transparent; border:none; border-bottom:2px solid transparent;
+  cursor:pointer; text-align:center; transition:all .12s;
+}
+.ncr-filtre-btn.aktif { color:var(--mavi); border-bottom-color:var(--mavi); background:var(--mavi-acik); }
+.ncr-liste { flex:1; overflow-y:auto; }
+.ncr-satir {
+  padding:10px 12px; border-bottom:1px solid #f8fafc; cursor:pointer;
+  border-left:3px solid transparent; transition:background .1s;
+}
+.ncr-satir:hover { background:var(--bg2); }
+.ncr-satir.secili { background:var(--mavi-acik); border-left-color:var(--mavi); }
+.ncr-satir.acik { border-left-color:var(--kirmizi); }
+.ncr-satir.capa { border-left-color:var(--sari); }
+.ncr-satir.kapali { border-left-color:var(--yesil); }
+.ncr-satir-no {
+  font-family:'Courier New',monospace; font-size:11px; font-weight:600;
+  color:var(--mavi-koyu); margin-bottom:2px;
+}
+.ncr-satir-desc { font-size:11px; color:var(--metin2); margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ncr-satir-alt { display:flex; align-items:center; justify-content:space-between; gap:4px; }
+.ncr-sag {
+  flex:1; background:var(--beyaz); border:1px solid var(--border); border-radius:8px;
+  overflow-y:auto; display:flex; flex-direction:column;
+}
+.ncr-sag-ust {
+  padding:12px 16px; border-bottom:1px solid var(--border); flex-shrink:0;
+  display:flex; align-items:center; justify-content:space-between; gap:8px;
+}
+.ncr-sag-icerik { padding:16px; flex:1; overflow-y:auto; }
+.ncr-empty {
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  height:100%; color:var(--metin4); gap:8px;
+}
+.ncr-empty-icon { font-size:40px; opacity:0.3; }
+/* Siddet bar */
+.siddet-bar { display:flex; gap:6px; margin-bottom:12px; }
+.siddet-btn {
+  flex:1; padding:8px 4px; border-radius:6px; border:2px solid var(--border);
+  background:var(--beyaz); font-size:11px; font-weight:600; cursor:pointer;
+  text-align:center; transition:all .15s; font-family:inherit; color:var(--metin2);
+}
+.siddet-btn:hover { background:var(--bg2); }
+.siddet-btn.s-gozlem.aktif { border-color:#94a3b8; background:#f1f5f9; color:#475569; }
+.siddet-btn.s-minor.aktif { border-color:var(--sari); background:var(--sari-bg); color:var(--sari-t); }
+.siddet-btn.s-major.aktif { border-color:#ea580c; background:#fff7ed; color:#9a3412; }
+.siddet-btn.s-kritik.aktif { border-color:var(--kirmizi); background:var(--kirmizi-bg); color:var(--kirmizi-t); }
+/* Aksiyon multi-select */
+.aksiyon-row { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px; }
+.aksiyon-btn {
+  padding:6px 12px; border-radius:16px; border:1px solid var(--border);
+  background:var(--beyaz); font-size:11px; cursor:pointer; transition:all .12s;
+  font-family:inherit; color:var(--metin2);
+}
+.aksiyon-btn.secili { background:var(--mavi-acik); border-color:var(--mavi); color:var(--mavi-koyu); font-weight:600; }
+.aksiyon-btn:hover { background:var(--bg2); }
+/* Sections */
+.ncr-sec { margin-bottom:14px; }
+.ncr-sec-baslik {
+  font-size:11px; font-weight:700; color:var(--metin3); text-transform:uppercase;
+  letter-spacing:0.5px; margin-bottom:6px; padding-bottom:4px; border-bottom:1px solid var(--border);
+}
+.ncr-textarea {
+  width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:6px;
+  font-size:13px; font-family:inherit; color:var(--metin2); resize:vertical; min-height:80px;
+}
+.ncr-textarea:focus { outline:none; border-color:var(--mavi); box-shadow:0 0 0 3px rgba(55,138,221,0.1); }
+.ncr-info-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.ncr-info-item { }
+.ncr-info-label { font-size:10px; font-weight:600; color:var(--metin4); text-transform:uppercase; margin-bottom:2px; }
+.ncr-info-val { font-size:12px; color:var(--metin2); }
+.ncr-input {
+  width:100%; padding:5px 8px; border:1px solid var(--border); border-radius:5px;
+  font-size:12px; font-family:inherit; color:var(--metin2);
+}
+.ncr-input:focus { outline:none; border-color:var(--mavi); }
+.scr-banner {
+  padding:10px 14px; border-radius:6px; border:1px solid var(--border);
+  background:var(--bg2); display:flex; align-items:center; justify-content:space-between;
+}
+.durum-flow { display:flex; align-items:center; gap:6px; margin-bottom:12px; }
+.durum-step {
+  padding:4px 12px; border-radius:12px; font-size:10px; font-weight:600;
+  background:#f1f5f9; color:var(--metin4);
+}
+.durum-step.aktif-adim { background:var(--mavi-acik); color:var(--mavi-koyu); }
+.durum-step.tamamlandi { background:var(--yesil-bg); color:var(--yesil-t); }
+.durum-ok { color:var(--metin4); font-size:12px; }
+/* Toast */
+.toast-wrap { position:fixed; top:60px; right:20px; z-index:9999; display:flex; flex-direction:column; gap:8px; }
+.toast { padding:10px 16px; border-radius:8px; font-size:12px; font-weight:500; color:#fff; animation:fadeIn .2s; }
+.toast.ok { background:var(--yesil); }
+.toast.err { background:var(--kirmizi); }
+.toast.warn { background:var(--sari); }
+@keyframes fadeIn { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:none} }
+</style>
+</head>
+<body>
+<div id="nav-alani"></div>
+<div class="icerik-alani">
+  <div class="topbar">
+    <div class="topbar-baslik">Uygunsuzluk Raporu (NCR)</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button class="btn btn-mavi" onclick="yeniNCR()">+ Yeni NCR</button>
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
+    </div>
+  </div>
+  <div class="sayfa-icerik">
+
+    <!-- KPI ROW -->
+    <div class="kpi-grid" id="kpi-row">
+      <div class="kpi-kart kirmizi"><div class="kpi-etiket">Acik</div><div class="kpi-deger" id="kpi-acik">0</div></div>
+      <div class="kpi-kart sari"><div class="kpi-etiket">CAPA Acik</div><div class="kpi-deger" id="kpi-capa">0</div></div>
+      <div class="kpi-kart yesil"><div class="kpi-etiket">Kapali</div><div class="kpi-deger" id="kpi-kapali">0</div></div>
+      <div class="kpi-kart"><div class="kpi-etiket">Bu Ay</div><div class="kpi-deger" id="kpi-buay">0</div></div>
+    </div>
+
+    <!-- SPLIT LAYOUT -->
+    <div class="ncr-split">
+      <!-- LEFT LIST -->
+      <div class="ncr-sol">
+        <div class="ncr-sol-ust">
+          <h3>NCR Kayitlari</h3>
+          <input type="text" class="ncr-arama" id="ncr-arama" placeholder="NCR No, malzeme ara..." oninput="listeGoster()">
+        </div>
+        <div class="ncr-filtre">
+          <button class="ncr-filtre-btn aktif" data-f="hepsi" onclick="filtreAyarla(this)">Hepsi</button>
+          <button class="ncr-filtre-btn" data-f="acik" onclick="filtreAyarla(this)">Acik</button>
+          <button class="ncr-filtre-btn" data-f="capa" onclick="filtreAyarla(this)">CAPA</button>
+          <button class="ncr-filtre-btn" data-f="kapali" onclick="filtreAyarla(this)">Kapali</button>
+        </div>
+        <div class="ncr-liste" id="ncr-liste"></div>
+      </div>
+
+      <!-- RIGHT DETAIL -->
+      <div class="ncr-sag">
+        <div class="ncr-sag-ust" id="ncr-header">
+          <span style="font-size:13px;font-weight:600;color:var(--laci);">NCR Detay</span>
+          <span id="ncr-header-badges"></span>
+        </div>
+        <div class="ncr-sag-icerik" id="ncr-detay">
+          <div class="ncr-empty">
+            <div class="ncr-empty-icon">&#9888;</div>
+            <div>Listeden bir NCR secin veya yeni olusturun.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<script>
+/* ── CONFIG ─────────────────────────────────────── */
+var BASE = 'app5LDgJMgocw79Ix';
+var T = {
+  ncr:       'tblreW3hJTIxwXb0K',
+  muayene:   'tblm47qZunWAsfufH',
+  isemri:    'tbl58qL39I2tv8hK4',
+  traveller: 'tbljfjpefe5Z03S0a',
+  personel:  'tblwG9GqnLC9oFZzb',
+  tedarikci: 'tblEI6683Im5AXj36'
+};
+
+/* ── STATE ──────────────────────────────────────── */
+var ncrList = [];
+var seciliNCR = null;
+var aktifFiltre = 'hepsi';
+var seciliSiddet = '';
+var seciliAksiyonlar = [];
+var kayitDegisti = false;
+
+/* ── API ────────────────────────────────────────── */
+function apiGet(table, params) {
+  params = params || '';
+  return fetch('/.netlify/functions/airtable', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({method:'GET', path:'/v0/' + BASE + '/' + table + '?' + params})
+  }).then(function(r){ return r.json(); });
+}
+
+function apiSave(method, table, body, id) {
+  id = id || '';
+  return fetch('/.netlify/functions/airtable', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({method:method, path:'/v0/' + BASE + '/' + table + (id ? '/' + id : ''), body:body})
+  }).then(function(r){ return r.json(); });
+}
+
+function apiGetAll(table, params) {
+  params = params || '';
+  var all = [];
+  function sayfa(offset) {
+    var sep = params ? '&' : '';
+    var ofs = offset ? sep + 'offset=' + offset : '';
+    return apiGet(table, params + ofs).then(function(d) {
+      all = all.concat(d.records || []);
+      if (d.offset) return sayfa(d.offset);
+      return all;
+    });
+  }
+  return sayfa('');
+}
+
+/* ── HELPERS ────────────────────────────────────── */
+function escHtml(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function fmtDate(d) {
+  if (!d) return '';
+  var dt = new Date(d);
+  return dt.toLocaleDateString('tr-TR',{day:'2-digit',month:'2-digit',year:'numeric'});
+}
+function todayISO() { return new Date().toISOString().slice(0,10); }
+function toast(msg, type) {
+  type = type || 'ok';
+  var w = document.getElementById('toast-wrap');
+  var el = document.createElement('div');
+  el.className = 'toast ' + type;
+  el.textContent = msg;
+  w.appendChild(el);
+  setTimeout(function(){ el.remove(); }, 3200);
+}
+
+function durumSinif(statu) {
+  if (!statu) return '';
+  var s = statu.toLowerCase();
+  if (s === 'acik' || s.indexOf('acik') >= 0) return 'acik';
+  if (s === 'capa acik' || s.indexOf('capa') >= 0) return 'capa';
+  if (s === 'kapali' || s.indexOf('kapal') >= 0) return 'kapali';
+  return '';
+}
+
+function siddetBadge(siddet) {
+  if (!siddet) return '';
+  var cls = 'badge-gri';
+  var s = siddet.toLowerCase();
+  if (s === 'kritik') cls = 'badge-kirmizi';
+  else if (s === 'major') cls = 'badge-sari';
+  else if (s === 'minor') cls = 'badge-mavi';
+  return '<span class="badge ' + cls + '">' + escHtml(siddet) + '</span>';
+}
+
+function durumBadge(statu) {
+  if (!statu) return '';
+  var cls = 'badge-gri';
+  var s = statu.toLowerCase();
+  if (s.indexOf('acik') >= 0 && s.indexOf('capa') < 0) cls = 'badge-kirmizi';
+  else if (s.indexOf('capa') >= 0) cls = 'badge-sari';
+  else if (s.indexOf('kapal') >= 0) cls = 'badge-yesil';
+  return '<span class="badge ' + cls + '">' + escHtml(statu) + '</span>';
+}
+
+function kaynakBadge(kaynak) {
+  if (!kaynak) return '';
+  return '<span class="badge badge-gri">' + escHtml(kaynak) + '</span>';
+}
+
+/* ── LOAD ───────────────────────────────────────── */
+function yukle() {
+  apiGetAll(T.ncr, 'sort%5B0%5D%5Bfield%5D=Tarih&sort%5B0%5D%5Bdirection%5D=desc').then(function(records) {
+    ncrList = records || [];
+    // Siralama: Acik first, then CAPA, then Kapali, within group by date desc
+    ncrList.sort(function(a, b) {
+      var sa = durumSirasi(a.fields ? a.fields['Statu'] || '' : '');
+      var sb = durumSirasi(b.fields ? b.fields['Statu'] || '' : '');
+      if (sa !== sb) return sa - sb;
+      var da = a.fields ? a.fields['Tarih'] || '' : '';
+      var db = b.fields ? b.fields['Tarih'] || '' : '';
+      return db.localeCompare(da);
+    });
+    kpiGuncelle();
+    listeGoster();
+
+    // URL'den NCR secimi
+    var params = new URLSearchParams(window.location.search);
+    var ncrId = params.get('id');
+    if (ncrId) {
+      var rec = ncrList.find(function(r){ return r.id === ncrId; });
+      if (rec) ncrSec(rec.id);
+    }
+  }).catch(function(e) {
+    toast('NCR verileri yuklenemedi: ' + e.message, 'err');
+  });
+}
+
+function durumSirasi(statu) {
+  if (!statu) return 0;
+  var s = statu.toLowerCase();
+  if (s.indexOf('capa') >= 0) return 1;
+  if (s.indexOf('kapal') >= 0) return 2;
+  return 0; // Acik = 0
+}
+
+/* ── KPI ────────────────────────────────────────── */
+function kpiGuncelle() {
+  var acik = 0, capa = 0, kapali = 0, buAy = 0;
+  var simdi = new Date();
+  var ayBaslangic = simdi.getFullYear() + '-' + String(simdi.getMonth() + 1).padStart(2, '0');
+
+  ncrList.forEach(function(r) {
+    var f = r.fields || {};
+    var statu = f['Statu'] || '';
+    var s = statu.toLowerCase();
+
+    if (s.indexOf('kapal') >= 0) kapali++;
+    else if (s.indexOf('capa') >= 0) capa++;
+    else acik++;
+
+    var tarih = f['Tarih'] || '';
+    if (tarih.indexOf(ayBaslangic) === 0) buAy++;
+  });
+
+  document.getElementById('kpi-acik').textContent = acik;
+  document.getElementById('kpi-capa').textContent = capa;
+  document.getElementById('kpi-kapali').textContent = kapali;
+  document.getElementById('kpi-buay').textContent = buAy;
+}
+
+/* ── FILTRE ─────────────────────────────────────── */
+function filtreAyarla(el) {
+  document.querySelectorAll('.ncr-filtre-btn').forEach(function(b){ b.classList.remove('aktif'); });
+  el.classList.add('aktif');
+  aktifFiltre = el.dataset.f;
+  listeGoster();
+}
+
+/* ── LISTE ──────────────────────────────────────── */
+function listeGoster() {
+  var q = (document.getElementById('ncr-arama').value || '').toLowerCase();
+  var items = ncrList;
+
+  if (aktifFiltre === 'acik') {
+    items = items.filter(function(r) {
+      var s = (r.fields ? r.fields['Statu'] || '' : '').toLowerCase();
+      return s.indexOf('acik') >= 0 && s.indexOf('capa') < 0;
+    });
+  } else if (aktifFiltre === 'capa') {
+    items = items.filter(function(r) {
+      var s = (r.fields ? r.fields['Statu'] || '' : '').toLowerCase();
+      return s.indexOf('capa') >= 0;
+    });
+  } else if (aktifFiltre === 'kapali') {
+    items = items.filter(function(r) {
+      var s = (r.fields ? r.fields['Statu'] || '' : '').toLowerCase();
+      return s.indexOf('kapal') >= 0;
+    });
+  }
+
+  if (q) {
+    items = items.filter(function(r) {
+      var f = r.fields || {};
+      var text = ((f['NCR No'] || '') + ' ' + (f['Aciklama'] || '') + ' ' + (f['Malzeme'] || '') + ' ' + (f['Kaynak'] || '')).toLowerCase();
+      return text.indexOf(q) >= 0;
+    });
+  }
+
+  var ul = document.getElementById('ncr-liste');
+  if (!items.length) {
+    ul.innerHTML = '<div style="padding:20px;text-align:center;color:var(--metin4);font-size:12px;">Kayit yok</div>';
+    return;
+  }
+
+  ul.innerHTML = items.map(function(r) {
+    var f = r.fields || {};
+    var ncrNo = f['NCR No'] || r.id.substring(0, 8);
+    var statu = f['Statu'] || '';
+    var siddet = f['Siddet'] || '';
+    var aciklama = f['Aciklama'] || f['Malzeme'] || '';
+    if (aciklama.length > 50) aciklama = aciklama.substring(0, 50) + '...';
+    var isActive = seciliNCR && seciliNCR.id === r.id;
+    var sinif = durumSinif(statu);
+
+    return '<div class="ncr-satir ' + sinif + (isActive ? ' secili' : '') + '" onclick="ncrSec(\'' + r.id + '\')">' +
+      '<div class="ncr-satir-no">' + escHtml(ncrNo) + '</div>' +
+      '<div class="ncr-satir-desc">' + escHtml(aciklama) + '</div>' +
+      '<div class="ncr-satir-alt">' +
+        siddetBadge(siddet) +
+        durumBadge(statu) +
+      '</div>' +
+      '</div>';
+  }).join('');
+}
+
+/* ── NCR SEC ────────────────────────────────────── */
+function ncrSec(id) {
+  seciliNCR = ncrList.find(function(r){ return r.id === id; }) || null;
+  kayitDegisti = false;
+  listeGoster();
+  detayGoster();
+}
+
+/* ── DETAY GOSTER ───────────────────────────────── */
+function detayGoster() {
+  var headerEl = document.getElementById('ncr-header');
+  var detayEl = document.getElementById('ncr-detay');
+
+  if (!seciliNCR) {
+    document.querySelector('#ncr-header span:first-child').textContent = 'NCR Detay';
+    document.getElementById('ncr-header-badges').innerHTML = '';
+    detayEl.innerHTML = '<div class="ncr-empty"><div class="ncr-empty-icon">&#9888;</div><div>Listeden bir NCR secin veya yeni olusturun.</div></div>';
+    return;
+  }
+
+  var f = seciliNCR.fields || {};
+  var ncrNo = f['NCR No'] || '';
+  var statu = f['Statu'] || 'Acik';
+  var siddet = f['Siddet'] || '';
+  var kaynak = f['Kaynak'] || '';
+  var aciklama = f['Aciklama'] || '';
+  var anlikAksiyon = f['Anlik Aksiyon'] || '';
+  var woNo = f['Is Emri No'] || f['WO No'] || '';
+  var lotNo = f['Lot No'] || '';
+  var tedarikci = f['Tedarikci'] || f['Tedarikci Adi'] || '';
+  var miktar = f['Etkilenen Miktar'] || '';
+  var scrGonderildi = f['SCR Gonderildi'] || false;
+  var scrTarih = f['SCR Tarih'] || '';
+  var tarih = f['Tarih'] || '';
+  var raporlayan = f['Raporlayan'] || '';
+
+  seciliSiddet = siddet;
+  seciliAksiyonlar = anlikAksiyon ? anlikAksiyon.split(',').map(function(s){ return s.trim(); }) : [];
+
+  // Header
+  document.querySelector('#ncr-header span:first-child').textContent = ncrNo || 'NCR Detay';
+  document.getElementById('ncr-header-badges').innerHTML = kaynakBadge(kaynak) + ' ' + siddetBadge(siddet) + ' ' + durumBadge(statu);
+
+  // Durum flow
+  var durumAcik = statu.toLowerCase().indexOf('acik') >= 0 && statu.toLowerCase().indexOf('capa') < 0;
+  var durumCapa = statu.toLowerCase().indexOf('capa') >= 0;
+  var durumKapali = statu.toLowerCase().indexOf('kapal') >= 0;
+
+  var html = '';
+
+  // Durum flow bar
+  html += '<div class="durum-flow">';
+  html += '<div class="durum-step ' + (durumAcik ? 'aktif-adim' : (durumCapa || durumKapali ? 'tamamlandi' : '')) + '">Acik</div>';
+  html += '<span class="durum-ok">&rarr;</span>';
+  html += '<div class="durum-step ' + (durumCapa ? 'aktif-adim' : (durumKapali ? 'tamamlandi' : '')) + '">CAPA Acik</div>';
+  html += '<span class="durum-ok">&rarr;</span>';
+  html += '<div class="durum-step ' + (durumKapali ? 'aktif-adim' : '') + '">Kapali</div>';
+  html += '</div>';
+
+  // Tarih & Raporlayan
+  html += '<div class="ncr-sec">';
+  html += '<div class="ncr-info-grid">';
+  html += '<div class="ncr-info-item"><div class="ncr-info-label">Tarih</div><div class="ncr-info-val">' + fmtDate(tarih) + '</div></div>';
+  html += '<div class="ncr-info-item"><div class="ncr-info-label">Raporlayan</div><div class="ncr-info-val">' + escHtml(raporlayan) + '</div></div>';
+  html += '</div>';
+  html += '</div>';
+
+  // Siddet bar
+  html += '<div class="ncr-sec">';
+  html += '<div class="ncr-sec-baslik">Siddet</div>';
+  html += '<div class="siddet-bar">';
+  var siddetler = ['Gozlem', 'Minor', 'Major', 'Kritik'];
+  siddetler.forEach(function(s) {
+    var cls = 's-' + s.toLowerCase();
+    var aktifCls = (seciliSiddet === s) ? ' aktif' : '';
+    html += '<button class="siddet-btn ' + cls + aktifCls + '" onclick="siddetSec(\'' + s + '\')">' + s + '</button>';
+  });
+  html += '</div>';
+  if (siddet === 'Kritik') {
+    html += '<div style="padding:8px 12px;border-radius:6px;background:var(--kirmizi-bg);color:var(--kirmizi-t);font-size:11px;font-weight:600;margin-bottom:8px;">KRITIK: Is emri durdurulmasi onerilir!</div>';
+  }
+  html += '</div>';
+
+  // Uygunsuzluk Tanimi
+  html += '<div class="ncr-sec">';
+  html += '<div class="ncr-sec-baslik">Uygunsuzluk Tanimi <span style="color:var(--kirmizi);">*</span></div>';
+  html += '<textarea class="ncr-textarea" id="ncr-aciklama" onchange="kayitDegistir()">' + escHtml(aciklama) + '</textarea>';
+  html += '</div>';
+
+  // Anlik Aksiyon
+  html += '<div class="ncr-sec">';
+  html += '<div class="ncr-sec-baslik">Anlik Aksiyon</div>';
+  html += '<div class="aksiyon-row">';
+  var aksiyonlar = ['Karantinaya Al', 'Tedarikciye Iade', 'Deviyasyon', 'Hurdaya Ayir', 'Sartli Kullan'];
+  aksiyonlar.forEach(function(a) {
+    var secili = seciliAksiyonlar.indexOf(a) >= 0 ? ' secili' : '';
+    html += '<button class="aksiyon-btn' + secili + '" onclick="aksiyonToggle(this,\'' + a + '\')">' + a + '</button>';
+  });
+  html += '</div>';
+  html += '</div>';
+
+  // Baglanti bilgileri
+  html += '<div class="ncr-sec">';
+  html += '<div class="ncr-sec-baslik">Baglanti Bilgileri</div>';
+  html += '<div class="ncr-info-grid">';
+  html += '<div class="ncr-info-item"><div class="ncr-info-label">Is Emri No</div><input class="ncr-input" id="ncr-wo" value="' + escHtml(woNo) + '" onchange="kayitDegistir()"></div>';
+  html += '<div class="ncr-info-item"><div class="ncr-info-label">Lot No</div><input class="ncr-input" id="ncr-lot" value="' + escHtml(lotNo) + '" onchange="kayitDegistir()"></div>';
+  html += '<div class="ncr-info-item"><div class="ncr-info-label">Tedarikci</div><input class="ncr-input" id="ncr-tedarikci" value="' + escHtml(tedarikci) + '" onchange="kayitDegistir()"></div>';
+  html += '<div class="ncr-info-item"><div class="ncr-info-label">Etkilenen Miktar</div><input class="ncr-input" id="ncr-miktar" type="number" value="' + escHtml(String(miktar)) + '" onchange="kayitDegistir()"></div>';
+  html += '</div>';
+  html += '</div>';
+
+  // SCR (Tedarikci Duzeltme Talebi)
+  html += '<div class="ncr-sec">';
+  html += '<div class="ncr-sec-baslik">Tedarikci Duzeltme Talebi (SCR)</div>';
+  if (scrGonderildi) {
+    html += '<div class="scr-banner">';
+    html += '<div><span style="color:var(--yesil);font-weight:600;">SCR Gonderildi</span>';
+    if (scrTarih) html += ' <span style="color:var(--metin4);font-size:11px;">' + fmtDate(scrTarih) + '</span>';
+    html += '<div style="font-size:10px;color:var(--metin4);margin-top:2px;">7 gunluk sure bekleniyor</div>';
+    html += '</div>';
+    html += '<span class="badge badge-yesil">Gonderildi</span>';
+    html += '</div>';
+  } else {
+    html += '<button class="btn btn-beyaz" onclick="scrGonder(\'' + seciliNCR.id + '\')">SCR Gonder</button>';
+  }
+  html += '</div>';
+
+  // Alt butonlar
+  html += '<div style="display:flex;gap:10px;margin-top:16px;padding-top:12px;border-top:1px solid var(--border);">';
+
+  if (!durumKapali) {
+    html += '<button class="btn btn-mavi" onclick="ncrKaydet(\'' + seciliNCR.id + '\')">Kaydet</button>';
+  }
+
+  if (durumAcik) {
+    html += '<button class="btn btn-sari" style="background:var(--sari);color:#fff;" onclick="capayaGecis(\'' + escHtml(ncrNo) + '\')">CAPA Ac</button>';
+  }
+
+  if (!durumKapali) {
+    html += '<button class="btn btn-beyaz" onclick="ncrKapat(\'' + seciliNCR.id + '\')">Kapat</button>';
+  }
+
+  html += '</div>';
+
+  detayEl.innerHTML = html;
+}
+
+/* ── SIDDET SEC ─────────────────────────────────── */
+function siddetSec(s) {
+  seciliSiddet = s;
+  kayitDegistir();
+  document.querySelectorAll('.siddet-btn').forEach(function(b){ b.classList.remove('aktif'); });
+  var btn = document.querySelector('.siddet-btn.s-' + s.toLowerCase());
+  if (btn) btn.classList.add('aktif');
+
+  // Kritik uyarisi
+  if (s === 'Kritik') {
+    toast('KRITIK siddet secildi — Is emri durdurulmasi onerilir!', 'warn');
+  }
+}
+
+/* ── AKSIYON TOGGLE ─────────────────────────────── */
+function aksiyonToggle(el, aksiyon) {
+  var idx = seciliAksiyonlar.indexOf(aksiyon);
+  if (idx >= 0) {
+    seciliAksiyonlar.splice(idx, 1);
+    el.classList.remove('secili');
+  } else {
+    seciliAksiyonlar.push(aksiyon);
+    el.classList.add('secili');
+  }
+  kayitDegistir();
+
+  if (aksiyon === 'Karantinaya Al' && idx < 0) {
+    var lotNo = document.getElementById('ncr-lot') ? document.getElementById('ncr-lot').value : '';
+    if (lotNo) {
+      karantinayaAl(lotNo);
+    }
+  }
+}
+
+/* ── KAYIT DEGISTIR FLAG ────────────────────────── */
+function kayitDegistir() {
+  kayitDegisti = true;
+}
+
+/* ── NCR KAYDET ─────────────────────────────────── */
+function ncrKaydet(id, ekFields) {
+  if (!seciliNCR) return;
+
+  var aciklama = document.getElementById('ncr-aciklama') ? document.getElementById('ncr-aciklama').value : '';
+  if (!aciklama.trim()) {
+    toast('Uygunsuzluk tanimi zorunludur!', 'err');
+    return;
+  }
+
+  var fields = {
+    'Siddet': seciliSiddet,
+    'Aciklama': aciklama,
+    'Anlik Aksiyon': seciliAksiyonlar.join(', ')
+  };
+
+  var woEl = document.getElementById('ncr-wo');
+  var lotEl = document.getElementById('ncr-lot');
+  var tedEl = document.getElementById('ncr-tedarikci');
+  var mikEl = document.getElementById('ncr-miktar');
+
+  if (woEl) fields['Is Emri No'] = woEl.value;
+  if (woEl) fields['WO No'] = woEl.value;
+  if (lotEl) fields['Lot No'] = lotEl.value;
+  if (tedEl) fields['Tedarikci'] = tedEl.value;
+  if (tedEl) fields['Tedarikci Adi'] = tedEl.value;
+  if (mikEl && mikEl.value) fields['Etkilenen Miktar'] = parseInt(mikEl.value);
+
+  if (ekFields) {
+    for (var k in ekFields) { fields[k] = ekFields[k]; }
+  }
+
+  apiSave('PATCH', T.ncr, {fields: fields}, id).then(function(res) {
+    if (res.error) {
+      toast('Kayit hatasi: ' + res.error.message, 'err');
+      return;
+    }
+    toast('NCR kaydedildi', 'ok');
+    kayitDegisti = false;
+    logIslem('Guncellendi', 'NCR', id, seciliNCR.fields ? seciliNCR.fields['NCR No'] : '', null, fields);
+
+    // Listeyi guncelle
+    var idx = ncrList.findIndex(function(r){ return r.id === id; });
+    if (idx >= 0 && res.fields) {
+      ncrList[idx].fields = res.fields;
+      seciliNCR = ncrList[idx];
+    }
+    listeGoster();
+    detayGoster();
+  }).catch(function(e) {
+    toast('Hata: ' + e.message, 'err');
+  });
+}
+
+/* ── KARANTINAYA AL ─────────────────────────────── */
+function karantinayaAl(lotNo) {
+  toast('Lot ' + lotNo + ' karantina lokasyonuna (KR-02) tasinma talep edildi', 'warn');
+  logIslem('Karantina', 'NCR', seciliNCR ? seciliNCR.id : '', 'Lot: ' + lotNo, null, {lokasyon: 'KR-02'});
+}
+
+/* ── SCR GONDER ─────────────────────────────────── */
+function scrGonder(ncrId) {
+  if (!seciliNCR) return;
+
+  var fields = {
+    'SCR Gonderildi': true,
+    'SCR Tarih': todayISO()
+  };
+
+  apiSave('PATCH', T.ncr, {fields: fields}, ncrId).then(function(res) {
+    if (res.error) {
+      toast('SCR gonderilemedi: ' + res.error.message, 'err');
+      return;
+    }
+    toast('SCR gonderildi — 7 gunluk hatirlatma ayarlandi', 'ok');
+    logIslem('SCR Gonderildi', 'NCR', ncrId, seciliNCR.fields ? seciliNCR.fields['NCR No'] : '', null, fields);
+
+    // Guncelle
+    var idx = ncrList.findIndex(function(r){ return r.id === ncrId; });
+    if (idx >= 0) {
+      ncrList[idx].fields['SCR Gonderildi'] = true;
+      ncrList[idx].fields['SCR Tarih'] = todayISO();
+      seciliNCR = ncrList[idx];
+    }
+    detayGoster();
+  }).catch(function(e) {
+    toast('Hata: ' + e.message, 'err');
+  });
+}
+
+/* ── CAPA'YA GECIS ──────────────────────────────── */
+function capayaGecis(ncrNo) {
+  if (!seciliNCR) return;
+
+  // Durumu CAPA Acik yap
+  ncrKaydet(seciliNCR.id, {'Statu': 'CAPA Acik'});
+
+  // CAPA sayfasina yonlendir
+  setTimeout(function() {
+    window.location.href = 'ersan_kalite_capa.html?ncr=' + encodeURIComponent(ncrNo);
+  }, 500);
+}
+
+/* ── NCR KAPAT ──────────────────────────────────── */
+function ncrKapat(id) {
+  if (!confirm('NCR\'yi kapatmak istediginizden emin misiniz?')) return;
+
+  apiSave('PATCH', T.ncr, {fields: {'Statu': 'Kapali'}}, id).then(function(res) {
+    if (res.error) {
+      toast('Kapatma hatasi: ' + res.error.message, 'err');
+      return;
+    }
+    toast('NCR kapatildi', 'ok');
+    logIslem('Kapatildi', 'NCR', id, seciliNCR.fields ? seciliNCR.fields['NCR No'] : '', null, {'Statu': 'Kapali'});
+    yukle();
+  }).catch(function(e) {
+    toast('Hata: ' + e.message, 'err');
+  });
+}
+
+/* ── YENI NCR ───────────────────────────────────── */
+function yeniNCR() {
+  kodUret('NCR').then(function(ncrNo) {
+    var fields = {
+      'NCR No': ncrNo,
+      'Statu': 'Acik',
+      'Tarih': todayISO(),
+      'Kaynak': 'Manuel',
+      'Siddet': 'Minor',
+      'Raporlayan': window._aktifKullanici || 'Erdem Kucukates'
+    };
+
+    return apiSave('POST', T.ncr, {fields: fields});
+  }).then(function(res) {
+    if (res.error) {
+      toast('NCR olusturulamadi: ' + res.error.message, 'err');
+      return;
+    }
+    toast('Yeni NCR olusturuldu: ' + (res.fields ? res.fields['NCR No'] : ''), 'ok');
+    logIslem('Olusturuldu', 'NCR', res.id, res.fields ? res.fields['NCR No'] : '', null, res.fields);
+
+    // Listeye ekle ve sec
+    ncrList.unshift(res);
+    seciliNCR = res;
+    kpiGuncelle();
+    listeGoster();
+    detayGoster();
+  }).catch(function(e) {
+    toast('Hata: ' + e.message, 'err');
+  });
+}
+
+/* ── INIT ───────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', function() {
+  yukle();
+});
+</script>
+</body>
+</html>

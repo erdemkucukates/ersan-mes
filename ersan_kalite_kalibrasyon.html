@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — Kalibrasyon Yönetimi</title>
+<link rel="stylesheet" href="ersan_styles.css">
+<script src="ersan_nav.js" defer></script>
+<script src="ersan_log.js" defer></script>
+<style>
+/* KPI Row */
+.kpi-row { display:flex; gap:12px; margin-bottom:16px; }
+.kpi { flex:1; background:var(--beyaz); border:1px solid var(--border); border-radius:10px; padding:14px 16px; }
+.kpi-ust { font-size:11px; color:var(--metin3); text-transform:uppercase; letter-spacing:.3px; margin-bottom:4px; }
+.kpi-deger { font-size:26px; font-weight:700; color:var(--metin); }
+.kpi.s1 { border-left:3px solid var(--mavi); }
+.kpi.s2 { border-left:3px solid var(--yesil); }
+.kpi.s3 { border-left:3px solid var(--sari); }
+.kpi.s4 { border-left:3px solid var(--kirmizi); }
+
+/* AS9100 strip */
+.as-serit { display:flex; align-items:center; gap:8px; padding:8px 14px; background:var(--bg2); border:1px solid var(--border); border-radius:8px; margin-bottom:14px; font-size:11px; color:var(--metin3); flex-wrap:wrap; }
+.as-chip { font-size:10px; font-weight:600; padding:2px 8px; border-radius:4px; }
+.as-chip.grn { background:var(--yesil-bg); color:var(--yesil-t); }
+.as-chip.amr { background:var(--sari-bg); color:var(--sari-t); }
+.as-chip.red { background:var(--kirmizi-bg); color:var(--kirmizi-t); }
+.as-chip.blue { background:var(--mavi-acik); color:var(--mavi-koyu); }
+
+/* Filter Bar */
+.filtre-bar { display:flex; gap:8px; align-items:center; margin-bottom:16px; flex-wrap:wrap; }
+.filtre-bar input[type="text"] { flex:1; min-width:200px; padding:7px 12px; border:1px solid var(--border); border-radius:6px; font-size:13px; font-family:inherit; background:var(--beyaz); color:var(--metin2); }
+.filtre-bar select { padding:7px 12px; border:1px solid var(--border); border-radius:6px; font-size:13px; font-family:inherit; background:var(--beyaz); color:var(--metin2); cursor:pointer; }
+
+/* Equipment Grid */
+.td-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:14px; padding-bottom:20px; }
+@media(max-width:1200px) { .td-grid { grid-template-columns:repeat(2, 1fr); } }
+@media(max-width:768px)  { .td-grid { grid-template-columns:1fr; } }
+
+/* Equipment Card */
+.td-kart { background:var(--beyaz); border:1px solid var(--border); border-radius:10px; overflow:hidden; transition:box-shadow .2s, border-color .2s; position:relative; }
+.td-kart:hover { box-shadow:0 4px 16px rgba(15,39,68,.1); }
+.td-kart.kalibre { border-left:4px solid var(--yesil); }
+.td-kart.yaklasan { border-left:4px solid var(--sari); background:linear-gradient(135deg, #fffbeb 0%, var(--beyaz) 30%); }
+.td-kart.gecmis { border-left:4px solid var(--kirmizi); background:linear-gradient(135deg, #fef2f2 0%, var(--beyaz) 30%); }
+.tdk-head { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:var(--bg2); border-bottom:1px solid var(--border); }
+.tdk-adi { font-size:14px; font-weight:700; color:var(--metin); }
+.tdk-no { font-family:'Courier New',monospace; font-size:11px; color:var(--mavi-koyu); font-weight:600; }
+.tdk-body { padding:12px 16px 14px; }
+.tdk-row { display:flex; justify-content:space-between; padding:3px 0; font-size:12px; }
+.tdk-k { color:var(--metin3); }
+.tdk-v { color:var(--metin); font-weight:500; }
+
+/* Progress bar */
+.puan-bar { height:6px; background:var(--border); border-radius:3px; margin:8px 0 4px; overflow:hidden; }
+.puan-fill { height:100%; border-radius:3px; transition:width .5s; }
+
+/* Badges */
+.bdg { display:inline-block; font-size:10px; font-weight:600; padding:2px 8px; border-radius:4px; }
+.b-grn { background:var(--yesil-bg); color:var(--yesil-t); }
+.b-amr { background:var(--sari-bg); color:var(--sari-t); }
+.b-red { background:var(--kirmizi-bg); color:var(--kirmizi-t); }
+.b-gray { background:#f1f5f9; color:var(--metin3); }
+.blok-badge { position:absolute; top:10px; right:10px; font-size:11px; font-weight:700; background:var(--kirmizi); color:#fff; padding:3px 10px; border-radius:4px; }
+
+/* Buttons */
+.btn { display:inline-flex; align-items:center; gap:4px; padding:7px 14px; border:none; border-radius:6px; font-size:13px; font-weight:600; font-family:inherit; cursor:pointer; transition:background .15s; }
+.btn-p { background:var(--mavi); color:#fff; }
+.btn-p:hover { background:var(--mavi-koyu); }
+.btn-sm { padding:5px 10px; font-size:11px; }
+.btn-g { background:var(--border); color:var(--metin2); }
+.btn-g:hover { background:var(--border2); }
+.btn-red { background:var(--kirmizi); color:#fff; }
+.kart-alt { display:flex; gap:6px; padding:10px 16px; border-top:1px solid var(--border); }
+
+/* Modal */
+.modal-bg { position:fixed; inset:0; background:rgba(15,39,68,.45); z-index:700; display:none; align-items:center; justify-content:center; }
+.modal-bg.acik { display:flex; }
+.modal-kutu { background:var(--beyaz); border-radius:12px; width:520px; max-width:95vw; max-height:90vh; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 16px 48px rgba(15,39,68,.2); }
+.modal-ust { display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--border); }
+.modal-ust h3 { font-size:16px; color:var(--metin); }
+.modal-kapat { width:28px; height:28px; border:none; background:var(--bg); border-radius:6px; cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center; color:var(--metin3); }
+.modal-kapat:hover { background:var(--border); }
+.modal-govde { flex:1; overflow-y:auto; padding:20px; }
+.modal-alt { display:flex; justify-content:flex-end; gap:8px; padding:14px 20px; border-top:1px solid var(--border); }
+
+/* Form */
+.form-grup { margin-bottom:12px; }
+.form-grup label { display:block; font-size:11px; font-weight:600; color:var(--metin3); margin-bottom:4px; text-transform:uppercase; }
+.form-grup input, .form-grup select, .form-grup textarea { width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:6px; font-size:13px; font-family:inherit; background:var(--beyaz); color:var(--metin2); }
+.form-iki { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+
+/* Detail Modal (wider) */
+.modal-kutu.genis { width:700px; }
+
+/* Cal history table */
+.cal-tablo { width:100%; font-size:12px; border-collapse:collapse; margin-top:12px; }
+.cal-tablo th { text-align:left; padding:6px 8px; background:var(--bg); color:var(--metin3); font-weight:600; border-bottom:1px solid var(--border); font-size:10px; text-transform:uppercase; }
+.cal-tablo td { padding:6px 8px; border-bottom:1px solid var(--border); color:var(--metin2); }
+
+/* Empty */
+.bos-grid { text-align:center; padding:60px 20px; color:var(--metin4); font-size:14px; grid-column:1/-1; }
+.yukleniyor { display:flex; align-items:center; justify-content:center; gap:8px; padding:40px; color:var(--metin3); font-size:13px; grid-column:1/-1; }
+.spinner { width:20px; height:20px; border:2px solid var(--border); border-top-color:var(--mavi); border-radius:50%; animation:spin .6s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+</style>
+</head>
+<body>
+<div id="nav-alani"></div>
+<div class="icerik-alani">
+  <div class="topbar">
+    <div class="topbar-baslik">Kalibrasyon Yönetimi</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button class="btn btn-p" onclick="yeniEkipmanModal()">+ Yeni Ekipman</button>
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
+    </div>
+  </div>
+  <div class="sayfa-icerik">
+
+    <!-- AS9100 strip -->
+    <div class="as-serit">
+      <span class="as-chip blue">AS9100 §7.1.5</span>
+      <span>İzleme ve Ölçme Kaynakları — Kalibrasyon Yönetimi</span>
+      <span style="margin-left:auto;display:flex;gap:6px;">
+        <span class="as-chip grn" id="chipKalibre">Kalibre: 0</span>
+        <span class="as-chip amr" id="chipYaklasan">Yaklaşıyor: 0</span>
+        <span class="as-chip red" id="chipGecmis">Geçmiş: 0</span>
+      </span>
+    </div>
+
+    <!-- KPI Row -->
+    <div class="kpi-row">
+      <div class="kpi s1"><div class="kpi-ust">Toplam Ekipman</div><div class="kpi-deger" id="kpi-toplam">0</div></div>
+      <div class="kpi s2"><div class="kpi-ust">Kalibre</div><div class="kpi-deger" id="kpi-kalibre">0</div></div>
+      <div class="kpi s3"><div class="kpi-ust">Yaklaşıyor (&le;30 gün)</div><div class="kpi-deger" id="kpi-yaklasan">0</div></div>
+      <div class="kpi s4"><div class="kpi-ust">Süresi Geçmiş</div><div class="kpi-deger" id="kpi-gecmis">0</div></div>
+    </div>
+
+    <!-- Filter bar -->
+    <div class="filtre-bar">
+      <input type="text" id="aramaInput" placeholder="EQP kodu veya alet adı ara..." oninput="filtrele()">
+      <select id="durumFiltre" onchange="filtrele()">
+        <option value="">Tüm Durumlar</option>
+        <option value="kalibre">Kalibre</option>
+        <option value="yaklasan">Yaklaşıyor</option>
+        <option value="gecmis">Süresi Geçmiş</option>
+      </select>
+      <select id="tipFiltre" onchange="filtrele()">
+        <option value="">Tüm Tipler</option>
+        <option value="Kumpas">Kumpas</option>
+        <option value="Mikrometre">Mikrometre</option>
+        <option value="Gösterge">Gösterge</option>
+        <option value="Tork Anahtarı">Tork Anahtarı</option>
+        <option value="Terazi">Terazi</option>
+        <option value="Diğer">Diğer</option>
+      </select>
+    </div>
+
+    <!-- Equipment Grid -->
+    <div class="td-grid" id="ekipmanGrid">
+      <div class="yukleniyor"><div class="spinner"></div> Yükleniyor...</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Yeni Ekipman Modal -->
+<div class="modal-bg" id="yeniModal">
+  <div class="modal-kutu">
+    <div class="modal-ust">
+      <h3 id="modalBaslik">Yeni Kalibrasyon Ekipmanı</h3>
+      <button class="modal-kapat" onclick="modalKapat('yeniModal')">&times;</button>
+    </div>
+    <div class="modal-govde">
+      <div class="form-iki">
+        <div class="form-grup">
+          <label>Alet Adı</label>
+          <input type="text" id="frmAd" placeholder="Dış Mikrometre 0-25mm">
+        </div>
+        <div class="form-grup">
+          <label>Tip</label>
+          <select id="frmTip">
+            <option value="Kumpas">Kumpas</option>
+            <option value="Mikrometre">Mikrometre</option>
+            <option value="Gösterge">Gösterge</option>
+            <option value="Tork Anahtarı">Tork Anahtarı</option>
+            <option value="Terazi">Terazi</option>
+            <option value="Diğer">Diğer</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-iki">
+        <div class="form-grup">
+          <label>Marka</label>
+          <input type="text" id="frmMarka" placeholder="Mitutoyo">
+        </div>
+        <div class="form-grup">
+          <label>Model / Seri No</label>
+          <input type="text" id="frmModel" placeholder="293-240-30">
+        </div>
+      </div>
+      <div class="form-iki">
+        <div class="form-grup">
+          <label>Kalibrasyon Periyodu (ay)</label>
+          <input type="number" id="frmPeriyot" value="12" min="1" max="60">
+        </div>
+        <div class="form-grup">
+          <label>Kalibrasyon Laboratuvarı</label>
+          <input type="text" id="frmLab" placeholder="TÜBİTAK UME">
+        </div>
+      </div>
+      <div class="form-iki">
+        <div class="form-grup">
+          <label>Son Kalibrasyon Tarihi</label>
+          <input type="date" id="frmSonTarih">
+        </div>
+        <div class="form-grup">
+          <label>Sertifika No</label>
+          <input type="text" id="frmSertifika" placeholder="UME-2026-12345">
+        </div>
+      </div>
+      <div class="form-grup">
+        <label>Konum / Atanmış Kişi</label>
+        <input type="text" id="frmKonum" placeholder="Atölye / CNC-1 Operatörü">
+      </div>
+    </div>
+    <div class="modal-alt">
+      <button class="btn btn-g" onclick="modalKapat('yeniModal')">İptal</button>
+      <button class="btn btn-p" id="modalKaydetBtn" onclick="ekipmanKaydet()">Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<!-- Kalibrasyon Ekle Modal -->
+<div class="modal-bg" id="kalModal">
+  <div class="modal-kutu">
+    <div class="modal-ust">
+      <h3>Kalibrasyon Ekle</h3>
+      <button class="modal-kapat" onclick="modalKapat('kalModal')">&times;</button>
+    </div>
+    <div class="modal-govde">
+      <input type="hidden" id="kalEqpId">
+      <div class="form-iki">
+        <div class="form-grup">
+          <label>Kalibrasyon Tarihi</label>
+          <input type="date" id="kalTarih">
+        </div>
+        <div class="form-grup">
+          <label>Laboratuvar</label>
+          <input type="text" id="kalLab">
+        </div>
+      </div>
+      <div class="form-iki">
+        <div class="form-grup">
+          <label>Sertifika No</label>
+          <input type="text" id="kalSertifika" placeholder="UME-2026-XXXXX">
+        </div>
+        <div class="form-grup">
+          <label>Sonuç</label>
+          <select id="kalSonuc">
+            <option value="Uygun">Uygun</option>
+            <option value="Şartlı Uygun">Şartlı Uygun</option>
+            <option value="Uygun Değil">Uygun Değil</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-grup">
+        <label>Notlar</label>
+        <input type="text" id="kalNot" placeholder="Opsiyonel notlar...">
+      </div>
+    </div>
+    <div class="modal-alt">
+      <button class="btn btn-g" onclick="modalKapat('kalModal')">İptal</button>
+      <button class="btn btn-p" onclick="kalibrasyonKaydet()">Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<!-- Detay Modal -->
+<div class="modal-bg" id="detayModal">
+  <div class="modal-kutu genis">
+    <div class="modal-ust">
+      <h3 id="detayBaslik">Ekipman Detayı</h3>
+      <button class="modal-kapat" onclick="modalKapat('detayModal')">&times;</button>
+    </div>
+    <div class="modal-govde" id="detayGovde"></div>
+    <div class="modal-alt">
+      <button class="btn btn-red btn-sm" id="detaySilBtn" onclick="ekipmanSil()">Sil</button>
+      <button class="btn btn-g" onclick="modalKapat('detayModal')">Kapat</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var EQP_STORAGE_KEY = 'ersan_kalibrasyon_ekipman';
+var ekipmanListesi = [];
+var duzenleId = null;
+
+/* ── Örnek veri ── */
+var ORNEK_VERI = [
+  { id:'eqp_1', no:'EQP-KMP-001', ad:'Dijital Kumpas 0-150mm', tip:'Kumpas', marka:'Mitutoyo', model:'500-196-30', periyot:12, lab:'TÜBİTAK UME', konum:'Atölye Genel', kalibrasyonlar:[{tarih:'2026-01-15',lab:'TÜBİTAK UME',sertifika:'UME-2026-10234',sonuc:'Uygun',not:''}] },
+  { id:'eqp_2', no:'EQP-MKR-001', ad:'Dış Mikrometre 0-25mm', tip:'Mikrometre', marka:'Mitutoyo', model:'293-240-30', periyot:6, lab:'TÜBİTAK UME', konum:'CNC-1', kalibrasyonlar:[{tarih:'2026-01-15',lab:'TÜBİTAK UME',sertifika:'UME-2026-10235',sonuc:'Uygun',not:''}] },
+  { id:'eqp_3', no:'EQP-MKR-002', ad:'Dış Mikrometre 25-50mm', tip:'Mikrometre', marka:'Mitutoyo', model:'293-241-30', periyot:6, lab:'Kaltest', konum:'CNC-2', kalibrasyonlar:[{tarih:'2025-10-01',lab:'Kaltest',sertifika:'KLT-2025-5567',sonuc:'Uygun',not:''}] },
+  { id:'eqp_4', no:'EQP-GST-001', ad:'Komparatör Saati 0.01mm', tip:'Gösterge', marka:'Käfer', model:'M2S', periyot:12, lab:'Kaltest', konum:'Kalite Masası', kalibrasyonlar:[{tarih:'2025-12-20',lab:'Kaltest',sertifika:'KLT-2025-8891',sonuc:'Uygun',not:''}] },
+  { id:'eqp_5', no:'EQP-KMP-002', ad:'Dijital Kumpas 0-300mm', tip:'Kumpas', marka:'Insize', model:'1108-300', periyot:12, lab:'TÜBİTAK UME', konum:'Montaj', kalibrasyonlar:[{tarih:'2025-06-10',lab:'TÜBİTAK UME',sertifika:'UME-2025-7712',sonuc:'Uygun',not:''}] },
+  { id:'eqp_6', no:'EQP-TRK-001', ad:'Tork Anahtarı 10-50 Nm', tip:'Tork Anahtarı', marka:'Norbar', model:'NorTorque 50', periyot:12, lab:'Norbar Türkiye', konum:'Montaj', kalibrasyonlar:[{tarih:'2026-03-01',lab:'Norbar Türkiye',sertifika:'NRB-2026-0312',sonuc:'Uygun',not:''}] }
+];
+
+/* ── Veri yönetimi ── */
+function veriYukle() {
+  try {
+    var raw = localStorage.getItem(EQP_STORAGE_KEY);
+    ekipmanListesi = raw ? JSON.parse(raw) : [];
+  } catch(e) {
+    ekipmanListesi = [];
+  }
+  if (ekipmanListesi.length === 0) {
+    ekipmanListesi = JSON.parse(JSON.stringify(ORNEK_VERI));
+    veriKaydet();
+  }
+}
+
+function veriKaydet() {
+  localStorage.setItem(EQP_STORAGE_KEY, JSON.stringify(ekipmanListesi));
+}
+
+/* ── Hesaplamalar ── */
+function kalanGunHesapla(sonKalTarih, periyotAy) {
+  if (!sonKalTarih) return -9999;
+  var son = new Date(sonKalTarih);
+  var sonraki = new Date(son);
+  sonraki.setMonth(sonraki.getMonth() + (periyotAy || 12));
+  var bugun = new Date();
+  bugun.setHours(0,0,0,0);
+  sonraki.setHours(0,0,0,0);
+  return Math.ceil((sonraki - bugun) / (1000 * 60 * 60 * 24));
+}
+
+function sonrakiTarihHesapla(sonKalTarih, periyotAy) {
+  if (!sonKalTarih) return '—';
+  var son = new Date(sonKalTarih);
+  var sonraki = new Date(son);
+  sonraki.setMonth(sonraki.getMonth() + (periyotAy || 12));
+  return sonraki.toISOString().split('T')[0];
+}
+
+function kalibrasyon_durumu(kalanGun) {
+  if (kalanGun < 0) return { text: 'Süresi Geçmiş', cls: 'gecmis', bdg: 'b-red', renk: 'var(--kirmizi)' };
+  if (kalanGun <= 30) return { text: 'Yaklaşıyor', cls: 'yaklasan', bdg: 'b-amr', renk: 'var(--sari)' };
+  return { text: 'Kalibre', cls: 'kalibre', bdg: 'b-grn', renk: 'var(--yesil)' };
+}
+
+function sonKalibrasyon(eqp) {
+  if (!eqp.kalibrasyonlar || eqp.kalibrasyonlar.length === 0) return null;
+  var sorted = eqp.kalibrasyonlar.slice().sort(function(a, b) { return b.tarih.localeCompare(a.tarih); });
+  return sorted[0];
+}
+
+function ilerlemeYuzde(sonKalTarih, periyotAy) {
+  if (!sonKalTarih) return 0;
+  var son = new Date(sonKalTarih);
+  var sonraki = new Date(son);
+  sonraki.setMonth(sonraki.getMonth() + (periyotAy || 12));
+  var bugun = new Date();
+  var toplam = sonraki - son;
+  var gecen = bugun - son;
+  if (toplam <= 0) return 100;
+  var yuzde = Math.round((gecen / toplam) * 100);
+  return Math.min(Math.max(yuzde, 0), 100);
+}
+
+function tarihFormat(str) {
+  if (!str) return '—';
+  var d = new Date(str);
+  return String(d.getDate()).padStart(2, '0') + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.' + d.getFullYear();
+}
+
+/* ── KPI ── */
+function kpiGuncelle() {
+  var toplam = ekipmanListesi.length;
+  var kalibre = 0, yaklasan = 0, gecmis = 0;
+
+  ekipmanListesi.forEach(function(eqp) {
+    var son = sonKalibrasyon(eqp);
+    var kalan = son ? kalanGunHesapla(son.tarih, eqp.periyot) : -9999;
+    var d = kalibrasyon_durumu(kalan);
+    if (d.cls === 'kalibre') kalibre++;
+    else if (d.cls === 'yaklasan') yaklasan++;
+    else gecmis++;
+  });
+
+  document.getElementById('kpi-toplam').textContent = toplam;
+  document.getElementById('kpi-kalibre').textContent = kalibre;
+  document.getElementById('kpi-yaklasan').textContent = yaklasan;
+  document.getElementById('kpi-gecmis').textContent = gecmis;
+  document.getElementById('chipKalibre').textContent = 'Kalibre: ' + kalibre;
+  document.getElementById('chipYaklasan').textContent = 'Yaklaşıyor: ' + yaklasan;
+  document.getElementById('chipGecmis').textContent = 'Geçmiş: ' + gecmis;
+}
+
+/* ── Grid render ── */
+function gridOlustur() {
+  var grid = document.getElementById('ekipmanGrid');
+  var arama = document.getElementById('aramaInput').value.toLowerCase();
+  var durumF = document.getElementById('durumFiltre').value;
+  var tipF = document.getElementById('tipFiltre').value;
+
+  var filtrelenmis = ekipmanListesi.filter(function(eqp) {
+    // text search
+    if (arama) {
+      var text = (eqp.no + ' ' + eqp.ad + ' ' + eqp.marka + ' ' + eqp.model).toLowerCase();
+      if (text.indexOf(arama) < 0) return false;
+    }
+    // durum filter
+    if (durumF) {
+      var son = sonKalibrasyon(eqp);
+      var kalan = son ? kalanGunHesapla(son.tarih, eqp.periyot) : -9999;
+      var d = kalibrasyon_durumu(kalan);
+      if (d.cls !== durumF) return false;
+    }
+    // tip filter
+    if (tipF && eqp.tip !== tipF) return false;
+    return true;
+  });
+
+  if (filtrelenmis.length === 0) {
+    grid.innerHTML = '<div class="bos-grid">Ekipman bulunamadı.</div>';
+    return;
+  }
+
+  var html = '';
+  filtrelenmis.forEach(function(eqp) {
+    var son = sonKalibrasyon(eqp);
+    var sonTarih = son ? son.tarih : null;
+    var kalan = sonTarih ? kalanGunHesapla(sonTarih, eqp.periyot) : -9999;
+    var sonrakiTarih = sonTarih ? sonrakiTarihHesapla(sonTarih, eqp.periyot) : '—';
+    var d = kalibrasyon_durumu(kalan);
+    var yuzde = sonTarih ? ilerlemeYuzde(sonTarih, eqp.periyot) : 100;
+    var barRenk = d.renk;
+
+    html += '<div class="td-kart ' + d.cls + '">';
+    if (d.cls === 'gecmis') html += '<div class="blok-badge">BLOKLANДИ</div>';
+    html += '<div class="tdk-head">';
+    html += '<div><div class="tdk-no">' + eqp.no + '</div><div class="tdk-adi">' + escapeHtml(eqp.ad) + '</div></div>';
+    html += '<span class="bdg ' + d.bdg + '">' + d.text + '</span>';
+    html += '</div>';
+    html += '<div class="tdk-body">';
+    html += '<div style="font-size:11px;color:var(--metin3);margin-bottom:6px;">' + escapeHtml(eqp.marka || '') + (eqp.model ? ' · ' + escapeHtml(eqp.model) : '') + '</div>';
+    html += '<div class="tdk-row"><span class="tdk-k">Son Kalibrasyon</span><span class="tdk-v">' + tarihFormat(sonTarih) + '</span></div>';
+    html += '<div class="tdk-row"><span class="tdk-k">Sonraki</span><span class="tdk-v">' + tarihFormat(sonrakiTarih) + '</span></div>';
+    html += '<div class="tdk-row"><span class="tdk-k">Kalan</span><span class="tdk-v" style="color:' + d.renk + ';font-weight:700;">' + (kalan > -9000 ? kalan + ' gün' : '—') + '</span></div>';
+    html += '<div class="tdk-row"><span class="tdk-k">Lab</span><span class="tdk-v">' + escapeHtml(son ? son.lab : (eqp.lab || '—')) + '</span></div>';
+    html += '<div class="puan-bar"><div class="puan-fill" style="width:' + yuzde + '%;background:' + barRenk + ';"></div></div>';
+    html += '<div style="text-align:right;font-size:10px;color:var(--metin4);">' + (100 - yuzde) + '% kalan</div>';
+    html += '</div>';
+    html += '<div class="kart-alt">';
+    html += '<button class="btn btn-p btn-sm" onclick="kalibrasyonEkleModal(\'' + eqp.id + '\')">Kalibrasyon Ekle</button>';
+    html += '<button class="btn btn-g btn-sm" onclick="qrYazdir(\'' + eqp.id + '\')">QR Yazdır</button>';
+    html += '<button class="btn btn-g btn-sm" onclick="detayGoster(\'' + eqp.id + '\')">Detay</button>';
+    html += '</div></div>';
+  });
+
+  grid.innerHTML = html;
+}
+
+function filtrele() {
+  gridOlustur();
+}
+
+/* ── Yeni ekipman ── */
+function yeniEkipmanModal() {
+  duzenleId = null;
+  document.getElementById('modalBaslik').textContent = 'Yeni Kalibrasyon Ekipmanı';
+  document.getElementById('frmAd').value = '';
+  document.getElementById('frmTip').value = 'Kumpas';
+  document.getElementById('frmMarka').value = '';
+  document.getElementById('frmModel').value = '';
+  document.getElementById('frmPeriyot').value = '12';
+  document.getElementById('frmLab').value = '';
+  document.getElementById('frmSonTarih').value = '';
+  document.getElementById('frmSertifika').value = '';
+  document.getElementById('frmKonum').value = '';
+  document.getElementById('yeniModal').classList.add('acik');
+}
+
+function modalKapat(id) {
+  document.getElementById(id).classList.remove('acik');
+}
+
+function sonrakiEqpNo(tip) {
+  var kisaltma = { 'Kumpas':'KMP', 'Mikrometre':'MKR', 'Gösterge':'GST', 'Tork Anahtarı':'TRK', 'Terazi':'TRZ', 'Diğer':'DGR' };
+  var k = kisaltma[tip] || 'DGR';
+  var max = 0;
+  ekipmanListesi.forEach(function(e) {
+    if (e.no && e.no.indexOf('EQP-' + k) === 0) {
+      var m = e.no.match(/-(\d+)$/);
+      if (m) { var n = parseInt(m[1]); if (n > max) max = n; }
+    }
+  });
+  return 'EQP-' + k + '-' + String(max + 1).padStart(3, '0');
+}
+
+function ekipmanKaydet() {
+  var ad = document.getElementById('frmAd').value.trim();
+  if (!ad) { alert('Alet adı zorunludur.'); return; }
+
+  var tip = document.getElementById('frmTip').value;
+  var marka = document.getElementById('frmMarka').value.trim();
+  var model = document.getElementById('frmModel').value.trim();
+  var periyot = parseInt(document.getElementById('frmPeriyot').value) || 12;
+  var lab = document.getElementById('frmLab').value.trim();
+  var sonTarih = document.getElementById('frmSonTarih').value;
+  var sertifika = document.getElementById('frmSertifika').value.trim();
+  var konum = document.getElementById('frmKonum').value.trim();
+
+  if (duzenleId) {
+    var eqp = ekipmanListesi.find(function(e) { return e.id === duzenleId; });
+    if (eqp) {
+      eqp.ad = ad; eqp.tip = tip; eqp.marka = marka; eqp.model = model;
+      eqp.periyot = periyot; eqp.lab = lab; eqp.konum = konum;
+    }
+  } else {
+    var yeni = {
+      id: 'eqp_' + Date.now(),
+      no: sonrakiEqpNo(tip),
+      ad: ad, tip: tip, marka: marka, model: model,
+      periyot: periyot, lab: lab, konum: konum,
+      kalibrasyonlar: []
+    };
+    if (sonTarih) {
+      yeni.kalibrasyonlar.push({ tarih: sonTarih, lab: lab, sertifika: sertifika, sonuc: 'Uygun', not: '' });
+    }
+    ekipmanListesi.push(yeni);
+    logIslem('Oluşturuldu', 'Kalibrasyon', yeni.id, yeni.no, null, { ad: ad, tip: tip });
+  }
+
+  veriKaydet();
+  modalKapat('yeniModal');
+  kpiGuncelle();
+  gridOlustur();
+}
+
+/* ── Kalibrasyon ekle ── */
+function kalibrasyonEkleModal(eqpId) {
+  var eqp = ekipmanListesi.find(function(e) { return e.id === eqpId; });
+  if (!eqp) return;
+  document.getElementById('kalEqpId').value = eqpId;
+  document.getElementById('kalTarih').value = new Date().toISOString().split('T')[0];
+  document.getElementById('kalLab').value = eqp.lab || '';
+  document.getElementById('kalSertifika').value = '';
+  document.getElementById('kalSonuc').value = 'Uygun';
+  document.getElementById('kalNot').value = '';
+  document.getElementById('kalModal').classList.add('acik');
+}
+
+function kalibrasyonKaydet() {
+  var eqpId = document.getElementById('kalEqpId').value;
+  var eqp = ekipmanListesi.find(function(e) { return e.id === eqpId; });
+  if (!eqp) return;
+
+  var tarih = document.getElementById('kalTarih').value;
+  if (!tarih) { alert('Tarih zorunludur.'); return; }
+
+  var kayit = {
+    tarih: tarih,
+    lab: document.getElementById('kalLab').value.trim(),
+    sertifika: document.getElementById('kalSertifika').value.trim(),
+    sonuc: document.getElementById('kalSonuc').value,
+    not: document.getElementById('kalNot').value.trim()
+  };
+
+  if (!eqp.kalibrasyonlar) eqp.kalibrasyonlar = [];
+  eqp.kalibrasyonlar.push(kayit);
+
+  veriKaydet();
+  modalKapat('kalModal');
+  kpiGuncelle();
+  gridOlustur();
+
+  logIslem('Güncellendi', 'Kalibrasyon', eqpId, eqp.no, null, { kalibrasyon: kayit });
+}
+
+/* ── QR Yazdır ── */
+function qrYazdir(eqpId) {
+  var eqp = ekipmanListesi.find(function(e) { return e.id === eqpId; });
+  if (!eqp) return;
+  var son = sonKalibrasyon(eqp);
+  var sonTarih = son ? son.tarih : '—';
+  var sonrakiTarih = son ? sonrakiTarihHesapla(son.tarih, eqp.periyot) : '—';
+
+  var w = window.open('', '_blank', 'width=400,height=300');
+  w.document.write('<html><head><title>QR — ' + eqp.no + '</title>');
+  w.document.write('<style>body{font-family:monospace;padding:20px;text-align:center;} .no{font-size:24px;font-weight:bold;margin:10px 0;} .info{font-size:12px;color:#333;margin:4px 0;} .line{border-top:1px dashed #ccc;margin:10px 0;}</style>');
+  w.document.write('</head><body>');
+  w.document.write('<div class="no">' + eqp.no + '</div>');
+  w.document.write('<div class="info">' + escapeHtml(eqp.ad) + '</div>');
+  w.document.write('<div class="info">' + escapeHtml(eqp.marka || '') + ' ' + escapeHtml(eqp.model || '') + '</div>');
+  w.document.write('<div class="line"></div>');
+  w.document.write('<div class="info">Son Kal: ' + tarihFormat(sonTarih) + '</div>');
+  w.document.write('<div class="info">Sonraki: ' + tarihFormat(sonrakiTarih) + '</div>');
+  w.document.write('<div class="line"></div>');
+  w.document.write('<div style="margin-top:10px;"><img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=' + encodeURIComponent(eqp.no + '|' + eqp.ad + '|' + sonTarih + '|' + sonrakiTarih) + '" width="120" height="120"></div>');
+  w.document.write('<script>setTimeout(function(){window.print();},500);<\/script>');
+  w.document.write('</body></html>');
+  w.document.close();
+}
+
+/* ── Detay modal ── */
+function detayGoster(eqpId) {
+  var eqp = ekipmanListesi.find(function(e) { return e.id === eqpId; });
+  if (!eqp) return;
+
+  document.getElementById('detayBaslik').textContent = eqp.no + ' — ' + eqp.ad;
+  document.getElementById('detaySilBtn').setAttribute('data-id', eqpId);
+
+  var son = sonKalibrasyon(eqp);
+  var sonTarih = son ? son.tarih : null;
+  var kalan = sonTarih ? kalanGunHesapla(sonTarih, eqp.periyot) : -9999;
+  var d = kalibrasyon_durumu(kalan);
+
+  var html = '';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">';
+  html += '<div style="font-size:12px;"><span style="color:var(--metin3);">Tip:</span> <b>' + escapeHtml(eqp.tip) + '</b></div>';
+  html += '<div style="font-size:12px;"><span style="color:var(--metin3);">Marka / Model:</span> <b>' + escapeHtml(eqp.marka || '—') + ' / ' + escapeHtml(eqp.model || '—') + '</b></div>';
+  html += '<div style="font-size:12px;"><span style="color:var(--metin3);">Periyot:</span> <b>' + eqp.periyot + ' ay</b></div>';
+  html += '<div style="font-size:12px;"><span style="color:var(--metin3);">Konum:</span> <b>' + escapeHtml(eqp.konum || '—') + '</b></div>';
+  html += '<div style="font-size:12px;"><span style="color:var(--metin3);">Durum:</span> <span class="bdg ' + d.bdg + '">' + d.text + (kalan > -9000 ? ' (' + kalan + ' gün)' : '') + '</span></div>';
+  html += '<div style="font-size:12px;"><span style="color:var(--metin3);">Laboratuvar:</span> <b>' + escapeHtml(eqp.lab || '—') + '</b></div>';
+  html += '</div>';
+
+  // Kalibrasyon geçmişi
+  html += '<div style="font-size:12px;font-weight:700;color:var(--metin);margin-bottom:8px;">Kalibrasyon Geçmişi</div>';
+  if (eqp.kalibrasyonlar && eqp.kalibrasyonlar.length > 0) {
+    var sorted = eqp.kalibrasyonlar.slice().sort(function(a, b) { return b.tarih.localeCompare(a.tarih); });
+    html += '<table class="cal-tablo"><thead><tr><th>Tarih</th><th>Lab</th><th>Sertifika</th><th>Sonuç</th><th>Not</th></tr></thead><tbody>';
+    sorted.forEach(function(k) {
+      var sonucCls = k.sonuc === 'Uygun' ? 'b-grn' : (k.sonuc === 'Uygun Değil' ? 'b-red' : 'b-amr');
+      html += '<tr><td>' + tarihFormat(k.tarih) + '</td><td>' + escapeHtml(k.lab || '—') + '</td><td>' + escapeHtml(k.sertifika || '—') + '</td>';
+      html += '<td><span class="bdg ' + sonucCls + '">' + k.sonuc + '</span></td>';
+      html += '<td>' + escapeHtml(k.not || '—') + '</td></tr>';
+    });
+    html += '</tbody></table>';
+  } else {
+    html += '<div style="font-size:12px;color:var(--metin4);padding:12px;">Henüz kalibrasyon kaydı yok.</div>';
+  }
+
+  document.getElementById('detayGovde').innerHTML = html;
+  document.getElementById('detayModal').classList.add('acik');
+}
+
+function ekipmanSil() {
+  var id = document.getElementById('detaySilBtn').getAttribute('data-id');
+  if (!id) return;
+  if (!confirm('Bu ekipmanı silmek istediğinize emin misiniz?')) return;
+  ekipmanListesi = ekipmanListesi.filter(function(e) { return e.id !== id; });
+  veriKaydet();
+  modalKapat('detayModal');
+  kpiGuncelle();
+  gridOlustur();
+}
+
+/* ── QR Blok kontrol ── */
+function qrBlokGuncelle() {
+  ekipmanListesi.forEach(function(eqp) {
+    var son = sonKalibrasyon(eqp);
+    var kalan = son ? kalanGunHesapla(son.tarih, eqp.periyot) : -9999;
+    eqp._bloklu = kalan < 0;
+  });
+}
+
+/* ── Helpers ── */
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ── Init ── */
+function sayfaYukle() {
+  veriYukle();
+  qrBlokGuncelle();
+  kpiGuncelle();
+  gridOlustur();
+}
+
+document.addEventListener('DOMContentLoaded', sayfaYukle);
+</script>
+</body>
+</html>

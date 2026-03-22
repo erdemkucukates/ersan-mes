@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — CAPA (8D)</title>
+<link rel="stylesheet" href="ersan_styles.css">
+<script src="ersan_nav.js" defer></script>
+<script src="ersan_log.js" defer></script>
+<style>
+/* KPI Row */
+.kpi-row { display:flex; gap:12px; margin-bottom:16px; }
+.kpi { flex:1; background:var(--beyaz); border:1px solid var(--border); border-radius:10px; padding:14px 16px; }
+.kpi-ust { font-size:11px; color:var(--metin3); text-transform:uppercase; letter-spacing:.3px; margin-bottom:4px; }
+.kpi-deger { font-size:26px; font-weight:700; color:var(--metin); }
+.kpi.s1 { border-left:3px solid var(--mavi); }
+.kpi.s2 { border-left:3px solid var(--sari); }
+.kpi.s3 { border-left:3px solid var(--yesil); }
+.kpi.s4 { border-left:3px solid var(--kirmizi); }
+
+/* AS9100 strip */
+.as-serit { display:flex; align-items:center; gap:8px; padding:8px 14px; background:var(--bg2); border:1px solid var(--border); border-radius:8px; margin-bottom:14px; font-size:11px; color:var(--metin3); }
+.as-chip { background:var(--mavi-acik); color:var(--mavi-koyu); font-size:10px; font-weight:600; padding:2px 8px; border-radius:4px; }
+
+/* Split layout */
+.split { display:flex; gap:0; height:calc(100vh - 220px); }
+.sol-panel { width:280px; min-width:280px; background:var(--beyaz); border:1px solid var(--border); border-radius:10px; display:flex; flex-direction:column; overflow:hidden; }
+.sol-ust { padding:10px 12px; border-bottom:1px solid var(--border); display:flex; gap:6px; align-items:center; }
+.sol-ust input { flex:1; padding:6px 10px; border:1px solid var(--border); border-radius:6px; font-size:12px; font-family:inherit; }
+.sol-liste { flex:1; overflow-y:auto; }
+.capa-item { padding:10px 14px; border-bottom:1px solid var(--border); cursor:pointer; transition:background .12s; }
+.capa-item:hover { background:var(--bg2); }
+.capa-item.secili { background:var(--mavi-acik); border-left:3px solid var(--mavi); }
+.ci-baslik { font-size:12px; font-weight:600; color:var(--metin); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ci-no { font-family:'Courier New',monospace; font-size:11px; color:var(--mavi-koyu); font-weight:600; }
+.ci-ncr { font-size:10px; color:var(--metin4); margin-top:2px; }
+.ci-alt { display:flex; align-items:center; gap:6px; margin-top:4px; }
+
+/* Right detail */
+.sag-panel { flex:1; margin-left:14px; background:var(--beyaz); border:1px solid var(--border); border-radius:10px; display:flex; flex-direction:column; overflow:hidden; }
+.sag-ust { padding:14px 18px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.sag-baslik { font-size:15px; font-weight:700; color:var(--metin); }
+.sag-govde { flex:1; overflow-y:auto; padding:18px; }
+
+/* Badges */
+.bdg { display:inline-block; font-size:10px; font-weight:600; padding:2px 8px; border-radius:4px; }
+.b-grn { background:var(--yesil-bg); color:var(--yesil-t); }
+.b-amr { background:var(--sari-bg); color:var(--sari-t); }
+.b-red { background:var(--kirmizi-bg); color:var(--kirmizi-t); }
+.b-blue { background:var(--mavi-acik); color:var(--mavi-koyu); }
+.b-gray { background:#f1f5f9; color:var(--metin3); }
+
+/* 8D Timeline */
+.d8-timeline { padding:0; }
+.d8-step { display:flex; gap:12px; margin-bottom:16px; padding-bottom:16px; border-bottom:1px solid #f3f4f6; }
+.d8-step:last-child { border-bottom:none; margin-bottom:0; }
+.d8-num { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex-shrink:0; }
+.d8-num.done { background:#d1fae5; color:#065f46; }
+.d8-num.active { background:#1a2b47; color:#fff; }
+.d8-num.pending { background:#f3f4f6; color:#9ca3af; }
+.d8-body { flex:1; }
+.d8-title { font-size:12px; font-weight:600; color:#374151; margin-bottom:4px; }
+.d8-content { font-size:11px; color:#6b7280; line-height:1.5; }
+.d8-date { font-size:10px; color:#9ca3af; margin-top:4px; }
+.d8-textarea { width:100%; min-height:80px; font-size:12px; padding:8px; border:1px solid #d1d5db; border-radius:6px; font-family:inherit; resize:vertical; }
+.d8-actions { display:flex; gap:8px; margin-top:8px; align-items:center; }
+.d8-actions input[type="date"] { padding:5px 8px; border:1px solid var(--border); border-radius:5px; font-size:12px; font-family:inherit; }
+
+/* 5-Why */
+.why-stack { margin-top:10px; }
+.why-row { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+.why-label { font-size:11px; font-weight:700; color:var(--mavi-koyu); min-width:60px; }
+.why-input { flex:1; padding:6px 8px; border:1px solid var(--border); border-radius:5px; font-size:12px; font-family:inherit; }
+
+/* Kok neden method */
+.kok-method { margin-bottom:10px; }
+.kok-method select { padding:6px 10px; border:1px solid var(--border); border-radius:5px; font-size:12px; font-family:inherit; }
+
+/* Buttons */
+.btn { display:inline-flex; align-items:center; gap:4px; padding:7px 14px; border:none; border-radius:6px; font-size:13px; font-weight:600; font-family:inherit; cursor:pointer; transition:background .15s; }
+.btn-p { background:var(--mavi); color:#fff; }
+.btn-p:hover { background:var(--mavi-koyu); }
+.btn-sm { padding:5px 10px; font-size:11px; }
+.btn-g { background:var(--border); color:var(--metin2); }
+.btn-g:hover { background:var(--border2); }
+.btn-red { background:var(--kirmizi); color:#fff; }
+
+/* Modal */
+.modal-bg { position:fixed; inset:0; background:rgba(15,39,68,.45); z-index:700; display:none; align-items:center; justify-content:center; }
+.modal-bg.acik { display:flex; }
+.modal-kutu { background:var(--beyaz); border-radius:12px; width:520px; max-width:95vw; max-height:90vh; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 16px 48px rgba(15,39,68,.2); }
+.modal-ust { display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--border); }
+.modal-ust h3 { font-size:16px; color:var(--metin); }
+.modal-kapat { width:28px; height:28px; border:none; background:var(--bg); border-radius:6px; cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center; color:var(--metin3); }
+.modal-kapat:hover { background:var(--border); }
+.modal-govde { flex:1; overflow-y:auto; padding:20px; }
+.modal-alt { display:flex; justify-content:flex-end; gap:8px; padding:14px 20px; border-top:1px solid var(--border); }
+
+/* Form */
+.form-grup { margin-bottom:12px; }
+.form-grup label { display:block; font-size:11px; font-weight:600; color:var(--metin3); margin-bottom:4px; text-transform:uppercase; }
+.form-grup input, .form-grup select, .form-grup textarea { width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:6px; font-size:13px; font-family:inherit; background:var(--beyaz); color:var(--metin2); }
+.form-grup textarea { resize:vertical; min-height:60px; }
+.form-iki { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+
+/* Empty */
+.bos-alan { text-align:center; padding:60px 20px; color:var(--metin4); font-size:13px; }
+.yukleniyor { display:flex; align-items:center; justify-content:center; gap:8px; padding:40px; color:var(--metin3); font-size:13px; }
+.spinner { width:20px; height:20px; border:2px solid var(--border); border-top-color:var(--mavi); border-radius:50%; animation:spin .6s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+</style>
+</head>
+<body>
+<div id="nav-alani"></div>
+<div class="icerik-alani">
+  <div class="topbar">
+    <div class="topbar-baslik">Düzeltici ve Önleyici Faaliyet (CAPA)</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button class="btn btn-p" onclick="yeniCapaModal()">+ Yeni CAPA</button>
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
+    </div>
+  </div>
+  <div class="sayfa-icerik">
+
+    <!-- AS9100 strip -->
+    <div class="as-serit">
+      <span class="as-chip">AS9100 §10.2</span>
+      <span>Uygunsuzluk ve Düzeltici Faaliyet — 8D Problem Çözme Metodolojisi</span>
+    </div>
+
+    <!-- KPI Row -->
+    <div class="kpi-row">
+      <div class="kpi s1"><div class="kpi-ust">8D Açık</div><div class="kpi-deger" id="kpi-acik">0</div></div>
+      <div class="kpi s2"><div class="kpi-ust">Etkinlik Doğrulanıyor</div><div class="kpi-deger" id="kpi-dogrulama">0</div></div>
+      <div class="kpi s3"><div class="kpi-ust">Kapalı</div><div class="kpi-deger" id="kpi-kapali">0</div></div>
+      <div class="kpi s4"><div class="kpi-ust">Bu Ay Açılan</div><div class="kpi-deger" id="kpi-buay">0</div></div>
+    </div>
+
+    <!-- Split layout -->
+    <div class="split">
+      <!-- Left list -->
+      <div class="sol-panel">
+        <div class="sol-ust">
+          <input type="text" id="aramaInput" placeholder="CAPA ara..." oninput="listeFiltrele()">
+        </div>
+        <div class="sol-liste" id="capaListe">
+          <div class="yukleniyor"><div class="spinner"></div> Yükleniyor...</div>
+        </div>
+      </div>
+
+      <!-- Right detail -->
+      <div class="sag-panel">
+        <div class="sag-ust" id="sagUst" style="display:none;">
+          <div>
+            <div class="sag-baslik" id="sagBaslik"></div>
+            <div style="font-size:11px;color:var(--metin3);margin-top:2px;" id="sagNcr"></div>
+          </div>
+          <div id="sagDurum"></div>
+        </div>
+        <div class="sag-govde" id="sagGovde">
+          <div class="bos-alan">Detay görüntülemek için sol listeden bir CAPA seçin.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Yeni CAPA Modal -->
+<div class="modal-bg" id="yeniModal">
+  <div class="modal-kutu">
+    <div class="modal-ust">
+      <h3>Yeni CAPA Oluştur</h3>
+      <button class="modal-kapat" onclick="modalKapat()">&times;</button>
+    </div>
+    <div class="modal-govde">
+      <div class="form-grup">
+        <label>Başlık</label>
+        <input type="text" id="frmBaslik" placeholder="Kısa problem tanımı">
+      </div>
+      <div class="form-iki">
+        <div class="form-grup">
+          <label>Kaynak</label>
+          <select id="frmKaynak">
+            <option value="NCR">NCR</option>
+            <option value="Müşteri Şikayeti">Müşteri Şikayeti</option>
+            <option value="İç Denetim">İç Denetim</option>
+            <option value="Yönetim Kararı">Yönetim Kararı</option>
+            <option value="Diğer">Diğer</option>
+          </select>
+        </div>
+        <div class="form-grup">
+          <label>NCR No (opsiyonel)</label>
+          <input type="text" id="frmNcrNo" placeholder="NCR-26-00001">
+        </div>
+      </div>
+      <div class="form-iki">
+        <div class="form-grup">
+          <label>Öncelik</label>
+          <select id="frmOncelik">
+            <option value="Düşük">Düşük</option>
+            <option value="Orta" selected>Orta</option>
+            <option value="Yüksek">Yüksek</option>
+            <option value="Kritik">Kritik</option>
+          </select>
+        </div>
+        <div class="form-grup">
+          <label>Hedef Kapanış</label>
+          <input type="date" id="frmHedef">
+        </div>
+      </div>
+      <div class="form-grup">
+        <label>Problem Açıklaması</label>
+        <textarea id="frmAciklama" placeholder="Detaylı problem tanımı..."></textarea>
+      </div>
+    </div>
+    <div class="modal-alt">
+      <button class="btn btn-g" onclick="modalKapat()">İptal</button>
+      <button class="btn btn-p" onclick="capaOlustur()">Oluştur</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var CAPA_STORAGE_KEY = 'ersan_capa_kayitlar';
+var D8_ADIMLAR = [
+  { no: 1, ad: 'Ekip Oluşturma', kisa: 'D1 Ekip' },
+  { no: 2, ad: 'Problem Tanımı', kisa: 'D2 Problem' },
+  { no: 3, ad: 'Konteyment Aksiyonu', kisa: 'D3 Konteyment' },
+  { no: 4, ad: 'Kök Neden Analizi', kisa: 'D4 Kök Neden' },
+  { no: 5, ad: 'Kalıcı Düzeltici Aksiyon', kisa: 'D5 Kalıcı Aksiyon' },
+  { no: 6, ad: 'Doğrulama & Etkinlik', kisa: 'D6 Doğrulama' },
+  { no: 7, ad: 'Önleme (Sistematik)', kisa: 'D7 Önleme' },
+  { no: 8, ad: 'Kapanış & Ekip Takdiri', kisa: 'D8 Kapanış' }
+];
+
+var capaListesi = [];
+var seciliCapa = null;
+
+/* ── Veri yönetimi (localStorage) ── */
+function veriYukle() {
+  try {
+    var raw = localStorage.getItem(CAPA_STORAGE_KEY);
+    capaListesi = raw ? JSON.parse(raw) : [];
+  } catch(e) {
+    capaListesi = [];
+  }
+}
+
+function veriKaydet() {
+  localStorage.setItem(CAPA_STORAGE_KEY, JSON.stringify(capaListesi));
+}
+
+function sonrakiNo() {
+  var max = 0;
+  capaListesi.forEach(function(c) {
+    var m = c.no.match(/CAPA-(\d+)/);
+    if (m) { var n = parseInt(m[1]); if (n > max) max = n; }
+  });
+  var next = max + 1;
+  return 'CAPA-' + String(next).padStart(5, '0');
+}
+
+/* ── Sayfa yükle ── */
+function sayfaYukle() {
+  veriYukle();
+  checkUrlParams();
+  listeOlustur();
+  kpiGuncelle();
+  if (capaListesi.length > 0 && !seciliCapa) {
+    capaSecFunc(capaListesi[0].id);
+  }
+}
+
+function checkUrlParams() {
+  var params = new URLSearchParams(window.location.search);
+  var ncrNo = params.get('ncr');
+  if (ncrNo) {
+    var mevcut = capaListesi.find(function(c) { return c.ncrNo === ncrNo; });
+    if (!mevcut) {
+      var yeni = {
+        id: 'capa_' + Date.now(),
+        no: sonrakiNo(),
+        baslik: 'NCR Kaynaklı CAPA — ' + ncrNo,
+        kaynak: 'NCR',
+        ncrNo: ncrNo,
+        oncelik: 'Yüksek',
+        hedef: '',
+        aciklama: '',
+        durum: 'Açık',
+        aktifAdim: 1,
+        adimlar: baslangicAdimlari(),
+        olusturmaTarihi: new Date().toISOString().split('T')[0]
+      };
+      capaListesi.unshift(yeni);
+      veriKaydet();
+      seciliCapa = yeni.id;
+    } else {
+      seciliCapa = mevcut.id;
+    }
+    window.history.replaceState({}, '', window.location.pathname);
+  }
+}
+
+function baslangicAdimlari() {
+  var adimlar = {};
+  D8_ADIMLAR.forEach(function(a) {
+    adimlar['D' + a.no] = { icerik: '', tarih: '', tamamlandi: false };
+  });
+  return adimlar;
+}
+
+/* ── KPI ── */
+function kpiGuncelle() {
+  var acik = 0, dogrulama = 0, kapali = 0, buAy = 0;
+  var simdi = new Date();
+  var ayBaslangic = simdi.getFullYear() + '-' + String(simdi.getMonth() + 1).padStart(2, '0');
+
+  capaListesi.forEach(function(c) {
+    if (c.durum === 'Kapalı') { kapali++; }
+    else if (c.aktifAdim === 6) { dogrulama++; }
+    else { acik++; }
+    if (c.olusturmaTarihi && c.olusturmaTarihi.startsWith(ayBaslangic)) buAy++;
+  });
+
+  document.getElementById('kpi-acik').textContent = acik;
+  document.getElementById('kpi-dogrulama').textContent = dogrulama;
+  document.getElementById('kpi-kapali').textContent = kapali;
+  document.getElementById('kpi-buay').textContent = buAy;
+}
+
+/* ── Sol liste ── */
+function listeOlustur() {
+  var el = document.getElementById('capaListe');
+  if (capaListesi.length === 0) {
+    el.innerHTML = '<div class="bos-alan">Henüz CAPA kaydı yok.</div>';
+    return;
+  }
+  var html = '';
+  capaListesi.forEach(function(c) {
+    var secili = seciliCapa === c.id ? ' secili' : '';
+    var durumCls = c.durum === 'Kapalı' ? 'b-grn' : (c.aktifAdim >= 6 ? 'b-amr' : 'b-blue');
+    var durumText = c.durum === 'Kapalı' ? 'Kapalı' : 'D' + c.aktifAdim;
+    html += '<div class="capa-item' + secili + '" onclick="capaSecFunc(\'' + c.id + '\')">';
+    html += '<div class="ci-no">' + c.no + '</div>';
+    html += '<div class="ci-baslik">' + (c.baslik || '—') + '</div>';
+    if (c.ncrNo) html += '<div class="ci-ncr">NCR: ' + c.ncrNo + '</div>';
+    html += '<div class="ci-alt">';
+    html += '<span class="bdg ' + durumCls + '">' + durumText + '</span>';
+    if (c.oncelik === 'Kritik') html += '<span class="bdg b-red">Kritik</span>';
+    else if (c.oncelik === 'Yüksek') html += '<span class="bdg b-amr">Yüksek</span>';
+    html += '</div></div>';
+  });
+  el.innerHTML = html;
+}
+
+function listeFiltrele() {
+  var q = document.getElementById('aramaInput').value.toLowerCase();
+  var items = document.querySelectorAll('.capa-item');
+  items.forEach(function(item) {
+    var text = item.textContent.toLowerCase();
+    item.style.display = text.indexOf(q) >= 0 ? '' : 'none';
+  });
+}
+
+/* ── CAPA seç ── */
+function capaSecFunc(id) {
+  seciliCapa = id;
+  listeOlustur();
+  var capa = capaListesi.find(function(c) { return c.id === id; });
+  if (!capa) return;
+
+  document.getElementById('sagUst').style.display = 'flex';
+  document.getElementById('sagBaslik').textContent = capa.no + ' — ' + (capa.baslik || '');
+  document.getElementById('sagNcr').textContent = capa.ncrNo ? 'NCR: ' + capa.ncrNo + ' | Kaynak: ' + capa.kaynak : 'Kaynak: ' + capa.kaynak;
+
+  var durumCls = capa.durum === 'Kapalı' ? 'b-grn' : (capa.aktifAdim >= 6 ? 'b-amr' : 'b-blue');
+  var durumText = capa.durum === 'Kapalı' ? 'Kapalı' : (capa.aktifAdim <= 8 ? 'D' + capa.aktifAdim + ' Aktif' : 'Tamamlandı');
+  document.getElementById('sagDurum').innerHTML = '<span class="bdg ' + durumCls + '">' + durumText + '</span>';
+
+  d8Render(capa);
+}
+
+/* ── 8D Timeline ── */
+function d8Render(capa) {
+  var govde = document.getElementById('sagGovde');
+  var html = '<div class="d8-timeline">';
+
+  D8_ADIMLAR.forEach(function(adim) {
+    var key = 'D' + adim.no;
+    var data = capa.adimlar[key] || { icerik: '', tarih: '', tamamlandi: false };
+    var durum = 'pending';
+    if (data.tamamlandi) durum = 'done';
+    else if (adim.no === capa.aktifAdim && capa.durum !== 'Kapalı') durum = 'active';
+
+    html += '<div class="d8-step">';
+    html += '<div class="d8-num ' + durum + '">D' + adim.no + '</div>';
+    html += '<div class="d8-body">';
+    html += '<div class="d8-title">' + adim.ad + '</div>';
+
+    if (durum === 'done') {
+      html += '<div class="d8-content">' + escapeHtml(data.icerik || '—') + '</div>';
+      html += '<div class="d8-date">Tamamlandı: ' + (data.tarih || '—') + '</div>';
+    } else if (durum === 'active') {
+      // D4 special: kok neden method
+      if (adim.no === 4) {
+        var method = data.method || '5why';
+        html += '<div class="kok-method">';
+        html += '<select id="kokMethod" onchange="kokMethodDegis(\'' + capa.id + '\')">';
+        html += '<option value="5why"' + (method === '5why' ? ' selected' : '') + '>5 Neden (5-Why)</option>';
+        html += '<option value="ishikawa"' + (method === 'ishikawa' ? ' selected' : '') + '>Ishikawa (Balık Kılçığı)</option>';
+        html += '<option value="diger"' + (method === 'diger' ? ' selected' : '') + '>Diğer</option>';
+        html += '</select></div>';
+
+        if (method === '5why') {
+          html += '<div class="why-stack">';
+          for (var w = 1; w <= 5; w++) {
+            var whyVal = data['neden' + w] || '';
+            html += '<div class="why-row">';
+            html += '<span class="why-label">Neden ' + w + '?</span>';
+            html += '<input class="why-input" type="text" id="why' + w + '" value="' + escapeHtml(whyVal) + '" placeholder="' + w + '. neden...">';
+            html += '</div>';
+          }
+          html += '</div>';
+        }
+        html += '<textarea class="d8-textarea" id="adimIcerik" placeholder="Kök neden sonucu ve özet...">' + escapeHtml(data.icerik || '') + '</textarea>';
+      } else {
+        html += '<textarea class="d8-textarea" id="adimIcerik" placeholder="' + adim.ad + ' detayını girin...">' + escapeHtml(data.icerik || '') + '</textarea>';
+      }
+      html += '<div class="d8-actions">';
+      html += '<input type="date" id="adimTarih" value="' + (data.tarih || new Date().toISOString().split('T')[0]) + '">';
+      html += '<button class="btn btn-p btn-sm" onclick="adimTamamla(\'' + capa.id + '\',' + adim.no + ')">Tamamla</button>';
+      html += '</div>';
+    } else {
+      html += '<div class="d8-content" style="color:#d1d5db;">Bu adım henüz aktif değil.</div>';
+    }
+
+    html += '</div></div>';
+  });
+
+  html += '</div>';
+
+  // Info bar
+  if (capa.aciklama) {
+    html += '<div style="margin-top:16px;padding:12px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;">';
+    html += '<div style="font-size:10px;font-weight:600;color:var(--metin3);text-transform:uppercase;margin-bottom:4px;">Problem Açıklaması</div>';
+    html += '<div style="font-size:12px;color:var(--metin2);line-height:1.5;">' + escapeHtml(capa.aciklama) + '</div>';
+    html += '</div>';
+  }
+
+  govde.innerHTML = html;
+}
+
+/* ── Adım tamamla ── */
+function adimTamamla(capaId, adimNo) {
+  var capa = capaListesi.find(function(c) { return c.id === capaId; });
+  if (!capa) return;
+
+  var key = 'D' + adimNo;
+  var icerikEl = document.getElementById('adimIcerik');
+  var tarihEl = document.getElementById('adimTarih');
+  var icerik = icerikEl ? icerikEl.value.trim() : '';
+  var tarih = tarihEl ? tarihEl.value : new Date().toISOString().split('T')[0];
+
+  if (!icerik) {
+    alert('Lütfen adım içeriğini doldurun.');
+    return;
+  }
+
+  capa.adimlar[key].icerik = icerik;
+  capa.adimlar[key].tarih = tarih;
+  capa.adimlar[key].tamamlandi = true;
+
+  // D4: save 5-why data
+  if (adimNo === 4) {
+    var methodEl = document.getElementById('kokMethod');
+    capa.adimlar[key].method = methodEl ? methodEl.value : '5why';
+    for (var w = 1; w <= 5; w++) {
+      var wEl = document.getElementById('why' + w);
+      if (wEl) capa.adimlar[key]['neden' + w] = wEl.value;
+    }
+  }
+
+  // D8 tamamlandıysa CAPA'yı kapat
+  if (adimNo === 8) {
+    capa.durum = 'Kapalı';
+    capa.aktifAdim = 9;
+  } else {
+    capa.aktifAdim = adimNo + 1;
+  }
+
+  veriKaydet();
+  kpiGuncelle();
+  listeOlustur();
+  capaSecFunc(capaId);
+
+  logIslem('Güncellendi', 'CAPA', capaId, capa.no, null, { adim: key, icerik: icerik });
+}
+
+/* ── Kök neden metod değiş ── */
+function kokMethodDegis(capaId) {
+  var capa = capaListesi.find(function(c) { return c.id === capaId; });
+  if (!capa) return;
+  var el = document.getElementById('kokMethod');
+  capa.adimlar.D4.method = el.value;
+  veriKaydet();
+  d8Render(capa);
+}
+
+/* ── Modal ── */
+function yeniCapaModal() {
+  document.getElementById('yeniModal').classList.add('acik');
+  document.getElementById('frmBaslik').value = '';
+  document.getElementById('frmNcrNo').value = '';
+  document.getElementById('frmAciklama').value = '';
+  document.getElementById('frmHedef').value = '';
+  document.getElementById('frmOncelik').value = 'Orta';
+  document.getElementById('frmKaynak').value = 'NCR';
+}
+
+function modalKapat() {
+  document.getElementById('yeniModal').classList.remove('acik');
+}
+
+function capaOlustur() {
+  var baslik = document.getElementById('frmBaslik').value.trim();
+  if (!baslik) { alert('Başlık zorunludur.'); return; }
+
+  var yeni = {
+    id: 'capa_' + Date.now(),
+    no: sonrakiNo(),
+    baslik: baslik,
+    kaynak: document.getElementById('frmKaynak').value,
+    ncrNo: document.getElementById('frmNcrNo').value.trim(),
+    oncelik: document.getElementById('frmOncelik').value,
+    hedef: document.getElementById('frmHedef').value,
+    aciklama: document.getElementById('frmAciklama').value.trim(),
+    durum: 'Açık',
+    aktifAdim: 1,
+    adimlar: baslangicAdimlari(),
+    olusturmaTarihi: new Date().toISOString().split('T')[0]
+  };
+
+  capaListesi.unshift(yeni);
+  veriKaydet();
+  modalKapat();
+  kpiGuncelle();
+  listeOlustur();
+  capaSecFunc(yeni.id);
+
+  logIslem('Oluşturuldu', 'CAPA', yeni.id, yeni.no, null, { baslik: baslik, kaynak: yeni.kaynak });
+}
+
+/* ── Helpers ── */
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ── Init ── */
+document.addEventListener('DOMContentLoaded', sayfaYukle);
+</script>
+</body>
+</html>

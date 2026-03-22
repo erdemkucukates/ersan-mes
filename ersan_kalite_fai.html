@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — Ilk Parca Muayenesi (FAI)</title>
+<link rel="stylesheet" href="ersan_styles.css">
+<script src="ersan_nav.js" defer></script>
+<script src="ersan_log.js" defer></script>
+</head>
+<body>
+<div id="nav-alani"></div>
+<div class="icerik-alani">
+  <div class="topbar">
+    <div class="topbar-baslik">Ilk Parca Muayenesi (FAI)</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button class="btn btn-mavi btn-sm" onclick="yeniFAI()">+ Yeni FAI</button>
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
+    </div>
+  </div>
+  <div class="sayfa-icerik">
+
+    <!-- AS9100 Serit -->
+    <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;">
+      <span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:12px;font-size:10px;font-weight:600;background:var(--mavi-acik);color:var(--mavi-koyu);">AS9100 &sect;8.5.1.1</span>
+      <span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:12px;font-size:10px;font-weight:500;background:#f1f5f9;color:#475569;">Ilk Urun Dogrulamasi</span>
+      <span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:12px;font-size:10px;font-weight:500;background:#f1f5f9;color:#475569;">GD&amp;T Olcum</span>
+      <span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:12px;font-size:10px;font-weight:500;background:#f1f5f9;color:#475569;">Kalibrasyon Kontrolu</span>
+    </div>
+
+    <!-- KPI Kartlari -->
+    <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:12px;">
+      <div class="kpi-kart"><div class="kpi-etiket">Toplam FAI</div><div class="kpi-deger" id="kpiToplam">0</div></div>
+      <div class="kpi-kart yesil"><div class="kpi-etiket">Onayli</div><div class="kpi-deger" id="kpiOnayli">0</div></div>
+      <div class="kpi-kart sari"><div class="kpi-etiket">Revize Gerekli</div><div class="kpi-deger" id="kpiRevize">0</div></div>
+      <div class="kpi-kart" style="border-top-color:var(--mavi);"><div class="kpi-etiket">Bekleyen</div><div class="kpi-deger" id="kpiBekleyen">0</div></div>
+    </div>
+
+    <!-- Iki Panel Layout -->
+    <div class="iki-panel">
+
+      <!-- SOL PANEL -->
+      <div class="sol-panel" style="width:260px;">
+        <div class="sol-panel-ust">
+          <div class="sol-panel-baslik">FAI Kayitlari</div>
+          <span class="badge badge-mavi" id="fai-sayi">0</span>
+        </div>
+        <div class="sol-arama"><input type="text" id="fai-arama" placeholder="FAI no, parca, IE no..." oninput="filtreleListeyi()"></div>
+        <div class="sol-filtre">
+          <button class="filtre-btn aktif" onclick="durumFiltre('Tumu',this)">Tumu</button>
+          <button class="filtre-btn" onclick="durumFiltre('Bekleyen',this)">Bekleyen</button>
+          <button class="filtre-btn" onclick="durumFiltre('Onayli',this)">Onayli</button>
+          <button class="filtre-btn" onclick="durumFiltre('Revize',this)">Revize</button>
+        </div>
+        <div class="sol-liste" id="fai-liste">
+          <div class="yukleniyor"><div class="spinner"></div> Yukleniyor...</div>
+        </div>
+      </div>
+
+      <!-- SAG PANEL -->
+      <div class="sag-panel">
+        <div class="sag-panel-ust">
+          <div style="font-size:13px;font-weight:600;color:var(--laci);" id="sag-baslik">FAI Detay</div>
+          <div id="sag-badge"></div>
+        </div>
+        <div class="sag-panel-icerik" id="sag-icerik">
+          <div class="bos-durum">Listeden bir FAI kaydi secin.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Yeni FAI Modal -->
+<div id="yeniFaiModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:900;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:10px;width:480px;max-height:80vh;overflow-y:auto;padding:24px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <span style="font-size:14px;font-weight:700;color:var(--laci);">Yeni FAI Kaydi</span>
+      <button onclick="modalKapat()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--metin3);">&times;</button>
+    </div>
+    <div class="form-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div><label class="form-label">Is Emri *</label><select id="m-ie" class="form-input"><option value="">Secin...</option></select></div>
+      <div><label class="form-label">Parca Adi *</label><input type="text" id="m-parca" class="form-input"></div>
+      <div style="grid-column:1/-1"><label class="form-label">Aciklama</label><input type="text" id="m-aciklama" class="form-input" placeholder="FAI aciklamasi..."></div>
+    </div>
+    <div style="margin-top:16px;display:flex;justify-content:flex-end;gap:8px;">
+      <button class="btn btn-beyaz btn-sm" onclick="modalKapat()">Iptal</button>
+      <button class="btn btn-mavi btn-sm" onclick="faiKaydet()">Olustur</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-wrap" style="position:fixed;bottom:20px;right:20px;z-index:9999;"></div>
+
+<script>
+var BASE = 'app5LDgJMgocw79Ix';
+var T = {
+  muayene: 'tblm47qZunWAsfufH',
+  ie:      'tbl58qL39I2tv8hK4',
+  ncr:     'tblreW3hJTIxwXb0K',
+  tezgah:  'tblsBXDsWACBAFEJ5'
+};
+
+var records = [];
+var filtrelenmis = [];
+var ieList = [];
+var seciliId = null;
+var aktifFiltre = 'Tumu';
+
+// GD&T Sembolleri
+var GDT_SYMBOLS = [
+  {key:'duzluk',   sym:'\u23E5', label:'Duzluk (Flatness)'},
+  {key:'diklik',   sym:'\u27C2', label:'Diklik (Perpendicularity)'},
+  {key:'paralellik',sym:'\u2225', label:'Paralellik (Parallelism)'},
+  {key:'konum',    sym:'\u2295', label:'Konum (Position)'},
+  {key:'dairesellik',sym:'\u25CB', label:'Dairesellik (Circularity)'},
+  {key:'konsantriklik',sym:'\u2B2D', label:'Konsantriklik (Concentricity)'},
+  {key:'yok',      sym:'—',      label:'Boyutsal (Linear)'}
+];
+
+// ── API ──
+function apiGet(table, params) {
+  params = params || '';
+  return fetch('/.netlify/functions/airtable', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({method:'GET', path:'/v0/' + BASE + '/' + table + '?' + params})
+  }).then(function(res) { return res.json(); });
+}
+
+function apiFn(method, table, body, id) {
+  id = id || '';
+  return fetch('/.netlify/functions/airtable', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({method: method, path: '/v0/' + BASE + '/' + table + (id ? '/' + id : ''), body: body})
+  }).then(function(res) {
+    if (!res.ok) return res.text().then(function(t) { throw new Error(t); });
+    return res.json();
+  });
+}
+
+// ── HELPERS ──
+function fmtDate(d) { try { return new Date(d).toLocaleDateString('tr-TR'); } catch(e) { return d || ''; } }
+function toast(msg, type) {
+  type = type || 'ok';
+  var el = document.createElement('div');
+  el.style.cssText = 'padding:10px 16px;border-radius:8px;font-size:13px;font-weight:500;color:#fff;margin-top:8px;opacity:0;transform:translateY(10px);transition:all .3s;';
+  el.style.background = type === 'err' ? 'var(--kirmizi)' : type === 'inf' ? 'var(--mavi)' : 'var(--yesil)';
+  el.textContent = msg;
+  document.getElementById('toast-wrap').appendChild(el);
+  setTimeout(function() { el.style.opacity = '1'; el.style.transform = 'translateY(0)'; }, 50);
+  setTimeout(function() { el.remove(); }, 3500);
+}
+function ieNo(id) {
+  for (var i = 0; i < ieList.length; i++) {
+    if (ieList[i].id === id) return ieList[i].fields['IE No'] || '—';
+  }
+  return '—';
+}
+function ieFields(id) {
+  for (var i = 0; i < ieList.length; i++) {
+    if (ieList[i].id === id) return ieList[i].fields;
+  }
+  return {};
+}
+
+// ── FILTRE ──
+function durumFiltre(durum, btn) {
+  aktifFiltre = durum;
+  var btns = btn.parentElement.querySelectorAll('.filtre-btn');
+  for (var i = 0; i < btns.length; i++) btns[i].classList.remove('aktif');
+  btn.classList.add('aktif');
+  filtreleListeyi();
+}
+
+function filtreleListeyi() {
+  var q = (document.getElementById('fai-arama').value || '').toLowerCase();
+  filtrelenmis = records.filter(function(r) {
+    var f = r.fields;
+    var durum = f['FAI Durum'] || f['Durum'] || 'Bekleyen';
+    var durumOk = aktifFiltre === 'Tumu' || durum === aktifFiltre;
+    var ieId = (f['Is Emri'] || f['İş Emri'] || [])[0] || '';
+    var aramaOk = !q ||
+      (f['FAI No'] || '').toLowerCase().indexOf(q) >= 0 ||
+      (f['Parca Adi'] || f['Parça Adı'] || '').toLowerCase().indexOf(q) >= 0 ||
+      ieNo(ieId).toLowerCase().indexOf(q) >= 0;
+    return durumOk && aramaOk;
+  });
+  listeRender();
+  kpiGuncelle();
+}
+
+// ── LISTE RENDER ──
+function listeRender() {
+  var el = document.getElementById('fai-liste');
+  document.getElementById('fai-sayi').textContent = filtrelenmis.length;
+  if (!filtrelenmis.length) {
+    el.innerHTML = '<div class="bos-durum" style="padding:20px"><p>Kayit bulunamadi</p></div>';
+    return;
+  }
+  var html = '';
+  for (var i = 0; i < filtrelenmis.length; i++) {
+    var r = filtrelenmis[i];
+    var f = r.fields;
+    var secili = r.id === seciliId ? ' secili' : '';
+    var durum = f['FAI Durum'] || f['Durum'] || 'Bekleyen';
+    var durumClass = durum === 'Onayli' ? 'badge-yesil' : durum === 'Revize' ? 'badge-sari' : 'badge-mavi';
+    var ieId = (f['Is Emri'] || f['İş Emri'] || [])[0] || '';
+    html += '<div class="liste-satir' + secili + '" onclick="faiSec(\'' + r.id + '\')">' +
+      '<div class="liste-satir-no">' + (f['FAI No'] || r.id.substr(0, 8)) + '</div>' +
+      '<div class="liste-satir-ad">' + (f['Parca Adi'] || f['Parça Adı'] || '—') + '</div>' +
+      '<div class="liste-satir-alt">' +
+        '<span style="font-size:10px;color:var(--metin4)">' + ieNo(ieId) + '</span>' +
+        '<span class="badge ' + durumClass + '">' + durum + '</span>' +
+      '</div>' +
+    '</div>';
+  }
+  el.innerHTML = html;
+}
+
+// ── KPI GUNCELLE ──
+function kpiGuncelle() {
+  var toplam = 0, onayli = 0, revize = 0, bekleyen = 0;
+  for (var i = 0; i < records.length; i++) {
+    var d = records[i].fields['FAI Durum'] || records[i].fields['Durum'] || 'Bekleyen';
+    toplam++;
+    if (d === 'Onayli') onayli++;
+    else if (d === 'Revize') revize++;
+    else bekleyen++;
+  }
+  document.getElementById('kpiToplam').textContent = toplam;
+  document.getElementById('kpiOnayli').textContent = onayli;
+  document.getElementById('kpiRevize').textContent = revize;
+  document.getElementById('kpiBekleyen').textContent = bekleyen;
+}
+
+// ── FAI SEC (DETAY) ──
+function faiSec(id) {
+  seciliId = id;
+  listeRender();
+  var r = null;
+  for (var i = 0; i < records.length; i++) {
+    if (records[i].id === id) { r = records[i]; break; }
+  }
+  if (!r) return;
+  var f = r.fields;
+  var durum = f['FAI Durum'] || f['Durum'] || 'Bekleyen';
+  var ieId = (f['Is Emri'] || f['İş Emri'] || [])[0] || '';
+  var ieF = ieFields(ieId);
+
+  var durumBadge = durum === 'Onayli' ? 'badge-yesil' : durum === 'Revize' ? 'badge-sari' : 'badge-mavi';
+  document.getElementById('sag-badge').innerHTML = '<span class="badge ' + durumBadge + '">' + durum + '</span>';
+  document.getElementById('sag-baslik').textContent = f['FAI No'] || 'FAI Detay';
+
+  // GD&T olcum verileri
+  var olcumler = f['GDT Olcumler'] || [];
+  try { if (typeof olcumler === 'string') olcumler = JSON.parse(olcumler); } catch(e) { olcumler = []; }
+
+  var html = '';
+
+  // WO + Parca Bilgileri (readonly)
+  html += '<div class="kart" style="margin-bottom:12px;">';
+  html += '<div class="kart-baslik">Is Emri &amp; Parca Bilgileri</div>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:12px;font-size:12px;">';
+  html += '<div><span style="color:var(--metin3);">Is Emri:</span> <b>' + ieNo(ieId) + '</b></div>';
+  html += '<div><span style="color:var(--metin3);">Parca Adi:</span> <b>' + (f['Parca Adi'] || f['Parça Adı'] || ieF['Parça Adı'] || '—') + '</b></div>';
+  html += '<div><span style="color:var(--metin3);">Parca No:</span> <b>' + (ieF['Parça No'] || ieF['Parca No'] || '—') + '</b></div>';
+  html += '<div><span style="color:var(--metin3);">Musteri:</span> <b>' + (ieF['Müşteri Adı'] || ieF['Musteri'] || '—') + '</b></div>';
+  html += '<div><span style="color:var(--metin3);">Revizyon:</span> <b>' + (ieF['Revizyon'] || f['Revizyon'] || '—') + '</b></div>';
+  html += '<div><span style="color:var(--metin3);">Tarih:</span> <b>' + fmtDate(f['Tarih'] || f['Created']) + '</b></div>';
+  html += '</div>';
+
+  // Teknik resim baglantisi
+  var teknikResim = ieF['Teknik Resim'] || f['Teknik Resim'] || null;
+  if (teknikResim && teknikResim.length > 0) {
+    var trUrl = teknikResim[0].url || teknikResim[0];
+    html += '<div style="padding:0 12px 12px;"><a href="' + trUrl + '" target="_blank" style="font-size:11px;color:var(--mavi);text-decoration:none;">Teknik Resimi Gor &rarr;</a></div>';
+  }
+  html += '</div>';
+
+  // GD&T Olcum Tablosu
+  html += '<div class="kart" style="margin-bottom:12px;">';
+  html += '<div class="kart-baslik" style="display:flex;justify-content:space-between;align-items:center;">GD&amp;T Olcum Tablosu <button class="btn btn-beyaz btn-sm" onclick="gdtSatirEkle()">+ Olcum Ekle</button></div>';
+  html += '<div style="overflow-x:auto;">';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:12px;">';
+  html += '<thead><tr style="background:var(--bg2);">';
+  html += '<th style="padding:8px 10px;text-align:left;font-weight:600;border-bottom:2px solid var(--border);">Ozellik</th>';
+  html += '<th style="padding:8px 10px;text-align:center;font-weight:600;border-bottom:2px solid var(--border);">GD&amp;T</th>';
+  html += '<th style="padding:8px 10px;text-align:center;font-weight:600;border-bottom:2px solid var(--border);">Nominal</th>';
+  html += '<th style="padding:8px 10px;text-align:center;font-weight:600;border-bottom:2px solid var(--border);">Tolerans (+/-)</th>';
+  html += '<th style="padding:8px 10px;text-align:center;font-weight:600;border-bottom:2px solid var(--border);">Olculen</th>';
+  html += '<th style="padding:8px 10px;text-align:center;font-weight:600;border-bottom:2px solid var(--border);">Sapma</th>';
+  html += '<th style="padding:8px 10px;text-align:center;font-weight:600;border-bottom:2px solid var(--border);">Sonuc</th>';
+  html += '</tr></thead>';
+  html += '<tbody id="gdt-tbody">';
+  if (olcumler.length === 0) {
+    html += gdtSatirHTML(0, {});
+    html += gdtSatirHTML(1, {});
+    html += gdtSatirHTML(2, {});
+  } else {
+    for (var o = 0; o < olcumler.length; o++) {
+      html += gdtSatirHTML(o, olcumler[o]);
+    }
+  }
+  html += '</tbody></table></div>';
+
+  // Olcum aleti secimi
+  html += '<div style="margin-top:10px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;">';
+  html += '<div style="display:flex;align-items:center;gap:6px;">';
+  html += '<label style="font-size:11px;color:var(--metin3);">Olcum Aleti:</label>';
+  html += '<select id="eqp-select" class="form-input" style="width:200px;padding:4px 8px;font-size:11px;" onchange="eqpKontrol(this.value)">';
+  html += '<option value="">Secin...</option>';
+  html += '<option value="EQP-MIC-001">EQP-MIC-001 — Mikrometre</option>';
+  html += '<option value="EQP-KMP-001">EQP-KMP-001 — Kumpas</option>';
+  html += '<option value="EQP-CMM-001">EQP-CMM-001 — CMM</option>';
+  html += '<option value="EQP-YSK-001">EQP-YSK-001 — Yukseklik Olcer</option>';
+  html += '<option value="EQP-PFM-001">EQP-PFM-001 — Profil Olcer</option>';
+  html += '</select>';
+  html += '<span id="eqp-badge" style="font-size:10px;"></span>';
+  html += '</div>';
+  html += '<button class="btn btn-mavi btn-sm" onclick="gdtKaydet(\'' + r.id + '\')">Olcumleri Kaydet</button>';
+  html += '</div>';
+  html += '</div>';
+
+  // Sonuc Butonlari
+  html += '<div class="kart">';
+  html += '<div class="kart-baslik">FAI Sonuc</div>';
+  html += '<div style="padding:16px;">';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">';
+  html += '<button class="btn btn-yesil" style="padding:16px;font-size:14px;font-weight:700;border-radius:10px;" onclick="faiOnayla(\'' + r.id + '\',\'Onayli\')">&#10003; FAI ONAYLI</button>';
+  html += '<button class="btn" style="padding:16px;font-size:14px;font-weight:700;border-radius:10px;background:var(--sari);color:#fff;" onclick="faiOnayla(\'' + r.id + '\',\'Revize\')">&#8634; REVIZE GEREKLI</button>';
+  html += '</div>';
+  html += '<div><label class="form-label">Sonuc Notu</label><textarea id="fai-not" class="form-input" rows="3" style="width:100%;resize:vertical;" placeholder="FAI sonuc notunu yazin...">' + (f['FAI Notu'] || f['Sonuc Notu'] || '') + '</textarea></div>';
+  if (durum !== 'Bekleyen') {
+    var bgColor = durum === 'Onayli' ? 'var(--yesil-bg)' : 'var(--sari-bg)';
+    html += '<div style="margin-top:12px;padding:10px;background:' + bgColor + ';border-radius:8px;font-size:12px;">';
+    html += '<b>Mevcut Sonuc:</b> ' + durum;
+    if (f['FAI Notu'] || f['Sonuc Notu']) html += ' — ' + (f['FAI Notu'] || f['Sonuc Notu']);
+    html += '</div>';
+  }
+  html += '</div></div>';
+
+  document.getElementById('sag-icerik').innerHTML = html;
+}
+
+// ── GD&T Satir HTML ──
+function gdtSatirHTML(idx, data) {
+  var ozellik = data.ozellik || '';
+  var gdtKey = data.gdt || 'yok';
+  var nominal = data.nominal != null ? data.nominal : '';
+  var tolerans = data.tolerans != null ? data.tolerans : '';
+  var olculen = data.olculen != null ? data.olculen : '';
+  var sapma = '';
+  var sonuc = '';
+  var renk = '';
+
+  if (olculen !== '' && nominal !== '' && tolerans !== '') {
+    var val = parseFloat(olculen);
+    var nom = parseFloat(nominal);
+    var tol = parseFloat(tolerans);
+    sapma = (val - nom).toFixed(3);
+    if (Math.abs(val - nom) <= tol) { sonuc = 'OK'; renk = 'var(--yesil)'; }
+    else { sonuc = 'NOK'; renk = 'var(--kirmizi)'; }
+  }
+
+  // GD&T dropdown
+  var gdtOptions = '';
+  for (var g = 0; g < GDT_SYMBOLS.length; g++) {
+    var s = GDT_SYMBOLS[g];
+    var sel = s.key === gdtKey ? ' selected' : '';
+    gdtOptions += '<option value="' + s.key + '"' + sel + '>' + s.sym + ' ' + s.label + '</option>';
+  }
+
+  var html = '<tr data-idx="' + idx + '">';
+  html += '<td style="padding:6px 10px;border-bottom:1px solid var(--bg);"><input type="text" class="form-input gdt-ozellik" value="' + ozellik + '" style="padding:4px 6px;font-size:11px;width:100%;" placeholder="Ornek: D1 Cap"></td>';
+  html += '<td style="padding:6px 10px;border-bottom:1px solid var(--bg);text-align:center;"><select class="form-input gdt-sembol" style="padding:4px 4px;font-size:11px;width:100px;">' + gdtOptions + '</select></td>';
+  html += '<td style="padding:6px 10px;border-bottom:1px solid var(--bg);text-align:center;"><input type="number" step="0.001" class="form-input gdt-nominal" value="' + nominal + '" style="padding:4px 6px;font-size:11px;width:80px;text-align:center;" onchange="gdtKontrolSatir(this)"></td>';
+  html += '<td style="padding:6px 10px;border-bottom:1px solid var(--bg);text-align:center;"><input type="number" step="0.001" class="form-input gdt-tolerans" value="' + tolerans + '" style="padding:4px 6px;font-size:11px;width:80px;text-align:center;" onchange="gdtKontrolSatir(this)"></td>';
+  html += '<td style="padding:6px 10px;border-bottom:1px solid var(--bg);text-align:center;"><input type="number" step="0.001" class="form-input gdt-olculen" value="' + olculen + '" style="padding:4px 6px;font-size:11px;width:80px;text-align:center;' + (renk ? 'border-color:' + renk + ';color:' + renk + ';font-weight:600;' : '') + '" onchange="gdtKontrolSatir(this)"></td>';
+  html += '<td style="padding:6px 10px;border-bottom:1px solid var(--bg);text-align:center;font-size:11px;font-weight:600;color:' + renk + ';" class="gdt-sapma">' + sapma + '</td>';
+  html += '<td style="padding:6px 10px;border-bottom:1px solid var(--bg);text-align:center;font-weight:700;color:' + renk + ';" class="gdt-sonuc">' + sonuc + '</td>';
+  html += '</tr>';
+  return html;
+}
+
+// ── GD&T Satir Ekle ──
+function gdtSatirEkle() {
+  var tbody = document.getElementById('gdt-tbody');
+  if (!tbody) return;
+  var idx = tbody.rows.length;
+  tbody.insertAdjacentHTML('beforeend', gdtSatirHTML(idx, {}));
+}
+
+// ── GD&T Kontrol (satir bazinda) ──
+function gdtKontrolSatir(inp) {
+  var tr = inp.closest('tr');
+  var nominal = parseFloat(tr.querySelector('.gdt-nominal').value);
+  var tolerans = parseFloat(tr.querySelector('.gdt-tolerans').value);
+  var olculen = parseFloat(tr.querySelector('.gdt-olculen').value);
+  var sapmaEl = tr.querySelector('.gdt-sapma');
+  var sonucEl = tr.querySelector('.gdt-sonuc');
+  var olculenInp = tr.querySelector('.gdt-olculen');
+
+  if (isNaN(olculen) || isNaN(nominal) || isNaN(tolerans)) {
+    sapmaEl.textContent = '';
+    sonucEl.textContent = '';
+    sapmaEl.style.color = '';
+    sonucEl.style.color = '';
+    olculenInp.style.borderColor = '';
+    olculenInp.style.color = '';
+    return;
+  }
+
+  var sapma = (olculen - nominal).toFixed(3);
+  var ok = Math.abs(olculen - nominal) <= tolerans;
+  var renk = ok ? 'var(--yesil)' : 'var(--kirmizi)';
+
+  sapmaEl.textContent = sapma;
+  sapmaEl.style.color = renk;
+  sonucEl.textContent = ok ? 'OK' : 'NOK';
+  sonucEl.style.color = renk;
+  olculenInp.style.borderColor = renk;
+  olculenInp.style.color = renk;
+  olculenInp.style.fontWeight = '600';
+}
+
+// ── EQP Kalibrasyon Kontrol ──
+function eqpKontrol(eqpKodu) {
+  var badge = document.getElementById('eqp-badge');
+  if (!badge || !eqpKodu) { if (badge) badge.innerHTML = ''; return; }
+
+  // Simule kalibrasyon kontrolu (gercek sistemde Tezgahlar/Ekipman tablosundan cekilir)
+  var simKalib = {
+    'EQP-MIC-001': {durum: 'Gecerli', son: '2026-01-15', sonraki: '2027-01-15'},
+    'EQP-KMP-001': {durum: 'Gecerli', son: '2025-12-01', sonraki: '2026-12-01'},
+    'EQP-CMM-001': {durum: 'Gecerli', son: '2026-02-20', sonraki: '2027-02-20'},
+    'EQP-YSK-001': {durum: 'Suresi Dolmus', son: '2025-06-10', sonraki: '2026-06-10'},
+    'EQP-PFM-001': {durum: 'Gecerli', son: '2026-03-01', sonraki: '2027-03-01'}
+  };
+  var kb = simKalib[eqpKodu];
+  if (!kb) { badge.innerHTML = '<span class="badge badge-gri">Bilinmiyor</span>'; return; }
+
+  if (kb.durum === 'Gecerli') {
+    badge.innerHTML = '<span class="badge badge-yesil">Kalibrasyon Gecerli (' + kb.sonraki + ')</span>';
+  } else {
+    badge.innerHTML = '<span class="badge badge-kirmizi">Kalibrasyon Suresi Dolmus!</span>';
+  }
+}
+
+// ── GD&T Kaydet ──
+function gdtKaydet(id) {
+  var tbody = document.getElementById('gdt-tbody');
+  if (!tbody) return;
+  var rows = tbody.querySelectorAll('tr');
+  var olcumler = [];
+  for (var i = 0; i < rows.length; i++) {
+    var ozellik = rows[i].querySelector('.gdt-ozellik').value;
+    var gdt = rows[i].querySelector('.gdt-sembol').value;
+    var nominal = rows[i].querySelector('.gdt-nominal').value;
+    var tolerans = rows[i].querySelector('.gdt-tolerans').value;
+    var olculen = rows[i].querySelector('.gdt-olculen').value;
+    if (ozellik || nominal || tolerans || olculen) {
+      olcumler.push({ozellik: ozellik, gdt: gdt, nominal: nominal, tolerans: tolerans, olculen: olculen});
+    }
+  }
+  var eqp = document.getElementById('eqp-select') ? document.getElementById('eqp-select').value : '';
+  apiFn('PATCH', T.muayene, {fields: {'GDT Olcumler': JSON.stringify(olcumler), 'Olcum Aleti': eqp}}, id).then(function() {
+    toast('GD&T olcumleri kaydedildi');
+  }).catch(function(e) { toast('Hata: ' + e.message, 'err'); });
+}
+
+// ── FAI Onayla / Revize ──
+function faiOnayla(id, sonuc) {
+  var not = document.getElementById('fai-not') ? document.getElementById('fai-not').value : '';
+  var fields = {
+    'FAI Durum': sonuc,
+    'Durum': sonuc,
+    'FAI Notu': not,
+    'Sonuc Notu': not,
+    'Karar Tarihi': new Date().toISOString().slice(0, 10)
+  };
+
+  apiFn('PATCH', T.muayene, {fields: fields}, id).then(function() {
+    toast('FAI sonuc: ' + sonuc, sonuc === 'Revize' ? 'inf' : 'ok');
+
+    // Revize durumunda otomatik NCR olustur
+    if (sonuc === 'Revize') {
+      var rec = null;
+      for (var i = 0; i < records.length; i++) {
+        if (records[i].id === id) { rec = records[i]; break; }
+      }
+      if (rec) {
+        var rf = rec.fields;
+        kodUret('NCR').then(function(ncrNo) {
+          return apiFn('POST', T.ncr, {fields: {
+            'NCR No': ncrNo,
+            'Kaynak': 'FAI Revize',
+            'Aciklama': 'FAI Revize Gerekli — ' + (rf['Parca Adi'] || rf['Parça Adı'] || '') + '. ' + not,
+            'Durum': 'Acik',
+            'Tarih': new Date().toISOString().slice(0, 10)
+          }});
+        }).then(function() {
+          toast('NCR otomatik olusturuldu', 'inf');
+        }).catch(function(e) { toast('NCR olusturma hatasi: ' + e.message, 'err'); });
+      }
+    }
+
+    // Is emri FAI durumunu guncelle
+    var rec2 = null;
+    for (var i = 0; i < records.length; i++) {
+      if (records[i].id === id) { rec2 = records[i]; break; }
+    }
+    if (rec2) {
+      var ieId = (rec2.fields['Is Emri'] || rec2.fields['İş Emri'] || [])[0] || '';
+      if (ieId) {
+        apiFn('PATCH', T.ie, {fields: {'FAI Durum': sonuc}}, ieId).catch(function() {});
+      }
+    }
+
+    yukle();
+  }).catch(function(e) { toast('Hata: ' + e.message, 'err'); });
+}
+
+// ── MODAL ──
+function yeniFAI() {
+  document.getElementById('yeniFaiModal').style.display = 'flex';
+  var ieSel = document.getElementById('m-ie');
+  ieSel.innerHTML = '<option value="">Secin...</option>';
+  for (var i = 0; i < ieList.length; i++) {
+    var ief = ieList[i].fields;
+    ieSel.innerHTML += '<option value="' + ieList[i].id + '">' + (ief['IE No'] || '—') + ' — ' + (ief['Parça Adı'] || ief['Parca Adi'] || '') + '</option>';
+  }
+}
+function modalKapat() {
+  document.getElementById('yeniFaiModal').style.display = 'none';
+}
+
+// ── FAI Kaydet ──
+function faiKaydet() {
+  var ieVal = document.getElementById('m-ie').value;
+  var parca = document.getElementById('m-parca').value.trim();
+  if (!ieVal || !parca) {
+    toast('Is emri ve parca adi zorunlu', 'err');
+    return;
+  }
+  kodUret('FAI').then(function(faiNo) {
+    var fields = {
+      'FAI No': faiNo,
+      'Parca Adi': parca,
+      'Is Emri': [{id: ieVal}],
+      'Aciklama': document.getElementById('m-aciklama').value.trim(),
+      'FAI Durum': 'Bekleyen',
+      'Durum': 'Bekleyen',
+      'Tip': 'FAI',
+      'Tarih': new Date().toISOString().slice(0, 10)
+    };
+    return apiFn('POST', T.muayene, {fields: fields});
+  }).then(function() {
+    toast('FAI kaydi olusturuldu');
+    modalKapat();
+    yukle();
+  }).catch(function(e) {
+    toast('Hata: ' + e.message, 'err');
+  });
+}
+
+// ── YUKLE ──
+function yukle() {
+  Promise.all([
+    apiGet(T.muayene, 'pageSize=100&sort%5B0%5D%5Bfield%5D=Tarih&sort%5B0%5D%5Bdirection%5D=desc'),
+    apiGet(T.ie, 'pageSize=100')
+  ]).then(function(arr) {
+    records = (arr[0].records || []).filter(function(r) {
+      return r.fields['FAI No'] || (r.fields['Tip'] || '').indexOf('FAI') >= 0;
+    });
+    ieList = arr[1].records || [];
+    filtrelenmis = records.slice();
+    aktifFiltre = 'Tumu';
+    seciliId = null;
+    filtreleListeyi();
+    document.getElementById('sag-icerik').innerHTML = '<div class="bos-durum">Listeden bir FAI kaydi secin.</div>';
+  }).catch(function(e) {
+    toast('Veri yukleme hatasi: ' + e.message, 'err');
+  });
+}
+
+document.addEventListener('DOMContentLoaded', yukle);
+</script>
+</body>
+</html>

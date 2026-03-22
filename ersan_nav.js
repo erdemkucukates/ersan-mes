@@ -40,24 +40,17 @@ var ERSAN_NAV = [
     group: 'Kalite',
     collapsed: false,
     subgroups: [
-      { label: 'Rutin', collapsed: false, items: [
-        { label: 'Kalite Hub',        href: 'ersan_kalite_hub.html' },
-        { label: 'Kontrol Plan\u0131',     href: 'ersan_kontrol_plani.html' },
-        { label: 'Girdi Muayene',     href: 'ersan_girdi_kalite.html' },
-        { label: '\u00DCretim Muayenesi', href: 'ersan_muayene.html' },
-        { label: 'FAI',              href: 'ersan_fai.html' },
-        { label: 'FOD Kontrol',       href: 'ersan_fod.html' },
-        { label: 'CoC / Sevkiyat',    href: 'ersan_sevkiyat.html' },
+      { label: 'Muayene', collapsed: false, items: [
+        { label: 'Girdi Kalite (IQC)',   href: 'ersan_kalite_iqc.html' },
+        { label: '\u0130lk Par\u00E7a (FAI)',     href: 'ersan_kalite_fai.html' },
+        { label: 'S\u00FCre\u00E7 \u0130\u00E7i (IPQC)',  href: 'ersan_kalite_ipqc.html' },
       ]},
-      { label: 'Uygunsuzluk & D\u00FCzeltme', collapsed: true, items: [
-        { label: 'NCR',              href: 'ersan_ncr.html' },
-        { label: 'Sapma / Feragat',  href: 'ersan_sapma.html' },
-        { label: 'CAPA',             href: 'ersan_capa.html' },
-        { label: 'M\u00FC\u015Fteri \u015Eikayeti', href: 'ersan_sikayet.html' },
+      { label: 'Uygunsuzluk & D\u00FCzeltme', collapsed: false, items: [
+        { label: 'NCR',              href: 'ersan_kalite_ncr.html' },
+        { label: 'CAPA (8D)',        href: 'ersan_kalite_capa.html' },
       ]},
-      { label: 'Sistem & Denetim', collapsed: true, items: [
-        { label: '\u0130\u00E7 Denetim',         href: 'ersan_denetim.html' },
-        { label: 'Kalite Ekipmanlar\u0131', href: 'ersan_kalite_ekipman.html' },
+      { label: 'Ekipman', collapsed: false, items: [
+        { label: 'Kalibrasyon',      href: 'ersan_kalite_kalibrasyon.html' },
       ]},
     ]
   },

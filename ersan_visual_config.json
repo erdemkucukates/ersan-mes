@@ -151,6 +151,42 @@
       "canliUrl": "/ersan_atolye.html",
       "viewport": { "width": 1280, "height": 900 },
       "bekle": ".kpi-row"
+    },
+    {
+      "id": "kalite_iqc",
+      "canliUrl": "/ersan_kalite_iqc.html",
+      "viewport": { "width": 1280, "height": 900 },
+      "bekle": ".kpi-row"
+    },
+    {
+      "id": "kalite_fai",
+      "canliUrl": "/ersan_kalite_fai.html",
+      "viewport": { "width": 1280, "height": 900 },
+      "bekle": ".kpi-row"
+    },
+    {
+      "id": "kalite_ipqc",
+      "canliUrl": "/ersan_kalite_ipqc.html",
+      "viewport": { "width": 1280, "height": 900 },
+      "bekle": ".kpi-row"
+    },
+    {
+      "id": "kalite_ncr",
+      "canliUrl": "/ersan_kalite_ncr.html",
+      "viewport": { "width": 1280, "height": 900 },
+      "bekle": ".kpi-row"
+    },
+    {
+      "id": "kalite_capa",
+      "canliUrl": "/ersan_kalite_capa.html",
+      "viewport": { "width": 1280, "height": 900 },
+      "bekle": ".kpi-row"
+    },
+    {
+      "id": "kalite_kalibrasyon",
+      "canliUrl": "/ersan_kalite_kalibrasyon.html",
+      "viewport": { "width": 1280, "height": 900 },
+      "bekle": ".kpi-row"
     }
   ]
 }
