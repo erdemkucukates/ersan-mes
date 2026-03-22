@@ -61,137 +61,46 @@
   outline: none;
   border-color: var(--mavi);
 }
-.sp-filtreler {
-  display: flex;
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
-  overflow-x: auto;
-}
-.sp-ft {
-  flex: 1;
-  padding: 6px 8px;
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--metin3);
-  background: transparent;
-  border: none;
-  border-bottom: 2px solid transparent;
-  cursor: pointer;
-  white-space: nowrap;
-  text-align: center;
-  transition: all .12s;
-  font-family: inherit;
-}
-.sp-ft.on {
-  color: var(--mavi);
-  border-bottom-color: var(--mavi);
-  background: var(--mavi-acik);
-}
+/* Sekme filtreleri */
+.sp-tab-nav { display:flex; border-bottom:1px solid #e5e7eb; flex-shrink:0; overflow-x:auto; }
+.sp-tab-btn { flex:1; padding:7px 4px; font-size:11px; text-align:center; cursor:pointer; border:none; background:transparent; color:#6b7280; border-bottom:2px solid transparent; font-weight:400; font-family:inherit; white-space:nowrap; transition:all .12s; }
+.sp-tab-btn.on { color:#1a2b47; border-bottom-color:#1a2b47; font-weight:500; }
+.sp-tab-btn:hover:not(.on) { background:#f9fafb; }
 .sp-liste {
   flex: 1;
   overflow-y: auto;
 }
-.sp-item {
-  padding: 10px 12px;
-  border-bottom: 1px solid var(--bg2);
-  cursor: pointer;
-  transition: background .1s;
-  border-left: 3px solid transparent;
-}
-.sp-item:hover { background: var(--bg2); }
-.sp-item.secili {
-  background: var(--mavi-acik);
-  border-left-color: var(--mavi);
-}
-.sp-item-ust {
+/* Liste item */
+.sp-li { padding:9px 12px; border-bottom:1px solid #f3f4f6; cursor:pointer; border-left:3px solid transparent; transition:background .1s; }
+.sp-li:hover { background:#f9fafb; }
+.sp-li.sel { background:#eff6ff; border-left-color:#1a2b47; }
+.sp-li .sp-no { font-size:12px; font-weight:600; color:#1a2b47; font-family:monospace; }
+.sp-li .sp-ad { font-size:12px; color:#374151; margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.sp-li .sp-alt { font-size:11px; color:#9ca3af; margin-top:2px; }
+.sp-li .sp-item-ust {
   display: flex;
   align-items: center;
   gap: 6px;
   margin-bottom: 3px;
 }
-.sp-item-no {
-  font-family: 'Courier New', monospace;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--mavi-koyu);
-}
-.sp-item-kalem {
+.sp-li .sp-item-kalem {
   font-size: 10px;
-  color: var(--metin4);
-}
-.sp-item-ad {
-  font-size: 12px;
-  color: var(--metin2);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  color: #9ca3af;
 }
 /* Durum badge'leri */
-.pill {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-size: 10px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-.pill-bek { background: #f1f5f9; color: #475569; }
-.pill-ure { background: var(--mavi-acik); color: var(--mavi-koyu); }
-.pill-tam { background: var(--yesil-bg); color: var(--yesil-t); }
-.pill-ips { background: var(--kirmizi-bg); color: var(--kirmizi-t); }
-.pill-ksv { background: var(--sari-bg); color: var(--sari-t); }
-.po-chip {
-  display: inline-block;
-  padding: 1px 6px;
-  border-radius: 4px;
-  font-size: 9px;
-  font-weight: 600;
-  background: #ede9fe;
-  color: #6d28d9;
-  margin-top: 2px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-}
-.musteri-po-alani {
-  padding: 6px 14px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-  background: var(--bg2);
-}
-.musteri-po-alani label {
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--metin3);
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-  white-space: nowrap;
-}
-.musteri-po-alani input {
-  flex: 1;
-  padding: 4px 8px;
-  border: 1px solid var(--border);
-  border-radius: 5px;
-  font-size: 12px;
-  font-family: 'Courier New', monospace;
-  color: var(--metin2);
-  background: var(--beyaz);
-  max-width: 240px;
-}
-.musteri-po-alani input:focus {
-  outline: none;
-  border-color: var(--mavi);
-}
-.musteri-po-alani .po-hint {
-  font-size: 10px;
-  color: var(--metin4);
-  font-style: italic;
-}
+.sp-bdg { font-size:10px; padding:2px 7px; border-radius:12px; font-weight:500; display:inline-block; white-space:nowrap; }
+.sp-bdg-bek { background:#fef3c7; color:#92400e; }
+.sp-bdg-ure { background:#dbeafe; color:#1e40af; }
+.sp-bdg-tam { background:#d1fae5; color:#065f46; }
+.sp-bdg-iptal { background:#f3f4f6; color:#6b7280; }
+.sp-bdg-ksv { background:#fef3c7; color:#92400e; }
+/* PO chip */
+.po-chip { font-size:10px; padding:2px 7px; border-radius:4px; background:#ede9fe; color:#6d28d9; font-weight:500; display:inline-block; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; }
+/* Müşteri PO alanı */
+.musteri-po-bar { background:#fffbeb; border-bottom:1px solid #fcd34d; padding:7px 14px; display:flex; align-items:center; gap:10px; flex-shrink:0; }
+.musteri-po-bar label { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:#92400e; white-space:nowrap; }
+.musteri-po-bar input { flex:1; font-size:12px; padding:4px 8px; border:1px solid #fcd34d; border-radius:4px; background:#fff; outline:none; color:#374151; font-family:inherit; max-width:240px; }
+.musteri-po-bar .po-hint { font-size:10px; color:#9ca3af; font-style:italic; }
 .sevkiyat-bilgi {
   padding: 8px 14px;
   border-bottom: 1px solid var(--border);
@@ -239,22 +148,9 @@
   color: var(--metin4);
   font-size: 13px;
 }
-.sp-ust-bar {
-  padding: 8px 14px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  flex-shrink: 0;
-  background: var(--beyaz);
-}
-.sp-ust-no {
-  font-family: 'Courier New', monospace;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--laci);
-}
+/* Header bar */
+.sp-header { background:#fff; border-bottom:1px solid #e5e7eb; padding:10px 16px; display:flex; align-items:center; gap:10px; flex-wrap:wrap; flex-shrink:0; }
+.sp-header .sp-title { font-size:14px; font-weight:700; color:#1a2b47; font-family:monospace; }
 .sp-ust-sag {
   margin-left: auto;
   display: flex;
@@ -267,44 +163,48 @@
   flex-direction: column;
   overflow: hidden;
 }
-/* Kalem listesi */
+/* Kalem tablosu */
+.sp-ktbl { width:100%; border-collapse:collapse; font-size:12px; }
+.sp-ktbl th { text-align:left; padding:7px 10px; font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.04em; color:#9ca3af; background:#f9fafb; border-bottom:1px solid #e5e7eb; }
+.sp-ktbl td { padding:8px 10px; border-bottom:1px solid #f3f4f6; vertical-align:middle; color:#374151; }
+/* Kalem listesi (grid fallback) */
 .kalem-baslik {
   display: grid;
   grid-template-columns: 40px 1fr 100px 40px 80px 80px 100px;
   gap: 6px;
-  padding: 6px 14px;
+  padding: 7px 10px;
   font-size: 10px;
   font-weight: 600;
-  color: var(--metin3);
+  color: #9ca3af;
   text-transform: uppercase;
-  letter-spacing: 0.3px;
-  border-bottom: 1px solid var(--border);
-  background: var(--bg2);
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
   flex-shrink: 0;
 }
 .kalem-liste {
   overflow-y: auto;
   max-height: 40%;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid #e5e7eb;
 }
 .kalem-item {
   cursor: pointer;
   transition: background .1s;
   border-left: 3px solid transparent;
 }
-.kalem-item:hover { background: var(--bg2); }
+.kalem-item:hover { background: #f9fafb; }
 .kalem-item.secili {
-  background: var(--mavi-acik);
-  border-left-color: var(--mavi);
+  background: #eff6ff;
+  border-left-color: #1a2b47;
 }
 .kalem-item.soluk { opacity: 0.5; }
 .kalem-ozet {
   display: grid;
   grid-template-columns: 40px 1fr 100px 40px 80px 80px 100px;
   gap: 6px;
-  padding: 8px 14px;
+  padding: 8px 10px;
   font-size: 12px;
-  color: var(--metin2);
+  color: #374151;
   align-items: center;
 }
 .kalem-detay {
@@ -312,21 +212,21 @@
   grid-template-columns: repeat(4, 1fr);
   gap: 10px;
   padding: 10px 14px;
-  background: var(--bg2);
-  border-top: 1px solid var(--border);
+  background: #f9fafb;
+  border-top: 1px solid #e5e7eb;
 }
 .kalem-detay label {
   font-size: 10px;
   font-weight: 600;
-  color: var(--metin3);
+  color: #9ca3af;
   text-transform: uppercase;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.04em;
   display: block;
   margin-bottom: 2px;
 }
 .kalem-detay .v {
   font-size: 12px;
-  color: var(--metin2);
+  color: #374151;
 }
 /* PDF upload buton */
 .yukle-btn {
@@ -352,17 +252,22 @@
   display: flex;
   flex-direction: column;
 }
+/* PDF viewer header */
+.pdf-head { background:#1a2b47; padding:8px 14px; display:flex; align-items:center; justify-content:space-between; border-radius:6px 6px 0 0; gap:8px; flex-shrink:0; }
+.pdf-head span { color:rgba(255,255,255,.8); font-size:11px; }
+.pdf-head button { font-size:11px; padding:3px 8px; border:1px solid rgba(255,255,255,.2); border-radius:4px; background:transparent; color:rgba(255,255,255,.7); cursor:pointer; font-family:inherit; }
 .pdf-ust {
   padding: 6px 14px;
   display: flex;
   align-items: center;
   gap: 8px;
-  background: var(--laci2);
+  background: #1a2b47;
   flex-shrink: 0;
+  border-radius: 6px 6px 0 0;
 }
 .pdf-dosya-adi {
   font-size: 11px;
-  color: rgba(255,255,255,0.7);
+  color: rgba(255,255,255,0.8);
   flex: 1;
   white-space: nowrap;
   overflow: hidden;
@@ -451,27 +356,19 @@
   transform: translateY(0);
 }
 /* Butonlar */
-.sp-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 5px 10px;
-  border-radius: 6px;
-  font-size: 11px;
-  font-weight: 500;
-  cursor: pointer;
-  border: 1px solid var(--border);
-  background: var(--beyaz);
-  color: var(--metin2);
-  font-family: inherit;
-  transition: all .12s;
-}
-.sp-btn:hover { background: var(--bg2); }
-.sp-btn-mavi { background: var(--mavi); color: #fff; border-color: var(--mavi); }
-.sp-btn-mavi:hover { background: var(--mavi-koyu); }
-.sp-btn-sari { background: var(--sari); color: #fff; border-color: var(--sari); }
-.sp-btn-kirmizi { background: var(--kirmizi); color: #fff; border-color: var(--kirmizi); }
-.sp-btn-kirmizi:hover { background: #c53030; }
+.sp-btn { font-size:11px; padding:5px 11px; border-radius:5px; cursor:pointer; font-weight:500; border:1px solid; font-family:inherit; display:inline-flex; align-items:center; gap:4px; transition:all .12s; background:#fff; color:#374151; border-color:#d1d5db; }
+.sp-btn:hover { background:#f9fafb; }
+.sp-btn-stl { background:#fef3c7; color:#92400e; border-color:#fcd34d; }
+.sp-btn-ie { background:#dbeafe; color:#1e40af; border-color:#93c5fd; }
+.sp-btn-sil { background:#fee2e2; color:#991b1b; border-color:#fca5a5; }
+.sp-btn-sevk { background:#d1fae5; color:#065f46; border-color:#6ee7b7; }
+.sp-btn-mavi { background:#dbeafe; color:#1e40af; border-color:#93c5fd; }
+.sp-btn-mavi:hover { background:#bfdbfe; }
+.sp-btn-sari { background:#fef3c7; color:#92400e; border-color:#fcd34d; }
+.sp-btn-kirmizi { background:#fee2e2; color:#991b1b; border-color:#fca5a5; }
+.sp-btn-kirmizi:hover { background:#fecaca; }
+/* Durum dropdown */
+.sp-durum-sel { font-size:11px; padding:5px 9px; border:1px solid #d1d5db; border-radius:5px; background:#fff; color:#374151; cursor:pointer; font-family:inherit; }
 /* Modal */
 .sp-modal-bg {
   position: fixed;
@@ -559,11 +456,11 @@
     <div class="sp-arama">
       <input id="search" placeholder="SE no, parca veya PO no ara..." oninput="filterList()">
     </div>
-    <div class="sp-filtreler">
-      <button class="sp-ft on" onclick="setFilter(this,'Tumu')">Tumu</button>
-      <button class="sp-ft" onclick="setFilter(this,'Beklemede')">Beklemede</button>
-      <button class="sp-ft" onclick="setFilter(this,'Uretimde')">Uretimde</button>
-      <button class="sp-ft" onclick="setFilter(this,'Tamamlandi')">Tamamlandi</button>
+    <div class="sp-tab-nav">
+      <button class="sp-tab-btn on" onclick="setFilter(this,'Tumu')">Tumu</button>
+      <button class="sp-tab-btn" onclick="setFilter(this,'Beklemede')">Beklemede</button>
+      <button class="sp-tab-btn" onclick="setFilter(this,'Uretimde')">Uretimde</button>
+      <button class="sp-tab-btn" onclick="setFilter(this,'Tamamlandi')">Tamamlandi</button>
     </div>
     <div class="sp-liste" id="sb-list"><div style="padding:1rem;font-size:12px;color:var(--metin4);">Yukleniyor...</div></div>
   </div>
@@ -595,11 +492,11 @@ function toast(msg) {
 }
 
 function pillClass(s) {
-  if (s==='Uretimde'||s==='Üretimde') return 'pill-ure';
-  if (s==='Tamamlandi'||s==='Tamamlandı') return 'pill-tam';
-  if (s==='Iptal'||s==='İptal') return 'pill-ips';
-  if (s==='Kismi Sevk'||s==='Kısmi Sevk') return 'pill-ksv';
-  return 'pill-bek';
+  if (s==='Uretimde'||s==='Üretimde') return 'sp-bdg-ure';
+  if (s==='Tamamlandi'||s==='Tamamlandı') return 'sp-bdg-tam';
+  if (s==='Iptal'||s==='İptal') return 'sp-bdg-iptal';
+  if (s==='Kismi Sevk'||s==='Kısmi Sevk') return 'sp-bdg-ksv';
+  return 'sp-bdg-bek';
 }
 
 function fmtDate(d) { if(!d) return '—'; try { return new Date(d).toLocaleDateString('tr-TR'); } catch(e){ return d; } }
@@ -688,7 +585,7 @@ async function loadList() {
 
 function setFilter(el, f) {
   currentFilter = f;
-  document.querySelectorAll('.sp-ft').forEach(function(t){ t.classList.remove('on'); });
+  document.querySelectorAll('.sp-tab-btn').forEach(function(t){ t.classList.remove('on'); });
   el.classList.add('on'); filterList();
 }
 
@@ -713,13 +610,13 @@ function filterList() {
 
   document.getElementById('sb-list').innerHTML = groups.map(function(g) {
     var isActive = g.spNo === selectedSP;
-    return '<div class="sp-item'+(isActive?' secili':'')+'" onclick="selectGroup(this.dataset.sp)" data-sp="'+g.spNo+'">'+
+    return '<div class="sp-li'+(isActive?' sel':'')+'" onclick="selectGroup(this.dataset.sp)" data-sp="'+g.spNo+'">'+
       '<div class="sp-item-ust">'+
-      '<span class="sp-item-no">'+g.spNo+'</span>'+
+      '<span class="sp-no">'+g.spNo+'</span>'+
       '<span class="sp-item-kalem">'+g.kalemler.length+' kalem</span>'+
-      '<span class="pill '+pillClass(g.durum)+'">'+g.durum+'</span>'+
+      '<span class="sp-bdg '+pillClass(g.durum)+'">'+g.durum+'</span>'+
       '</div>'+
-      '<div class="sp-item-ad">'+g.parcalar.slice(0,2).join(', ').substring(0,45)+'</div>'+
+      '<div class="sp-ad">'+g.parcalar.slice(0,2).join(', ').substring(0,45)+'</div>'+
       (musteriPoMap[g.spNo] ? '<div class="po-chip">MUSTERI PO: '+musteriPoMap[g.spNo]+'</div>' : '')+
       '</div>';
   }).join('');
@@ -743,20 +640,20 @@ function renderMain(g) {
   var sevkBilgi = sevkiyatBilgiMap[g.spNo] || null;
 
   main.innerHTML =
-    '<div class="sp-ust-bar">'+
-    '<div class="sp-ust-no">'+g.spNo+'</div>'+
-    '<span style="font-size:11px;color:var(--metin4);">'+g.kalemler.length+' kalem</span>'+
-    '<span class="pill '+pillClass(firstDurum)+'" style="font-size:11px;">'+firstDurum+'</span>'+
+    '<div class="sp-header">'+
+    '<div class="sp-title">'+g.spNo+'</div>'+
+    '<span style="font-size:11px;color:#9ca3af;">'+g.kalemler.length+' kalem</span>'+
+    '<span class="sp-bdg '+pillClass(firstDurum)+'" style="font-size:11px;">'+firstDurum+'</span>'+
     '<div class="sp-ust-sag">'+
-    '<button class="sp-btn sp-btn-sari" id="stl-btn">Satinalma Talebi</button>'+
-    '<button class="sp-btn sp-btn-mavi" id="ie-btn">Is Emri Ac</button>'+
-    (isSevkReady ? '<button class="sp-btn" id="sevk-btn" style="background:var(--yesil);color:#fff;border-color:var(--yesil);">&#x1F69A; Sevkiyat Olustur</button>' : '')+
-    '<select id="durum-sel" style="padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;" onchange="updateAllDurum(this.value)">'+
+    '<button class="sp-btn sp-btn-stl" id="stl-btn">Satinalma Talebi</button>'+
+    '<button class="sp-btn sp-btn-ie" id="ie-btn">Is Emri Ac</button>'+
+    (isSevkReady ? '<button class="sp-btn sp-btn-sevk" id="sevk-btn">&#x1F69A; Sevkiyat Olustur</button>' : '')+
+    '<select id="durum-sel" class="sp-durum-sel" onchange="updateAllDurum(this.value)">'+
     ['Beklemede','Üretimde','Tamamlandı','Kısmi Sevk','İptal'].map(function(d){ return '<option'+(d===firstDurum?' selected':'')+'>'+d+'</option>'; }).join('')+
     '</select>'+
-    '<button class="sp-btn sp-btn-kirmizi" id="del-btn">Sil</button>'+
+    '<button class="sp-btn sp-btn-sil" id="del-btn">Sil</button>'+
     '</div></div>'+
-    '<div class="musteri-po-alani">'+
+    '<div class="musteri-po-bar">'+
     '<label>Musteri PO No</label>'+
     '<input id="musteri-po-input" value="'+currentPO.replace(/"/g,'&quot;')+'" placeholder="Musterinin kendi siparis numarasi..." onchange="saveMusteriPO(\''+g.spNo+'\',this.value)">'+
     '<span class="po-hint">Irsaliye ve faturada gorunecek</span>'+
@@ -767,7 +664,7 @@ function renderMain(g) {
     '<div class="sevkiyat-bilgi-grid">'+
     '<div><label>Sevkiyat No</label><div class="v" style="font-family:monospace">'+sevkBilgi.no+'</div></div>'+
     '<div><label>Sevk Tarihi</label><div class="v">'+sevkBilgi.tarih+'</div></div>'+
-    '<div><label>Durum</label><div class="v"><span class="pill pill-ure" style="font-size:10px;">&#x1F69A; '+sevkBilgi.durum+'</span></div></div>'+
+    '<div><label>Durum</label><div class="v"><span class="sp-bdg sp-bdg-ure" style="font-size:10px;">&#x1F69A; '+sevkBilgi.durum+'</span></div></div>'+
     '<div><a href="ersan_sevkiyat.html?sp='+g.spNo+'" class="sp-btn sp-btn-mavi" style="font-size:10px;">Sevkiyat Detayi &rarr;</a></div>'+
     '</div></div>' : '')+
     '<div class="sp-govde">'+
@@ -840,7 +737,7 @@ function renderKalemler(kalemler, selIdx) {
       '<div><label>Revizyon</label><div class="v">'+(f['Revizyon']||'—')+'</div></div>'+
       '<div><label>Miktar</label><div class="v">'+(f['Miktar']||0)+' '+(f['Birim']||'Adet')+'</div></div>'+
       '<div><label>Termin</label><div class="v" style="color:var(--sari)">'+(f['Termin Tarihi']?fmtDate(f['Termin Tarihi']):'—')+'</div></div>'+
-      '<div><label>Durum</label><div class="v"><span class="pill '+pillClass(durum)+'" style="font-size:10px;">'+durum+'</span></div></div>'+
+      '<div><label>Durum</label><div class="v"><span class="sp-bdg '+pillClass(durum)+'" style="font-size:10px;">'+durum+'</span></div></div>'+
       '<div><label>Musteri PO</label><div class="v">'+(f['Müşteri PO No']||'—')+'</div></div>'+
       '<div style="grid-column:1/-1"><label>Notlar</label><div class="v" style="font-weight:400">'+(f['Notlar']||'—')+'</div></div>'+
       '</div>' : '';

@@ -7,6 +7,72 @@
 <script src="ersan_nav.js" defer></script>
 <script src="ersan_log.js" defer></script>
 <link rel="stylesheet" href="ersan_styles.css">
+<style>
+/* Sol Panel */
+.sl-head { padding:10px 12px; border-bottom:1px solid #e5e7eb; display:flex; align-items:center; justify-content:space-between; background:#fff; }
+
+/* Yeni Teklif butonu — mor */
+.btn-yeni-teklif { font-size:11px; padding:5px 12px; border-radius:5px; border:none; background:#7c3aed; color:#fff; cursor:pointer; font-weight:600; }
+.btn-yeni-teklif:hover { background:#6d28d9; }
+
+/* Arama */
+.sl-search input { width:100%; font-size:12px; padding:5px 9px; border:1px solid #d1d5db; border-radius:5px; outline:none; background:#fafafa; }
+.sl-search input:focus { border-color:#1a2b47; background:#fff; }
+
+/* Liste item */
+.li { padding:9px 12px; border-bottom:1px solid #f3f4f6; cursor:pointer; border-left:3px solid transparent; transition:background .1s; }
+.li:hover { background:#f9fafb; }
+.li.sel { background:#eff6ff; border-left-color:#1a2b47; }
+
+/* Durum badge */
+.badge-onay { background:#d1fae5; color:#065f46; font-size:10px; padding:2px 7px; border-radius:12px; font-weight:500; }
+.badge-taslak { background:#f3f4f6; color:#6b7280; font-size:10px; padding:2px 7px; border-radius:12px; font-weight:500; }
+.badge-revize { background:#ede9fe; color:#5b21b6; font-size:10px; padding:2px 7px; border-radius:12px; font-weight:500; }
+.badge-gonderildi { background:#dbeafe; color:#1e40af; font-size:10px; padding:2px 7px; border-radius:12px; font-weight:500; }
+.badge-red { background:#fee2e2; color:#991b1b; font-size:10px; padding:2px 7px; border-radius:12px; font-weight:500; }
+
+/* Sag panel header */
+.rh { background:#fff; border-bottom:1px solid #e5e7eb; padding:10px 16px; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.rh .teklif-no { font-size:14px; font-weight:700; color:#1a2b47; font-family:monospace; }
+
+/* Section wrapper */
+.sec { background:#fff; border:1px solid #e5e7eb; border-radius:7px; margin:10px; overflow:hidden; }
+.sec-head { padding:9px 14px; border-bottom:1px solid #e5e7eb; display:flex; align-items:center; gap:7px; background:#fafafa; font-size:12px; font-weight:600; color:#374151; }
+.sec-body { padding:14px; }
+
+/* Form label */
+.fl { display:block; font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:#9ca3af; margin-bottom:3px; }
+
+/* Form input */
+.fi { width:100%; font-size:12px; padding:6px 9px; border:1px solid #d1d5db; border-radius:5px; background:#fff; color:#111827; outline:none; font-family:inherit; }
+.fi:focus { border-color:#1a2b47; }
+.fi[readonly] { background:#f9fafb; color:#9ca3af; border-color:#e5e7eb; }
+
+/* Kalemler tablo */
+.ktbl { width:100%; border-collapse:collapse; font-size:12px; }
+.ktbl th { text-align:left; padding:7px 10px; font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.04em; color:#9ca3af; background:#f9fafb; border-bottom:1px solid #e5e7eb; }
+.ktbl td { padding:7px 10px; border-bottom:1px solid #f3f4f6; color:#374151; vertical-align:middle; }
+
+/* Kalem ekle butonu */
+.btn-kalem-ekle { font-size:11px; padding:4px 8px; background:#1a2b47; color:#fff; border:none; border-radius:4px; cursor:pointer; font-weight:600; }
+
+/* Durum bar */
+.durum-bar { background:#fff; border-top:1px solid #e5e7eb; padding:10px 14px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+
+/* Aksiyon butonlari */
+.btn-aksiyon { font-size:11px; padding:5px 12px; border-radius:5px; cursor:pointer; font-weight:500; border:1px solid; }
+.btn-revize { background:#fff; border-color:#c4b5fd; color:#5b21b6; }
+.btn-onayla { background:#d1fae5; border-color:#6ee7b7; color:#065f46; }
+.btn-reddet { background:#fee2e2; border-color:#fca5a5; color:#991b1b; }
+.btn-gonder { background:#fff; border-color:#d1d5db; color:#374151; }
+.btn-hatirla { background:#1a2b47; border-color:#1a2b47; color:#fff; }
+.btn-kaydet { background:#1a2b47; border-color:#1a2b47; color:#fff; font-weight:600; }
+.btn-pdf { background:#1a2b47; border-color:#1a2b47; color:#fff; }
+.btn-sil { background:#fee2e2; border-color:#fca5a5; color:#991b1b; }
+
+/* Genel buton base */
+.btn-base { font-size:11px; padding:5px 11px; border-radius:5px; cursor:pointer; }
+</style>
 </head>
 <body>
 <div id="nav-alani"></div>
@@ -26,10 +92,10 @@
   <div class="list-panel">
     <div class="list-header">
       <h2>Teklifler</h2>
-      <button onclick="createNewQuote()" style="margin:8px 12px 0;width:calc(100% - 24px);background:#7c3aed;color:white;border:none;border-radius:7px;padding:8px;font-size:12px;font-weight:600;cursor:pointer;">+ Yeni Teklif</button>
+      <button class="btn-yeni-teklif" onclick="createNewQuote()" style="margin:8px 12px 0;width:calc(100% - 24px);padding:8px;border-radius:7px;">+ Yeni Teklif</button>
       <div class="list-count" id="list-count">Yükleniyor...</div>
     </div>
-    <div class="list-search">
+    <div class="list-search sl-search">
       <input type="text" placeholder="Teklif no veya müşteri ara..." id="search-input" oninput="filterList()">
     </div>
     <div style="padding:2px 12px;display:flex;align-items:center;gap:6px;">
@@ -119,11 +185,11 @@ const fmtDate = (d) => {
 const toISO = (d) => { if (!d) return null; return d; };
 
 const statusColors = {
-  'Taslak': 'status-Taslak',
-  'Gönderildi': 'status-Gönderildi',
-  'Onaylandı': 'status-Onaylandı',
-  'Reddedildi': 'status-Reddedildi',
-  'Revize Edildi': 'status-Reddedildi',
+  'Taslak': 'badge-taslak',
+  'Gönderildi': 'badge-gonderildi',
+  'Onaylandı': 'badge-onay',
+  'Reddedildi': 'badge-red',
+  'Revize Edildi': 'badge-revize',
 };
 let sadeceAktifVersiyon = true; // Varsayılan: Revize Edildi olanları gizle
 
@@ -228,13 +294,13 @@ function renderList() {
     var durum = f['Durum'] || 'Taslak';
     var tarih = fmtDate(f['Teklif Tarihi']);
     var tutar = f['Toplam Tutar'] ? fmt(f['Toplam Tutar']) + ' ' + (f['Para Birimi']||'TL') : '—';
-    var active = q.id === activeId ? ' secili' : '';
+    var active = q.id === activeId ? ' sel' : '';
 
     // Revizyon badge
     var revBadge = '';
     var rev = parseInt(f['Revizyon']) || 0;
     if (rev > 1 && f['Ana Teklif No']) {
-      revBadge = ' <span style="background:#ede9fe;color:#7c3aed;font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;">R' + rev + '</span>';
+      revBadge = ' <span class="badge-revize" style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;">R' + rev + '</span>';
     }
 
     // Opacity for revised
@@ -246,7 +312,7 @@ function renderList() {
       var gt = new Date(f['Geçerlilik Tarihi']);
       var diff = Math.floor((gt - bugun) / 86400000);
       if (diff < 0) {
-        gecerlilikBadge = ' <span style="background:#fee2e2;color:#dc2626;font-size:9px;font-weight:600;padding:1px 5px;border-radius:4px;">Suresi Gecmis</span>';
+        gecerlilikBadge = ' <span class="badge-red" style="font-size:9px;font-weight:600;padding:1px 5px;">Suresi Gecmis</span>';
       } else if (diff <= 3) {
         gecerlilikBadge = ' <span style="color:#d97706;font-size:10px;" title="' + (diff+1) + ' gun kaldi">&#9888;</span>';
       }
@@ -259,7 +325,7 @@ function renderList() {
       else if (diff2 <= 3) tarihStyle = 'color:#d97706;font-weight:600;';
     }
 
-    return '<div class="liste-satir' + active + '"' + rowStyle + ' onclick="loadDetail(\'' + q.id + '\')">' +
+    return '<div class="liste-satir li' + active + '"' + rowStyle + ' onclick="loadDetail(\'' + q.id + '\')">' +
       '<div class="qi-top">' +
         '<span class="qi-no">' + no + revBadge + '</span>' +
         '<span class="qi-status ' + (statusColors[durum]||'status-Taslak') + '">' + durum + '</span>' +
@@ -395,23 +461,23 @@ function renderDetail(q) {
           <button class="nav-btn" onclick="loadDetail('${prevId}')" ${!prevId?'disabled':''}>&#8593;</button>
           <button class="nav-btn" onclick="loadDetail('${nextId}')" ${!nextId?'disabled':''}>&#8595;</button>
         </div>
-        <div class="detail-title">${f['Teklif No']||'Yeni Teklif'}</div>
-        <span class="qi-status ${statusColors[durum]||'status-Taslak'} detail-musteri-tag">${durum}</span>
+        <div class="detail-title teklif-no">${f['Teklif No']||'Yeni Teklif'}</div>
+        <span class="${statusColors[durum]||'badge-taslak'} detail-musteri-tag">${durum}</span>
         <span class="detail-musteri-tag">${getMusteriName(musteriId)}</span>
       </div>
-      ${isDraft ? '' : `<button class="toolbar-btn ghost" onclick="loadDetail('${q.id}')">
+      ${isDraft ? '' : `<button class="toolbar-btn btn-base ghost" onclick="loadDetail('${q.id}')">
         <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M11 6.5A4.5 4.5 0 112 6.5a4.5 4.5 0 019 0z" stroke="currentColor" stroke-width="1.5"/><path d="M9.5 9.5l2 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
         Yenile
       </button>`}
-      ${isDraft ? '' : `<button class="toolbar-btn" style="background:#1e1b4b;color:white;border-color:#1e1b4b;" onclick="generatePDF('${q.id}')">
+      ${isDraft ? '' : `<button class="toolbar-btn btn-base btn-pdf" onclick="generatePDF('${q.id}')">
         <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 10h9M6.5 2v6M4 6l2.5 2.5L9 6" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
         Proforma PDF
       </button>`}
-      ${isDraft ? '' : `<button class="toolbar-btn" onclick="deleteQuote('${q.id}')">
+      ${isDraft ? '' : `<button class="toolbar-btn btn-base btn-sil" onclick="deleteQuote('${q.id}')">
         <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 3h9M5 3V2h3v1M4 3l.5 7h4L9 3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
         Sil
       </button>`}
-      <button class="toolbar-btn primary" onclick="saveQuote('${q.id}')">
+      <button class="toolbar-btn btn-base btn-kaydet" onclick="saveQuote('${q.id}')">
         <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 7l3 3 6-6" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
         Teklifi Kaydet
       </button>
@@ -421,68 +487,68 @@ function renderDetail(q) {
     <div class="detail-scroll">
 
       <!-- Temel Bilgiler -->
-      <div class="card">
-        <div class="card-header">
+      <div class="card sec">
+        <div class="card-header sec-head">
           <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><rect x="1" y="2" width="11" height="9" rx="2" stroke="currentColor" stroke-width="1.3"/><path d="M4 5h5M4 7.5h3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
           Teklif Bilgileri
         </div>
-        <div class="card-body">
+        <div class="card-body sec-body">
           <div class="form-grid-4" style="gap:10px;">
             <div class="field-group">
-              <label class="field-label">Teklif No</label>
-              <input class="field-input" value="${f['Teklif No']||''}" disabled style="font-family:var(--mono);font-size:12px;">
+              <label class="field-label fl">Teklif No</label>
+              <input class="field-input fi" value="${f['Teklif No']||''}" disabled style="font-family:var(--mono);font-size:12px;">
             </div>
             <div class="field-group">
-              <label class="field-label">Teklif Tarihi</label>
-              <input type="date" class="field-input" id="f-teklif-tarihi" value="${f['Teklif Tarihi']||''}">
+              <label class="field-label fl">Teklif Tarihi</label>
+              <input type="date" class="field-input fi" id="f-teklif-tarihi" value="${f['Teklif Tarihi']||''}">
             </div>
             <div class="field-group">
-              <label class="field-label">Geçerlilik Tarihi</label>
-              <input type="date" class="field-input" id="f-gecerlilik" value="${f['Geçerlilik Tarihi']||''}">
+              <label class="field-label fl">Geçerlilik Tarihi</label>
+              <input type="date" class="field-input fi" id="f-gecerlilik" value="${f['Geçerlilik Tarihi']||''}">
             </div>
             <div class="field-group">
-              <label class="field-label">Vade Süresi (Gün)</label>
-              <input type="number" class="field-input" id="f-vade" value="${f['Vade Süresi (Gün)']||''}">
+              <label class="field-label fl">Vade Süresi (Gün)</label>
+              <input type="number" class="field-input fi" id="f-vade" value="${f['Vade Süresi (Gün)']||''}">
             </div>
           </div>
           <div style="height:10px;"></div>
           <div class="form-grid-4" style="gap:10px;">
             <div class="field-group" style="grid-column:span 2;">
-              <label class="field-label">Müşteri</label>
-              <select class="field-input" id="f-musteri" onchange="onMusteriChange(this.value)">
+              <label class="field-label fl">Müşteri</label>
+              <select class="field-input fi" id="f-musteri" onchange="onMusteriChange(this.value)">
                 <option value="">— Seçin —</option>
                 ${musteriOpts}
               </select>
             </div>
             <div class="field-group">
-              <label class="field-label">Müşteri Kodu</label>
-              <input class="field-input" id="f-musteri-kodu" value="${musteriler.find(m=>m.id===musteriId)?.fields?.['Müşteri Kodu']||''}" disabled style="background:var(--surface2);color:var(--text2);">
+              <label class="field-label fl">Müşteri Kodu</label>
+              <input class="field-input fi" id="f-musteri-kodu" value="${musteriler.find(m=>m.id===musteriId)?.fields?.['Müşteri Kodu']||''}" disabled style="background:var(--surface2);color:var(--text2);">
             </div>
             <div class="field-group">
               <label class="field-label" style="display:flex;align-items:center;justify-content:space-between;">
                 Yetkili Kişi
                 <button onclick="openYetkiliModal()" style="background:var(--accent);color:white;border:none;border-radius:4px;width:18px;height:18px;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;">+</button>
               </label>
-              <input class="field-input" id="f-musteri-yetkili" value="${f['Müşteri Yetkili Kişi']?.[0]||''}" placeholder="Yetkili kişi adı">
+              <input class="field-input fi" id="f-musteri-yetkili" value="${f['Müşteri Yetkili Kişi']?.[0]||''}" placeholder="Yetkili kişi adı">
             </div>
             <div class="field-group">
-              <label class="field-label">Müşteri Telefon</label>
-              <input class="field-input" id="f-musteri-tel" value="${f['Müşteri Telefon']?.[0]||''}" placeholder="Telefon">
+              <label class="field-label fl">Müşteri Telefon</label>
+              <input class="field-input fi" id="f-musteri-tel" value="${f['Müşteri Telefon']?.[0]||''}" placeholder="Telefon">
             </div>
             <div class="field-group">
-              <label class="field-label">Müşteri E-posta</label>
-              <input class="field-input" id="f-musteri-email" value="${f['Müşteri Email']?.[0]||''}" placeholder="E-posta">
+              <label class="field-label fl">Müşteri E-posta</label>
+              <input class="field-input fi" id="f-musteri-email" value="${f['Müşteri Email']?.[0]||''}" placeholder="E-posta">
             </div>
             <div class="field-group">
-              <label class="field-label">Hazırlayan</label>
-              <select class="field-input" id="f-hazirlayan">
+              <label class="field-label fl">Hazırlayan</label>
+              <select class="field-input fi" id="f-hazirlayan">
                 <option value="">— Seçin —</option>
                 ${personelOpts}
               </select>
             </div>
             <div class="field-group">
-              <label class="field-label">Durum</label>
-              <select class="field-input" id="f-durum">
+              <label class="field-label fl">Durum</label>
+              <select class="field-input fi" id="f-durum">
                 <option ${durum==='Taslak'?'selected':''}>Taslak</option>
                 <option ${durum==='Gönderildi'?'selected':''}>Gönderildi</option>
                 <option ${durum==='Onaylandı'?'selected':''}>Onaylandı</option>
@@ -491,8 +557,8 @@ function renderDetail(q) {
               </select>
             </div>
             <div class="field-group">
-              <label class="field-label">Para Birimi</label>
-              <select class="field-input" id="f-para">
+              <label class="field-label fl">Para Birimi</label>
+              <select class="field-input fi" id="f-para">
                 <option ${(f['Para Birimi']||'TL')==='TL'?'selected':''}>TL</option>
                 <option ${f['Para Birimi']==='USD'?'selected':''}>USD</option>
                 <option ${f['Para Birimi']==='EUR'?'selected':''}>EUR</option>
@@ -500,26 +566,26 @@ function renderDetail(q) {
             </div>
             <!-- KDV alanı kaldırıldı -->
             <div class="field-group" style="grid-column:span 4;">
-              <label class="field-label">Teklif Notu (Müşteri talep / proje no)</label>
-              <input type="text" class="field-input" id="f-not" value="${f['Teklif Notu']||''}" placeholder="Müşteri talep / proje no...">
+              <label class="field-label fl">Teklif Notu (Müşteri talep / proje no)</label>
+              <input type="text" class="field-input fi" id="f-not" value="${f['Teklif Notu']||''}" placeholder="Müşteri talep / proje no...">
             </div>
             <div class="field-group" style="grid-column:span 2;">
-              <label class="field-label">Dosya No / Proje No</label>
-              <input type="text" class="field-input" id="f-dosya-no" value="${f['Dosya No']||''}" placeholder="DOS-2026-001 (opsiyonel)">
+              <label class="field-label fl">Dosya No / Proje No</label>
+              <input type="text" class="field-input fi" id="f-dosya-no" value="${f['Dosya No']||''}" placeholder="DOS-2026-001 (opsiyonel)">
             </div>
           </div>
         </div>
       </div>
 
       <!-- Kalemler -->
-      <div class="card">
-        <div class="card-header">
+      <div class="card sec">
+        <div class="card-header sec-head">
           <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 4h9M2 7h9M2 10h5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
           Teklif Kalemleri
           <span style="margin-left:auto;font-size:10px;font-weight:400;color:var(--text3)" id="item-count">${currentItems.length} kalem</span>
         </div>
         <div style="overflow-x:auto;">
-          <table class="items-table">
+          <table class="items-table ktbl">
             <thead>
               <tr>
                 <th style="width:32px;text-align:center;">
@@ -543,7 +609,7 @@ function renderDetail(q) {
           </table>
         </div>
         <div class="items-footer">
-          <button class="btn-add-row" onclick="addItem()">
+          <button class="btn-add-row btn-kalem-ekle" onclick="addItem()">
             <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 2v9M2 6.5h9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
             Kalem Ekle
           </button>
@@ -557,18 +623,18 @@ function renderDetail(q) {
     </div><!-- end scroll -->
 
     <!-- DURUM BUTTONS -->
-    ${isDraft ? '' : `<div class="durum-row">
+    ${isDraft ? '' : `<div class="durum-row durum-bar">
       <span class="durum-label">Teklif Durumu:</span>
-      <span class="qi-status ${statusColors[durum]}" style="font-size:12px;">${durum}</span>
+      <span class="${statusColors[durum]}" style="font-size:12px;">${durum}</span>
       <span style="flex:1"></span>
-      <button class="toolbar-btn warn" onclick="revizeEt('${q.id}')">↩ Revize Et</button>
-      <button class="toolbar-btn success" onclick="setDurum('${q.id}','Onaylandı')">✓ Onaylandı</button>
-      <button class="toolbar-btn danger" onclick="setDurum('${q.id}','Reddedildi')">✕ Reddedildi</button>
-      <button class="toolbar-btn" onclick="setDurum('${q.id}','Gönderildi')">
+      <button class="btn-aksiyon btn-revize" onclick="revizeEt('${q.id}')">&#8617; Revize Et</button>
+      <button class="btn-aksiyon btn-onayla" onclick="setDurum('${q.id}','Onaylandı')">&#10003; Onaylandi</button>
+      <button class="btn-aksiyon btn-reddet" onclick="setDurum('${q.id}','Reddedildi')">&#10005; Reddedildi</button>
+      <button class="btn-aksiyon btn-gonder" onclick="setDurum('${q.id}','Gönderildi')">
         <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 6.5h9M7.5 3l4 3.5-4 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        Gönderildi
+        Gonderildi
       </button>
-      ${durum === 'Onaylandı' ? `<button class="toolbar-btn" id="btn-hatirlatma-${q.id}" onclick="musteriyeHatirlatma('${q.id}')" style="background:#0ea5e9;color:white;border-color:#0ea5e9;">
+      ${durum === 'Onaylandı' ? `<button class="btn-aksiyon btn-hatirla" id="btn-hatirlatma-${q.id}" onclick="musteriyeHatirlatma('${q.id}')">
         &#x1F4E7; Musteriye Hatirlatma Gonder
       </button>` : ''}
     </div>`}
@@ -648,9 +714,9 @@ function renderItems() {
           <input type="checkbox" ${item.secili?'checked':''} onchange="updateItem(${i},'secili',this.checked)" style="cursor:pointer;width:14px;height:14px;">
         </td>
         <td class="cell-no">${i+1}</td>
-        <td><input class="field-input" style="border:1px solid transparent;border-radius:5px;padding:5px 7px;" value="${item.stokKodu||''}" oninput="updateItem(${i},'stokKodu',this.value)" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='transparent'" placeholder="Stok kodu"></td>
-        <td><input class="field-input" style="border:1px solid transparent;border-radius:5px;padding:5px 7px;" value="${item.malzemeNo||''}" oninput="updateItem(${i},'malzemeNo',this.value)" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='transparent'" placeholder="Malzeme no"></td>
-        <td><input class="field-input" style="border:1px solid transparent;border-radius:5px;padding:5px 7px;min-width:140px;" value="${item.parcaAdi||''}" oninput="updateItem(${i},'parcaAdi',this.value)" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='transparent'" placeholder="Parça adı / açıklama"></td>
+        <td><input class="field-input fi" style="border:1px solid transparent;border-radius:5px;padding:5px 7px;" value="${item.stokKodu||''}" oninput="updateItem(${i},'stokKodu',this.value)" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='transparent'" placeholder="Stok kodu"></td>
+        <td><input class="field-input fi" style="border:1px solid transparent;border-radius:5px;padding:5px 7px;" value="${item.malzemeNo||''}" oninput="updateItem(${i},'malzemeNo',this.value)" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='transparent'" placeholder="Malzeme no"></td>
+        <td><input class="field-input fi" style="border:1px solid transparent;border-radius:5px;padding:5px 7px;min-width:140px;" value="${item.parcaAdi||''}" oninput="updateItem(${i},'parcaAdi',this.value)" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='transparent'" placeholder="Parça adı / açıklama"></td>
         <td><input type="number" class="num" style="border:1px solid transparent;border-radius:5px;padding:5px 7px;" value="${item.miktar||''}" oninput="updateItem(${i},'miktar',parseFloat(this.value)||0)" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='transparent'" placeholder="0"></td>
         <td>
           <select style="border:1px solid transparent;border-radius:5px;padding:5px 7px;font-size:12px;font-family:var(--sans);width:100%;outline:none;" onchange="updateItem(${i},'birim',this.value)" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='transparent'">
@@ -746,20 +812,20 @@ function openYetkiliModal() {
           Müşteri: <strong>${m?.fields?.['Müşteri Adı']||'—'}</strong>
         </div>
         <div class="field-group">
-          <label class="field-label">Ad Soyad *</label>
-          <input class="field-input" id="ym-adsoyad" placeholder="Yetkili kişi adı soyadı">
+          <label class="field-label fl">Ad Soyad *</label>
+          <input class="field-input fi" id="ym-adsoyad" placeholder="Yetkili kişi adı soyadı">
         </div>
         <div class="field-group">
-          <label class="field-label">Telefon</label>
-          <input class="field-input" id="ym-tel" placeholder="0532 000 0000">
+          <label class="field-label fl">Telefon</label>
+          <input class="field-input fi" id="ym-tel" placeholder="0532 000 0000">
         </div>
         <div class="field-group">
-          <label class="field-label">E-posta</label>
-          <input class="field-input" id="ym-email" placeholder="yetkili@firma.com">
+          <label class="field-label fl">E-posta</label>
+          <input class="field-input fi" id="ym-email" placeholder="yetkili@firma.com">
         </div>
         <div class="field-group">
-          <label class="field-label">Ünvan</label>
-          <input class="field-input" id="ym-unvan" placeholder="Satınalma Müdürü...">
+          <label class="field-label fl">Ünvan</label>
+          <input class="field-input fi" id="ym-unvan" placeholder="Satınalma Müdürü...">
         </div>
         <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px;">
           <button class="toolbar-btn" onclick="closeYetkiliModal()">İptal</button>
@@ -1111,27 +1177,27 @@ function createSTLFromSiparisler(seId, seNo, parcaAdi, parcaNo, miktar, birim) {
         </div>
         ${s.tip==='Fason'?`
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">
-            <div style="display:flex;flex-direction:column;gap:3px;"><div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;">İşlem Tipi</div><input class="field-input" style="font-size:12px;" value="${s.malzemeCinsi||''}" oninput="window._stlSatirlar[${i}].malzemeCinsi=this.value" placeholder="Isıl İşlem..."></div>
-            <div style="display:flex;flex-direction:column;gap:3px;"><div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;">Şartname</div><input class="field-input" style="font-size:12px;" value="${s.spec||''}" oninput="window._stlSatirlar[${i}].spec=this.value" placeholder="58-60 HRC..."></div>
-            <div style="display:flex;flex-direction:column;gap:3px;"><div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;">Miktar</div><input type="number" class="field-input" style="font-size:12px;" value="${s.miktar||''}" oninput="window._stlSatirlar[${i}].miktar=parseFloat(this.value)||0"></div>
+            <div style="display:flex;flex-direction:column;gap:3px;"><div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;">İşlem Tipi</div><input class="field-input fi" style="font-size:12px;" value="${s.malzemeCinsi||''}" oninput="window._stlSatirlar[${i}].malzemeCinsi=this.value" placeholder="Isıl İşlem..."></div>
+            <div style="display:flex;flex-direction:column;gap:3px;"><div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;">Şartname</div><input class="field-input fi" style="font-size:12px;" value="${s.spec||''}" oninput="window._stlSatirlar[${i}].spec=this.value" placeholder="58-60 HRC..."></div>
+            <div style="display:flex;flex-direction:column;gap:3px;"><div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;">Miktar</div><input type="number" class="field-input fi" style="font-size:12px;" value="${s.miktar||''}" oninput="window._stlSatirlar[${i}].miktar=parseFloat(this.value)||0"></div>
           </div>`:
         `<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;">
-            <div style="display:flex;flex-direction:column;gap:3px;"><div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;">Malzeme Cinsi</div><input class="field-input" style="font-size:12px;" value="${s.malzemeCinsi||''}" oninput="window._stlSatirlar[${i}].malzemeCinsi=this.value" placeholder="AISI 4140..."></div>
+            <div style="display:flex;flex-direction:column;gap:3px;"><div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;">Malzeme Cinsi</div><input class="field-input fi" style="font-size:12px;" value="${s.malzemeCinsi||''}" oninput="window._stlSatirlar[${i}].malzemeCinsi=this.value" placeholder="AISI 4140..."></div>
             <div style="display:flex;flex-direction:column;gap:3px;"><div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;">Yoğunluk</div>
-              <select class="field-input" style="font-size:12px;" onchange="window._stlSatirlar[${i}].yogunluk=this.value">
+              <select class="field-input fi" style="font-size:12px;" onchange="window._stlSatirlar[${i}].yogunluk=this.value">
                 ${['Çelik','Paslanmaz','Alüminyum','Titanyum','Bakır'].map(k=>`<option ${s.yogunluk===k?'selected':''}>${k}</option>`).join('')}
               </select>
             </div>
           </div>
           <div style="display:grid;grid-template-columns:${s.malzemeTipi==='Boru'?'1fr 1fr 1fr':'1fr 1fr'};gap:6px;margin-bottom:6px;">
-            ${s.malzemeTipi==='Mil'?`<div style="display:flex;flex-direction:column;gap:3px;"><div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;">Çap (mm)</div><input type="number" class="field-input" style="font-size:12px;" value="${s.cap||''}" oninput="window._stlSatirlar[${i}].cap=this.value" placeholder="150"></div><div style="display:flex;flex-direction:column;gap:3px;"><div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;">Boy (mm)</div><input type="number" class="field-input" style="font-size:12px;" value="${s.boy||''}" oninput="window._stlSatirlar[${i}].boy=this.value" placeholder="200"></div>`:''}
-            ${s.malzemeTipi==='Boru'?`<div style="display:flex;flex-direction:column;gap:3px;"><div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;">Dış Çap (mm)</div><input type="number" class="field-input" style="font-size:12px;" value="${s.cap||''}" oninput="window._stlSatirlar[${i}].cap=this.value"></div><div style="display:flex;flex-direction:column;gap:3px;"><div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;">İç Çap (mm)</div><input type="number" class="field-input" style="font-size:12px;" value="${s.ic_cap||''}" oninput="window._stlSatirlar[${i}].ic_cap=this.value"></div><div style="display:flex;flex-direction:column;gap:3px;"><div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;">Boy (mm)</div><input type="number" class="field-input" style="font-size:12px;" value="${s.boy||''}" oninput="window._stlSatirlar[${i}].boy=this.value"></div>`:''}
-            ${['Lama','Sac'].includes(s.malzemeTipi)?`<div style="display:flex;flex-direction:column;gap:3px;"><div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;">En (mm)</div><input type="number" class="field-input" style="font-size:12px;" value="${s.en||''}" oninput="window._stlSatirlar[${i}].en=this.value"></div><div style="display:flex;flex-direction:column;gap:3px;"><div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;">Boy (mm)</div><input type="number" class="field-input" style="font-size:12px;" value="${s.boy||''}" oninput="window._stlSatirlar[${i}].boy=this.value"></div>`:''}
+            ${s.malzemeTipi==='Mil'?`<div style="display:flex;flex-direction:column;gap:3px;"><div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;">Çap (mm)</div><input type="number" class="field-input fi" style="font-size:12px;" value="${s.cap||''}" oninput="window._stlSatirlar[${i}].cap=this.value" placeholder="150"></div><div style="display:flex;flex-direction:column;gap:3px;"><div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;">Boy (mm)</div><input type="number" class="field-input fi" style="font-size:12px;" value="${s.boy||''}" oninput="window._stlSatirlar[${i}].boy=this.value" placeholder="200"></div>`:''}
+            ${s.malzemeTipi==='Boru'?`<div style="display:flex;flex-direction:column;gap:3px;"><div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;">Dış Çap (mm)</div><input type="number" class="field-input fi" style="font-size:12px;" value="${s.cap||''}" oninput="window._stlSatirlar[${i}].cap=this.value"></div><div style="display:flex;flex-direction:column;gap:3px;"><div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;">İç Çap (mm)</div><input type="number" class="field-input fi" style="font-size:12px;" value="${s.ic_cap||''}" oninput="window._stlSatirlar[${i}].ic_cap=this.value"></div><div style="display:flex;flex-direction:column;gap:3px;"><div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;">Boy (mm)</div><input type="number" class="field-input fi" style="font-size:12px;" value="${s.boy||''}" oninput="window._stlSatirlar[${i}].boy=this.value"></div>`:''}
+            ${['Lama','Sac'].includes(s.malzemeTipi)?`<div style="display:flex;flex-direction:column;gap:3px;"><div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;">En (mm)</div><input type="number" class="field-input fi" style="font-size:12px;" value="${s.en||''}" oninput="window._stlSatirlar[${i}].en=this.value"></div><div style="display:flex;flex-direction:column;gap:3px;"><div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;">Boy (mm)</div><input type="number" class="field-input fi" style="font-size:12px;" value="${s.boy||''}" oninput="window._stlSatirlar[${i}].boy=this.value"></div>`:''}
           </div>
           <div style="display:grid;grid-template-columns:80px 80px 1fr;gap:6px;align-items:end;">
-            <div style="display:flex;flex-direction:column;gap:3px;"><div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;">Miktar</div><input type="number" class="field-input" style="font-size:12px;" value="${s.miktar||''}" oninput="window._stlSatirlar[${i}].miktar=parseFloat(this.value)||0"></div>
+            <div style="display:flex;flex-direction:column;gap:3px;"><div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;">Miktar</div><input type="number" class="field-input fi" style="font-size:12px;" value="${s.miktar||''}" oninput="window._stlSatirlar[${i}].miktar=parseFloat(this.value)||0"></div>
             <div style="display:flex;flex-direction:column;gap:3px;"><div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;">Birim</div>
-              <select class="field-input" style="font-size:12px;" onchange="window._stlSatirlar[${i}].birim=this.value">
+              <select class="field-input fi" style="font-size:12px;" onchange="window._stlSatirlar[${i}].birim=this.value">
                 ${['Adet','Kg','Mt','Tk','m²'].map(b=>`<option ${s.birim===b?'selected':''}>${b}</option>`).join('')}
               </select>
             </div>
@@ -1279,8 +1345,8 @@ function renderSiparisList() {
   el.innerHTML = filteredSiparisler.map(s => {
     const f = s.fields;
     const durum = f['Durum'] || 'Beklemede';
-    const durumClass = durum === 'Tamamlandı' ? 'status-Onaylandı' : durum === 'İptal' ? 'status-Reddedildi' : durum === 'Üretimde' ? 'status-Gönderildi' : 'status-Taslak';
-    return `<div class="liste-satir" onclick="showSiparisDetail('${s.id}')">
+    const durumClass = durum === 'Tamamlandı' ? 'badge-onay' : durum === 'İptal' ? 'badge-red' : durum === 'Üretimde' ? 'badge-gonderildi' : 'badge-taslak';
+    return `<div class="liste-satir li" onclick="showSiparisDetail('${s.id}')">
       <div class="qi-top">
         <span class="qi-no">${f['SE No']||'—'}</span>
         <span class="qi-status ${durumClass}">${durum}</span>
@@ -1304,7 +1370,7 @@ function showSiparisDetail(id) {
     <div class="detail-toolbar">
       <div class="detail-toolbar-left">
         <div class="detail-title">${f['SE No']||'—'}</div>
-        <span class="qi-status ${durum==='Tamamlandı'?'status-Onaylandı':durum==='Beklemede'?'status-Taslak':'status-Gönderildi'}" style="font-size:12px;">${durum}</span>
+        <span class="${durum==='Tamamlandı'?'badge-onay':durum==='Beklemede'?'badge-taslak':'badge-gonderildi'}" style="font-size:12px;">${durum}</span>
         <span class="detail-musteri-tag">${musteriAd}</span>
       </div>
       <button class="toolbar-btn" style="background:#f59e0b;color:white;border-color:#f59e0b;" onclick="createSTLFromSiparisler('${id}','${f['SE No']||''}','${f['Parça Adı']||''}','${f['Parça No']||''}',${f['Miktar']||0},'${f['Birim']||'Adet'}')">
@@ -1313,35 +1379,35 @@ function showSiparisDetail(id) {
       <button class="toolbar-btn" onclick="window.location.href='ersan_satinalma.html'">
         🔗 Satınalma Sayfası
       </button>
-      <select class="field-input" style="width:160px;font-size:12px;" onchange="updateSEDurum('${id}',this.value)">
+      <select class="field-input fi" style="width:160px;font-size:12px;" onchange="updateSEDurum('${id}',this.value)">
         ${['Beklemede','Üretimde','Tamamlandı','Kısmi Sevk','İptal'].map(d=>`<option ${durum===d?'selected':''}>${d}</option>`).join('')}
       </select>
     </div>
     <div class="detail-scroll">
-      <div class="card">
-        <div class="card-header">Sipariş Detayı</div>
-        <div class="card-body">
+      <div class="card sec">
+        <div class="card-header sec-head">Siparis Detayi</div>
+        <div class="card-body sec-body">
           <div class="form-grid-4" style="gap:10px;">
-            <div class="field-group"><label class="field-label">SE No</label><input class="field-input" value="${f['SE No']||''}" disabled></div>
-            <div class="field-group"><label class="field-label">Parça No</label><input class="field-input" value="${f['Parça No']||''}" disabled></div>
-            <div class="field-group"><label class="field-label">Parça Adı</label><input class="field-input" value="${f['Parça Adı']||''}" disabled></div>
-            <div class="field-group"><label class="field-label">Müşteri</label><input class="field-input" value="${musteriAd}" disabled></div>
-            <div class="field-group"><label class="field-label">Miktar</label><input class="field-input" value="${f['Miktar']||0}" disabled></div>
-            <div class="field-group"><label class="field-label">Birim</label><input class="field-input" value="${f['Birim']||'Adet'}" disabled></div>
-            <div class="field-group"><label class="field-label">Termin</label><input class="field-input" value="${fmtDate(f['Termin Tarihi'])}" disabled></div>
-            <div class="field-group"><label class="field-label">Müşteri PO No</label><input class="field-input" value="${f['Müşteri PO No']||''}" disabled></div>
+            <div class="field-group"><label class="field-label fl">SE No</label><input class="field-input fi" value="${f['SE No']||''}" disabled></div>
+            <div class="field-group"><label class="field-label fl">Parça No</label><input class="field-input fi" value="${f['Parça No']||''}" disabled></div>
+            <div class="field-group"><label class="field-label fl">Parça Adı</label><input class="field-input fi" value="${f['Parça Adı']||''}" disabled></div>
+            <div class="field-group"><label class="field-label fl">Müşteri</label><input class="field-input fi" value="${musteriAd}" disabled></div>
+            <div class="field-group"><label class="field-label fl">Miktar</label><input class="field-input fi" value="${f['Miktar']||0}" disabled></div>
+            <div class="field-group"><label class="field-label fl">Birim</label><input class="field-input fi" value="${f['Birim']||'Adet'}" disabled></div>
+            <div class="field-group"><label class="field-label fl">Termin</label><input class="field-input fi" value="${fmtDate(f['Termin Tarihi'])}" disabled></div>
+            <div class="field-group"><label class="field-label fl">Müşteri PO No</label><input class="field-input fi" value="${f['Müşteri PO No']||''}" disabled></div>
           </div>
         </div>
       </div>
 
       <!-- GELEN TEKLİFLER -->
-      <div class="card" id="rfq-card-${id}">
-        <div class="card-header">
+      <div class="card sec" id="rfq-card-${id}">
+        <div class="card-header sec-head">
           <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 4h9M2 7h9M2 10h5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
-          Gelen Satınalma Teklifleri
+          Gelen Satinalma Teklifleri
           <button onclick="loadRFQTeklifleri('${id}','${f['SE No']||''}')" style="margin-left:auto;background:transparent;border:1px solid var(--border);border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer;color:var(--text2);">Yenile</button>
         </div>
-        <div class="card-body" id="rfq-list-${id}">
+        <div class="card-body sec-body" id="rfq-list-${id}">
           <div style="text-align:center;padding:20px;color:var(--text3);font-size:12px;">
             Teklifleri görmek için "Yenile" butonuna tıklayın
           </div>
