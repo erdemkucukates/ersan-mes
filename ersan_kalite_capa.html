@@ -274,7 +274,7 @@ function sayfaYukle() {
 
 function checkUrlParams() {
   var params = new URLSearchParams(window.location.search);
-  var ncrNo = params.get('ncr');
+  var ncrNo = params.get('ncr') || params.get('ncrNo');
   if (ncrNo) {
     var mevcut = capaListesi.find(function(c) { return c.ncrNo === ncrNo; });
     if (!mevcut) {
@@ -295,6 +295,9 @@ function checkUrlParams() {
       capaListesi.unshift(yeni);
       veriKaydet();
       seciliCapa = yeni.id;
+
+      // NCR durumunu 'CAPA Acik' olarak guncelle
+      ncrDurumGuncelle(ncrNo, 'CAPA Acik');
     } else {
       seciliCapa = mevcut.id;
     }
@@ -422,6 +425,11 @@ function d8Render(capa) {
             html += '</div>';
           }
           html += '</div>';
+        } else if (method === 'ishikawa') {
+          html += '<div style="margin-top:8px;margin-bottom:8px;">';
+          html += '<div style="font-size:10px;color:var(--metin3);margin-bottom:4px;">Kategoriler: Insan, Makine, Malzeme, Metod, Ortam, Olcum (6M)</div>';
+          html += '<textarea class="d8-textarea" id="ishikawaIcerik" rows="6" placeholder="Her kategori icin olasi nedenleri yazin:\n\nInsan: ...\nMakine: ...\nMalzeme: ...\nMetod: ...\nOrtam: ...\nOlcum: ...">' + escapeHtml(data.ishikawaIcerik || '') + '</textarea>';
+          html += '</div>';
         }
         html += '<textarea class="d8-textarea" id="adimIcerik" placeholder="Kök neden sonucu ve özet...">' + escapeHtml(data.icerik || '') + '</textarea>';
       } else {
@@ -456,6 +464,12 @@ function adimTamamla(capaId, adimNo) {
   var capa = capaListesi.find(function(c) { return c.id === capaId; });
   if (!capa) return;
 
+  // Sirasal adim dogrulamasi — onceki adimlar tamamlanmali
+  if (!adimAtlamaKontrol(capa, adimNo)) {
+    alert('Onceki adimlar tamamlanmadan bu adim tamamlanamaz.');
+    return;
+  }
+
   var key = 'D' + adimNo;
   var icerikEl = document.getElementById('adimIcerik');
   var tarihEl = document.getElementById('adimTarih');
@@ -471,20 +485,30 @@ function adimTamamla(capaId, adimNo) {
   capa.adimlar[key].tarih = tarih;
   capa.adimlar[key].tamamlandi = true;
 
-  // D4: save 5-why data
+  // D4: save 5-why / ishikawa data
   if (adimNo === 4) {
     var methodEl = document.getElementById('kokMethod');
     capa.adimlar[key].method = methodEl ? methodEl.value : '5why';
-    for (var w = 1; w <= 5; w++) {
-      var wEl = document.getElementById('why' + w);
-      if (wEl) capa.adimlar[key]['neden' + w] = wEl.value;
+    if (capa.adimlar[key].method === '5why') {
+      for (var w = 1; w <= 5; w++) {
+        var wEl = document.getElementById('why' + w);
+        if (wEl) capa.adimlar[key]['neden' + w] = wEl.value;
+      }
+    } else if (capa.adimlar[key].method === 'ishikawa') {
+      var ishEl = document.getElementById('ishikawaIcerik');
+      if (ishEl) capa.adimlar[key].ishikawaIcerik = ishEl.value;
     }
   }
 
-  // D8 tamamlandıysa CAPA'yı kapat
+  // D8 tamamlandiysa CAPA'yi kapat + bagli NCR'yi kapat
   if (adimNo === 8) {
     capa.durum = 'Kapalı';
     capa.aktifAdim = 9;
+    if (capa.ncrNo) {
+      ncrDurumGuncelle(capa.ncrNo, 'Kapali');
+      logIslem('Kapatildi', 'NCR', '', capa.ncrNo, null, {kaynak: 'CAPA D8 Kapanis', capaNo: capa.no});
+    }
+    logIslem('Kapatildi', 'CAPA', capa.id, capa.no, null, {adim: 'D8'});
   } else {
     capa.aktifAdim = adimNo + 1;
   }
@@ -555,6 +579,48 @@ function capaOlustur() {
 function escapeHtml(str) {
   if (!str) return '';
   return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ── NCR Durum Guncelle (Airtable uzerinden) ── */
+function ncrDurumGuncelle(ncrNo, yeniDurum) {
+  var BASE = 'app5LDgJMgocw79Ix';
+  var NCR_TABLE = 'tblreW3hJTIxwXb0K';
+  var filterFormula = encodeURIComponent('SEARCH("' + ncrNo + '",{NCR No})');
+
+  fetch('/.netlify/functions/airtable', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({method: 'GET', path: '/v0/' + BASE + '/' + NCR_TABLE + '?filterByFormula=' + filterFormula + '&maxRecords=1'})
+  }).then(function(r) { return r.json(); })
+  .then(function(data) {
+    var records = data.records || [];
+    if (records.length === 0) return;
+    var recId = records[0].id;
+
+    return fetch('/.netlify/functions/airtable', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({method: 'PATCH', path: '/v0/' + BASE + '/' + NCR_TABLE + '/' + recId, body: {fields: {'Statu': yeniDurum}}})
+    });
+  }).then(function(r) {
+    if (r) return r.json();
+  }).then(function(res) {
+    if (res && !res.error) {
+      console.log('NCR ' + ncrNo + ' durumu guncellendi: ' + yeniDurum);
+    }
+  }).catch(function(e) {
+    console.error('NCR durum guncelleme hatasi:', e);
+  });
+}
+
+/* ── 8D Adim Atlama Korumasi ── */
+function adimAtlamaKontrol(capa, hedefAdim) {
+  if (capa.durum === 'Kapalı') return false;
+  for (var i = 1; i < hedefAdim; i++) {
+    var key = 'D' + i;
+    if (!capa.adimlar[key] || !capa.adimlar[key].tamamlandi) return false;
+  }
+  return true;
 }
 
 /* ── Init ── */

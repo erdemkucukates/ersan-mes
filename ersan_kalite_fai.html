@@ -442,8 +442,33 @@ function eqpKontrol(eqpKodu) {
 
   if (kb.durum === 'Gecerli') {
     badge.innerHTML = '<span class="badge badge-yesil">Kalibrasyon Gecerli (' + kb.sonraki + ')</span>';
+    // Olcum inputlarini etkinlestir
+    eqpOlcumToggle(false);
   } else {
     badge.innerHTML = '<span class="badge badge-kirmizi">Kalibrasyon Suresi Dolmus!</span>';
+    toast('Secilen ekipmanin kalibrasyonu gecersiz! Olcum yapilamaz.', 'err');
+    // Olcum inputlarini devre disi birak
+    eqpOlcumToggle(true);
+  }
+}
+
+// ── EQP Kalibrasyon durumuna gore olcum inputlarini ac/kapat ──
+function eqpOlcumToggle(devreDisi) {
+  var tbody = document.getElementById('gdt-tbody');
+  if (!tbody) return;
+  var inputs = tbody.querySelectorAll('input, select');
+  for (var i = 0; i < inputs.length; i++) {
+    inputs[i].disabled = devreDisi;
+    inputs[i].style.opacity = devreDisi ? '0.5' : '1';
+  }
+  // Kaydet butonunu da devre disi birak
+  var kaydetBtn = tbody.closest('.kart');
+  if (kaydetBtn) {
+    var btns = kaydetBtn.querySelectorAll('.btn-mavi');
+    for (var j = 0; j < btns.length; j++) {
+      btns[j].disabled = devreDisi;
+      btns[j].style.opacity = devreDisi ? '0.5' : '1';
+    }
   }
 }
 
@@ -481,7 +506,19 @@ function faiOnayla(id, sonuc) {
   };
 
   apiFn('PATCH', T.muayene, {fields: fields}, id).then(function() {
-    toast('FAI sonuc: ' + sonuc, sonuc === 'Revize' ? 'inf' : 'ok');
+    // logIslem ile kaydet
+    var rec0 = null;
+    for (var j = 0; j < records.length; j++) {
+      if (records[j].id === id) { rec0 = records[j]; break; }
+    }
+    var ozet = rec0 ? (rec0.fields['FAI No'] || '') + ' — ' + (rec0.fields['Parca Adi'] || rec0.fields['Parça Adı'] || '') : id;
+    if (typeof logIslem === 'function') {
+      logIslem('FAI Sonuc', 'FAI', id, ozet, rec0 ? (rec0.fields['FAI Durum'] || rec0.fields['Durum'] || 'Bekleyen') : '', sonuc, not);
+    }
+
+    if (sonuc === 'Onayli') {
+      toast('FAI Onayli', 'ok');
+    }
 
     // Revize durumunda otomatik NCR olustur
     if (sonuc === 'Revize') {
@@ -498,14 +535,17 @@ function faiOnayla(id, sonuc) {
             'Aciklama': 'FAI Revize Gerekli — ' + (rf['Parca Adi'] || rf['Parça Adı'] || '') + '. ' + not,
             'Durum': 'Acik',
             'Tarih': new Date().toISOString().slice(0, 10)
-          }});
-        }).then(function() {
-          toast('NCR otomatik olusturuldu', 'inf');
+          }}).then(function() {
+            toast('Revize — NCR ' + ncrNo + ' otomatik olusturuldu', 'err');
+            if (typeof logIslem === 'function') {
+              logIslem('NCR Olusturma', 'FAI', id, ozet, '', ncrNo, 'Otomatik NCR — FAI Revize');
+            }
+          });
         }).catch(function(e) { toast('NCR olusturma hatasi: ' + e.message, 'err'); });
       }
     }
 
-    // Is emri FAI durumunu guncelle
+    // Is emri FAI durumunu guncelle (WO Update)
     var rec2 = null;
     for (var i = 0; i < records.length; i++) {
       if (records[i].id === id) { rec2 = records[i]; break; }
@@ -513,7 +553,11 @@ function faiOnayla(id, sonuc) {
     if (rec2) {
       var ieId = (rec2.fields['Is Emri'] || rec2.fields['İş Emri'] || [])[0] || '';
       if (ieId) {
-        apiFn('PATCH', T.ie, {fields: {'FAI Durum': sonuc}}, ieId).catch(function() {});
+        apiFn('PATCH', T.ie, {fields: {'FAI Durum': sonuc}}, ieId).then(function() {
+          toast('Is emri FAI durumu guncellendi', 'inf');
+        }).catch(function(e) {
+          toast('IE guncelleme hatasi: ' + e.message, 'err');
+        });
       }
     }
 

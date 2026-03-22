@@ -142,6 +142,7 @@
             <tbody id="kp-tbody"></tbody>
           </table>
         </div>
+        <div id="kontrol-ozet" style="display:none;margin-top:10px;padding:10px 14px;border-radius:8px;font-size:13px;font-weight:600;"></div>
         <div class="sonuc-bar" id="sonuc-bar" style="display:none;">
           <button class="btn btn-yesil" onclick="kontrolKaydet('Gecti')">Gecti</button>
           <button class="btn btn-kirmizi" onclick="kontrolKaydet('Basarisiz')">Basarisiz &rarr; NCR</button>
@@ -323,7 +324,13 @@ function travelerSecildi() {
   slot.className = 'qr-slot ok';
   info.innerHTML =
     '<div class="qr-slot-value">' + escHtml(f['Traveller No'] || f['Lot No'] || '') + '</div>' +
-    '<div class="qr-slot-sub">Is Emri: ' + escHtml(f['IE No (from Is Emirleri)'] || f['Is Emri No'] || '-') + '</div>' +
+    (function(){
+      var woNo = f['IE No (from Is Emirleri)'] || f['Is Emri No'] || '';
+      if (woNo && woNo !== '-') {
+        return '<div class="qr-slot-sub">Is Emri: <a href="ersan_isemirleri.html?wo=' + encodeURIComponent(woNo) + '" style="color:var(--mavi);text-decoration:underline;font-weight:600;" target="_blank">' + escHtml(woNo) + '</a></div>';
+      }
+      return '<div class="qr-slot-sub">Is Emri: -</div>';
+    })() +
     '<div class="qr-slot-sub">Parca: ' + escHtml(f['Parca Adi'] || f['Parca No'] || '-') + '</div>' +
     '<div class="qr-slot-sub">Operasyon: ' + escHtml(f['Operasyon'] || f['Mevcut Operasyon'] || '-') + '</div>' +
     '<span class="qr-slot-badge ok">Hazir</span>';
@@ -590,7 +597,7 @@ function kontrolKaydet(genel) {
   });
 }
 
-/* ── IPQC RED → NCR ─────────────────────────────── */
+/* ── IPQC RED → NCR + WO DURDURMA ──────────────── */
 function ipqc_red() {
   var tf = seciliTraveler ? seciliTraveler.fields || {} : {};
   var pf = seciliPersonel ? seciliPersonel.fields || {} : {};
@@ -602,8 +609,14 @@ function ipqc_red() {
     }).join('\n');
 
   var kritikVar = basarisiz.some(function(s){ return s.kritik; });
+  var ncrNoSaved = '';
+
+  // WO ID'yi traveller'dan al
+  var woLinked = tf['Is Emirleri'] || tf['Is Emri'] || [];
+  var woId = Array.isArray(woLinked) && woLinked.length > 0 ? woLinked[0] : (typeof woLinked === 'string' ? woLinked : null);
 
   kodUret('NCR').then(function(ncrNo) {
+    ncrNoSaved = ncrNo;
     var ncrFields = {
       'NCR No': ncrNo,
       'Kaynak': 'IPQC',
@@ -618,10 +631,24 @@ function ipqc_red() {
   }).then(function(res) {
     if (res.error) {
       toast('NCR olusturulamadi: ' + res.error.message, 'err');
-      return;
+      throw new Error('NCR save failed');
     }
-    toast('NCR olusturuldu: ' + (res.fields ? res.fields['NCR No'] : ''), 'err');
-    logIslem('Olusturuldu', 'NCR', res.id, 'IPQC NCR', null, res.fields);
+    ncrNoSaved = (res.fields ? res.fields['NCR No'] : ncrNoSaved) || ncrNoSaved;
+    toast('NCR olusturuldu: ' + ncrNoSaved, 'err');
+    logIslem('IPQC_RED', 'NCR', res.id, ncrNoSaved, null, res.fields);
+
+    // WO Durdur
+    var woPromise;
+    if (woId) {
+      woPromise = apiSave('PATCH', T.isemri, {fields: {'Durum': 'Durduruldu'}}, woId).then(function(woRes) {
+        if (woRes && !woRes.error) {
+          toast('Is Emri durduruldu', 'warn');
+          logIslem('IPQC_RED', 'Is Emri', woId, 'WO Durduruldu — NCR: ' + ncrNoSaved, null, {Durum: 'Durduruldu'});
+        }
+      });
+    } else {
+      woPromise = Promise.resolve();
+    }
 
     // Muayene kaydi da olustur (Red olarak)
     var detay = kontrolSatirlar.map(function(s) {
@@ -632,15 +659,25 @@ function ipqc_red() {
       'Kontrol Tipi': 'IPQC',
       'Tarih': todayISO(),
       'Sonuc': 'Basarisiz',
-      'Notlar': detay + '\n\nNCR Acildi: ' + (res.fields ? res.fields['NCR No'] : '')
+      'Notlar': detay + '\n\nNCR Acildi: ' + ncrNoSaved,
+      'Kontrol Eden': pf['Ad Soyad'] || ''
     };
 
-    return apiSave('POST', T.muayene, {fields: muayeneFields});
+    if (seciliTraveler.id) {
+      muayeneFields['Traveller/WIP'] = [{id: seciliTraveler.id}];
+    }
+
+    return Promise.all([
+      woPromise,
+      apiSave('POST', T.muayene, {fields: muayeneFields})
+    ]);
   }).then(function() {
     kontrolSifirla();
     yukle();
   }).catch(function(e) {
-    toast('Hata: ' + e.message, 'err');
+    if (e.message !== 'NCR save failed') {
+      toast('Hata: ' + e.message, 'err');
+    }
   });
 }
 
@@ -711,6 +748,52 @@ function gecmisGoster() {
       '</tr>';
   }).join('');
 }
+
+/* ── KONTROL SONUC OZETI ────────────────────────── */
+function kontrolOzetGuncelle() {
+  var ozetEl = document.getElementById('kontrol-ozet');
+  if (!kontrolAktif || kontrolSatirlar.length === 0) {
+    ozetEl.style.display = 'none';
+    return;
+  }
+  var toplam = kontrolSatirlar.length;
+  var gecenler = kontrolSatirlar.filter(function(s){ return s.sonuc === 'pass'; }).length;
+  var basarisizlar = kontrolSatirlar.filter(function(s){ return s.sonuc === 'fail'; }).length;
+  var bekleyen = toplam - gecenler - basarisizlar;
+
+  ozetEl.style.display = 'block';
+  if (basarisizlar > 0) {
+    ozetEl.style.background = 'var(--kirmizi-bg)';
+    ozetEl.style.color = 'var(--kirmizi-t)';
+    ozetEl.innerHTML = '&#10007; ' + basarisizlar + ' kontrol basarisiz' + (bekleyen > 0 ? ' | ' + bekleyen + ' bekliyor' : '') + ' (toplam ' + toplam + ')';
+  } else if (gecenler === toplam) {
+    ozetEl.style.background = 'var(--yesil-bg)';
+    ozetEl.style.color = 'var(--yesil-t)';
+    ozetEl.innerHTML = '&#10003; ' + gecenler + '/' + toplam + ' kontrol gecti';
+  } else {
+    ozetEl.style.background = 'var(--sari-bg)';
+    ozetEl.style.color = 'var(--sari-t)';
+    ozetEl.innerHTML = '&#10003; ' + gecenler + '/' + toplam + ' gecti | ' + bekleyen + ' bekliyor';
+  }
+}
+
+/* ── KRITIK PARAMETRE UYARI ────────────────────── */
+function kritikParametreKontrol(idx) {
+  var s = kontrolSatirlar[idx];
+  if (s.kritik && s.sonuc === 'fail') {
+    toast('KRITIK parametre basarisiz: "' + s.ad + '" — Is Emri durdurulmasi oneriliyor!', 'err');
+  }
+}
+
+/* ── Override olcumGirildi to add ozet + kritik ── */
+var _orijinal_olcumGirildi = olcumGirildi;
+olcumGirildi = function(i, deger) {
+  kontrolSatirlar[i].olculen = deger;
+  sonucHesapla(i);
+  kontrolTabloGuncelle();
+  kontrolOzetGuncelle();
+  kritikParametreKontrol(i);
+};
 
 /* ── INIT ───────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', function() {

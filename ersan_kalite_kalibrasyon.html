@@ -120,10 +120,10 @@
     <div class="as-serit">
       <span class="as-chip blue">AS9100 §7.1.5</span>
       <span>İzleme ve Ölçme Kaynakları — Kalibrasyon Yönetimi</span>
-      <span style="margin-left:auto;display:flex;gap:6px;">
-        <span class="as-chip grn" id="chipKalibre">Kalibre: 0</span>
-        <span class="as-chip amr" id="chipYaklasan">Yaklaşıyor: 0</span>
-        <span class="as-chip red" id="chipGecmis">Geçmiş: 0</span>
+      <span style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap;">
+        <span class="as-chip grn" id="chipGecerli"></span>
+        <span class="as-chip amr" id="chipYaklasiyor"></span>
+        <span class="as-chip blue" id="chipSonKal"></span>
       </span>
     </div>
 
@@ -378,6 +378,7 @@ function tarihFormat(str) {
 function kpiGuncelle() {
   var toplam = ekipmanListesi.length;
   var kalibre = 0, yaklasan = 0, gecmis = 0;
+  var sonKalTarih = null;
 
   ekipmanListesi.forEach(function(eqp) {
     var son = sonKalibrasyon(eqp);
@@ -386,15 +387,40 @@ function kpiGuncelle() {
     if (d.cls === 'kalibre') kalibre++;
     else if (d.cls === 'yaklasan') yaklasan++;
     else gecmis++;
+
+    // En son kalibrasyon tarihini bul
+    if (son && son.tarih) {
+      if (!sonKalTarih || son.tarih > sonKalTarih) sonKalTarih = son.tarih;
+    }
   });
 
   document.getElementById('kpi-toplam').textContent = toplam;
   document.getElementById('kpi-kalibre').textContent = kalibre;
   document.getElementById('kpi-yaklasan').textContent = yaklasan;
   document.getElementById('kpi-gecmis').textContent = gecmis;
-  document.getElementById('chipKalibre').textContent = 'Kalibre: ' + kalibre;
-  document.getElementById('chipYaklasan').textContent = 'Yaklaşıyor: ' + yaklasan;
-  document.getElementById('chipGecmis').textContent = 'Geçmiş: ' + gecmis;
+
+  // AS9100 §7.1.5 strip chips
+  var chipGecerli = document.getElementById('chipGecerli');
+  var chipYaklasiyor = document.getElementById('chipYaklasiyor');
+  var chipSonKal = document.getElementById('chipSonKal');
+
+  if (gecmis > 0) {
+    chipGecerli.className = 'as-chip red';
+    chipGecerli.innerHTML = '&#10007; ' + gecmis + ' S\u00fcresi Ge\u00e7mi\u015f';
+  } else {
+    chipGecerli.className = 'as-chip grn';
+    chipGecerli.innerHTML = '&#10003; T\u00fcm Ekipmanlar Ge\u00e7erli';
+  }
+
+  if (yaklasan > 0) {
+    chipYaklasiyor.className = 'as-chip amr';
+    chipYaklasiyor.innerHTML = '&#9888; ' + yaklasan + ' Yakla\u015f\u0131yor (30 g\u00fcn)';
+  } else {
+    chipYaklasiyor.className = 'as-chip grn';
+    chipYaklasiyor.innerHTML = '&#10003; Yakla\u015fan Yok';
+  }
+
+  chipSonKal.innerHTML = 'Son Kalibrasyon: ' + (sonKalTarih ? tarihFormat(sonKalTarih) : '\u2014');
 }
 
 /* ── Grid render ── */
@@ -438,7 +464,7 @@ function gridOlustur() {
     var barRenk = d.renk;
 
     html += '<div class="td-kart ' + d.cls + '">';
-    if (d.cls === 'gecmis') html += '<div class="blok-badge">BLOKLANДИ</div>';
+    if (d.cls === 'gecmis') html += '<div class="blok-badge">BLOKLANDI</div>';
     html += '<div class="tdk-head">';
     html += '<div><div class="tdk-no">' + eqp.no + '</div><div class="tdk-adi">' + escapeHtml(eqp.ad) + '</div></div>';
     html += '<span class="bdg ' + d.bdg + '">' + d.text + '</span>';
@@ -569,14 +595,26 @@ function kalibrasyonKaydet() {
   };
 
   if (!eqp.kalibrasyonlar) eqp.kalibrasyonlar = [];
-  eqp.kalibrasyonlar.push(kayit);
+  // Prepend to array (newest first)
+  eqp.kalibrasyonlar.unshift(kayit);
+
+  // Auto-calc next date from this calibration + periyot
+  var sonrakiISO = sonrakiTarihHesapla(tarih, eqp.periyot);
+
+  // Clear QR_Blok status
+  eqp._bloklu = false;
+
+  // Update status based on new calibration
+  var kalan = kalanGunHesapla(tarih, eqp.periyot);
+  var durum = kalibrasyon_durumu(kalan);
 
   veriKaydet();
   modalKapat('kalModal');
+  qrBlokGuncelle();
   kpiGuncelle();
   gridOlustur();
 
-  logIslem('Güncellendi', 'Kalibrasyon', eqpId, eqp.no, null, { kalibrasyon: kayit });
+  logIslem('G\u00fcncellendi', 'Kalibrasyon', eqpId, eqp.no + ' — Sonraki: ' + tarihFormat(sonrakiISO), null, { kalibrasyon: kayit, sonrakiTarih: sonrakiISO });
 }
 
 /* ── QR Yazdır ── */
@@ -663,8 +701,11 @@ function qrBlokGuncelle() {
   ekipmanListesi.forEach(function(eqp) {
     var son = sonKalibrasyon(eqp);
     var kalan = son ? kalanGunHesapla(son.tarih, eqp.periyot) : -9999;
+    eqp._kalanGun = kalan;
     eqp._bloklu = kalan < 0;
+    eqp._durum = kalibrasyon_durumu(kalan);
   });
+  veriKaydet();
 }
 
 /* ── Helpers ── */

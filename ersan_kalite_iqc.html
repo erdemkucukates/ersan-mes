@@ -429,6 +429,9 @@ function iqcSec(id) {
 
   document.getElementById('sag-icerik').innerHTML = html;
 
+  // Akis cubugu guncelle
+  akisGuncelle(durum);
+
   // Tedarikci gecmisini yukle
   tedGecmisiYukle(tedId);
 }
@@ -548,7 +551,21 @@ function lotKarariVer(id, karar) {
   var fields = {'Durum': karar, 'Karar Notu': not, 'Karar Tarihi': new Date().toISOString().slice(0, 10)};
 
   apiFn('PATCH', T.muayene, {fields: fields}, id).then(function() {
-    toast('Lot karari: ' + karar, karar === 'Red' ? 'err' : 'ok');
+    // logIslem ile kaydet
+    var rec0 = null;
+    for (var j = 0; j < records.length; j++) {
+      if (records[j].id === id) { rec0 = records[j]; break; }
+    }
+    var ozet = rec0 ? (rec0.fields['IQC No'] || '') + ' — ' + (rec0.fields['Malzeme'] || rec0.fields['Malzeme Adi'] || '') : id;
+    if (typeof logIslem === 'function') {
+      logIslem('Lot Karari', 'IQC', id, ozet, rec0 ? (rec0.fields['Durum'] || 'Bekleyen') : '', karar, not);
+    }
+
+    if (karar === 'Kabul') {
+      toast('Lot karari: Kabul', 'ok');
+    } else if (karar === 'Kosullu') {
+      toast('Lot karari: Kosullu Kabul', 'inf');
+    }
 
     // Red durumunda otomatik NCR olustur
     if (karar === 'Red') {
@@ -565,9 +582,12 @@ function lotKarariVer(id, karar) {
             'Aciklama': 'IQC Red — ' + (f['Malzeme'] || f['Malzeme Adi'] || '') + '. ' + not,
             'Durum': 'Acik',
             'Tarih': new Date().toISOString().slice(0, 10)
-          }});
-        }).then(function() {
-          toast('NCR otomatik olusturuldu', 'inf');
+          }}).then(function() {
+            toast('RED — NCR ' + ncrNo + ' otomatik olusturuldu', 'err');
+            if (typeof logIslem === 'function') {
+              logIslem('NCR Olusturma', 'IQC', id, ozet, '', ncrNo, 'Otomatik NCR — IQC Red');
+            }
+          });
         }).catch(function(e) { toast('NCR olusturma hatasi: ' + e.message, 'err'); });
       }
     }
@@ -729,6 +749,32 @@ function yukle() {
   }).catch(function(e) {
     toast('Veri yukleme hatasi: ' + e.message, 'err');
   });
+}
+
+// ── Akis Cubugu Adim Guncelle ──
+function akisGuncelle(durum) {
+  var adimlar = ['adim-grn', 'adim-belge', 'adim-boyut', 'adim-karar', 'adim-sonuc'];
+  var durumAdim = {'Bekleyen': 0, 'Kabul': 4, 'Kosullu': 4, 'Red': 4};
+  var aktifIdx = durumAdim[durum] != null ? durumAdim[durum] : 0;
+  for (var i = 0; i < adimlar.length; i++) {
+    var el = document.getElementById(adimlar[i]);
+    if (!el) continue;
+    var daire = el.querySelector('span:first-child');
+    var yazi = el.querySelector('span:last-child');
+    if (i < aktifIdx) {
+      // Tamamlanmis
+      if (daire) { daire.style.background = 'var(--yesil)'; daire.style.color = '#fff'; }
+      if (yazi) { yazi.style.color = 'var(--yesil)'; yazi.style.fontWeight = '600'; }
+    } else if (i === aktifIdx) {
+      // Aktif
+      if (daire) { daire.style.background = 'var(--laci)'; daire.style.color = '#fff'; }
+      if (yazi) { yazi.style.color = 'var(--laci)'; yazi.style.fontWeight = '600'; }
+    } else {
+      // Bekleyen
+      if (daire) { daire.style.background = 'var(--border2)'; daire.style.color = '#fff'; }
+      if (yazi) { yazi.style.color = 'var(--metin3)'; yazi.style.fontWeight = '400'; }
+    }
+  }
 }
 
 document.addEventListener('DOMContentLoaded', yukle);

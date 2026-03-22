@@ -569,9 +569,19 @@ function siddetSec(s) {
   var btn = document.querySelector('.siddet-btn.s-' + s.toLowerCase());
   if (btn) btn.classList.add('aktif');
 
-  // Kritik uyarisi
+  // Kritik → confirm WO durdurma
   if (s === 'Kritik') {
-    toast('KRITIK siddet secildi — Is emri durdurulmasi onerilir!', 'warn');
+    var woEl = document.getElementById('ncr-wo');
+    var woNo = woEl ? woEl.value : '';
+    if (woNo) {
+      var durdur = confirm('KRITIK siddet secildi!\n\nIs emri ' + woNo + ' durdurulsun mu?');
+      if (durdur) {
+        toast('Is emri ' + woNo + ' DURDURULDU', 'warn');
+        logIslem('WO Durduruldu', 'NCR', seciliNCR ? seciliNCR.id : '', woNo, null, {siddet: 'Kritik'});
+      }
+    } else {
+      toast('KRITIK siddet secildi — Is emri durdurulmasi onerilir!', 'warn');
+    }
   }
 }
 
@@ -749,6 +759,23 @@ function yeniNCR() {
     detayGoster();
   }).catch(function(e) {
     toast('Hata: ' + e.message, 'err');
+  });
+}
+
+/* ── KOD URET ──────────────────────────────────── */
+function kodUret(prefix) {
+  var yil = new Date().getFullYear().toString().slice(-2);
+  return apiGetAll(T.ncr, 'fields%5B%5D=NCR+No&pageSize=100').then(function(records) {
+    var max = 0;
+    records.forEach(function(r) {
+      var no = r.fields ? r.fields['NCR No'] || '' : '';
+      var m = no.match(/NCR-\d{2}-(\d+)/);
+      if (m) {
+        var n = parseInt(m[1]);
+        if (n > max) max = n;
+      }
+    });
+    return prefix + '-' + yil + '-' + String(max + 1).padStart(5, '0');
   });
 }
 
