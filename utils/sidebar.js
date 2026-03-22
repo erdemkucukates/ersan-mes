@@ -253,8 +253,19 @@
       mainEl.style.flex = '1 1 0';
       mainEl.style.minWidth = '0';
       mainEl.style.height = '100vh';
-      mainEl.style.overflowY = 'auto';
+      mainEl.style.overflow = 'hidden';
+      mainEl.style.display = 'flex';
+      mainEl.style.flexDirection = 'column';
+      // Top bar sabit
+      var tb = mainEl.querySelector('.tb, .topbar, [class*="topbar"]');
+      if (tb) tb.style.flexShrink = '0';
+      // Son cocuk flex:1 overflow:auto
+      var ch = Array.from(mainEl.children).filter(function(e){ return e.tagName!=='SCRIPT' && !e.classList.contains('tb') && e.id!=='sb-mount'; });
+      var son = ch[ch.length-1];
+      if (son) { son.style.flex='1 1 0'; son.style.minHeight='0'; son.style.overflowY='auto'; son.style.overflowX='hidden'; }
     }
+    // Tooltip
+    document.querySelectorAll('.sb-ni').forEach(function(ni){ var t=ni.querySelector('.sb-ni-txt'); if(t&&!ni.title) ni.title=t.textContent.trim(); });
 
     sbHighlight();
     sbClock();
