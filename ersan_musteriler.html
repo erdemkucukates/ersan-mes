@@ -117,6 +117,46 @@
 
 /* Ciro toplam */
 .ciro-toplam { display:flex; justify-content:flex-end; padding:8px; font-size:13px; font-weight:700; color:var(--metin); border-top:2px solid var(--border); margin-top:4px; }
+
+/* Sayfa Tab Bar */
+.sayfa-tab-bar { display:flex; border-bottom:2px solid var(--border); margin-bottom:18px; gap:0; }
+.sayfa-tab-bar .tab-btn { padding:10px 20px; font-size:13px; font-weight:600; color:var(--metin3); background:none; border:none; border-bottom:3px solid transparent; cursor:pointer; font-family:inherit; transition:color .15s, border-color .15s; }
+.sayfa-tab-bar .tab-btn.aktif { color:var(--mavi); border-bottom-color:var(--mavi); }
+.sayfa-tab-bar .tab-btn:hover { color:var(--metin); }
+.panel { display:none; }
+.panel.aktif { display:block; }
+
+/* Sikayet KPI mini */
+.sky-kpi-row { display:flex; gap:12px; margin-bottom:16px; }
+.sky-kpi { flex:1; background:var(--beyaz); border:1px solid var(--border); border-radius:10px; padding:14px 16px; text-align:center; }
+.sky-kpi-sayi { font-size:24px; font-weight:700; color:var(--metin); }
+.sky-kpi-etiket { font-size:11px; color:var(--metin3); text-transform:uppercase; margin-top:2px; }
+.sky-kpi.k1 { border-top:3px solid var(--mavi); }
+.sky-kpi.k2 { border-top:3px solid var(--sari); }
+.sky-kpi.k3 { border-top:3px solid var(--yesil); }
+.sky-kpi.k4 { border-top:3px solid var(--kirmizi); }
+
+/* Sikayet trend chart */
+.sky-chart-wrap { background:var(--beyaz); border:1px solid var(--border); border-radius:10px; padding:16px; margin-bottom:16px; }
+.sky-chart-wrap h4 { font-size:13px; color:var(--metin); margin:0 0 12px; }
+
+/* Sikayet filter tabs */
+.sky-filtre { display:flex; gap:6px; margin-bottom:12px; }
+.sky-filtre-btn { padding:5px 14px; border:1px solid var(--border); border-radius:16px; font-size:12px; font-weight:500; background:var(--beyaz); color:var(--metin3); cursor:pointer; font-family:inherit; transition:all .15s; }
+.sky-filtre-btn.aktif { background:var(--mavi); color:#fff; border-color:var(--mavi); }
+
+/* Sikayet table */
+.sky-tablo { width:100%; font-size:12px; border-collapse:collapse; }
+.sky-tablo th { text-align:left; padding:8px 10px; background:var(--bg); color:var(--metin3); font-weight:600; border-bottom:1px solid var(--border); }
+.sky-tablo td { padding:8px 10px; border-bottom:1px solid var(--border); color:var(--metin2); }
+.sky-tablo tr:hover td { background:var(--bg2); cursor:pointer; }
+
+/* Sikayet detay modal */
+.sky-zaman-cizgi { border-left:2px solid var(--border); padding-left:16px; margin:12px 0; }
+.sky-zaman-item { position:relative; padding-bottom:14px; }
+.sky-zaman-item::before { content:''; position:absolute; left:-22px; top:4px; width:10px; height:10px; border-radius:50%; background:var(--mavi); border:2px solid var(--beyaz); }
+.sky-zaman-item .sky-z-tarih { font-size:11px; color:var(--metin4); }
+.sky-zaman-item .sky-z-metin { font-size:13px; color:var(--metin); margin-top:2px; }
 </style>
 </head>
 <body>
@@ -130,6 +170,15 @@
     </div>
   </div>
   <div class="sayfa-icerik">
+
+    <!-- Sayfa Tab Bar -->
+    <div class="sayfa-tab-bar">
+      <button class="tab-btn aktif" onclick="sekmeAc('musteriler',this)">Müşteriler</button>
+      <button class="tab-btn" onclick="sekmeAc('sikayetler',this)">Sikayetler <span id="sky-badge" class="bdg b-red" style="display:none"></span></button>
+    </div>
+
+    <!-- PANEL: Müşteriler -->
+    <div class="panel aktif" id="panel-musteriler">
 
     <!-- KPI Row -->
     <div class="kpi-row">
@@ -163,6 +212,44 @@
     <div class="td-grid" id="td-grid">
       <div class="yukleniyor"><div class="spinner"></div><span>Yükleniyor...</span></div>
     </div>
+
+    </div><!-- /panel-musteriler -->
+
+    <!-- PANEL: Şikayetler -->
+    <div class="panel" id="panel-sikayetler">
+
+      <!-- Şikayet KPI -->
+      <div class="sky-kpi-row">
+        <div class="sky-kpi k1"><div class="sky-kpi-sayi" id="sky-kpi-toplam">0</div><div class="sky-kpi-etiket">Toplam Sikayet</div></div>
+        <div class="sky-kpi k2"><div class="sky-kpi-sayi" id="sky-kpi-ort">0</div><div class="sky-kpi-etiket">Ort. Kapatma (gun)</div></div>
+        <div class="sky-kpi k3"><div class="sky-kpi-sayi" id="sky-kpi-memn">—</div><div class="sky-kpi-etiket">Memnuniyet %</div></div>
+        <div class="sky-kpi k4"><div class="sky-kpi-sayi" id="sky-kpi-8d">0</div><div class="sky-kpi-etiket">8D Acilan</div></div>
+      </div>
+
+      <!-- Trend Chart -->
+      <div class="sky-chart-wrap">
+        <h4>Son 6 Ay Sikayet Trendi</h4>
+        <canvas id="sky-chart" width="600" height="180"></canvas>
+      </div>
+
+      <!-- Filtre + Yeni Buton -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div class="sky-filtre">
+          <button class="sky-filtre-btn aktif" onclick="skyFiltreUygula('Tümü',this)">Tumu</button>
+          <button class="sky-filtre-btn" onclick="skyFiltreUygula('Açık',this)">Acik</button>
+          <button class="sky-filtre-btn" onclick="skyFiltreUygula('İncelemede',this)">Incelemede</button>
+          <button class="sky-filtre-btn" onclick="skyFiltreUygula('Kapatıldı',this)">Kapatildi</button>
+        </div>
+        <button class="btn btn-p" onclick="modalAc('sky-yeni-modal')">+ Yeni Sikayet</button>
+      </div>
+
+      <!-- Şikayet Tablosu -->
+      <table class="sky-tablo">
+        <thead><tr><th>No</th><th>Musteri</th><th>Konu</th><th>Oncelik</th><th>Durum</th><th>Tarih</th><th>Kapatma</th></tr></thead>
+        <tbody id="sky-tablo-body"></tbody>
+      </table>
+
+    </div><!-- /panel-sikayetler -->
 
   </div>
 </div>
@@ -308,6 +395,82 @@
     <div class="modal-alt">
       <button class="btn btn-g" onclick="modalKapat('yeni-modal')">İptal</button>
       <button class="btn btn-p" onclick="yeniKaydet()">Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<!-- YENI SIKAYET MODAL -->
+<div class="modal-bg" id="sky-yeni-modal">
+  <div class="modal-kutu" style="width:560px;">
+    <div class="modal-ust">
+      <h3>Yeni Sikayet</h3>
+      <button class="modal-kapat" onclick="modalKapat('sky-yeni-modal')">&times;</button>
+    </div>
+    <div class="modal-govde">
+      <div class="form-iki">
+        <div class="form-grup"><label>Sikayet No</label><input type="text" id="sky-no" readonly></div>
+        <div class="form-grup"><label>Tarih</label><input type="date" id="sky-tarih"></div>
+      </div>
+      <div class="form-iki">
+        <div class="form-grup"><label>Musteri *</label>
+          <select id="sky-musteri"><option value="">Seciniz</option></select>
+        </div>
+        <div class="form-grup"><label>Oncelik</label>
+          <select id="sky-oncelik">
+            <option value="Düşük">Dusuk</option>
+            <option value="Orta" selected>Orta</option>
+            <option value="Yüksek">Yuksek</option>
+            <option value="Kritik">Kritik</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-grup"><label>Konu *</label><input type="text" id="sky-konu" placeholder="Sikayet konusu..."></div>
+      <div class="form-grup"><label>Aciklama</label><textarea id="sky-aciklama" placeholder="Detayli aciklama..."></textarea></div>
+      <div class="form-iki">
+        <div class="form-grup"><label>Kategori</label>
+          <select id="sky-kategori">
+            <option value="Kalite">Kalite</option>
+            <option value="Teslimat">Teslimat</option>
+            <option value="Fiyat">Fiyat</option>
+            <option value="İletişim">Iletisim</option>
+            <option value="Diğer">Diger</option>
+          </select>
+        </div>
+        <div class="form-grup"><label>8D Gerekli mi?</label>
+          <select id="sky-8d">
+            <option value="Hayır">Hayir</option>
+            <option value="Evet">Evet</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-alt">
+      <button class="btn btn-g" onclick="modalKapat('sky-yeni-modal')">Iptal</button>
+      <button class="btn btn-p" onclick="sikayet_kaydet()">Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<!-- SIKAYET DETAY MODAL -->
+<div class="modal-bg" id="sky-detay-modal">
+  <div class="modal-kutu" style="width:600px;">
+    <div class="modal-ust">
+      <h3 id="skd-baslik">Sikayet Detayi</h3>
+      <button class="modal-kapat" onclick="modalKapat('sky-detay-modal')">&times;</button>
+    </div>
+    <div class="modal-govde">
+      <div class="info-box" id="skd-bilgi"></div>
+      <h4 style="font-size:13px;margin:16px 0 8px;color:var(--metin);">Zaman Cizelgesi</h4>
+      <div class="sky-zaman-cizgi" id="skd-zaman"></div>
+      <div class="form-grup" style="margin-top:16px;">
+        <label>Yorum Ekle</label>
+        <textarea id="skd-yorum" placeholder="Yorum yazin..."></textarea>
+      </div>
+      <button class="btn btn-g" onclick="skyYorumEkle()" style="margin-bottom:8px;">Yorum Ekle</button>
+    </div>
+    <div class="modal-alt">
+      <button class="btn btn-g" onclick="modalKapat('sky-detay-modal')">Kapat</button>
+      <button class="btn btn-p" id="skd-kapat-btn" onclick="sikayet_kapat()">Sikayeti Kapat</button>
     </div>
   </div>
 </div>
@@ -893,9 +1056,339 @@ function yeniKaydet() {
   });
 }
 
+// ══════════════════════════════════════
+// ── SAYFA SEKME SİSTEMİ ──
+// ══════════════════════════════════════
+function sekmeAc(panelAdi, btn) {
+  var btns = document.querySelectorAll('.sayfa-tab-bar .tab-btn');
+  for (var i = 0; i < btns.length; i++) btns[i].classList.remove('aktif');
+  btn.classList.add('aktif');
+  var panels = document.querySelectorAll('.panel');
+  for (var j = 0; j < panels.length; j++) panels[j].classList.remove('aktif');
+  document.getElementById('panel-' + panelAdi).classList.add('aktif');
+  if (panelAdi === 'sikayetler') {
+    sikayet_kpi_yukle();
+  }
+}
+
+// ══════════════════════════════════════
+// ── ŞİKAYET SİSTEMİ ──
+// ══════════════════════════════════════
+var skyFiltre = 'Tümü';
+var skySeciliId = null;
+
+function skyOrnek() {
+  var mevcut = localStorage.getItem('ersan_sikayetler');
+  if (mevcut) return;
+  var ornekler = [
+    {id:'SKY-001', musteri:'ABC Makina', konu:'Parça ölçü hatası', aciklama:'Gönderilen 50 adet parçada çap ölçüsü tolerans dışı.', kategori:'Kalite', oncelik:'Yüksek', durum:'Açık', tarih:'2026-02-15', kapatmaTarih:'', gun:0, d8:'Evet', yorumlar:[{tarih:'2026-02-15',metin:'Şikayet alındı, inceleme başlatıldı.'}]},
+    {id:'SKY-002', musteri:'DEF Havacılık', konu:'Geç teslimat', aciklama:'2 hafta gecikme yaşandı.', kategori:'Teslimat', oncelik:'Orta', durum:'İncelemede', tarih:'2026-02-20', kapatmaTarih:'', gun:0, d8:'Hayır', yorumlar:[{tarih:'2026-02-20',metin:'Şikayet kaydedildi.'},{tarih:'2026-02-22',metin:'Üretim planı inceleniyor.'}]},
+    {id:'SKY-003', musteri:'GHI Enerji', konu:'Yüzey kalite problemi', aciklama:'Ra değeri spesifikasyon üstü.', kategori:'Kalite', oncelik:'Kritik', durum:'Açık', tarih:'2026-03-01', kapatmaTarih:'', gun:0, d8:'Evet', yorumlar:[{tarih:'2026-03-01',metin:'8D raporu açıldı.'}]},
+    {id:'SKY-004', musteri:'JKL Savunma', konu:'Fatura uyuşmazlığı', aciklama:'Birim fiyat tekliften farklı faturalandı.', kategori:'Fiyat', oncelik:'Düşük', durum:'Kapatıldı', tarih:'2026-01-10', kapatmaTarih:'2026-01-18', gun:8, d8:'Hayır', yorumlar:[{tarih:'2026-01-10',metin:'Fatura inceleniyor.'},{tarih:'2026-01-18',metin:'Düzeltme faturası kesildi, kapatıldı.'}]},
+    {id:'SKY-005', musteri:'MNO Otomotiv', konu:'Yanlış parça gönderimi', aciklama:'Sipariş edilen yerine farklı parça numarası gönderildi.', kategori:'Kalite', oncelik:'Yüksek', durum:'Kapatıldı', tarih:'2025-12-05', kapatmaTarih:'2025-12-15', gun:10, d8:'Evet', yorumlar:[{tarih:'2025-12-05',metin:'Uyumsuzluk tespit edildi.'},{tarih:'2025-12-10',metin:'Doğru parça gönderildi.'},{tarih:'2025-12-15',metin:'Müşteri onayladı, kapatıldı.'}]}
+  ];
+  localStorage.setItem('ersan_sikayetler', JSON.stringify(ornekler));
+
+  var memnuniyet = [
+    {id:'MEM-001', musteri:'ABC Makina', puan:78, tarih:'2026-01-15', yorum:'Genel olarak iyi ama ölçü hassasiyeti artmalı.'},
+    {id:'MEM-002', musteri:'DEF Havacılık', puan:92, tarih:'2026-02-10', yorum:'Kalite ve iletişim çok iyi.'},
+    {id:'MEM-003', musteri:'GHI Enerji', puan:65, tarih:'2026-03-05', yorum:'Teslimat süreleri iyileştirilmeli.'}
+  ];
+  localStorage.setItem('ersan_memnuniyet', JSON.stringify(memnuniyet));
+}
+
+function skyVeriAl() {
+  try { return JSON.parse(localStorage.getItem('ersan_sikayetler') || '[]'); } catch(e) { return []; }
+}
+
+function skyVeriKaydet(liste) {
+  localStorage.setItem('ersan_sikayetler', JSON.stringify(liste));
+}
+
+function sikayet_kpi_yukle() {
+  var liste = skyVeriAl();
+  var toplam = liste.length;
+  var acikSayi = 0;
+  var kapatmaGunToplam = 0;
+  var kapatmaSayac = 0;
+  var d8Sayac = 0;
+
+  for (var i = 0; i < liste.length; i++) {
+    var s = liste[i];
+    if (s.durum === 'Açık' || s.durum === 'İncelemede') acikSayi++;
+    if (s.gun > 0) { kapatmaGunToplam += s.gun; kapatmaSayac++; }
+    if (s.d8 === 'Evet') d8Sayac++;
+  }
+
+  document.getElementById('sky-kpi-toplam').textContent = toplam;
+  document.getElementById('sky-kpi-ort').textContent = kapatmaSayac > 0 ? Math.round(kapatmaGunToplam / kapatmaSayac) : '—';
+  document.getElementById('sky-kpi-8d').textContent = d8Sayac;
+
+  // Memnuniyet
+  var memListe = [];
+  try { memListe = JSON.parse(localStorage.getItem('ersan_memnuniyet') || '[]'); } catch(e) {}
+  var memTop = 0;
+  for (var m = 0; m < memListe.length; m++) memTop += Number(memListe[m].puan) || 0;
+  document.getElementById('sky-kpi-memn').textContent = memListe.length > 0 ? '%' + Math.round(memTop / memListe.length) : '—';
+
+  // Badge
+  var badge = document.getElementById('sky-badge');
+  if (acikSayi > 0) {
+    badge.textContent = acikSayi;
+    badge.style.display = 'inline-block';
+  } else {
+    badge.style.display = 'none';
+  }
+
+  sikayet_tablo_render(liste, skyFiltre);
+  egilim_grafik_render(liste);
+}
+
+function sikayet_tablo_render(liste, filtre) {
+  var body = document.getElementById('sky-tablo-body');
+  var filtered = [];
+  for (var i = 0; i < liste.length; i++) {
+    if (filtre === 'Tümü' || liste[i].durum === filtre) filtered.push(liste[i]);
+  }
+  if (filtered.length === 0) {
+    body.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--metin4);padding:20px;">Sikayet bulunamadi</td></tr>';
+    return;
+  }
+  var html = '';
+  for (var j = 0; j < filtered.length; j++) {
+    var s = filtered[j];
+    var oncelikCls = s.oncelik === 'Kritik' ? 'b-red' : s.oncelik === 'Yüksek' ? 'b-amr' : s.oncelik === 'Orta' ? 'b-gray' : 'b-grn';
+    var durumCls = s.durum === 'Açık' ? 'b-red' : s.durum === 'İncelemede' ? 'b-amr' : 'b-grn';
+    html += '<tr onclick="sikayet_detay_ac(\'' + s.id + '\')">';
+    html += '<td><strong>' + s.id + '</strong></td>';
+    html += '<td>' + s.musteri + '</td>';
+    html += '<td>' + s.konu + '</td>';
+    html += '<td><span class="bdg ' + oncelikCls + '">' + s.oncelik + '</span></td>';
+    html += '<td><span class="bdg ' + durumCls + '">' + s.durum + '</span></td>';
+    html += '<td>' + fmtDate(s.tarih) + '</td>';
+    html += '<td>' + (s.kapatmaTarih ? s.gun + ' gun' : '—') + '</td>';
+    html += '</tr>';
+  }
+  body.innerHTML = html;
+}
+
+function skyFiltreUygula(filtre, btn) {
+  skyFiltre = filtre;
+  var btns = document.querySelectorAll('.sky-filtre-btn');
+  for (var i = 0; i < btns.length; i++) btns[i].classList.remove('aktif');
+  btn.classList.add('aktif');
+  sikayet_tablo_render(skyVeriAl(), filtre);
+}
+
+function sikayet_kaydet() {
+  var musteri = document.getElementById('sky-musteri').value;
+  var konu = document.getElementById('sky-konu').value.trim();
+  if (!musteri) { toast('Musteri seciniz', 'err'); return; }
+  if (!konu) { toast('Konu zorunludur', 'err'); return; }
+
+  var liste = skyVeriAl();
+  var yeniNo = 'SKY-' + String(liste.length + 1).padStart(3, '0');
+  var tarih = document.getElementById('sky-tarih').value || new Date().toISOString().slice(0, 10);
+
+  var yeni = {
+    id: yeniNo,
+    musteri: musteri,
+    konu: konu,
+    aciklama: document.getElementById('sky-aciklama').value.trim(),
+    kategori: document.getElementById('sky-kategori').value,
+    oncelik: document.getElementById('sky-oncelik').value,
+    durum: 'Açık',
+    tarih: tarih,
+    kapatmaTarih: '',
+    gun: 0,
+    d8: document.getElementById('sky-8d').value,
+    yorumlar: [{tarih: tarih, metin: 'Sikayet kaydedildi.'}]
+  };
+
+  liste.push(yeni);
+  skyVeriKaydet(liste);
+  toast('Sikayet kaydedildi: ' + yeniNo);
+  modalKapat('sky-yeni-modal');
+  sikayet_kpi_yukle();
+}
+
+function sikayet_detay_ac(id) {
+  var liste = skyVeriAl();
+  var sky = null;
+  for (var i = 0; i < liste.length; i++) {
+    if (liste[i].id === id) { sky = liste[i]; break; }
+  }
+  if (!sky) return;
+  skySeciliId = id;
+
+  document.getElementById('skd-baslik').textContent = sky.id + ' — ' + sky.konu;
+
+  // Bilgi kutusu
+  var durumCls = sky.durum === 'Açık' ? 'b-red' : sky.durum === 'İncelemede' ? 'b-amr' : 'b-grn';
+  var bilgiHtml = '';
+  bilgiHtml += '<div class="ib-row"><span class="ib-k">Musteri</span><span class="ib-v">' + sky.musteri + '</span></div>';
+  bilgiHtml += '<div class="ib-row"><span class="ib-k">Kategori</span><span class="ib-v">' + sky.kategori + '</span></div>';
+  bilgiHtml += '<div class="ib-row"><span class="ib-k">Oncelik</span><span class="ib-v">' + sky.oncelik + '</span></div>';
+  bilgiHtml += '<div class="ib-row"><span class="ib-k">Durum</span><span class="ib-v"><span class="bdg ' + durumCls + '">' + sky.durum + '</span></span></div>';
+  bilgiHtml += '<div class="ib-row"><span class="ib-k">Tarih</span><span class="ib-v">' + fmtDate(sky.tarih) + '</span></div>';
+  bilgiHtml += '<div class="ib-row"><span class="ib-k">8D</span><span class="ib-v">' + sky.d8 + '</span></div>';
+  if (sky.aciklama) bilgiHtml += '<div class="ib-row"><span class="ib-k">Aciklama</span><span class="ib-v">' + sky.aciklama + '</span></div>';
+  document.getElementById('skd-bilgi').innerHTML = bilgiHtml;
+
+  // Zaman çizgisi
+  var zamanHtml = '';
+  var yorumlar = sky.yorumlar || [];
+  for (var j = 0; j < yorumlar.length; j++) {
+    zamanHtml += '<div class="sky-zaman-item"><div class="sky-z-tarih">' + fmtDate(yorumlar[j].tarih) + '</div><div class="sky-z-metin">' + yorumlar[j].metin + '</div></div>';
+  }
+  document.getElementById('skd-zaman').innerHTML = zamanHtml || '<div style="color:var(--metin4);font-size:13px;">Henuz yorum yok.</div>';
+
+  // Kapat butonu
+  var kapatBtn = document.getElementById('skd-kapat-btn');
+  if (sky.durum === 'Kapatıldı') {
+    kapatBtn.style.display = 'none';
+  } else {
+    kapatBtn.style.display = 'inline-flex';
+  }
+
+  document.getElementById('skd-yorum').value = '';
+  modalAc('sky-detay-modal');
+}
+
+function skyYorumEkle() {
+  var yorum = document.getElementById('skd-yorum').value.trim();
+  if (!yorum) { toast('Yorum yaziniz', 'err'); return; }
+  var liste = skyVeriAl();
+  for (var i = 0; i < liste.length; i++) {
+    if (liste[i].id === skySeciliId) {
+      if (!liste[i].yorumlar) liste[i].yorumlar = [];
+      liste[i].yorumlar.push({tarih: new Date().toISOString().slice(0, 10), metin: yorum});
+      // Durumu incelemede yap eğer açıksa
+      if (liste[i].durum === 'Açık') liste[i].durum = 'İncelemede';
+      break;
+    }
+  }
+  skyVeriKaydet(liste);
+  toast('Yorum eklendi');
+  sikayet_detay_ac(skySeciliId);
+  sikayet_kpi_yukle();
+}
+
+function sikayet_kapat() {
+  var liste = skyVeriAl();
+  for (var i = 0; i < liste.length; i++) {
+    if (liste[i].id === skySeciliId) {
+      liste[i].durum = 'Kapatıldı';
+      liste[i].kapatmaTarih = new Date().toISOString().slice(0, 10);
+      // Gün hesapla
+      var baslangic = new Date(liste[i].tarih);
+      var bitis = new Date(liste[i].kapatmaTarih);
+      liste[i].gun = Math.round((bitis - baslangic) / (1000 * 60 * 60 * 24));
+      liste[i].yorumlar.push({tarih: liste[i].kapatmaTarih, metin: 'Sikayet kapatildi.'});
+      break;
+    }
+  }
+  skyVeriKaydet(liste);
+  toast('Sikayet kapatildi');
+  modalKapat('sky-detay-modal');
+  sikayet_kpi_yukle();
+}
+
+function egilim_grafik_render(data) {
+  var canvas = document.getElementById('sky-chart');
+  if (!canvas || !canvas.getContext) return;
+  var ctx = canvas.getContext('2d');
+  var w = canvas.width;
+  var h = canvas.height;
+  ctx.clearRect(0, 0, w, h);
+
+  // Son 6 ay verisini hesapla
+  var simdi = new Date();
+  var aylar = [];
+  var sayilar = [];
+  for (var m = 5; m >= 0; m--) {
+    var ay = new Date(simdi.getFullYear(), simdi.getMonth() - m, 1);
+    var ayStr = ay.getFullYear() + '-' + String(ay.getMonth() + 1).padStart(2, '0');
+    var ayAdi = ay.toLocaleDateString('tr-TR', {month:'short', year:'2-digit'});
+    aylar.push(ayAdi);
+    var sayi = 0;
+    for (var i = 0; i < data.length; i++) {
+      if (data[i].tarih && data[i].tarih.indexOf(ayStr) === 0) sayi++;
+    }
+    sayilar.push(sayi);
+  }
+
+  var maxVal = Math.max.apply(null, sayilar);
+  if (maxVal === 0) maxVal = 1;
+  var barW = 50;
+  var gap = (w - 60 - barW * 6) / 5;
+  var chartH = h - 40;
+  var startX = 40;
+
+  // Y ekseni
+  ctx.strokeStyle = '#e2e8f0';
+  ctx.lineWidth = 1;
+  ctx.font = '11px Segoe UI';
+  ctx.fillStyle = '#94a3b8';
+  ctx.textAlign = 'right';
+  for (var g = 0; g <= 4; g++) {
+    var yVal = Math.round(maxVal * g / 4);
+    var yPos = chartH - (chartH * g / 4) + 10;
+    ctx.beginPath();
+    ctx.moveTo(35, yPos);
+    ctx.lineTo(w, yPos);
+    ctx.stroke();
+    ctx.fillText(yVal, 30, yPos + 4);
+  }
+
+  // Barlar
+  ctx.textAlign = 'center';
+  for (var b = 0; b < 6; b++) {
+    var x = startX + b * (barW + gap);
+    var barH = (sayilar[b] / maxVal) * (chartH - 10);
+    if (barH < 2 && sayilar[b] > 0) barH = 4;
+    var y = chartH + 10 - barH;
+
+    // Gradient bar
+    var grad = ctx.createLinearGradient(x, y, x, chartH + 10);
+    grad.addColorStop(0, '#378ADD');
+    grad.addColorStop(1, '#6ab0f3');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.roundRect(x, y, barW, barH, [4, 4, 0, 0]);
+    ctx.fill();
+
+    // Değer
+    if (sayilar[b] > 0) {
+      ctx.fillStyle = '#0f2744';
+      ctx.font = 'bold 12px Segoe UI';
+      ctx.fillText(sayilar[b], x + barW / 2, y - 6);
+    }
+
+    // Ay etiketi
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '11px Segoe UI';
+    ctx.fillText(aylar[b], x + barW / 2, h - 4);
+  }
+}
+
+function skyMusteriSecenekleriDoldur() {
+  var sel = document.getElementById('sky-musteri');
+  // Seçenekleri musList'ten doldur
+  var opts = '<option value="">Seciniz</option>';
+  for (var i = 0; i < musList.length; i++) {
+    var adi = f(musList[i], 'Müşteri Adı') || '';
+    if (adi) opts += '<option value="' + adi + '">' + adi + '</option>';
+  }
+  sel.innerHTML = opts;
+}
+
 // ── INIT ──
 document.addEventListener('DOMContentLoaded', function() {
+  skyOrnek();
   veriYukle();
+  // Müşteri listesi yüklendikten sonra select'i doldur
+  setTimeout(function() { skyMusteriSecenekleriDoldur(); }, 2000);
 });
 </script>
 </body>

@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — Risk & FMEA</title>
+<link rel="stylesheet" href="ersan_styles.css">
+<script src="ersan_nav.js" defer></script>
+<script src="ersan_log.js" defer></script>
+<style>
+/* ── KPI ROW ── */
+.kpi-row { display:flex; gap:12px; margin-bottom:16px; flex-wrap:wrap; }
+.kpi { flex:1; min-width:160px; padding:16px 18px; border-radius:10px; background:var(--beyaz); border:1px solid var(--border); transition:box-shadow .15s; }
+.kpi:hover { box-shadow:0 2px 8px rgba(0,0,0,0.06); }
+.kpi .kpi-val { font-size:26px; font-weight:700; color:var(--metin); margin-bottom:2px; }
+.kpi .kpi-lbl { font-size:12px; color:var(--metin3); }
+.kpi .kpi-sub { font-size:10px; color:var(--metin4); margin-top:2px; }
+.kpi.s-blue  { border-left:4px solid var(--mavi); }
+.kpi.s-red   { border-left:4px solid var(--kirmizi); }
+.kpi.s-green { border-left:4px solid var(--yesil); }
+.kpi.s-amber { border-left:4px solid var(--sari); }
+
+/* ── TABS ── */
+.tab-row { display:flex; gap:0; margin-bottom:16px; border-bottom:2px solid var(--border); }
+.tab-btn { padding:10px 20px; font-size:13px; font-weight:600; color:var(--metin3); background:none; border:none; border-bottom:2px solid transparent; margin-bottom:-2px; cursor:pointer; transition:all .15s; font-family:inherit; }
+.tab-btn:hover { color:var(--metin); }
+.tab-btn.on { color:var(--mavi); border-bottom-color:var(--mavi); }
+.tab-panel { display:none; }
+.tab-panel.on { display:block; }
+
+/* ── CARD ── */
+.card { background:var(--beyaz); border:1px solid var(--border); border-radius:10px; overflow:hidden; }
+.card-head { padding:12px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.card-title { font-size:13px; font-weight:700; color:var(--metin); }
+.card-body { padding:16px; }
+
+/* ── TABLE ── */
+.rf-tbl { width:100%; border-collapse:collapse; font-size:12px; }
+.rf-tbl th { text-align:left; font-size:10px; font-weight:600; color:var(--metin3); text-transform:uppercase; letter-spacing:.3px; padding:8px 10px; border-bottom:1px solid var(--border); background:var(--beyaz); position:sticky; top:0; }
+.rf-tbl td { padding:10px 10px; border-bottom:1px solid var(--border); color:var(--metin2); }
+.rf-tbl tr:last-child td { border-bottom:none; }
+.rf-tbl tr:hover td { background:var(--bg2); }
+.mono { font-family:'Cascadia Code','Fira Code',monospace; font-size:11px; }
+
+/* ── BADGES ── */
+.bdg { display:inline-block; padding:2px 8px; border-radius:20px; font-size:10px; font-weight:600; white-space:nowrap; }
+.b-grn { background:var(--yesil-bg); color:var(--yesil-t); }
+.b-red { background:var(--kirmizi-bg); color:var(--kirmizi-t); }
+.b-amr { background:var(--sari-bg); color:var(--sari-t); }
+.b-blu { background:var(--mavi-acik); color:var(--mavi-koyu); }
+.b-gry { background:#f1f5f9; color:#64748b; }
+.b-pur { background:#f3e8ff; color:#6b21a8; }
+
+/* ── RISK MATRIX 5x5 ── */
+.matrix-wrap { display:flex; gap:24px; margin-bottom:16px; flex-wrap:wrap; }
+.matrix-grid { display:grid; grid-template-columns:30px repeat(5,56px); grid-template-rows:repeat(5,40px) 30px; gap:3px; }
+.matrix-cell { display:flex; align-items:center; justify-content:center; border-radius:4px; font-size:11px; font-weight:700; color:#fff; cursor:pointer; transition:opacity .15s; }
+.matrix-cell:hover { opacity:0.8; }
+.matrix-cell.c-grn { background:#22c55e; }
+.matrix-cell.c-yel { background:#eab308; }
+.matrix-cell.c-org { background:#f97316; }
+.matrix-cell.c-red { background:#ef4444; }
+.matrix-label { display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:700; color:var(--metin3); }
+
+/* ── FMEA LAYOUT ── */
+.fmea-layout { display:flex; gap:12px; height:calc(100vh - 300px); min-height:400px; }
+.fmea-left { width:220px; flex-shrink:0; display:flex; flex-direction:column; background:var(--beyaz); border:1px solid var(--border); border-radius:10px; overflow:hidden; }
+.fmea-left-head { padding:10px 12px; border-bottom:1px solid var(--border); font-size:12px; font-weight:700; color:var(--metin); }
+.fmea-left-list { flex:1; overflow-y:auto; }
+.fmea-item { padding:10px 12px; border-bottom:1px solid var(--border); cursor:pointer; font-size:12px; transition:background .1s; }
+.fmea-item:hover { background:var(--bg2); }
+.fmea-item.aktif { background:var(--mavi-acik); border-left:3px solid var(--mavi); }
+.fmea-item .fi-title { font-weight:600; color:var(--metin); }
+.fmea-item .fi-sub { font-size:10px; color:var(--metin3); margin-top:2px; }
+.fmea-right { flex:1; min-width:0; }
+
+/* ── RPN CALCULATOR ── */
+.rpn-calc { display:flex; gap:24px; flex-wrap:wrap; align-items:flex-start; }
+.rpn-sliders { flex:1; min-width:260px; }
+.rpn-result { width:200px; text-align:center; padding:24px; background:var(--beyaz); border:1px solid var(--border); border-radius:10px; }
+.rpn-big { font-size:56px; font-weight:800; line-height:1; margin-bottom:4px; }
+.rpn-label { font-size:12px; color:var(--metin3); font-weight:600; }
+.slider-group { margin-bottom:16px; }
+.slider-group label { display:flex; justify-content:space-between; font-size:11px; font-weight:600; color:var(--metin2); margin-bottom:6px; }
+.slider-group input[type=range] { width:100%; accent-color:var(--mavi); }
+.rpn-guide { width:100%; border-collapse:collapse; font-size:11px; margin-top:16px; }
+.rpn-guide th { text-align:left; padding:6px 10px; font-size:10px; font-weight:600; color:var(--metin3); border-bottom:1px solid var(--border); }
+.rpn-guide td { padding:6px 10px; border-bottom:1px solid var(--border); color:var(--metin2); }
+
+/* ── MODAL ── */
+.modal-bg { position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:800; display:flex; align-items:center; justify-content:center; }
+.modal { background:#fff; border-radius:12px; width:560px; max-width:95vw; max-height:85vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.2); }
+.modal-head { padding:16px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.modal-head h3 { font-size:15px; font-weight:700; margin:0; }
+.modal-body { padding:20px; }
+.modal-body label { display:block; font-size:11px; font-weight:600; color:var(--metin3); margin-bottom:4px; margin-top:12px; }
+.modal-body label:first-child { margin-top:0; }
+.modal-body input, .modal-body select, .modal-body textarea { width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:6px; font-size:13px; font-family:inherit; box-sizing:border-box; }
+.modal-body .trio { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
+.modal-foot { padding:12px 20px; border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:8px; }
+.btn-m { padding:8px 20px; border-radius:6px; font-size:13px; font-weight:600; border:none; cursor:pointer; font-family:inherit; }
+.btn-m.primary { background:var(--mavi); color:#fff; }
+.btn-m.primary:hover { background:var(--mavi-koyu); }
+.btn-m.ghost { background:none; color:var(--metin3); }
+
+/* ── BTN ── */
+.btn-topbar { padding:6px 14px; border-radius:6px; font-size:12px; font-weight:600; border:1px solid var(--border); background:var(--beyaz); color:var(--metin2); cursor:pointer; transition:all .15s; font-family:inherit; }
+.btn-topbar:hover { border-color:var(--mavi); color:var(--mavi); }
+.btn-topbar.primary { background:var(--mavi); color:#fff; border-color:var(--mavi); }
+.btn-topbar.primary:hover { background:var(--mavi-koyu); }
+.aksiyon-btn { padding:3px 10px; border-radius:4px; font-size:11px; font-weight:600; border:1px solid var(--border); background:var(--beyaz); cursor:pointer; font-family:inherit; }
+.aksiyon-btn:hover { border-color:var(--mavi); color:var(--mavi); }
+
+/* ── TOAST ── */
+.toast { position:fixed; bottom:20px; right:20px; padding:10px 20px; border-radius:8px; font-size:13px; font-weight:600; color:#fff; background:var(--laci); box-shadow:0 4px 12px rgba(0,0,0,0.15); opacity:0; transition:opacity .3s; pointer-events:none; z-index:999; }
+.toast.show { opacity:1; }
+</style>
+</head>
+<body>
+<div id="nav-alani"></div>
+<div class="icerik-alani">
+  <div class="topbar">
+    <div class="topbar-baslik">Risk & FMEA</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button class="btn-topbar primary" onclick="riskModalAc()">+ Yeni Risk</button>
+      <button class="btn-topbar" onclick="fmeaModalAc()">+ Yeni FMEA</button>
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
+    </div>
+  </div>
+  <div class="sayfa-icerik">
+
+<!-- KPI ROW -->
+<div class="kpi-row">
+  <div class="kpi s-red"><div class="kpi-val" id="kpi-kritik">0</div><div class="kpi-lbl">Kritik Risk</div><div class="kpi-sub">Seviye 4-5</div></div>
+  <div class="kpi s-amber"><div class="kpi-val" id="kpi-yuksek">0</div><div class="kpi-lbl">Yuksek RPN (&ge;200)</div><div class="kpi-sub">FMEA satirlari</div></div>
+  <div class="kpi s-blue"><div class="kpi-val" id="kpi-ort">0</div><div class="kpi-lbl">Ort. RPN</div><div class="kpi-sub">Tum FMEA</div></div>
+  <div class="kpi s-green"><div class="kpi-val" id="kpi-fmea">0</div><div class="kpi-lbl">Aktif FMEA</div><div class="kpi-sub">Toplam analiz</div></div>
+</div>
+
+<!-- TABS -->
+<div class="tab-row">
+  <button class="tab-btn on" onclick="tabDegistir(this,0)">Risk Kaydi</button>
+  <button class="tab-btn" onclick="tabDegistir(this,1)">FMEA Tablosu</button>
+  <button class="tab-btn" onclick="tabDegistir(this,2)">RPN Hesabi</button>
+</div>
+
+<!-- TAB 0: Risk Kaydi -->
+<div class="tab-panel on" id="tab0">
+  <div class="matrix-wrap">
+    <!-- 5x5 Matrix -->
+    <div class="card" style="padding:16px;">
+      <div class="card-title" style="margin-bottom:12px;">5&times;5 Risk Matrisi (Olasilik &times; Siddet)</div>
+      <div class="matrix-grid" id="matrixGrid"></div>
+      <div style="display:flex;justify-content:space-between;margin-top:8px;">
+        <span style="font-size:9px;color:var(--metin4);">Siddet &rarr;</span>
+        <div style="display:flex;gap:8px;">
+          <span style="font-size:9px;display:flex;align-items:center;gap:3px;"><span style="width:10px;height:10px;border-radius:2px;background:#22c55e;display:inline-block;"></span>Dusuk</span>
+          <span style="font-size:9px;display:flex;align-items:center;gap:3px;"><span style="width:10px;height:10px;border-radius:2px;background:#eab308;display:inline-block;"></span>Orta</span>
+          <span style="font-size:9px;display:flex;align-items:center;gap:3px;"><span style="width:10px;height:10px;border-radius:2px;background:#f97316;display:inline-block;"></span>Yuksek</span>
+          <span style="font-size:9px;display:flex;align-items:center;gap:3px;"><span style="width:10px;height:10px;border-radius:2px;background:#ef4444;display:inline-block;"></span>Kritik</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Risk Table -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-title">Risk Listesi</div>
+      <span class="bdg b-gry" id="riskCount">0 risk</span>
+    </div>
+    <div class="card-body" style="padding:0;overflow-x:auto;">
+      <table class="rf-tbl">
+        <thead><tr><th>No</th><th>Baslik</th><th>Kategori</th><th>O&times;S RPN</th><th>Seviye</th><th>Durum</th><th>Aksiyon</th></tr></thead>
+        <tbody id="riskBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- TAB 1: FMEA Tablosu -->
+<div class="tab-panel" id="tab1">
+  <div class="fmea-layout">
+    <div class="fmea-left">
+      <div class="fmea-left-head">FMEA Analizleri</div>
+      <div class="fmea-left-list" id="fmeaList"></div>
+    </div>
+    <div class="fmea-right">
+      <div class="card" style="height:100%;display:flex;flex-direction:column;">
+        <div class="card-head">
+          <div class="card-title" id="fmeaTitle">FMEA secin</div>
+          <button class="aksiyon-btn" onclick="fmeaSatirEkleModal()" id="btnSatirEkle" style="display:none;">+ Satir Ekle</button>
+        </div>
+        <div class="card-body" style="padding:0;flex:1;overflow:auto;">
+          <div id="fmeaSatirContent" style="text-align:center;padding:40px;color:var(--metin3);font-size:13px;">Soldan bir FMEA secin</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB 2: RPN Hesabi -->
+<div class="tab-panel" id="tab2">
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-head"><div class="card-title">RPN Hesaplayici</div></div>
+    <div class="card-body">
+      <div class="rpn-calc">
+        <div class="rpn-sliders">
+          <div class="slider-group">
+            <label><span>Olasilik (O)</span><span id="oVal">5</span></label>
+            <input type="range" min="1" max="10" value="5" id="sliderO" oninput="rpnHesapla()">
+          </div>
+          <div class="slider-group">
+            <label><span>Siddet (S)</span><span id="sVal">5</span></label>
+            <input type="range" min="1" max="10" value="5" id="sliderS" oninput="rpnHesapla()">
+          </div>
+          <div class="slider-group">
+            <label><span>Algilama (D)</span><span id="dVal">5</span></label>
+            <input type="range" min="1" max="10" value="5" id="sliderD" oninput="rpnHesapla()">
+          </div>
+          <button class="btn-m primary" onclick="rpnRiskKaydet()" style="margin-top:8px;">Bu Degerleri Risk Olarak Kaydet</button>
+        </div>
+        <div class="rpn-result">
+          <div class="rpn-big" id="rpnBig" style="color:var(--sari);">125</div>
+          <div class="rpn-label">RPN = O &times; S &times; D</div>
+          <div id="rpnSeviye" style="margin-top:8px;"><span class="bdg b-amr">Orta</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RPN Kilavuz -->
+  <div class="card">
+    <div class="card-head"><div class="card-title">RPN Derecelendirme Kilavuzu</div></div>
+    <div class="card-body" style="padding:0;overflow-x:auto;">
+      <table class="rpn-guide">
+        <thead><tr><th>Deger</th><th>Olasilik (O)</th><th>Siddet (S)</th><th>Algilama (D)</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">1</td><td>Cok dusuk, neredeyse imkansiz</td><td>Etki yok</td><td>Kesinlikle tespit edilir</td></tr>
+          <tr><td class="mono">2</td><td>Dusuk, nadir olusur</td><td>Cok kucuk etki</td><td>Yuksek tespit olasiligi</td></tr>
+          <tr><td class="mono">3</td><td>Nispeten dusuk</td><td>Kucuk etki</td><td>Iyi tespit olasiligi</td></tr>
+          <tr><td class="mono">4</td><td>Orta-dusuk</td><td>Orta-kucuk etki</td><td>Makul tespit</td></tr>
+          <tr><td class="mono">5</td><td>Orta</td><td>Orta etki</td><td>Orta tespit</td></tr>
+          <tr><td class="mono">6</td><td>Orta-yuksek</td><td>Belirgin etki</td><td>Dusuk tespit</td></tr>
+          <tr><td class="mono">7</td><td>Yuksek</td><td>Onemli etki</td><td>Cok dusuk tespit</td></tr>
+          <tr><td class="mono">8</td><td>Cok yuksek</td><td>Ciddi etki</td><td>Uzaktan tespit</td></tr>
+          <tr><td class="mono">9</td><td>Neredeyse kesin</td><td>Tehlikeli, uyari ile</td><td>Neredeyse tespit edilemez</td></tr>
+          <tr><td class="mono">10</td><td>Kesin olusur</td><td>Tehlikeli, uyari yok</td><td>Tespit edilemez</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- RISK MODAL -->
+<div class="modal-bg" id="riskModalBg" style="display:none;" onclick="if(event.target===this)riskModalKapat()">
+  <div class="modal">
+    <div class="modal-head"><h3>Yeni Risk</h3><button class="btn-m ghost" onclick="riskModalKapat()" style="font-size:20px;line-height:1;">&times;</button></div>
+    <div class="modal-body">
+      <label>Baslik</label>
+      <input id="r-baslik" placeholder="Risk tanimi">
+      <label>Kategori</label>
+      <select id="r-kategori">
+        <option>Operasyonel</option><option>Kalite</option><option>Tedarik</option><option>Mali</option><option>Insan Kaynaklari</option><option>Cevre</option><option>Bilgi Guvenligi</option>
+      </select>
+      <label>Surec</label>
+      <input id="r-surec" placeholder="Uretim, Kalite Kontrol, ...">
+      <label>Aciklama</label>
+      <textarea id="r-aciklama" rows="2" placeholder="Risk detayi"></textarea>
+      <div class="trio">
+        <div><label>Olasilik (1-10)</label><input id="r-o" type="number" min="1" max="10" value="5"></div>
+        <div><label>Siddet (1-10)</label><input id="r-s" type="number" min="1" max="10" value="5"></div>
+        <div><label>Algilama (1-10)</label><input id="r-d" type="number" min="1" max="10" value="5"></div>
+      </div>
+      <label>Sorumlu</label>
+      <input id="r-sorumlu" value="Erdem">
+      <label>Aksiyon Plani</label>
+      <input id="r-aksiyon" placeholder="Alinacak onlem">
+    </div>
+    <div class="modal-foot">
+      <button class="btn-m ghost" onclick="riskModalKapat()">Iptal</button>
+      <button class="btn-m primary" onclick="riskKaydet()">Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<!-- FMEA MODAL -->
+<div class="modal-bg" id="fmeaModalBg" style="display:none;" onclick="if(event.target===this)fmeaModalKapat()">
+  <div class="modal">
+    <div class="modal-head"><h3 id="fmeaModalTitle">Yeni FMEA</h3><button class="btn-m ghost" onclick="fmeaModalKapat()" style="font-size:20px;line-height:1;">&times;</button></div>
+    <div class="modal-body">
+      <label>FMEA Adi</label>
+      <input id="f-ad" placeholder="CNC Tornalama FMEA">
+      <label>Surec</label>
+      <input id="f-surec" placeholder="CNC Tornalama">
+      <label>Sorumlu</label>
+      <input id="f-sorumlu" value="Erdem">
+    </div>
+    <div class="modal-foot">
+      <button class="btn-m ghost" onclick="fmeaModalKapat()">Iptal</button>
+      <button class="btn-m primary" onclick="fmeaKaydet()">Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<!-- FMEA SATIR MODAL -->
+<div class="modal-bg" id="satirModalBg" style="display:none;" onclick="if(event.target===this)satirModalKapat()">
+  <div class="modal" style="width:620px;">
+    <div class="modal-head"><h3>FMEA Satir Ekle</h3><button class="btn-m ghost" onclick="satirModalKapat()" style="font-size:20px;line-height:1;">&times;</button></div>
+    <div class="modal-body">
+      <label>Surec Adimi</label>
+      <input id="fs-surec" placeholder="Op10 - Tornalama">
+      <label>Hata Modu</label>
+      <input id="fs-hata" placeholder="Olcu disi kalma">
+      <label>Etki</label>
+      <input id="fs-etki" placeholder="Parca hurda olur">
+      <label>Neden</label>
+      <input id="fs-neden" placeholder="Takim asinmasi">
+      <label>Kontroller</label>
+      <input id="fs-kontrol" placeholder="SPC, olcum">
+      <div class="trio">
+        <div><label>Siddet (S)</label><input id="fs-s" type="number" min="1" max="10" value="5"></div>
+        <div><label>Olasilik (O)</label><input id="fs-o" type="number" min="1" max="10" value="5"></div>
+        <div><label>Algilama (D)</label><input id="fs-d" type="number" min="1" max="10" value="5"></div>
+      </div>
+      <label>Aksiyon</label>
+      <input id="fs-aksiyon" placeholder="Onleyici faaliyet">
+      <label>Sorumlu</label>
+      <input id="fs-sorumlu" value="Erdem">
+      <label>Termin</label>
+      <input id="fs-termin" type="date">
+    </div>
+    <div class="modal-foot">
+      <button class="btn-m ghost" onclick="satirModalKapat()">Iptal</button>
+      <button class="btn-m primary" onclick="fmeaSatirKaydet()">Kaydet</button>
+    </div>
+  </div>
+</div>
+
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════
+   Ersan MES — Risk & FMEA
+   localStorage tabanli
+   ══════════════════════════════════════════════ */
+
+var riskler = [];
+var fmealar = [];
+var fmeaSatirlari = [];
+var secilenFmea = null;
+
+// ── INIT ──
+function init() {
+  yukle();
+  if (riskler.length === 0) ornekVeriOlustur();
+  renderAll();
+  rpnHesapla();
+}
+
+function yukle() {
+  try { riskler = JSON.parse(localStorage.getItem('ersan_riskler')) || []; } catch(e) { riskler = []; }
+  try { fmealar = JSON.parse(localStorage.getItem('ersan_fmea')) || []; } catch(e) { fmealar = []; }
+  try { fmeaSatirlari = JSON.parse(localStorage.getItem('ersan_fmea_satirlari')) || []; } catch(e) { fmeaSatirlari = []; }
+}
+
+function kaydet() {
+  localStorage.setItem('ersan_riskler', JSON.stringify(riskler));
+  localStorage.setItem('ersan_fmea', JSON.stringify(fmealar));
+  localStorage.setItem('ersan_fmea_satirlari', JSON.stringify(fmeaSatirlari));
+}
+
+function ornekVeriOlustur() {
+  riskler = [
+    { id:'RSK-001', baslik:'Takim asinmasi ile olcu sapma', kategori:'Kalite', surec:'CNC Tornalama', aciklama:'Takim omru izlenmezse parca olcu disi kalabilir', o:6, s:7, d:4, rpn:168, seviye:3, durum:'Acik', sorumlu:'Erdem', aksiyon:'Takim omru izleme sistemi kur' },
+    { id:'RSK-002', baslik:'Tedarikci malzeme gecikmesi', kategori:'Tedarik', surec:'Satinalma', aciklama:'Kritik hammadde tedarikcisi tek kaynak', o:5, s:8, d:3, rpn:120, seviye:3, durum:'Izleniyor', sorumlu:'Ahmet', aksiyon:'Alternatif tedarikci degerlendirmesi' },
+    { id:'RSK-003', baslik:'Kalibrasyon suresi gecme', kategori:'Kalite', surec:'Olcum', aciklama:'Mikrometre ve kumpas kalibrasyon suresi gecebilir', o:3, s:6, d:5, rpn:90, seviye:2, durum:'Acik', sorumlu:'Veli', aksiyon:'Otomatik hatirlatma sistemi' },
+    { id:'RSK-004', baslik:'Veri kaybi (yedekleme)', kategori:'Bilgi Guvenligi', surec:'IT', aciklama:'Sunucu arizasinda veri kaybi riski', o:2, s:9, d:3, rpn:54, seviye:2, durum:'Kapali', sorumlu:'Erdem', aksiyon:'Gunluk yedekleme aktif' },
+    { id:'RSK-005', baslik:'Personel yetkinlik eksigi', kategori:'Insan Kaynaklari', surec:'Uretim', aciklama:'Kritik tezgah operatorlerinde yedek personel yok', o:4, s:7, d:6, rpn:168, seviye:3, durum:'Acik', sorumlu:'Hasan', aksiyon:'Capraz egitim plani baslat' }
+  ];
+
+  fmealar = [
+    { id:'FMEA-001', ad:'CNC Tornalama FMEA', surec:'CNC Tornalama', sorumlu:'Erdem', tarih:'2026-01-10' },
+    { id:'FMEA-002', ad:'Kaynak Sureci FMEA', surec:'Kaynak', sorumlu:'Ahmet', tarih:'2026-02-15' }
+  ];
+
+  fmeaSatirlari = [
+    { id:'FS-001', fmeaId:'FMEA-001', surec:'Op10 - Torna Dis', hata:'Olcu sapma', etki:'Parca hurda', s:7, neden:'Takim asinmasi', o:6, kontrol:'SPC olcum', d:4, rpn:168, aksiyon:'Takim omru takibi', sorumlu:'Erdem', termin:'2026-03-01', sonrasiRpn:84 },
+    { id:'FS-002', fmeaId:'FMEA-001', surec:'Op20 - Ic Torna', hata:'Yuzey puruslulugu', etki:'Musteri reddi', s:8, neden:'Kesme parametreleri', o:4, kontrol:'Ra olcumu', d:3, rpn:96, aksiyon:'Parametre standardizasyonu', sorumlu:'Erdem', termin:'2026-03-15', sonrasiRpn:48 },
+    { id:'FS-003', fmeaId:'FMEA-001', surec:'Op30 - Frezleme', hata:'Pozisyon hatasi', etki:'Montaj uyumsuzlugu', s:9, neden:'Fikstür asinmasi', o:3, kontrol:'CMM olcum', d:2, rpn:54, aksiyon:'Fikstür kontrol plani', sorumlu:'Veli', termin:'2026-04-01', sonrasiRpn:36 },
+    { id:'FS-004', fmeaId:'FMEA-001', surec:'Op40 - Taslama', hata:'Yanma izi', etki:'Parca hurda', s:8, neden:'Sogutma yetersiz', o:5, kontrol:'Gorsel kontrol', d:5, rpn:200, aksiyon:'Sogutma sistemi revizyon', sorumlu:'Ahmet', termin:'2026-02-28', sonrasiRpn:80 },
+    { id:'FS-005', fmeaId:'FMEA-002', surec:'Kaynak hazirligi', hata:'Yanlis malzeme eslesmesi', etki:'Kaynak calismasi', s:9, neden:'Etiket hatasi', o:2, kontrol:'Malzeme sertifikasi', d:3, rpn:54, aksiyon:'Barkod dogrulama', sorumlu:'Mehmet', termin:'2026-03-20', sonrasiRpn:27 },
+    { id:'FS-006', fmeaId:'FMEA-002', surec:'Kaynak uygulama', hata:'Goz. nufuziyet eksik', etki:'Dayanim dusuk', s:9, neden:'Yanlis parametre', o:4, kontrol:'RT/UT testi', d:2, rpn:72, aksiyon:'WPS guncelle', sorumlu:'Mehmet', termin:'2026-03-25', sonrasiRpn:36 },
+    { id:'FS-007', fmeaId:'FMEA-002', surec:'Kaynak sonrasi', hata:'Capak/spatir', etki:'Gorsel red', s:4, neden:'Teknik yetersiz', o:5, kontrol:'Gorsel kontrol', d:6, rpn:120, aksiyon:'Operator egitimi', sorumlu:'Ahmet', termin:'2026-04-10', sonrasiRpn:40 },
+    { id:'FS-008', fmeaId:'FMEA-002', surec:'Kaynak sonrasi ISG', hata:'Isil deformasyon', etki:'Olcu bozulma', s:7, neden:'Soguma kontrolsuz', o:3, kontrol:'Olcum', d:4, rpn:84, aksiyon:'Soguma proseduru', sorumlu:'Ahmet', termin:'2026-04-15', sonrasiRpn:42 }
+  ];
+
+  kaydet();
+}
+
+// ── RENDER ALL ──
+function renderAll() {
+  renderKPI();
+  renderMatrix();
+  renderRiskTable();
+  renderFmeaList();
+  if (secilenFmea) renderFmeaSatirlari();
+}
+
+// ── KPI ──
+function renderKPI() {
+  var kritik = riskler.filter(function(r) { return r.seviye >= 4 && r.durum !== 'Kapali'; }).length;
+  var allSatir = fmeaSatirlari;
+  var yuksekRpn = allSatir.filter(function(s) { return s.rpn >= 200; }).length;
+  var toplamRpn = 0;
+  allSatir.forEach(function(s) { toplamRpn += s.rpn; });
+  var ortRpn = allSatir.length > 0 ? Math.round(toplamRpn / allSatir.length) : 0;
+
+  document.getElementById('kpi-kritik').textContent = kritik;
+  document.getElementById('kpi-yuksek').textContent = yuksekRpn;
+  document.getElementById('kpi-ort').textContent = ortRpn;
+  document.getElementById('kpi-fmea').textContent = fmealar.length;
+}
+
+// ── 5x5 RISK MATRIX ──
+function renderMatrix() {
+  var grid = document.getElementById('matrixGrid');
+  // matris[olasilik][siddet] -> renk
+  // Olasilik: rows 5(top) to 1(bottom), Siddet: cols 1(left) to 5(right)
+  var renkMap = [
+    // siddet 1    2      3      4      5
+    ['c-grn','c-grn','c-yel','c-yel','c-org'], // olasilik 1
+    ['c-grn','c-yel','c-yel','c-org','c-org'], // 2
+    ['c-yel','c-yel','c-org','c-org','c-red'], // 3
+    ['c-yel','c-org','c-org','c-red','c-red'], // 4
+    ['c-org','c-org','c-red','c-red','c-red'], // 5
+  ];
+
+  // Count risks per cell (map olasilik 1-10 to 1-5, siddet 1-10 to 1-5)
+  var counts = {};
+  riskler.forEach(function(r) {
+    if (r.durum === 'Kapali') return;
+    var oi = Math.min(5, Math.max(1, Math.ceil(r.o / 2)));
+    var si = Math.min(5, Math.max(1, Math.ceil(r.s / 2)));
+    var key = oi + '-' + si;
+    counts[key] = (counts[key] || 0) + 1;
+  });
+
+  var html = '';
+  // Rows: olasilik 5 (top) to 1 (bottom)
+  for (var oi = 5; oi >= 1; oi--) {
+    // Row label
+    html += '<div class="matrix-label">' + oi + '</div>';
+    for (var si = 1; si <= 5; si++) {
+      var cls = renkMap[oi - 1][si - 1];
+      var cnt = counts[oi + '-' + si] || 0;
+      html += '<div class="matrix-cell ' + cls + '">' + (cnt > 0 ? cnt : '') + '</div>';
+    }
+  }
+  // Bottom row: empty corner + siddet labels
+  html += '<div class="matrix-label"></div>';
+  for (var si2 = 1; si2 <= 5; si2++) {
+    html += '<div class="matrix-label">' + si2 + '</div>';
+  }
+
+  grid.innerHTML = html;
+}
+
+// ── RISK TABLE ──
+function renderRiskTable() {
+  var body = document.getElementById('riskBody');
+  document.getElementById('riskCount').textContent = riskler.length + ' risk';
+  if (riskler.length === 0) {
+    body.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--metin3);">Henuz risk yok</td></tr>';
+    return;
+  }
+  var sorted = riskler.slice().sort(function(a,b) { return b.rpn - a.rpn; });
+  var html = '';
+  sorted.forEach(function(r) {
+    var sevCls = r.seviye >= 4 ? 'b-red' : r.seviye === 3 ? 'b-amr' : r.seviye === 2 ? 'b-blu' : 'b-grn';
+    var sevTxt = r.seviye >= 4 ? 'Kritik' : r.seviye === 3 ? 'Yuksek' : r.seviye === 2 ? 'Orta' : 'Dusuk';
+    var durCls = r.durum === 'Kapali' ? 'b-grn' : r.durum === 'Izleniyor' ? 'b-amr' : 'b-red';
+    html += '<tr>';
+    html += '<td class="mono">' + r.id + '</td>';
+    html += '<td style="font-weight:600;max-width:200px;">' + r.baslik + '</td>';
+    html += '<td><span class="bdg b-gry">' + r.kategori + '</span></td>';
+    html += '<td class="mono" style="font-weight:700;">' + r.rpn + '</td>';
+    html += '<td><span class="bdg ' + sevCls + '">' + sevTxt + '</span></td>';
+    html += '<td><span class="bdg ' + durCls + '">' + r.durum + '</span></td>';
+    html += '<td style="max-width:180px;font-size:11px;">' + (r.aksiyon || '-') + '</td>';
+    html += '</tr>';
+  });
+  body.innerHTML = html;
+}
+
+// ── FMEA LIST ──
+function renderFmeaList() {
+  var cont = document.getElementById('fmeaList');
+  if (fmealar.length === 0) {
+    cont.innerHTML = '<div style="padding:20px;text-align:center;color:var(--metin3);font-size:12px;">FMEA yok</div>';
+    return;
+  }
+  var html = '';
+  fmealar.forEach(function(f) {
+    var cnt = fmeaSatirlari.filter(function(s) { return s.fmeaId === f.id; }).length;
+    var aktif = secilenFmea && secilenFmea.id === f.id ? ' aktif' : '';
+    html += '<div class="fmea-item' + aktif + '" onclick="fmeaSec(\'' + f.id + '\')">';
+    html += '<div class="fi-title">' + f.ad + '</div>';
+    html += '<div class="fi-sub">' + f.surec + ' | ' + cnt + ' satir</div>';
+    html += '</div>';
+  });
+  cont.innerHTML = html;
+}
+
+function fmeaSec(id) {
+  secilenFmea = fmealar.find(function(f) { return f.id === id; });
+  renderFmeaList();
+  renderFmeaSatirlari();
+  document.getElementById('btnSatirEkle').style.display = 'inline-block';
+}
+
+function renderFmeaSatirlari() {
+  if (!secilenFmea) return;
+  document.getElementById('fmeaTitle').textContent = secilenFmea.ad;
+  var satirlar = fmeaSatirlari.filter(function(s) { return s.fmeaId === secilenFmea.id; });
+  var sorted = satirlar.slice().sort(function(a,b) { return b.rpn - a.rpn; });
+
+  if (sorted.length === 0) {
+    document.getElementById('fmeaSatirContent').innerHTML = '<div style="padding:40px;text-align:center;color:var(--metin3);font-size:12px;">Bu FMEA icin satir yok. "+ Satir Ekle" ile baslayin.</div>';
+    return;
+  }
+
+  var html = '<table class="rf-tbl" style="font-size:11px;">';
+  html += '<thead><tr><th>Surec</th><th>Hata Modu</th><th>Etki</th><th>S</th><th>Neden</th><th>O</th><th>Kontroller</th><th>D</th><th>RPN</th><th>Oncelik</th><th>Aksiyon</th><th>Sorumlu</th><th>Termin</th><th>Sonrasi RPN</th></tr></thead>';
+  html += '<tbody>';
+  sorted.forEach(function(s) {
+    var rpnCls = s.rpn >= 200 ? 'b-red' : s.rpn >= 100 ? 'b-amr' : 'b-grn';
+    var sonCls = (s.sonrasiRpn || 0) >= 200 ? 'b-red' : (s.sonrasiRpn || 0) >= 100 ? 'b-amr' : 'b-grn';
+    var oncelik = s.rpn >= 200 ? 'Kritik' : s.rpn >= 100 ? 'Yuksek' : s.rpn >= 50 ? 'Orta' : 'Dusuk';
+    html += '<tr>';
+    html += '<td>' + s.surec + '</td>';
+    html += '<td style="font-weight:600;">' + s.hata + '</td>';
+    html += '<td>' + s.etki + '</td>';
+    html += '<td class="mono" style="text-align:center;">' + s.s + '</td>';
+    html += '<td>' + s.neden + '</td>';
+    html += '<td class="mono" style="text-align:center;">' + s.o + '</td>';
+    html += '<td>' + s.kontrol + '</td>';
+    html += '<td class="mono" style="text-align:center;">' + s.d + '</td>';
+    html += '<td><span class="bdg ' + rpnCls + '" style="font-size:11px;font-weight:700;">' + s.rpn + '</span></td>';
+    html += '<td><span class="bdg ' + rpnCls + '">' + oncelik + '</span></td>';
+    html += '<td style="max-width:140px;">' + (s.aksiyon || '-') + '</td>';
+    html += '<td>' + (s.sorumlu || '-') + '</td>';
+    html += '<td>' + (s.termin ? tarihFormat(s.termin) : '-') + '</td>';
+    html += '<td><span class="bdg ' + sonCls + '">' + (s.sonrasiRpn || '-') + '</span></td>';
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  document.getElementById('fmeaSatirContent').innerHTML = html;
+}
+
+// ── RPN CALCULATOR ──
+function rpnHesapla() {
+  var o = parseInt(document.getElementById('sliderO').value);
+  var s = parseInt(document.getElementById('sliderS').value);
+  var d = parseInt(document.getElementById('sliderD').value);
+  document.getElementById('oVal').textContent = o;
+  document.getElementById('sVal').textContent = s;
+  document.getElementById('dVal').textContent = d;
+
+  var rpn = o * s * d;
+  var el = document.getElementById('rpnBig');
+  el.textContent = rpn;
+
+  var sevEl = document.getElementById('rpnSeviye');
+  if (rpn >= 200) {
+    el.style.color = '#ef4444';
+    sevEl.innerHTML = '<span class="bdg b-red">Kritik — Acil aksiyon gerekli</span>';
+  } else if (rpn >= 100) {
+    el.style.color = '#f97316';
+    sevEl.innerHTML = '<span class="bdg b-amr">Yuksek — Aksiyon planlanmali</span>';
+  } else if (rpn >= 50) {
+    el.style.color = '#eab308';
+    sevEl.innerHTML = '<span class="bdg b-amr">Orta — Izlenmeli</span>';
+  } else {
+    el.style.color = '#22c55e';
+    sevEl.innerHTML = '<span class="bdg b-grn">Dusuk — Kabul edilebilir</span>';
+  }
+}
+
+function rpnRiskKaydet() {
+  var o = parseInt(document.getElementById('sliderO').value);
+  var s = parseInt(document.getElementById('sliderS').value);
+  var d = parseInt(document.getElementById('sliderD').value);
+  var rpn = o * s * d;
+  var seviye = rpn >= 200 ? 4 : rpn >= 100 ? 3 : rpn >= 50 ? 2 : 1;
+
+  var yeniId = 'RSK-' + String(riskler.length + 1).padStart(3, '0');
+  riskler.push({
+    id: yeniId,
+    baslik: 'RPN Hesabi ile olusturulan risk',
+    kategori: 'Operasyonel',
+    surec: '',
+    aciklama: 'O=' + o + ', S=' + s + ', D=' + d,
+    o: o, s: s, d: d,
+    rpn: rpn,
+    seviye: seviye,
+    durum: 'Acik',
+    sorumlu: 'Erdem',
+    aksiyon: ''
+  });
+  kaydet();
+  renderAll();
+  toast('Risk kaydedildi: ' + yeniId + ' (RPN: ' + rpn + ')');
+}
+
+// ── RISK MODAL ──
+function riskModalAc() {
+  document.getElementById('r-baslik').value = '';
+  document.getElementById('r-kategori').value = 'Operasyonel';
+  document.getElementById('r-surec').value = '';
+  document.getElementById('r-aciklama').value = '';
+  document.getElementById('r-o').value = '5';
+  document.getElementById('r-s').value = '5';
+  document.getElementById('r-d').value = '5';
+  document.getElementById('r-sorumlu').value = 'Erdem';
+  document.getElementById('r-aksiyon').value = '';
+  document.getElementById('riskModalBg').style.display = 'flex';
+}
+function riskModalKapat() { document.getElementById('riskModalBg').style.display = 'none'; }
+
+function riskKaydet() {
+  var baslik = document.getElementById('r-baslik').value.trim();
+  if (!baslik) { toast('Baslik zorunlu'); return; }
+
+  var o = Math.min(10, Math.max(1, parseInt(document.getElementById('r-o').value) || 5));
+  var s = Math.min(10, Math.max(1, parseInt(document.getElementById('r-s').value) || 5));
+  var d = Math.min(10, Math.max(1, parseInt(document.getElementById('r-d').value) || 5));
+  var rpn = o * s * d;
+  var seviye = rpn >= 200 ? 4 : rpn >= 100 ? 3 : rpn >= 50 ? 2 : 1;
+
+  var yeniId = 'RSK-' + String(riskler.length + 1).padStart(3, '0');
+  riskler.push({
+    id: yeniId,
+    baslik: baslik,
+    kategori: document.getElementById('r-kategori').value,
+    surec: document.getElementById('r-surec').value.trim(),
+    aciklama: document.getElementById('r-aciklama').value.trim(),
+    o: o, s: s, d: d,
+    rpn: rpn,
+    seviye: seviye,
+    durum: 'Acik',
+    sorumlu: document.getElementById('r-sorumlu').value.trim(),
+    aksiyon: document.getElementById('r-aksiyon').value.trim()
+  });
+  kaydet();
+  renderAll();
+  riskModalKapat();
+  toast('Risk olusturuldu: ' + yeniId);
+}
+
+// ── FMEA MODAL ──
+function fmeaModalAc() {
+  document.getElementById('f-ad').value = '';
+  document.getElementById('f-surec').value = '';
+  document.getElementById('f-sorumlu').value = 'Erdem';
+  document.getElementById('fmeaModalBg').style.display = 'flex';
+}
+function fmeaModalKapat() { document.getElementById('fmeaModalBg').style.display = 'none'; }
+
+function fmeaKaydet() {
+  var ad = document.getElementById('f-ad').value.trim();
+  if (!ad) { toast('FMEA adi zorunlu'); return; }
+
+  var yeniId = 'FMEA-' + String(fmealar.length + 1).padStart(3, '0');
+  fmealar.push({
+    id: yeniId,
+    ad: ad,
+    surec: document.getElementById('f-surec').value.trim(),
+    sorumlu: document.getElementById('f-sorumlu').value.trim(),
+    tarih: new Date().toISOString().split('T')[0]
+  });
+  kaydet();
+  renderAll();
+  fmeaModalKapat();
+  toast('FMEA olusturuldu: ' + yeniId);
+}
+
+// ── FMEA SATIR MODAL ──
+function fmeaSatirEkleModal() {
+  if (!secilenFmea) { toast('Once bir FMEA secin'); return; }
+  document.getElementById('fs-surec').value = '';
+  document.getElementById('fs-hata').value = '';
+  document.getElementById('fs-etki').value = '';
+  document.getElementById('fs-neden').value = '';
+  document.getElementById('fs-kontrol').value = '';
+  document.getElementById('fs-s').value = '5';
+  document.getElementById('fs-o').value = '5';
+  document.getElementById('fs-d').value = '5';
+  document.getElementById('fs-aksiyon').value = '';
+  document.getElementById('fs-sorumlu').value = 'Erdem';
+  document.getElementById('fs-termin').value = '';
+  document.getElementById('satirModalBg').style.display = 'flex';
+}
+function satirModalKapat() { document.getElementById('satirModalBg').style.display = 'none'; }
+
+function fmeaSatirKaydet() {
+  var surec = document.getElementById('fs-surec').value.trim();
+  var hata = document.getElementById('fs-hata').value.trim();
+  if (!surec || !hata) { toast('Surec ve hata modu zorunlu'); return; }
+
+  var s = Math.min(10, Math.max(1, parseInt(document.getElementById('fs-s').value) || 5));
+  var o = Math.min(10, Math.max(1, parseInt(document.getElementById('fs-o').value) || 5));
+  var d = Math.min(10, Math.max(1, parseInt(document.getElementById('fs-d').value) || 5));
+  var rpn = o * s * d;
+
+  var yeniId = 'FS-' + String(fmeaSatirlari.length + 1).padStart(3, '0');
+  fmeaSatirlari.push({
+    id: yeniId,
+    fmeaId: secilenFmea.id,
+    surec: surec,
+    hata: hata,
+    etki: document.getElementById('fs-etki').value.trim(),
+    s: s,
+    neden: document.getElementById('fs-neden').value.trim(),
+    o: o,
+    kontrol: document.getElementById('fs-kontrol').value.trim(),
+    d: d,
+    rpn: rpn,
+    aksiyon: document.getElementById('fs-aksiyon').value.trim(),
+    sorumlu: document.getElementById('fs-sorumlu').value.trim(),
+    termin: document.getElementById('fs-termin').value,
+    sonrasiRpn: null
+  });
+  kaydet();
+  renderAll();
+  renderFmeaSatirlari();
+  satirModalKapat();
+  toast('FMEA satiri eklendi (RPN: ' + rpn + ')');
+}
+
+// ── TAB SWITCH ──
+function tabDegistir(btn, idx) {
+  var btns = document.querySelectorAll('.tab-btn');
+  var panels = document.querySelectorAll('.tab-panel');
+  for (var i = 0; i < btns.length; i++) { btns[i].classList.remove('on'); }
+  for (var j = 0; j < panels.length; j++) { panels[j].classList.remove('on'); }
+  btn.classList.add('on');
+  document.getElementById('tab' + idx).classList.add('on');
+}
+
+// ── HELPERS ──
+function tarihFormat(d) {
+  if (!d) return '-';
+  var p = d.split('-');
+  if (p.length < 3) return d;
+  return p[2] + '.' + p[1] + '.' + p[0];
+}
+
+function toast(msg) {
+  var el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(function() { el.classList.remove('show'); }, 2500);
+}
+
+// ── START ──
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

@@ -80,6 +80,7 @@ var ERSAN_NAV = [
     { label: 'Sertifika Takibi',   href: 'ersan_ik_sertifika.html' },
     { label: 'Gap Analizi',        href: 'ersan_ik_gap.html' },
     { label: 'Risk Y\u00F6netimi',        href: 'ersan_risk.html' },
+    { label: 'Risk & FMEA',            href: 'ersan_risk_fmea.html' },
     { label: '\u0130SG',                  href: 'ersan_isg.html' },
   ]},
   { group: '\u0130\u00E7 Denetim', collapsed: false, items: [

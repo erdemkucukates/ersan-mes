@@ -4,485 +4,502 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ersan MES — Yönetim Gözden Geçirme</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <link rel="stylesheet" href="ersan_styles.css">
 <script src="ersan_nav.js" defer></script>
 <script src="ersan_log.js" defer></script>
 <style>
-/* KPI GRID */
-.kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;}
-.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;position:relative;overflow:hidden;}
-.kpi-card::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;border-radius:4px 0 0 4px;}
-.kpi-green::before{background:var(--green);}
-.kpi-blue::before{background:var(--blue);}
-.kpi-orange::before{background:var(--orange);}
-.kpi-red::before{background:var(--red);}
-.kpi-accent::before{background:var(--accent);}
-.kpi-title{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;}
-.kpi-val{font-size:32px;font-weight:700;font-family:var(--mono);line-height:1;color:var(--text);}
-.kpi-unit{font-size:14px;color:var(--text3);margin-left:2px;}
-.kpi-sub{font-size:11px;color:var(--text3);margin-top:4px;}
+/* ── KPI ROW ── */
+.kpi-row { display:flex; gap:12px; margin-bottom:16px; flex-wrap:wrap; }
+.kpi { flex:1; min-width:160px; padding:16px 18px; border-radius:10px; background:var(--beyaz); border:1px solid var(--border); transition:box-shadow .15s; }
+.kpi:hover { box-shadow:0 2px 8px rgba(0,0,0,0.06); }
+.kpi .kpi-val { font-size:26px; font-weight:700; color:var(--metin); margin-bottom:2px; }
+.kpi .kpi-lbl { font-size:12px; color:var(--metin3); }
+.kpi .kpi-sub { font-size:10px; color:var(--metin4); margin-top:2px; }
+.kpi.s-blue  { border-left:4px solid var(--mavi); }
+.kpi.s-red   { border-left:4px solid var(--kirmizi); }
+.kpi.s-green { border-left:4px solid var(--yesil); }
+.kpi.s-amber { border-left:4px solid var(--sari); }
 
-/* CHARTS */
-.chart-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
-.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;}
-.chart-title{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;}
+/* ── TABS ── */
+.tab-row { display:flex; gap:0; margin-bottom:16px; border-bottom:2px solid var(--border); }
+.tab-btn { padding:10px 20px; font-size:13px; font-weight:600; color:var(--metin3); background:none; border:none; border-bottom:2px solid transparent; margin-bottom:-2px; cursor:pointer; transition:all .15s; font-family:inherit; }
+.tab-btn:hover { color:var(--metin); }
+.tab-btn.on { color:var(--mavi); border-bottom-color:var(--mavi); }
+.tab-panel { display:none; }
+.tab-panel.on { display:block; }
 
-/* PERIOD */
-.period-bar{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px;}
-.period-label{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;}
+/* ── CARD ── */
+.card { background:var(--beyaz); border:1px solid var(--border); border-radius:10px; overflow:hidden; }
+.card-head { padding:12px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.card-title { font-size:13px; font-weight:700; color:var(--metin); }
+.card-body { padding:16px; }
 
-/* LOG TABLE */
-.log-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:24px;}
-.log-title{padding:10px 14px;border-bottom:1px solid var(--border);font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;}
-.log-table{width:100%;border-collapse:collapse;font-size:11px;}
-.log-table th{padding:6px 10px;text-align:left;font-weight:600;color:var(--text3);border-bottom:1px solid var(--border);font-size:10px;text-transform:uppercase;}
-.log-table td{padding:7px 10px;border-bottom:1px solid var(--border);color:var(--text2);}
-.log-table tr:last-child td{border-bottom:none;}
-.log-table tr:hover td{background:var(--surface2);}
+/* ── TABLE ── */
+.ygg-tbl { width:100%; border-collapse:collapse; font-size:12px; }
+.ygg-tbl th { text-align:left; font-size:10px; font-weight:600; color:var(--metin3); text-transform:uppercase; letter-spacing:.3px; padding:8px 10px; border-bottom:1px solid var(--border); background:var(--beyaz); position:sticky; top:0; }
+.ygg-tbl td { padding:10px 10px; border-bottom:1px solid var(--border); color:var(--metin2); }
+.ygg-tbl tr:last-child td { border-bottom:none; }
+.ygg-tbl tr:hover td { background:var(--bg2); }
+.ygg-tbl tr.gecik td { background:#fef2f2; }
 
-@media print{
-  .topbar,.period-bar .btn,.ai-card-header .btn{display:none!important;}
-  body{background:white;margin:0;padding:0;}
-  .ai-body{display:block!important;}
-}
-@media(max-width:900px){
-  .kpi-grid{grid-template-columns:repeat(2,1fr);}
-  .chart-row{grid-template-columns:1fr;}
-}
-@media(max-width:600px){
-  .kpi-grid{grid-template-columns:1fr;}
-}
+/* ── BADGES ── */
+.bdg { display:inline-block; padding:2px 8px; border-radius:20px; font-size:10px; font-weight:600; white-space:nowrap; }
+.b-grn { background:var(--yesil-bg); color:var(--yesil-t); }
+.b-red { background:var(--kirmizi-bg); color:var(--kirmizi-t); }
+.b-amr { background:var(--sari-bg); color:var(--sari-t); }
+.b-blu { background:var(--mavi-acik); color:var(--mavi-koyu); }
+.b-gry { background:#f1f5f9; color:#64748b; }
+
+/* ── GIRDI MATRIX ── */
+.girdi-row { display:flex; align-items:center; gap:12px; padding:12px 16px; border-bottom:1px solid var(--border); }
+.girdi-row:last-child { border-bottom:none; }
+.girdi-madde { font-size:10px; font-weight:700; color:var(--mavi); min-width:70px; font-family:'Cascadia Code','Fira Code',monospace; }
+.girdi-baslik { flex:1; font-size:12px; font-weight:600; color:var(--metin); }
+.girdi-deger { font-size:12px; color:var(--metin2); min-width:100px; text-align:right; }
+
+/* ── TUTANAK ── */
+.tutanak-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px; }
+.tutanak-alan { font-size:12px; }
+.tutanak-alan label { font-size:10px; font-weight:600; color:var(--metin3); text-transform:uppercase; letter-spacing:.3px; display:block; margin-bottom:4px; }
+.tutanak-alan .val { font-size:13px; color:var(--metin); font-weight:500; }
+.tutanak-ozet { width:100%; min-height:120px; border:1px solid var(--border); border-radius:8px; padding:12px; font-size:13px; font-family:inherit; resize:vertical; box-sizing:border-box; }
+
+/* ── MODAL ── */
+.modal-bg { position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:800; display:flex; align-items:center; justify-content:center; }
+.modal { background:#fff; border-radius:12px; width:520px; max-width:95vw; max-height:85vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.2); }
+.modal-head { padding:16px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.modal-head h3 { font-size:15px; font-weight:700; margin:0; }
+.modal-body { padding:20px; }
+.modal-body label { display:block; font-size:11px; font-weight:600; color:var(--metin3); margin-bottom:4px; margin-top:12px; }
+.modal-body label:first-child { margin-top:0; }
+.modal-body input, .modal-body select, .modal-body textarea { width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:6px; font-size:13px; font-family:inherit; box-sizing:border-box; }
+.modal-foot { padding:12px 20px; border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:8px; }
+.btn-m { padding:8px 20px; border-radius:6px; font-size:13px; font-weight:600; border:none; cursor:pointer; font-family:inherit; }
+.btn-m.primary { background:var(--mavi); color:#fff; }
+.btn-m.primary:hover { background:var(--mavi-koyu); }
+.btn-m.ghost { background:none; color:var(--metin3); }
+
+/* ── BTN ── */
+.btn-topbar { padding:6px 14px; border-radius:6px; font-size:12px; font-weight:600; border:1px solid var(--border); background:var(--beyaz); color:var(--metin2); cursor:pointer; transition:all .15s; font-family:inherit; }
+.btn-topbar:hover { border-color:var(--mavi); color:var(--mavi); }
+.btn-topbar.primary { background:var(--mavi); color:#fff; border-color:var(--mavi); }
+.btn-topbar.primary:hover { background:var(--mavi-koyu); }
+
+/* ── TOAST ── */
+.toast { position:fixed; bottom:20px; right:20px; padding:10px 20px; border-radius:8px; font-size:13px; font-weight:600; color:#fff; background:var(--laci); box-shadow:0 4px 12px rgba(0,0,0,0.15); opacity:0; transition:opacity .3s; pointer-events:none; z-index:999; }
+.toast.show { opacity:1; }
+
+.aksiyon-btn { padding:3px 10px; border-radius:4px; font-size:11px; font-weight:600; border:1px solid var(--border); background:var(--beyaz); cursor:pointer; font-family:inherit; }
+.aksiyon-btn:hover { border-color:var(--mavi); color:var(--mavi); }
+.aksiyon-btn.tamam { background:var(--yesil); color:#fff; border-color:var(--yesil); }
 </style>
 </head>
 <body>
 <div id="nav-alani"></div>
 <div class="icerik-alani">
   <div class="topbar">
-    <div class="topbar-baslik">YGG Dashboard</div>
+    <div class="topbar-baslik">Yonetim Gozden Gecirme (YGG)</div>
     <div style="display:flex;align-items:center;gap:8px;">
+      <button class="btn-topbar primary" onclick="modalAc()">+ Toplanti Planla</button>
       <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
     </div>
   </div>
   <div class="sayfa-icerik">
 
-  <!-- PERIOD SELECTOR -->
-  <div class="period-bar">
-    <span class="period-label">Dönem:</span>
-    <select id="sel-ay" class="fi">
-      <option value="1">Ocak</option><option value="2">Şubat</option><option value="3">Mart</option>
-      <option value="4">Nisan</option><option value="5">Mayıs</option><option value="6">Haziran</option>
-      <option value="7">Temmuz</option><option value="8">Ağustos</option><option value="9">Eylül</option>
-      <option value="10">Ekim</option><option value="11">Kasım</option><option value="12">Aralık</option>
-    </select>
-    <select id="sel-yil" class="fi"></select>
-    <button class="btn primary" onclick="loadDashboard()">Yükle</button>
-    <div style="flex:1;"></div>
-    <span id="last-refresh" style="font-size:11px;color:var(--text3);"></span>
-  </div>
+<!-- KPI ROW -->
+<div class="kpi-row" id="kpiRow">
+  <div class="kpi s-green"><div class="kpi-val" id="kpi-tamam">0</div><div class="kpi-lbl">Tamamlanan Toplanti</div><div class="kpi-sub">Bu yil</div></div>
+  <div class="kpi s-red"><div class="kpi-val" id="kpi-acik">0</div><div class="kpi-lbl">Acik Aksiyon</div><div class="kpi-sub">Toplam</div></div>
+  <div class="kpi s-blue"><div class="kpi-val" id="kpi-capa">%0</div><div class="kpi-lbl">CAPA Kapatma</div><div class="kpi-sub">Son 12 ay</div></div>
+  <div class="kpi s-amber"><div class="kpi-val" id="kpi-sonraki">-</div><div class="kpi-lbl">Sonraki Toplanti</div><div class="kpi-sub">Planlanan</div></div>
+</div>
 
-  <!-- KPI CARDS -->
-  <div class="kpi-grid">
-    <div class="kpi-card kpi-green">
-      <div class="kpi-title">OTD (Zamanında Teslimat)</div>
-      <div><span class="kpi-val" id="kpi-otd">—</span><span class="kpi-unit">%</span></div>
-      <div class="kpi-sub" id="kpi-otd-sub">Hesaplanıyor...</div>
-    </div>
-    <div class="kpi-card kpi-red">
-      <div class="kpi-title">NCR Oranı</div>
-      <div><span class="kpi-val" id="kpi-ncr">—</span><span class="kpi-unit">%</span></div>
-      <div class="kpi-sub" id="kpi-ncr-sub">Hesaplanıyor...</div>
-    </div>
-    <div class="kpi-card kpi-orange">
-      <div class="kpi-title">Müşteri Şikayeti</div>
-      <div><span class="kpi-val" id="kpi-sikayet">—</span></div>
-      <div class="kpi-sub" id="kpi-sikayet-sub">Adet</div>
-    </div>
-    <div class="kpi-card kpi-accent">
-      <div class="kpi-title">Açık CAPA</div>
-      <div><span class="kpi-val" id="kpi-capa">—</span></div>
-      <div class="kpi-sub" id="kpi-capa-sub">Adet</div>
-    </div>
-    <div class="kpi-card kpi-blue">
-      <div class="kpi-title">Denetim Bulgu</div>
-      <div><span class="kpi-val" id="kpi-denetim">—</span></div>
-      <div class="kpi-sub" id="kpi-denetim-sub">Açık bulgu</div>
-    </div>
-    <div class="kpi-card kpi-green">
-      <div class="kpi-title">Tedarikçi Ort. Skoru</div>
-      <div><span class="kpi-val" id="kpi-tedarik">—</span><span class="kpi-unit">/100</span></div>
-      <div class="kpi-sub" id="kpi-tedarik-sub">Değerlendirme</div>
-    </div>
-  </div>
+<!-- TABS -->
+<div class="tab-row">
+  <button class="tab-btn on" onclick="tabDegistir(this,0)">Toplanti Takibi</button>
+  <button class="tab-btn" onclick="tabDegistir(this,1)">Girdi Matrisi</button>
+  <button class="tab-btn" onclick="tabDegistir(this,2)">Aksiyon Takibi</button>
+  <button class="tab-btn" onclick="tabDegistir(this,3)">Tutanak</button>
+</div>
 
-  <!-- CHARTS -->
-  <div class="chart-row">
-    <div class="chart-card">
-      <div class="chart-title">NCR Trendi — Son 6 Ay</div>
-      <canvas id="chart-ncr" height="200"></canvas>
+<!-- TAB 0: Toplanti Takibi -->
+<div class="tab-panel on" id="tab0">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-title">Toplanti Listesi</div>
     </div>
-    <div class="chart-card">
-      <div class="chart-title">OTD Trendi — Son 6 Ay</div>
-      <canvas id="chart-otd" height="200"></canvas>
-    </div>
-  </div>
-
-  <!-- AI RAPOR -->
-  <div class="ai-card">
-    <div class="ai-card-header">
-      <span>&#10024; Yönetim Raporu Oluştur (AS9100 §9.3)</span>
-      <div style="display:flex;gap:8px;">
-        <button class="btn primary" onclick="generateAIReport()">Rapor Oluştur</button>
-        <button class="btn" onclick="window.print()">PDF İndir</button>
-      </div>
-    </div>
-    <div id="ai-loading-wrap" style="display:none;" class="ai-loading">
-      <div class="spinner"></div>
-      <span>Rapor hazırlanıyor...</span>
-    </div>
-    <div id="ai-report-body" class="ai-body"></div>
-  </div>
-
-  <!-- LOG TABLOSU -->
-  <div class="log-section">
-    <div class="log-title">Son 20 Sistem Logu</div>
-    <div style="overflow-x:auto;">
-      <table class="log-table">
-        <thead>
-          <tr>
-            <th>Tarih/Saat</th>
-            <th>Kullanıcı</th>
-            <th>İşlem</th>
-            <th>Modül</th>
-            <th>Kayıt</th>
-          </tr>
-        </thead>
-        <tbody id="log-tbody">
-          <tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text3);">Yükleniyor...</td></tr>
-        </tbody>
+    <div class="card-body" style="padding:0;overflow-x:auto;">
+      <table class="ygg-tbl">
+        <thead><tr><th>No</th><th>Baslik</th><th>Tarih</th><th>Yonetici</th><th>Durum</th><th>Aksiyonlar</th><th>Islem</th></tr></thead>
+        <tbody id="toplantiBody"></tbody>
       </table>
     </div>
   </div>
+</div>
 
-<div class="toast-wrap" id="toast-wrap"></div>
+<!-- TAB 1: Girdi Matrisi -->
+<div class="tab-panel" id="tab1">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-title">AS9100 &sect;9.3.2 Zorunlu Girdiler</div>
+      <span class="bdg b-blu">7 Girdi</span>
+    </div>
+    <div class="card-body" style="padding:0;" id="girdiBody"></div>
+  </div>
+</div>
+
+<!-- TAB 2: Aksiyon Takibi -->
+<div class="tab-panel" id="tab2">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-title">YGG Aksiyonlari</div>
+    </div>
+    <div class="card-body" style="padding:0;overflow-x:auto;">
+      <table class="ygg-tbl">
+        <thead><tr><th>No</th><th>Toplanti</th><th>Aksiyon</th><th>Sorumlu</th><th>Termin</th><th>Durum</th><th>Islem</th></tr></thead>
+        <tbody id="aksiyonBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- TAB 3: Tutanak -->
+<div class="tab-panel" id="tab3">
+  <div id="tutanakContent">
+    <div style="text-align:center;padding:40px;color:var(--metin3);font-size:13px;">Toplanti Takibi sekmesinden bir toplantinin "Ac" butonuna basin.</div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- MODAL -->
+<div class="modal-bg" id="modalBg" style="display:none;" onclick="if(event.target===this)modalKapat()">
+  <div class="modal">
+    <div class="modal-head"><h3 id="modalTitle">Toplanti Planla</h3><button class="btn-m ghost" onclick="modalKapat()" style="font-size:20px;line-height:1;">&times;</button></div>
+    <div class="modal-body">
+      <label>Baslik</label>
+      <input id="m-baslik" placeholder="YGG-2026-Q1">
+      <label>Tarih</label>
+      <input id="m-tarih" type="date">
+      <label>Sure (dk)</label>
+      <input id="m-sure" type="number" value="120">
+      <label>Katilimcilar</label>
+      <input id="m-katilimci" placeholder="Erdem, Ahmet, Mehmet">
+      <label>Yonetici</label>
+      <input id="m-yonetici" value="Erdem Kucukates">
+    </div>
+    <div class="modal-foot">
+      <button class="btn-m ghost" onclick="modalKapat()">Iptal</button>
+      <button class="btn-m primary" onclick="toplantiKaydet()">Kaydet</button>
+    </div>
+  </div>
+</div>
 
   </div>
 </div>
 
 <script>
-const BASE = 'app5LDgJMgocw79Ix';
-const T = {
-  isemirleri: 'İş Emirleri',
-  ncr:        'NCR',
-  musteri:    'Müşteri Geri Bildirimleri',
-  capa:       'Düzeltici Faaliyetler',
-  tedarik:    'Tedarikçiler (OTL)',
-  log:        'Sistem Logu'
-};
+/* ══════════════════════════════════════════════
+   Ersan MES — YGG (Yonetim Gozden Gecirme)
+   localStorage tabanli
+   ══════════════════════════════════════════════ */
 
-let kpiData = {};
-let ncrChart = null, otdChart = null;
-
-// ── API ──
-const apiPost = async (method, path, body) => {
-  const res = await fetch('/.netlify/functions/airtable', {
-    method: 'POST', headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({method, path, body})
-  });
-  return res.json();
-};
-
-const apiGet = async (table, params='') => apiPost('GET', `/v0/${BASE}/${encodeURIComponent(table)}?${params}`);
-
-const apiGetAll = async (table, params='') => {
-  let all = [], offset = '';
-  do {
-    const sep = params ? '&' : '';
-    const p = params + (offset ? sep + 'offset=' + offset : '');
-    const d = await apiGet(table, p);
-    all = all.concat(d.records || []);
-    offset = d.offset || '';
-  } while (offset);
-  return all;
-};
-
-// ── TOAST ──
-function toast(msg, type='ok') {
-  const w = document.getElementById('toast-wrap');
-  const t = document.createElement('div');
-  t.className = `toast ${type}`;
-  t.textContent = msg;
-  w.appendChild(t);
-  setTimeout(() => t.remove(), 3200);
-}
-
-// ── INIT PERIOD ──
-function initPeriod() {
-  const now = new Date();
-  document.getElementById('sel-ay').value = String(now.getMonth() + 1);
-  const yilSel = document.getElementById('sel-yil');
-  for (let y = now.getFullYear(); y >= now.getFullYear() - 4; y--) {
-    const opt = document.createElement('option');
-    opt.value = y; opt.textContent = y;
-    yilSel.appendChild(opt);
-  }
-  yilSel.value = String(now.getFullYear());
-}
-
-// ── LOAD DASHBOARD ──
-async function loadDashboard() {
-  const ay = parseInt(document.getElementById('sel-ay').value);
-  const yil = parseInt(document.getElementById('sel-yil').value);
-
-  // KPI placeholder while loading
-  ['kpi-otd','kpi-ncr','kpi-sikayet','kpi-capa','kpi-denetim','kpi-tedarik'].forEach(id => {
-    document.getElementById(id).textContent = '...';
-  });
-
-  try {
-    // Fetch all needed data in parallel
-    const [ieRecords, ncrRecords, sikayetRecords, capaRecords, tedarikRecords] = await Promise.all([
-      apiGetAll(T.isemirleri, 'fields[]=Statü&fields[]=Teslim Tarihi&fields[]=Gerçekleşen Teslim&fields[]=Tarih&maxRecords=500').catch(() => []),
-      apiGetAll(T.ncr, 'fields[]=Statü&fields[]=Açılış Tarihi&maxRecords=500').catch(() => []),
-      apiGetAll(T.musteri, 'fields[]=Statü&fields[]=Tarih&maxRecords=200').catch(() => []),
-      apiGetAll(T.capa, 'fields[]=Statü&maxRecords=200').catch(() => []),
-      apiGetAll(T.tedarik, 'fields[]=Puan&fields[]=Skor&maxRecords=200').catch(() => []),
-    ]);
-
-    // ── OTD ──
-    const ieFiltered = ieRecords.filter(r => {
-      const d = r.fields['Tarih'] || r.fields['Teslim Tarihi'] || '';
-      if (!d) return false;
-      const dt = new Date(d);
-      return dt.getFullYear() === yil && (dt.getMonth() + 1) === ay;
-    });
-    const teslimEdilen = ieFiltered.filter(r => (r.fields['Statü'] || '').includes('Teslim') || r.fields['Statü'] === 'Kapalı');
-    const otd = ieFiltered.length ? Math.round((teslimEdilen.length / ieFiltered.length) * 100) : null;
-
-    // ── NCR ORAN ──
-    const ncrAy = ncrRecords.filter(r => {
-      const d = r.fields['Açılış Tarihi'] || '';
-      if (!d) return false;
-      const dt = new Date(d);
-      return dt.getFullYear() === yil && (dt.getMonth() + 1) === ay;
-    });
-    const ncrOran = ieFiltered.length ? ((ncrAy.length / (ieFiltered.length || 1)) * 100).toFixed(1) : null;
-
-    // ── SIKAYET ──
-    const sikayetAy = sikayetRecords.filter(r => {
-      const d = r.fields['Tarih'] || '';
-      if (!d) return false;
-      const dt = new Date(d);
-      return dt.getFullYear() === yil && (dt.getMonth() + 1) === ay;
-    });
-
-    // ── CAPA ──
-    const capaBekleyen = capaRecords.filter(r => (r.fields['Statü'] || '') !== 'Kapalı').length;
-
-    // ── TEDARİKÇİ ──
-    const tedarikSkors = tedarikRecords
-      .map(r => parseFloat(r.fields['Puan'] || r.fields['Skor'] || 0))
-      .filter(v => v > 0);
-    const tedarikOrt = tedarikSkors.length ? Math.round(tedarikSkors.reduce((a,b) => a+b, 0) / tedarikSkors.length) : null;
-
-    kpiData = {
-      otd: otd,
-      ncrOran: ncrOran,
-      sikayetSayi: sikayetAy.length,
-      capaBekleyen,
-      denetimBulgu: 0, // placeholder — no denetim table yet
-      tedarikOrt,
-      ay, yil,
-      ieTotal: ieFiltered.length,
-      ncrTotal: ncrAy.length
-    };
-
-    // Update KPI display
-    document.getElementById('kpi-otd').textContent = otd !== null ? otd : '—';
-    document.getElementById('kpi-otd-sub').textContent = `${teslimEdilen.length} / ${ieFiltered.length} iş emri`;
-    document.getElementById('kpi-ncr').textContent = ncrOran !== null ? ncrOran : '—';
-    document.getElementById('kpi-ncr-sub').textContent = `${ncrAy.length} NCR / ${ieFiltered.length} İE`;
-    document.getElementById('kpi-sikayet').textContent = sikayetAy.length;
-    document.getElementById('kpi-sikayet-sub').textContent = 'Bu dönem';
-    document.getElementById('kpi-capa').textContent = capaBekleyen;
-    document.getElementById('kpi-capa-sub').textContent = 'Bekleyen CAPA';
-    document.getElementById('kpi-denetim').textContent = '—';
-    document.getElementById('kpi-denetim-sub').textContent = 'Denetim modülü bağlanacak';
-    document.getElementById('kpi-tedarik').textContent = tedarikOrt !== null ? tedarikOrt : '—';
-    document.getElementById('kpi-tedarik-sub').textContent = `${tedarikSkors.length} tedarikçi`;
-
-    document.getElementById('last-refresh').textContent = 'Güncellendi: ' + new Date().toLocaleTimeString('tr-TR');
-
-    // Draw charts
-    await drawCharts(yil, ay, ncrRecords, ieRecords);
-
-    // Load logs
-    await loadLogs();
-
-  } catch(e) {
-    toast('Dashboard yükleme hatası: ' + e.message, 'err');
-    console.error(e);
-  }
-}
-
-// ── DRAW CHARTS ──
-async function drawCharts(yil, ay, ncrRecords, ieRecords) {
-  // Build last 6 months labels
-  const months = [];
-  for (let i = 5; i >= 0; i--) {
-    let d = new Date(yil, ay - 1 - i, 1);
-    months.push({ label: d.toLocaleString('tr-TR', {month:'short', year:'2-digit'}), year: d.getFullYear(), month: d.getMonth() + 1 });
-  }
-
-  // NCR per month
-  const ncrCounts = months.map(m => ncrRecords.filter(r => {
-    const d = r.fields['Açılış Tarihi'] || '';
-    if (!d) return false;
-    const dt = new Date(d);
-    return dt.getFullYear() === m.year && (dt.getMonth()+1) === m.month;
-  }).length);
-
-  // OTD per month
-  const otdVals = months.map(m => {
-    const filtered = ieRecords.filter(r => {
-      const d = r.fields['Tarih'] || r.fields['Teslim Tarihi'] || '';
-      if (!d) return false;
-      const dt = new Date(d);
-      return dt.getFullYear() === m.year && (dt.getMonth()+1) === m.month;
-    });
-    if (!filtered.length) return null;
-    const done = filtered.filter(r => (r.fields['Statü']||'').includes('Teslim') || r.fields['Statü'] === 'Kapalı');
-    return Math.round((done.length / filtered.length) * 100);
-  });
-
-  // Destroy existing charts
-  if (ncrChart) { ncrChart.destroy(); ncrChart = null; }
-  if (otdChart) { otdChart.destroy(); otdChart = null; }
-
-  const ncrCtx = document.getElementById('chart-ncr').getContext('2d');
-  ncrChart = new Chart(ncrCtx, {
-    type: 'bar',
-    data: {
-      labels: months.map(m => m.label),
-      datasets: [{
-        label: 'NCR Sayısı',
-        data: ncrCounts,
-        backgroundColor: 'rgba(220, 38, 38, 0.7)',
-        borderColor: '#dc2626',
-        borderWidth: 1,
-        borderRadius: 4
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: { legend: { display: false } },
-      scales: {
-        y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: '#f0f0f0' } },
-        x: { grid: { display: false } }
-      }
-    }
-  });
-
-  const otdCtx = document.getElementById('chart-otd').getContext('2d');
-  otdChart = new Chart(otdCtx, {
-    type: 'line',
-    data: {
-      labels: months.map(m => m.label),
-      datasets: [{
-        label: 'OTD %',
-        data: otdVals,
-        borderColor: '#059669',
-        backgroundColor: 'rgba(5, 150, 105, 0.08)',
-        borderWidth: 2,
-        pointRadius: 4,
-        pointBackgroundColor: '#059669',
-        fill: true,
-        tension: 0.3,
-        spanGaps: true
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: { legend: { display: false } },
-      scales: {
-        y: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' }, grid: { color: '#f0f0f0' } },
-        x: { grid: { display: false } }
-      }
-    }
-  });
-}
-
-// ── LOAD LOGS ──
-async function loadLogs() {
-  try {
-    const data = await apiGet(T.log, 'sort[0][field]=Tarih Saat&sort[0][direction]=desc&maxRecords=20');
-    const logs = data.records || [];
-    const tbody = document.getElementById('log-tbody');
-    if (!logs.length) {
-      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--text3);">Log bulunamadı</td></tr>';
-      return;
-    }
-    tbody.innerHTML = logs.map(r => {
-      const f = r.fields;
-      const ts = f['Tarih Saat'] ? new Date(f['Tarih Saat']).toLocaleString('tr-TR') : '—';
-      return `<tr>
-        <td style="font-family:var(--mono);font-size:10px;">${ts}</td>
-        <td>${f['Kullanıcı'] || '—'}</td>
-        <td><span style="background:var(--accent-light);color:var(--accent);padding:1px 6px;border-radius:4px;font-size:10px;font-weight:600;">${f['İşlem Tipi'] || '—'}</span></td>
-        <td>${f['Modül'] || '—'}</td>
-        <td style="font-family:var(--mono);font-size:10px;">${f['Kayıt Özeti'] || '—'}</td>
-      </tr>`;
-    }).join('');
-  } catch(e) {
-    document.getElementById('log-tbody').innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--red);padding:16px;font-size:12px;">Log yükleme hatası</td></tr>`;
-  }
-}
-
-// ── AI REPORT ──
-async function generateAIReport() {
-  const bodyEl = document.getElementById('ai-report-body');
-  const loadEl = document.getElementById('ai-loading-wrap');
-  loadEl.style.display = 'flex';
-  bodyEl.style.display = 'none';
-  bodyEl.textContent = '';
-
-  const kpi = kpiData;
-  const kpiText = [
-    `OTD (Zamanında Teslimat): ${kpi.otd !== null && kpi.otd !== undefined ? kpi.otd + '%' : 'Veri yok'}`,
-    `NCR Oranı: ${kpi.ncrOran !== null && kpi.ncrOran !== undefined ? kpi.ncrOran + '%' : 'Veri yok'} (${kpi.ncrTotal || 0} NCR / ${kpi.ieTotal || 0} İş Emri)`,
-    `Müşteri Şikayeti: ${kpi.sikayetSayi !== undefined ? kpi.sikayetSayi : '—'} adet`,
-    `Açık CAPA: ${kpi.capaBekleyen !== undefined ? kpi.capaBekleyen : '—'} adet`,
-    `Tedarikçi Ortalama Skoru: ${kpi.tedarikOrt !== null && kpi.tedarikOrt !== undefined ? kpi.tedarikOrt + '/100' : 'Veri yok'}`,
-    `Dönem: ${kpi.ay || '—'}/${kpi.yil || '—'}`
-  ].join('\n');
-
-  try {
-    const res = await fetch('/.netlify/functions/claude', {
-      method: 'POST', headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        prompt: `AS9100 Md. 9.3 yönetim gözden geçirme raporu girdileri hazırla. Veriler:\n${kpiText}\nTürkçe, resmi format.`
-      })
-    });
-    const data = await res.json();
-    const text = data.content || data.text || data.result || data.response || JSON.stringify(data);
-    loadEl.style.display = 'none';
-    bodyEl.style.display = 'block';
-    bodyEl.textContent = text;
-    await logIslem('Rapor Oluşturuldu', 'Yönetim Gözden Geçirme', '', `${kpi.ay}/${kpi.yil}`, null, {kpi: kpiText});
-  } catch(e) {
-    loadEl.style.display = 'none';
-    bodyEl.style.display = 'block';
-    bodyEl.textContent = 'Hata: ' + e.message;
-    bodyEl.style.color = 'var(--red)';
-  }
-}
+var toplantilar = [];
+var aksiyonlar = [];
+var girdiler = [];
+var secilenToplanti = null;
 
 // ── INIT ──
-window.addEventListener('DOMContentLoaded', () => {
-  initPeriod();
-  loadDashboard();
-});
+function init() {
+  yukle();
+  if (toplantilar.length === 0) ornekVeriOlustur();
+  renderAll();
+}
+
+function yukle() {
+  try { toplantilar = JSON.parse(localStorage.getItem('ersan_ygg_toplanti')) || []; } catch(e) { toplantilar = []; }
+  try { aksiyonlar = JSON.parse(localStorage.getItem('ersan_ygg_aksiyon')) || []; } catch(e) { aksiyonlar = []; }
+  try { girdiler = JSON.parse(localStorage.getItem('ersan_ygg_girdi')) || []; } catch(e) { girdiler = []; }
+}
+
+function kaydet() {
+  localStorage.setItem('ersan_ygg_toplanti', JSON.stringify(toplantilar));
+  localStorage.setItem('ersan_ygg_aksiyon', JSON.stringify(aksiyonlar));
+  localStorage.setItem('ersan_ygg_girdi', JSON.stringify(girdiler));
+}
+
+function ornekVeriOlustur() {
+  toplantilar = [
+    { id:'YGG-001', baslik:'YGG-2026-Q1', tarih:'2026-01-15', sure:120, katilimci:'Erdem, Ahmet, Veli', yonetici:'Erdem Kucukates', durum:'Tamamlandi', ozet:'AS9100 uyum kontrolu yapildi. 3 aksiyon belirlendi.' },
+    { id:'YGG-002', baslik:'YGG-2026-Q2 (Hazirlik)', tarih:'2026-03-28', sure:90, katilimci:'Erdem, Mehmet', yonetici:'Erdem Kucukates', durum:'Planli', ozet:'' },
+    { id:'YGG-003', baslik:'YGG-2025-Q4', tarih:'2025-10-20', sure:150, katilimci:'Erdem, Ahmet, Veli, Hasan', yonetici:'Erdem Kucukates', durum:'Tamamlandi', ozet:'Yillik degerlendirme. Tedarikci performansi gundemdeydi.' }
+  ];
+  aksiyonlar = [
+    { id:'AKS-001', toplantiId:'YGG-001', toplantiBas:'YGG-2026-Q1', aksiyon:'CAPA prosedurunu guncelle', sorumlu:'Erdem', termin:'2026-02-15', durum:'Tamamlandi' },
+    { id:'AKS-002', toplantiId:'YGG-001', toplantiBas:'YGG-2026-Q1', aksiyon:'D seviye tedarikcileri degerlendir', sorumlu:'Ahmet', termin:'2026-03-01', durum:'Devam' },
+    { id:'AKS-003', toplantiId:'YGG-001', toplantiBas:'YGG-2026-Q1', aksiyon:'FAI tamamlanma oranini %90 uzerine cikart', sorumlu:'Erdem', termin:'2026-04-15', durum:'Acik' },
+    { id:'AKS-004', toplantiId:'YGG-003', toplantiBas:'YGG-2025-Q4', aksiyon:'Kalibrasyon takvimini guncelle', sorumlu:'Veli', termin:'2025-11-30', durum:'Tamamlandi' },
+    { id:'AKS-005', toplantiId:'YGG-003', toplantiBas:'YGG-2025-Q4', aksiyon:'Risk matrisini gozden gecir', sorumlu:'Erdem', termin:'2025-12-31', durum:'Tamamlandi' },
+    { id:'AKS-006', toplantiId:'YGG-003', toplantiBas:'YGG-2025-Q4', aksiyon:'Musteri sikayet trendini analiz et', sorumlu:'Hasan', termin:'2026-01-15', durum:'Gecikti' }
+  ];
+  girdiler = [
+    { madde:'9.3.2a', baslik:'Onceki YGG Aksiyonlari', durum:'green', deger:'5/6 tamamlandi', link:'#' },
+    { madde:'9.3.2b', baslik:'Musteri Geri Bildirimleri', durum:'amber', deger:'3 sikayet (Q1)', link:'' },
+    { madde:'9.3.2c', baslik:'Kalite Hedefleri & Denetim Skorlari', durum:'green', deger:'Ort. %87 uyum', link:'ersan_denetim_panel.html' },
+    { madde:'9.3.2d', baslik:'Surec Performansi', durum:'amber', deger:'2 acik bulgu', link:'ersan_bulgular.html' },
+    { madde:'9.3.2e', baslik:'Uygunsuzluklar & CAPA', durum:'red', deger:'1 geciken CAPA', link:'ersan_kalite_capa.html' },
+    { madde:'9.3.2f', baslik:'Tedarikci Performansi', durum:'green', deger:'0 D/C tedarikci', link:'ersan_tedarikciler.html' },
+    { madde:'9.3.2g', baslik:'Iyilestirme Firsatlari', durum:'green', deger:'Manuel giris gerekli', link:'' }
+  ];
+  kaydet();
+}
+
+// ── RENDER ALL ──
+function renderAll() {
+  renderKPI();
+  renderToplantilar();
+  renderGirdiler();
+  renderAksiyonlar();
+}
+
+// ── KPI ──
+function renderKPI() {
+  var tamam = toplantilar.filter(function(t) { return t.durum === 'Tamamlandi'; }).length;
+  var acik = aksiyonlar.filter(function(a) { return a.durum !== 'Tamamlandi'; }).length;
+  var tamamAks = aksiyonlar.filter(function(a) { return a.durum === 'Tamamlandi'; }).length;
+  var capaOran = aksiyonlar.length > 0 ? Math.round(tamamAks / aksiyonlar.length * 100) : 0;
+
+  var planli = toplantilar.filter(function(t) { return t.durum === 'Planli'; }).sort(function(a,b) { return a.tarih.localeCompare(b.tarih); });
+  var sonraki = planli.length > 0 ? planli[0].tarih : '-';
+
+  document.getElementById('kpi-tamam').textContent = tamam;
+  document.getElementById('kpi-acik').textContent = acik;
+  document.getElementById('kpi-capa').textContent = '%' + capaOran;
+  document.getElementById('kpi-sonraki').textContent = sonraki !== '-' ? tarihFormat(sonraki) : '-';
+}
+
+// ── TOPLANTI TABLOSU ──
+function renderToplantilar() {
+  var body = document.getElementById('toplantiBody');
+  if (toplantilar.length === 0) {
+    body.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--metin3);">Henuz toplanti yok</td></tr>';
+    return;
+  }
+  var html = '';
+  var sorted = toplantilar.slice().sort(function(a,b) { return b.tarih.localeCompare(a.tarih); });
+  sorted.forEach(function(t) {
+    var aksCount = aksiyonlar.filter(function(a) { return a.toplantiId === t.id; }).length;
+    var durumCls = t.durum === 'Tamamlandi' ? 'b-grn' : t.durum === 'Planli' ? 'b-blu' : 'b-amr';
+    html += '<tr>';
+    html += '<td style="font-family:monospace;font-size:11px;">' + t.id + '</td>';
+    html += '<td style="font-weight:600;">' + t.baslik + '</td>';
+    html += '<td>' + tarihFormat(t.tarih) + '</td>';
+    html += '<td>' + t.yonetici + '</td>';
+    html += '<td><span class="bdg ' + durumCls + '">' + t.durum + '</span></td>';
+    html += '<td style="text-align:center;">' + aksCount + '</td>';
+    html += '<td><button class="aksiyon-btn" onclick="toplantiAc(\'' + t.id + '\')">Ac &rarr;</button></td>';
+    html += '</tr>';
+  });
+  body.innerHTML = html;
+}
+
+// ── GIRDI MATRISI ──
+function renderGirdiler() {
+  var cont = document.getElementById('girdiBody');
+  var html = '';
+  girdiler.forEach(function(g) {
+    var renk = g.durum === 'green' ? 'b-grn' : g.durum === 'red' ? 'b-red' : 'b-amr';
+    html += '<div class="girdi-row">';
+    html += '<div class="girdi-madde">' + g.madde + '</div>';
+    html += '<div class="girdi-baslik">' + g.baslik + '</div>';
+    html += '<div class="girdi-deger">' + g.deger + '</div>';
+    html += '<span class="bdg ' + renk + '" style="min-width:50px;text-align:center;">' + durumEtiket(g.durum) + '</span>';
+    if (g.link) {
+      html += '<a href="' + g.link + '" style="font-size:11px;color:var(--mavi);text-decoration:none;margin-left:8px;">Git &rarr;</a>';
+    }
+    html += '</div>';
+  });
+  cont.innerHTML = html;
+}
+
+function durumEtiket(d) {
+  if (d === 'green') return 'Uygun';
+  if (d === 'red') return 'Kritik';
+  return 'Dikkat';
+}
+
+// ── AKSIYON TABLOSU ──
+function renderAksiyonlar() {
+  var body = document.getElementById('aksiyonBody');
+  if (aksiyonlar.length === 0) {
+    body.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--metin3);">Henuz aksiyon yok</td></tr>';
+    return;
+  }
+  var bugun = new Date().toISOString().split('T')[0];
+  var html = '';
+  aksiyonlar.forEach(function(a) {
+    var gecik = a.durum !== 'Tamamlandi' && a.termin < bugun;
+    var durumCls = a.durum === 'Tamamlandi' ? 'b-grn' : gecik ? 'b-red' : a.durum === 'Devam' ? 'b-amr' : 'b-blu';
+    var durumTxt = gecik && a.durum !== 'Tamamlandi' ? 'Gecikti' : a.durum;
+    html += '<tr' + (gecik ? ' class="gecik"' : '') + '>';
+    html += '<td style="font-family:monospace;font-size:11px;">' + a.id + '</td>';
+    html += '<td>' + a.toplantiBas + '</td>';
+    html += '<td style="max-width:250px;">' + a.aksiyon + '</td>';
+    html += '<td>' + a.sorumlu + '</td>';
+    html += '<td>' + tarihFormat(a.termin) + '</td>';
+    html += '<td><span class="bdg ' + durumCls + '">' + durumTxt + '</span></td>';
+    if (a.durum !== 'Tamamlandi') {
+      html += '<td><button class="aksiyon-btn tamam" onclick="aksiyonTamamla(\'' + a.id + '\')">&#10003;</button></td>';
+    } else {
+      html += '<td></td>';
+    }
+    html += '</tr>';
+  });
+  body.innerHTML = html;
+}
+
+// ── TUTANAK ──
+function toplantiAc(id) {
+  secilenToplanti = toplantilar.find(function(t) { return t.id === id; });
+  if (!secilenToplanti) return;
+  tabDegistir(document.querySelectorAll('.tab-btn')[3], 3);
+  renderTutanak();
+}
+
+function renderTutanak() {
+  var t = secilenToplanti;
+  if (!t) return;
+  var topAks = aksiyonlar.filter(function(a) { return a.toplantiId === t.id; });
+  var html = '';
+  html += '<div class="card" style="margin-bottom:16px;">';
+  html += '<div class="card-head"><div class="card-title">' + t.baslik + ' — Tutanak</div><div style="display:flex;gap:8px;">';
+  html += '<button class="aksiyon-btn" onclick="tutanakKaydet()">Kaydet</button>';
+  html += '</div></div>';
+  html += '<div class="card-body">';
+  html += '<div class="tutanak-grid">';
+  html += '<div class="tutanak-alan"><label>Toplanti No</label><div class="val">' + t.id + '</div></div>';
+  html += '<div class="tutanak-alan"><label>Tarih</label><div class="val">' + tarihFormat(t.tarih) + '</div></div>';
+  html += '<div class="tutanak-alan"><label>Sure</label><div class="val">' + t.sure + ' dk</div></div>';
+  html += '<div class="tutanak-alan"><label>Yonetici</label><div class="val">' + t.yonetici + '</div></div>';
+  html += '<div class="tutanak-alan" style="grid-column:1/3;"><label>Katilimcilar</label><div class="val">' + t.katilimci + '</div></div>';
+  html += '</div>';
+  html += '<label style="font-size:10px;font-weight:600;color:var(--metin3);text-transform:uppercase;letter-spacing:.3px;display:block;margin:16px 0 6px;">Toplanti Ozeti / Kararlar</label>';
+  html += '<textarea class="tutanak-ozet" id="tutanakOzet">' + (t.ozet || '') + '</textarea>';
+  html += '</div></div>';
+
+  // Girdiler
+  html += '<div class="card" style="margin-bottom:16px;"><div class="card-head"><div class="card-title">YGG Girdileri (AS9100 &sect;9.3.2)</div></div>';
+  html += '<div class="card-body" style="padding:0;">';
+  girdiler.forEach(function(g) {
+    var renk = g.durum === 'green' ? 'b-grn' : g.durum === 'red' ? 'b-red' : 'b-amr';
+    html += '<div class="girdi-row"><div class="girdi-madde">' + g.madde + '</div><div class="girdi-baslik">' + g.baslik + '</div><span class="bdg ' + renk + '">' + durumEtiket(g.durum) + '</span></div>';
+  });
+  html += '</div></div>';
+
+  // Aksiyonlar
+  html += '<div class="card"><div class="card-head"><div class="card-title">Aksiyonlar (' + topAks.length + ')</div></div>';
+  html += '<div class="card-body" style="padding:0;overflow-x:auto;">';
+  if (topAks.length > 0) {
+    html += '<table class="ygg-tbl"><thead><tr><th>No</th><th>Aksiyon</th><th>Sorumlu</th><th>Termin</th><th>Durum</th></tr></thead><tbody>';
+    topAks.forEach(function(a) {
+      var durumCls = a.durum === 'Tamamlandi' ? 'b-grn' : a.durum === 'Gecikti' ? 'b-red' : 'b-amr';
+      html += '<tr><td style="font-family:monospace;font-size:11px;">' + a.id + '</td><td>' + a.aksiyon + '</td><td>' + a.sorumlu + '</td><td>' + tarihFormat(a.termin) + '</td><td><span class="bdg ' + durumCls + '">' + a.durum + '</span></td></tr>';
+    });
+    html += '</tbody></table>';
+  } else {
+    html += '<div style="padding:20px;text-align:center;color:var(--metin3);font-size:12px;">Bu toplantiya ait aksiyon yok</div>';
+  }
+  html += '</div></div>';
+
+  document.getElementById('tutanakContent').innerHTML = html;
+}
+
+function tutanakKaydet() {
+  if (!secilenToplanti) return;
+  var ozet = document.getElementById('tutanakOzet');
+  if (ozet) secilenToplanti.ozet = ozet.value;
+  kaydet();
+  toast('Tutanak kaydedildi');
+}
+
+// ── AKSIYON TAMAMLA ──
+function aksiyonTamamla(id) {
+  var a = aksiyonlar.find(function(x) { return x.id === id; });
+  if (!a) return;
+  a.durum = 'Tamamlandi';
+  kaydet();
+  renderAll();
+  toast('Aksiyon tamamlandi');
+}
+
+// ── MODAL ──
+function modalAc() {
+  document.getElementById('m-baslik').value = '';
+  document.getElementById('m-tarih').value = '';
+  document.getElementById('m-sure').value = '120';
+  document.getElementById('m-katilimci').value = '';
+  document.getElementById('m-yonetici').value = 'Erdem Kucukates';
+  document.getElementById('modalBg').style.display = 'flex';
+}
+
+function modalKapat() {
+  document.getElementById('modalBg').style.display = 'none';
+}
+
+function toplantiKaydet() {
+  var baslik = document.getElementById('m-baslik').value.trim();
+  var tarih = document.getElementById('m-tarih').value;
+  var sure = parseInt(document.getElementById('m-sure').value) || 120;
+  var katilimci = document.getElementById('m-katilimci').value.trim();
+  var yonetici = document.getElementById('m-yonetici').value.trim();
+
+  if (!baslik || !tarih) { toast('Baslik ve tarih zorunlu'); return; }
+
+  var yeniId = 'YGG-' + String(toplantilar.length + 1).padStart(3, '0');
+  toplantilar.push({
+    id: yeniId,
+    baslik: baslik,
+    tarih: tarih,
+    sure: sure,
+    katilimci: katilimci,
+    yonetici: yonetici,
+    durum: 'Planli',
+    ozet: ''
+  });
+  kaydet();
+  renderAll();
+  modalKapat();
+  toast('Toplanti planlandi: ' + yeniId);
+}
+
+// ── TAB SWITCH ──
+function tabDegistir(btn, idx) {
+  var btns = document.querySelectorAll('.tab-btn');
+  var panels = document.querySelectorAll('.tab-panel');
+  for (var i = 0; i < btns.length; i++) { btns[i].classList.remove('on'); }
+  for (var j = 0; j < panels.length; j++) { panels[j].classList.remove('on'); }
+  btn.classList.add('on');
+  document.getElementById('tab' + idx).classList.add('on');
+}
+
+// ── HELPERS ──
+function tarihFormat(d) {
+  if (!d) return '-';
+  var p = d.split('-');
+  if (p.length < 3) return d;
+  return p[2] + '.' + p[1] + '.' + p[0];
+}
+
+function toast(msg) {
+  var el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(function() { el.classList.remove('show'); }, 2500);
+}
+
+// ── START ──
+document.addEventListener('DOMContentLoaded', init);
 </script>
 </body>
 </html>

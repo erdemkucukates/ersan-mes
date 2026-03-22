@@ -106,6 +106,43 @@
 .yukleniyor { display:flex; align-items:center; justify-content:center; gap:8px; padding:40px; color:var(--metin3); font-size:13px; grid-column:1/-1; }
 .spinner { width:20px; height:20px; border:2px solid var(--border); border-top-color:var(--mavi); border-radius:50%; animation:spin .6s linear infinite; }
 @keyframes spin { to { transform:rotate(360deg); } }
+
+/* Sayfa Alt Tab Bar */
+.alt-tab-bar { display:flex; border-bottom:2px solid var(--border); margin:20px 0 16px; gap:0; }
+.alt-tab-bar .tab-btn { padding:10px 20px; font-size:13px; font-weight:600; color:var(--metin3); background:none; border:none; border-bottom:3px solid transparent; cursor:pointer; font-family:inherit; transition:color .15s; }
+.alt-tab-bar .tab-btn.aktif { color:var(--mavi); border-bottom-color:var(--mavi); }
+.alt-tab-bar .tab-btn:hover { color:var(--metin); }
+.alt-panel { display:none; }
+.alt-panel.aktif { display:block; }
+
+/* OTL Table */
+.otl-tablo { width:100%; font-size:12px; border-collapse:collapse; }
+.otl-tablo th { text-align:left; padding:8px 10px; background:var(--bg); color:var(--metin3); font-weight:600; border-bottom:1px solid var(--border); }
+.otl-tablo td { padding:8px 10px; border-bottom:1px solid var(--border); color:var(--metin2); }
+.otl-tablo tr:hover td { background:var(--bg2); }
+.otl-suresi-uyari { color:var(--kirmizi); font-weight:600; }
+.otl-suresi-ok { color:var(--yesil); }
+
+/* Değerlendirme Scoring */
+.dg-kriter { display:flex; align-items:center; gap:12px; margin-bottom:14px; padding:10px 14px; background:var(--bg2); border-radius:8px; }
+.dg-kriter-adi { width:120px; font-size:12px; font-weight:600; color:var(--metin); }
+.dg-agirlik { font-size:11px; color:var(--metin3); width:40px; text-align:center; }
+.dg-slider { flex:1; }
+.dg-slider input[type="range"] { width:100%; accent-color:var(--mavi); }
+.dg-puan { width:36px; text-align:center; font-size:14px; font-weight:700; color:var(--metin); }
+.dg-sonuc { display:flex; justify-content:space-between; align-items:center; padding:16px; background:var(--beyaz); border:2px solid var(--border); border-radius:10px; margin-top:12px; }
+.dg-sonuc-puan { font-size:32px; font-weight:800; }
+.dg-sonuc-seviye { font-size:14px; font-weight:600; padding:4px 14px; border-radius:6px; }
+
+/* Skor Kartı */
+.skor-bar-wrap { margin-bottom:10px; }
+.skor-bar-label { display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px; }
+.skor-bar-label span:first-child { color:var(--metin3); font-weight:500; }
+.skor-bar-label span:last-child { color:var(--metin); font-weight:700; }
+.skor-bar { height:14px; background:var(--border); border-radius:7px; overflow:hidden; }
+.skor-bar-fill { height:100%; border-radius:7px; transition:width .5s; }
+.skor-gecmis { margin-top:16px; }
+.skor-gecmis-item { display:flex; justify-content:space-between; padding:6px 0; font-size:12px; border-bottom:1px solid var(--border); }
 </style>
 </head>
 <body>
@@ -149,6 +186,52 @@
     <!-- Card Grid -->
     <div class="td-grid" id="td-grid">
       <div class="yukleniyor"><div class="spinner"></div><span>Yükleniyor...</span></div>
+    </div>
+
+    <!-- Alt Sekme Bar -->
+    <div class="alt-tab-bar">
+      <button class="tab-btn aktif" onclick="altSekmeAc('otl',this)">OTL Yonetimi</button>
+      <button class="tab-btn" onclick="altSekmeAc('degerlendirme',this)">Donemsel Degerlendirme</button>
+      <button class="tab-btn" onclick="altSekmeAc('skorkart',this)">Skor Karti</button>
+    </div>
+
+    <!-- ALT PANEL: OTL Yönetimi -->
+    <div class="alt-panel aktif" id="alt-otl">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <h4 style="font-size:14px;color:var(--metin);margin:0;">Onayli Tedarikci Listesi (OTL)</h4>
+        <button class="btn btn-p" onclick="modalAc('otl-ekle-modal')">+ Tedarikci Onayla</button>
+      </div>
+      <table class="otl-tablo">
+        <thead><tr><th>Tedarikci</th><th>Kategori</th><th>Onay Tarihi</th><th>Gecerlilik</th><th>Skor</th><th>Seviye</th><th>Durum</th></tr></thead>
+        <tbody id="otl-body"></tbody>
+      </table>
+    </div>
+
+    <!-- ALT PANEL: Dönemsel Değerlendirme -->
+    <div class="alt-panel" id="alt-degerlendirme">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <h4 style="font-size:14px;color:var(--metin);margin:0;">Tedarikci Degerlendirme</h4>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <select id="dg-ted-sec" style="padding:7px 12px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;">
+            <option value="">Tedarikci Seciniz</option>
+          </select>
+          <button class="btn btn-p" onclick="dgSeciliAc()">Degerlendir</button>
+        </div>
+      </div>
+      <div id="dg-gecmis-liste"></div>
+    </div>
+
+    <!-- ALT PANEL: Skor Kartı -->
+    <div class="alt-panel" id="alt-skorkart">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <h4 style="font-size:14px;color:var(--metin);margin:0;">Skor Karti</h4>
+        <select id="sk-ted-sec" onchange="skorKartiGoster()" style="padding:7px 12px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;">
+          <option value="">Tedarikci Seciniz</option>
+        </select>
+      </div>
+      <div id="sk-icerik" style="background:var(--beyaz);border:1px solid var(--border);border-radius:10px;padding:20px;">
+        <p style="color:var(--metin4);font-size:13px;text-align:center;">Tedarikci secin.</p>
+      </div>
     </div>
 
   </div>
@@ -274,6 +357,113 @@
     <div class="modal-alt">
       <button class="btn btn-g" onclick="modalKapat('yeni-modal')">İptal</button>
       <button class="btn btn-p" onclick="yeniKaydet()">Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<!-- OTL EKLEME MODAL -->
+<div class="modal-bg" id="otl-ekle-modal">
+  <div class="modal-kutu" style="width:480px;">
+    <div class="modal-ust">
+      <h3>Tedarikci Onayla (OTL)</h3>
+      <button class="modal-kapat" onclick="modalKapat('otl-ekle-modal')">&times;</button>
+    </div>
+    <div class="modal-govde">
+      <div class="form-grup"><label>Tedarikci *</label>
+        <select id="otl-ted-sec"><option value="">Seciniz</option></select>
+      </div>
+      <div class="form-iki">
+        <div class="form-grup"><label>Onay Tarihi</label><input type="date" id="otl-onay-tarih"></div>
+        <div class="form-grup"><label>Gecerlilik (ay)</label><input type="number" id="otl-gecerlilik" value="12"></div>
+      </div>
+      <div class="form-grup"><label>Kategori</label>
+        <select id="otl-kategori">
+          <option value="Hammadde">Hammadde</option>
+          <option value="Fason">Fason</option>
+          <option value="Test">Test</option>
+          <option value="Hizmet">Hizmet</option>
+        </select>
+      </div>
+      <div class="form-grup"><label>Notlar</label><textarea id="otl-not" placeholder="Onay notlari..."></textarea></div>
+    </div>
+    <div class="modal-alt">
+      <button class="btn btn-g" onclick="modalKapat('otl-ekle-modal')">Iptal</button>
+      <button class="btn btn-p" onclick="tedarikci_onayla()">Onayla</button>
+    </div>
+  </div>
+</div>
+
+<!-- DEGERLENDIRME MODAL -->
+<div class="modal-bg" id="dg-modal">
+  <div class="modal-kutu" style="width:560px;">
+    <div class="modal-ust">
+      <h3 id="dg-baslik">Tedarikci Degerlendirme</h3>
+      <button class="modal-kapat" onclick="modalKapat('dg-modal')">&times;</button>
+    </div>
+    <div class="modal-govde">
+      <div class="form-iki" style="margin-bottom:16px;">
+        <div class="form-grup"><label>Donem</label><input type="month" id="dg-donem"></div>
+        <div class="form-grup"><label>Degerlendiren</label><input type="text" id="dg-degerlendiren" value="Erdem Kucukates"></div>
+      </div>
+
+      <div class="dg-kriter">
+        <div class="dg-kriter-adi">Kalite</div>
+        <div class="dg-agirlik">%35</div>
+        <div class="dg-slider"><input type="range" min="0" max="100" value="75" id="dg-kalite" oninput="skor_hesapla()"></div>
+        <div class="dg-puan" id="dg-kalite-val">75</div>
+      </div>
+      <div class="dg-kriter">
+        <div class="dg-kriter-adi">Teslimat</div>
+        <div class="dg-agirlik">%30</div>
+        <div class="dg-slider"><input type="range" min="0" max="100" value="75" id="dg-teslimat" oninput="skor_hesapla()"></div>
+        <div class="dg-puan" id="dg-teslimat-val">75</div>
+      </div>
+      <div class="dg-kriter">
+        <div class="dg-kriter-adi">Fiyat</div>
+        <div class="dg-agirlik">%20</div>
+        <div class="dg-slider"><input type="range" min="0" max="100" value="75" id="dg-fiyat" oninput="skor_hesapla()"></div>
+        <div class="dg-puan" id="dg-fiyat-val">75</div>
+      </div>
+      <div class="dg-kriter">
+        <div class="dg-kriter-adi">Iletisim</div>
+        <div class="dg-agirlik">%10</div>
+        <div class="dg-slider"><input type="range" min="0" max="100" value="75" id="dg-iletisim" oninput="skor_hesapla()"></div>
+        <div class="dg-puan" id="dg-iletisim-val">75</div>
+      </div>
+      <div class="dg-kriter">
+        <div class="dg-kriter-adi">Belge</div>
+        <div class="dg-agirlik">%5</div>
+        <div class="dg-slider"><input type="range" min="0" max="100" value="75" id="dg-belge" oninput="skor_hesapla()"></div>
+        <div class="dg-puan" id="dg-belge-val">75</div>
+      </div>
+
+      <div class="dg-sonuc">
+        <div>
+          <div style="font-size:11px;color:var(--metin3);text-transform:uppercase;">Agirlikli Ortalama</div>
+          <div class="dg-sonuc-puan" id="dg-toplam-puan">75.0</div>
+        </div>
+        <div class="dg-sonuc-seviye" id="dg-seviye" style="background:var(--sari-bg);color:var(--sari-t);">B — Kosullu</div>
+      </div>
+
+      <div class="form-grup" style="margin-top:14px;"><label>Notlar</label><textarea id="dg-not" placeholder="Degerlendirme notlari..."></textarea></div>
+    </div>
+    <div class="modal-alt">
+      <button class="btn btn-g" onclick="modalKapat('dg-modal')">Iptal</button>
+      <button class="btn btn-p" onclick="degerlendirme_kaydet()">Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<!-- SKOR KARTI MODAL -->
+<div class="modal-bg" id="sk-modal">
+  <div class="modal-kutu" style="width:540px;">
+    <div class="modal-ust">
+      <h3 id="sk-baslik">Skor Karti</h3>
+      <button class="modal-kapat" onclick="modalKapat('sk-modal')">&times;</button>
+    </div>
+    <div class="modal-govde" id="sk-modal-icerik"></div>
+    <div class="modal-alt">
+      <button class="btn btn-g" onclick="modalKapat('sk-modal')">Kapat</button>
     </div>
   </div>
 </div>
@@ -686,8 +876,374 @@ document.addEventListener('keydown', function(e) {
   }
 });
 
+// ══════════════════════════════════════
+// ── ALT SEKME SİSTEMİ ──
+// ══════════════════════════════════════
+function altSekmeAc(panelAdi, btn) {
+  var btns = document.querySelectorAll('.alt-tab-bar .tab-btn');
+  for (var i = 0; i < btns.length; i++) btns[i].classList.remove('aktif');
+  btn.classList.add('aktif');
+  var panels = document.querySelectorAll('.alt-panel');
+  for (var j = 0; j < panels.length; j++) panels[j].classList.remove('aktif');
+  document.getElementById('alt-' + panelAdi).classList.add('aktif');
+  if (panelAdi === 'otl') otl_yukle();
+  if (panelAdi === 'degerlendirme') dgGecmisListele();
+  if (panelAdi === 'skorkart') skorKartiGoster();
+}
+
+function modalAc(id) { document.getElementById(id).classList.add('acik'); }
+
+// ══════════════════════════════════════
+// ── OTL YÖNETİMİ ──
+// ══════════════════════════════════════
+function otlOrnek() {
+  var mevcut = localStorage.getItem('ersan_otl');
+  if (mevcut) return;
+  var ornekler = [
+    {id:'OTL-001', tedId:'rec1', tedAdi:'Celik Depo A.S.', kategori:'Hammadde', onayTarih:'2025-06-15', gecerlilikAy:12, skor:88, seviye:'A', not:'ISO 9001 sertifikali'},
+    {id:'OTL-002', tedId:'rec2', tedAdi:'CNC Fason Ltd.', kategori:'Fason', onayTarih:'2025-09-01', gecerlilikAy:12, skor:76, seviye:'B', not:'AS9100 basvurusu yapildi'},
+    {id:'OTL-003', tedId:'rec3', tedAdi:'Test Lab Merkezi', kategori:'Test', onayTarih:'2025-03-10', gecerlilikAy:12, skor:92, seviye:'A', not:'Akredite laboratuvar'},
+    {id:'OTL-004', tedId:'rec4', tedAdi:'Isil Islem San.', kategori:'Fason', onayTarih:'2026-01-20', gecerlilikAy:12, skor:64, seviye:'C', not:'Gelisim plani takipte'},
+    {id:'OTL-005', tedId:'rec5', tedAdi:'Kaplama Teknik', kategori:'Fason', onayTarih:'2025-11-05', gecerlilikAy:12, skor:81, seviye:'B', not:'Yuzey isleme uzman'},
+    {id:'OTL-006', tedId:'rec6', tedAdi:'Lojistik Partner', kategori:'Hizmet', onayTarih:'2025-08-20', gecerlilikAy:6, skor:45, seviye:'D', not:'Performans dusuk, izleniyor'}
+  ];
+  localStorage.setItem('ersan_otl', JSON.stringify(ornekler));
+
+  var dgOrnekler = [
+    {id:'DG-001', tedId:'rec1', tedAdi:'Celik Depo A.S.', donem:'2026-01', kalite:90, teslimat:85, fiyat:88, iletisim:92, belge:85, toplam:88.0, seviye:'A', degerlendiren:'Erdem Kucukates', tarih:'2026-01-30', not:'Genel performans cok iyi.'},
+    {id:'DG-002', tedId:'rec2', tedAdi:'CNC Fason Ltd.', donem:'2026-01', kalite:80, teslimat:72, fiyat:75, iletisim:70, belge:65, toplam:75.3, seviye:'B', degerlendiren:'Erdem Kucukates', tarih:'2026-01-30', not:'Teslimat suresi iyilestirmeli.'},
+    {id:'DG-003', tedId:'rec3', tedAdi:'Test Lab Merkezi', donem:'2026-02', kalite:95, teslimat:90, fiyat:85, iletisim:95, belge:100, toplam:92.0, seviye:'A', degerlendiren:'Erdem Kucukates', tarih:'2026-02-28', not:'Mukemmel hizmet.'},
+    {id:'DG-004', tedId:'rec6', tedAdi:'Lojistik Partner', donem:'2026-02', kalite:40, teslimat:50, fiyat:55, iletisim:30, belge:20, toplam:44.5, seviye:'D', degerlendiren:'Erdem Kucukates', tarih:'2026-02-28', not:'Ciddi sorunlar var, alternatif aranmali.'}
+  ];
+  localStorage.setItem('ersan_ted_degerlendirme', JSON.stringify(dgOrnekler));
+}
+
+function otlVeriAl() {
+  try { return JSON.parse(localStorage.getItem('ersan_otl') || '[]'); } catch(e) { return []; }
+}
+function otlVeriKaydet(liste) { localStorage.setItem('ersan_otl', JSON.stringify(liste)); }
+function dgVeriAl() {
+  try { return JSON.parse(localStorage.getItem('ersan_ted_degerlendirme') || '[]'); } catch(e) { return []; }
+}
+function dgVeriKaydet(liste) { localStorage.setItem('ersan_ted_degerlendirme', JSON.stringify(liste)); }
+
+function seviyeHesapla(puan) {
+  if (puan >= 85) return {seviye:'A', etiket:'Onayli', renk:'var(--yesil)', bg:'var(--yesil-bg)', txt:'var(--yesil-t)'};
+  if (puan >= 70) return {seviye:'B', etiket:'Kosullu', renk:'var(--sari)', bg:'var(--sari-bg)', txt:'var(--sari-t)'};
+  if (puan >= 50) return {seviye:'C', etiket:'Gelistirme', renk:'#f97316', bg:'#fff7ed', txt:'#c2410c'};
+  return {seviye:'D', etiket:'Onaysiz', renk:'var(--kirmizi)', bg:'var(--kirmizi-bg)', txt:'var(--kirmizi-t)'};
+}
+
+function otl_yukle() {
+  otl_tablo_render();
+}
+
+function otl_tablo_render() {
+  var liste = otlVeriAl();
+  var body = document.getElementById('otl-body');
+  if (liste.length === 0) {
+    body.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--metin4);padding:20px;">OTL kaydi bulunamadi</td></tr>';
+    return;
+  }
+  var bugun = new Date();
+  var html = '';
+  for (var i = 0; i < liste.length; i++) {
+    var o = liste[i];
+    var onayDate = new Date(o.onayTarih);
+    var bitisTarih = new Date(onayDate);
+    bitisTarih.setMonth(bitisTarih.getMonth() + (o.gecerlilikAy || 12));
+    var kalanGun = Math.round((bitisTarih - bugun) / (1000 * 60 * 60 * 24));
+    var gecerlilikStr = fmtDate(bitisTarih.toISOString());
+    var gecerlilikCls = kalanGun <= 30 ? 'otl-suresi-uyari' : 'otl-suresi-ok';
+    if (kalanGun <= 0) gecerlilikStr = 'SURESI DOLMUS';
+
+    var sv = seviyeHesapla(o.skor);
+    html += '<tr>';
+    html += '<td><strong>' + o.tedAdi + '</strong></td>';
+    html += '<td>' + (o.kategori || '—') + '</td>';
+    html += '<td>' + fmtDate(o.onayTarih) + '</td>';
+    html += '<td class="' + gecerlilikCls + '">' + gecerlilikStr + (kalanGun > 0 ? ' (' + kalanGun + ' gun)' : '') + '</td>';
+    html += '<td style="font-weight:700;color:' + sv.renk + ';">' + o.skor + '</td>';
+    html += '<td><span class="bdg" style="background:' + sv.bg + ';color:' + sv.txt + ';">' + sv.seviye + ' — ' + sv.etiket + '</span></td>';
+    html += '<td>' + (kalanGun <= 0 ? '<span class="bdg b-red">Suresi Dolmus</span>' : '<span class="bdg b-grn">Gecerli</span>') + '</td>';
+    html += '</tr>';
+  }
+  body.innerHTML = html;
+}
+
+function otlSelectDoldur() {
+  var sel = document.getElementById('otl-ted-sec');
+  var dgSel = document.getElementById('dg-ted-sec');
+  var skSel = document.getElementById('sk-ted-sec');
+  var opts = '<option value="">Seciniz</option>';
+  for (var i = 0; i < tdList.length; i++) {
+    var adi = f(tdList[i], 'Tedarikçi Adı') || '';
+    if (adi) opts += '<option value="' + tdList[i].id + '" data-adi="' + adi + '">' + adi + '</option>';
+  }
+  sel.innerHTML = opts;
+  dgSel.innerHTML = opts;
+  skSel.innerHTML = opts;
+}
+
+function tedarikci_onayla() {
+  var sel = document.getElementById('otl-ted-sec');
+  var tedId = sel.value;
+  if (!tedId) { toast('Tedarikci seciniz', 'err'); return; }
+  var tedAdi = sel.options[sel.selectedIndex].getAttribute('data-adi') || sel.options[sel.selectedIndex].text;
+
+  var liste = otlVeriAl();
+  var yeniNo = 'OTL-' + String(liste.length + 1).padStart(3, '0');
+  var onayTarih = document.getElementById('otl-onay-tarih').value || new Date().toISOString().slice(0, 10);
+  var gecerlilik = Number(document.getElementById('otl-gecerlilik').value) || 12;
+
+  var yeni = {
+    id: yeniNo,
+    tedId: tedId,
+    tedAdi: tedAdi,
+    kategori: document.getElementById('otl-kategori').value,
+    onayTarih: onayTarih,
+    gecerlilikAy: gecerlilik,
+    skor: 70,
+    seviye: 'B',
+    not: document.getElementById('otl-not').value.trim()
+  };
+
+  liste.push(yeni);
+  otlVeriKaydet(liste);
+  toast('Tedarikci OTL\'ye eklendi: ' + tedAdi);
+  modalKapat('otl-ekle-modal');
+  otl_tablo_render();
+}
+
+// ══════════════════════════════════════
+// ── DÖNEMSEL DEĞERLENDİRME ──
+// ══════════════════════════════════════
+var dgSeciliTedId = '';
+var dgSeciliTedAdi = '';
+
+function dgSeciliAc() {
+  var sel = document.getElementById('dg-ted-sec');
+  var tedId = sel.value;
+  if (!tedId) { toast('Tedarikci seciniz', 'err'); return; }
+  var tedAdi = sel.options[sel.selectedIndex].getAttribute('data-adi') || sel.options[sel.selectedIndex].text;
+  degerlendirme_ac(tedId, tedAdi);
+}
+
+function degerlendirme_ac(tedId, tedAdi) {
+  dgSeciliTedId = tedId;
+  dgSeciliTedAdi = tedAdi;
+  document.getElementById('dg-baslik').textContent = tedAdi + ' — Degerlendirme';
+
+  var simdi = new Date();
+  document.getElementById('dg-donem').value = simdi.getFullYear() + '-' + String(simdi.getMonth() + 1).padStart(2, '0');
+
+  // Slider'lari sifirla
+  var alanlar = ['kalite', 'teslimat', 'fiyat', 'iletisim', 'belge'];
+  for (var i = 0; i < alanlar.length; i++) {
+    document.getElementById('dg-' + alanlar[i]).value = 75;
+    document.getElementById('dg-' + alanlar[i] + '-val').textContent = '75';
+  }
+  document.getElementById('dg-not').value = '';
+  skor_hesapla();
+  modalAc('dg-modal');
+}
+
+function skor_hesapla() {
+  var kalite = Number(document.getElementById('dg-kalite').value);
+  var teslimat = Number(document.getElementById('dg-teslimat').value);
+  var fiyat = Number(document.getElementById('dg-fiyat').value);
+  var iletisim = Number(document.getElementById('dg-iletisim').value);
+  var belge = Number(document.getElementById('dg-belge').value);
+
+  document.getElementById('dg-kalite-val').textContent = kalite;
+  document.getElementById('dg-teslimat-val').textContent = teslimat;
+  document.getElementById('dg-fiyat-val').textContent = fiyat;
+  document.getElementById('dg-iletisim-val').textContent = iletisim;
+  document.getElementById('dg-belge-val').textContent = belge;
+
+  var toplam = (kalite * 0.35) + (teslimat * 0.30) + (fiyat * 0.20) + (iletisim * 0.10) + (belge * 0.05);
+  toplam = Math.round(toplam * 10) / 10;
+  document.getElementById('dg-toplam-puan').textContent = toplam.toFixed(1);
+
+  var sv = seviyeHesapla(toplam);
+  var seviyeEl = document.getElementById('dg-seviye');
+  seviyeEl.textContent = sv.seviye + ' — ' + sv.etiket;
+  seviyeEl.style.background = sv.bg;
+  seviyeEl.style.color = sv.txt;
+
+  // Puan rengini güncelle
+  document.getElementById('dg-toplam-puan').style.color = sv.renk;
+}
+
+function degerlendirme_kaydet() {
+  if (!dgSeciliTedId) { toast('Tedarikci secilmedi', 'err'); return; }
+
+  var kalite = Number(document.getElementById('dg-kalite').value);
+  var teslimat = Number(document.getElementById('dg-teslimat').value);
+  var fiyat = Number(document.getElementById('dg-fiyat').value);
+  var iletisim = Number(document.getElementById('dg-iletisim').value);
+  var belge = Number(document.getElementById('dg-belge').value);
+  var toplam = (kalite * 0.35) + (teslimat * 0.30) + (fiyat * 0.20) + (iletisim * 0.10) + (belge * 0.05);
+  toplam = Math.round(toplam * 10) / 10;
+  var sv = seviyeHesapla(toplam);
+
+  var liste = dgVeriAl();
+  var yeniNo = 'DG-' + String(liste.length + 1).padStart(3, '0');
+
+  var yeni = {
+    id: yeniNo,
+    tedId: dgSeciliTedId,
+    tedAdi: dgSeciliTedAdi,
+    donem: document.getElementById('dg-donem').value,
+    kalite: kalite,
+    teslimat: teslimat,
+    fiyat: fiyat,
+    iletisim: iletisim,
+    belge: belge,
+    toplam: toplam,
+    seviye: sv.seviye,
+    degerlendiren: document.getElementById('dg-degerlendiren').value.trim(),
+    tarih: new Date().toISOString().slice(0, 10),
+    not: document.getElementById('dg-not').value.trim()
+  };
+
+  liste.push(yeni);
+  dgVeriKaydet(liste);
+
+  // OTL'deki skoru da güncelle
+  var otlListe = otlVeriAl();
+  for (var i = 0; i < otlListe.length; i++) {
+    if (otlListe[i].tedId === dgSeciliTedId) {
+      otlListe[i].skor = toplam;
+      otlListe[i].seviye = sv.seviye;
+    }
+  }
+  otlVeriKaydet(otlListe);
+
+  toast('Degerlendirme kaydedildi: ' + sv.seviye + ' (' + toplam.toFixed(1) + ')');
+  modalKapat('dg-modal');
+  dgGecmisListele();
+}
+
+function dgGecmisListele() {
+  var liste = dgVeriAl();
+  var div = document.getElementById('dg-gecmis-liste');
+  if (liste.length === 0) {
+    div.innerHTML = '<p style="color:var(--metin4);font-size:13px;text-align:center;padding:20px;">Henuz degerlendirme yapilmamis.</p>';
+    return;
+  }
+  var html = '<table class="otl-tablo"><thead><tr><th>Tedarikci</th><th>Donem</th><th>Kal.</th><th>Tes.</th><th>Fiy.</th><th>Ile.</th><th>Bel.</th><th>Toplam</th><th>Seviye</th></tr></thead><tbody>';
+  for (var i = liste.length - 1; i >= 0; i--) {
+    var d = liste[i];
+    var sv = seviyeHesapla(d.toplam);
+    html += '<tr style="cursor:pointer;" onclick="skor_karti_ac(\'' + d.tedId + '\')">';
+    html += '<td><strong>' + d.tedAdi + '</strong></td>';
+    html += '<td>' + d.donem + '</td>';
+    html += '<td>' + d.kalite + '</td>';
+    html += '<td>' + d.teslimat + '</td>';
+    html += '<td>' + d.fiyat + '</td>';
+    html += '<td>' + d.iletisim + '</td>';
+    html += '<td>' + d.belge + '</td>';
+    html += '<td style="font-weight:700;color:' + sv.renk + ';">' + d.toplam.toFixed(1) + '</td>';
+    html += '<td><span class="bdg" style="background:' + sv.bg + ';color:' + sv.txt + ';">' + sv.seviye + '</span></td>';
+    html += '</tr>';
+  }
+  html += '</tbody></table>';
+  div.innerHTML = html;
+}
+
+// ══════════════════════════════════════
+// ── SKOR KARTI ──
+// ══════════════════════════════════════
+function skorKartiGoster() {
+  var sel = document.getElementById('sk-ted-sec');
+  var tedId = sel.value;
+  var div = document.getElementById('sk-icerik');
+  if (!tedId) {
+    div.innerHTML = '<p style="color:var(--metin4);font-size:13px;text-align:center;">Tedarikci secin.</p>';
+    return;
+  }
+  var tedAdi = sel.options[sel.selectedIndex].getAttribute('data-adi') || sel.options[sel.selectedIndex].text;
+  skorKartiRender(tedId, tedAdi, div);
+}
+
+function skor_karti_ac(tedId) {
+  var dgListe = dgVeriAl();
+  var tedAdi = '';
+  for (var i = 0; i < dgListe.length; i++) {
+    if (dgListe[i].tedId === tedId) { tedAdi = dgListe[i].tedAdi; break; }
+  }
+  document.getElementById('sk-baslik').textContent = tedAdi + ' — Skor Karti';
+  var icerik = document.getElementById('sk-modal-icerik');
+  skorKartiRender(tedId, tedAdi, icerik);
+  modalAc('sk-modal');
+}
+
+function skorKartiRender(tedId, tedAdi, container) {
+  var dgListe = dgVeriAl();
+  // Son değerlendirmeyi bul
+  var son = null;
+  for (var i = dgListe.length - 1; i >= 0; i--) {
+    if (dgListe[i].tedId === tedId) { son = dgListe[i]; break; }
+  }
+  if (!son) {
+    container.innerHTML = '<p style="color:var(--metin4);font-size:13px;text-align:center;padding:20px;">' + tedAdi + ' icin degerlendirme bulunamadi.</p>';
+    return;
+  }
+
+  var sv = seviyeHesapla(son.toplam);
+  var html = '';
+  html += '<div style="text-align:center;margin-bottom:20px;">';
+  html += '<div style="font-size:14px;color:var(--metin3);margin-bottom:4px;">' + tedAdi + '</div>';
+  html += '<div style="font-size:42px;font-weight:800;color:' + sv.renk + ';">' + son.toplam.toFixed(1) + '</div>';
+  html += '<div><span class="bdg" style="background:' + sv.bg + ';color:' + sv.txt + ';font-size:13px;padding:4px 16px;">' + sv.seviye + ' — ' + sv.etiket + '</span></div>';
+  html += '<div style="font-size:11px;color:var(--metin4);margin-top:6px;">Donem: ' + son.donem + ' | Degerlendiren: ' + son.degerlendiren + '</div>';
+  html += '</div>';
+
+  // Bar chart
+  var kriterler = [
+    {adi:'Kalite (%35)', puan:son.kalite},
+    {adi:'Teslimat (%30)', puan:son.teslimat},
+    {adi:'Fiyat (%20)', puan:son.fiyat},
+    {adi:'Iletisim (%10)', puan:son.iletisim},
+    {adi:'Belge (%5)', puan:son.belge}
+  ];
+  for (var k = 0; k < kriterler.length; k++) {
+    var kr = kriterler[k];
+    var krSv = seviyeHesapla(kr.puan);
+    html += '<div class="skor-bar-wrap">';
+    html += '<div class="skor-bar-label"><span>' + kr.adi + '</span><span>' + kr.puan + '/100</span></div>';
+    html += '<div class="skor-bar"><div class="skor-bar-fill" style="width:' + kr.puan + '%;background:' + krSv.renk + ';"></div></div>';
+    html += '</div>';
+  }
+
+  // Geçmiş değerlendirmeler
+  var gecmis = [];
+  for (var g = dgListe.length - 1; g >= 0; g--) {
+    if (dgListe[g].tedId === tedId) gecmis.push(dgListe[g]);
+  }
+  if (gecmis.length > 1) {
+    html += '<div class="skor-gecmis"><h4 style="font-size:12px;color:var(--metin3);margin-bottom:8px;">GECMIS DEGERLENDIRMELER</h4>';
+    for (var h = 0; h < gecmis.length; h++) {
+      var gd = gecmis[h];
+      var gdSv = seviyeHesapla(gd.toplam);
+      html += '<div class="skor-gecmis-item"><span>' + gd.donem + '</span><span style="font-weight:700;color:' + gdSv.renk + ';">' + gd.toplam.toFixed(1) + ' (' + gdSv.seviye + ')</span></div>';
+    }
+    html += '</div>';
+  }
+
+  if (son.not) {
+    html += '<div style="margin-top:14px;padding:10px 14px;background:var(--bg2);border-radius:8px;font-size:12px;color:var(--metin2);"><strong>Not:</strong> ' + son.not + '</div>';
+  }
+
+  container.innerHTML = html;
+}
+
 // ── INIT ──
+otlOrnek();
 veriYukle();
+// Select'leri Airtable verisi yüklendikten sonra doldur
+setTimeout(function() { otlSelectDoldur(); otl_yukle(); dgGecmisListele(); }, 2000);
 </script>
 </body>
 </html>
