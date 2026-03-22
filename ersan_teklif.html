@@ -496,7 +496,7 @@ function renderDetail(q) {
           <div class="form-grid-4" style="gap:10px;">
             <div class="field-group">
               <label class="field-label fl">Teklif No</label>
-              <input class="field-input fi" value="${f['Teklif No']||''}" disabled style="font-family:var(--mono);font-size:12px;">
+              <input class="field-input fi fi-ro" value="${f['Teklif No']||''}" disabled placeholder="${isDraft?'Otomatik üretilecek':''}" style="font-family:var(--mono);font-size:12px;${isDraft?'background:#f9fafb;color:#9ca3af;':''}">
             </div>
             <div class="field-group">
               <label class="field-label fl">Teklif Tarihi</label>
@@ -705,7 +705,7 @@ function renderItems() {
   if (!tbody) return;
 
   if (!currentItems.length) {
-    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:20px;color:var(--text3);font-size:12px;">Henüz kalem eklenmedi</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:20px;color:#9ca3af;font-size:12px;">Henüz kalem eklenmedi</td></tr>`;
   } else {
     tbody.innerHTML = currentItems.map((item, i) => {
       const toplam = calcItemTotal(item);
