@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — Revizyon Takibi</title>
+<link rel="stylesheet" href="ersan_styles.css">
+<script src="ersan_nav.js" defer></script>
+<script src="ersan_log.js" defer></script>
+<style>
+.rv-main { padding:14px 18px; flex:1; overflow-y:auto; }
+.kpi-row { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:14px; }
+.kpi {
+  background:var(--beyaz); border:1px solid var(--border); border-radius:8px;
+  padding:12px 14px; position:relative; overflow:hidden;
+}
+.kpi::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; }
+.kpi.b::before { background:var(--mavi); }
+.kpi.a::before { background:var(--sari); }
+.kpi.g::before { background:var(--yesil); }
+.kpi-label { font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--metin4); }
+.kpi-val { font-size:22px; font-weight:700; color:var(--laci); margin:3px 0 1px; line-height:1; }
+.kpi-sub { font-size:10px; color:var(--metin4); }
+
+.topbar {
+  background:var(--beyaz); border-bottom:1px solid var(--border); padding:0 18px;
+  display:flex; align-items:center; gap:10px; height:48px; flex-shrink:0;
+}
+.topbar-title { font-size:14px; font-weight:700; color:var(--laci); }
+.topbar-r { margin-left:auto; display:flex; gap:8px; align-items:center; }
+
+.btn {
+  display:inline-flex; align-items:center; gap:5px; padding:6px 12px; border-radius:5px;
+  font-size:11.5px; font-weight:600; cursor:pointer; border:none; transition:all .15s; white-space:nowrap;
+}
+.btn-p { background:var(--laci); color:#fff; }
+.btn-p:hover { background:var(--laci2); }
+.btn-o { background:var(--beyaz); border:1px solid var(--border2); color:var(--metin2); }
+.btn-o:hover { background:var(--bg); }
+.btn-g { background:var(--yesil); color:#fff; }
+.btn-r { background:var(--kirmizi); color:#fff; }
+.btn-a { background:var(--sari); color:#fff; }
+.btn-sm { padding:4px 9px; font-size:10.5px; }
+.sel-filter {
+  font-size:11px; padding:5px 8px; border-radius:5px; border:1px solid var(--border2);
+  background:var(--beyaz); color:var(--metin2); font-family:inherit;
+}
+
+.info-box {
+  padding:9px 12px; border-radius:6px; font-size:11px; margin-bottom:12px;
+}
+.info-box.warn { background:var(--kirmizi-bg); color:var(--kirmizi-t); border:1px solid #fca5a5; }
+
+.tbl { width:100%; border-collapse:collapse; }
+.tbl th {
+  font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.05em;
+  color:var(--metin4); background:var(--bg); padding:7px 9px; border-bottom:1px solid var(--border);
+  text-align:left; white-space:nowrap; position:sticky; top:0;
+}
+.tbl td {
+  padding:7px 9px; border-bottom:1px solid #f3f4f6; font-size:11.5px;
+  color:var(--metin2); vertical-align:middle;
+}
+.tbl tr:hover td { background:#fafafa; }
+.tbl tr.overdue td { background:var(--kirmizi-bg); }
+
+.bdg {
+  display:inline-flex; align-items:center; padding:2px 7px; border-radius:12px;
+  font-size:9.5px; font-weight:600;
+}
+.bdg-g { background:var(--yesil-bg); color:var(--yesil-t); }
+.bdg-r { background:var(--kirmizi-bg); color:var(--kirmizi-t); }
+.bdg-a { background:var(--sari-bg); color:var(--sari-t); }
+.bdg-b { background:var(--mavi-acik); color:var(--mavi-koyu); }
+.bdg-z { background:var(--bg); color:var(--metin3); }
+
+.rev-badge {
+  display:inline-flex; align-items:center; justify-content:center;
+  width:22px; height:22px; border-radius:4px; font-size:10px; font-weight:800;
+  background:var(--laci); color:#fff;
+}
+.rev-badge.old { background:var(--metin4); }
+
+.mono { font-family:'Courier New',monospace; font-size:10.5px; font-weight:700; color:var(--laci); }
+
+.pnl {
+  background:var(--beyaz); border:1px solid var(--border); border-radius:8px;
+  overflow:hidden;
+}
+
+/* Modal */
+.modal-overlay {
+  display:none; position:fixed; top:0; left:0; right:0; bottom:0;
+  background:rgba(0,0,0,.45); z-index:800; align-items:center; justify-content:center;
+}
+.modal-overlay.open { display:flex; }
+.modal {
+  background:#fff; border-radius:10px; width:520px; max-height:80vh;
+  overflow-y:auto; box-shadow:0 8px 30px rgba(0,0,0,.18);
+}
+.modal-head {
+  padding:14px 18px; border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between;
+}
+.modal-head h3 { font-size:14px; font-weight:700; color:var(--laci); }
+.modal-close { background:none; border:none; font-size:18px; cursor:pointer; color:var(--metin3); }
+.modal-body { padding:16px 18px; }
+.modal-body label { display:block; font-size:11px; font-weight:600; color:var(--metin3); margin-bottom:3px; margin-top:10px; }
+.modal-body label:first-child { margin-top:0; }
+.modal-body input, .modal-body select, .modal-body textarea {
+  width:100%; padding:6px 9px; border:1px solid var(--border); border-radius:5px;
+  font-size:12px; font-family:inherit; color:var(--metin);
+}
+.modal-body textarea { height:60px; resize:vertical; }
+.modal-foot { padding:12px 18px; border-top:1px solid var(--border); display:flex; gap:8px; justify-content:flex-end; }
+</style>
+</head>
+<body>
+<div class="sayfa-alani">
+  <div class="topbar">
+    <div class="topbar-title">Revizyon Takibi</div>
+    <div class="topbar-r">
+      <select class="sel-filter" id="filtrePeriod" onchange="renderAll()">
+        <option value="yil">Bu Yil</option>
+        <option value="6ay">Son 6 Ay</option>
+        <option value="3ay">Son 3 Ay</option>
+      </select>
+      <button class="btn btn-o" onclick="exportExcel()">Excel Indir</button>
+    </div>
+  </div>
+
+  <div class="rv-main">
+    <!-- KPI -->
+    <div class="kpi-row">
+      <div class="kpi b">
+        <div class="kpi-label">Toplam Revizyon</div>
+        <div class="kpi-val" id="kpiToplam">0</div>
+        <div class="kpi-sub">Filtrelenen donem</div>
+      </div>
+      <div class="kpi a">
+        <div class="kpi-label">Gozden Gecirme Bekleyen</div>
+        <div class="kpi-val" id="kpiBekleyen">0</div>
+        <div class="kpi-sub">Suresi dolmus</div>
+      </div>
+      <div class="kpi g">
+        <div class="kpi-label">Bu Ay</div>
+        <div class="kpi-val" id="kpiBuAy">0</div>
+        <div class="kpi-sub">Revizyon yapildi</div>
+      </div>
+    </div>
+
+    <!-- Overdue warning -->
+    <div id="overdueSection"></div>
+
+    <!-- Revision table -->
+    <div class="pnl">
+      <table class="tbl">
+        <thead>
+          <tr>
+            <th>Dok No</th><th>Baslik</th><th>Tur</th><th>Eski Rev</th><th>Yeni Rev</th>
+            <th>Tarih</th><th>Degisiklik Ozeti</th><th>Onaylayan</th><th>Durum</th><th>Islem</th>
+          </tr>
+        </thead>
+        <tbody id="revTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Revizyon Baslat Modal -->
+<div class="modal-overlay" id="modalRevizyon">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Revizyon / Gozden Gecirme Baslat</h3>
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <label>Dokuman No</label>
+      <input type="text" id="mDokNo" readonly>
+      <label>Mevcut Baslik</label>
+      <input type="text" id="mBaslik" readonly>
+      <label>Mevcut Revizyon</label>
+      <input type="text" id="mEskiRev" readonly>
+      <label>Yeni Revizyon</label>
+      <input type="text" id="mYeniRev" placeholder="Orn: D">
+      <label>Degisiklik Ozeti</label>
+      <textarea id="mOzet" placeholder="Yapilan degisiklikleri kisa aciklayiniz..."></textarea>
+      <label>Onaylayan</label>
+      <input type="text" id="mOnaylayan" placeholder="Orn: A.Demir (GM)">
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-o" onclick="closeModal()">Iptal</button>
+      <button class="btn btn-p" onclick="saveRevizyon()">Revizyonu Baslat</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── SAMPLE DATA SEED ── */
+var SAMPLE_DOCS = [
+  {id:'D001',dokNo:'KYS-PR-001',baslik:'Dokuman ve Kayit Kontrolu Proseduru',tur:'Prosedur',rev:'C',durum:'Gecerli',yayinTarihi:'2026-01-15',sonrakiGozdenGecirme:'2027-01-15',hazirlayan:'Ayse Kaya',onaylayan:'A.Demir (GM)'},
+  {id:'D002',dokNo:'KYS-PR-002',baslik:'Ic Denetim Proseduru',tur:'Prosedur',rev:'B',durum:'Gecerli',yayinTarihi:'2025-11-20',sonrakiGozdenGecirme:'2026-11-20',hazirlayan:'Ayse Kaya',onaylayan:'A.Demir (GM)'},
+  {id:'D003',dokNo:'KYS-PR-003',baslik:'Uygunsuz Urun Kontrolu Proseduru',tur:'Prosedur',rev:'A',durum:'Taslak',yayinTarihi:'2026-03-19',sonrakiGozdenGecirme:'2027-03-19',hazirlayan:'Ayse Kaya',onaylayan:''},
+  {id:'D004',dokNo:'URT-PR-001',baslik:'Uretim Planlama Proseduru',tur:'Prosedur',rev:'D',durum:'Gecerli',yayinTarihi:'2026-02-05',sonrakiGozdenGecirme:'2027-02-05',hazirlayan:'Mehmet Aydin',onaylayan:'A.Demir (GM)'},
+  {id:'D005',dokNo:'URT-IT-001',baslik:'CNC Torna Operasyon Talimati',tur:'Is Talimati',rev:'B',durum:'Gecerli',yayinTarihi:'2026-03-10',sonrakiGozdenGecirme:'2027-03-10',hazirlayan:'Ali Yildiz',onaylayan:'M.Aydin'},
+  {id:'D006',dokNo:'KAL-IT-001',baslik:'IQC Muayene Talimati',tur:'Is Talimati',rev:'C',durum:'Gecerli',yayinTarihi:'2026-02-22',sonrakiGozdenGecirme:'2027-02-22',hazirlayan:'Ayse Kaya',onaylayan:'M.Aydin'},
+  {id:'D007',dokNo:'BAK-IT-001',baslik:'Periyodik Bakim Uygulama Talimati',tur:'Is Talimati',rev:'A',durum:'Gecerli',yayinTarihi:'2025-03-01',sonrakiGozdenGecirme:'2026-03-01',hazirlayan:'Fatma Celik',onaylayan:'M.Aydin'},
+  {id:'D008',dokNo:'FRM-IQC-001',baslik:'IQC Boyutsal Kontrol Formu',tur:'Form',rev:'B',durum:'Gecerli',yayinTarihi:'2026-02-22',sonrakiGozdenGecirme:'2027-02-22',hazirlayan:'Ayse Kaya',onaylayan:'A.Kaya'},
+  {id:'D009',dokNo:'FRM-NCR-001',baslik:'NCR Rapor Sablonu',tur:'Form',rev:'A',durum:'Taslak',yayinTarihi:'2026-03-20',sonrakiGozdenGecirme:'2027-03-20',hazirlayan:'Mehmet Aydin',onaylayan:''},
+  {id:'D010',dokNo:'KAL-IT-002',baslik:'FAI Olcum Talimati',tur:'Is Talimati',rev:'B',durum:'Gecerli',yayinTarihi:'2025-03-15',sonrakiGozdenGecirme:'2026-03-15',hazirlayan:'Ayse Kaya',onaylayan:'M.Aydin'},
+  {id:'D011',dokNo:'FRM-BAK-001',baslik:'Periyodik Bakim Kontrol Listesi',tur:'Form',rev:'C',durum:'Gecerli',yayinTarihi:'2026-01-10',sonrakiGozdenGecirme:'2027-01-10',hazirlayan:'Fatma Celik',onaylayan:'A.Kaya'},
+  {id:'D012',dokNo:'SAT-PR-001',baslik:'Satin Alma Proseduru',tur:'Prosedur',rev:'B',durum:'Gecerli',yayinTarihi:'2026-01-20',sonrakiGozdenGecirme:'2027-01-20',hazirlayan:'Ali Yildiz',onaylayan:'A.Demir (GM)'}
+];
+
+var SAMPLE_REVISIONS = [
+  {id:'R001',dokNo:'KYS-PR-001',baslik:'Dokuman ve Kayit Kontrolu',tur:'Prosedur',eskiRev:'B',yeniRev:'C',tarih:'2026-01-15',ozet:'Dijital onay akisi eklendi, e-imza bolumu guncellendi',onaylayan:'A.Demir (GM)',durum:'Tamamlandi'},
+  {id:'R002',dokNo:'URT-IT-001',baslik:'CNC Torna Operasyon Talimati',tur:'Is Talimati',eskiRev:'A',yeniRev:'B',tarih:'2026-03-10',ozet:'Mazak QTN-200M parametreleri guncellendi',onaylayan:'M.Aydin',durum:'Tamamlandi'},
+  {id:'R003',dokNo:'FRM-IQC-001',baslik:'IQC Boyutsal Kontrol Formu',tur:'Form',eskiRev:'A',yeniRev:'B',tarih:'2026-02-22',ozet:'AQL II numune tablosu eklendi',onaylayan:'A.Kaya',durum:'Tamamlandi'},
+  {id:'R004',dokNo:'KYS-PR-001',baslik:'Dokuman ve Kayit Kontrolu',tur:'Prosedur',eskiRev:'A',yeniRev:'B',tarih:'2025-06-10',ozet:'Dagitim listesi eklendi, form referanslari guncellendi',onaylayan:'A.Demir (GM)',durum:'Tamamlandi'},
+  {id:'R005',dokNo:'URT-PR-001',baslik:'Uretim Planlama Proseduru',tur:'Prosedur',eskiRev:'C',yeniRev:'D',tarih:'2026-02-05',ozet:'Kapasite planlama bolumu eklendi',onaylayan:'A.Demir (GM)',durum:'Tamamlandi'},
+  {id:'R006',dokNo:'KAL-IT-001',baslik:'IQC Muayene Talimati',tur:'Is Talimati',eskiRev:'B',yeniRev:'C',tarih:'2026-02-22',ozet:'Gorsel muayene kriterleri guncellendi',onaylayan:'M.Aydin',durum:'Tamamlandi'},
+  {id:'R007',dokNo:'SAT-PR-001',baslik:'Satin Alma Proseduru',tur:'Prosedur',eskiRev:'A',yeniRev:'B',tarih:'2026-01-20',ozet:'Tedarikci degerlendirme kriterleri eklendi',onaylayan:'A.Demir (GM)',durum:'Tamamlandi'},
+  {id:'R008',dokNo:'FRM-BAK-001',baslik:'Periyodik Bakim Kontrol Listesi',tur:'Form',eskiRev:'B',yeniRev:'C',tarih:'2026-01-10',ozet:'Yeni tezgah satirlari eklendi',onaylayan:'A.Kaya',durum:'Tamamlandi'}
+];
+
+function initData() {
+  if (!localStorage.getItem('ersan_dms_dokumanlar')) {
+    localStorage.setItem('ersan_dms_dokumanlar', JSON.stringify(SAMPLE_DOCS));
+  }
+  if (!localStorage.getItem('ersan_dms_revizyon_gecmisi')) {
+    localStorage.setItem('ersan_dms_revizyon_gecmisi', JSON.stringify(SAMPLE_REVISIONS));
+  }
+}
+
+function getDocs() {
+  try { return JSON.parse(localStorage.getItem('ersan_dms_dokumanlar')) || []; }
+  catch(e) { return []; }
+}
+
+function getRevisions() {
+  try { return JSON.parse(localStorage.getItem('ersan_dms_revizyon_gecmisi')) || []; }
+  catch(e) { return []; }
+}
+
+function saveDocs(arr) { localStorage.setItem('ersan_dms_dokumanlar', JSON.stringify(arr)); }
+function saveRevisions(arr) { localStorage.setItem('ersan_dms_revizyon_gecmisi', JSON.stringify(arr)); }
+
+function today() { return new Date().toISOString().slice(0,10); }
+
+function filterByPeriod(arr, dateField) {
+  var period = document.getElementById('filtrePeriod').value;
+  var now = new Date();
+  var cutoff = new Date();
+  if (period === '6ay') cutoff.setMonth(now.getMonth() - 6);
+  else if (period === '3ay') cutoff.setMonth(now.getMonth() - 3);
+  else cutoff = new Date(now.getFullYear(), 0, 1);
+  return arr.filter(function(r) { return new Date(r[dateField]) >= cutoff; });
+}
+
+function getOverdueDocs() {
+  var docs = getDocs();
+  var now = today();
+  return docs.filter(function(d) {
+    return d.durum === 'Gecerli' && d.sonrakiGozdenGecirme && d.sonrakiGozdenGecirme <= now;
+  });
+}
+
+function formatDate(d) {
+  if (!d) return '-';
+  var parts = d.split('-');
+  return parts[2] + '.' + parts[1] + '.' + parts[0];
+}
+
+function turPill(tur) {
+  var colors = {
+    'Prosedur': 'background:var(--mavi-acik);color:var(--mavi-koyu)',
+    'Is Talimati': 'background:var(--yesil-bg);color:var(--yesil-t)',
+    'Form': 'background:#ede9fe;color:#4c1d95'
+  };
+  var style = colors[tur] || 'background:var(--bg);color:var(--metin3)';
+  return '<span class="bdg" style="' + style + '">' + tur + '</span>';
+}
+
+function durumBadge(durum) {
+  if (durum === 'Tamamlandi') return '<span class="bdg bdg-g">Tamamlandi</span>';
+  if (durum === 'Devam Ediyor') return '<span class="bdg bdg-a">Devam Ediyor</span>';
+  if (durum === 'Iptal') return '<span class="bdg bdg-z">Iptal</span>';
+  return '<span class="bdg bdg-b">' + durum + '</span>';
+}
+
+/* ── RENDER ── */
+function renderAll() {
+  renderKPI();
+  renderOverdue();
+  renderTable();
+}
+
+function renderKPI() {
+  var revs = getRevisions();
+  var filtered = filterByPeriod(revs, 'tarih');
+  var overdue = getOverdueDocs();
+  var now = new Date();
+  var buAy = filtered.filter(function(r) {
+    var d = new Date(r.tarih);
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  });
+  document.getElementById('kpiToplam').textContent = filtered.length;
+  document.getElementById('kpiBekleyen').textContent = overdue.length;
+  document.getElementById('kpiBuAy').textContent = buAy.length;
+}
+
+function renderOverdue() {
+  var overdue = getOverdueDocs();
+  var el = document.getElementById('overdueSection');
+  if (overdue.length === 0) {
+    el.innerHTML = '';
+    return;
+  }
+  var html = '<div class="info-box warn" style="margin-bottom:14px">';
+  html += '<strong>Gozden gecirme suresi dolmus ' + overdue.length + ' dokuman:</strong>';
+  html += '</div>';
+  html += '<div class="pnl" style="margin-bottom:14px"><table class="tbl">';
+  html += '<thead><tr><th>Dok No</th><th>Baslik</th><th>Tur</th><th>Rev</th><th>Son Gozden Gecirme</th><th>Gecen Gun</th><th>Islem</th></tr></thead><tbody>';
+  overdue.forEach(function(d) {
+    var gecen = Math.floor((new Date() - new Date(d.sonrakiGozdenGecirme)) / 86400000);
+    html += '<tr class="overdue">';
+    html += '<td class="mono">' + d.dokNo + '</td>';
+    html += '<td>' + d.baslik + '</td>';
+    html += '<td>' + turPill(d.tur) + '</td>';
+    html += '<td><span class="rev-badge">' + d.rev + '</span></td>';
+    html += '<td>' + formatDate(d.sonrakiGozdenGecirme) + '</td>';
+    html += '<td style="color:var(--kirmizi);font-weight:700">' + gecen + ' gun</td>';
+    html += '<td><button class="btn btn-r btn-sm" onclick="openRevizyonModal(\'' + d.id + '\')">Baslat</button></td>';
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+  el.innerHTML = html;
+}
+
+function renderTable() {
+  var revs = getRevisions();
+  var filtered = filterByPeriod(revs, 'tarih');
+  filtered.sort(function(a,b) { return b.tarih.localeCompare(a.tarih); });
+  var tbody = document.getElementById('revTableBody');
+  if (filtered.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--metin4);padding:30px">Secilen donemde revizyon kaydi yok</td></tr>';
+    return;
+  }
+  var html = '';
+  filtered.forEach(function(r) {
+    html += '<tr>';
+    html += '<td class="mono">' + r.dokNo + '</td>';
+    html += '<td>' + r.baslik + '</td>';
+    html += '<td>' + turPill(r.tur) + '</td>';
+    html += '<td>' + (r.eskiRev ? '<span class="rev-badge old">' + r.eskiRev + '</span>' : '-') + '</td>';
+    html += '<td><span class="rev-badge">' + r.yeniRev + '</span></td>';
+    html += '<td>' + formatDate(r.tarih) + '</td>';
+    html += '<td style="font-size:10.5px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + r.ozet + '">' + r.ozet + '</td>';
+    html += '<td>' + r.onaylayan + '</td>';
+    html += '<td>' + durumBadge(r.durum) + '</td>';
+    html += '<td><button class="btn btn-o btn-sm" onclick="alert(\'Revizyon detayi: ' + r.dokNo + ' Rev ' + r.yeniRev + '\')">Detay</button></td>';
+    html += '</tr>';
+  });
+  tbody.innerHTML = html;
+}
+
+/* ── MODAL ── */
+var currentDocId = null;
+
+function openRevizyonModal(docId) {
+  var docs = getDocs();
+  var doc = docs.find(function(d) { return d.id === docId; });
+  if (!doc) return;
+  currentDocId = docId;
+  document.getElementById('mDokNo').value = doc.dokNo;
+  document.getElementById('mBaslik').value = doc.baslik;
+  document.getElementById('mEskiRev').value = doc.rev;
+  var nextRev = String.fromCharCode(doc.rev.charCodeAt(0) + 1);
+  document.getElementById('mYeniRev').value = nextRev;
+  document.getElementById('mOzet').value = '';
+  document.getElementById('mOnaylayan').value = '';
+  document.getElementById('modalRevizyon').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modalRevizyon').classList.remove('open');
+  currentDocId = null;
+}
+
+function revizyon_talep_baslat(docId, yeniRev, ozet, onaylayan) {
+  var docs = getDocs();
+  var idx = -1;
+  for (var i = 0; i < docs.length; i++) {
+    if (docs[i].id === docId) { idx = i; break; }
+  }
+  if (idx === -1) return;
+  var doc = docs[idx];
+  var eskiRev = doc.rev;
+
+  // Eski dokumani Gecersiz yap
+  docs[idx].durum = 'Gecersiz';
+
+  // Yeni taslak dokuman olustur
+  var newDoc = {
+    id: 'D' + (Date.now()),
+    dokNo: doc.dokNo,
+    baslik: doc.baslik,
+    tur: doc.tur,
+    rev: yeniRev,
+    durum: 'Taslak',
+    yayinTarihi: today(),
+    sonrakiGozdenGecirme: '',
+    hazirlayan: doc.hazirlayan,
+    onaylayan: onaylayan
+  };
+  docs.push(newDoc);
+  saveDocs(docs);
+
+  // Revizyon gecmisine ekle
+  var revs = getRevisions();
+  revs.push({
+    id: 'R' + (Date.now()),
+    dokNo: doc.dokNo,
+    baslik: doc.baslik,
+    tur: doc.tur,
+    eskiRev: eskiRev,
+    yeniRev: yeniRev,
+    tarih: today(),
+    ozet: ozet || 'Periyodik gozden gecirme revizyonu',
+    onaylayan: onaylayan || '-',
+    durum: 'Devam Ediyor'
+  });
+  saveRevisions(revs);
+}
+
+function saveRevizyon() {
+  if (!currentDocId) return;
+  var yeniRev = document.getElementById('mYeniRev').value.trim();
+  var ozet = document.getElementById('mOzet').value.trim();
+  var onaylayan = document.getElementById('mOnaylayan').value.trim();
+  if (!yeniRev) { alert('Yeni revizyon harfi giriniz.'); return; }
+  if (!ozet) { alert('Degisiklik ozeti giriniz.'); return; }
+  revizyon_talep_baslat(currentDocId, yeniRev, ozet, onaylayan);
+  closeModal();
+  renderAll();
+  alert('Revizyon baslat ildi. Eski revizyon gecersiz yapildi, yeni taslak olusturuldu.');
+}
+
+/* ── EXCEL EXPORT ── */
+function exportExcel() {
+  var revs = getRevisions();
+  var filtered = filterByPeriod(revs, 'tarih');
+  filtered.sort(function(a,b) { return b.tarih.localeCompare(a.tarih); });
+  var csv = 'Dok No;Baslik;Tur;Eski Rev;Yeni Rev;Tarih;Degisiklik Ozeti;Onaylayan;Durum\n';
+  filtered.forEach(function(r) {
+    csv += [r.dokNo, r.baslik, r.tur, r.eskiRev || '-', r.yeniRev, r.tarih, '"' + r.ozet + '"', r.onaylayan, r.durum].join(';') + '\n';
+  });
+  // Overdue docs
+  var overdue = getOverdueDocs();
+  if (overdue.length > 0) {
+    csv += '\nGOZDEN GECIRME BEKLEYENLER\n';
+    csv += 'Dok No;Baslik;Tur;Rev;Son Gozden Gecirme\n';
+    overdue.forEach(function(d) {
+      csv += [d.dokNo, d.baslik, d.tur, d.rev, d.sonrakiGozdenGecirme].join(';') + '\n';
+    });
+  }
+  var blob = new Blob(['\uFEFF' + csv], {type: 'text/csv;charset=utf-8;'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'revizyon_takibi_' + today() + '.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+/* ── INIT ── */
+initData();
+renderAll();
+</script>
+</body>
+</html>

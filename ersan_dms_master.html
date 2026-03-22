@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — Doküman Yönetimi (DMS)</title>
+<link rel="stylesheet" href="ersan_styles.css">
+<script src="ersan_nav.js" defer></script>
+<script src="ersan_log.js" defer></script>
+<style>
+.dms-split { display:flex; gap:12px; height:calc(100vh - 52px - 32px - 80px - 42px); }
+.dms-sol {
+  width:280px; flex-shrink:0; background:var(--beyaz); border:1px solid var(--border);
+  border-radius:8px; display:flex; flex-direction:column; overflow:hidden;
+}
+.dms-sol-ust {
+  padding:10px 12px; border-bottom:1px solid var(--border); flex-shrink:0;
+}
+.dms-sol-ust h3 { font-size:12px; font-weight:600; color:var(--laci); margin-bottom:6px; }
+.dms-arama {
+  width:100%; padding:5px 8px; border:1px solid var(--border); border-radius:5px;
+  font-size:12px; color:var(--metin2); background:var(--bg2); font-family:inherit;
+}
+.dms-arama:focus { outline:none; border-color:var(--mavi); }
+.dms-filtre-row {
+  display:flex; gap:6px; padding:8px 12px; border-bottom:1px solid var(--border); flex-shrink:0;
+}
+.dms-filtre-sel {
+  flex:1; padding:4px 6px; border:1px solid var(--border); border-radius:4px;
+  font-size:11px; font-family:inherit; color:var(--metin2); background:var(--bg2);
+}
+.dms-liste { flex:1; overflow-y:auto; }
+.dms-grup-baslik {
+  padding:6px 12px; font-size:10px; font-weight:700; color:var(--metin4);
+  text-transform:uppercase; letter-spacing:0.5px; background:var(--bg); border-bottom:1px solid var(--border);
+  display:flex; align-items:center; gap:6px;
+}
+.dms-grup-baslik .sayi { font-size:9px; background:var(--border); border-radius:8px; padding:0 5px; color:var(--metin3); }
+.dms-satir {
+  padding:10px 12px; border-bottom:1px solid #f8fafc; cursor:pointer;
+  border-left:3px solid transparent; transition:background .1s;
+}
+.dms-satir:hover { background:var(--bg2); }
+.dms-satir.secili { background:var(--mavi-acik); border-left-color:var(--mavi); }
+.dms-satir.gecerli { border-left-color:var(--yesil); }
+.dms-satir.taslak { border-left-color:var(--mavi); }
+.dms-satir.incelemede { border-left-color:var(--sari); }
+.dms-satir.gecersiz { border-left-color:#94a3b8; }
+.dms-satir-no {
+  font-family:'Courier New',monospace; font-size:11px; font-weight:600;
+  color:var(--mavi-koyu); margin-bottom:2px; display:flex; align-items:center; gap:6px;
+}
+.dms-satir-baslik { font-size:11px; color:var(--metin2); margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.dms-satir-alt { display:flex; align-items:center; gap:6px; }
+.dms-satir-kat { font-size:10px; color:var(--metin4); }
+/* Badges */
+.rev-badge {
+  font-size:9px; font-weight:700; padding:1px 6px; border-radius:3px;
+  font-family:'Courier New',monospace;
+}
+.rev-badge.rev-a { background:#dbeafe; color:#1e40af; }
+.rev-badge.rev-b { background:#e0e7ff; color:#3730a3; }
+.rev-badge.rev-c { background:#fae8ff; color:#86198f; }
+.durum-badge {
+  font-size:9px; font-weight:600; padding:2px 7px; border-radius:10px;
+}
+.durum-badge.gecerli { background:var(--yesil-bg); color:var(--yesil-t); }
+.durum-badge.taslak { background:var(--mavi-acik); color:var(--mavi-koyu); }
+.durum-badge.incelemede { background:var(--sari-bg); color:var(--sari-t); }
+.durum-badge.gecersiz { background:#f1f5f9; color:#64748b; }
+.tur-icon {
+  display:inline-flex; width:20px; height:20px; border-radius:4px; align-items:center;
+  justify-content:center; font-size:10px; font-weight:700; color:#fff; flex-shrink:0;
+}
+.tur-elk { background:#7c3aed; }
+.tur-pr { background:#2563eb; }
+.tur-it { background:#0891b2; }
+.tur-frm { background:#059669; }
+.tur-plt { background:#d97706; }
+.tur-ref { background:#dc2626; }
+/* Sag panel */
+.dms-sag {
+  flex:1; background:var(--beyaz); border:1px solid var(--border); border-radius:8px;
+  overflow-y:auto; display:flex; flex-direction:column;
+}
+.dms-sag-ust {
+  padding:12px 16px; border-bottom:1px solid var(--border); flex-shrink:0;
+  display:flex; align-items:center; justify-content:space-between; gap:8px;
+}
+.dms-sag-icerik { padding:16px; flex:1; overflow-y:auto; }
+.dms-empty {
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  height:100%; color:var(--metin4); gap:8px;
+}
+.dms-empty-icon { font-size:40px; opacity:0.3; }
+/* Tabs */
+.dms-tab-row {
+  display:flex; gap:0; border-bottom:1px solid var(--border); flex-shrink:0;
+}
+.dms-tab-btn {
+  flex:1; padding:8px 4px; font-size:11px; font-weight:500; color:var(--metin3);
+  background:transparent; border:none; border-bottom:2px solid transparent;
+  cursor:pointer; text-align:center; transition:all .12s; font-family:inherit;
+}
+.dms-tab-btn.aktif { color:var(--mavi); border-bottom-color:var(--mavi); background:var(--mavi-acik); }
+/* Info grid */
+.dms-info-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:14px; }
+.dms-info-label { font-size:10px; font-weight:600; color:var(--metin4); text-transform:uppercase; margin-bottom:2px; }
+.dms-info-val { font-size:12px; color:var(--metin2); }
+/* Section */
+.dms-sec { margin-bottom:14px; }
+.dms-sec-baslik {
+  font-size:11px; font-weight:700; color:var(--metin3); text-transform:uppercase;
+  letter-spacing:0.5px; margin-bottom:6px; padding-bottom:4px; border-bottom:1px solid var(--border);
+}
+/* Rev table */
+.dms-rev-tablo { width:100%; border-collapse:collapse; }
+.dms-rev-tablo th {
+  font-size:10px; font-weight:600; color:var(--metin4); text-transform:uppercase;
+  padding:6px 8px; text-align:left; border-bottom:1px solid var(--border); background:var(--bg2);
+}
+.dms-rev-tablo td { font-size:12px; padding:6px 8px; border-bottom:1px solid var(--border); color:var(--metin2); }
+.dms-rev-tablo tr.guncel td { background:var(--yesil-bg); }
+.dms-rev-tablo tr.eski td { color:var(--metin4); text-decoration:line-through; }
+/* Dagitim table */
+.dms-dag-tablo { width:100%; border-collapse:collapse; }
+.dms-dag-tablo th {
+  font-size:10px; font-weight:600; color:var(--metin4); text-transform:uppercase;
+  padding:6px 8px; text-align:left; border-bottom:1px solid var(--border); background:var(--bg2);
+}
+.dms-dag-tablo td { font-size:12px; padding:6px 8px; border-bottom:1px solid var(--border); color:var(--metin2); }
+/* Chips */
+.as-serit {
+  display:flex; gap:8px; margin-bottom:12px; padding:8px 0;
+}
+.as-chip {
+  padding:5px 14px; border-radius:16px; font-size:11px; font-weight:600;
+  cursor:pointer; border:1px solid var(--border); background:var(--beyaz); color:var(--metin2);
+  transition:all .12s;
+}
+.as-chip.aktif { background:var(--mavi); color:#fff; border-color:var(--mavi); }
+.as-chip:hover { background:var(--bg2); }
+.as-chip.aktif:hover { background:var(--mavi-koyu); }
+/* Modul chip */
+.modul-chip {
+  display:inline-block; font-size:10px; padding:2px 8px; border-radius:10px;
+  background:var(--bg); border:1px solid var(--border); color:var(--metin3); font-weight:500;
+}
+/* Modal */
+.dms-modal-bg {
+  display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:600;
+  align-items:center; justify-content:center;
+}
+.dms-modal-bg.acik { display:flex; }
+.dms-modal {
+  background:#fff; border-radius:10px; width:520px; max-height:85vh; overflow-y:auto;
+  box-shadow:0 20px 60px rgba(0,0,0,0.25);
+}
+.dms-modal-baslik {
+  padding:14px 18px; border-bottom:1px solid var(--border);
+  font-size:14px; font-weight:700; color:var(--laci);
+  display:flex; align-items:center; justify-content:space-between;
+}
+.dms-modal-icerik { padding:18px; }
+.dms-modal-footer {
+  padding:12px 18px; border-top:1px solid var(--border);
+  display:flex; justify-content:flex-end; gap:8px;
+}
+.dms-field { margin-bottom:12px; }
+.dms-field label { display:block; font-size:11px; font-weight:600; color:var(--metin3); margin-bottom:4px; }
+.dms-field select, .dms-field input, .dms-field textarea {
+  width:100%; padding:7px 10px; border:1px solid var(--border); border-radius:6px;
+  font-size:13px; font-family:inherit; color:var(--metin2);
+}
+.dms-field select:focus, .dms-field input:focus, .dms-field textarea:focus {
+  outline:none; border-color:var(--mavi); box-shadow:0 0 0 3px rgba(55,138,221,0.1);
+}
+.dms-field textarea { resize:vertical; min-height:60px; }
+/* Buttons */
+.btn-mavi {
+  padding:7px 16px; border-radius:6px; border:none; background:var(--mavi); color:#fff;
+  font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; transition:background .12s;
+}
+.btn-mavi:hover { background:var(--mavi-koyu); }
+.btn-gri {
+  padding:7px 16px; border-radius:6px; border:1px solid var(--border); background:var(--beyaz); color:var(--metin2);
+  font-size:12px; font-weight:500; cursor:pointer; font-family:inherit; transition:background .12s;
+}
+.btn-gri:hover { background:var(--bg2); }
+.btn-kirmizi {
+  padding:7px 16px; border-radius:6px; border:none; background:var(--kirmizi); color:#fff;
+  font-size:12px; font-weight:600; cursor:pointer; font-family:inherit;
+}
+.btn-sm { padding:4px 10px; font-size:11px; }
+/* Iliski kayit */
+.iliski-card {
+  padding:10px 12px; border:1px solid var(--border); border-radius:6px; margin-bottom:8px;
+  display:flex; align-items:center; gap:10px; background:var(--bg2);
+}
+.iliski-card-tip {
+  font-size:9px; font-weight:700; padding:2px 6px; border-radius:3px; color:#fff;
+}
+.iliski-card-tip.ncr { background:var(--kirmizi); }
+.iliski-card-tip.capa { background:var(--sari); }
+.iliski-card-tip.bwo { background:#7c3aed; }
+</style>
+</head>
+<body>
+<div id="nav-alani"></div>
+<div class="icerik-alani">
+  <div class="topbar">
+    <div class="topbar-baslik">Dokuman Yonetimi (DMS)</div>
+    <button class="btn-mavi" onclick="yeniDokModal()">+ Yeni Dokuman</button>
+  </div>
+  <div class="sayfa-icerik">
+
+    <!-- AS9100 Serit -->
+    <div class="as-serit">
+      <div class="as-chip aktif" onclick="seritFiltre('tum',this)">Tum Guncel</div>
+      <div class="as-chip" onclick="seritFiltre('gozden',this)">Gozden Gecirme</div>
+      <div class="as-chip" onclick="seritFiltre('onay',this)">Onay Bekliyor</div>
+      <div style="flex:1"></div>
+      <span style="font-size:10px;color:var(--metin4);align-self:center;">AS9100 &sect;7.5 Belgelendirilmis Bilgi</span>
+    </div>
+
+    <!-- KPI -->
+    <div class="kpi-grid" id="kpiGrid">
+      <div class="kpi-kart"><div class="kpi-etiket">Toplam Dokuman</div><div class="kpi-deger" id="kpiToplam">0</div></div>
+      <div class="kpi-kart yesil"><div class="kpi-etiket">Gecerli</div><div class="kpi-deger" id="kpiGecerli">0</div></div>
+      <div class="kpi-kart sari"><div class="kpi-etiket">Onay Bekleyen</div><div class="kpi-deger" id="kpiOnay">0</div></div>
+      <div class="kpi-kart kirmizi"><div class="kpi-etiket">Suresi Dolan</div><div class="kpi-deger" id="kpiSuresi">0</div></div>
+      <div class="kpi-kart"><div class="kpi-etiket">Bu Ay Revize</div><div class="kpi-deger" id="kpiRevize">0</div></div>
+    </div>
+
+    <!-- Split -->
+    <div class="dms-split">
+      <!-- Sol Liste -->
+      <div class="dms-sol">
+        <div class="dms-sol-ust">
+          <h3>Dokumanlar</h3>
+          <input type="text" class="dms-arama" placeholder="Ara... (No veya baslik)" oninput="listeFiltrele()">
+        </div>
+        <div class="dms-filtre-row">
+          <select class="dms-filtre-sel" id="filtreDurum" onchange="listeFiltrele()">
+            <option value="">Tum Durum</option>
+            <option value="Gecerli">Gecerli</option>
+            <option value="Taslak">Taslak</option>
+            <option value="Incelemede">Incelemede</option>
+            <option value="Gecersiz">Gecersiz</option>
+          </select>
+          <select class="dms-filtre-sel" id="filtreTur" onchange="listeFiltrele()">
+            <option value="">Tum Tur</option>
+            <option value="El Kitabi">El Kitabi</option>
+            <option value="Prosedur">Prosedur</option>
+            <option value="Is Talimati">Is Talimati</option>
+            <option value="Form">Form</option>
+            <option value="Politika">Politika</option>
+            <option value="Referans">Referans</option>
+          </select>
+        </div>
+        <div class="dms-liste" id="dmsListe"></div>
+      </div>
+
+      <!-- Sag Detay -->
+      <div class="dms-sag" id="dmsSag">
+        <div class="dms-empty" id="dmsEmpty">
+          <div class="dms-empty-icon">&#128196;</div>
+          <div style="font-size:13px;">Dokuman secin</div>
+          <div style="font-size:11px;">Sol listeden bir dokuman secin veya yeni olusturun</div>
+        </div>
+        <div id="dmsDetay" style="display:none;flex-direction:column;flex:1;">
+          <div class="dms-sag-ust">
+            <div>
+              <span style="font-family:'Courier New',monospace;font-size:14px;font-weight:700;color:var(--laci);" id="detayNo"></span>
+              <span class="rev-badge" id="detayRev" style="margin-left:6px;"></span>
+              <span class="durum-badge" id="detayDurum" style="margin-left:4px;"></span>
+            </div>
+            <div style="display:flex;gap:6px;">
+              <button class="btn-gri btn-sm" onclick="revizyonTalepEt()">Revizyon Talep Et</button>
+              <button class="btn-gri btn-sm" onclick="dagitModal()">Dagit</button>
+              <button class="btn-mavi btn-sm" onclick="pdfGoruntule()">PDF Goruntule</button>
+            </div>
+          </div>
+          <div class="dms-tab-row">
+            <button class="dms-tab-btn aktif" onclick="tabSec(0,this)">Dokuman Bilgisi</button>
+            <button class="dms-tab-btn" onclick="tabSec(1,this)">Revizyon Gecmisi</button>
+            <button class="dms-tab-btn" onclick="tabSec(2,this)">Dagitim</button>
+            <button class="dms-tab-btn" onclick="tabSec(3,this)">Iliskili Kayitlar</button>
+          </div>
+          <div class="dms-sag-icerik">
+            <!-- Tab 0: Bilgi -->
+            <div class="dms-tab-panel" id="tab0">
+              <div class="dms-info-grid" id="bilgiGrid"></div>
+              <div class="dms-sec">
+                <div class="dms-sec-baslik">Kapsam</div>
+                <div id="bilgiKapsam" style="font-size:12px;color:var(--metin2);line-height:1.6;"></div>
+              </div>
+              <div class="dms-sec">
+                <div class="dms-sec-baslik">Iliskili Modul</div>
+                <div id="bilgiModul"></div>
+              </div>
+            </div>
+            <!-- Tab 1: Revizyon -->
+            <div class="dms-tab-panel" id="tab1" style="display:none;">
+              <table class="dms-rev-tablo">
+                <thead><tr><th>Rev</th><th>Yayin Tarihi</th><th>Hazirlayan</th><th>Onaylayan</th><th>Degisiklik</th><th>Durum</th></tr></thead>
+                <tbody id="revTbody"></tbody>
+              </table>
+            </div>
+            <!-- Tab 2: Dagitim -->
+            <div class="dms-tab-panel" id="tab2" style="display:none;">
+              <div style="margin-bottom:10px;">
+                <button class="btn-gri btn-sm" onclick="dagitAliciEkle()">+ Alici Ekle</button>
+              </div>
+              <table class="dms-dag-tablo">
+                <thead><tr><th>Personel</th><th>Departman</th><th>Yontem</th><th>Tarih</th><th>Okuma Onayi</th><th></th></tr></thead>
+                <tbody id="dagTbody"></tbody>
+              </table>
+            </div>
+            <!-- Tab 3: Iliskili Kayitlar -->
+            <div class="dms-tab-panel" id="tab3" style="display:none;">
+              <div id="iliskiListe"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Yeni Dokuman Modal -->
+<div class="dms-modal-bg" id="yeniDokModalBg">
+  <div class="dms-modal">
+    <div class="dms-modal-baslik">
+      <span>Yeni Dokuman Olustur</span>
+      <span style="cursor:pointer;font-size:18px;color:var(--metin4);" onclick="modalKapat('yeniDokModalBg')">&times;</span>
+    </div>
+    <div class="dms-modal-icerik">
+      <div class="dms-field">
+        <label>Dokuman Turu</label>
+        <select id="mdTur">
+          <option value="El Kitabi">El Kitabi</option>
+          <option value="Prosedur">Prosedur</option>
+          <option value="Is Talimati">Is Talimati</option>
+          <option value="Form">Form</option>
+          <option value="Politika">Politika</option>
+          <option value="Referans">Referans</option>
+        </select>
+      </div>
+      <div class="dms-field">
+        <label>Kategori</label>
+        <select id="mdKategori">
+          <option value="Kalite">Kalite (KYS)</option>
+          <option value="Uretim">Uretim (URT)</option>
+          <option value="Bakim">Bakim (BAK)</option>
+          <option value="ISG">ISG</option>
+          <option value="Satinalma">Satinalma (SAT)</option>
+          <option value="Genel">Genel (GNL)</option>
+        </select>
+      </div>
+      <div class="dms-field">
+        <label>Baslik</label>
+        <input type="text" id="mdBaslik" placeholder="Dokuman basligi">
+      </div>
+      <div class="dms-field">
+        <label>Kapsam</label>
+        <textarea id="mdKapsam" placeholder="Dokumanin kapsamini aciklayiniz..."></textarea>
+      </div>
+      <div class="dms-field">
+        <label>AS9100 Maddesi</label>
+        <input type="text" id="mdAS9100" placeholder="orn: 7.5, 8.1">
+      </div>
+      <div class="dms-field">
+        <label>Iliskili Modul</label>
+        <select id="mdModul">
+          <option value="">Secin...</option>
+          <option value="Kalite">Kalite</option>
+          <option value="Uretim">Uretim</option>
+          <option value="Satinalma">Satinalma</option>
+          <option value="Bakim">Bakim</option>
+          <option value="ISG">ISG</option>
+          <option value="Finans">Finans</option>
+          <option value="Sevkiyat">Sevkiyat</option>
+        </select>
+      </div>
+    </div>
+    <div class="dms-modal-footer">
+      <button class="btn-gri" onclick="modalKapat('yeniDokModalBg')">Iptal</button>
+      <button class="btn-mavi" onclick="yeniDokKaydet()">Olustur</button>
+    </div>
+  </div>
+</div>
+
+<!-- Dagitim Alici Modal -->
+<div class="dms-modal-bg" id="dagitModalBg">
+  <div class="dms-modal" style="width:400px;">
+    <div class="dms-modal-baslik">
+      <span>Alici Ekle</span>
+      <span style="cursor:pointer;font-size:18px;color:var(--metin4);" onclick="modalKapat('dagitModalBg')">&times;</span>
+    </div>
+    <div class="dms-modal-icerik">
+      <div class="dms-field">
+        <label>Personel</label>
+        <select id="dagPersonel"></select>
+      </div>
+      <div class="dms-field">
+        <label>Yontem</label>
+        <select id="dagYontem">
+          <option value="Dijital">Dijital</option>
+          <option value="Basili">Basili Kopya</option>
+          <option value="E-posta">E-posta</option>
+        </select>
+      </div>
+    </div>
+    <div class="dms-modal-footer">
+      <button class="btn-gri" onclick="modalKapat('dagitModalBg')">Iptal</button>
+      <button class="btn-mavi" onclick="dagitKaydet()">Ekle</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var dokumanlar = [];
+var onaylar = [];
+var dagitimlar = [];
+var seciliDokId = null;
+var aktifTab = 0;
+var seritMod = 'tum';
+var personelListesi = [];
+
+// ── SAMPLE DATA ──
+var ornekDokumanlar = [
+  { id:'DOK001', dokNo:'KYS-ELK-001', baslik:'Kalite El Kitabi', tur:'El Kitabi', kategori:'Kalite', rev:'C', durum:'Gecerli', yayinTarihi:'2025-09-15', gozdenGecirme:'2026-09-15', as9100:'4.4, 7.5', modul:'Kalite', hazirlayan:'Erdem Kucukates', inceleyen:'Ahmet Yilmaz', onaylayan:'Genel Mudur', kapsam:'Ersan Endustriyel Makine Kalite Yonetim Sistemi El Kitabi. AS9100 Rev.D gerekliliklerini karsilar.', revGecmisi:[
+    { rev:'C', tarih:'2025-09-15', hazirlayan:'Erdem Kucukates', onaylayan:'Genel Mudur', degisiklik:'AS9100 Rev.D guncelleme', durum:'Gecerli' },
+    { rev:'B', tarih:'2024-03-01', hazirlayan:'Erdem Kucukates', onaylayan:'Genel Mudur', degisiklik:'Organizasyon semasi guncelleme', durum:'Gecersiz' },
+    { rev:'A', tarih:'2023-01-10', hazirlayan:'Erdem Kucukates', onaylayan:'Genel Mudur', degisiklik:'Ilk yayin', durum:'Gecersiz' }
+  ]},
+  { id:'DOK002', dokNo:'KYS-PR-001', baslik:'Dokuman Kontrol Proseduru', tur:'Prosedur', kategori:'Kalite', rev:'B', durum:'Gecerli', yayinTarihi:'2025-06-20', gozdenGecirme:'2026-06-20', as9100:'7.5', modul:'Kalite', hazirlayan:'Erdem Kucukates', inceleyen:'Kalite Departmani', onaylayan:'Erdem Kucukates', kapsam:'Dokumanlarin hazirlanmasi, incelenmesi, onaylanmasi, dagitimi, revizyonu ve iptal edilmesi sureclerini tanimlar.', revGecmisi:[
+    { rev:'B', tarih:'2025-06-20', hazirlayan:'Erdem Kucukates', onaylayan:'Erdem Kucukates', degisiklik:'Dijital dagitim eklendi', durum:'Gecerli' },
+    { rev:'A', tarih:'2024-01-15', hazirlayan:'Erdem Kucukates', onaylayan:'Erdem Kucukates', degisiklik:'Ilk yayin', durum:'Gecersiz' }
+  ]},
+  { id:'DOK003', dokNo:'URT-IT-001', baslik:'CNC Torna Operasyon Talimati', tur:'Is Talimati', kategori:'Uretim', rev:'A', durum:'Gecerli', yayinTarihi:'2025-11-01', gozdenGecirme:'2026-11-01', as9100:'8.5.1', modul:'Uretim', hazirlayan:'Mehmet Usta', inceleyen:'Uretim Sefi', onaylayan:'Erdem Kucukates', kapsam:'CNC torna tezgahlarinda gerceklestirilecek operasyonlar icin standart calisma talimati.', revGecmisi:[
+    { rev:'A', tarih:'2025-11-01', hazirlayan:'Mehmet Usta', onaylayan:'Erdem Kucukates', degisiklik:'Ilk yayin', durum:'Gecerli' }
+  ]},
+  { id:'DOK004', dokNo:'KAL-PR-001', baslik:'Girdi Kalite Kontrol Proseduru', tur:'Prosedur', kategori:'Kalite', rev:'B', durum:'Gecerli', yayinTarihi:'2025-08-10', gozdenGecirme:'2026-08-10', as9100:'8.4.2', modul:'Kalite', hazirlayan:'Erdem Kucukates', inceleyen:'Kalite Departmani', onaylayan:'Erdem Kucukates', kapsam:'Tedarikci malzemelerinin giris muayenesi, kabul/red kriterleri ve kayit surecleri.', revGecmisi:[
+    { rev:'B', tarih:'2025-08-10', hazirlayan:'Erdem Kucukates', onaylayan:'Erdem Kucukates', degisiklik:'Sahte parca kontrol eklendi', durum:'Gecerli' },
+    { rev:'A', tarih:'2024-05-01', hazirlayan:'Erdem Kucukates', onaylayan:'Erdem Kucukates', degisiklik:'Ilk yayin', durum:'Gecersiz' }
+  ]},
+  { id:'DOK005', dokNo:'FRM-IQC-001', baslik:'IQC Muayene Formu', tur:'Form', kategori:'Kalite', rev:'A', durum:'Gecerli', yayinTarihi:'2025-08-10', gozdenGecirme:'2026-08-10', as9100:'8.4.2', modul:'Kalite', hazirlayan:'Erdem Kucukates', inceleyen:'Kalite Departmani', onaylayan:'Erdem Kucukates', kapsam:'Girdi kalite muayenesi icin standart kayit formu.', revGecmisi:[
+    { rev:'A', tarih:'2025-08-10', hazirlayan:'Erdem Kucukates', onaylayan:'Erdem Kucukates', degisiklik:'Ilk yayin', durum:'Gecerli' }
+  ]},
+  { id:'DOK006', dokNo:'BAK-IT-001', baslik:'Torna Bakim Talimati', tur:'Is Talimati', kategori:'Bakim', rev:'A', durum:'Incelemede', yayinTarihi:'2025-04-01', gozdenGecirme:'2026-03-01', as9100:'7.1.3', modul:'Bakim', hazirlayan:'Bakim Teknisyeni', inceleyen:'Bakim Sefi', onaylayan:'', kapsam:'Torna tezgahlarinin periyodik bakim proseduru ve kontrol listeleri.', revGecmisi:[
+    { rev:'A', tarih:'2025-04-01', hazirlayan:'Bakim Teknisyeni', onaylayan:'', degisiklik:'Ilk yayin', durum:'Incelemede' }
+  ]},
+  { id:'DOK007', dokNo:'KYS-PR-002', baslik:'Ic Denetim Proseduru', tur:'Prosedur', kategori:'Kalite', rev:'A', durum:'Taslak', yayinTarihi:'', gozdenGecirme:'', as9100:'9.2', modul:'Kalite', hazirlayan:'Erdem Kucukates', inceleyen:'', onaylayan:'', kapsam:'Ic denetim planlama, yurutme ve raporlama surecleri.', revGecmisi:[
+    { rev:'A', tarih:'', hazirlayan:'Erdem Kucukates', onaylayan:'', degisiklik:'Ilk taslak', durum:'Taslak' }
+  ]},
+  { id:'DOK008', dokNo:'URT-IT-002', baslik:'CNC Freze Operasyon Talimati', tur:'Is Talimati', kategori:'Uretim', rev:'A', durum:'Gecerli', yayinTarihi:'2025-12-01', gozdenGecirme:'2026-12-01', as9100:'8.5.1', modul:'Uretim', hazirlayan:'Ali Usta', inceleyen:'Uretim Sefi', onaylayan:'Erdem Kucukates', kapsam:'CNC freze tezgahlarinda standart operasyon talimati.', revGecmisi:[
+    { rev:'A', tarih:'2025-12-01', hazirlayan:'Ali Usta', onaylayan:'Erdem Kucukates', degisiklik:'Ilk yayin', durum:'Gecerli' }
+  ]}
+];
+
+var ornekOnaylar = [
+  { id:'ONA001', dokId:'DOK006', adim:2, adimAdi:'Departman Incelemesi', sorumlu:'Bakim Sefi', tarih:'', not:'', durum:'bekliyor' },
+  { id:'ONA002', dokId:'DOK006', adim:1, adimAdi:'Hazirlama', sorumlu:'Bakim Teknisyeni', tarih:'2025-04-01', not:'Ilk taslak hazirlandi', durum:'tamam' },
+  { id:'ONA003', dokId:'DOK007', adim:1, adimAdi:'Hazirlama', sorumlu:'Erdem Kucukates', tarih:'2026-03-20', not:'Taslak hazirlandi', durum:'tamam' },
+  { id:'ONA004', dokId:'DOK007', adim:2, adimAdi:'Departman Incelemesi', sorumlu:'', tarih:'', not:'', durum:'bekliyor' }
+];
+
+var ornekDagitim = [
+  { id:'DAG001', dokId:'DOK001', personel:'Erdem Kucukates', departman:'Kalite', yontem:'Dijital', tarih:'2025-09-16', okumaOnayi:true },
+  { id:'DAG002', dokId:'DOK001', personel:'Ahmet Yilmaz', departman:'Uretim', yontem:'Basili', tarih:'2025-09-16', okumaOnayi:true },
+  { id:'DAG003', dokId:'DOK001', personel:'Mehmet Usta', departman:'Uretim', yontem:'Dijital', tarih:'2025-09-17', okumaOnayi:false },
+  { id:'DAG004', dokId:'DOK002', personel:'Erdem Kucukates', departman:'Kalite', yontem:'Dijital', tarih:'2025-06-21', okumaOnayi:true },
+  { id:'DAG005', dokId:'DOK004', personel:'Erdem Kucukates', departman:'Kalite', yontem:'Dijital', tarih:'2025-08-11', okumaOnayi:true }
+];
+
+// ── INIT ──
+function init() {
+  var kayitli = localStorage.getItem('ersan_dms_dokumanlar');
+  if (!kayitli) {
+    dokumanlar = ornekDokumanlar;
+    onaylar = ornekOnaylar;
+    dagitimlar = ornekDagitim;
+    kaydet();
+  } else {
+    dokumanlar = JSON.parse(kayitli);
+    onaylar = JSON.parse(localStorage.getItem('ersan_dms_onay') || '[]');
+    dagitimlar = JSON.parse(localStorage.getItem('ersan_dms_dagitim') || '[]');
+  }
+  personelYukle();
+  kpiGuncelle();
+  listeOlustur();
+}
+
+function kaydet() {
+  localStorage.setItem('ersan_dms_dokumanlar', JSON.stringify(dokumanlar));
+  localStorage.setItem('ersan_dms_onay', JSON.stringify(onaylar));
+  localStorage.setItem('ersan_dms_dagitim', JSON.stringify(dagitimlar));
+}
+
+function personelYukle() {
+  fetch('/.netlify/functions/airtable?table=Personel&pageSize=100')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      personelListesi = (d.records || []).map(function(rec) {
+        return { id: rec.id, ad: (rec.fields['Ad Soyad'] || rec.fields['Ad'] || 'Bilinmeyen'), departman: rec.fields['Departman'] || '' };
+      });
+      dagitPersonelDoldur();
+    })
+    .catch(function() {
+      personelListesi = [
+        { id:'p1', ad:'Erdem Kucukates', departman:'Kalite' },
+        { id:'p2', ad:'Ahmet Yilmaz', departman:'Uretim' },
+        { id:'p3', ad:'Mehmet Usta', departman:'Uretim' },
+        { id:'p4', ad:'Ali Usta', departman:'Uretim' },
+        { id:'p5', ad:'Bakim Teknisyeni', departman:'Bakim' }
+      ];
+      dagitPersonelDoldur();
+    });
+}
+
+function dagitPersonelDoldur() {
+  var sel = document.getElementById('dagPersonel');
+  sel.innerHTML = '';
+  personelListesi.forEach(function(p) {
+    var opt = document.createElement('option');
+    opt.value = p.ad;
+    opt.textContent = p.ad + (p.departman ? ' (' + p.departman + ')' : '');
+    opt.dataset.dept = p.departman;
+    sel.appendChild(opt);
+  });
+}
+
+// ── KPI ──
+function kpiGuncelle() {
+  var toplam = dokumanlar.length;
+  var gecerli = dokumanlar.filter(function(d) { return d.durum === 'Gecerli'; }).length;
+  var onayB = dokumanlar.filter(function(d) { return d.durum === 'Taslak' || d.durum === 'Incelemede'; }).length;
+  var bugun = new Date().toISOString().slice(0, 10);
+  var suresi = dokumanlar.filter(function(d) { return d.gozdenGecirme && d.gozdenGecirme < bugun; }).length;
+  var buAy = new Date().toISOString().slice(0, 7);
+  var revize = dokumanlar.filter(function(d) { return d.yayinTarihi && d.yayinTarihi.slice(0, 7) === buAy; }).length;
+
+  document.getElementById('kpiToplam').textContent = toplam;
+  document.getElementById('kpiGecerli').textContent = gecerli;
+  document.getElementById('kpiOnay').textContent = onayB;
+  document.getElementById('kpiSuresi').textContent = suresi;
+  document.getElementById('kpiRevize').textContent = revize;
+}
+
+// ── SERIT ──
+function seritFiltre(mod, el) {
+  seritMod = mod;
+  document.querySelectorAll('.as-chip').forEach(function(c) { c.classList.remove('aktif'); });
+  el.classList.add('aktif');
+  listeOlustur();
+}
+
+// ── LISTE ──
+function listeFiltrele() {
+  listeOlustur();
+}
+
+function listeOlustur() {
+  var arama = document.querySelector('.dms-arama').value.toLowerCase();
+  var durumF = document.getElementById('filtreDurum').value;
+  var turF = document.getElementById('filtreTur').value;
+
+  var filtreli = dokumanlar.filter(function(d) {
+    if (arama && d.dokNo.toLowerCase().indexOf(arama) === -1 && d.baslik.toLowerCase().indexOf(arama) === -1) return false;
+    if (durumF && d.durum !== durumF) return false;
+    if (turF && d.tur !== turF) return false;
+    if (seritMod === 'gozden') {
+      var bugun = new Date().toISOString().slice(0, 10);
+      return d.gozdenGecirme && d.gozdenGecirme < bugun;
+    }
+    if (seritMod === 'onay') return d.durum === 'Taslak' || d.durum === 'Incelemede';
+    return true;
+  });
+
+  // Group by tur
+  var gruplar = {};
+  var turSira = ['El Kitabi', 'Prosedur', 'Is Talimati', 'Form', 'Politika', 'Referans'];
+  filtreli.forEach(function(d) {
+    if (!gruplar[d.tur]) gruplar[d.tur] = [];
+    gruplar[d.tur].push(d);
+  });
+
+  var html = '';
+  turSira.forEach(function(tur) {
+    if (!gruplar[tur]) return;
+    var turCls = turClassAl(tur);
+    html += '<div class="dms-grup-baslik"><span class="tur-icon ' + turCls + '">' + turKisalt(tur) + '</span>' + tur + ' <span class="sayi">' + gruplar[tur].length + '</span></div>';
+    gruplar[tur].forEach(function(d) {
+      var durCls = d.durum.toLowerCase().replace('ı', 'i');
+      var revCls = 'rev-' + d.rev.toLowerCase();
+      html += '<div class="dms-satir ' + durCls + (d.id === seciliDokId ? ' secili' : '') + '" onclick="dokSec(\'' + d.id + '\')">';
+      html += '<div class="dms-satir-no"><span class="tur-icon ' + turCls + '" style="width:16px;height:16px;font-size:8px;">' + turKisalt(tur) + '</span>' + d.dokNo + ' <span class="rev-badge ' + revCls + '">Rev ' + d.rev + '</span> <span class="durum-badge ' + durCls + '">' + d.durum + '</span></div>';
+      html += '<div class="dms-satir-baslik">' + d.baslik + '</div>';
+      html += '<div class="dms-satir-alt"><span class="dms-satir-kat">' + d.kategori + '</span></div>';
+      html += '</div>';
+    });
+  });
+
+  if (!html) html = '<div style="padding:20px;text-align:center;color:var(--metin4);font-size:12px;">Dokuman bulunamadi</div>';
+  document.getElementById('dmsListe').innerHTML = html;
+}
+
+function turClassAl(tur) {
+  var m = { 'El Kitabi':'tur-elk', 'Prosedur':'tur-pr', 'Is Talimati':'tur-it', 'Form':'tur-frm', 'Politika':'tur-plt', 'Referans':'tur-ref' };
+  return m[tur] || 'tur-pr';
+}
+
+function turKisalt(tur) {
+  var m = { 'El Kitabi':'EK', 'Prosedur':'PR', 'Is Talimati':'IT', 'Form':'FM', 'Politika':'PL', 'Referans':'RF' };
+  return m[tur] || '?';
+}
+
+// ── DETAIL ──
+function dokSec(id) {
+  seciliDokId = id;
+  var d = dokumanlar.find(function(x) { return x.id === id; });
+  if (!d) return;
+
+  document.getElementById('dmsEmpty').style.display = 'none';
+  document.getElementById('dmsDetay').style.display = 'flex';
+
+  document.getElementById('detayNo').textContent = d.dokNo;
+  var revEl = document.getElementById('detayRev');
+  revEl.textContent = 'Rev ' + d.rev;
+  revEl.className = 'rev-badge rev-' + d.rev.toLowerCase();
+  var durEl = document.getElementById('detayDurum');
+  durEl.textContent = d.durum;
+  durEl.className = 'durum-badge ' + d.durum.toLowerCase().replace('ı', 'i');
+
+  // Tab 0 info
+  var gridHtml = '';
+  var fields = [
+    { l:'Dokuman No', v:d.dokNo },
+    { l:'Revizyon', v:d.rev },
+    { l:'Tur', v:d.tur },
+    { l:'Yayin Tarihi', v:d.yayinTarihi || '-' },
+    { l:'Gozden Gecirme', v:gozdenGecirmeHtml(d) },
+    { l:'AS9100 Maddesi', v:d.as9100 || '-' },
+    { l:'Hazirlayan', v:d.hazirlayan || '-' },
+    { l:'Inceleyen', v:d.inceleyen || '-' },
+    { l:'Onaylayan', v:d.onaylayan || '-' }
+  ];
+  fields.forEach(function(f) {
+    gridHtml += '<div><div class="dms-info-label">' + f.l + '</div><div class="dms-info-val">' + f.v + '</div></div>';
+  });
+  document.getElementById('bilgiGrid').innerHTML = gridHtml;
+  document.getElementById('bilgiKapsam').textContent = d.kapsam || '-';
+  document.getElementById('bilgiModul').innerHTML = d.modul ? '<span class="modul-chip">' + d.modul + '</span>' : '-';
+
+  // Tab 1 rev
+  var revHtml = '';
+  (d.revGecmisi || []).forEach(function(r, i) {
+    var cls = i === 0 ? 'guncel' : 'eski';
+    revHtml += '<tr class="' + cls + '"><td><strong>Rev ' + r.rev + '</strong></td><td>' + (r.tarih || '-') + '</td><td>' + (r.hazirlayan || '-') + '</td><td>' + (r.onaylayan || '-') + '</td><td>' + (r.degisiklik || '-') + '</td><td><span class="durum-badge ' + r.durum.toLowerCase().replace('ı', 'i') + '">' + r.durum + '</span></td></tr>';
+  });
+  document.getElementById('revTbody').innerHTML = revHtml;
+
+  // Tab 2 dagitim
+  dagitimTabloGuncelle(id);
+
+  // Tab 3 iliski
+  iliskiGuncelle(id);
+
+  // Re-render list for selection
+  listeOlustur();
+  tabSec(aktifTab, document.querySelectorAll('.dms-tab-btn')[aktifTab]);
+}
+
+function gozdenGecirmeHtml(d) {
+  if (!d.gozdenGecirme) return '-';
+  var bugun = new Date().toISOString().slice(0, 10);
+  if (d.gozdenGecirme < bugun) {
+    return '<span style="color:var(--kirmizi);font-weight:600;">' + d.gozdenGecirme + ' (SURESI DOLMUS)</span>';
+  }
+  return d.gozdenGecirme;
+}
+
+function dagitimTabloGuncelle(dokId) {
+  var dagList = dagitimlar.filter(function(dg) { return dg.dokId === dokId; });
+  var html = '';
+  dagList.forEach(function(dg) {
+    html += '<tr><td>' + dg.personel + '</td><td>' + (dg.departman || '-') + '</td><td>' + dg.yontem + '</td><td>' + dg.tarih + '</td><td>';
+    if (dg.okumaOnayi) {
+      html += '<span style="color:var(--yesil);font-weight:600;">Okundu</span>';
+    } else {
+      html += '<span style="color:var(--sari);">Bekliyor</span>';
+    }
+    html += '</td><td>';
+    if (!dg.okumaOnayi) {
+      html += '<button class="btn-gri btn-sm" onclick="hatirlatGonder(\'' + dg.id + '\')">Hatırlat</button>';
+    }
+    html += '</td></tr>';
+  });
+  if (!html) html = '<tr><td colspan="6" style="text-align:center;color:var(--metin4);padding:20px;">Dagitim kaydi yok</td></tr>';
+  document.getElementById('dagTbody').innerHTML = html;
+}
+
+function iliskiGuncelle(dokId) {
+  // Sample related records
+  var iliskiler = [];
+  var d = dokumanlar.find(function(x) { return x.id === dokId; });
+  if (d && d.kategori === 'Kalite') {
+    iliskiler.push({ tip: 'NCR', no: 'NCR-2026-001', aciklama: 'Malzeme sertifika uygunsuzlugu' });
+    iliskiler.push({ tip: 'CAPA', no: 'CAPA-2026-001', aciklama: 'Tedarikci kalite iyilestirme' });
+  }
+  var html = '';
+  iliskiler.forEach(function(il) {
+    html += '<div class="iliski-card"><span class="iliski-card-tip ' + il.tip.toLowerCase() + '">' + il.tip + '</span><div><div style="font-size:12px;font-weight:600;color:var(--laci);">' + il.no + '</div><div style="font-size:11px;color:var(--metin3);">' + il.aciklama + '</div></div></div>';
+  });
+  if (!html) html = '<div style="padding:20px;text-align:center;color:var(--metin4);font-size:12px;">Iliskili kayit yok</div>';
+  document.getElementById('iliskiListe').innerHTML = html;
+}
+
+// ── TABS ──
+function tabSec(idx, el) {
+  aktifTab = idx;
+  document.querySelectorAll('.dms-tab-btn').forEach(function(b) { b.classList.remove('aktif'); });
+  if (el) el.classList.add('aktif');
+  document.querySelectorAll('.dms-tab-panel').forEach(function(p, i) {
+    p.style.display = i === idx ? 'block' : 'none';
+  });
+}
+
+// ── MODALS ──
+function yeniDokModal() {
+  document.getElementById('mdBaslik').value = '';
+  document.getElementById('mdKapsam').value = '';
+  document.getElementById('mdAS9100').value = '';
+  document.getElementById('yeniDokModalBg').classList.add('acik');
+}
+
+function modalKapat(id) {
+  document.getElementById(id).classList.remove('acik');
+}
+
+function dagitModal() {
+  if (!seciliDokId) return;
+  document.getElementById('dagitModalBg').classList.add('acik');
+}
+
+function dagitAliciEkle() {
+  dagitModal();
+}
+
+// ── YENI DOKUMAN ──
+function yeniDokKaydet() {
+  var tur = document.getElementById('mdTur').value;
+  var kategori = document.getElementById('mdKategori').value;
+  var baslik = document.getElementById('mdBaslik').value.trim();
+  var kapsam = document.getElementById('mdKapsam').value.trim();
+  var as9100 = document.getElementById('mdAS9100').value.trim();
+  var modul = document.getElementById('mdModul').value;
+
+  if (!baslik) { alert('Baslik zorunludur'); return; }
+
+  var katKod = { 'Kalite':'KYS', 'Uretim':'URT', 'Bakim':'BAK', 'ISG':'ISG', 'Satinalma':'SAT', 'Genel':'GNL' };
+  var turKod = { 'El Kitabi':'ELK', 'Prosedur':'PR', 'Is Talimati':'IT', 'Form':'FRM', 'Politika':'PLT', 'Referans':'REF' };
+  var prefix = (katKod[kategori] || 'GNL') + '-' + (turKod[tur] || 'DOC');
+
+  // Find next number
+  var mevcut = dokumanlar.filter(function(d) { return d.dokNo.indexOf(prefix) === 0; });
+  var sonNo = 0;
+  mevcut.forEach(function(d) {
+    var p = d.dokNo.split('-');
+    var n = parseInt(p[p.length - 1]) || 0;
+    if (n > sonNo) sonNo = n;
+  });
+  var yeniNo = prefix + '-' + String(sonNo + 1).padStart(3, '0');
+  var yeniId = 'DOK' + String(Date.now()).slice(-6);
+
+  var yeniDok = {
+    id: yeniId,
+    dokNo: yeniNo,
+    baslik: baslik,
+    tur: tur,
+    kategori: kategori,
+    rev: 'A',
+    durum: 'Taslak',
+    yayinTarihi: '',
+    gozdenGecirme: '',
+    as9100: as9100,
+    modul: modul,
+    hazirlayan: window._aktifKullanici || 'Erdem Kucukates',
+    inceleyen: '',
+    onaylayan: '',
+    kapsam: kapsam,
+    revGecmisi: [
+      { rev: 'A', tarih: '', hazirlayan: window._aktifKullanici || 'Erdem Kucukates', onaylayan: '', degisiklik: 'Ilk taslak', durum: 'Taslak' }
+    ]
+  };
+
+  dokumanlar.push(yeniDok);
+
+  // Create approval chain
+  var bugun = new Date().toISOString().slice(0, 10);
+  onaylar.push({ id: 'ONA' + Date.now() + 'a', dokId: yeniId, adim: 1, adimAdi: 'Hazirlama', sorumlu: yeniDok.hazirlayan, tarih: bugun, not: 'Dokuman olusturuldu', durum: 'tamam' });
+  onaylar.push({ id: 'ONA' + Date.now() + 'b', dokId: yeniId, adim: 2, adimAdi: 'Departman Incelemesi', sorumlu: '', tarih: '', not: '', durum: 'bekliyor' });
+  onaylar.push({ id: 'ONA' + Date.now() + 'c', dokId: yeniId, adim: 3, adimAdi: 'Kalite Muduru Onayi', sorumlu: '', tarih: '', not: '', durum: 'bekliyor' });
+  onaylar.push({ id: 'ONA' + Date.now() + 'd', dokId: yeniId, adim: 4, adimAdi: 'Genel Mudur / Yayin', sorumlu: '', tarih: '', not: '', durum: 'bekliyor' });
+
+  kaydet();
+  kpiGuncelle();
+  listeOlustur();
+  modalKapat('yeniDokModalBg');
+  dokSec(yeniId);
+}
+
+// ── REVIZYON TALEP ──
+function revizyonTalepEt() {
+  if (!seciliDokId) return;
+  var d = dokumanlar.find(function(x) { return x.id === seciliDokId; });
+  if (!d) return;
+  if (d.durum !== 'Gecerli') { alert('Sadece gecerli dokumanlar revize edilebilir'); return; }
+
+  if (!confirm(d.dokNo + ' Rev ' + d.rev + ' gecersiz yapilacak ve yeni revizyon (Rev ' + sonrakiRev(d.rev) + ') Taslak olarak olusturulacak.\n\nDevam edilsin mi?')) return;
+
+  // Old doc becomes Gecersiz
+  d.durum = 'Gecersiz';
+  if (d.revGecmisi && d.revGecmisi.length > 0) {
+    d.revGecmisi[0].durum = 'Gecersiz';
+  }
+
+  // New doc
+  var yeniRev = sonrakiRev(d.rev);
+  var yeniId = 'DOK' + String(Date.now()).slice(-6);
+  var bugun = new Date().toISOString().slice(0, 10);
+  var yeniDok = JSON.parse(JSON.stringify(d));
+  yeniDok.id = yeniId;
+  yeniDok.rev = yeniRev;
+  yeniDok.durum = 'Taslak';
+  yeniDok.yayinTarihi = '';
+  yeniDok.gozdenGecirme = '';
+  yeniDok.onaylayan = '';
+  yeniDok.revGecmisi.unshift({ rev: yeniRev, tarih: '', hazirlayan: window._aktifKullanici || 'Erdem Kucukates', onaylayan: '', degisiklik: 'Revizyon talebi', durum: 'Taslak' });
+
+  dokumanlar.push(yeniDok);
+
+  // New approval chain
+  onaylar.push({ id: 'ONA' + Date.now() + 'a', dokId: yeniId, adim: 1, adimAdi: 'Hazirlama', sorumlu: yeniDok.hazirlayan, tarih: bugun, not: 'Revizyon talebi olusturuldu', durum: 'tamam' });
+  onaylar.push({ id: 'ONA' + Date.now() + 'b', dokId: yeniId, adim: 2, adimAdi: 'Departman Incelemesi', sorumlu: '', tarih: '', not: '', durum: 'bekliyor' });
+  onaylar.push({ id: 'ONA' + Date.now() + 'c', dokId: yeniId, adim: 3, adimAdi: 'Kalite Muduru Onayi', sorumlu: '', tarih: '', not: '', durum: 'bekliyor' });
+  onaylar.push({ id: 'ONA' + Date.now() + 'd', dokId: yeniId, adim: 4, adimAdi: 'Genel Mudur / Yayin', sorumlu: '', tarih: '', not: '', durum: 'bekliyor' });
+
+  kaydet();
+  kpiGuncelle();
+  listeOlustur();
+  dokSec(yeniId);
+}
+
+function sonrakiRev(rev) {
+  var code = rev.charCodeAt(0);
+  return String.fromCharCode(code + 1);
+}
+
+// ── DAGITIM ──
+function dagitKaydet() {
+  if (!seciliDokId) return;
+  var sel = document.getElementById('dagPersonel');
+  var personel = sel.value;
+  var dept = sel.options[sel.selectedIndex].dataset.dept || '';
+  var yontem = document.getElementById('dagYontem').value;
+  var bugun = new Date().toISOString().slice(0, 10);
+
+  dagitimlar.push({
+    id: 'DAG' + Date.now(),
+    dokId: seciliDokId,
+    personel: personel,
+    departman: dept,
+    yontem: yontem,
+    tarih: bugun,
+    okumaOnayi: false
+  });
+
+  kaydet();
+  dagitimTabloGuncelle(seciliDokId);
+  modalKapat('dagitModalBg');
+}
+
+function hatirlatGonder(dagId) {
+  alert('Hatirlatma gonderildi!');
+}
+
+function pdfGoruntule() {
+  alert('PDF goruntuleme -- Cloudinary entegrasyonu bekliyor');
+}
+
+// ── INIT ──
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

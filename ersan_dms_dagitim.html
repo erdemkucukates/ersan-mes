@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — Dagitim Listesi</title>
+<link rel="stylesheet" href="ersan_styles.css">
+<script src="ersan_nav.js" defer></script>
+<script src="ersan_log.js" defer></script>
+<style>
+.dg-main { padding:14px 18px; flex:1; overflow:hidden; display:flex; flex-direction:column; }
+.kpi-row { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:14px; flex-shrink:0; }
+.kpi {
+  background:var(--beyaz); border:1px solid var(--border); border-radius:8px;
+  padding:12px 14px; position:relative; overflow:hidden;
+}
+.kpi::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; }
+.kpi.b::before { background:var(--mavi); }
+.kpi.a::before { background:var(--sari); }
+.kpi.g::before { background:var(--yesil); }
+.kpi-label { font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--metin4); }
+.kpi-val { font-size:22px; font-weight:700; color:var(--laci); margin:3px 0 1px; line-height:1; }
+.kpi-sub { font-size:10px; color:var(--metin4); }
+
+.topbar {
+  background:var(--beyaz); border-bottom:1px solid var(--border); padding:0 18px;
+  display:flex; align-items:center; gap:10px; height:48px; flex-shrink:0;
+}
+.topbar-title { font-size:14px; font-weight:700; color:var(--laci); }
+.topbar-r { margin-left:auto; display:flex; gap:8px; align-items:center; }
+
+.btn {
+  display:inline-flex; align-items:center; gap:5px; padding:6px 12px; border-radius:5px;
+  font-size:11.5px; font-weight:600; cursor:pointer; border:none; transition:all .15s; white-space:nowrap;
+}
+.btn-p { background:var(--laci); color:#fff; }
+.btn-p:hover { background:var(--laci2); }
+.btn-o { background:var(--beyaz); border:1px solid var(--border2); color:var(--metin2); }
+.btn-o:hover { background:var(--bg); }
+.btn-g { background:var(--yesil); color:#fff; }
+.btn-r { background:var(--kirmizi); color:#fff; }
+.btn-a { background:var(--sari); color:#fff; }
+.btn-sm { padding:4px 9px; font-size:10.5px; }
+
+.split {
+  display:grid; grid-template-columns:300px 1fr; gap:12px;
+  flex:1; min-height:0;
+}
+.pnl {
+  background:var(--beyaz); border:1px solid var(--border); border-radius:8px;
+  display:flex; flex-direction:column; overflow:hidden;
+}
+.pnl-head {
+  padding:9px 13px; border-bottom:1px solid var(--border); background:var(--bg2);
+  display:flex; align-items:center; gap:8px; flex-shrink:0;
+}
+.pnl-head-title { font-size:11.5px; font-weight:700; color:var(--laci); }
+.pnl-body { flex:1; overflow-y:auto; }
+
+.per-item {
+  padding:10px 12px; border-bottom:1px solid #f3f4f6; cursor:pointer;
+  border-left:3px solid transparent; transition:background .12s;
+}
+.per-item:hover { background:var(--bg2); }
+.per-item.sel { background:var(--mavi-acik); border-left-color:var(--mavi); }
+.per-item.ok { border-left-color:var(--yesil); }
+.per-item.pending { border-left-color:var(--sari); }
+.per-name { font-size:12px; font-weight:700; color:var(--laci); }
+.per-dept { font-size:10px; color:var(--metin3); margin-top:2px; }
+.per-badge { margin-left:auto; }
+
+.bdg {
+  display:inline-flex; align-items:center; padding:2px 7px; border-radius:12px;
+  font-size:9.5px; font-weight:600;
+}
+.bdg-g { background:var(--yesil-bg); color:var(--yesil-t); }
+.bdg-r { background:var(--kirmizi-bg); color:var(--kirmizi-t); }
+.bdg-a { background:var(--sari-bg); color:var(--sari-t); }
+.bdg-b { background:var(--mavi-acik); color:var(--mavi-koyu); }
+.bdg-z { background:var(--bg); color:var(--metin3); }
+
+.tbl { width:100%; border-collapse:collapse; }
+.tbl th {
+  font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.05em;
+  color:var(--metin4); background:var(--bg); padding:7px 9px; border-bottom:1px solid var(--border);
+  text-align:left; white-space:nowrap; position:sticky; top:0;
+}
+.tbl td {
+  padding:7px 9px; border-bottom:1px solid #f3f4f6; font-size:11.5px;
+  color:var(--metin2); vertical-align:middle;
+}
+.tbl tr:hover td { background:#fafafa; }
+.tbl tr.pending-row td { background:var(--sari-bg); }
+
+.rev-badge {
+  display:inline-flex; align-items:center; justify-content:center;
+  width:20px; height:20px; border-radius:4px; font-size:9px; font-weight:800;
+  background:var(--laci); color:#fff;
+}
+
+.mono { font-family:'Courier New',monospace; font-size:10.5px; font-weight:700; color:var(--laci); }
+
+.info-box {
+  padding:9px 12px; border-radius:6px; font-size:11px; margin-top:10px;
+}
+.info-box.info { background:var(--mavi-acik); color:var(--mavi-koyu); }
+
+.empty-state {
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  height:100%; color:var(--metin4); gap:8px; padding:40px;
+}
+.empty-icon { font-size:36px; opacity:0.3; }
+
+/* Modal */
+.modal-overlay {
+  display:none; position:fixed; top:0; left:0; right:0; bottom:0;
+  background:rgba(0,0,0,.45); z-index:800; align-items:center; justify-content:center;
+}
+.modal-overlay.open { display:flex; }
+.modal {
+  background:#fff; border-radius:10px; width:560px; max-height:80vh;
+  overflow-y:auto; box-shadow:0 8px 30px rgba(0,0,0,.18);
+}
+.modal-head {
+  padding:14px 18px; border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between;
+}
+.modal-head h3 { font-size:14px; font-weight:700; color:var(--laci); }
+.modal-close { background:none; border:none; font-size:18px; cursor:pointer; color:var(--metin3); }
+.modal-body { padding:16px 18px; }
+.modal-body label { display:block; font-size:11px; font-weight:600; color:var(--metin3); margin-bottom:3px; margin-top:10px; }
+.modal-body label:first-child { margin-top:0; }
+.modal-body select {
+  width:100%; padding:6px 9px; border:1px solid var(--border); border-radius:5px;
+  font-size:12px; font-family:inherit; color:var(--metin);
+}
+.chk-list { max-height:180px; overflow-y:auto; border:1px solid var(--border); border-radius:5px; padding:6px 8px; }
+.chk-item { display:flex; align-items:center; gap:6px; padding:4px 0; font-size:11.5px; color:var(--metin2); }
+.chk-item input { accent-color:var(--mavi); }
+.modal-foot { padding:12px 18px; border-top:1px solid var(--border); display:flex; gap:8px; justify-content:flex-end; }
+</style>
+</head>
+<body>
+<div class="sayfa-alani">
+  <div class="topbar">
+    <div class="topbar-title">Dagitim Listesi</div>
+    <div class="topbar-r">
+      <button class="btn btn-p" onclick="openDagitimModal()">+ Dagitim Baslat</button>
+    </div>
+  </div>
+
+  <div class="dg-main">
+    <!-- KPI -->
+    <div class="kpi-row">
+      <div class="kpi b">
+        <div class="kpi-label">Toplam Dagitim</div>
+        <div class="kpi-val" id="kpiToplam">0</div>
+        <div class="kpi-sub">Dokuman-personel kaydi</div>
+      </div>
+      <div class="kpi g">
+        <div class="kpi-label">Okunan</div>
+        <div class="kpi-val" id="kpiOkunan">0</div>
+        <div class="kpi-sub">Onay verildi</div>
+      </div>
+      <div class="kpi a">
+        <div class="kpi-label">Bekleyen</div>
+        <div class="kpi-val" id="kpiBekleyen">0</div>
+        <div class="kpi-sub">Hatirlatma gerekli</div>
+      </div>
+    </div>
+
+    <!-- Split layout -->
+    <div class="split">
+      <!-- Left: Personel list -->
+      <div class="pnl">
+        <div class="pnl-head">
+          <span class="pnl-head-title">Personel Listesi</span>
+        </div>
+        <div class="pnl-body" id="personelList">
+          <div class="empty-state"><div class="empty-icon">...</div><div>Yukleniyor...</div></div>
+        </div>
+      </div>
+
+      <!-- Right: Document list for selected person -->
+      <div class="pnl">
+        <div class="pnl-head">
+          <span class="pnl-head-title" id="rightTitle">Personel seciniz</span>
+          <div style="margin-left:auto;display:flex;gap:6px" id="rightButtons"></div>
+        </div>
+        <div class="pnl-body" id="rightPanel">
+          <div class="empty-state"><div class="empty-icon">&#8592;</div><div>Sol panelden personel seciniz</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Dagitim Baslat Modal -->
+<div class="modal-overlay" id="modalDagitim">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Dagitim Baslat</h3>
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <label>Dokuman Sec (Gecerli dokumanlar)</label>
+      <select id="mDokuman">
+        <option value="">-- Dokuman seciniz --</option>
+      </select>
+
+      <label>Dagitim Yontemi</label>
+      <select id="mYontem">
+        <option value="Sistem">Sistem (dijital)</option>
+        <option value="Baskili">Baskili kopya</option>
+      </select>
+
+      <label>Personel Sec</label>
+      <div class="chk-list" id="mPersonelList">
+        <div style="color:var(--metin4);font-size:11px">Yukleniyor...</div>
+      </div>
+      <div style="margin-top:6px;display:flex;gap:8px">
+        <button class="btn btn-o btn-sm" onclick="selectAllPersonel(true)">Tumunu Sec</button>
+        <button class="btn btn-o btn-sm" onclick="selectAllPersonel(false)">Temizle</button>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-o" onclick="closeModal()">Iptal</button>
+      <button class="btn btn-p" onclick="saveDagitim()">Dagitimi Baslat</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── SAMPLE DATA ── */
+var SAMPLE_DAGITIM = [
+  {id:'DG001',dokNo:'KYS-PR-001',baslik:'Dokuman ve Kayit Kontrolu',rev:'C',personelId:'P001',personelAd:'Ayse Kaya',departman:'Kalite',dagitimTarihi:'2026-01-15',yontem:'Sistem',durum:'Okundu'},
+  {id:'DG002',dokNo:'KYS-PR-001',baslik:'Dokuman ve Kayit Kontrolu',rev:'C',personelId:'P002',personelAd:'Mehmet Aydin',departman:'Uretim',dagitimTarihi:'2026-01-15',yontem:'Sistem',durum:'Okundu'},
+  {id:'DG003',dokNo:'KYS-PR-001',baslik:'Dokuman ve Kayit Kontrolu',rev:'C',personelId:'P003',personelAd:'Ali Yildiz',departman:'Satinalma',dagitimTarihi:'2026-01-15',yontem:'Sistem',durum:'Bekliyor'},
+  {id:'DG004',dokNo:'KYS-PR-001',baslik:'Dokuman ve Kayit Kontrolu',rev:'C',personelId:'P004',personelAd:'Fatma Celik',departman:'Depo',dagitimTarihi:'2026-01-15',yontem:'Sistem',durum:'Okundu'},
+  {id:'DG005',dokNo:'KYS-PR-001',baslik:'Dokuman ve Kayit Kontrolu',rev:'C',personelId:'P005',personelAd:'Ahmet Kaya',departman:'Atolye',dagitimTarihi:'2026-01-16',yontem:'Baskili',durum:'Imzali'},
+  {id:'DG006',dokNo:'URT-PR-001',baslik:'Uretim Planlama',rev:'D',personelId:'P002',personelAd:'Mehmet Aydin',departman:'Uretim',dagitimTarihi:'2026-02-05',yontem:'Sistem',durum:'Okundu'},
+  {id:'DG007',dokNo:'URT-PR-001',baslik:'Uretim Planlama',rev:'D',personelId:'P005',personelAd:'Ahmet Kaya',departman:'Atolye',dagitimTarihi:'2026-02-05',yontem:'Baskili',durum:'Imzali'},
+  {id:'DG008',dokNo:'URT-IT-001',baslik:'CNC Torna Operasyon Talimati',rev:'B',personelId:'P002',personelAd:'Mehmet Aydin',departman:'Uretim',dagitimTarihi:'2026-03-10',yontem:'Baskili',durum:'Imzali'},
+  {id:'DG009',dokNo:'URT-IT-001',baslik:'CNC Torna Operasyon Talimati',rev:'B',personelId:'P005',personelAd:'Ahmet Kaya',departman:'Atolye',dagitimTarihi:'2026-03-10',yontem:'Baskili',durum:'Imzali'},
+  {id:'DG010',dokNo:'KAL-IT-001',baslik:'IQC Muayene Talimati',rev:'C',personelId:'P001',personelAd:'Ayse Kaya',departman:'Kalite',dagitimTarihi:'2026-02-22',yontem:'Sistem',durum:'Okundu'},
+  {id:'DG011',dokNo:'FRM-IQC-001',baslik:'IQC Boyutsal Kontrol Formu',rev:'B',personelId:'P001',personelAd:'Ayse Kaya',departman:'Kalite',dagitimTarihi:'2026-02-22',yontem:'Sistem',durum:'Okundu'},
+  {id:'DG012',dokNo:'FRM-BAK-001',baslik:'Periyodik Bakim Kontrol Listesi',rev:'C',personelId:'P004',personelAd:'Fatma Celik',departman:'Depo',dagitimTarihi:'2026-01-10',yontem:'Sistem',durum:'Okundu'},
+  {id:'DG013',dokNo:'SAT-PR-001',baslik:'Satin Alma Proseduru',rev:'B',personelId:'P003',personelAd:'Ali Yildiz',departman:'Satinalma',dagitimTarihi:'2026-01-20',yontem:'Sistem',durum:'Okundu'},
+  {id:'DG014',dokNo:'SAT-PR-001',baslik:'Satin Alma Proseduru',rev:'B',personelId:'P002',personelAd:'Mehmet Aydin',departman:'Uretim',dagitimTarihi:'2026-01-20',yontem:'Sistem',durum:'Bekliyor'},
+  {id:'DG015',dokNo:'KYS-PR-002',baslik:'Ic Denetim Proseduru',rev:'B',personelId:'P001',personelAd:'Ayse Kaya',departman:'Kalite',dagitimTarihi:'2025-11-20',yontem:'Sistem',durum:'Okundu'},
+  {id:'DG016',dokNo:'KYS-PR-002',baslik:'Ic Denetim Proseduru',rev:'B',personelId:'P002',personelAd:'Mehmet Aydin',departman:'Uretim',dagitimTarihi:'2025-11-20',yontem:'Sistem',durum:'Okundu'},
+  {id:'DG017',dokNo:'FRM-NCR-001',baslik:'NCR Rapor Sablonu',rev:'A',personelId:'P001',personelAd:'Ayse Kaya',departman:'Kalite',dagitimTarihi:'2026-03-20',yontem:'Sistem',durum:'Bekliyor'},
+  {id:'DG018',dokNo:'FRM-NCR-001',baslik:'NCR Rapor Sablonu',rev:'A',personelId:'P002',personelAd:'Mehmet Aydin',departman:'Uretim',dagitimTarihi:'2026-03-20',yontem:'Sistem',durum:'Bekliyor'}
+];
+
+var SAMPLE_DOCS = [
+  {id:'D001',dokNo:'KYS-PR-001',baslik:'Dokuman ve Kayit Kontrolu Proseduru',tur:'Prosedur',rev:'C',durum:'Gecerli'},
+  {id:'D002',dokNo:'KYS-PR-002',baslik:'Ic Denetim Proseduru',tur:'Prosedur',rev:'B',durum:'Gecerli'},
+  {id:'D004',dokNo:'URT-PR-001',baslik:'Uretim Planlama Proseduru',tur:'Prosedur',rev:'D',durum:'Gecerli'},
+  {id:'D005',dokNo:'URT-IT-001',baslik:'CNC Torna Operasyon Talimati',tur:'Is Talimati',rev:'B',durum:'Gecerli'},
+  {id:'D006',dokNo:'KAL-IT-001',baslik:'IQC Muayene Talimati',tur:'Is Talimati',rev:'C',durum:'Gecerli'},
+  {id:'D008',dokNo:'FRM-IQC-001',baslik:'IQC Boyutsal Kontrol Formu',tur:'Form',rev:'B',durum:'Gecerli'},
+  {id:'D011',dokNo:'FRM-BAK-001',baslik:'Periyodik Bakim Kontrol Listesi',tur:'Form',rev:'C',durum:'Gecerli'},
+  {id:'D012',dokNo:'SAT-PR-001',baslik:'Satin Alma Proseduru',tur:'Prosedur',rev:'B',durum:'Gecerli'}
+];
+
+var personelData = [];
+var selectedPersonelId = null;
+
+function initData() {
+  if (!localStorage.getItem('ersan_dms_dagitim')) {
+    localStorage.setItem('ersan_dms_dagitim', JSON.stringify(SAMPLE_DAGITIM));
+  }
+  if (!localStorage.getItem('ersan_dms_dokumanlar')) {
+    localStorage.setItem('ersan_dms_dokumanlar', JSON.stringify(SAMPLE_DOCS.map(function(d) {
+      d.yayinTarihi = '2026-01-15';
+      d.sonrakiGozdenGecirme = '2027-01-15';
+      d.hazirlayan = 'Ayse Kaya';
+      d.onaylayan = 'A.Demir (GM)';
+      return d;
+    })));
+  }
+}
+
+function getDagitim() {
+  try { return JSON.parse(localStorage.getItem('ersan_dms_dagitim')) || []; }
+  catch(e) { return []; }
+}
+function saveDagitimData(arr) { localStorage.setItem('ersan_dms_dagitim', JSON.stringify(arr)); }
+
+function getDocs() {
+  try { return JSON.parse(localStorage.getItem('ersan_dms_dokumanlar')) || []; }
+  catch(e) { return []; }
+}
+
+function today() { return new Date().toISOString().slice(0,10); }
+function formatDate(d) {
+  if (!d) return '-';
+  var parts = d.split('-');
+  return parts[2] + '.' + parts[1] + '.' + parts[0];
+}
+
+/* ── PERSONEL LOADING ── */
+function loadPersonel() {
+  fetch('/.netlify/functions/airtable?table=Personel&pageSize=100')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var records = data.records || [];
+      personelData = records.map(function(rec) {
+        var f = rec.fields || {};
+        return {
+          id: rec.id,
+          ad: f['Ad Soyad'] || f['Ad'] || f['Name'] || 'Isimsiz',
+          departman: f['Departman'] || f['Department'] || '-'
+        };
+      });
+      if (personelData.length === 0) {
+        personelData = fallbackPersonel();
+      }
+      renderAll();
+    })
+    .catch(function() {
+      personelData = fallbackPersonel();
+      renderAll();
+    });
+}
+
+function fallbackPersonel() {
+  return [
+    {id:'P001', ad:'Ayse Kaya', departman:'Kalite'},
+    {id:'P002', ad:'Mehmet Aydin', departman:'Uretim'},
+    {id:'P003', ad:'Ali Yildiz', departman:'Satinalma'},
+    {id:'P004', ad:'Fatma Celik', departman:'Depo'},
+    {id:'P005', ad:'Ahmet Kaya', departman:'Atolye'}
+  ];
+}
+
+/* ── RENDER ── */
+function renderAll() {
+  renderKPI();
+  renderPersonelList();
+  if (selectedPersonelId) renderRightPanel(selectedPersonelId);
+}
+
+function renderKPI() {
+  var dag = getDagitim();
+  var okunan = dag.filter(function(d) { return d.durum === 'Okundu' || d.durum === 'Imzali'; });
+  var bekleyen = dag.filter(function(d) { return d.durum === 'Bekliyor'; });
+  document.getElementById('kpiToplam').textContent = dag.length;
+  document.getElementById('kpiOkunan').textContent = okunan.length;
+  document.getElementById('kpiBekleyen').textContent = bekleyen.length;
+}
+
+function renderPersonelList() {
+  var dag = getDagitim();
+  var container = document.getElementById('personelList');
+
+  // Build personel stats from dagitim + personel data
+  var personelMap = {};
+  // Add from personelData
+  personelData.forEach(function(p) {
+    personelMap[p.id] = {id: p.id, ad: p.ad, departman: p.departman, toplam: 0, onaylanan: 0};
+  });
+  // Also add from dagitim records (fallback person IDs)
+  dag.forEach(function(d) {
+    if (!personelMap[d.personelId]) {
+      personelMap[d.personelId] = {id: d.personelId, ad: d.personelAd, departman: d.departman, toplam: 0, onaylanan: 0};
+    }
+    personelMap[d.personelId].toplam++;
+    if (d.durum === 'Okundu' || d.durum === 'Imzali') personelMap[d.personelId].onaylanan++;
+  });
+
+  var list = Object.keys(personelMap).map(function(k) { return personelMap[k]; });
+  // Only show people with dagitim records
+  list = list.filter(function(p) { return p.toplam > 0; });
+  list.sort(function(a,b) { return a.ad.localeCompare(b.ad); });
+
+  if (list.length === 0) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-icon">0</div><div>Dagitim kaydi yok</div></div>';
+    return;
+  }
+
+  var html = '';
+  list.forEach(function(p) {
+    var allOk = p.onaylanan >= p.toplam;
+    var cls = 'per-item' + (allOk ? ' ok' : ' pending') + (selectedPersonelId === p.id ? ' sel' : '');
+    var badgeCls = allOk ? 'bdg bdg-g' : 'bdg bdg-a';
+    var badgeText = p.onaylanan + '/' + p.toplam + (allOk ? ' Tamam' : '');
+    html += '<div class="' + cls + '" onclick="selectPersonel(\'' + p.id + '\')">';
+    html += '<div style="display:flex;align-items:center;gap:8px;width:100%">';
+    html += '<div style="flex:1"><div class="per-name">' + p.ad + '</div>';
+    html += '<div class="per-dept">' + p.departman + ' &middot; ' + p.toplam + ' dokuman</div></div>';
+    html += '<span class="' + badgeCls + '">' + badgeText + '</span>';
+    html += '</div></div>';
+  });
+  container.innerHTML = html;
+}
+
+function selectPersonel(pid) {
+  selectedPersonelId = pid;
+  renderPersonelList();
+  renderRightPanel(pid);
+}
+
+function renderRightPanel(pid) {
+  var dag = getDagitim();
+  var items = dag.filter(function(d) { return d.personelId === pid; });
+  var person = items.length > 0 ? items[0].personelAd : pid;
+
+  document.getElementById('rightTitle').textContent = person + ' — Dokuman Listesi';
+
+  var bekleyen = items.filter(function(d) { return d.durum === 'Bekliyor'; });
+  var btnsEl = document.getElementById('rightButtons');
+  if (bekleyen.length > 0) {
+    btnsEl.innerHTML = '<button class="btn btn-a btn-sm" onclick="hatirlatAll(\'' + pid + '\')">Hatirlatma Gonder (' + bekleyen.length + ')</button>';
+  } else {
+    btnsEl.innerHTML = '';
+  }
+
+  var panel = document.getElementById('rightPanel');
+  if (items.length === 0) {
+    panel.innerHTML = '<div class="empty-state"><div class="empty-icon">0</div><div>Bu kisiye atanmis dokuman yok</div></div>';
+    return;
+  }
+
+  items.sort(function(a,b) {
+    if (a.durum === 'Bekliyor' && b.durum !== 'Bekliyor') return -1;
+    if (a.durum !== 'Bekliyor' && b.durum === 'Bekliyor') return 1;
+    return b.dagitimTarihi.localeCompare(a.dagitimTarihi);
+  });
+
+  var html = '<table class="tbl"><thead><tr>';
+  html += '<th>Dok No</th><th>Baslik</th><th>Rev</th><th>Dagitim Tarihi</th><th>Yontem</th><th>Onay Durumu</th><th>Islem</th>';
+  html += '</tr></thead><tbody>';
+
+  items.forEach(function(d) {
+    var rowCls = d.durum === 'Bekliyor' ? ' class="pending-row"' : '';
+    html += '<tr' + rowCls + '>';
+    html += '<td class="mono">' + d.dokNo + '</td>';
+    html += '<td>' + d.baslik + '</td>';
+    html += '<td><span class="rev-badge">' + d.rev + '</span></td>';
+    html += '<td>' + formatDate(d.dagitimTarihi) + '</td>';
+    html += '<td>' + yontemBadge(d.yontem) + '</td>';
+    html += '<td>' + durumBadge(d.durum) + '</td>';
+    html += '<td>';
+    if (d.durum === 'Bekliyor') {
+      html += '<button class="btn btn-a btn-sm" onclick="hatirlatTek(\'' + d.id + '\')">Hatrlat</button> ';
+      html += '<button class="btn btn-g btn-sm" onclick="okudum(\'' + d.id + '\')">Okudum</button>';
+    } else {
+      html += '<span style="font-size:10px;color:var(--metin4)">-</span>';
+    }
+    html += '</td></tr>';
+  });
+
+  html += '</tbody></table>';
+  html += '<div class="info-box info" style="margin:10px 12px">Sistem dagitiminda personel sisteme giris yaptiginda bildirim alir. "Okudum" butonu ile onay verir. Baskili kopyalarda imzali form taranarak yuklenir.</div>';
+  panel.innerHTML = html;
+}
+
+function yontemBadge(y) {
+  if (y === 'Sistem') return '<span class="bdg bdg-b">Sistem</span>';
+  return '<span class="bdg bdg-z">Baskili</span>';
+}
+
+function durumBadge(d) {
+  if (d === 'Okundu') return '<span class="bdg bdg-g">Okundu</span>';
+  if (d === 'Imzali') return '<span class="bdg bdg-g">Imzali</span>';
+  if (d === 'Bekliyor') return '<span class="bdg bdg-a">Bekliyor</span>';
+  return '<span class="bdg bdg-z">' + d + '</span>';
+}
+
+/* ── ACTIONS ── */
+function okudum(dagitimId) {
+  var dag = getDagitim();
+  for (var i = 0; i < dag.length; i++) {
+    if (dag[i].id === dagitimId) {
+      dag[i].durum = 'Okundu';
+      break;
+    }
+  }
+  saveDagitimData(dag);
+  renderAll();
+}
+
+function hatirlatTek(dagitimId) {
+  var dag = getDagitim();
+  var rec = dag.find(function(d) { return d.id === dagitimId; });
+  if (rec) {
+    alert(rec.personelAd + ' icin "' + rec.dokNo + '" hatirlatmasi gonderildi.');
+  }
+}
+
+function hatirlatAll(pid) {
+  var dag = getDagitim();
+  var bekleyen = dag.filter(function(d) { return d.personelId === pid && d.durum === 'Bekliyor'; });
+  var person = bekleyen.length > 0 ? bekleyen[0].personelAd : '';
+  alert(person + ' icin ' + bekleyen.length + ' dokuman hatirlatmasi gonderildi.');
+}
+
+/* ── MODAL ── */
+function openDagitimModal() {
+  var docs = getDocs();
+  var gecerli = docs.filter(function(d) { return d.durum === 'Gecerli'; });
+  var selEl = document.getElementById('mDokuman');
+  selEl.innerHTML = '<option value="">-- Dokuman seciniz --</option>';
+  gecerli.forEach(function(d) {
+    selEl.innerHTML += '<option value="' + d.dokNo + '" data-baslik="' + d.baslik + '" data-rev="' + d.rev + '">' + d.dokNo + ' — ' + d.baslik + ' (Rev ' + d.rev + ')</option>';
+  });
+
+  var chkEl = document.getElementById('mPersonelList');
+  chkEl.innerHTML = '';
+  personelData.forEach(function(p) {
+    chkEl.innerHTML += '<div class="chk-item"><input type="checkbox" value="' + p.id + '" data-ad="' + p.ad + '" data-dept="' + p.departman + '"><span>' + p.ad + ' (' + p.departman + ')</span></div>';
+  });
+
+  document.getElementById('modalDagitim').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modalDagitim').classList.remove('open');
+}
+
+function selectAllPersonel(val) {
+  var checks = document.querySelectorAll('#mPersonelList input[type=checkbox]');
+  checks.forEach(function(c) { c.checked = val; });
+}
+
+function saveDagitim() {
+  var selEl = document.getElementById('mDokuman');
+  var dokNo = selEl.value;
+  if (!dokNo) { alert('Dokuman seciniz.'); return; }
+  var opt = selEl.options[selEl.selectedIndex];
+  var baslik = opt.getAttribute('data-baslik') || '';
+  var rev = opt.getAttribute('data-rev') || '';
+  var yontem = document.getElementById('mYontem').value;
+
+  var checks = document.querySelectorAll('#mPersonelList input[type=checkbox]:checked');
+  if (checks.length === 0) { alert('En az bir personel seciniz.'); return; }
+
+  var dag = getDagitim();
+  checks.forEach(function(c) {
+    var pid = c.value;
+    var ad = c.getAttribute('data-ad') || '';
+    var dept = c.getAttribute('data-dept') || '';
+    // Check duplicate
+    var exists = dag.some(function(d) { return d.dokNo === dokNo && d.personelId === pid && d.rev === rev; });
+    if (!exists) {
+      dag.push({
+        id: 'DG' + Date.now() + '_' + pid,
+        dokNo: dokNo,
+        baslik: baslik,
+        rev: rev,
+        personelId: pid,
+        personelAd: ad,
+        departman: dept,
+        dagitimTarihi: today(),
+        yontem: yontem,
+        durum: 'Bekliyor'
+      });
+    }
+  });
+
+  saveDagitimData(dag);
+  closeModal();
+  renderAll();
+  alert(dokNo + ' Rev ' + rev + ' — ' + checks.length + ' kisiye dagitildi.');
+}
+
+/* ── INIT ── */
+initData();
+loadPersonel();
+</script>
+</body>
+</html>

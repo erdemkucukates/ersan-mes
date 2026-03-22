@@ -70,7 +70,10 @@ var ERSAN_NAV = [
     { label: 'Mutabakat',              href: 'ersan_mutabakat.html' },
   ]},
   { group: 'Destek', collapsed: true, items: [
-    { label: 'Dok\u00FCman Y\u00F6netimi',    href: 'ersan_dokuman.html' },
+    { label: 'DMS Master Liste',   href: 'ersan_dms_master.html' },
+    { label: 'Onay Bekleyenler',   href: 'ersan_dms_onay.html' },
+    { label: 'Revizyon Takibi',    href: 'ersan_dms_revizyon.html' },
+    { label: 'Da\u011F\u0131t\u0131m Listesi', href: 'ersan_dms_dagitim.html' },
     { label: 'Personel & Yetkinlik', href: 'ersan_personel.html' },
     { label: 'Risk Y\u00F6netimi',        href: 'ersan_risk.html' },
     { label: '\u0130SG',                  href: 'ersan_isg.html' },

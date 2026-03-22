@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — Onay Bekleyenler</title>
+<link rel="stylesheet" href="ersan_styles.css">
+<script src="ersan_nav.js" defer></script>
+<script src="ersan_log.js" defer></script>
+<style>
+.oa-split { display:flex; gap:12px; height:calc(100vh - 52px - 32px - 80px); }
+.oa-sol {
+  width:280px; flex-shrink:0; background:var(--beyaz); border:1px solid var(--border);
+  border-radius:8px; display:flex; flex-direction:column; overflow:hidden;
+}
+.oa-sol-ust {
+  padding:10px 12px; border-bottom:1px solid var(--border); flex-shrink:0;
+}
+.oa-sol-ust h3 { font-size:12px; font-weight:600; color:var(--laci); margin-bottom:6px; }
+.oa-arama {
+  width:100%; padding:5px 8px; border:1px solid var(--border); border-radius:5px;
+  font-size:12px; color:var(--metin2); background:var(--bg2); font-family:inherit;
+}
+.oa-arama:focus { outline:none; border-color:var(--mavi); }
+.oa-filtre {
+  display:flex; gap:0; border-bottom:1px solid var(--border); flex-shrink:0;
+}
+.oa-filtre-btn {
+  flex:1; padding:6px 4px; font-size:10px; font-weight:500; color:var(--metin3);
+  background:transparent; border:none; border-bottom:2px solid transparent;
+  cursor:pointer; text-align:center; transition:all .12s; font-family:inherit;
+}
+.oa-filtre-btn.aktif { color:var(--mavi); border-bottom-color:var(--mavi); background:var(--mavi-acik); }
+.oa-liste { flex:1; overflow-y:auto; }
+.oa-satir {
+  padding:10px 12px; border-bottom:1px solid #f8fafc; cursor:pointer;
+  border-left:3px solid transparent; transition:background .1s;
+}
+.oa-satir:hover { background:var(--bg2); }
+.oa-satir.secili { background:var(--mavi-acik); border-left-color:var(--mavi); }
+.oa-satir.taslak { border-left-color:var(--mavi); }
+.oa-satir.incelemede { border-left-color:var(--sari); }
+.oa-satir-no {
+  font-family:'Courier New',monospace; font-size:11px; font-weight:600;
+  color:var(--mavi-koyu); margin-bottom:2px; display:flex; align-items:center; gap:6px;
+}
+.oa-satir-baslik { font-size:11px; color:var(--metin2); margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.oa-satir-alt { display:flex; align-items:center; justify-content:space-between; gap:4px; }
+.oa-satir-gun { font-size:10px; color:var(--metin4); }
+/* Badges */
+.rev-badge {
+  font-size:9px; font-weight:700; padding:1px 6px; border-radius:3px;
+  font-family:'Courier New',monospace;
+}
+.rev-badge.rev-a { background:#dbeafe; color:#1e40af; }
+.rev-badge.rev-b { background:#e0e7ff; color:#3730a3; }
+.rev-badge.rev-c { background:#fae8ff; color:#86198f; }
+.durum-badge {
+  font-size:9px; font-weight:600; padding:2px 7px; border-radius:10px;
+}
+.durum-badge.gecerli { background:var(--yesil-bg); color:var(--yesil-t); }
+.durum-badge.taslak { background:var(--mavi-acik); color:var(--mavi-koyu); }
+.durum-badge.incelemede { background:var(--sari-bg); color:var(--sari-t); }
+/* Sag */
+.oa-sag {
+  flex:1; background:var(--beyaz); border:1px solid var(--border); border-radius:8px;
+  overflow-y:auto; display:flex; flex-direction:column;
+}
+.oa-sag-ust {
+  padding:14px 18px; border-bottom:1px solid var(--border); flex-shrink:0;
+}
+.oa-sag-icerik { padding:20px 24px; flex:1; overflow-y:auto; }
+.oa-empty {
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  height:100%; color:var(--metin4); gap:8px;
+}
+.oa-empty-icon { font-size:40px; opacity:0.3; }
+/* Approval chain */
+.oa-chain { position:relative; padding-left:24px; }
+.oa-chain::before {
+  content:''; position:absolute; left:15px; top:16px; bottom:16px;
+  width:2px; background:var(--border);
+}
+.oa { display:flex; gap:12px; padding:12px 0; border-bottom:1px solid #f3f4f6; position:relative; }
+.oa:last-child { border-bottom:none; }
+.oa-num {
+  width:32px; height:32px; border-radius:50%; display:flex; align-items:center;
+  justify-content:center; font-size:13px; font-weight:700; color:#fff; flex-shrink:0;
+  position:relative; z-index:1;
+}
+.oa-num.tamam { background:var(--yesil); }
+.oa-num.aktif { background:var(--mavi); box-shadow:0 0 0 4px rgba(55,138,221,0.2); }
+.oa-num.bekliyor { background:#cbd5e1; }
+.oa-icerik { flex:1; min-width:0; }
+.oa-baslik { font-size:13px; font-weight:600; color:var(--laci); margin-bottom:2px; }
+.oa-sorumlu { font-size:11px; color:var(--metin3); margin-bottom:2px; }
+.oa-tarih { font-size:10px; color:var(--metin4); }
+.oa-not-gosterim {
+  margin-top:6px; padding:8px 10px; background:var(--bg2); border-radius:6px;
+  font-size:12px; color:var(--metin2); border-left:3px solid var(--yesil);
+}
+/* Active step form */
+.oa-form { margin-top:8px; }
+.oa-textarea {
+  width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:6px;
+  font-size:12px; font-family:inherit; color:var(--metin2); resize:vertical; min-height:60px;
+  margin-bottom:8px;
+}
+.oa-textarea:focus { outline:none; border-color:var(--mavi); box-shadow:0 0 0 3px rgba(55,138,221,0.1); }
+.oa-btn-row { display:flex; gap:8px; }
+.btn-mavi {
+  padding:7px 16px; border-radius:6px; border:none; background:var(--mavi); color:#fff;
+  font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; transition:background .12s;
+}
+.btn-mavi:hover { background:var(--mavi-koyu); }
+.btn-yesil {
+  padding:7px 16px; border-radius:6px; border:none; background:var(--yesil); color:#fff;
+  font-size:12px; font-weight:600; cursor:pointer; font-family:inherit;
+}
+.btn-yesil:hover { background:#15785c; }
+.btn-kirmizi {
+  padding:7px 16px; border-radius:6px; border:none; background:var(--kirmizi); color:#fff;
+  font-size:12px; font-weight:600; cursor:pointer; font-family:inherit;
+}
+.btn-kirmizi:hover { background:#c43a3a; }
+.btn-gri {
+  padding:7px 16px; border-radius:6px; border:1px solid var(--border); background:var(--beyaz); color:var(--metin2);
+  font-size:12px; font-weight:500; cursor:pointer; font-family:inherit;
+}
+.btn-gri:hover { background:var(--bg2); }
+.btn-sm { padding:4px 10px; font-size:11px; }
+/* Dok info summary */
+.oa-dok-ozet {
+  display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:16px;
+  padding:12px 14px; background:var(--bg2); border-radius:8px; border:1px solid var(--border);
+}
+.oa-dok-label { font-size:10px; font-weight:600; color:var(--metin4); text-transform:uppercase; margin-bottom:2px; }
+.oa-dok-val { font-size:12px; color:var(--metin2); }
+</style>
+</head>
+<body>
+<div id="nav-alani"></div>
+<div class="icerik-alani">
+  <div class="topbar">
+    <div class="topbar-baslik">Onay Bekleyenler</div>
+    <div style="font-size:11px;color:var(--metin3);">AS9100 &sect;7.5 Dokuman Onay Sureci</div>
+  </div>
+  <div class="sayfa-icerik">
+
+    <!-- KPI -->
+    <div class="kpi-grid" id="kpiGrid">
+      <div class="kpi-kart sari"><div class="kpi-etiket">Bekleyen</div><div class="kpi-deger" id="kpiBekleyen">0</div></div>
+      <div class="kpi-kart"><div class="kpi-etiket">Incelemede</div><div class="kpi-deger" id="kpiIncelemede">0</div></div>
+      <div class="kpi-kart yesil"><div class="kpi-etiket">Bu Ay Onaylanan</div><div class="kpi-deger" id="kpiOnaylanan">0</div></div>
+    </div>
+
+    <!-- Split -->
+    <div class="oa-split">
+      <!-- Sol Liste -->
+      <div class="oa-sol">
+        <div class="oa-sol-ust">
+          <h3>Onay Sureci</h3>
+          <input type="text" class="oa-arama" placeholder="Ara..." oninput="listeFiltrele()">
+        </div>
+        <div class="oa-filtre">
+          <button class="oa-filtre-btn aktif" onclick="filtreSec('tum',this)">Tumu</button>
+          <button class="oa-filtre-btn" onclick="filtreSec('taslak',this)">Taslak</button>
+          <button class="oa-filtre-btn" onclick="filtreSec('incelemede',this)">Incelemede</button>
+        </div>
+        <div class="oa-liste" id="oaListe"></div>
+      </div>
+
+      <!-- Sag Detay -->
+      <div class="oa-sag" id="oaSag">
+        <div class="oa-empty" id="oaEmpty">
+          <div class="oa-empty-icon">&#9989;</div>
+          <div style="font-size:13px;">Dokuman secin</div>
+          <div style="font-size:11px;">Sol listeden onay surecini goruntulemek istediginiz dokumani secin</div>
+        </div>
+        <div id="oaDetay" style="display:none;flex-direction:column;flex:1;">
+          <div class="oa-sag-ust">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-family:'Courier New',monospace;font-size:14px;font-weight:700;color:var(--laci);" id="detayNo"></span>
+              <span class="rev-badge" id="detayRev"></span>
+              <span class="durum-badge" id="detayDurum"></span>
+            </div>
+            <div style="font-size:13px;color:var(--metin2);margin-top:4px;" id="detayBaslik"></div>
+          </div>
+          <div class="oa-sag-icerik">
+            <!-- Dok ozet -->
+            <div class="oa-dok-ozet" id="dokOzet"></div>
+            <!-- Onay zinciri -->
+            <div style="font-size:11px;font-weight:700;color:var(--metin3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;padding-bottom:4px;border-bottom:1px solid var(--border);">Onay Zinciri (4 Adim)</div>
+            <div class="oa-chain" id="oaChain"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+var dokumanlar = [];
+var onaylar = [];
+var dagitimlar = [];
+var seciliDokId = null;
+var aktifFiltre = 'tum';
+
+// ── INIT ──
+function init() {
+  var kayitli = localStorage.getItem('ersan_dms_dokumanlar');
+  if (kayitli) {
+    dokumanlar = JSON.parse(kayitli);
+    onaylar = JSON.parse(localStorage.getItem('ersan_dms_onay') || '[]');
+    dagitimlar = JSON.parse(localStorage.getItem('ersan_dms_dagitim') || '[]');
+  } else {
+    // Redirect to master if no data
+    dokumanlar = [];
+    onaylar = [];
+    dagitimlar = [];
+  }
+  kpiGuncelle();
+  listeOlustur();
+}
+
+function kaydet() {
+  localStorage.setItem('ersan_dms_dokumanlar', JSON.stringify(dokumanlar));
+  localStorage.setItem('ersan_dms_onay', JSON.stringify(onaylar));
+  localStorage.setItem('ersan_dms_dagitim', JSON.stringify(dagitimlar));
+}
+
+// ── KPI ──
+function kpiGuncelle() {
+  var bekleyenler = dokumanlar.filter(function(d) { return d.durum === 'Taslak' || d.durum === 'Incelemede'; });
+  var taslak = dokumanlar.filter(function(d) { return d.durum === 'Taslak'; }).length;
+  var incelemede = dokumanlar.filter(function(d) { return d.durum === 'Incelemede'; }).length;
+
+  // Bu ay onaylanan: check revGecmisi for Gecerli items this month
+  var buAy = new Date().toISOString().slice(0, 7);
+  var onaylanan = dokumanlar.filter(function(d) {
+    return d.durum === 'Gecerli' && d.yayinTarihi && d.yayinTarihi.slice(0, 7) === buAy;
+  }).length;
+
+  document.getElementById('kpiBekleyen').textContent = taslak + incelemede;
+  document.getElementById('kpiIncelemede').textContent = incelemede;
+  document.getElementById('kpiOnaylanan').textContent = onaylanan;
+}
+
+// ── FILTRE ──
+function filtreSec(mod, el) {
+  aktifFiltre = mod;
+  document.querySelectorAll('.oa-filtre-btn').forEach(function(b) { b.classList.remove('aktif'); });
+  el.classList.add('aktif');
+  listeOlustur();
+}
+
+function listeFiltrele() {
+  listeOlustur();
+}
+
+// ── LISTE ──
+function listeOlustur() {
+  var arama = document.querySelector('.oa-arama').value.toLowerCase();
+
+  var filtreli = dokumanlar.filter(function(d) {
+    if (d.durum !== 'Taslak' && d.durum !== 'Incelemede') return false;
+    if (aktifFiltre === 'taslak' && d.durum !== 'Taslak') return false;
+    if (aktifFiltre === 'incelemede' && d.durum !== 'Incelemede') return false;
+    if (arama && d.dokNo.toLowerCase().indexOf(arama) === -1 && d.baslik.toLowerCase().indexOf(arama) === -1) return false;
+    return true;
+  });
+
+  // Sort by oldest first (longest waiting) — docs without yayinTarihi sort by revGecmisi first entry
+  filtreli.sort(function(a, b) {
+    var ta = olusturmaTarihi(a);
+    var tb = olusturmaTarihi(b);
+    if (ta < tb) return -1;
+    if (ta > tb) return 1;
+    return 0;
+  });
+
+  var html = '';
+  filtreli.forEach(function(d) {
+    var durCls = d.durum.toLowerCase().replace('ı', 'i');
+    var revCls = 'rev-' + d.rev.toLowerCase();
+    var gunOnce = gunHesapla(d);
+    html += '<div class="oa-satir ' + durCls + (d.id === seciliDokId ? ' secili' : '') + '" onclick="dokSec(\'' + d.id + '\')">';
+    html += '<div class="oa-satir-no">' + d.dokNo + ' <span class="rev-badge ' + revCls + '">Rev ' + d.rev + '</span> <span class="durum-badge ' + durCls + '">' + d.durum + '</span></div>';
+    html += '<div class="oa-satir-baslik">' + d.baslik + '</div>';
+    html += '<div class="oa-satir-alt"><span class="oa-satir-gun">' + gunOnce + '</span></div>';
+    html += '</div>';
+  });
+
+  if (!html) html = '<div style="padding:20px;text-align:center;color:var(--metin4);font-size:12px;">Onay bekleyen dokuman yok</div>';
+  document.getElementById('oaListe').innerHTML = html;
+}
+
+function olusturmaTarihi(d) {
+  if (d.revGecmisi && d.revGecmisi.length > 0) {
+    var son = d.revGecmisi[0];
+    if (son.tarih) return son.tarih;
+  }
+  return '9999-12-31';
+}
+
+function gunHesapla(d) {
+  var tarih = olusturmaTarihi(d);
+  if (tarih === '9999-12-31') return 'Tarih yok';
+  var t = new Date(tarih);
+  var bugun = new Date();
+  var fark = Math.floor((bugun - t) / (1000 * 60 * 60 * 24));
+  if (fark === 0) return 'Bugun';
+  if (fark === 1) return '1 gun once';
+  return fark + ' gun once';
+}
+
+// ── DETAIL ──
+function dokSec(id) {
+  seciliDokId = id;
+  var d = dokumanlar.find(function(x) { return x.id === id; });
+  if (!d) return;
+
+  document.getElementById('oaEmpty').style.display = 'none';
+  document.getElementById('oaDetay').style.display = 'flex';
+
+  document.getElementById('detayNo').textContent = d.dokNo;
+  var revEl = document.getElementById('detayRev');
+  revEl.textContent = 'Rev ' + d.rev;
+  revEl.className = 'rev-badge rev-' + d.rev.toLowerCase();
+  var durEl = document.getElementById('detayDurum');
+  durEl.textContent = d.durum;
+  durEl.className = 'durum-badge ' + d.durum.toLowerCase().replace('ı', 'i');
+  document.getElementById('detayBaslik').textContent = d.baslik;
+
+  // Dok ozet
+  var ozetHtml = '';
+  var ozetFields = [
+    { l:'Tur', v:d.tur },
+    { l:'Kategori', v:d.kategori },
+    { l:'Hazirlayan', v:d.hazirlayan || '-' },
+    { l:'AS9100', v:d.as9100 || '-' },
+    { l:'Modul', v:d.modul || '-' },
+    { l:'Kapsam', v:(d.kapsam || '-').substring(0, 80) + ((d.kapsam || '').length > 80 ? '...' : '') }
+  ];
+  ozetFields.forEach(function(f) {
+    ozetHtml += '<div><div class="oa-dok-label">' + f.l + '</div><div class="oa-dok-val">' + f.v + '</div></div>';
+  });
+  document.getElementById('dokOzet').innerHTML = ozetHtml;
+
+  // Build approval chain
+  chainOlustur(id, d);
+  listeOlustur();
+}
+
+function chainOlustur(dokId, dok) {
+  var dokOnaylar = onaylar.filter(function(o) { return o.dokId === dokId; });
+  dokOnaylar.sort(function(a, b) { return a.adim - b.adim; });
+
+  // If no approval records exist, create default 4-step
+  if (dokOnaylar.length === 0) {
+    var bugun = new Date().toISOString().slice(0, 10);
+    dokOnaylar = [
+      { id: 'ONA_tmp_1', dokId: dokId, adim: 1, adimAdi: 'Hazirlama', sorumlu: dok.hazirlayan || '-', tarih: bugun, not: 'Dokuman olusturuldu', durum: 'tamam' },
+      { id: 'ONA_tmp_2', dokId: dokId, adim: 2, adimAdi: 'Departman Incelemesi', sorumlu: '', tarih: '', not: '', durum: 'bekliyor' },
+      { id: 'ONA_tmp_3', dokId: dokId, adim: 3, adimAdi: 'Kalite Muduru Onayi', sorumlu: '', tarih: '', not: '', durum: 'bekliyor' },
+      { id: 'ONA_tmp_4', dokId: dokId, adim: 4, adimAdi: 'Genel Mudur / Yayin', sorumlu: '', tarih: '', not: '', durum: 'bekliyor' }
+    ];
+    dokOnaylar.forEach(function(o) { onaylar.push(o); });
+    kaydet();
+  }
+
+  // Determine active step (first 'bekliyor')
+  var aktifAdim = -1;
+  for (var i = 0; i < dokOnaylar.length; i++) {
+    if (dokOnaylar[i].durum === 'bekliyor') {
+      aktifAdim = dokOnaylar[i].adim;
+      break;
+    }
+  }
+
+  var html = '';
+  dokOnaylar.forEach(function(o) {
+    var numCls = 'bekliyor';
+    if (o.durum === 'tamam') numCls = 'tamam';
+    else if (o.adim === aktifAdim) numCls = 'aktif';
+
+    html += '<div class="oa">';
+    html += '<div class="oa-num ' + numCls + '">' + o.adim + '</div>';
+    html += '<div class="oa-icerik">';
+    html += '<div class="oa-baslik">' + o.adimAdi + '</div>';
+    html += '<div class="oa-sorumlu">' + (o.sorumlu || 'Atanmadi') + '</div>';
+
+    if (o.durum === 'tamam') {
+      html += '<div class="oa-tarih">Tamamlandi: ' + (o.tarih || '-') + '</div>';
+      if (o.not) {
+        html += '<div class="oa-not-gosterim">' + o.not + '</div>';
+      }
+    } else if (o.adim === aktifAdim) {
+      html += '<div class="oa-tarih" style="color:var(--mavi);font-weight:600;">Aktif adim — onay bekleniyor</div>';
+      html += '<div class="oa-form">';
+      html += '<textarea class="oa-textarea" id="onayNot_' + o.id + '" placeholder="Not ekleyin (istege bagli)..."></textarea>';
+      html += '<div class="oa-btn-row">';
+      html += '<button class="btn-yesil btn-sm" onclick="adimOnayla(\'' + o.id + '\')">Onayla</button>';
+      html += '<button class="btn-kirmizi btn-sm" onclick="adimReddet(\'' + o.id + '\')">Reddet</button>';
+      html += '<button class="btn-gri btn-sm" onclick="adimGeriGonder(\'' + o.id + '\')">Geri Gonder</button>';
+      html += '</div>';
+      html += '</div>';
+    } else {
+      html += '<div class="oa-tarih">Bekliyor</div>';
+    }
+
+    html += '</div></div>';
+  });
+
+  document.getElementById('oaChain').innerHTML = html;
+}
+
+// ── APPROVAL ACTIONS ──
+function adimOnayla(onayId) {
+  var onay = onaylar.find(function(o) { return o.id === onayId; });
+  if (!onay) return;
+
+  var notEl = document.getElementById('onayNot_' + onayId);
+  var notText = notEl ? notEl.value.trim() : '';
+  var bugun = new Date().toISOString().slice(0, 10);
+
+  onay.durum = 'tamam';
+  onay.tarih = bugun;
+  onay.not = notText || 'Onaylandi';
+  onay.sorumlu = window._aktifKullanici || 'Erdem Kucukates';
+
+  // Check if this was step 4 (final)
+  if (onay.adim === 4) {
+    var dok = dokumanlar.find(function(d) { return d.id === onay.dokId; });
+    if (dok) {
+      dok.durum = 'Gecerli';
+      dok.yayinTarihi = bugun;
+      // Set gozden gecirme to 1 year later
+      var gg = new Date();
+      gg.setFullYear(gg.getFullYear() + 1);
+      dok.gozdenGecirme = gg.toISOString().slice(0, 10);
+      dok.onaylayan = onay.sorumlu;
+      if (dok.revGecmisi && dok.revGecmisi.length > 0) {
+        dok.revGecmisi[0].durum = 'Gecerli';
+        dok.revGecmisi[0].tarih = bugun;
+        dok.revGecmisi[0].onaylayan = onay.sorumlu;
+      }
+      // Auto-distribute to hazirlayan
+      dagitimlar.push({
+        id: 'DAG' + Date.now(),
+        dokId: dok.id,
+        personel: dok.hazirlayan,
+        departman: '',
+        yontem: 'Dijital',
+        tarih: bugun,
+        okumaOnayi: false
+      });
+    }
+  } else if (onay.adim === 2) {
+    // Step 2 complete -> doc becomes Incelemede
+    var dok2 = dokumanlar.find(function(d) { return d.id === onay.dokId; });
+    if (dok2 && dok2.durum === 'Taslak') {
+      dok2.durum = 'Incelemede';
+    }
+  }
+
+  kaydet();
+  kpiGuncelle();
+  dokSec(onay.dokId);
+}
+
+function adimReddet(onayId) {
+  var onay = onaylar.find(function(o) { return o.id === onayId; });
+  if (!onay) return;
+
+  var notEl = document.getElementById('onayNot_' + onayId);
+  var notText = notEl ? notEl.value.trim() : '';
+  if (!notText) { alert('Red nedeni yazmaniz zorunludur'); return; }
+
+  if (!confirm('Dokuman reddedilecek ve Taslak durumuna donecek. Devam edilsin mi?')) return;
+
+  var bugun = new Date().toISOString().slice(0, 10);
+
+  // Reset all steps for this doc except step 1
+  var dokOnaylar = onaylar.filter(function(o) { return o.dokId === onay.dokId; });
+  dokOnaylar.forEach(function(o) {
+    if (o.adim > 1) {
+      o.durum = 'bekliyor';
+      o.tarih = '';
+      o.not = '';
+      o.sorumlu = '';
+    }
+  });
+
+  // Add rejection note to step 1
+  var adim1 = dokOnaylar.find(function(o) { return o.adim === 1; });
+  if (adim1) {
+    adim1.not = (adim1.not ? adim1.not + ' | ' : '') + 'REDDEDILDI (' + bugun + '): ' + notText;
+  }
+
+  // Document back to Taslak
+  var dok = dokumanlar.find(function(d) { return d.id === onay.dokId; });
+  if (dok) {
+    dok.durum = 'Taslak';
+  }
+
+  kaydet();
+  kpiGuncelle();
+  dokSec(onay.dokId);
+}
+
+function adimGeriGonder(onayId) {
+  var onay = onaylar.find(function(o) { return o.id === onayId; });
+  if (!onay) return;
+  if (onay.adim <= 1) { alert('Ilk adim geri gonderilemez'); return; }
+
+  var notEl = document.getElementById('onayNot_' + onayId);
+  var notText = notEl ? notEl.value.trim() : '';
+  if (!notText) { alert('Geri gonderme nedeni yazmaniz zorunludur'); return; }
+
+  var bugun = new Date().toISOString().slice(0, 10);
+
+  // Set previous step back to bekliyor with note
+  var dokOnaylar = onaylar.filter(function(o) { return o.dokId === onay.dokId; });
+  var oncekiAdim = dokOnaylar.find(function(o) { return o.adim === onay.adim - 1; });
+  if (oncekiAdim) {
+    oncekiAdim.durum = 'bekliyor';
+    oncekiAdim.not = (oncekiAdim.not ? oncekiAdim.not + ' | ' : '') + 'GERI GONDERILDI (' + bugun + '): ' + notText;
+  }
+
+  kaydet();
+  kpiGuncelle();
+  dokSec(onay.dokId);
+}
+
+// ── INIT ──
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
