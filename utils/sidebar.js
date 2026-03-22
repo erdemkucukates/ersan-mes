@@ -238,34 +238,23 @@
     if (!mount) return;
     mount.className = 'sb';
     mount.innerHTML = buildHTML();
+    mount.style.cssText = 'width:210px!important;min-width:210px!important;flex-shrink:0!important;height:100vh!important;overflow-y:scroll!important;overflow-x:hidden!important;';
 
-    // Layout fix
-    var appEl = mount.closest('.app') || mount.parentElement;
+    var appEl = mount.parentElement;
     if (appEl) {
-      appEl.style.display = 'flex';
-      appEl.style.flexDirection = 'row';
-      appEl.style.height = '100vh';
-      appEl.style.width = '100vw';
-      appEl.style.overflow = 'hidden';
+      appEl.style.cssText = 'display:flex!important;flex-direction:row!important;height:100vh!important;width:100vw!important;overflow:hidden!important;';
     }
     var mainEl = appEl ? (appEl.querySelector('.main') || appEl.querySelector('.icerik-alani')) : null;
     if (mainEl) {
-      mainEl.style.flex = '1 1 0';
-      mainEl.style.minWidth = '0';
-      mainEl.style.height = '100vh';
-      mainEl.style.overflow = 'hidden';
-      mainEl.style.display = 'flex';
-      mainEl.style.flexDirection = 'column';
-      // Top bar sabit
-      var tb = mainEl.querySelector('.tb, .topbar, [class*="topbar"]');
-      if (tb) tb.style.flexShrink = '0';
-      // Son cocuk flex:1 overflow:auto
-      var ch = Array.from(mainEl.children).filter(function(e){ return e.tagName!=='SCRIPT' && !e.classList.contains('tb') && e.id!=='sb-mount'; });
-      var son = ch[ch.length-1];
-      if (son) { son.style.flex='1 1 0'; son.style.minHeight='0'; son.style.overflowY='auto'; son.style.overflowX='hidden'; }
+      mainEl.style.cssText = 'flex:1 1 0!important;min-width:0!important;height:100vh!important;overflow:hidden!important;display:flex!important;flex-direction:column!important;';
+      var children = Array.from(mainEl.children).filter(function(c){ return c.tagName!=='SCRIPT' && c.tagName!=='STYLE'; });
+      children.forEach(function(child, i) {
+        var isTb = child.classList.contains('tb') || child.className.indexOf('topbar')>=0 || child.tagName==='NAV';
+        if (isTb) { child.style.flexShrink='0'; }
+        else { child.style.flex='1 1 0'; child.style.minHeight='0'; child.style.overflowY='auto'; }
+      });
     }
-    // Tooltip
-    document.querySelectorAll('.sb-ni').forEach(function(ni){ var t=ni.querySelector('.sb-ni-txt'); if(t&&!ni.title) ni.title=t.textContent.trim(); });
+    document.querySelectorAll('.sb-ni').forEach(function(ni){ var t=ni.querySelector('.sb-ni-txt'); if(t) ni.title=t.textContent.trim(); });
 
     sbHighlight();
     sbClock();
