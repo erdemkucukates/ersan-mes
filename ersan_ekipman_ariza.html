@@ -88,6 +88,11 @@
 .mch-chip{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;background:#dbeafe;color:#1e40af;border-radius:16px;font-size:12px;font-weight:600;margin-bottom:8px}
 .mch-chip-x{cursor:pointer;opacity:0.6;font-size:10px}
 </style>
+
+  <!-- LAYOUT FIX v3 -->
+  <link rel="stylesheet" href="utils/sidebar.css">
+  <style>html,body{height:100%;margin:0;padding:0;overflow:hidden}.app{display:flex!important;flex-direction:row!important;height:100vh!important;width:100vw!important;overflow:hidden!important}#sb-mount,.sb{width:210px!important;min-width:210px!important;max-width:210px!important;flex-shrink:0!important;height:100vh!important;overflow-y:scroll!important;overflow-x:hidden!important}.main,.icerik-alani{flex:1 1 0!important;min-width:0!important;height:100vh!important;overflow:hidden!important;display:flex!important;flex-direction:column!important}.main>.tb,.main>.topbar,.main>[class*="topbar"]{flex-shrink:0!important}</style>
+  <!-- /LAYOUT FIX -->
 </head>
 <body data-page="ekipman-ariza">
 <div class="app">
@@ -844,5 +849,11 @@ function esc(str) {
   return d.innerHTML;
 }
 </script>
+
+<!-- LAYOUT JS -->
+<script>
+(function(){var sb=document.getElementById("sb-mount")||document.querySelector(".sb");var app=sb?sb.parentElement:document.querySelector(".app");var main=app?(app.querySelector(".main")||app.querySelector(".icerik-alani")):null;if(app)app.style.cssText="display:flex!important;flex-direction:row!important;height:100vh!important;width:100vw!important;overflow:hidden!important;";if(sb)sb.style.cssText="width:210px!important;min-width:210px!important;max-width:210px!important;flex-shrink:0!important;height:100vh!important;overflow-y:scroll!important;overflow-x:hidden!important;";if(main){main.style.cssText="flex:1 1 0!important;min-width:0!important;height:100vh!important;overflow:hidden!important;display:flex!important;flex-direction:column!important;";var k=Array.from(main.children).filter(function(c){return c.tagName!=="SCRIPT"&&c.tagName!=="STYLE";});if(k.length>0){k[0].style.flexShrink="0";for(var i=1;i<k.length;i++){k[i].style.flex="1 1 0";k[i].style.minHeight="0";k[i].style.overflowY="auto";}}}})();
+</script>
+<!-- /LAYOUT JS -->
 </body>
 </html>

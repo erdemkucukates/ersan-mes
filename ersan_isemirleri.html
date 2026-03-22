@@ -39,6 +39,11 @@
 /* Ops footer */
 .ops-footer{display:flex;justify-content:space-between;align-items:center;padding:6px 12px;background:var(--bg2);border-top:1px solid var(--border);font-size:11px;color:var(--text2);font-weight:600;}
 </style>
+
+  <!-- LAYOUT FIX v3 -->
+  <link rel="stylesheet" href="utils/sidebar.css">
+  <style>html,body{height:100%;margin:0;padding:0;overflow:hidden}.app{display:flex!important;flex-direction:row!important;height:100vh!important;width:100vw!important;overflow:hidden!important}#sb-mount,.sb{width:210px!important;min-width:210px!important;max-width:210px!important;flex-shrink:0!important;height:100vh!important;overflow-y:scroll!important;overflow-x:hidden!important}.main,.icerik-alani{flex:1 1 0!important;min-width:0!important;height:100vh!important;overflow:hidden!important;display:flex!important;flex-direction:column!important}.main>.tb,.main>.topbar,.main>[class*="topbar"]{flex-shrink:0!important}</style>
+  <!-- /LAYOUT FIX -->
 </head>
 <body data-page="uretim-wo">
 <div class="app">
@@ -1361,5 +1366,11 @@ loadAll = async function() {
 };
 loadAll();
 </script>
+
+<!-- LAYOUT JS -->
+<script>
+(function(){var sb=document.getElementById("sb-mount")||document.querySelector(".sb");var app=sb?sb.parentElement:document.querySelector(".app");var main=app?(app.querySelector(".main")||app.querySelector(".icerik-alani")):null;if(app)app.style.cssText="display:flex!important;flex-direction:row!important;height:100vh!important;width:100vw!important;overflow:hidden!important;";if(sb)sb.style.cssText="width:210px!important;min-width:210px!important;max-width:210px!important;flex-shrink:0!important;height:100vh!important;overflow-y:scroll!important;overflow-x:hidden!important;";if(main){main.style.cssText="flex:1 1 0!important;min-width:0!important;height:100vh!important;overflow:hidden!important;display:flex!important;flex-direction:column!important;";var k=Array.from(main.children).filter(function(c){return c.tagName!=="SCRIPT"&&c.tagName!=="STYLE";});if(k.length>0){k[0].style.flexShrink="0";for(var i=1;i<k.length;i++){k[i].style.flex="1 1 0";k[i].style.minHeight="0";k[i].style.overflowY="auto";}}}})();
+</script>
+<!-- /LAYOUT JS -->
 </body>
 </html>
