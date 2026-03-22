@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — İç Denetim Paneli</title>
+<link rel="stylesheet" href="ersan_styles.css">
+<script src="ersan_nav.js" defer></script>
+<script src="ersan_log.js" defer></script>
+<style>
+/* ── KPI ROW ── */
+.kpi-row { display:flex; gap:12px; margin-bottom:16px; flex-wrap:wrap; }
+.kpi { flex:1; min-width:160px; padding:16px 18px; border-radius:10px; background:var(--beyaz); border:1px solid var(--border); cursor:pointer; transition:box-shadow .15s; }
+.kpi:hover { box-shadow:0 2px 8px rgba(0,0,0,0.06); }
+.kpi .kpi-val { font-size:26px; font-weight:700; color:var(--metin); margin-bottom:2px; }
+.kpi .kpi-lbl { font-size:12px; color:var(--metin3); }
+.kpi .kpi-sub { font-size:10px; color:var(--metin4); margin-top:2px; }
+.kpi.s-blue  { border-left:4px solid var(--mavi); }
+.kpi.s-red   { border-left:4px solid var(--kirmizi); }
+.kpi.s-green { border-left:4px solid var(--yesil); }
+.kpi.s-amber { border-left:4px solid var(--sari); }
+.kpi.s-purple { border-left:4px solid #7c3aed; }
+
+/* ── AS9100 CHIPS ── */
+.as-chips { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
+.as-chip { padding:6px 14px; border-radius:20px; font-size:11px; font-weight:600; cursor:pointer; transition:all .15s; border:1px solid var(--border); background:var(--beyaz); color:var(--metin2); }
+.as-chip:hover { border-color:var(--mavi); color:var(--mavi); }
+.as-chip.aktif { background:var(--mavi); color:#fff; border-color:var(--mavi); }
+
+/* ── TWO COLUMN ── */
+.iki-kolon { display:flex; gap:16px; margin-bottom:16px; }
+.iki-kolon .kolon-sol { width:440px; flex-shrink:0; display:flex; flex-direction:column; gap:16px; }
+.iki-kolon .kolon-sag { flex:1; min-width:0; }
+
+/* ── CARD ── */
+.card { background:var(--beyaz); border:1px solid var(--border); border-radius:10px; overflow:hidden; }
+.card-head { padding:12px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.card-title { font-size:13px; font-weight:700; color:var(--metin); }
+.card-body { padding:16px; }
+
+/* ── TAKVIM ── */
+.takvim-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+.takvim-ay { padding:12px 10px; border-radius:8px; border:1px solid var(--border); cursor:pointer; text-align:center; transition:all .15s; }
+.takvim-ay:hover { box-shadow:0 2px 8px rgba(0,0,0,0.08); transform:translateY(-1px); }
+.takvim-ay .ay-ad { font-size:11px; font-weight:700; color:var(--metin); margin-bottom:4px; }
+.takvim-ay .ay-sayi { font-size:18px; font-weight:700; }
+.takvim-ay .ay-durum { font-size:9px; font-weight:600; margin-top:2px; }
+.takvim-ay.t-bos { background:var(--bg); }
+.takvim-ay.t-bos .ay-sayi { color:var(--metin4); }
+.takvim-ay.t-plan { background:#eff6ff; border-color:#93c5fd; }
+.takvim-ay.t-plan .ay-sayi { color:#2563eb; }
+.takvim-ay.t-devam { background:var(--mavi-acik); border-color:var(--mavi); }
+.takvim-ay.t-devam .ay-sayi { color:var(--mavi); }
+.takvim-ay.t-tamam { background:var(--yesil-bg); border-color:var(--yesil); }
+.takvim-ay.t-tamam .ay-sayi { color:var(--yesil); }
+.takvim-ay.t-gecik { background:var(--kirmizi-bg); border-color:var(--kirmizi); }
+.takvim-ay.t-gecik .ay-sayi { color:var(--kirmizi); }
+
+/* ── RISK MATRISI ── */
+.risk-grid { display:grid; grid-template-columns:30px repeat(5,1fr); grid-template-rows:repeat(5,1fr) 30px; gap:3px; }
+.risk-cell { display:flex; align-items:center; justify-content:center; border-radius:4px; font-size:11px; font-weight:700; color:#fff; min-height:36px; cursor:pointer; transition:opacity .15s; }
+.risk-cell:hover { opacity:0.8; }
+.risk-cell.c-green { background:#22c55e; }
+.risk-cell.c-yellow { background:#eab308; }
+.risk-cell.c-orange { background:#f97316; }
+.risk-cell.c-red { background:#ef4444; }
+.risk-label { display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:700; color:var(--metin3); }
+
+/* ── DENETIM TABLE ── */
+.den-tablo { width:100%; border-collapse:collapse; font-size:12px; }
+.den-tablo th { text-align:left; font-size:10px; font-weight:600; color:var(--metin3); text-transform:uppercase; letter-spacing:.3px; padding:8px 10px; border-bottom:1px solid var(--border); position:sticky; top:0; background:var(--beyaz); }
+.den-tablo td { padding:10px 10px; border-bottom:1px solid var(--border); color:var(--metin2); }
+.den-tablo tr:last-child td { border-bottom:none; }
+.den-tablo tr:hover td { background:var(--bg2); cursor:pointer; }
+.mono { font-family:'Cascadia Code','Fira Code',monospace; font-size:11px; }
+
+/* ── BADGES ── */
+.bdg { display:inline-block; padding:2px 8px; border-radius:20px; font-size:10px; font-weight:600; white-space:nowrap; }
+.b-grn { background:var(--yesil-bg); color:var(--yesil-t); }
+.b-red { background:var(--kirmizi-bg); color:var(--kirmizi-t); }
+.b-amr { background:var(--sari-bg); color:var(--sari-t); }
+.b-blu { background:var(--mavi-acik); color:var(--mavi-koyu); }
+.b-gry { background:#f1f5f9; color:#64748b; }
+.b-pur { background:#f3e8ff; color:#6b21a8; }
+
+/* ── SKOR BAR ── */
+.skor-bar-bg { height:6px; background:var(--bg); border-radius:3px; overflow:hidden; width:60px; display:inline-block; vertical-align:middle; margin-left:4px; }
+.skor-bar { height:100%; border-radius:3px; }
+
+/* ── BTN ── */
+.btn-topbar { padding:6px 14px; border-radius:6px; font-size:12px; font-weight:600; border:1px solid var(--border); background:var(--beyaz); color:var(--metin2); cursor:pointer; transition:all .15s; }
+.btn-topbar:hover { border-color:var(--mavi); color:var(--mavi); }
+.btn-topbar.primary { background:var(--mavi); color:#fff; border-color:var(--mavi); }
+.btn-topbar.primary:hover { background:var(--mavi-koyu); }
+.yil-sec { padding:5px 10px; border:1px solid var(--border); border-radius:6px; font-size:12px; color:var(--metin2); background:var(--beyaz); font-family:inherit; cursor:pointer; }
+
+/* ── TOAST ── */
+.toast { position:fixed; bottom:20px; right:20px; padding:10px 20px; border-radius:8px; font-size:13px; font-weight:600; color:#fff; background:var(--laci); box-shadow:0 4px 12px rgba(0,0,0,0.15); opacity:0; transition:opacity .3s; pointer-events:none; z-index:999; }
+.toast.show { opacity:1; }
+
+/* ── SCROLL WRAPPER ── */
+.tablo-scroll { max-height:calc(100vh - 340px); overflow-y:auto; }
+
+/* ── LEGEND ── */
+.legend { display:flex; gap:12px; flex-wrap:wrap; margin-top:8px; }
+.legend-item { display:flex; align-items:center; gap:4px; font-size:10px; color:var(--metin3); }
+.legend-dot { width:10px; height:10px; border-radius:3px; }
+</style>
+</head>
+<body>
+<div id="nav-alani"></div>
+<div class="icerik-alani">
+  <div class="topbar">
+    <div class="topbar-baslik">Ic Denetim Paneli</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <select class="yil-sec" id="yilSec" onchange="yilDegisti()">
+        <option value="2026" selected>2026</option>
+        <option value="2025">2025</option>
+      </select>
+      <button class="btn-topbar" onclick="window.location.href='ersan_denetim_plan.html'">Planla</button>
+      <button class="btn-topbar primary" onclick="window.location.href='ersan_denetim_plan.html'">+ Yeni Denetim</button>
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
+    </div>
+  </div>
+  <div class="sayfa-icerik">
+
+    <!-- AS9100 §9.2 CHIPS -->
+    <div class="as-chips" id="asChips">
+      <div class="as-chip aktif" data-step="all" onclick="asFilter(this,'all')">Tumu</div>
+      <div class="as-chip" data-step="plan" onclick="asFilter(this,'plan')">Plan</div>
+      <div class="as-chip" data-step="maddeler" onclick="asFilter(this,'maddeler')">Maddeler</div>
+      <div class="as-chip" data-step="bulgu" onclick="asFilter(this,'bulgu')">Bulgu</div>
+      <div class="as-chip" data-step="capa" onclick="asFilter(this,'capa')">CAPA</div>
+      <div class="as-chip" data-step="son" onclick="asFilter(this,'son')">Son Denetim</div>
+    </div>
+
+    <!-- KPI ROW -->
+    <div class="kpi-row" id="kpiRow">
+      <div class="kpi s-blue"><div class="kpi-val" id="kpiToplam">0</div><div class="kpi-lbl">Toplam Denetim</div><div class="kpi-sub" id="kpiToplamSub">-</div></div>
+      <div class="kpi s-red"><div class="kpi-val" id="kpiAcik">0</div><div class="kpi-lbl">Acik Bulgular</div><div class="kpi-sub" id="kpiAcikSub">-</div></div>
+      <div class="kpi s-amber"><div class="kpi-val" id="kpiCapa">0</div><div class="kpi-lbl">CAPA Durumu</div><div class="kpi-sub" id="kpiCapaSub">-</div></div>
+      <div class="kpi s-green"><div class="kpi-val" id="kpiSkor">0%</div><div class="kpi-lbl">Uyumluluk Skoru</div><div class="kpi-sub" id="kpiSkorSub">-</div></div>
+      <div class="kpi s-purple"><div class="kpi-val" id="kpiKapatma">0</div><div class="kpi-lbl">Ort. Kapatma (gun)</div><div class="kpi-sub" id="kpiKapatmaSub">-</div></div>
+    </div>
+
+    <!-- TWO COLUMN -->
+    <div class="iki-kolon">
+      <div class="kolon-sol">
+        <!-- TAKVIM -->
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Yillik Denetim Takvimi</div>
+            <span style="font-size:11px;color:var(--metin3);" id="takvimYil">2026</span>
+          </div>
+          <div class="card-body">
+            <div class="takvim-grid" id="takvimGrid"></div>
+            <div class="legend" style="margin-top:12px;">
+              <div class="legend-item"><div class="legend-dot" style="background:var(--yesil);"></div>Tamamlandi</div>
+              <div class="legend-item"><div class="legend-dot" style="background:var(--mavi);"></div>Devam Ediyor</div>
+              <div class="legend-item"><div class="legend-dot" style="background:#93c5fd;"></div>Planlandi</div>
+              <div class="legend-item"><div class="legend-dot" style="background:var(--kirmizi);"></div>Gecikti</div>
+              <div class="legend-item"><div class="legend-dot" style="background:var(--bg);"></div>Bos</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RISK MATRISI -->
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Risk Matrisi (Olasilik x Etki)</div>
+          </div>
+          <div class="card-body">
+            <div class="risk-grid" id="riskGrid"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="kolon-sag">
+        <!-- DENETIM LISTESI -->
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Denetim Listesi</div>
+            <span style="font-size:11px;color:var(--metin3);" id="denSayi">0 denetim</span>
+          </div>
+          <div class="tablo-scroll">
+            <table class="den-tablo">
+              <thead>
+                <tr>
+                  <th>No</th>
+                  <th>Kapsam</th>
+                  <th>AS9100 Maddeleri</th>
+                  <th>Denetci</th>
+                  <th>Tarih</th>
+                  <th>Bulgular</th>
+                  <th>Durum</th>
+                  <th>Skor</th>
+                  <th>Islem</th>
+                </tr>
+              </thead>
+              <tbody id="denTbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ══════════════════════════════════════════════════
+   ERSAN MES — Ic Denetim Paneli
+   localStorage: ersan_denetimler, ersan_bulgular, ersan_capa_denetim
+   ══════════════════════════════════════════════════ */
+
+var AY_ADLARI = ['Ocak','Subat','Mart','Nisan','Mayis','Haziran','Temmuz','Agustos','Eylul','Ekim','Kasim','Aralik'];
+var seciliYil = 2026;
+var seciliAsStep = 'all';
+
+// ── ORNEK VERILER ──
+function ornekVeriYukle() {
+  if (!localStorage.getItem('ersan_denetimler')) {
+    var denetimler = [
+      { id:'DEN-2026-001', kapsam:'Dokuman Yonetimi', tip:'Sistem', maddeler:['4.1','4.2','7.5'], denetci:'Erdem Kucukates', yardimci:'Ahmet Yilmaz', tarih:'2026-01-15', sure:2, durum:'Tamamlandi', skor:88, risk:6, notlar:'Yillik plana uygun', ay:1 },
+      { id:'DEN-2026-002', kapsam:'Uretim Surecleri', tip:'Surec', maddeler:['8.5.1','8.5.2','8.5.3'], denetci:'Erdem Kucukates', yardimci:'Mehmet Demir', tarih:'2026-02-20', sure:3, durum:'Tamamlandi', skor:75, risk:12, notlar:'2 minor bulgu', ay:2 },
+      { id:'DEN-2026-003', kapsam:'Tedarikci Yonetimi', tip:'Surec', maddeler:['8.4','8.4.1','8.4.2'], denetci:'Erdem Kucukates', yardimci:'', tarih:'2026-03-10', sure:2, durum:'Devam Ediyor', skor:0, risk:15, notlar:'Denetim suresi uzadi', ay:3 },
+      { id:'DEN-2026-004', kapsam:'Kalibrasyon', tip:'Uygunluk', maddeler:['7.1.5','7.1.5.1'], denetci:'Ahmet Yilmaz', yardimci:'', tarih:'2026-05-15', sure:1, durum:'Planlandi', skor:0, risk:8, notlar:'', ay:5 },
+      { id:'DEN-2026-005', kapsam:'Yonetim Sorumlulugu', tip:'Sistem', maddeler:['5.1','5.2','5.3','9.3'], denetci:'Erdem Kucukates', yardimci:'', tarih:'2026-07-20', sure:2, durum:'Planlandi', skor:0, risk:10, notlar:'', ay:7 },
+      { id:'DEN-2026-006', kapsam:'Risk Yonetimi & Iyilestirme', tip:'Sistem', maddeler:['6.1','10.1','10.2','10.3'], denetci:'Erdem Kucukates', yardimci:'Ahmet Yilmaz', tarih:'2026-01-25', sure:2, durum:'Gecikti', skor:0, risk:20, notlar:'Gecikme nedeni: personel eksikligi', ay:1 }
+    ];
+    localStorage.setItem('ersan_denetimler', JSON.stringify(denetimler));
+  }
+  if (!localStorage.getItem('ersan_bulgular')) {
+    var bulgular = [
+      { id:'BLG-001', denetimId:'DEN-2026-001', madde:'7.5', tip:'Minor', aciklama:'Dokuman dagitimlari imza eksik', durum:'Acik', tarih:'2026-01-15', kapatmaTarih:'' },
+      { id:'BLG-002', denetimId:'DEN-2026-001', madde:'4.2', tip:'Gozlem', aciklama:'KYS el kitabi son revizyonu guncellenmeli', durum:'Kapatildi', tarih:'2026-01-15', kapatmaTarih:'2026-01-28' },
+      { id:'BLG-003', denetimId:'DEN-2026-002', madde:'8.5.1', tip:'Major', aciklama:'Uretim parametreleri kayit altina alinmiyor', durum:'Acik', tarih:'2026-02-20', kapatmaTarih:'' },
+      { id:'BLG-004', denetimId:'DEN-2026-002', madde:'8.5.2', tip:'Minor', aciklama:'Is emri formlarinda revizyon takibi yok', durum:'Acik', tarih:'2026-02-20', kapatmaTarih:'' },
+      { id:'BLG-005', denetimId:'DEN-2026-002', madde:'8.5.3', tip:'Gozlem', aciklama:'Musteri malzemesi ayristirma alani yetersiz', durum:'Kapatildi', tarih:'2026-02-20', kapatmaTarih:'2026-03-05' },
+      { id:'BLG-006', denetimId:'DEN-2026-003', madde:'8.4', tip:'Major', aciklama:'Tedarikci degerlendirme kriterleri belirsiz', durum:'Acik', tarih:'2026-03-10', kapatmaTarih:'' },
+      { id:'BLG-007', denetimId:'DEN-2026-003', madde:'8.4.1', tip:'Minor', aciklama:'OTL guncellemesi yapilmamis', durum:'Acik', tarih:'2026-03-10', kapatmaTarih:'' },
+      { id:'BLG-008', denetimId:'DEN-2026-006', madde:'6.1', tip:'Minor', aciklama:'Risk degerlendirme tablosu eski', durum:'Acik', tarih:'2026-01-25', kapatmaTarih:'' }
+    ];
+    localStorage.setItem('ersan_bulgular', JSON.stringify(bulgular));
+  }
+  if (!localStorage.getItem('ersan_capa_denetim')) {
+    var capalar = [
+      { id:'CAPA-D-001', bulguId:'BLG-003', aciklama:'Uretim parametreleri icin check-list olusturulacak', sorumlu:'Mehmet Demir', hedefTarih:'2026-03-20', durum:'Devam Ediyor', tamamlanma:60 },
+      { id:'CAPA-D-002', bulguId:'BLG-001', aciklama:'Dokuman dagitimlari dijitale tasinacak', sorumlu:'Erdem Kucukates', hedefTarih:'2026-02-28', durum:'Gecikti', tamamlanma:30 },
+      { id:'CAPA-D-003', bulguId:'BLG-006', aciklama:'Tedarikci degerlendirme proseduru guncellenecek', sorumlu:'Erdem Kucukates', hedefTarih:'2026-04-15', durum:'Planlandi', tamamlanma:0 },
+      { id:'CAPA-D-004', bulguId:'BLG-004', aciklama:'Is emri revizyon takip sistemi kurulacak', sorumlu:'Ahmet Yilmaz', hedefTarih:'2026-04-01', durum:'Devam Ediyor', tamamlanma:40 }
+    ];
+    localStorage.setItem('ersan_capa_denetim', JSON.stringify(capalar));
+  }
+}
+
+// ── VERI OKUMA ──
+function getDenetimler() {
+  try { return JSON.parse(localStorage.getItem('ersan_denetimler')) || []; } catch(e) { return []; }
+}
+function getBulgular() {
+  try { return JSON.parse(localStorage.getItem('ersan_bulgular')) || []; } catch(e) { return []; }
+}
+function getCapalar() {
+  try { return JSON.parse(localStorage.getItem('ersan_capa_denetim')) || []; } catch(e) { return []; }
+}
+
+// ── KPI HESAPLA ──
+function kpiGuncelle() {
+  var den = getDenetimler();
+  var blg = getBulgular();
+  var cap = getCapalar();
+
+  // Toplam Denetim
+  document.getElementById('kpiToplam').textContent = den.length;
+  var tamam = den.filter(function(d) { return d.durum === 'Tamamlandi'; }).length;
+  document.getElementById('kpiToplamSub').textContent = tamam + ' tamamlandi, ' + (den.length - tamam) + ' bekliyor';
+
+  // Acik Bulgular
+  var acikBlg = blg.filter(function(b) { return b.durum === 'Acik'; });
+  var majorAcik = acikBlg.filter(function(b) { return b.tip === 'Major'; }).length;
+  document.getElementById('kpiAcik').textContent = acikBlg.length;
+  document.getElementById('kpiAcikSub').textContent = majorAcik + ' major, ' + (acikBlg.length - majorAcik) + ' minor/gozlem';
+
+  // CAPA Durumu
+  var devamCapa = cap.filter(function(c) { return c.durum === 'Devam Ediyor'; }).length;
+  var gecikCapa = cap.filter(function(c) { return c.durum === 'Gecikti'; }).length;
+  document.getElementById('kpiCapa').textContent = cap.length;
+  document.getElementById('kpiCapaSub').textContent = devamCapa + ' devam, ' + gecikCapa + ' gecikti';
+
+  // Uyumluluk Skoru
+  var tamamDen = den.filter(function(d) { return d.durum === 'Tamamlandi' && d.skor > 0; });
+  var ortSkor = 0;
+  if (tamamDen.length > 0) {
+    var topSkor = 0;
+    tamamDen.forEach(function(d) { topSkor += d.skor; });
+    ortSkor = Math.round(topSkor / tamamDen.length);
+  }
+  document.getElementById('kpiSkor').textContent = ortSkor + '%';
+  document.getElementById('kpiSkorSub').textContent = tamamDen.length + ' tamamlanan denetim ortalamasi';
+
+  // Ort Kapatma
+  var kapatilan = blg.filter(function(b) { return b.durum === 'Kapatildi' && b.kapatmaTarih; });
+  var ortGun = 0;
+  if (kapatilan.length > 0) {
+    var topGun = 0;
+    kapatilan.forEach(function(b) {
+      var d1 = new Date(b.tarih);
+      var d2 = new Date(b.kapatmaTarih);
+      topGun += Math.round((d2 - d1) / (1000 * 60 * 60 * 24));
+    });
+    ortGun = Math.round(topGun / kapatilan.length);
+  }
+  document.getElementById('kpiKapatma').textContent = ortGun;
+  document.getElementById('kpiKapatmaSub').textContent = kapatilan.length + ' kapatilan bulgu icin';
+}
+
+// ── TAKVIM ──
+function takvimOlustur() {
+  var den = getDenetimler();
+  var grid = document.getElementById('takvimGrid');
+  grid.innerHTML = '';
+  document.getElementById('takvimYil').textContent = seciliYil;
+
+  for (var m = 0; m < 12; m++) {
+    var ayDen = den.filter(function(d) { return d.ay === (m + 1); });
+    var cls = 't-bos';
+    var durumText = 'Bos';
+    var sayi = ayDen.length;
+
+    if (ayDen.length > 0) {
+      var durumlar = ayDen.map(function(d) { return d.durum; });
+      if (durumlar.indexOf('Gecikti') >= 0) { cls = 't-gecik'; durumText = 'Gecikti'; }
+      else if (durumlar.indexOf('Devam Ediyor') >= 0) { cls = 't-devam'; durumText = 'Devam'; }
+      else if (durumlar.indexOf('Planlandi') >= 0) { cls = 't-plan'; durumText = 'Planlandi'; }
+      else { cls = 't-tamam'; durumText = 'Tamam'; }
+    }
+
+    var cell = document.createElement('div');
+    cell.className = 'takvim-ay ' + cls;
+    cell.innerHTML = '<div class="ay-ad">' + AY_ADLARI[m] + '</div>' +
+      '<div class="ay-sayi">' + sayi + '</div>' +
+      '<div class="ay-durum">' + durumText + '</div>';
+    cell.setAttribute('data-ay', m + 1);
+    cell.addEventListener('click', function() {
+      var ay = parseInt(this.getAttribute('data-ay'));
+      tabloFiltreleAy(ay);
+    });
+    grid.appendChild(cell);
+  }
+}
+
+// ── RISK MATRISI ──
+function riskMatrisiOlustur() {
+  var den = getDenetimler();
+  var grid = document.getElementById('riskGrid');
+  grid.innerHTML = '';
+
+  // Renk matrisi: [olasilik][etki] (1-indexed logic, 0 = labels)
+  var renkler = [
+    ['','','','','',''],
+    ['','c-green','c-green','c-yellow','c-yellow','c-orange'],
+    ['','c-green','c-yellow','c-yellow','c-orange','c-orange'],
+    ['','c-yellow','c-yellow','c-orange','c-orange','c-red'],
+    ['','c-yellow','c-orange','c-orange','c-red','c-red'],
+    ['','c-orange','c-orange','c-red','c-red','c-red']
+  ];
+
+  // Risk mapping for audits
+  var riskMap = {};
+  den.forEach(function(d) {
+    var olasilik = Math.min(5, Math.max(1, Math.ceil(d.risk / 5)));
+    var etki = Math.min(5, Math.max(1, (d.risk % 5) || 5));
+    var key = olasilik + '_' + etki;
+    if (!riskMap[key]) riskMap[key] = 0;
+    riskMap[key]++;
+  });
+
+  for (var row = 5; row >= 0; row--) {
+    for (var col = 0; col <= 5; col++) {
+      var el = document.createElement('div');
+
+      if (row === 0 && col === 0) {
+        el.className = 'risk-label';
+        el.textContent = '';
+      } else if (row === 0) {
+        el.className = 'risk-label';
+        el.textContent = col;
+      } else if (col === 0) {
+        el.className = 'risk-label';
+        el.textContent = row;
+      } else {
+        var key = row + '_' + col;
+        var sayi = riskMap[key] || 0;
+        el.className = 'risk-cell ' + renkler[row][col];
+        el.textContent = sayi || '';
+        el.setAttribute('data-olas', row);
+        el.setAttribute('data-etki', col);
+        el.addEventListener('click', function() {
+          var o = this.getAttribute('data-olas');
+          var e = this.getAttribute('data-etki');
+          toast('Risk: Olasilik=' + o + ', Etki=' + e);
+        });
+      }
+      grid.appendChild(el);
+    }
+  }
+}
+
+// ── DENETIM TABLOSU ──
+function tabloOlustur(filtre) {
+  var den = getDenetimler();
+  var blg = getBulgular();
+
+  if (filtre && filtre.ay) {
+    den = den.filter(function(d) { return d.ay === filtre.ay; });
+  }
+  if (filtre && filtre.durum) {
+    den = den.filter(function(d) { return d.durum === filtre.durum; });
+  }
+
+  var tbody = document.getElementById('denTbody');
+  tbody.innerHTML = '';
+  document.getElementById('denSayi').textContent = den.length + ' denetim';
+
+  if (den.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:40px;color:var(--metin4);">Denetim bulunamadi</td></tr>';
+    return;
+  }
+
+  den.forEach(function(d) {
+    var denBlg = blg.filter(function(b) { return b.denetimId === d.id; });
+    var acikBlg = denBlg.filter(function(b) { return b.durum === 'Acik'; }).length;
+    var topBlg = denBlg.length;
+
+    var durumBdg = 'b-gry';
+    if (d.durum === 'Tamamlandi') durumBdg = 'b-grn';
+    else if (d.durum === 'Devam Ediyor') durumBdg = 'b-blu';
+    else if (d.durum === 'Planlandi') durumBdg = 'b-amr';
+    else if (d.durum === 'Gecikti') durumBdg = 'b-red';
+
+    var maddelerHTML = d.maddeler.map(function(m) {
+      return '<span style="display:inline-block;padding:1px 6px;border-radius:10px;font-size:9px;font-weight:600;background:var(--bg);color:var(--metin3);margin:1px;">' + m + '</span>';
+    }).join('');
+
+    var skorHTML = '-';
+    if (d.skor > 0) {
+      var skorRenk = d.skor >= 80 ? 'var(--yesil)' : d.skor >= 60 ? 'var(--sari)' : 'var(--kirmizi)';
+      skorHTML = d.skor + '%<div class="skor-bar-bg"><div class="skor-bar" style="width:' + d.skor + '%;background:' + skorRenk + ';"></div></div>';
+    }
+
+    var bulguHTML = topBlg > 0 ? '<span style="font-weight:600;">' + topBlg + '</span> <span style="color:var(--kirmizi);font-size:10px;">(' + acikBlg + ' acik)</span>' : '-';
+
+    var tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td class="mono">' + d.id + '</td>' +
+      '<td><div style="font-weight:600;">' + d.kapsam + '</div><div style="font-size:10px;color:var(--metin4);">' + d.tip + '</div></td>' +
+      '<td>' + maddelerHTML + '</td>' +
+      '<td>' + d.denetci + '</td>' +
+      '<td>' + d.tarih + '</td>' +
+      '<td>' + bulguHTML + '</td>' +
+      '<td><span class="bdg ' + durumBdg + '">' + d.durum + '</span></td>' +
+      '<td>' + skorHTML + '</td>' +
+      '<td><button class="btn-topbar" style="padding:3px 8px;font-size:10px;" onclick="event.stopPropagation();denetimAc(\'' + d.id + '\')">Ac</button></td>';
+
+    tr.addEventListener('click', function() { denetimAc(d.id); });
+    tbody.appendChild(tr);
+  });
+}
+
+function tabloFiltreleAy(ay) {
+  tabloOlustur({ ay: ay });
+  toast(AY_ADLARI[ay - 1] + ' denetimleri filtrelendi');
+}
+
+// ── AS9100 CHIP FILTER ──
+function asFilter(el, step) {
+  document.querySelectorAll('.as-chip').forEach(function(c) { c.classList.remove('aktif'); });
+  el.classList.add('aktif');
+  seciliAsStep = step;
+
+  if (step === 'all') {
+    tabloOlustur({});
+  } else if (step === 'plan') {
+    tabloOlustur({ durum: 'Planlandi' });
+  } else if (step === 'bulgu') {
+    // Show audits with open findings
+    var blg = getBulgular();
+    var acikDenIds = {};
+    blg.forEach(function(b) { if (b.durum === 'Acik') acikDenIds[b.denetimId] = true; });
+    var den = getDenetimler().filter(function(d) { return acikDenIds[d.id]; });
+    var tbody = document.getElementById('denTbody');
+    tbody.innerHTML = '';
+    document.getElementById('denSayi').textContent = den.length + ' denetim (acik bulgulu)';
+    // Reuse same rendering by temporarily replacing and restoring
+    var origData = localStorage.getItem('ersan_denetimler');
+    localStorage.setItem('ersan_denetimler', JSON.stringify(den));
+    tabloOlustur({});
+    localStorage.setItem('ersan_denetimler', origData);
+  } else if (step === 'capa') {
+    tabloOlustur({ durum: 'Devam Ediyor' });
+  } else if (step === 'son') {
+    tabloOlustur({ durum: 'Tamamlandi' });
+  } else if (step === 'maddeler') {
+    tabloOlustur({});
+  }
+}
+
+// ── NAVIGATE ──
+function denetimAc(id) {
+  var den = getDenetimler();
+  var d = den.filter(function(x) { return x.id === id; })[0];
+  if (!d) return;
+
+  if (d.durum === 'Planlandi') {
+    window.location.href = 'ersan_denetim_plan.html';
+  } else {
+    window.location.href = 'ersan_denetim_yurutme.html?id=' + id;
+  }
+}
+
+// ── YIL DEGISTI ──
+function yilDegisti() {
+  seciliYil = parseInt(document.getElementById('yilSec').value);
+  sayfaYukle();
+}
+
+// ── TOAST ──
+function toast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 2000);
+}
+
+// ── SAYFA YUKLE ──
+function sayfaYukle() {
+  ornekVeriYukle();
+  kpiGuncelle();
+  takvimOlustur();
+  riskMatrisiOlustur();
+  tabloOlustur({});
+}
+
+document.addEventListener('DOMContentLoaded', sayfaYukle);
+</script>
+</body>
+</html>

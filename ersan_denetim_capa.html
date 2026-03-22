@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — CAPA (Düzeltici Faaliyetler)</title>
+<link rel="stylesheet" href="ersan_styles.css">
+<script src="ersan_nav.js" defer></script>
+<script src="ersan_log.js" defer></script>
+<style>
+.kpi-row{display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;}
+.kpi-card{flex:1;min-width:160px;background:#fff;border-radius:10px;padding:16px 18px;box-shadow:0 1px 4px rgba(0,0,0,.06);border-left:4px solid var(--mavi);}
+.kpi-card .kpi-val{font-size:28px;font-weight:700;color:var(--laci);}
+.kpi-card .kpi-lbl{font-size:11px;color:var(--text3);margin-top:2px;}
+.kpi-card.open{border-left-color:#f59e0b;}
+.kpi-card.active{border-left-color:var(--mavi);}
+.kpi-card.overdue{border-left-color:#ef4444;}
+.kpi-card.closed{border-left-color:#22c55e;}
+
+.capa-tbl{width:100%;border-collapse:collapse;font-size:12px;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.06);}
+.capa-tbl th{background:var(--laci);color:#fff;padding:8px 10px;text-align:left;font-size:11px;font-weight:600;white-space:nowrap;}
+.capa-tbl td{padding:8px 10px;border-bottom:1px solid #edf2f7;vertical-align:middle;}
+.capa-tbl tr:hover{background:#f8fafc;}
+.capa-tbl tr.gecikli{background:#fef2f2;}
+.capa-tbl tr.gecikli:hover{background:#fee2e2;}
+.capa-tbl tr.secili{background:#eff6ff;}
+
+.bar-wrap{width:100%;background:#e5e7eb;border-radius:6px;height:8px;overflow:hidden;min-width:80px;}
+.bar-fill{height:100%;border-radius:6px;transition:width .3s;}
+
+.badge-onc{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;}
+.badge-onc.Yüksek{background:#fef2f2;color:#dc2626;}
+.badge-onc.Orta{background:#fffbeb;color:#d97706;}
+.badge-onc.Düşük{background:#f0fdf4;color:#16a34a;}
+
+.badge-durum{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;}
+.badge-durum.Açık{background:#fffbeb;color:#d97706;}
+.badge-durum.Devam{background:#eff6ff;color:#2563eb;}
+.badge-durum.Gecikmiş{background:#fef2f2;color:#dc2626;}
+.badge-durum.Kapatıldı{background:#f0fdf4;color:#16a34a;}
+
+.step-panel{background:#fff;border-radius:10px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.06);margin-top:16px;display:none;}
+.step-row{display:flex;align-items:flex-start;gap:16px;margin-bottom:18px;position:relative;}
+.step-row:last-child{margin-bottom:0;}
+.step-circle{width:32px;height:32px;min-width:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;position:relative;z-index:1;}
+.step-circle.done{background:#22c55e;}
+.step-circle.active{background:var(--mavi);}
+.step-circle.pending{background:#d1d5db;color:#6b7280;}
+.step-line{position:absolute;left:15px;top:32px;width:2px;height:calc(100% - 14px);background:#e5e7eb;}
+.step-body{flex:1;}
+.step-name{font-size:13px;font-weight:600;color:var(--laci);margin-bottom:4px;}
+.step-desc{font-size:12px;color:var(--text3);margin-bottom:6px;}
+.step-content{font-size:12px;color:var(--text2);background:#f8fafc;border-radius:6px;padding:8px 10px;margin-bottom:6px;display:none;}
+.step-content.show{display:block;}
+
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:800;display:none;align-items:center;justify-content:center;}
+.modal-bg.show{display:flex;}
+.modal-box{background:#fff;border-radius:12px;width:560px;max-width:94vw;max-height:88vh;overflow-y:auto;box-shadow:0 8px 30px rgba(0,0,0,.2);}
+.modal-head{padding:16px 20px;border-bottom:1px solid #edf2f7;display:flex;align-items:center;justify-content:space-between;}
+.modal-head h3{margin:0;font-size:15px;color:var(--laci);}
+.modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3);padding:4px 8px;}
+.modal-body{padding:20px;}
+.modal-foot{padding:12px 20px;border-top:1px solid #edf2f7;display:flex;justify-content:flex-end;gap:8px;}
+
+.fg{margin-bottom:12px;}
+.fl{display:block;font-size:11px;font-weight:600;color:var(--text3);margin-bottom:4px;}
+.fi{width:100%;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:12px;font-family:inherit;box-sizing:border-box;}
+.fi:focus{outline:none;border-color:var(--mavi);box-shadow:0 0 0 2px rgba(55,138,221,.15);}
+select.fi{appearance:auto;}
+textarea.fi{resize:vertical;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 14px;}
+
+.btn{padding:7px 14px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;}
+.btn.primary{background:var(--mavi);color:#fff;}
+.btn.primary:hover{background:#2a6fb5;}
+.btn.sm{padding:5px 10px;font-size:11px;}
+.btn.ghost{background:transparent;color:var(--text2);border:1px solid #d1d5db;}
+.btn.ghost:hover{background:#f8fafc;}
+.btn.danger{background:#ef4444;color:#fff;}
+
+.topbar-actions{display:flex;gap:8px;align-items:center;}
+</style>
+</head>
+<body>
+<div id="nav-alani"></div>
+<div class="icerik-alani">
+  <div class="topbar">
+    <div class="topbar-baslik">CAPA (Düzeltici Faaliyetler)</div>
+    <div class="topbar-actions">
+      <button class="btn primary" onclick="openNewCapaModal()">+ Yeni CAPA</button>
+      <button class="btn ghost" onclick="toggleGeciken()">Gecikenleri Göster</button>
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
+    </div>
+  </div>
+  <div class="sayfa-icerik">
+
+<!-- KPI ROW -->
+<div class="kpi-row">
+  <div class="kpi-card open">
+    <div class="kpi-val" id="kpiAcik">0</div>
+    <div class="kpi-lbl">Açık CAPA</div>
+  </div>
+  <div class="kpi-card active">
+    <div class="kpi-val" id="kpiDevam">0</div>
+    <div class="kpi-lbl">Devam Eden</div>
+  </div>
+  <div class="kpi-card overdue">
+    <div class="kpi-val" id="kpiGecikli">0</div>
+    <div class="kpi-lbl">Gecikmiş</div>
+  </div>
+  <div class="kpi-card closed">
+    <div class="kpi-val" id="kpiKapali">0</div>
+    <div class="kpi-lbl">Kapatılan</div>
+  </div>
+</div>
+
+<!-- CAPA TABLE -->
+<div style="overflow-x:auto;">
+  <table class="capa-tbl" id="capaTbl">
+    <thead>
+      <tr>
+        <th>No</th>
+        <th>Bulgu No</th>
+        <th>Konu</th>
+        <th>Sorumlu</th>
+        <th>Termin</th>
+        <th>Öncelik</th>
+        <th style="min-width:100px;">İlerleme</th>
+        <th>Durum</th>
+        <th>İşlem</th>
+      </tr>
+    </thead>
+    <tbody id="capaTbody"></tbody>
+  </table>
+</div>
+
+<!-- STEP PANEL -->
+<div class="step-panel" id="stepPanel">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+    <h3 style="margin:0;font-size:14px;color:var(--laci);" id="stepTitle">CAPA Adım Detayı</h3>
+    <div style="display:flex;gap:8px;">
+      <button class="btn sm ghost" onclick="terminUzat()">Termin Uzat</button>
+      <button class="btn sm ghost" onclick="closeStepPanel()">Kapat</button>
+    </div>
+  </div>
+  <div id="stepsContainer"></div>
+</div>
+
+<!-- NEW CAPA MODAL -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3>Yeni CAPA Oluştur</h3>
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="fg">
+          <label class="fl">Bulgu No (opsiyonel)</label>
+          <select class="fi" id="mBulguNo">
+            <option value="">— Bağımsız CAPA —</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label class="fl">Öncelik</label>
+          <select class="fi" id="mOncelik">
+            <option value="Yüksek">Yüksek</option>
+            <option value="Orta" selected>Orta</option>
+            <option value="Düşük">Düşük</option>
+          </select>
+        </div>
+      </div>
+      <div class="fg">
+        <label class="fl">Konu</label>
+        <input class="fi" type="text" id="mKonu" placeholder="CAPA konusu">
+      </div>
+      <div class="form-grid">
+        <div class="fg">
+          <label class="fl">Kök Neden Yöntemi</label>
+          <select class="fi" id="mYontem">
+            <option value="5-Neden">5-Neden</option>
+            <option value="Balık Kılçığı">Balık Kılçığı</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label class="fl">Sorumlu</label>
+          <input class="fi" type="text" id="mSorumlu" placeholder="Ad Soyad">
+        </div>
+      </div>
+      <div class="fg">
+        <label class="fl">Kök Neden</label>
+        <textarea class="fi" id="mKokNeden" rows="2" placeholder="Kök neden analizi..."></textarea>
+      </div>
+      <div class="fg">
+        <label class="fl">Düzeltici Aksiyon</label>
+        <textarea class="fi" id="mDuzeltici" rows="2" placeholder="Yapılacak düzeltici faaliyet..."></textarea>
+      </div>
+      <div class="fg">
+        <label class="fl">Önleyici Aksiyon</label>
+        <textarea class="fi" id="mOnleyici" rows="2" placeholder="Tekrarı önlemek için yapılacak faaliyet..."></textarea>
+      </div>
+      <div class="form-grid">
+        <div class="fg">
+          <label class="fl">Termin</label>
+          <input class="fi" type="date" id="mTermin">
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn ghost" onclick="closeModal()">İptal</button>
+      <button class="btn primary" id="btnSaveModal" onclick="saveNewCapa()">Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+  </div>
+</div>
+
+<script>
+/* ===== STATE ===== */
+var LS_KEY = 'ersan_capa_denetim';
+var LS_BULGU_KEY = 'ersan_bulgular';
+var allCapas = [];
+var selectedCapaId = null;
+var showOnlyGeciken = false;
+
+/* ===== INIT ===== */
+document.addEventListener('DOMContentLoaded', function() {
+  initSampleData();
+  loadCapas();
+});
+
+/* ===== TOAST ===== */
+function toast(msg, err) {
+  var el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show' + (err ? ' err' : '');
+  clearTimeout(el._t);
+  el._t = setTimeout(function() { el.className = 'toast'; }, 2800);
+}
+
+/* ===== SAMPLE DATA ===== */
+function initSampleData() {
+  if (!localStorage.getItem(LS_KEY)) {
+    var today = new Date();
+    var samples = [
+      {
+        id: 'capa-001', no: 'CAPA-2026-001', bulguNo: 'BLG-2026-001', konu: 'Tedarikçi malzeme sertifikası eksik',
+        sorumlu: 'Erdem Küçükateş', termin: '2026-04-15', oncelik: 'Yüksek', durum: 'Devam', ilerleme: 40,
+        adimlar: [
+          { ad: 'Kök Neden Analizi', yontem: '5-Neden', icerik: 'Tedarikçiye sertifika zorunluluğu bildirilmemiş', tamamlandi: true },
+          { ad: 'Plan Onayı', icerik: 'Satınalma prosedürüne madde eklenmesi planlandı', tamamlandi: true },
+          { ad: 'Uygulama', icerik: '', tamamlandi: false },
+          { ad: 'Doğrulama', icerik: '', tamamlandi: false },
+          { ad: 'Kapanış', icerik: '', tamamlandi: false }
+        ],
+        kokNeden: 'Tedarikçi bilgilendirme eksikliği', duzeltici: 'Prosedür güncelleme', onleyici: 'Checklist ekleme',
+        kokNedenYontemi: '5-Neden'
+      },
+      {
+        id: 'capa-002', no: 'CAPA-2026-002', bulguNo: 'BLG-2026-003', konu: 'Kalibrasyon takip sistemi yetersiz',
+        sorumlu: 'Ali Yılmaz', termin: '2026-03-10', oncelik: 'Yüksek', durum: 'Gecikmiş', ilerleme: 20,
+        adimlar: [
+          { ad: 'Kök Neden Analizi', yontem: 'Balık Kılçığı', icerik: 'Manuel takip hataya açık', tamamlandi: true },
+          { ad: 'Plan Onayı', icerik: '', tamamlandi: false },
+          { ad: 'Uygulama', icerik: '', tamamlandi: false },
+          { ad: 'Doğrulama', icerik: '', tamamlandi: false },
+          { ad: 'Kapanış', icerik: '', tamamlandi: false }
+        ],
+        kokNeden: 'Manuel takip hataya açık', duzeltici: 'Dijital kalibrasyon modülü', onleyici: 'Otomatik hatırlatıcı',
+        kokNedenYontemi: 'Balık Kılçığı'
+      },
+      {
+        id: 'capa-003', no: 'CAPA-2026-003', bulguNo: '', konu: 'İş emri açılmadan üretime başlanması',
+        sorumlu: 'Mehmet Demir', termin: '2026-04-01', oncelik: 'Orta', durum: 'Açık', ilerleme: 0,
+        adimlar: [
+          { ad: 'Kök Neden Analizi', yontem: '5-Neden', icerik: '', tamamlandi: false },
+          { ad: 'Plan Onayı', icerik: '', tamamlandi: false },
+          { ad: 'Uygulama', icerik: '', tamamlandi: false },
+          { ad: 'Doğrulama', icerik: '', tamamlandi: false },
+          { ad: 'Kapanış', icerik: '', tamamlandi: false }
+        ],
+        kokNeden: '', duzeltici: '', onleyici: '', kokNedenYontemi: '5-Neden'
+      },
+      {
+        id: 'capa-004', no: 'CAPA-2026-004', bulguNo: 'BLG-2026-002', konu: 'Doküman dağıtım kayıtları güncel değil',
+        sorumlu: 'Erdem Küçükateş', termin: '2026-02-28', oncelik: 'Düşük', durum: 'Kapatıldı', ilerleme: 100,
+        adimlar: [
+          { ad: 'Kök Neden Analizi', yontem: '5-Neden', icerik: 'DMS modülü henüz devreye alınmamış', tamamlandi: true },
+          { ad: 'Plan Onayı', icerik: 'DMS modülü devreye alındı', tamamlandi: true },
+          { ad: 'Uygulama', icerik: 'Tüm dokümanlar DMS üzerinden dağıtılıyor', tamamlandi: true },
+          { ad: 'Doğrulama', icerik: '30 gün kontrol tamamlandı', tamamlandi: true },
+          { ad: 'Kapanış', icerik: 'CAPA kapatıldı, bulgu da kapatıldı', tamamlandi: true }
+        ],
+        kokNeden: 'DMS yoktu', duzeltici: 'DMS devreye alındı', onleyici: 'Otomatik dağıtım',
+        kokNedenYontemi: '5-Neden'
+      },
+      {
+        id: 'capa-005', no: 'CAPA-2026-005', bulguNo: '', konu: 'FOD kontrol prosedürü eksik',
+        sorumlu: 'Ali Yılmaz', termin: '2026-04-20', oncelik: 'Orta', durum: 'Devam', ilerleme: 60,
+        adimlar: [
+          { ad: 'Kök Neden Analizi', yontem: '5-Neden', icerik: 'FOD farkındalığı yetersiz', tamamlandi: true },
+          { ad: 'Plan Onayı', icerik: 'FOD prosedürü yazılacak', tamamlandi: true },
+          { ad: 'Uygulama', icerik: 'Prosedür yazıldı, eğitim planlandı', tamamlandi: true },
+          { ad: 'Doğrulama', icerik: '', tamamlandi: false },
+          { ad: 'Kapanış', icerik: '', tamamlandi: false }
+        ],
+        kokNeden: 'FOD farkındalığı yetersiz', duzeltici: 'FOD prosedürü', onleyici: 'Periyodik eğitim',
+        kokNedenYontemi: '5-Neden'
+      }
+    ];
+    localStorage.setItem(LS_KEY, JSON.stringify(samples));
+  }
+
+  // Sample bulgular for cross-reference
+  if (!localStorage.getItem(LS_BULGU_KEY)) {
+    var bulgular = [
+      { id: 'BLG-2026-001', no: 'BLG-2026-001', tip: 'Majör', madde: '8.4.1', aciklama: 'Tedarikçi sertifikası eksik', durum: 'Açık' },
+      { id: 'BLG-2026-002', no: 'BLG-2026-002', tip: 'Minör', madde: '7.5.3', aciklama: 'Doküman dağıtım kaydı yok', durum: 'Kapatıldı' },
+      { id: 'BLG-2026-003', no: 'BLG-2026-003', tip: 'Majör', madde: '7.1.5', aciklama: 'Kalibrasyon takip yetersiz', durum: 'Açık' }
+    ];
+    localStorage.setItem(LS_BULGU_KEY, JSON.stringify(bulgular));
+  }
+}
+
+/* ===== LOAD CAPAS ===== */
+function loadCapas() {
+  try {
+    allCapas = JSON.parse(localStorage.getItem(LS_KEY) || '[]');
+  } catch(e) {
+    allCapas = [];
+  }
+  checkOverdue();
+  renderKpis();
+  renderTable();
+}
+
+/* ===== AUTO OVERDUE CHECK ===== */
+function checkOverdue() {
+  var today = new Date().toISOString().split('T')[0];
+  var changed = false;
+  allCapas.forEach(function(c) {
+    if ((c.durum === 'Devam' || c.durum === 'Açık') && c.termin && c.termin < today) {
+      c.durum = 'Gecikmiş';
+      changed = true;
+    }
+  });
+  if (changed) saveCapas();
+}
+
+/* ===== SAVE CAPAS ===== */
+function saveCapas() {
+  localStorage.setItem(LS_KEY, JSON.stringify(allCapas));
+}
+
+/* ===== RENDER KPIs ===== */
+function renderKpis() {
+  var acik = 0, devam = 0, gecik = 0, kapali = 0;
+  allCapas.forEach(function(c) {
+    if (c.durum === 'Açık') acik++;
+    else if (c.durum === 'Devam') devam++;
+    else if (c.durum === 'Gecikmiş') gecik++;
+    else if (c.durum === 'Kapatıldı') kapali++;
+  });
+  document.getElementById('kpiAcik').textContent = acik;
+  document.getElementById('kpiDevam').textContent = devam;
+  document.getElementById('kpiGecikli').textContent = gecik;
+  document.getElementById('kpiKapali').textContent = kapali;
+}
+
+/* ===== RENDER TABLE ===== */
+function renderTable() {
+  var list = allCapas;
+  if (showOnlyGeciken) {
+    list = list.filter(function(c) { return c.durum === 'Gecikmiş'; });
+  }
+  var tbody = document.getElementById('capaTbody');
+  if (!list.length) {
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--text3);padding:24px;">Kayıt bulunamadı</td></tr>';
+    return;
+  }
+  var html = '';
+  list.forEach(function(c) {
+    var gecikClass = c.durum === 'Gecikmiş' ? ' gecikli' : '';
+    var seciliClass = c.id === selectedCapaId ? ' secili' : '';
+    var barColor = c.ilerleme >= 80 ? '#22c55e' : c.ilerleme >= 40 ? '#f59e0b' : '#ef4444';
+    if (c.durum === 'Kapatıldı') barColor = '#22c55e';
+    html += '<tr class="' + gecikClass + seciliClass + '">';
+    html += '<td style="font-family:monospace;font-weight:600;">' + esc(c.no) + '</td>';
+    html += '<td>' + esc(c.bulguNo || '—') + '</td>';
+    html += '<td style="max-width:200px;">' + esc(c.konu) + '</td>';
+    html += '<td>' + esc(c.sorumlu) + '</td>';
+    html += '<td style="white-space:nowrap;">' + formatTarih(c.termin) + '</td>';
+    html += '<td><span class="badge-onc ' + esc(c.oncelik) + '">' + esc(c.oncelik) + '</span></td>';
+    html += '<td><div class="bar-wrap"><div class="bar-fill" style="width:' + c.ilerleme + '%;background:' + barColor + ';"></div></div><div style="font-size:10px;color:var(--text3);margin-top:2px;text-align:center;">%' + c.ilerleme + '</div></td>';
+    html += '<td><span class="badge-durum ' + esc(c.durum) + '">' + esc(c.durum) + '</span></td>';
+    html += '<td style="white-space:nowrap;">';
+    html += '<button class="btn sm ghost" onclick="selectCapa(\'' + c.id + '\')">Detay</button> ';
+    if (c.durum !== 'Kapatıldı') {
+      html += '<button class="btn sm primary" onclick="openUpdateCapa(\'' + c.id + '\')">Güncelle</button>';
+    }
+    html += '</td>';
+    html += '</tr>';
+  });
+  tbody.innerHTML = html;
+}
+
+/* ===== TOGGLE GECIKEN ===== */
+function toggleGeciken() {
+  showOnlyGeciken = !showOnlyGeciken;
+  var btn = document.querySelector('[onclick="toggleGeciken()"]');
+  btn.textContent = showOnlyGeciken ? 'Tümünü Göster' : 'Gecikenleri Göster';
+  renderTable();
+}
+
+/* ===== SELECT CAPA → SHOW STEP PANEL ===== */
+function selectCapa(id) {
+  selectedCapaId = id;
+  renderTable();
+  var capa = allCapas.find(function(c) { return c.id === id; });
+  if (!capa) return;
+  var panel = document.getElementById('stepPanel');
+  panel.style.display = 'block';
+  document.getElementById('stepTitle').textContent = capa.no + ' — Adım Detayı';
+  renderSteps(capa);
+}
+
+/* ===== RENDER STEPS ===== */
+function renderSteps(capa) {
+  var adimlar = capa.adimlar || [];
+  var stepNames = ['Kök Neden Analizi', 'Plan Onayı', 'Uygulama', 'Doğrulama (30 gün sonra)', 'Kapanış'];
+  var stepDescs = [
+    'Yöntem: ' + (capa.kokNedenYontemi || '5-Neden'),
+    'Düzeltici aksiyonun onaylanması',
+    'Aksiyonun sahada uygulanması',
+    '30 gün sonra etkinlik doğrulaması',
+    'CAPA kapatma ve bağlı bulgunun güncellenmesi'
+  ];
+  var html = '';
+  for (var i = 0; i < 5; i++) {
+    var a = adimlar[i] || { tamamlandi: false, icerik: '' };
+    var status = a.tamamlandi ? 'done' : (i === getActiveStep(adimlar) ? 'active' : 'pending');
+    var icon = a.tamamlandi ? '&#10003;' : (i + 1);
+    var showLine = i < 4 ? '<div class="step-line"></div>' : '';
+    html += '<div class="step-row">';
+    html += '<div style="position:relative;">';
+    html += '<div class="step-circle ' + status + '">' + icon + '</div>';
+    html += showLine;
+    html += '</div>';
+    html += '<div class="step-body">';
+    html += '<div class="step-name">' + stepNames[i] + '</div>';
+    html += '<div class="step-desc">' + stepDescs[i] + '</div>';
+    if (a.icerik) {
+      html += '<div class="step-content show">' + esc(a.icerik) + '</div>';
+    }
+    if (status === 'active' && capa.durum !== 'Kapatıldı') {
+      if (i < 4) {
+        html += '<button class="btn sm primary" onclick="tamamlaAdim(\'' + capa.id + '\',' + i + ')">Adım Tamamla</button>';
+      } else {
+        html += '<button class="btn sm danger" onclick="kapatCapa(\'' + capa.id + '\')">Kapat ve Doğrula</button>';
+      }
+    }
+    html += '</div>';
+    html += '</div>';
+  }
+  document.getElementById('stepsContainer').innerHTML = html;
+}
+
+/* ===== GET ACTIVE STEP ===== */
+function getActiveStep(adimlar) {
+  for (var i = 0; i < adimlar.length; i++) {
+    if (!adimlar[i].tamamlandi) return i;
+  }
+  return adimlar.length - 1;
+}
+
+/* ===== TAMAMLA ADIM ===== */
+function tamamlaAdim(capaId, stepIdx) {
+  var capa = allCapas.find(function(c) { return c.id === capaId; });
+  if (!capa) return;
+  var icerik = prompt('Adım açıklaması girin (opsiyonel):');
+  if (icerik === null) return;
+  capa.adimlar[stepIdx].tamamlandi = true;
+  capa.adimlar[stepIdx].icerik = icerik || capa.adimlar[stepIdx].icerik || 'Tamamlandı';
+  // Update ilerleme
+  var done = capa.adimlar.filter(function(a) { return a.tamamlandi; }).length;
+  capa.ilerleme = Math.round((done / 5) * 100);
+  // Update durum
+  if (capa.ilerleme > 0 && capa.ilerleme < 100) capa.durum = 'Devam';
+  saveCapas();
+  renderKpis();
+  renderTable();
+  renderSteps(capa);
+  toast('Adım ' + (stepIdx + 1) + ' tamamlandı');
+}
+
+/* ===== KAPAT CAPA ===== */
+function kapatCapa(capaId) {
+  var capa = allCapas.find(function(c) { return c.id === capaId; });
+  if (!capa) return;
+  capa.adimlar.forEach(function(a) { a.tamamlandi = true; });
+  capa.adimlar[4].icerik = capa.adimlar[4].icerik || 'CAPA kapatıldı — ' + new Date().toISOString().split('T')[0];
+  capa.ilerleme = 100;
+  capa.durum = 'Kapatıldı';
+  // Close linked bulgu if exists
+  if (capa.bulguNo) {
+    closeBulgu(capa.bulguNo);
+  }
+  saveCapas();
+  renderKpis();
+  renderTable();
+  renderSteps(capa);
+  toast(capa.no + ' kapatıldı');
+}
+
+/* ===== CLOSE LINKED BULGU ===== */
+function closeBulgu(bulguNo) {
+  try {
+    var bulgular = JSON.parse(localStorage.getItem(LS_BULGU_KEY) || '[]');
+    var found = bulgular.find(function(b) { return b.no === bulguNo; });
+    if (found) {
+      found.durum = 'Kapatıldı';
+      localStorage.setItem(LS_BULGU_KEY, JSON.stringify(bulgular));
+    }
+  } catch(e) { /* ignore */ }
+}
+
+/* ===== TERMIN UZAT ===== */
+function terminUzat() {
+  if (!selectedCapaId) { toast('Önce bir CAPA seçin', true); return; }
+  var capa = allCapas.find(function(c) { return c.id === selectedCapaId; });
+  if (!capa) return;
+  var yeniTermin = prompt('Yeni termin tarihi girin (YYYY-MM-DD):', capa.termin);
+  if (!yeniTermin || yeniTermin === capa.termin) return;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(yeniTermin)) { toast('Geçersiz tarih formatı', true); return; }
+  capa.termin = yeniTermin;
+  // Re-check overdue
+  var today = new Date().toISOString().split('T')[0];
+  if (capa.durum === 'Gecikmiş' && yeniTermin >= today) {
+    capa.durum = capa.ilerleme > 0 ? 'Devam' : 'Açık';
+  }
+  saveCapas();
+  renderKpis();
+  renderTable();
+  renderSteps(capa);
+  toast('Termin güncellendi: ' + formatTarih(yeniTermin));
+}
+
+/* ===== CLOSE STEP PANEL ===== */
+function closeStepPanel() {
+  selectedCapaId = null;
+  document.getElementById('stepPanel').style.display = 'none';
+  renderTable();
+}
+
+/* ===== MODAL: NEW CAPA ===== */
+function openNewCapaModal() {
+  document.getElementById('modalBg').classList.add('show');
+  // Load bulgular into select
+  loadBulgularToSelect();
+  // Reset fields
+  document.getElementById('mKonu').value = '';
+  document.getElementById('mSorumlu').value = '';
+  document.getElementById('mKokNeden').value = '';
+  document.getElementById('mDuzeltici').value = '';
+  document.getElementById('mOnleyici').value = '';
+  document.getElementById('mTermin').value = '';
+  document.getElementById('mOncelik').value = 'Orta';
+  document.getElementById('mYontem').value = '5-Neden';
+}
+
+function closeModal() {
+  document.getElementById('modalBg').classList.remove('show');
+}
+
+function loadBulgularToSelect() {
+  var sel = document.getElementById('mBulguNo');
+  sel.innerHTML = '<option value="">— Bağımsız CAPA —</option>';
+  try {
+    var bulgular = JSON.parse(localStorage.getItem(LS_BULGU_KEY) || '[]');
+    bulgular.forEach(function(b) {
+      if (b.durum !== 'Kapatıldı') {
+        sel.innerHTML += '<option value="' + esc(b.no) + '">' + esc(b.no) + ' — ' + esc(b.aciklama || '').substring(0, 40) + '</option>';
+      }
+    });
+  } catch(e) { /* ignore */ }
+}
+
+/* ===== SAVE NEW CAPA ===== */
+function saveNewCapa() {
+  var konu = document.getElementById('mKonu').value.trim();
+  var sorumlu = document.getElementById('mSorumlu').value.trim();
+  var termin = document.getElementById('mTermin').value;
+  if (!konu) { toast('Konu zorunludur', true); return; }
+  if (!sorumlu) { toast('Sorumlu zorunludur', true); return; }
+  if (!termin) { toast('Termin zorunludur', true); return; }
+
+  // Generate CAPA No
+  var year = new Date().getFullYear();
+  var existing = allCapas.map(function(c) { return c.no; })
+    .filter(function(n) { return n.indexOf('CAPA-' + year + '-') === 0; })
+    .map(function(n) { return parseInt(n.split('-')[2]) || 0; });
+  var max = existing.length ? Math.max.apply(null, existing) : 0;
+  var no = 'CAPA-' + year + '-' + String(max + 1).padStart(3, '0');
+
+  var yontem = document.getElementById('mYontem').value;
+  var newCapa = {
+    id: 'capa-' + Date.now(),
+    no: no,
+    bulguNo: document.getElementById('mBulguNo').value,
+    konu: konu,
+    sorumlu: sorumlu,
+    termin: termin,
+    oncelik: document.getElementById('mOncelik').value,
+    durum: 'Açık',
+    ilerleme: 0,
+    kokNeden: document.getElementById('mKokNeden').value.trim(),
+    duzeltici: document.getElementById('mDuzeltici').value.trim(),
+    onleyici: document.getElementById('mOnleyici').value.trim(),
+    kokNedenYontemi: yontem,
+    adimlar: [
+      { ad: 'Kök Neden Analizi', yontem: yontem, icerik: document.getElementById('mKokNeden').value.trim(), tamamlandi: false },
+      { ad: 'Plan Onayı', icerik: '', tamamlandi: false },
+      { ad: 'Uygulama', icerik: '', tamamlandi: false },
+      { ad: 'Doğrulama', icerik: '', tamamlandi: false },
+      { ad: 'Kapanış', icerik: '', tamamlandi: false }
+    ]
+  };
+  allCapas.unshift(newCapa);
+  saveCapas();
+  renderKpis();
+  renderTable();
+  closeModal();
+  toast(no + ' oluşturuldu');
+}
+
+/* ===== UPDATE CAPA (quick) ===== */
+function openUpdateCapa(id) {
+  var capa = allCapas.find(function(c) { return c.id === id; });
+  if (!capa) return;
+  selectCapa(id);
+  // scroll to step panel
+  document.getElementById('stepPanel').scrollIntoView({ behavior: 'smooth' });
+}
+
+/* ===== UTILS ===== */
+function esc(s) {
+  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+function formatTarih(d) {
+  if (!d) return '—';
+  var parts = d.split('-');
+  if (parts.length !== 3) return d;
+  return parts[2] + '.' + parts[1] + '.' + parts[0];
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — Denetim Plani</title>
+<link rel="stylesheet" href="ersan_styles.css">
+<script src="ersan_nav.js" defer></script>
+<script src="ersan_log.js" defer></script>
+<style>
+/* ── KPI ROW ── */
+.kpi-row { display:flex; gap:12px; margin-bottom:16px; flex-wrap:wrap; }
+.kpi { flex:1; min-width:160px; padding:16px 18px; border-radius:10px; background:var(--beyaz); border:1px solid var(--border); transition:box-shadow .15s; }
+.kpi:hover { box-shadow:0 2px 8px rgba(0,0,0,0.06); }
+.kpi .kpi-val { font-size:26px; font-weight:700; color:var(--metin); margin-bottom:2px; }
+.kpi .kpi-lbl { font-size:12px; color:var(--metin3); }
+.kpi .kpi-sub { font-size:10px; color:var(--metin4); margin-top:2px; }
+.kpi.s-blue  { border-left:4px solid var(--mavi); }
+.kpi.s-green { border-left:4px solid var(--yesil); }
+.kpi.s-amber { border-left:4px solid var(--sari); }
+.kpi.s-purple { border-left:4px solid #7c3aed; }
+
+/* ── CARD ── */
+.card { background:var(--beyaz); border:1px solid var(--border); border-radius:10px; overflow:hidden; }
+.card-head { padding:12px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.card-title { font-size:13px; font-weight:700; color:var(--metin); }
+.card-body { padding:16px; }
+
+/* ── PLAN TABLE ── */
+.plan-tablo { width:100%; border-collapse:collapse; font-size:12px; }
+.plan-tablo th { text-align:left; font-size:10px; font-weight:600; color:var(--metin3); text-transform:uppercase; letter-spacing:.3px; padding:8px 10px; border-bottom:1px solid var(--border); position:sticky; top:0; background:var(--beyaz); }
+.plan-tablo td { padding:10px 10px; border-bottom:1px solid var(--border); color:var(--metin2); }
+.plan-tablo tr:last-child td { border-bottom:none; }
+.plan-tablo tr:hover td { background:var(--bg2); }
+.mono { font-family:'Cascadia Code','Fira Code',monospace; font-size:11px; }
+
+/* ── BADGES ── */
+.bdg { display:inline-block; padding:2px 8px; border-radius:20px; font-size:10px; font-weight:600; white-space:nowrap; }
+.b-grn { background:var(--yesil-bg); color:var(--yesil-t); }
+.b-red { background:var(--kirmizi-bg); color:var(--kirmizi-t); }
+.b-amr { background:var(--sari-bg); color:var(--sari-t); }
+.b-blu { background:var(--mavi-acik); color:var(--mavi-koyu); }
+.b-gry { background:#f1f5f9; color:#64748b; }
+
+/* ── MADDE CHIPS ── */
+.madde-chip { display:inline-block; padding:1px 6px; border-radius:10px; font-size:9px; font-weight:600; background:var(--bg); color:var(--metin3); margin:1px; }
+
+/* ── RISK BAR ── */
+.risk-bar-bg { height:8px; background:var(--bg); border-radius:4px; overflow:hidden; width:80px; display:inline-block; vertical-align:middle; }
+.risk-bar { height:100%; border-radius:4px; }
+
+/* ── BTN ── */
+.btn-topbar { padding:6px 14px; border-radius:6px; font-size:12px; font-weight:600; border:1px solid var(--border); background:var(--beyaz); color:var(--metin2); cursor:pointer; transition:all .15s; }
+.btn-topbar:hover { border-color:var(--mavi); color:var(--mavi); }
+.btn-topbar.primary { background:var(--mavi); color:#fff; border-color:var(--mavi); }
+.btn-topbar.primary:hover { background:var(--mavi-koyu); }
+.btn-sm { padding:3px 8px; font-size:10px; }
+
+/* ── MODAL ── */
+.modal-bg { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.4); z-index:800; display:none; align-items:center; justify-content:center; }
+.modal-bg.acik { display:flex; }
+.modal { background:var(--beyaz); border-radius:12px; width:680px; max-height:85vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.2); }
+.modal-head { padding:16px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.modal-head h3 { font-size:15px; font-weight:700; color:var(--laci); }
+.modal-close { width:28px; height:28px; border-radius:6px; border:none; background:var(--bg); cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center; color:var(--metin3); }
+.modal-close:hover { background:var(--kirmizi-bg); color:var(--kirmizi); }
+.modal-body { padding:20px; }
+.modal-footer { padding:14px 20px; border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:8px; }
+
+/* ── FORM ── */
+.form-row { margin-bottom:14px; }
+.form-row label { display:block; font-size:11px; font-weight:600; color:var(--metin3); text-transform:uppercase; letter-spacing:.3px; margin-bottom:4px; }
+.form-input { width:100%; padding:8px 12px; border:1px solid var(--border); border-radius:6px; font-size:13px; font-family:inherit; color:var(--metin); background:var(--beyaz); }
+.form-input:focus { outline:none; border-color:var(--mavi); box-shadow:0 0 0 3px rgba(55,138,221,0.1); }
+select.form-input { cursor:pointer; }
+textarea.form-input { resize:vertical; min-height:60px; }
+.form-2col { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+
+/* ── CHECKBOX GROUP ── */
+.chk-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; }
+.chk-item { display:flex; align-items:center; gap:6px; padding:4px 8px; border-radius:6px; border:1px solid var(--border); cursor:pointer; transition:all .12s; font-size:11px; color:var(--metin2); }
+.chk-item:hover { border-color:var(--mavi); background:var(--mavi-acik); }
+.chk-item.secili { border-color:var(--mavi); background:var(--mavi-acik); color:var(--mavi-koyu); font-weight:600; }
+.chk-item input { display:none; }
+
+/* ── TABLO SCROLL ── */
+.tablo-scroll { max-height:calc(100vh - 280px); overflow-y:auto; }
+
+/* ── TOAST ── */
+.toast { position:fixed; bottom:20px; right:20px; padding:10px 20px; border-radius:8px; font-size:13px; font-weight:600; color:#fff; background:var(--laci); box-shadow:0 4px 12px rgba(0,0,0,0.15); opacity:0; transition:opacity .3s; pointer-events:none; z-index:999; }
+.toast.show { opacity:1; }
+</style>
+</head>
+<body>
+<div id="nav-alani"></div>
+<div class="icerik-alani">
+  <div class="topbar">
+    <div class="topbar-baslik">Denetim Plani</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button class="btn-topbar" onclick="excelIndir()">Excel Indir</button>
+      <button class="btn-topbar primary" onclick="modalAc()">+ Yeni Denetim Ekle</button>
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
+    </div>
+  </div>
+  <div class="sayfa-icerik">
+
+    <!-- KPI ROW -->
+    <div class="kpi-row" id="kpiRow">
+      <div class="kpi s-blue"><div class="kpi-val" id="kpiPlan">0</div><div class="kpi-lbl">Planlanan Denetim</div><div class="kpi-sub" id="kpiPlanSub">-</div></div>
+      <div class="kpi s-green"><div class="kpi-val" id="kpiMadde">0</div><div class="kpi-lbl">Kapsanan Madde</div><div class="kpi-sub" id="kpiMaddeSub">-</div></div>
+      <div class="kpi s-amber"><div class="kpi-val" id="kpiSure">0</div><div class="kpi-lbl">Ort. Sure (gun)</div><div class="kpi-sub" id="kpiSureSub">-</div></div>
+      <div class="kpi s-purple"><div class="kpi-val" id="kpiDenetci">0</div><div class="kpi-lbl">Denetci Sayisi</div><div class="kpi-sub" id="kpiDenetciSub">-</div></div>
+    </div>
+
+    <!-- PLAN TABLE -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">Yillik Denetim Plani</div>
+        <span style="font-size:11px;color:var(--metin3);" id="planSayi">0 kayit</span>
+      </div>
+      <div class="tablo-scroll">
+        <table class="plan-tablo">
+          <thead>
+            <tr>
+              <th>No</th>
+              <th>Kapsam / Tip</th>
+              <th>AS9100 Maddeleri</th>
+              <th>Risk Skoru</th>
+              <th>Tarih</th>
+              <th>Sure</th>
+              <th>Denetci</th>
+              <th>Durum</th>
+              <th>Islem</th>
+            </tr>
+          </thead>
+          <tbody id="planTbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL: YENI DENETIM -->
+<div class="modal-bg" id="modalBg" onclick="if(event.target===this)modalKapat()">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="modalBaslik">Yeni Denetim Ekle</h3>
+      <button class="modal-close" onclick="modalKapat()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-2col">
+        <div class="form-row">
+          <label>Denetim Tipi</label>
+          <select class="form-input" id="fTip">
+            <option value="Sistem">Sistem Denetimi</option>
+            <option value="Surec">Surec Denetimi</option>
+            <option value="Uygunluk">Uygunluk Denetimi</option>
+            <option value="Urun">Urun Denetimi</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label>Plan Tarihi</label>
+          <input type="date" class="form-input" id="fTarih">
+        </div>
+      </div>
+      <div class="form-row">
+        <label>Kapsam</label>
+        <input type="text" class="form-input" id="fKapsam" placeholder="Orn: Dokuman Yonetimi, Uretim Surecleri...">
+      </div>
+      <div class="form-row">
+        <label>AS9100 Maddeleri (secin)</label>
+        <div class="chk-grid" id="maddeGrid"></div>
+      </div>
+      <div class="form-2col">
+        <div class="form-row">
+          <label>Sure (gun)</label>
+          <input type="number" class="form-input" id="fSure" value="2" min="1" max="10">
+        </div>
+        <div class="form-row">
+          <label>Risk Skoru (1-25)</label>
+          <input type="number" class="form-input" id="fRisk" value="10" min="1" max="25">
+        </div>
+      </div>
+      <div class="form-2col">
+        <div class="form-row">
+          <label>Bas Denetci</label>
+          <select class="form-input" id="fDenetci">
+            <option value="Erdem Kucukates">Erdem Kucukates</option>
+            <option value="Ahmet Yilmaz">Ahmet Yilmaz</option>
+            <option value="Mehmet Demir">Mehmet Demir</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label>Yardimci Denetci</label>
+          <select class="form-input" id="fYardimci">
+            <option value="">Secilmedi</option>
+            <option value="Erdem Kucukates">Erdem Kucukates</option>
+            <option value="Ahmet Yilmaz">Ahmet Yilmaz</option>
+            <option value="Mehmet Demir">Mehmet Demir</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <label>Notlar</label>
+        <textarea class="form-input" id="fNotlar" rows="2" placeholder="Denetim ile ilgili notlar..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-topbar" onclick="modalKapat()">Iptal</button>
+      <button class="btn-topbar primary" onclick="denetimKaydet()">Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ══════════════════════════════════════════════════
+   ERSAN MES — Denetim Plani
+   localStorage: ersan_denetimler, ersan_denetim_checklist
+   ══════════════════════════════════════════════════ */
+
+// ── AS9100 SORU BANKASI ──
+var AS9100_SORU_BANKASI = [
+  { madde:'4.1', soru:'KYS kapsami tanimlanmis mi?', aciklama:'Organizasyon baglami belirlenmeli' },
+  { madde:'4.2', soru:'Ilgili taraflarin ihtiyaclari belirlenmis mi?', aciklama:'Ilgili taraf analizi' },
+  { madde:'4.3', soru:'KYS kapsami dokumante edilmis mi?', aciklama:'Kapsam dokumani' },
+  { madde:'4.4', soru:'KYS surecleri tanimlanmis mi?', aciklama:'Surec haritasi ve etkilesimleri' },
+  { madde:'5.1', soru:'Ust yonetim liderlik taahhutunu gosteriyor mu?', aciklama:'Yonetim sorumlulugu' },
+  { madde:'5.2', soru:'Kalite politikasi yayimlanmis mi?', aciklama:'Kalite politikasi erisilebilir olmali' },
+  { madde:'5.3', soru:'Gorev ve yetkiler tanimlanmis mi?', aciklama:'Organizasyon semasi ve gorev tanimlari' },
+  { madde:'6.1', soru:'Risk ve firsatlar belirlenmis mi?', aciklama:'Risk degerlendirme ve aksiyonlar' },
+  { madde:'6.2', soru:'Kalite hedefleri olculebilir mi?', aciklama:'SMART hedefler belirlenmeli' },
+  { madde:'6.3', soru:'Degisiklik yonetimi planlanmis mi?', aciklama:'Degisiklik yonetimi proseduru' },
+  { madde:'7.1.5', soru:'Olcum aletleri kalibre mi?', aciklama:'Izleme ve olcme kaynaklari' },
+  { madde:'7.1.5.1', soru:'Kalibrasyon kayitlari guncel mi?', aciklama:'Kalibrasyon sertifikalari' },
+  { madde:'7.2', soru:'Personel yetkinlikleri belirlenmis mi?', aciklama:'Yetkinlik matrisi' },
+  { madde:'7.3', soru:'Kalite farkindalik egitimi verilmis mi?', aciklama:'Egitim kayitlari' },
+  { madde:'7.5', soru:'Dokumante bilgi kontrol altinda mi?', aciklama:'Dokuman yonetim sistemi' },
+  { madde:'8.1', soru:'Operasyonel planlama yapilmis mi?', aciklama:'Uretim planlama sureci' },
+  { madde:'8.2', soru:'Musteri sartnamesini inceleme yapilmis mi?', aciklama:'Siparis gozden gecirme' },
+  { madde:'8.3', soru:'Tasarim ve gelistirme sureci kontrol altinda mi?', aciklama:'Tasarim dogrulama ve gecerleme' },
+  { madde:'8.4', soru:'Tedarikci degerlendirme yapiliyor mu?', aciklama:'Dis saglayici kontrolu' },
+  { madde:'8.4.1', soru:'Tedarikci secim kriterleri tanimlanmis mi?', aciklama:'OTL ve degerlendirme proseduru' },
+  { madde:'8.4.2', soru:'Satin alma bilgisi yeterli mi?', aciklama:'Siparis spesifikasyonlari' },
+  { madde:'8.5.1', soru:'Uretim kontrollu kosullarda mi?', aciklama:'Uretim ve hizmet saglama' },
+  { madde:'8.5.2', soru:'Tanimlama ve izlenebilirlik saglanmis mi?', aciklama:'Lot takibi ve QR sistemi' },
+  { madde:'8.5.3', soru:'Musteri veya dis saglayici mulkiyeti korunuyor mu?', aciklama:'Musteri malzemesi yonetimi' },
+  { madde:'8.7', soru:'Uygun olmayan ciktilar kontrol altinda mi?', aciklama:'NCR proseduru' },
+  { madde:'9.1', soru:'Surec performansi izleniyor mu?', aciklama:'KPI ve olcme analizi' },
+  { madde:'9.2', soru:'Ic denetim plani mevcut mu?', aciklama:'Ic denetim programi' },
+  { madde:'9.3', soru:'Yonetim gozden gecirme yapiliyor mu?', aciklama:'YGG toplanti tutanaklari' },
+  { madde:'10.1', soru:'Iyilestirme firsatlari belirlenmis mi?', aciklama:'Surekli iyilestirme' },
+  { madde:'10.2', soru:'Duzeltici faaliyetler izleniyor mu?', aciklama:'Uygunsuzluk ve CAPA' },
+  { madde:'10.3', soru:'Surekli iyilestirme kaniti var mi?', aciklama:'Iyilestirme projeleri' }
+];
+
+// AS9100 madde listesi (modal checkbox icin)
+var AS9100_MADDELER = [
+  '4.1','4.2','4.3','4.4',
+  '5.1','5.2','5.3',
+  '6.1','6.2','6.3',
+  '7.1.5','7.1.5.1','7.2','7.3','7.5',
+  '8.1','8.2','8.3','8.4','8.4.1','8.4.2','8.5.1','8.5.2','8.5.3','8.7',
+  '9.1','9.2','9.3',
+  '10.1','10.2','10.3'
+];
+
+var duzenleId = null; // null = yeni, string = duzenle modu
+
+// ── VERI OKUMA ──
+function getDenetimler() {
+  try { return JSON.parse(localStorage.getItem('ersan_denetimler')) || []; } catch(e) { return []; }
+}
+function kaydetDenetimler(data) {
+  localStorage.setItem('ersan_denetimler', JSON.stringify(data));
+}
+
+// ── ORNEK VERI ──
+function ornekVeriKontrol() {
+  if (!localStorage.getItem('ersan_denetimler')) {
+    var denetimler = [
+      { id:'DEN-2026-001', kapsam:'Dokuman Yonetimi', tip:'Sistem', maddeler:['4.1','4.2','7.5'], denetci:'Erdem Kucukates', yardimci:'Ahmet Yilmaz', tarih:'2026-01-15', sure:2, durum:'Tamamlandi', skor:88, risk:6, notlar:'Yillik plana uygun', ay:1 },
+      { id:'DEN-2026-002', kapsam:'Uretim Surecleri', tip:'Surec', maddeler:['8.5.1','8.5.2','8.5.3'], denetci:'Erdem Kucukates', yardimci:'Mehmet Demir', tarih:'2026-02-20', sure:3, durum:'Tamamlandi', skor:75, risk:12, notlar:'2 minor bulgu', ay:2 },
+      { id:'DEN-2026-003', kapsam:'Tedarikci Yonetimi', tip:'Surec', maddeler:['8.4','8.4.1','8.4.2'], denetci:'Erdem Kucukates', yardimci:'', tarih:'2026-03-10', sure:2, durum:'Devam Ediyor', skor:0, risk:15, notlar:'Denetim suresi uzadi', ay:3 },
+      { id:'DEN-2026-004', kapsam:'Kalibrasyon', tip:'Uygunluk', maddeler:['7.1.5','7.1.5.1'], denetci:'Ahmet Yilmaz', yardimci:'', tarih:'2026-05-15', sure:1, durum:'Planlandi', skor:0, risk:8, notlar:'', ay:5 },
+      { id:'DEN-2026-005', kapsam:'Yonetim Sorumlulugu', tip:'Sistem', maddeler:['5.1','5.2','5.3','9.3'], denetci:'Erdem Kucukates', yardimci:'', tarih:'2026-07-20', sure:2, durum:'Planlandi', skor:0, risk:10, notlar:'', ay:7 },
+      { id:'DEN-2026-006', kapsam:'Risk Yonetimi & Iyilestirme', tip:'Sistem', maddeler:['6.1','10.1','10.2','10.3'], denetci:'Erdem Kucukates', yardimci:'Ahmet Yilmaz', tarih:'2026-01-25', sure:2, durum:'Gecikti', skor:0, risk:20, notlar:'Gecikme nedeni: personel eksikligi', ay:1 }
+    ];
+    localStorage.setItem('ersan_denetimler', JSON.stringify(denetimler));
+  }
+}
+
+// ── KPI HESAPLA ──
+function kpiGuncelle() {
+  var den = getDenetimler();
+
+  // Planlanan
+  document.getElementById('kpiPlan').textContent = den.length;
+  var durumSay = {};
+  den.forEach(function(d) { durumSay[d.durum] = (durumSay[d.durum] || 0) + 1; });
+  var durumStr = Object.keys(durumSay).map(function(k) { return durumSay[k] + ' ' + k.toLowerCase(); }).join(', ');
+  document.getElementById('kpiPlanSub').textContent = durumStr || '-';
+
+  // Kapsanan Madde
+  var tumMaddeler = {};
+  den.forEach(function(d) { d.maddeler.forEach(function(m) { tumMaddeler[m] = true; }); });
+  var kapsananSayi = Object.keys(tumMaddeler).length;
+  document.getElementById('kpiMadde').textContent = kapsananSayi;
+  var toplamMadde = AS9100_MADDELER.length;
+  var kapsanmaOrani = Math.round((kapsananSayi / toplamMadde) * 100);
+  document.getElementById('kpiMaddeSub').textContent = toplamMadde + ' maddeden %' + kapsanmaOrani + ' kapsam';
+
+  // Ort Sure
+  var topSure = 0;
+  den.forEach(function(d) { topSure += d.sure; });
+  var ortSure = den.length > 0 ? (topSure / den.length).toFixed(1) : 0;
+  document.getElementById('kpiSure').textContent = ortSure;
+  document.getElementById('kpiSureSub').textContent = 'Toplam ' + topSure + ' gun planlandi';
+
+  // Denetci Sayisi
+  var denetciler = {};
+  den.forEach(function(d) {
+    denetciler[d.denetci] = true;
+    if (d.yardimci) denetciler[d.yardimci] = true;
+  });
+  var denetciSayi = Object.keys(denetciler).length;
+  document.getElementById('kpiDenetci').textContent = denetciSayi;
+  document.getElementById('kpiDenetciSub').textContent = Object.keys(denetciler).join(', ');
+}
+
+// ── PLAN TABLOSU ──
+function tabloOlustur() {
+  var den = getDenetimler();
+  var tbody = document.getElementById('planTbody');
+  tbody.innerHTML = '';
+  document.getElementById('planSayi').textContent = den.length + ' kayit';
+
+  if (den.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:40px;color:var(--metin4);">Henuz denetim plani olusturulmamis</td></tr>';
+    return;
+  }
+
+  // Tarihe gore sirala
+  den.sort(function(a, b) { return a.tarih.localeCompare(b.tarih); });
+
+  den.forEach(function(d) {
+    var durumBdg = 'b-gry';
+    if (d.durum === 'Tamamlandi') durumBdg = 'b-grn';
+    else if (d.durum === 'Devam Ediyor') durumBdg = 'b-blu';
+    else if (d.durum === 'Planlandi') durumBdg = 'b-amr';
+    else if (d.durum === 'Gecikti') durumBdg = 'b-red';
+
+    var maddelerHTML = d.maddeler.map(function(m) {
+      return '<span class="madde-chip">' + m + '</span>';
+    }).join('');
+
+    // Risk bar
+    var riskPct = Math.min(100, Math.round((d.risk / 25) * 100));
+    var riskRenk = d.risk <= 8 ? 'var(--yesil)' : d.risk <= 15 ? 'var(--sari)' : 'var(--kirmizi)';
+    var riskHTML = '<span style="font-size:11px;font-weight:600;margin-right:4px;">' + d.risk + '</span>' +
+      '<div class="risk-bar-bg"><div class="risk-bar" style="width:' + riskPct + '%;background:' + riskRenk + ';"></div></div>';
+
+    var tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td class="mono">' + d.id + '</td>' +
+      '<td><div style="font-weight:600;">' + d.kapsam + '</div><div style="font-size:10px;color:var(--metin4);">' + d.tip + '</div></td>' +
+      '<td>' + maddelerHTML + '</td>' +
+      '<td>' + riskHTML + '</td>' +
+      '<td>' + d.tarih + '</td>' +
+      '<td>' + d.sure + ' gun</td>' +
+      '<td>' + d.denetci + (d.yardimci ? '<div style="font-size:10px;color:var(--metin4);">+ ' + d.yardimci + '</div>' : '') + '</td>' +
+      '<td><span class="bdg ' + durumBdg + '">' + d.durum + '</span></td>' +
+      '<td style="white-space:nowrap;">' +
+        '<button class="btn-topbar btn-sm" onclick="event.stopPropagation();denetimDuzenle(\'' + d.id + '\')">Duzenle</button> ' +
+        '<button class="btn-topbar btn-sm primary" onclick="event.stopPropagation();denetimAc(\'' + d.id + '\')">Ac</button>' +
+      '</td>';
+    tbody.appendChild(tr);
+  });
+}
+
+// ── MODAL ──
+function modalAc() {
+  duzenleId = null;
+  document.getElementById('modalBaslik').textContent = 'Yeni Denetim Ekle';
+  document.getElementById('fTip').value = 'Sistem';
+  document.getElementById('fKapsam').value = '';
+  document.getElementById('fTarih').value = '';
+  document.getElementById('fSure').value = '2';
+  document.getElementById('fRisk').value = '10';
+  document.getElementById('fDenetci').value = 'Erdem Kucukates';
+  document.getElementById('fYardimci').value = '';
+  document.getElementById('fNotlar').value = '';
+
+  // Reset checkboxes
+  document.querySelectorAll('#maddeGrid .chk-item').forEach(function(el) { el.classList.remove('secili'); });
+
+  document.getElementById('modalBg').classList.add('acik');
+}
+
+function modalKapat() {
+  document.getElementById('modalBg').classList.remove('acik');
+  duzenleId = null;
+}
+
+function maddeGridOlustur() {
+  var grid = document.getElementById('maddeGrid');
+  grid.innerHTML = '';
+  AS9100_MADDELER.forEach(function(m) {
+    var div = document.createElement('div');
+    div.className = 'chk-item';
+    div.setAttribute('data-madde', m);
+    div.innerHTML = '<input type="checkbox"><span>' + m + '</span>';
+    div.addEventListener('click', function() {
+      this.classList.toggle('secili');
+    });
+    grid.appendChild(div);
+  });
+}
+
+function getSeciliMaddeler() {
+  var maddeler = [];
+  document.querySelectorAll('#maddeGrid .chk-item.secili').forEach(function(el) {
+    maddeler.push(el.getAttribute('data-madde'));
+  });
+  return maddeler;
+}
+
+// ── KAYDET ──
+function denetimKaydet() {
+  var kapsam = document.getElementById('fKapsam').value.trim();
+  var tarih = document.getElementById('fTarih').value;
+  var maddeler = getSeciliMaddeler();
+
+  if (!kapsam) { toast('Kapsam alani bos olamaz'); return; }
+  if (!tarih) { toast('Tarih secin'); return; }
+  if (maddeler.length === 0) { toast('En az bir AS9100 maddesi secin'); return; }
+
+  var den = getDenetimler();
+  var tip = document.getElementById('fTip').value;
+  var sure = parseInt(document.getElementById('fSure').value) || 2;
+  var risk = parseInt(document.getElementById('fRisk').value) || 10;
+  var denetci = document.getElementById('fDenetci').value;
+  var yardimci = document.getElementById('fYardimci').value;
+  var notlar = document.getElementById('fNotlar').value.trim();
+  var ay = parseInt(tarih.split('-')[1]);
+
+  if (duzenleId) {
+    // Duzenle modu
+    for (var i = 0; i < den.length; i++) {
+      if (den[i].id === duzenleId) {
+        den[i].kapsam = kapsam;
+        den[i].tip = tip;
+        den[i].maddeler = maddeler;
+        den[i].tarih = tarih;
+        den[i].sure = sure;
+        den[i].risk = risk;
+        den[i].denetci = denetci;
+        den[i].yardimci = yardimci;
+        den[i].notlar = notlar;
+        den[i].ay = ay;
+        break;
+      }
+    }
+    kaydetDenetimler(den);
+    toast('Denetim guncellendi: ' + duzenleId);
+  } else {
+    // Yeni
+    var yil = tarih.split('-')[0];
+    var sira = den.length + 1;
+    var id = 'DEN-' + yil + '-' + String(sira).padStart(3, '0');
+
+    var yeniDen = {
+      id: id,
+      kapsam: kapsam,
+      tip: tip,
+      maddeler: maddeler,
+      denetci: denetci,
+      yardimci: yardimci,
+      tarih: tarih,
+      sure: sure,
+      durum: 'Planlandi',
+      skor: 0,
+      risk: risk,
+      notlar: notlar,
+      ay: ay
+    };
+    den.push(yeniDen);
+    kaydetDenetimler(den);
+
+    // Auto-create checklist from soru bankasi
+    checklistOlustur(id, maddeler);
+
+    toast('Yeni denetim eklendi: ' + id);
+    logIslem('Olusturuldu', 'Denetim', id, kapsam, null, yeniDen);
+  }
+
+  modalKapat();
+  sayfaYukle();
+}
+
+// ── CHECKLIST OLUSTUR ──
+function checklistOlustur(denetimId, maddeler) {
+  var checklist = [];
+  AS9100_SORU_BANKASI.forEach(function(s) {
+    if (maddeler.indexOf(s.madde) >= 0) {
+      checklist.push({
+        denetimId: denetimId,
+        madde: s.madde,
+        soru: s.soru,
+        aciklama: s.aciklama,
+        sonuc: '', // Uygun / Uygun Degil / Gozlem / N/A
+        notlar: '',
+        kanit: ''
+      });
+    }
+  });
+
+  var tumChecklist = [];
+  try { tumChecklist = JSON.parse(localStorage.getItem('ersan_denetim_checklist')) || []; } catch(e) { tumChecklist = []; }
+  tumChecklist = tumChecklist.concat(checklist);
+  localStorage.setItem('ersan_denetim_checklist', JSON.stringify(tumChecklist));
+}
+
+// ── DUZENLE ──
+function denetimDuzenle(id) {
+  var den = getDenetimler();
+  var d = den.filter(function(x) { return x.id === id; })[0];
+  if (!d) return;
+
+  duzenleId = id;
+  document.getElementById('modalBaslik').textContent = 'Denetim Duzenle: ' + id;
+  document.getElementById('fTip').value = d.tip;
+  document.getElementById('fKapsam').value = d.kapsam;
+  document.getElementById('fTarih').value = d.tarih;
+  document.getElementById('fSure').value = d.sure;
+  document.getElementById('fRisk').value = d.risk;
+  document.getElementById('fDenetci').value = d.denetci;
+  document.getElementById('fYardimci').value = d.yardimci || '';
+  document.getElementById('fNotlar').value = d.notlar || '';
+
+  // Set checkboxes
+  document.querySelectorAll('#maddeGrid .chk-item').forEach(function(el) {
+    var m = el.getAttribute('data-madde');
+    if (d.maddeler.indexOf(m) >= 0) {
+      el.classList.add('secili');
+    } else {
+      el.classList.remove('secili');
+    }
+  });
+
+  document.getElementById('modalBg').classList.add('acik');
+}
+
+// ── NAVIGATE ──
+function denetimAc(id) {
+  window.location.href = 'ersan_denetim_yurutme.html?id=' + id;
+}
+
+// ── EXCEL INDIR ──
+function excelIndir() {
+  var den = getDenetimler();
+  if (den.length === 0) { toast('Indirilecek veri yok'); return; }
+
+  var csv = 'No,Kapsam,Tip,AS9100 Maddeleri,Risk,Tarih,Sure,Denetci,Yardimci,Durum,Skor,Notlar\n';
+  den.forEach(function(d) {
+    csv += '"' + d.id + '","' + d.kapsam + '","' + d.tip + '","' + d.maddeler.join('; ') + '",' +
+      d.risk + ',"' + d.tarih + '",' + d.sure + ',"' + d.denetci + '","' + (d.yardimci || '') + '","' +
+      d.durum + '",' + d.skor + ',"' + (d.notlar || '') + '"\n';
+  });
+
+  var blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+  var link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'denetim_plani_2026.csv';
+  link.click();
+  toast('Excel indirildi');
+}
+
+// ── TOAST ──
+function toast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 2000);
+}
+
+// ── SAYFA YUKLE ──
+function sayfaYukle() {
+  ornekVeriKontrol();
+  maddeGridOlustur();
+  kpiGuncelle();
+  tabloOlustur();
+}
+
+document.addEventListener('DOMContentLoaded', sayfaYukle);
+</script>
+</body>
+</html>

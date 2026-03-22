@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — Denetim Raporları</title>
+<link rel="stylesheet" href="ersan_styles.css">
+<script src="ersan_nav.js" defer></script>
+<script src="ersan_log.js" defer></script>
+<style>
+.report-cards{display:flex;gap:14px;margin-bottom:20px;flex-wrap:wrap;}
+.report-card{flex:1;min-width:220px;background:#fff;border-radius:10px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.06);border-top:4px solid var(--mavi);cursor:pointer;transition:transform .15s,box-shadow .15s;}
+.report-card:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.1);}
+.report-card .rc-icon{font-size:28px;margin-bottom:8px;}
+.report-card .rc-title{font-size:14px;font-weight:700;color:var(--laci);margin-bottom:4px;}
+.report-card .rc-desc{font-size:11px;color:var(--text3);margin-bottom:12px;line-height:1.4;}
+.report-card .rc-btn{display:inline-block;padding:6px 14px;background:var(--mavi);color:#fff;border-radius:6px;font-size:11px;font-weight:600;border:none;cursor:pointer;}
+.report-card .rc-btn:hover{background:#2a6fb5;}
+
+.rapor-tbl{width:100%;border-collapse:collapse;font-size:12px;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.06);margin-bottom:20px;}
+.rapor-tbl th{background:var(--laci);color:#fff;padding:8px 10px;text-align:left;font-size:11px;font-weight:600;white-space:nowrap;}
+.rapor-tbl td{padding:8px 10px;border-bottom:1px solid #edf2f7;vertical-align:middle;}
+.rapor-tbl tr:hover{background:#f8fafc;}
+
+.badge-tip{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;}
+.badge-tip.yonetim{background:#eff6ff;color:#2563eb;}
+.badge-tip.bulgu{background:#fef2f2;color:#dc2626;}
+.badge-tip.uyumluluk{background:#f0fdf4;color:#16a34a;}
+
+.skor-badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;}
+.skor-badge.yesil{background:#f0fdf4;color:#16a34a;}
+.skor-badge.sari{background:#fffbeb;color:#d97706;}
+.skor-badge.kirmizi{background:#fef2f2;color:#dc2626;}
+
+.as-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:20px;}
+.as-cell{background:#fff;border-radius:8px;padding:14px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.06);cursor:pointer;transition:transform .15s,box-shadow .15s;border:2px solid transparent;}
+.as-cell:hover{transform:translateY(-1px);box-shadow:0 3px 10px rgba(0,0,0,.1);border-color:var(--mavi);}
+.as-cell .as-madde{font-size:13px;font-weight:700;color:var(--laci);margin-bottom:4px;}
+.as-cell .as-skor{font-size:22px;font-weight:800;margin-bottom:2px;}
+.as-cell .as-label{font-size:10px;color:var(--text3);}
+.as-cell.green{border-left:4px solid #22c55e;} .as-cell.green .as-skor{color:#16a34a;}
+.as-cell.amber{border-left:4px solid #f59e0b;} .as-cell.amber .as-skor{color:#d97706;}
+.as-cell.red{border-left:4px solid #ef4444;} .as-cell.red .as-skor{color:#dc2626;}
+.as-cell.gray{border-left:4px solid #d1d5db;} .as-cell.gray .as-skor{color:#9ca3af;}
+
+.section-title{font-size:14px;font-weight:700;color:var(--laci);margin:20px 0 10px;display:flex;align-items:center;gap:8px;}
+.section-title .dot{width:8px;height:8px;border-radius:50%;background:var(--mavi);}
+
+.btn{padding:7px 14px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;}
+.btn.primary{background:var(--mavi);color:#fff;}
+.btn.primary:hover{background:#2a6fb5;}
+.btn.sm{padding:5px 10px;font-size:11px;}
+.btn.ghost{background:transparent;color:var(--text2);border:1px solid #d1d5db;}
+.btn.ghost:hover{background:#f8fafc;}
+
+.topbar-actions{display:flex;gap:8px;align-items:center;}
+
+.summary-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:800;display:none;align-items:center;justify-content:center;}
+.summary-overlay.show{display:flex;}
+.summary-box{background:#fff;border-radius:12px;width:640px;max-width:94vw;max-height:88vh;overflow-y:auto;box-shadow:0 8px 30px rgba(0,0,0,.2);padding:28px;}
+.summary-box h2{margin:0 0 16px;font-size:17px;color:var(--laci);}
+.summary-box .s-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #edf2f7;font-size:13px;}
+.summary-box .s-row .s-label{color:var(--text3);font-weight:600;}
+.summary-box .s-row .s-val{color:var(--laci);font-weight:700;}
+.summary-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;}
+</style>
+</head>
+<body>
+<div id="nav-alani"></div>
+<div class="icerik-alani">
+  <div class="topbar">
+    <div class="topbar-baslik">Denetim Raporları</div>
+    <div class="topbar-actions">
+      <button class="btn primary" onclick="openYonetimOzeti()">Yönetim Özeti</button>
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
+    </div>
+  </div>
+  <div class="sayfa-icerik">
+
+<!-- REPORT TYPE CARDS -->
+<div class="report-cards">
+  <div class="report-card" onclick="generateReport('yonetim')">
+    <div class="rc-icon">📋</div>
+    <div class="rc-title">Yönetim Özeti</div>
+    <div class="rc-desc">Denetim sonuçlarının yönetim gözden geçirme toplantısı için özetlenmiş raporu.</div>
+    <button class="rc-btn">Oluştur</button>
+  </div>
+  <div class="report-card" onclick="generateReport('bulgu')">
+    <div class="rc-icon">🔍</div>
+    <div class="rc-title">Bulgu Raporu</div>
+    <div class="rc-desc">Tüm bulguların tip, madde ve durum bazında detaylı listesi ve analizi.</div>
+    <button class="rc-btn">Oluştur</button>
+  </div>
+  <div class="report-card" onclick="generateReport('uyumluluk')">
+    <div class="rc-icon">✅</div>
+    <div class="rc-title">Uyumluluk Raporu</div>
+    <div class="rc-desc">AS9100 Rev.D maddelerine göre uyumluluk skoru ve gap analizi raporu.</div>
+    <button class="rc-btn">Oluştur</button>
+  </div>
+</div>
+
+<!-- RAPOR ARŞİV TABLE -->
+<div class="section-title"><div class="dot"></div>Rapor Arşivi</div>
+<div style="overflow-x:auto;">
+  <table class="rapor-tbl" id="raporTbl">
+    <thead>
+      <tr>
+        <th>Rapor No</th>
+        <th>Başlık</th>
+        <th>Tip</th>
+        <th>Tarih</th>
+        <th>Durum</th>
+        <th>Skor</th>
+        <th>İşlem</th>
+      </tr>
+    </thead>
+    <tbody id="raporTbody"></tbody>
+  </table>
+</div>
+
+<!-- AS9100 MADDE UYUMLULUK GRID -->
+<div class="section-title"><div class="dot"></div>AS9100 Rev.D Madde Uyumluluk Durumu</div>
+<div class="as-grid" id="asGrid"></div>
+
+<!-- YÖNETİM ÖZETİ OVERLAY -->
+<div class="summary-overlay" id="summaryOverlay">
+  <div class="summary-box" id="summaryBox">
+    <h2>Yönetim Özeti Raporu</h2>
+    <div id="summaryContent"></div>
+    <div class="summary-actions">
+      <button class="btn ghost" onclick="closeSummary()">Kapat</button>
+      <button class="btn primary" onclick="printSummary()">Yazdır</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+  </div>
+</div>
+
+<script>
+/* ===== STATE ===== */
+var LS_KEY = 'ersan_denetim_raporlar';
+var LS_CAPA_KEY = 'ersan_capa_denetim';
+var LS_BULGU_KEY = 'ersan_bulgular';
+var allRaporlar = [];
+
+/* ===== AS9100 MADDELER ===== */
+var AS_MADDELER = [
+  { no: '4.1', ad: 'Kuruluş Bağlamı', skor: 92 },
+  { no: '4.2', ad: 'İlgili Taraflar', skor: 88 },
+  { no: '4.3', ad: 'KYS Kapsamı', skor: 95 },
+  { no: '4.4', ad: 'KYS ve Prosesler', skor: 85 },
+  { no: '5.1', ad: 'Liderlik', skor: 90 },
+  { no: '5.2', ad: 'Kalite Politikası', skor: 93 },
+  { no: '5.3', ad: 'Roller ve Sorumluluklar', skor: 87 },
+  { no: '6.1', ad: 'Risk ve Fırsatlar', skor: 78 },
+  { no: '6.2', ad: 'Kalite Hedefleri', skor: 82 },
+  { no: '7.1', ad: 'Kaynaklar', skor: 75 },
+  { no: '7.2', ad: 'Yetkinlik', skor: 80 },
+  { no: '7.5', ad: 'Dokümante Bilgi', skor: 70 },
+  { no: '8.1', ad: 'Operasyon Planlama', skor: 84 },
+  { no: '8.4', ad: 'Dışarıdan Sağlama', skor: 68 },
+  { no: '9.2', ad: 'İç Denetim', skor: 0 },
+  { no: '10.2', ad: 'Uygunsuzluk ve CAPA', skor: 76 }
+];
+
+/* ===== INIT ===== */
+document.addEventListener('DOMContentLoaded', function() {
+  initSampleReports();
+  loadRaporlar();
+  renderAsGrid();
+});
+
+/* ===== TOAST ===== */
+function toast(msg, err) {
+  var el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show' + (err ? ' err' : '');
+  clearTimeout(el._t);
+  el._t = setTimeout(function() { el.className = 'toast'; }, 2800);
+}
+
+/* ===== SAMPLE DATA ===== */
+function initSampleReports() {
+  if (!localStorage.getItem(LS_KEY)) {
+    var samples = [
+      {
+        id: 'rpr-001', no: 'RPR-2026-001', baslik: 'Q1 2026 Yönetim Özeti', tip: 'yonetim',
+        tarih: '2026-01-31', durum: 'Yayınlandı', skor: 85,
+        ozet: 'Q1 döneminde 3 iç denetim gerçekleştirildi. Genel uyumluluk skoru %85.'
+      },
+      {
+        id: 'rpr-002', no: 'RPR-2026-002', baslik: 'Satınalma Prosesi Bulgu Raporu', tip: 'bulgu',
+        tarih: '2026-02-15', durum: 'Yayınlandı', skor: 72,
+        ozet: '2 majör, 3 minör bulgu tespit edildi. Tedarikçi değerlendirme eksiklikleri mevcut.'
+      },
+      {
+        id: 'rpr-003', no: 'RPR-2026-003', baslik: 'AS9100 Uyumluluk Değerlendirmesi', tip: 'uyumluluk',
+        tarih: '2026-03-01', durum: 'Taslak', skor: 82,
+        ozet: '16 maddeden 12\'si denetlendi. 3 madde kritik seviyede, 9 madde uyumlu.'
+      }
+    ];
+    localStorage.setItem(LS_KEY, JSON.stringify(samples));
+  }
+}
+
+/* ===== LOAD ===== */
+function loadRaporlar() {
+  try {
+    allRaporlar = JSON.parse(localStorage.getItem(LS_KEY) || '[]');
+  } catch(e) {
+    allRaporlar = [];
+  }
+  renderTable();
+}
+
+/* ===== SAVE ===== */
+function saveRaporlar() {
+  localStorage.setItem(LS_KEY, JSON.stringify(allRaporlar));
+}
+
+/* ===== RENDER TABLE ===== */
+function renderTable() {
+  var tbody = document.getElementById('raporTbody');
+  if (!allRaporlar.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:24px;">Rapor bulunamadı</td></tr>';
+    return;
+  }
+  var html = '';
+  allRaporlar.forEach(function(r) {
+    var tipClass = r.tip === 'yonetim' ? 'yonetim' : r.tip === 'bulgu' ? 'bulgu' : 'uyumluluk';
+    var tipLabel = r.tip === 'yonetim' ? 'Yönetim Özeti' : r.tip === 'bulgu' ? 'Bulgu Raporu' : 'Uyumluluk';
+    var skorClass = r.skor >= 90 ? 'yesil' : r.skor >= 80 ? 'sari' : 'kirmizi';
+    html += '<tr>';
+    html += '<td style="font-family:monospace;font-weight:600;">' + esc(r.no) + '</td>';
+    html += '<td>' + esc(r.baslik) + '</td>';
+    html += '<td><span class="badge-tip ' + tipClass + '">' + tipLabel + '</span></td>';
+    html += '<td style="white-space:nowrap;">' + formatTarih(r.tarih) + '</td>';
+    html += '<td>' + esc(r.durum) + '</td>';
+    html += '<td><span class="skor-badge ' + skorClass + '">%' + r.skor + '</span></td>';
+    html += '<td style="white-space:nowrap;">';
+    html += '<button class="btn sm ghost" onclick="printReport(\'' + r.id + '\')">PDF</button> ';
+    html += '<button class="btn sm ghost" onclick="shareReport(\'' + r.id + '\')">Paylaş</button>';
+    html += '</td>';
+    html += '</tr>';
+  });
+  tbody.innerHTML = html;
+}
+
+/* ===== GENERATE REPORT ===== */
+function generateReport(tip) {
+  var year = new Date().getFullYear();
+  var existing = allRaporlar.map(function(r) { return r.no; })
+    .filter(function(n) { return n.indexOf('RPR-' + year + '-') === 0; })
+    .map(function(n) { return parseInt(n.split('-')[2]) || 0; });
+  var max = existing.length ? Math.max.apply(null, existing) : 0;
+  var no = 'RPR-' + year + '-' + String(max + 1).padStart(3, '0');
+
+  var baslik = '';
+  var skor = 0;
+  var ozet = '';
+
+  if (tip === 'yonetim') {
+    baslik = 'Yönetim Özeti — ' + new Date().toLocaleDateString('tr-TR');
+    skor = calcAvgSkor();
+    ozet = buildYonetimOzeti();
+  } else if (tip === 'bulgu') {
+    baslik = 'Bulgu Raporu — ' + new Date().toLocaleDateString('tr-TR');
+    skor = calcBulguSkor();
+    ozet = buildBulguOzeti();
+  } else {
+    baslik = 'AS9100 Uyumluluk Raporu — ' + new Date().toLocaleDateString('tr-TR');
+    skor = calcAvgSkor();
+    ozet = buildUyumlulukOzeti();
+  }
+
+  var newRapor = {
+    id: 'rpr-' + Date.now(),
+    no: no,
+    baslik: baslik,
+    tip: tip,
+    tarih: new Date().toISOString().split('T')[0],
+    durum: 'Taslak',
+    skor: skor,
+    ozet: ozet
+  };
+
+  allRaporlar.unshift(newRapor);
+  saveRaporlar();
+  renderTable();
+  toast(no + ' oluşturuldu');
+
+  // Open print window
+  openPrintWindow(newRapor);
+}
+
+/* ===== CALC SCORES ===== */
+function calcAvgSkor() {
+  var denetlenen = AS_MADDELER.filter(function(m) { return m.skor > 0; });
+  if (!denetlenen.length) return 0;
+  var toplam = denetlenen.reduce(function(s, m) { return s + m.skor; }, 0);
+  return Math.round(toplam / denetlenen.length);
+}
+
+function calcBulguSkor() {
+  try {
+    var bulgular = JSON.parse(localStorage.getItem(LS_BULGU_KEY) || '[]');
+    var total = bulgular.length;
+    var kapali = bulgular.filter(function(b) { return b.durum === 'Kapatıldı'; }).length;
+    return total > 0 ? Math.round((kapali / total) * 100) : 100;
+  } catch(e) { return 0; }
+}
+
+/* ===== BUILD SUMMARIES ===== */
+function buildYonetimOzeti() {
+  var capas = [];
+  try { capas = JSON.parse(localStorage.getItem(LS_CAPA_KEY) || '[]'); } catch(e) {}
+  var bulgular = [];
+  try { bulgular = JSON.parse(localStorage.getItem(LS_BULGU_KEY) || '[]'); } catch(e) {}
+  var acikCapa = capas.filter(function(c) { return c.durum !== 'Kapatıldı'; }).length;
+  var acikBulgu = bulgular.filter(function(b) { return b.durum !== 'Kapatıldı'; }).length;
+  return 'Genel uyumluluk skoru: %' + calcAvgSkor() + '. ' +
+    'Açık CAPA: ' + acikCapa + ', Açık Bulgu: ' + acikBulgu + '. ' +
+    'Toplam rapor sayısı: ' + allRaporlar.length + '.';
+}
+
+function buildBulguOzeti() {
+  var bulgular = [];
+  try { bulgular = JSON.parse(localStorage.getItem(LS_BULGU_KEY) || '[]'); } catch(e) {}
+  var major = bulgular.filter(function(b) { return b.tip === 'Majör'; }).length;
+  var minor = bulgular.filter(function(b) { return b.tip === 'Minör'; }).length;
+  var gozlem = bulgular.filter(function(b) { return b.tip === 'Gözlem'; }).length;
+  return 'Toplam ' + bulgular.length + ' bulgu: ' + major + ' Majör, ' + minor + ' Minör, ' + gozlem + ' Gözlem. ' +
+    'Bulgu kapama oranı: %' + calcBulguSkor() + '.';
+}
+
+function buildUyumlulukOzeti() {
+  var denetlenen = AS_MADDELER.filter(function(m) { return m.skor > 0; }).length;
+  var kritik = AS_MADDELER.filter(function(m) { return m.skor > 0 && m.skor < 80; }).length;
+  var uyumlu = AS_MADDELER.filter(function(m) { return m.skor >= 80; }).length;
+  return denetlenen + '/' + AS_MADDELER.length + ' madde denetlendi. ' +
+    uyumlu + ' madde uyumlu (>=%80), ' + kritik + ' madde kritik (<%80). ' +
+    'Ortalama skor: %' + calcAvgSkor() + '.';
+}
+
+/* ===== RENDER AS9100 GRID ===== */
+function renderAsGrid() {
+  var grid = document.getElementById('asGrid');
+  var html = '';
+  AS_MADDELER.forEach(function(m) {
+    var colorClass = 'gray';
+    if (m.skor === 0) colorClass = 'gray';
+    else if (m.skor >= 90) colorClass = 'green';
+    else if (m.skor >= 80) colorClass = 'amber';
+    else colorClass = 'red';
+    html += '<div class="as-cell ' + colorClass + '" onclick="navigateToPlan(\'' + esc(m.no) + '\')" title="' + esc(m.ad) + '">';
+    html += '<div class="as-madde">' + esc(m.no) + '</div>';
+    html += '<div class="as-skor">' + (m.skor > 0 ? '%' + m.skor : '—') + '</div>';
+    html += '<div class="as-label">' + esc(m.ad) + '</div>';
+    html += '</div>';
+  });
+  grid.innerHTML = html;
+}
+
+/* ===== NAVIGATE TO PLAN ===== */
+function navigateToPlan(maddeNo) {
+  window.location.href = 'ersan_denetim_plan.html?madde=' + encodeURIComponent(maddeNo);
+}
+
+/* ===== PRINT REPORT ===== */
+function printReport(id) {
+  var rapor = allRaporlar.find(function(r) { return r.id === id; });
+  if (!rapor) return;
+  openPrintWindow(rapor);
+}
+
+function openPrintWindow(rapor) {
+  var tipLabel = rapor.tip === 'yonetim' ? 'Yönetim Özeti' : rapor.tip === 'bulgu' ? 'Bulgu Raporu' : 'Uyumluluk Raporu';
+  var w = window.open('', '_blank', 'width=800,height=600');
+  w.document.write('<!DOCTYPE html><html><head><title>' + esc(rapor.no) + '</title>');
+  w.document.write('<style>');
+  w.document.write('body{font-family:Segoe UI,system-ui,sans-serif;padding:40px;color:#1a202c;max-width:700px;margin:0 auto;}');
+  w.document.write('h1{font-size:20px;color:#0f2744;border-bottom:2px solid #0f2744;padding-bottom:8px;}');
+  w.document.write('h2{font-size:15px;color:#0f2744;margin-top:24px;}');
+  w.document.write('.meta{font-size:12px;color:#718096;margin-bottom:20px;}');
+  w.document.write('.row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #edf2f7;font-size:13px;}');
+  w.document.write('.lbl{color:#718096;font-weight:600;}.val{color:#0f2744;font-weight:700;}');
+  w.document.write('.ozet{background:#f7fafc;border-radius:8px;padding:16px;font-size:13px;line-height:1.6;margin-top:16px;}');
+  w.document.write('.footer{margin-top:40px;font-size:10px;color:#a0aec0;text-align:center;border-top:1px solid #edf2f7;padding-top:12px;}');
+  w.document.write('@media print{body{padding:20px;}}');
+  w.document.write('</style></head><body>');
+  w.document.write('<h1>Ersan MES — ' + esc(tipLabel) + '</h1>');
+  w.document.write('<div class="meta">' + esc(rapor.no) + ' | ' + formatTarih(rapor.tarih) + ' | Durum: ' + esc(rapor.durum) + '</div>');
+  w.document.write('<div class="row"><span class="lbl">Rapor Başlığı</span><span class="val">' + esc(rapor.baslik) + '</span></div>');
+  w.document.write('<div class="row"><span class="lbl">Skor</span><span class="val">%' + rapor.skor + '</span></div>');
+  w.document.write('<h2>Özet</h2>');
+  w.document.write('<div class="ozet">' + esc(rapor.ozet) + '</div>');
+
+  // Add AS9100 summary for uyumluluk reports
+  if (rapor.tip === 'uyumluluk') {
+    w.document.write('<h2>AS9100 Madde Skorları</h2>');
+    AS_MADDELER.forEach(function(m) {
+      var color = m.skor === 0 ? '#a0aec0' : m.skor >= 90 ? '#16a34a' : m.skor >= 80 ? '#d97706' : '#dc2626';
+      w.document.write('<div class="row"><span class="lbl">' + esc(m.no) + ' ' + esc(m.ad) + '</span><span class="val" style="color:' + color + ';">' + (m.skor > 0 ? '%' + m.skor : 'Denetlenmedi') + '</span></div>');
+    });
+  }
+
+  w.document.write('<div class="footer">Ersan Endüstriyel Makine San. Tic. Ltd. Şti. — AS9100 Rev.D İç Denetim Sistemi<br>Bu rapor Ersan MES tarafından otomatik oluşturulmuştur.</div>');
+  w.document.write('</body></html>');
+  w.document.close();
+  setTimeout(function() { w.print(); }, 500);
+}
+
+/* ===== SHARE REPORT ===== */
+function shareReport(id) {
+  var rapor = allRaporlar.find(function(r) { return r.id === id; });
+  if (!rapor) return;
+  var text = rapor.no + ' — ' + rapor.baslik + '\nSkor: %' + rapor.skor + '\n' + rapor.ozet;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(function() {
+      toast('Rapor bilgisi panoya kopyalandı');
+    });
+  } else {
+    prompt('Rapor bilgisi:', text);
+  }
+}
+
+/* ===== YÖNETİM ÖZETİ OVERLAY ===== */
+function openYonetimOzeti() {
+  var overlay = document.getElementById('summaryOverlay');
+  overlay.classList.add('show');
+
+  var capas = [];
+  try { capas = JSON.parse(localStorage.getItem(LS_CAPA_KEY) || '[]'); } catch(e) {}
+  var bulgular = [];
+  try { bulgular = JSON.parse(localStorage.getItem(LS_BULGU_KEY) || '[]'); } catch(e) {}
+
+  var totalDenetim = allRaporlar.length;
+  var avgSkor = calcAvgSkor();
+  var acikBulgu = bulgular.filter(function(b) { return b.durum !== 'Kapatıldı'; }).length;
+  var totalBulgu = bulgular.length;
+  var acikCapa = capas.filter(function(c) { return c.durum !== 'Kapatıldı'; }).length;
+  var totalCapa = capas.length;
+  var gecikenCapa = capas.filter(function(c) { return c.durum === 'Gecikmiş'; }).length;
+  var denetlenenMadde = AS_MADDELER.filter(function(m) { return m.skor > 0; }).length;
+  var kritikMadde = AS_MADDELER.filter(function(m) { return m.skor > 0 && m.skor < 80; }).length;
+
+  var html = '';
+  html += '<div class="s-row"><span class="s-label">Tarih</span><span class="s-val">' + new Date().toLocaleDateString('tr-TR') + '</span></div>';
+  html += '<div class="s-row"><span class="s-label">Toplam Rapor</span><span class="s-val">' + totalDenetim + '</span></div>';
+  html += '<div class="s-row"><span class="s-label">Genel Uyumluluk Skoru</span><span class="s-val">%' + avgSkor + '</span></div>';
+  html += '<div class="s-row"><span class="s-label">Denetlenen Madde</span><span class="s-val">' + denetlenenMadde + ' / ' + AS_MADDELER.length + '</span></div>';
+  html += '<div class="s-row"><span class="s-label">Kritik Madde (<%80)</span><span class="s-val" style="color:#dc2626;">' + kritikMadde + '</span></div>';
+  html += '<div class="s-row"><span class="s-label">Toplam Bulgu</span><span class="s-val">' + totalBulgu + ' (' + acikBulgu + ' açık)</span></div>';
+  html += '<div class="s-row"><span class="s-label">Toplam CAPA</span><span class="s-val">' + totalCapa + ' (' + acikCapa + ' açık)</span></div>';
+  html += '<div class="s-row"><span class="s-label">Geciken CAPA</span><span class="s-val" style="color:#dc2626;">' + gecikenCapa + '</span></div>';
+
+  document.getElementById('summaryContent').innerHTML = html;
+}
+
+function closeSummary() {
+  document.getElementById('summaryOverlay').classList.remove('show');
+}
+
+function printSummary() {
+  var content = document.getElementById('summaryBox').innerHTML;
+  var w = window.open('', '_blank', 'width=800,height=600');
+  w.document.write('<!DOCTYPE html><html><head><title>Yönetim Özeti</title>');
+  w.document.write('<style>');
+  w.document.write('body{font-family:Segoe UI,system-ui,sans-serif;padding:40px;color:#1a202c;max-width:600px;margin:0 auto;}');
+  w.document.write('h2{font-size:18px;color:#0f2744;border-bottom:2px solid #0f2744;padding-bottom:8px;}');
+  w.document.write('.s-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #edf2f7;font-size:14px;}');
+  w.document.write('.s-label{color:#718096;font-weight:600;}.s-val{color:#0f2744;font-weight:700;}');
+  w.document.write('.summary-actions{display:none;}');
+  w.document.write('</style></head><body>');
+  w.document.write('<h2>Ersan MES — Yönetim Özeti Raporu</h2>');
+  w.document.write(content);
+  w.document.write('</body></html>');
+  w.document.close();
+  setTimeout(function() { w.print(); }, 500);
+}
+
+/* ===== UTILS ===== */
+function esc(s) {
+  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+function formatTarih(d) {
+  if (!d) return '—';
+  var parts = d.split('-');
+  if (parts.length !== 3) return d;
+  return parts[2] + '.' + parts[1] + '.' + parts[0];
+}
+</script>
+</body>
+</html>

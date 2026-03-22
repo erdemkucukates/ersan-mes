@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — Bulgular</title>
+<link rel="stylesheet" href="ersan_styles.css">
+<script src="ersan_nav.js" defer></script>
+<script src="ersan_log.js" defer></script>
+<style>
+/* ── KPI ROW ── */
+.kpi-row{display:flex;gap:12px;padding:16px 20px;flex-wrap:wrap}
+.kpi-card{flex:1;min-width:140px;background:var(--beyaz);border:1px solid var(--border);border-radius:10px;padding:14px 16px;display:flex;align-items:center;gap:12px}
+.kpi-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.kpi-icon.red{background:var(--kirmizi-bg)}
+.kpi-icon.amber{background:var(--sari-bg)}
+.kpi-icon.blue{background:var(--mavi-acik)}
+.kpi-icon.green{background:var(--yesil-bg)}
+.kpi-val{font-size:22px;font-weight:700;color:var(--metin)}
+.kpi-label{font-size:11px;color:var(--metin3)}
+
+/* ── FILTER BAR ── */
+.filter-bar{display:flex;align-items:center;gap:8px;padding:0 20px 12px;flex-wrap:wrap}
+.filter-bar input{padding:7px 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;width:220px;font-family:inherit}
+.filter-bar input:focus{outline:none;border-color:var(--mavi);box-shadow:0 0 0 2px var(--mavi-acik)}
+.filter-bar select{padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;background:#fff;cursor:pointer}
+
+/* ── BULGU CARDS ── */
+.bulgu-list{padding:0 20px 20px;display:flex;flex-direction:column;gap:10px}
+.bulgu-card{background:var(--beyaz);border:1px solid var(--border);border-radius:10px;padding:16px 18px;display:flex;gap:14px;transition:box-shadow .2s;border-left:4px solid var(--border)}
+.bulgu-card:hover{box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.bulgu-card.kmt{border-left-color:var(--kirmizi)}
+.bulgu-card.gozlem{border-left-color:var(--sari)}
+.bulgu-card.iyilestirme{border-left-color:var(--mavi)}
+
+.bc-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.bc-icon.red{background:var(--kirmizi-bg)}
+.bc-icon.amber{background:var(--sari-bg)}
+.bc-icon.blue{background:var(--mavi-acik)}
+
+.bc-body{flex:1;min-width:0}
+.bc-header{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}
+.bc-no{font-size:13px;font-weight:700;color:var(--metin)}
+.badge{padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;white-space:nowrap}
+.badge.b-kmt{background:var(--kirmizi-bg);color:var(--kirmizi-t)}
+.badge.b-gozlem{background:var(--sari-bg);color:var(--sari-t)}
+.badge.b-iyilestirme{background:var(--mavi-acik);color:var(--mavi-koyu)}
+.badge.b-acik{background:#FEF3C7;color:#92400E}
+.badge.b-capada{background:#E0E7FF;color:#3730A3}
+.badge.b-kapandi{background:var(--yesil-bg);color:var(--yesil-t)}
+
+.bc-madde{background:var(--mavi-acik);color:var(--mavi-koyu);font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;display:inline-block;margin-bottom:4px}
+.bc-desc{font-size:12px;color:var(--metin2);margin-bottom:6px;line-height:1.5}
+.bc-meta{font-size:11px;color:var(--metin3);display:flex;gap:12px;flex-wrap:wrap}
+.bc-footer{display:flex;align-items:center;gap:8px;margin-top:8px}
+.bc-footer .btn{font-size:11px;padding:4px 10px}
+
+/* ── MODAL ── */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:900;justify-content:center;align-items:center}
+.modal-bg.open{display:flex}
+.modal-box{background:#fff;border-radius:12px;width:560px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.modal-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.modal-head h3{font-size:15px;font-weight:700;color:var(--metin)}
+.modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--metin3);padding:4px 8px;border-radius:4px}
+.modal-close:hover{background:var(--bg)}
+.modal-body{padding:20px}
+.modal-foot{padding:14px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
+.fg{margin-bottom:12px}
+.fl{display:block;font-size:11px;font-weight:600;color:var(--metin);margin-bottom:4px}
+.fi{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;background:#fff}
+.fi:focus{outline:none;border-color:var(--mavi);box-shadow:0 0 0 2px var(--mavi-acik)}
+select.fi{cursor:pointer}
+
+/* ── EMPTY ── */
+.empty-state{text-align:center;padding:60px 20px;color:var(--metin3)}
+.empty-state .es-icon{font-size:40px;margin-bottom:12px}
+.empty-state .es-text{font-size:15px;font-weight:600;color:var(--metin)}
+.empty-state .es-sub{font-size:12px;margin-top:4px}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--laci);color:#fff;padding:10px 24px;border-radius:8px;font-size:13px;font-weight:500;opacity:0;transition:opacity .3s;z-index:999;pointer-events:none}
+.toast.show{opacity:1}.toast.err{background:var(--kirmizi)}
+</style>
+</head>
+<body>
+<div id="nav-alani"></div>
+<div class="icerik-alani">
+  <div class="topbar">
+    <div class="topbar-baslik">Bulgular</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button class="btn sm primary" onclick="openYeniBulgu()">+ Yeni Bulgu</button>
+    </div>
+  </div>
+
+  <div class="sayfa-icerik">
+    <!-- KPI ROW -->
+    <div class="kpi-row">
+      <div class="kpi-card">
+        <div class="kpi-icon red">⚠</div>
+        <div><div class="kpi-val" id="kpiAcik">0</div><div class="kpi-label">Açık</div></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon amber">⚡</div>
+        <div><div class="kpi-val" id="kpiKmt">0</div><div class="kpi-label">KMT</div></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon blue">💡</div>
+        <div><div class="kpi-val" id="kpiGozlem">0</div><div class="kpi-label">Gözlem</div></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon green">📋</div>
+        <div><div class="kpi-val" id="kpiCapa">0</div><div class="kpi-label">CAPA'da</div></div>
+      </div>
+    </div>
+
+    <!-- FILTER BAR -->
+    <div class="filter-bar">
+      <input type="text" id="araInput" placeholder="🔍 Bulgu ara…" oninput="filtrele()">
+      <select id="filSinif" onchange="filtrele()">
+        <option value="">Tüm Sınıflar</option>
+        <option value="KMT">KMT</option>
+        <option value="Gözlem">Gözlem</option>
+        <option value="İyileştirme">İyileştirme</option>
+      </select>
+      <select id="filDurum" onchange="filtrele()">
+        <option value="">Tüm Durumlar</option>
+        <option value="Açık">Açık</option>
+        <option value="CAPA'da">CAPA'da</option>
+        <option value="Kapandı">Kapandı</option>
+      </select>
+    </div>
+
+    <!-- BULGU LIST -->
+    <div class="bulgu-list" id="bulguList">
+      <div class="empty-state">
+        <div class="es-icon">🔍</div>
+        <div class="es-text">Yükleniyor…</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- YENİ BULGU MODAL -->
+<div class="modal-bg" id="yeniBulguModal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3>Yeni Bulgu</h3>
+      <button class="modal-close" onclick="closeYeniBulgu()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="fg">
+        <label class="fl">Sınıflandırma *</label>
+        <select class="fi" id="nbSinif">
+          <option value="KMT">Kalite Majör Tutarsızlık (KMT)</option>
+          <option value="Gözlem" selected>Gözlem</option>
+          <option value="İyileştirme">İyileştirme Fırsatı</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label class="fl">AS9100 Maddesi</label>
+        <input class="fi" id="nbMadde" placeholder="Örn: 8.5.1">
+      </div>
+      <div class="fg">
+        <label class="fl">Süreç</label>
+        <input class="fi" id="nbSurec" placeholder="Örn: Satınalma, Üretim…">
+      </div>
+      <div class="fg">
+        <label class="fl">Açıklama *</label>
+        <textarea class="fi" id="nbAciklama" rows="3" placeholder="Bulgu detayı…"></textarea>
+      </div>
+      <div class="fg">
+        <label class="fl">Objektif Kanıt</label>
+        <textarea class="fi" id="nbKanit" rows="2" placeholder="Kanıt açıklaması…"></textarea>
+      </div>
+      <div class="fg">
+        <label class="fl">Referans No (opsiyonel)</label>
+        <input class="fi" id="nbRefNo" placeholder="CL-3, DEN-2026-001">
+      </div>
+      <div class="fg">
+        <label class="fl">CAPA Gerekli?</label>
+        <select class="fi" id="nbCapa">
+          <option value="Hayır">Hayır</option>
+          <option value="Evet">Evet</option>
+          <option value="Değerlendirilecek">Değerlendirilecek</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn sm" onclick="closeYeniBulgu()">İptal</button>
+      <button class="btn sm primary" onclick="kaydetYeniBulgu()">Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<!-- CAPA QUICK MODAL -->
+<div class="modal-bg" id="capaModal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3>CAPA Oluştur</h3>
+      <button class="modal-close" onclick="closeCapaModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="fg">
+        <label class="fl">Bulgu No</label>
+        <input class="fi" id="cpBulguNo" readonly>
+      </div>
+      <div class="fg">
+        <label class="fl">Kök Neden Yöntemi</label>
+        <select class="fi" id="cpYontem">
+          <option value="5 Neden">5 Neden</option>
+          <option value="Balık Kılçığı">Balık Kılçığı (Ishikawa)</option>
+          <option value="8D">8D</option>
+          <option value="Diğer">Diğer</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label class="fl">Kök Neden *</label>
+        <textarea class="fi" id="cpKokNeden" rows="2" placeholder="Kök neden analizi…"></textarea>
+      </div>
+      <div class="fg">
+        <label class="fl">Düzeltici Aksiyon *</label>
+        <textarea class="fi" id="cpAksiyon" rows="2" placeholder="Yapılacak düzeltici faaliyet…"></textarea>
+      </div>
+      <div class="fg">
+        <label class="fl">Sorumlu</label>
+        <input class="fi" id="cpSorumlu" placeholder="Ad Soyad">
+      </div>
+      <div style="display:flex;gap:12px">
+        <div class="fg" style="flex:1">
+          <label class="fl">Termin</label>
+          <input class="fi" type="date" id="cpTermin">
+        </div>
+        <div class="fg" style="flex:1">
+          <label class="fl">Öncelik</label>
+          <select class="fi" id="cpOncelik">
+            <option value="Yüksek">Yüksek</option>
+            <option value="Orta" selected>Orta</option>
+            <option value="Düşük">Düşük</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn sm" onclick="closeCapaModal()">İptal</button>
+      <button class="btn sm primary" onclick="kaydetCapa()">Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<!-- DETAY MODAL -->
+<div class="modal-bg" id="detayModal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3 id="detayTitle">Bulgu Detay</h3>
+      <button class="modal-close" onclick="closeDetay()">&times;</button>
+    </div>
+    <div class="modal-body" id="detayBody"></div>
+    <div class="modal-foot">
+      <button class="btn sm" onclick="closeDetay()">Kapat</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===== STATE ===== */
+var STORAGE_KEY = 'ersan_bulgular';
+var CAPA_KEY = 'ersan_denetim_capalar';
+var allBulgular = [];
+var filteredBulgular = [];
+var capaTargetIdx = null; // index in allBulgular for CAPA creation
+
+/* ===== INIT ===== */
+document.addEventListener('DOMContentLoaded', function() {
+  loadBulgular();
+});
+
+/* ===== TOAST ===== */
+function toast(msg, err) {
+  var el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show' + (err ? ' err' : '');
+  clearTimeout(el._t);
+  el._t = setTimeout(function(){ el.className = 'toast'; }, 2800);
+}
+
+/* ===== LOAD ===== */
+function loadBulgular() {
+  var stored = localStorage.getItem(STORAGE_KEY);
+  if (stored) {
+    try { allBulgular = JSON.parse(stored); } catch(e) { allBulgular = []; }
+  }
+  if (allBulgular.length === 0) {
+    allBulgular = getSampleBulgular();
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(allBulgular));
+  }
+  filtrele();
+}
+
+function getSampleBulgular() {
+  return [
+    {no:'BLG-2026-001', sinif:'KMT', madde:'8.4', surec:'Satınalma', aciklama:'Tedarikçi değerlendirme formu 2 tedarikçi için eksik. OTL listesinde kayıt var ancak yıllık değerlendirme yapılmamış.', kanit:'OTL-005 ve OTL-012 kayıtları kontrol edildi.', refNo:'CL-10', denetimNo:'DEN-2026-001', denetci:'Erdem Küçükateş', tarih:'2026-03-15', durum:'Açık', capa:null},
+    {no:'BLG-2026-002', sinif:'Gözlem', madde:'7.5', surec:'Doküman Yönetimi', aciklama:'Revizyon kontrol tablosunda 3 dokümanın son revizyon tarihi 12 ayı aşmış durumda.', kanit:'DMS-MASTER listesi incelendi.', refNo:'CL-8', denetimNo:'DEN-2026-001', denetci:'Erdem Küçükateş', tarih:'2026-03-15', durum:'CAPA\'da', capa:'CAPA-2026-001'},
+    {no:'BLG-2026-003', sinif:'İyileştirme', madde:'9.1', surec:'Performans İzleme', aciklama:'KPI dashboard üzerinde hedef değerler tanımlanmış ancak trend analizi yapılmıyor.', kanit:'Finans paneli ve KPI ekranları incelendi.', refNo:'', denetimNo:'DEN-2026-001', denetci:'Erdem Küçükateş', tarih:'2026-03-15', durum:'Açık', capa:null},
+    {no:'BLG-2026-004', sinif:'KMT', madde:'8.5.2', surec:'Üretim', aciklama:'3 iş emrinde lot/traveller kaydı başlatılmamış. İzlenebilirlik zinciri kopuk.', kanit:'IE-2026-00042, IE-2026-00045, IE-2026-00048 kontrol edildi.', refNo:'CL-12', denetimNo:'DEN-2026-002', denetci:'Erdem Küçükateş', tarih:'2026-03-18', durum:'Açık', capa:null},
+    {no:'BLG-2026-005', sinif:'Gözlem', madde:'7.2', surec:'İnsan Kaynakları', aciklama:'Yeni işe başlayan 2 personelin oryantasyon eğitim kaydı sisteme girilmemiş.', kanit:'Personel defteri ve eğitim planı karşılaştırıldı.', refNo:'CL-7', denetimNo:'DEN-2026-002', denetci:'Erdem Küçükateş', tarih:'2026-03-18', durum:'Kapandı', capa:'CAPA-2026-002'},
+    {no:'BLG-2026-006', sinif:'Gözlem', madde:'7.1.5', surec:'Kalibrasyon', aciklama:'Mikrometre seti (EKP-007) kalibrasyon tarihi 15 gün geçmiş, kullanımda.', kanit:'Kalibrasyon takip listesi ve atölye yerinde gözlem.', refNo:'CL-6', denetimNo:'DEN-2026-002', denetci:'Erdem Küçükateş', tarih:'2026-03-18', durum:'CAPA\'da', capa:'CAPA-2026-003'},
+    {no:'BLG-2026-007', sinif:'İyileştirme', madde:'6.1', surec:'Risk Yönetimi', aciklama:'Risk tablosu mevcut ancak fırsat değerlendirmesi bölümü boş bırakılmış.', kanit:'Risk yönetimi sayfası incelendi.', refNo:'CL-5', denetimNo:'DEN-2026-002', denetci:'Erdem Küçükateş', tarih:'2026-03-18', durum:'Açık', capa:null},
+    {no:'BLG-2026-008', sinif:'Gözlem', madde:'8.7', surec:'Kalite Kontrol', aciklama:'NCR kaydı açılmış ancak MRB karar formu imzalanmamış 2 kayıt tespit edildi.', kanit:'NCR-2026-012 ve NCR-2026-015 incelendi.', refNo:'CL-13', denetimNo:'DEN-2026-002', denetci:'Erdem Küçükateş', tarih:'2026-03-18', durum:'Açık', capa:null}
+  ];
+}
+
+/* ===== FILTER & RENDER ===== */
+function filtrele() {
+  var ara = (document.getElementById('araInput').value || '').toLowerCase();
+  var sinif = document.getElementById('filSinif').value;
+  var durum = document.getElementById('filDurum').value;
+
+  filteredBulgular = allBulgular.filter(function(b) {
+    if (sinif && b.sinif !== sinif) return false;
+    if (durum && b.durum !== durum) return false;
+    if (ara) {
+      var text = (b.no + ' ' + b.aciklama + ' ' + b.madde + ' ' + b.surec + ' ' + b.denetimNo).toLowerCase();
+      if (text.indexOf(ara) === -1) return false;
+    }
+    return true;
+  });
+
+  renderKPI();
+  renderList();
+}
+
+function renderKPI() {
+  var acik = 0, kmt = 0, gozlem = 0, capada = 0;
+  allBulgular.forEach(function(b) {
+    if (b.durum === 'Açık') acik++;
+    if (b.sinif === 'KMT') kmt++;
+    if (b.sinif === 'Gözlem') gozlem++;
+    if (b.durum === "CAPA'da") capada++;
+  });
+  document.getElementById('kpiAcik').textContent = acik;
+  document.getElementById('kpiKmt').textContent = kmt;
+  document.getElementById('kpiGozlem').textContent = gozlem;
+  document.getElementById('kpiCapa').textContent = capada;
+}
+
+function renderList() {
+  var cont = document.getElementById('bulguList');
+  if (!filteredBulgular.length) {
+    cont.innerHTML = '<div class="empty-state"><div class="es-icon">📋</div><div class="es-text">Bulgu bulunamadı</div><div class="es-sub">Filtrelerinizi değiştirin veya yeni bulgu ekleyin</div></div>';
+    return;
+  }
+
+  var html = '';
+  filteredBulgular.forEach(function(b, i) {
+    var cardCls = '';
+    var iconCls = '';
+    var iconChar = '';
+    if (b.sinif === 'KMT') { cardCls = 'kmt'; iconCls = 'red'; iconChar = '⚠'; }
+    else if (b.sinif === 'Gözlem') { cardCls = 'gozlem'; iconCls = 'amber'; iconChar = '⚡'; }
+    else { cardCls = 'iyilestirme'; iconCls = 'blue'; iconChar = '💡'; }
+
+    var sinifBadge = 'b-' + b.sinif.toLowerCase().replace('İ','i').replace('ş','s').replace('ü','u');
+    var durumCls = 'b-' + b.durum.toLowerCase().replace("'", '').replace(' ','');
+
+    html += '<div class="bulgu-card ' + cardCls + '">';
+    html += '  <div class="bc-icon ' + iconCls + '">' + iconChar + '</div>';
+    html += '  <div class="bc-body">';
+    html += '    <div class="bc-header">';
+    html += '      <span class="bc-no">' + escHtml(b.no) + '</span>';
+    html += '      <span class="badge ' + sinifBadge + '">' + escHtml(b.sinif) + '</span>';
+    html += '      <span class="badge ' + durumCls + '">' + escHtml(b.durum) + '</span>';
+    html += '    </div>';
+    if (b.madde) {
+      html += '    <span class="bc-madde">' + escHtml(b.madde) + '</span>';
+    }
+    html += '    <div class="bc-desc">' + escHtml(b.aciklama) + '</div>';
+    html += '    <div class="bc-meta">';
+    html += '      <span>Denetçi: ' + escHtml(b.denetci || '—') + '</span>';
+    html += '      <span>Tarih: ' + escHtml(b.tarih || '—') + '</span>';
+    if (b.denetimNo) html += '      <span>Denetim: ' + escHtml(b.denetimNo) + '</span>';
+    html += '    </div>';
+    html += '    <div class="bc-footer">';
+    if (b.durum === 'Açık') {
+      html += '      <button class="btn sm" style="background:var(--mavi);color:#fff" onclick="openCapaModal(' + realIndex(b) + ')">CAPA Aç →</button>';
+    }
+    if (b.capa) {
+      html += '      <span style="font-size:11px;color:var(--metin3)">CAPA: ' + escHtml(b.capa) + '</span>';
+    }
+    html += '      <button class="btn sm" onclick="openDetay(' + realIndex(b) + ')">Detay</button>';
+    html += '    </div>';
+    html += '  </div>';
+    html += '</div>';
+  });
+
+  cont.innerHTML = html;
+}
+
+function realIndex(b) {
+  return allBulgular.indexOf(b);
+}
+
+/* ===== YENİ BULGU MODAL ===== */
+function openYeniBulgu() {
+  document.getElementById('nbSinif').value = 'Gözlem';
+  document.getElementById('nbMadde').value = '';
+  document.getElementById('nbSurec').value = '';
+  document.getElementById('nbAciklama').value = '';
+  document.getElementById('nbKanit').value = '';
+  document.getElementById('nbRefNo').value = '';
+  document.getElementById('nbCapa').value = 'Hayır';
+  document.getElementById('yeniBulguModal').classList.add('open');
+}
+
+function closeYeniBulgu() {
+  document.getElementById('yeniBulguModal').classList.remove('open');
+}
+
+function kaydetYeniBulgu() {
+  var sinif = document.getElementById('nbSinif').value;
+  var aciklama = document.getElementById('nbAciklama').value.trim();
+  if (!aciklama) { toast('Açıklama zorunlu', true); return; }
+
+  var year = new Date().getFullYear();
+  var nextNo = allBulgular.length + 1;
+  var no = 'BLG-' + year + '-' + String(nextNo).padStart(3, '0');
+
+  var yeni = {
+    no: no,
+    sinif: sinif,
+    madde: document.getElementById('nbMadde').value.trim(),
+    surec: document.getElementById('nbSurec').value.trim(),
+    aciklama: aciklama,
+    kanit: document.getElementById('nbKanit').value.trim(),
+    refNo: document.getElementById('nbRefNo').value.trim(),
+    denetimNo: '',
+    denetci: 'Erdem Küçükateş',
+    tarih: new Date().toISOString().split('T')[0],
+    durum: 'Açık',
+    capa: null
+  };
+
+  allBulgular.push(yeni);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(allBulgular));
+  closeYeniBulgu();
+  filtrele();
+  toast(no + ' oluşturuldu');
+
+  // KMT auto-suggest
+  var capaGerekli = document.getElementById('nbCapa').value;
+  if (sinif === 'KMT' || capaGerekli === 'Evet') {
+    setTimeout(function() {
+      if (confirm(no + ' için CAPA açılması önerilir. Şimdi açmak ister misiniz?')) {
+        openCapaModal(allBulgular.length - 1);
+      }
+    }, 400);
+  }
+}
+
+/* ===== CAPA MODAL ===== */
+function openCapaModal(idx) {
+  capaTargetIdx = idx;
+  var b = allBulgular[idx];
+  document.getElementById('cpBulguNo').value = b.no;
+  document.getElementById('cpKokNeden').value = '';
+  document.getElementById('cpAksiyon').value = '';
+  document.getElementById('cpSorumlu').value = '';
+  document.getElementById('cpTermin').value = '';
+  document.getElementById('cpOncelik').value = 'Orta';
+  document.getElementById('cpYontem').value = '5 Neden';
+  document.getElementById('capaModal').classList.add('open');
+}
+
+function closeCapaModal() {
+  document.getElementById('capaModal').classList.remove('open');
+  capaTargetIdx = null;
+}
+
+function kaydetCapa() {
+  var kokNeden = document.getElementById('cpKokNeden').value.trim();
+  var aksiyon = document.getElementById('cpAksiyon').value.trim();
+  if (!kokNeden || !aksiyon) {
+    toast('Kök Neden ve Düzeltici Aksiyon zorunlu', true);
+    return;
+  }
+
+  var b = allBulgular[capaTargetIdx];
+  var year = new Date().getFullYear();
+
+  // Load existing CAPAs
+  var stored = localStorage.getItem(CAPA_KEY);
+  var capalar = [];
+  if (stored) {
+    try { capalar = JSON.parse(stored); } catch(e) { capalar = []; }
+  }
+
+  var nextNo = capalar.length + 1;
+  var capaNo = 'CAPA-' + year + '-' + String(nextNo).padStart(3, '0');
+
+  capalar.push({
+    no: capaNo,
+    bulguNo: b.no,
+    yontem: document.getElementById('cpYontem').value,
+    kokNeden: kokNeden,
+    aksiyon: aksiyon,
+    sorumlu: document.getElementById('cpSorumlu').value.trim(),
+    termin: document.getElementById('cpTermin').value,
+    oncelik: document.getElementById('cpOncelik').value,
+    tarih: new Date().toISOString().split('T')[0],
+    durum: 'Açık'
+  });
+
+  localStorage.setItem(CAPA_KEY, JSON.stringify(capalar));
+
+  // Update bulgu
+  b.durum = "CAPA'da";
+  b.capa = capaNo;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(allBulgular));
+
+  closeCapaModal();
+  filtrele();
+  toast(capaNo + ' oluşturuldu, bulgu güncellendi');
+}
+
+/* ===== DETAY MODAL ===== */
+function openDetay(idx) {
+  var b = allBulgular[idx];
+  document.getElementById('detayTitle').textContent = b.no + ' — Detay';
+
+  var html = '';
+  html += '<div class="fg"><label class="fl">Bulgu No</label><div style="font-weight:600">' + escHtml(b.no) + '</div></div>';
+  html += '<div class="fg"><label class="fl">Sınıflandırma</label><div>' + escHtml(b.sinif) + '</div></div>';
+  html += '<div class="fg"><label class="fl">AS9100 Maddesi</label><div>' + escHtml(b.madde || '—') + '</div></div>';
+  html += '<div class="fg"><label class="fl">Süreç</label><div>' + escHtml(b.surec || '—') + '</div></div>';
+  html += '<div class="fg"><label class="fl">Açıklama</label><div>' + escHtml(b.aciklama) + '</div></div>';
+  html += '<div class="fg"><label class="fl">Objektif Kanıt</label><div>' + escHtml(b.kanit || '—') + '</div></div>';
+  html += '<div class="fg"><label class="fl">Referans No</label><div>' + escHtml(b.refNo || '—') + '</div></div>';
+  html += '<div class="fg"><label class="fl">Denetim No</label><div>' + escHtml(b.denetimNo || '—') + '</div></div>';
+  html += '<div class="fg"><label class="fl">Denetçi</label><div>' + escHtml(b.denetci || '—') + '</div></div>';
+  html += '<div class="fg"><label class="fl">Tarih</label><div>' + escHtml(b.tarih || '—') + '</div></div>';
+  html += '<div class="fg"><label class="fl">Durum</label><div>' + escHtml(b.durum) + '</div></div>';
+  if (b.capa) {
+    html += '<div class="fg"><label class="fl">CAPA</label><div>' + escHtml(b.capa) + '</div></div>';
+  }
+
+  document.getElementById('detayBody').innerHTML = html;
+  document.getElementById('detayModal').classList.add('open');
+}
+
+function closeDetay() {
+  document.getElementById('detayModal').classList.remove('open');
+}
+
+/* ===== UTILS ===== */
+function escHtml(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
