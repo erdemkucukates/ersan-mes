@@ -7,6 +7,74 @@
 <link rel="stylesheet" href="ersan_styles.css">
 <script src="ersan_nav.js" defer></script>
 <script src="ersan_log.js" defer></script>
+<style>
+/* MAP GRID */
+.map-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; padding:12px; }
+.map-cell { background:#fff; border:1px solid #e5e7eb; border-radius:8px; padding:12px; cursor:pointer; text-align:center; transition:all .12s; min-height:100px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; }
+.map-cell:hover { border-color:#93c5fd; box-shadow:0 2px 8px rgba(0,0,0,.06); }
+.map-cell.sel { border-color:#1a2b47; background:#eff6ff; }
+.map-cell .mc-icon { font-size:24px; }
+.map-cell .mc-name { font-size:11px; font-weight:600; color:#374151; }
+.map-cell .mc-code { font-size:10px; color:#9ca3af; }
+.map-cell .mc-badge { font-size:10px; padding:2px 8px; border-radius:10px; font-weight:600; display:inline-block; margin-top:2px; }
+.mc-aktif { border-left:3px solid #10b981; }
+.mc-bosta { border-left:3px solid #9ca3af; }
+.mc-bakim { border-left:3px solid #f59e0b; background:#fffbeb; }
+.mc-karantina { border-left:3px solid #ef4444; background:#fff8f8; }
+.mc-depo { border-left:3px solid #3b82f6; }
+.mc-fire { border-left:3px solid #6b7280; background:#f9fafb; }
+.mc-sevk { border-left:3px solid #8b5cf6; }
+.mc-ofis { border-left:3px solid #64748b; background:#f8fafc; }
+
+/* VIEW TOGGLES */
+.view-toggles { display:flex; gap:4px; }
+.view-btn { padding:5px 12px; border-radius:6px; border:1px solid #d1d5db; background:#fff; font-size:11px; font-weight:600; color:#6b7280; cursor:pointer; transition:all .12s; }
+.view-btn:hover { border-color:#93c5fd; color:#1d4ed8; }
+.view-btn.aktif { background:var(--laci,#0f2744); color:#fff; border-color:var(--laci,#0f2744); }
+
+/* RIGHT PANEL */
+.harita-panel-sag { width:280px; min-width:280px; background:#fff; border-left:1px solid #e5e7eb; overflow-y:auto; display:flex; flex-direction:column; }
+.sag-header { padding:14px 16px; border-bottom:1px solid #e5e7eb; }
+.sag-header h3 { font-size:14px; font-weight:700; color:var(--laci,#0f2744); margin:0 0 2px 0; }
+.sag-header .sag-code { font-size:11px; color:#9ca3af; }
+.sag-body { padding:12px 16px; flex:1; overflow-y:auto; }
+.sag-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color:#9ca3af; font-size:13px; text-align:center; padding:24px; }
+.sag-empty .sag-empty-icon { font-size:32px; margin-bottom:8px; opacity:0.4; }
+.info-row { display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #f3f4f6; font-size:12px; }
+.info-row .lbl { color:#6b7280; }
+.info-row .val { font-weight:600; color:#1f2937; }
+.sag-section { margin-top:12px; }
+.sag-section-title { font-size:11px; font-weight:700; color:var(--laci,#0f2744); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px; }
+.lot-item { padding:6px 8px; background:#f9fafb; border-radius:6px; margin-bottom:4px; font-size:11px; display:flex; justify-content:space-between; align-items:center; }
+.lot-item .lot-no { font-weight:600; color:#374151; }
+.lot-item .lot-info { color:#6b7280; }
+.sag-actions { padding:12px 16px; border-top:1px solid #e5e7eb; display:flex; gap:6px; flex-wrap:wrap; }
+.sag-actions button { flex:1; min-width:70px; padding:6px 8px; border-radius:6px; border:1px solid #d1d5db; background:#fff; font-size:11px; font-weight:600; color:#374151; cursor:pointer; transition:all .12s; }
+.sag-actions button:hover { border-color:#93c5fd; color:#1d4ed8; }
+
+/* BOTTOM TABLE */
+.aktif-ops { margin-top:12px; background:#fff; border-radius:8px; border:1px solid #e5e7eb; overflow:hidden; }
+.aktif-ops-header { padding:10px 16px; border-bottom:1px solid #e5e7eb; font-size:12px; font-weight:700; color:var(--laci,#0f2744); display:flex; align-items:center; gap:8px; }
+.aktif-ops table { width:100%; border-collapse:collapse; font-size:11px; }
+.aktif-ops th { padding:8px 12px; text-align:left; font-weight:600; color:#6b7280; background:#f9fafb; border-bottom:1px solid #e5e7eb; }
+.aktif-ops td { padding:8px 12px; border-bottom:1px solid #f3f4f6; color:#374151; }
+.aktif-ops tr:last-child td { border-bottom:none; }
+.pulse-dot { width:8px; height:8px; border-radius:50%; background:#10b981; display:inline-block; animation:pulse-anim 1.5s infinite; }
+@keyframes pulse-anim { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+.durum-chip { padding:2px 8px; border-radius:10px; font-size:10px; font-weight:600; display:inline-flex; align-items:center; gap:4px; }
+.durum-aktif { background:#d1fae5; color:#065f46; }
+.durum-bosta { background:#f3f4f6; color:#6b7280; }
+.durum-bakim { background:#fef3c7; color:#92400e; }
+.badge-blue { background:#dbeafe; color:#1e40af; }
+.badge-green { background:#d1fae5; color:#065f46; }
+.badge-gray { background:#f3f4f6; color:#6b7280; }
+.badge-amber { background:#fef3c7; color:#92400e; }
+.badge-red { background:#fee2e2; color:#991b1b; }
+
+/* LAYOUT */
+.harita-layout { display:flex; flex:1; overflow:hidden; }
+.harita-sol { flex:1; overflow-y:auto; padding:0; display:flex; flex-direction:column; }
+</style>
 </head>
 <body>
 <div id="nav-alani"></div>
@@ -14,16 +82,440 @@
   <div class="topbar">
     <div class="topbar-baslik">Atolye Haritasi</div>
     <div style="display:flex;align-items:center;gap:8px;">
+      <div class="view-toggles">
+        <button class="view-btn aktif" onclick="setView('stok',this)">Stok Gorunumu</button>
+        <button class="view-btn" onclick="setView('wo',this)">WO Gorunumu</button>
+        <button class="view-btn" onclick="setView('tezgah',this)">Tezgah Durumu</button>
+      </div>
       <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
     </div>
   </div>
-  <div class="sayfa-icerik">
-    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:60vh;color:var(--metin3);">
-      <div style="font-size:48px;margin-bottom:16px;opacity:0.3;">&#9881;</div>
-      <div style="font-size:16px;font-weight:600;color:var(--laci);margin-bottom:8px;">Atolye Haritasi</div>
-      <div style="font-size:13px;">Bu modul yapim asamasindadir.</div>
+  <div class="sayfa-icerik" style="display:flex;flex-direction:column;overflow:hidden;">
+
+    <div class="harita-layout">
+      <!-- SOL: MAP GRID -->
+      <div class="harita-sol">
+        <div class="map-grid" id="map-grid"></div>
+
+        <!-- BOTTOM: Aktif Operasyonlar -->
+        <div class="aktif-ops" id="aktif-ops" style="margin:0 12px 12px 12px;">
+          <div class="aktif-ops-header">
+            <span class="pulse-dot"></span> Aktif Operasyonlar
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Makine</th>
+                <th>Aktif WO</th>
+                <th>Operator</th>
+                <th>Parca</th>
+                <th>Baslangic</th>
+                <th>Durum</th>
+              </tr>
+            </thead>
+            <tbody id="ops-tbody">
+              <tr><td colspan="6" style="text-align:center;color:#9ca3af;padding:16px;">Yukleniyor...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- SAG PANEL -->
+      <div class="harita-panel-sag" id="sag-panel">
+        <div class="sag-empty" id="sag-empty">
+          <div class="sag-empty-icon">&#128205;</div>
+          Haritadan bir konum secin
+        </div>
+        <div id="sag-content" style="display:none;flex:1;display:none;flex-direction:column;height:100%;"></div>
+      </div>
     </div>
+
   </div>
 </div>
+
+<script>
+/* ========== STATE ========== */
+var BASE = '/.netlify/functions/airtable';
+var tezgahlar = [];
+var lokasyonlar = [];
+var lotlar = [];
+var wip = [];
+var currentView = 'stok';
+var selectedCell = null;
+
+/* ========== GRID LAYOUT ========== */
+var GRID_LAYOUT = [
+  { code:'HM-01', name:'Hammadde Rafi', icon:'\uD83D\uDCE6', type:'depo' },
+  { code:'KR-02', name:'Karantina', icon:'\u26A0\uFE0F', type:'karantina' },
+  { code:'AT-03', name:'CNC Torna 1', icon:'\u2699\uFE0F', type:'tezgah' },
+  { code:'AT-04', name:'CNC Freze 1', icon:'\u2699\uFE0F', type:'tezgah' },
+  { code:'AT-05', name:'CNC Torna 2', icon:'\u2699\uFE0F', type:'tezgah' },
+  { code:'AT-06', name:'Taslama', icon:'\u2699\uFE0F', type:'tezgah' },
+  { code:'AT-07', name:'Matkap', icon:'\u2699\uFE0F', type:'tezgah' },
+  { code:'YM-04', name:'Yari Mamul', icon:'\uD83D\uDCE5', type:'depo' },
+  { code:'BU-05', name:'Bitmis Urun', icon:'\u2705', type:'depo' },
+  { code:'FR-06', name:'Fire/Hurda', icon:'\uD83D\uDDD1\uFE0F', type:'fire' },
+  { code:'SEVK', name:'Sevkiyat', icon:'\uD83D\uDE9A', type:'sevk' },
+  { code:'OFIS', name:'Ofis', icon:'\uD83C\uDFE2', type:'ofis' }
+];
+
+/* ========== INIT ========== */
+document.addEventListener('DOMContentLoaded', function() {
+  loadData();
+});
+
+function loadData() {
+  var p1 = fetch(BASE + '?table=Tezgahlar&pageSize=50').then(function(r){return r.json();});
+  var p2 = fetch(BASE + '?table=Lokasyonlar&pageSize=50').then(function(r){return r.json();});
+  var p3 = fetch(BASE + '?table=Lotlar&pageSize=100').then(function(r){return r.json();});
+  var p4 = fetch(BASE + '?table=Traveller%2FWIP&pageSize=100').then(function(r){return r.json();});
+
+  Promise.all([p1, p2, p3, p4]).then(function(results) {
+    tezgahlar = (results[0].records || []);
+    lokasyonlar = (results[1].records || []);
+    lotlar = (results[2].records || []);
+    wip = (results[3].records || []);
+    renderGrid();
+    renderOpsTable();
+  }).catch(function(err) {
+    console.error('Veri yuklenemedi:', err);
+    renderGrid();
+    renderOpsTable();
+  });
+}
+
+/* ========== HELPERS ========== */
+function getTezgahByCode(code) {
+  for (var i = 0; i < tezgahlar.length; i++) {
+    var f = tezgahlar[i].fields || {};
+    if ((f['Kod'] || f['Tezgah Kodu'] || f['Name'] || '') === code) return tezgahlar[i];
+  }
+  return null;
+}
+
+function getLotsForLocation(code) {
+  var result = [];
+  for (var i = 0; i < lotlar.length; i++) {
+    var f = lotlar[i].fields || {};
+    var lok = f['Lokasyon'] || f['Konum'] || '';
+    if (typeof lok === 'string' && lok.indexOf(code) > -1) result.push(lotlar[i]);
+    if (Array.isArray(lok)) {
+      for (var j = 0; j < lok.length; j++) {
+        if (String(lok[j]).indexOf(code) > -1) { result.push(lotlar[i]); break; }
+      }
+    }
+  }
+  return result;
+}
+
+function getWipForMachine(code) {
+  var result = [];
+  for (var i = 0; i < wip.length; i++) {
+    var f = wip[i].fields || {};
+    var m = f['Tezgah'] || f['Makine'] || '';
+    if (typeof m === 'string' && m.indexOf(code) > -1) result.push(wip[i]);
+    if (Array.isArray(m)) {
+      for (var j = 0; j < m.length; j++) {
+        if (String(m[j]).indexOf(code) > -1) { result.push(wip[i]); break; }
+      }
+    }
+  }
+  return result;
+}
+
+function getTezgahDurum(code) {
+  var t = getTezgahByCode(code);
+  if (t) {
+    var d = (t.fields['Durum'] || t.fields['Status'] || '').toLowerCase();
+    if (d.indexOf('bakim') > -1 || d.indexOf('maintenance') > -1) return 'bakim';
+    if (d.indexOf('aktif') > -1 || d.indexOf('active') > -1 || d.indexOf('calisiyor') > -1) return 'aktif';
+  }
+  // fallback: check if has active WIP
+  var wips = getWipForMachine(code);
+  if (wips.length > 0) return 'aktif';
+  return 'bosta';
+}
+
+/* ========== RENDER GRID ========== */
+function renderGrid() {
+  var grid = document.getElementById('map-grid');
+  var html = '';
+
+  for (var i = 0; i < GRID_LAYOUT.length; i++) {
+    var cell = GRID_LAYOUT[i];
+    var cellClass = 'map-cell';
+    var badgeHtml = '';
+
+    // Type class
+    if (cell.type === 'tezgah') {
+      var durum = getTezgahDurum(cell.code);
+      cellClass += ' mc-' + durum;
+      badgeHtml = getBadge(cell, durum);
+    } else if (cell.type === 'karantina') {
+      cellClass += ' mc-karantina';
+      badgeHtml = getBadge(cell, 'karantina');
+    } else if (cell.type === 'fire') {
+      cellClass += ' mc-fire';
+      badgeHtml = getBadge(cell, 'fire');
+    } else if (cell.type === 'sevk') {
+      cellClass += ' mc-sevk';
+      badgeHtml = getBadge(cell, 'sevk');
+    } else if (cell.type === 'ofis') {
+      cellClass += ' mc-ofis';
+      badgeHtml = '';
+    } else {
+      cellClass += ' mc-depo';
+      badgeHtml = getBadge(cell, 'depo');
+    }
+
+    if (selectedCell === cell.code) cellClass += ' sel';
+
+    html += '<div class="' + cellClass + '" data-code="' + cell.code + '" onclick="selectCell(\'' + cell.code + '\')">';
+    html += '<div class="mc-icon">' + cell.icon + '</div>';
+    html += '<div class="mc-name">' + cell.name + '</div>';
+    html += '<div class="mc-code">' + cell.code + '</div>';
+    if (badgeHtml) html += badgeHtml;
+    html += '</div>';
+  }
+
+  grid.innerHTML = html;
+}
+
+function getBadge(cell, durum) {
+  if (currentView === 'stok') {
+    var count = getLotsForLocation(cell.code).length;
+    var cls = count > 0 ? 'badge-blue' : 'badge-gray';
+    return '<div class="mc-badge ' + cls + '">' + count + ' kalem</div>';
+  }
+
+  if (currentView === 'wo') {
+    if (cell.type === 'tezgah') {
+      var wips = getWipForMachine(cell.code);
+      if (wips.length > 0) {
+        var woNo = wips[0].fields['WO No'] || wips[0].fields['Is Emri No'] || wips[0].fields['IE No'] || 'WO';
+        if (Array.isArray(woNo)) woNo = woNo[0] || 'WO';
+        return '<div class="mc-badge badge-green">' + woNo + '</div>';
+      }
+      return '<div class="mc-badge badge-gray">Bos</div>';
+    }
+    var count = getLotsForLocation(cell.code).length;
+    return '<div class="mc-badge badge-blue">' + count + ' kalem</div>';
+  }
+
+  if (currentView === 'tezgah') {
+    if (cell.type === 'tezgah') {
+      if (durum === 'aktif') return '<div class="mc-badge badge-green"><span class="pulse-dot" style="width:6px;height:6px;margin-right:3px;"></span>Aktif</div>';
+      if (durum === 'bakim') return '<div class="mc-badge badge-amber">Bakimda</div>';
+      return '<div class="mc-badge badge-gray">Bosta</div>';
+    }
+    var count = getLotsForLocation(cell.code).length;
+    return count > 0 ? '<div class="mc-badge badge-blue">' + count + '</div>' : '';
+  }
+
+  return '';
+}
+
+/* ========== VIEW TOGGLE ========== */
+function setView(view, btn) {
+  currentView = view;
+  var btns = document.querySelectorAll('.view-btn');
+  for (var i = 0; i < btns.length; i++) btns[i].classList.remove('aktif');
+  if (btn) btn.classList.add('aktif');
+  renderGrid();
+}
+
+/* ========== SELECT CELL ========== */
+function selectCell(code) {
+  selectedCell = code;
+  renderGrid();
+  renderSagPanel(code);
+}
+
+function renderSagPanel(code) {
+  var emptyEl = document.getElementById('sag-empty');
+  var contentEl = document.getElementById('sag-content');
+  emptyEl.style.display = 'none';
+  contentEl.style.display = 'flex';
+  contentEl.style.flexDirection = 'column';
+  contentEl.style.height = '100%';
+
+  var cell = null;
+  for (var i = 0; i < GRID_LAYOUT.length; i++) {
+    if (GRID_LAYOUT[i].code === code) { cell = GRID_LAYOUT[i]; break; }
+  }
+  if (!cell) return;
+
+  var html = '';
+
+  // Header
+  html += '<div class="sag-header">';
+  html += '<h3>' + cell.icon + ' ' + cell.name + '</h3>';
+  html += '<div class="sag-code">' + cell.code + ' &mdash; ' + capitalize(cell.type) + '</div>';
+  html += '</div>';
+
+  html += '<div class="sag-body">';
+
+  if (cell.type === 'tezgah') {
+    html += renderTezgahDetail(cell);
+  } else if (cell.type === 'ofis') {
+    html += '<div style="text-align:center;color:#9ca3af;padding:24px;font-size:12px;">Ofis alani</div>';
+  } else {
+    html += renderDepoDetail(cell);
+  }
+
+  html += '</div>';
+
+  // Actions
+  if (cell.type !== 'ofis') {
+    html += '<div class="sag-actions">';
+    if (cell.type === 'depo' || cell.type === 'karantina' || cell.type === 'fire' || cell.type === 'sevk') {
+      html += '<button onclick="alert(\'Stok giris formu acilacak\')">Stok Giris</button>';
+      html += '<button onclick="alert(\'Transfer formu acilacak\')">Transfer</button>';
+    }
+    if (cell.type === 'tezgah') {
+      html += '<button onclick="alert(\'Tezgah detay sayfasina yonlendirilecek\')">Detay &rarr;</button>';
+    }
+    html += '</div>';
+  }
+
+  contentEl.innerHTML = html;
+}
+
+function renderTezgahDetail(cell) {
+  var html = '';
+  var durum = getTezgahDurum(cell.code);
+  var t = getTezgahByCode(cell.code);
+
+  // Machine info
+  html += '<div class="info-row"><span class="lbl">Durum</span><span class="val">';
+  if (durum === 'aktif') html += '<span class="durum-chip durum-aktif"><span class="pulse-dot" style="width:6px;height:6px;"></span> Aktif</span>';
+  else if (durum === 'bakim') html += '<span class="durum-chip durum-bakim">Bakimda</span>';
+  else html += '<span class="durum-chip durum-bosta">Bosta</span>';
+  html += '</span></div>';
+
+  if (t) {
+    var f = t.fields;
+    if (f['Marka'] || f['Model']) {
+      html += '<div class="info-row"><span class="lbl">Makine</span><span class="val">' + (f['Marka'] || '') + ' ' + (f['Model'] || '') + '</span></div>';
+    }
+    if (f['Son Bakim'] || f['Son Bakım']) {
+      var sb = f['Son Bakim'] || f['Son Bakım'] || '';
+      html += '<div class="info-row"><span class="lbl">Son Bakim</span><span class="val">' + sb + '</span></div>';
+    }
+  }
+
+  // Active WO
+  var wips = getWipForMachine(cell.code);
+  if (wips.length > 0) {
+    html += '<div class="sag-section"><div class="sag-section-title">Aktif Is Emirleri</div>';
+    for (var i = 0; i < wips.length && i < 5; i++) {
+      var wf = wips[i].fields;
+      var woNo = wf['WO No'] || wf['Is Emri No'] || wf['IE No'] || '-';
+      if (Array.isArray(woNo)) woNo = woNo[0] || '-';
+      var parca = wf['Parca'] || wf['Parça Adı'] || wf['Parca No'] || '';
+      if (Array.isArray(parca)) parca = parca[0] || '';
+      html += '<div class="lot-item"><span class="lot-no">' + woNo + '</span><span class="lot-info">' + parca + '</span></div>';
+    }
+    html += '</div>';
+  }
+
+  // Lots at this location
+  var lots = getLotsForLocation(cell.code);
+  if (lots.length > 0) {
+    html += '<div class="sag-section"><div class="sag-section-title">Stok (' + lots.length + ')</div>';
+    for (var i = 0; i < lots.length && i < 10; i++) {
+      var lf = lots[i].fields;
+      var lotNo = lf['Lot No'] || lf['Name'] || '-';
+      var malzeme = lf['Malzeme'] || lf['Malzeme Adi'] || '';
+      if (Array.isArray(malzeme)) malzeme = malzeme[0] || '';
+      var miktar = lf['Miktar'] || lf['Adet'] || '-';
+      html += '<div class="lot-item"><span class="lot-no">' + lotNo + '</span><span class="lot-info">' + malzeme + ' / ' + miktar + '</span></div>';
+    }
+    html += '</div>';
+  }
+
+  return html;
+}
+
+function renderDepoDetail(cell) {
+  var html = '';
+  var lots = getLotsForLocation(cell.code);
+
+  html += '<div class="info-row"><span class="lbl">Tip</span><span class="val">' + capitalize(cell.type) + '</span></div>';
+  html += '<div class="info-row"><span class="lbl">Toplam Kalem</span><span class="val">' + lots.length + '</span></div>';
+
+  if (lots.length > 0) {
+    html += '<div class="sag-section"><div class="sag-section-title">Lotlar</div>';
+    for (var i = 0; i < lots.length && i < 15; i++) {
+      var lf = lots[i].fields;
+      var lotNo = lf['Lot No'] || lf['Name'] || '-';
+      var malzeme = lf['Malzeme'] || lf['Malzeme Adi'] || '';
+      if (Array.isArray(malzeme)) malzeme = malzeme[0] || '';
+      var miktar = lf['Miktar'] || lf['Adet'] || '-';
+      html += '<div class="lot-item"><span class="lot-no">' + lotNo + '</span><span class="lot-info">' + malzeme + ' / ' + miktar + '</span></div>';
+    }
+    if (lots.length > 15) {
+      html += '<div style="text-align:center;padding:6px;font-size:11px;color:#9ca3af;">+' + (lots.length - 15) + ' daha...</div>';
+    }
+    html += '</div>';
+  } else {
+    html += '<div style="text-align:center;color:#9ca3af;padding:24px;font-size:12px;">Bu konumda stok yok</div>';
+  }
+
+  return html;
+}
+
+function capitalize(s) {
+  if (!s) return '';
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+/* ========== AKTIF OPERASYONLAR TABLE ========== */
+function renderOpsTable() {
+  var tbody = document.getElementById('ops-tbody');
+  var aktifWips = [];
+
+  // Find tezgah cells that have active WIP
+  for (var i = 0; i < GRID_LAYOUT.length; i++) {
+    var cell = GRID_LAYOUT[i];
+    if (cell.type !== 'tezgah') continue;
+    var wips = getWipForMachine(cell.code);
+    for (var j = 0; j < wips.length; j++) {
+      aktifWips.push({ machine: cell.name, code: cell.code, wip: wips[j] });
+    }
+  }
+
+  if (aktifWips.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#9ca3af;padding:16px;">Aktif operasyon bulunamadi</td></tr>';
+    return;
+  }
+
+  var html = '';
+  for (var i = 0; i < aktifWips.length; i++) {
+    var item = aktifWips[i];
+    var f = item.wip.fields;
+    var woNo = f['WO No'] || f['Is Emri No'] || f['IE No'] || '-';
+    if (Array.isArray(woNo)) woNo = woNo[0] || '-';
+    var operator = f['Operator'] || f['Operatör'] || f['Personel'] || '-';
+    if (Array.isArray(operator)) operator = operator[0] || '-';
+    var parca = f['Parca'] || f['Parça Adı'] || f['Parca No'] || '-';
+    if (Array.isArray(parca)) parca = parca[0] || '-';
+    var baslangic = f['Baslangic'] || f['Başlangıç'] || f['Tarih'] || '-';
+    if (baslangic && baslangic.length > 10) baslangic = baslangic.substring(0, 10);
+    var durum = f['Durum'] || f['Status'] || 'Devam Ediyor';
+
+    html += '<tr>';
+    html += '<td><strong>' + item.machine + '</strong><br><span style="color:#9ca3af;font-size:10px;">' + item.code + '</span></td>';
+    html += '<td>' + woNo + '</td>';
+    html += '<td>' + operator + '</td>';
+    html += '<td>' + parca + '</td>';
+    html += '<td>' + baslangic + '</td>';
+    html += '<td><span class="durum-chip durum-aktif"><span class="pulse-dot" style="width:6px;height:6px;"></span> ' + durum + '</span></td>';
+    html += '</tr>';
+  }
+
+  tbody.innerHTML = html;
+}
+</script>
 </body>
 </html>

@@ -3,27 +3,917 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ersan MES — Palet / Traveller</title>
+<title>Ersan MES — Palet / Traveler</title>
 <link rel="stylesheet" href="ersan_styles.css">
 <script src="ersan_nav.js" defer></script>
 <script src="ersan_log.js" defer></script>
+<style>
+/* Traveler grid */
+.trv-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
+.trv-wo-grup { margin-bottom:16px; }
+.trv-wo-head { font-size:13px; font-weight:600; color:#1a2b47; padding:8px 0; border-bottom:1px solid #e5e7eb; margin-bottom:8px; display:flex; align-items:center; gap:8px; }
+.trv-card { border:1px solid #e5e7eb; border-radius:8px; overflow:hidden; background:#fff; transition:all .12s; }
+.trv-card:hover { border-color:#93c5fd; box-shadow:0 2px 8px rgba(0,0,0,.06); }
+.trv-card.highlight { border-color:#3b82f6; box-shadow:0 0 0 2px rgba(59,130,246,.2); }
+.trv-head { padding:10px 12px; background:#f9fafb; border-bottom:1px solid #e5e7eb; display:flex; align-items:center; justify-content:space-between; }
+.trv-no { font-size:12px; font-weight:700; color:#1a2b47; font-family:monospace; }
+.trv-body { padding:10px 12px; }
+.trv-title { font-size:12px; font-weight:600; color:#1a2b47; margin-bottom:4px; }
+.trv-info { font-size:11px; color:#6b7280; margin-bottom:8px; }
+
+/* Durum badge */
+.trv-durum { font-size:10px; padding:2px 8px; border-radius:10px; font-weight:600; white-space:nowrap; }
+.trv-durum-bekliyor { background:#f3f4f6; color:#6b7280; }
+.trv-durum-uretimde { background:#dbeafe; color:#1d4ed8; }
+.trv-durum-fai { background:#fef3c7; color:#92400e; }
+.trv-durum-fason { background:#ede9fe; color:#5b21b6; }
+.trv-durum-tamamlandi { background:#d1fae5; color:#065f46; }
+.trv-durum-iptal { background:#fee2e2; color:#991b1b; text-decoration:line-through; }
+
+/* Operasyon adimlari */
+.op-list { margin:8px 0; }
+.op-step { display:flex; align-items:center; gap:8px; padding:3px 0; font-size:11px; cursor:pointer; border-radius:4px; padding-left:4px; }
+.op-step:hover { background:#f9fafb; }
+.op-dot { width:16px; height:16px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:8px; flex-shrink:0; }
+.op-done { background:#d1fae5; color:#065f46; }
+.op-active { background:#1a2b47; color:#fff; }
+.op-pending { background:#f3f4f6; color:#9ca3af; }
+.op-fason { background:#ede9fe; color:#5b21b6; }
+
+/* Progress bar */
+.trv-progress { height:4px; background:#f3f4f6; border-radius:2px; overflow:hidden; margin:8px 0 4px; }
+.trv-progress-fill { height:100%; border-radius:2px; background:linear-gradient(90deg,#10b981,#3b82f6); }
+.trv-pct { font-size:10px; color:#6b7280; }
+
+/* Footer buttons */
+.trv-foot { padding:8px 12px; border-top:1px solid #f3f4f6; display:flex; gap:6px; }
+.trv-btn { font-size:10px; padding:3px 8px; border-radius:4px; border:1px solid #d1d5db; background:#fff; color:#374151; cursor:pointer; transition:all .1s; }
+.trv-btn:hover { background:#f3f4f6; border-color:#9ca3af; }
+
+/* AS9100 serit */
+.as-serit { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
+.as-chip { font-size:10px; padding:3px 10px; border-radius:12px; font-weight:600; }
+.as-chip-ok { background:#d1fae5; color:#065f46; }
+.as-chip-uyari { background:#fef3c7; color:#92400e; }
+.as-chip-hata { background:#fee2e2; color:#991b1b; }
+
+/* Filtre bar */
+.trv-filtre { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:12px; }
+.trv-filtre input, .trv-filtre select { font-size:12px; padding:6px 10px; border:1px solid #d1d5db; border-radius:6px; background:#fff; color:#374151; }
+.trv-filtre input { width:220px; }
+.trv-filtre select { min-width:120px; }
+
+/* Bos durum */
+.trv-bos { text-align:center; padding:60px 20px; color:#9ca3af; font-size:13px; }
+
+/* Modal */
+.trv-modal-bg { display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:700; align-items:center; justify-content:center; }
+.trv-modal-bg.acik { display:flex; }
+.trv-modal { background:#fff; border-radius:10px; width:480px; max-width:95vw; max-height:90vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,.2); }
+.trv-modal-head { padding:16px 20px; border-bottom:1px solid #e5e7eb; font-size:14px; font-weight:700; color:#1a2b47; display:flex; align-items:center; justify-content:space-between; }
+.trv-modal-body { padding:16px 20px; }
+.trv-modal-foot { padding:12px 20px; border-top:1px solid #e5e7eb; display:flex; justify-content:flex-end; gap:8px; }
+.trv-form-row { margin-bottom:12px; }
+.trv-form-row label { display:block; font-size:11px; font-weight:600; color:#374151; margin-bottom:4px; }
+.trv-form-row input, .trv-form-row select, .trv-form-row textarea { width:100%; font-size:12px; padding:7px 10px; border:1px solid #d1d5db; border-radius:6px; box-sizing:border-box; }
+.trv-form-row textarea { resize:vertical; min-height:60px; }
+.trv-form-row .auto-val { font-size:12px; color:#6b7280; padding:7px 0; }
+.trv-modal .btn-primary { background:#1a2b47; color:#fff; border:none; padding:8px 20px; border-radius:6px; font-size:12px; font-weight:600; cursor:pointer; }
+.trv-modal .btn-primary:hover { background:#243b5c; }
+.trv-modal .btn-secondary { background:#fff; color:#374151; border:1px solid #d1d5db; padding:8px 16px; border-radius:6px; font-size:12px; cursor:pointer; }
+
+/* Responsive */
+@media (max-width:768px) {
+  .trv-grid { grid-template-columns:1fr; }
+}
+</style>
 </head>
 <body>
 <div id="nav-alani"></div>
 <div class="icerik-alani">
   <div class="topbar">
-    <div class="topbar-baslik">Palet / Traveller</div>
+    <div class="topbar-baslik">Palet / Traveler</div>
     <div style="display:flex;align-items:center;gap:8px;">
+      <button class="btn btn-sm" onclick="termalYazdir()" style="font-size:11px;padding:4px 10px;border-radius:5px;border:1px solid #d1d5db;background:#fff;cursor:pointer;">&#128424; Termal Yazdir</button>
+      <button class="btn btn-sm" onclick="yeniTravelerAc()" style="font-size:11px;padding:4px 10px;border-radius:5px;border:1px solid var(--mavi);background:var(--mavi);color:#fff;cursor:pointer;">+ Yeni Traveler</button>
       <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
     </div>
   </div>
   <div class="sayfa-icerik">
-    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:60vh;color:var(--metin3);">
-      <div style="font-size:48px;margin-bottom:16px;opacity:0.3;">&#9881;</div>
-      <div style="font-size:16px;font-weight:600;color:var(--laci);margin-bottom:8px;">Palet / Traveller</div>
-      <div style="font-size:13px;">Bu modul yapim asamasindadir.</div>
+
+    <!-- AS9100 Serit -->
+    <div class="as-serit" id="as-serit"></div>
+
+    <!-- Filtre Bar -->
+    <div class="trv-filtre">
+      <input type="text" id="fil-ara" placeholder="&#128269; Traveler No, parca adi ara..." oninput="filtrele()">
+      <select id="fil-durum" onchange="filtrele()">
+        <option value="">Tum Durumlar</option>
+        <option value="Bekliyor">Bekliyor</option>
+        <option value="Uretimde">Uretimde</option>
+        <option value="FAI Bekliyor">FAI Bekliyor</option>
+        <option value="Fason">Fason</option>
+        <option value="Tamamlandi">Tamamlandi</option>
+        <option value="Iptal">Iptal</option>
+      </select>
+      <select id="fil-wo" onchange="filtrele()">
+        <option value="">Tum Is Emirleri</option>
+      </select>
+      <span id="sonuc-sayi" style="font-size:11px;color:#6b7280;margin-left:auto;"></span>
+    </div>
+
+    <!-- Traveler Grid -->
+    <div id="trv-alan"></div>
+
+  </div>
+</div>
+
+<!-- Yeni Traveler Modal -->
+<div class="trv-modal-bg" id="modal-yeni">
+  <div class="trv-modal">
+    <div class="trv-modal-head">
+      <span>Yeni Traveler Olustur</span>
+      <span style="cursor:pointer;font-size:18px;color:#9ca3af;" onclick="modalKapat('modal-yeni')">&times;</span>
+    </div>
+    <div class="trv-modal-body">
+      <div class="trv-form-row">
+        <label>Traveler No</label>
+        <div class="auto-val" id="yeni-trv-no">Otomatik olusturulacak...</div>
+      </div>
+      <div class="trv-form-row">
+        <label>Is Emri</label>
+        <select id="yeni-wo"></select>
+      </div>
+      <div class="trv-form-row">
+        <label>Parca Adi</label>
+        <div class="auto-val" id="yeni-parca">WO secildikten sonra otomatik</div>
+      </div>
+      <div class="trv-form-row">
+        <label>Malzeme</label>
+        <div class="auto-val" id="yeni-malzeme">WO secildikten sonra otomatik</div>
+      </div>
+      <div class="trv-form-row" style="display:flex;gap:12px;">
+        <div style="flex:1;">
+          <label>Lot Harfi</label>
+          <select id="yeni-lot">
+            <option value="A">A</option>
+            <option value="B">B</option>
+            <option value="C">C</option>
+            <option value="D">D</option>
+            <option value="E">E</option>
+            <option value="F">F</option>
+          </select>
+        </div>
+        <div style="flex:1;">
+          <label>Miktar</label>
+          <input type="number" id="yeni-miktar" min="1" value="1">
+        </div>
+        <div style="flex:1;">
+          <label>Birim</label>
+          <select id="yeni-birim">
+            <option value="Adet">Adet</option>
+            <option value="Kg">Kg</option>
+            <option value="Metre">Metre</option>
+          </select>
+        </div>
+      </div>
+      <div class="trv-form-row">
+        <label>Notlar</label>
+        <textarea id="yeni-notlar" placeholder="Ozel talimatlar, notlar..."></textarea>
+      </div>
+    </div>
+    <div class="trv-modal-foot">
+      <button class="btn-secondary" onclick="modalKapat('modal-yeni')">Iptal</button>
+      <button class="btn-primary" onclick="travelerOlustur()">Traveler Olustur</button>
     </div>
   </div>
 </div>
+
+<!-- Lot Bolme Modal -->
+<div class="trv-modal-bg" id="modal-bol">
+  <div class="trv-modal">
+    <div class="trv-modal-head">
+      <span>Lot Bol</span>
+      <span style="cursor:pointer;font-size:18px;color:#9ca3af;" onclick="modalKapat('modal-bol')">&times;</span>
+    </div>
+    <div class="trv-modal-body">
+      <div class="trv-form-row">
+        <label>Mevcut Traveler</label>
+        <div class="auto-val" id="bol-mevcut">-</div>
+      </div>
+      <div class="trv-form-row">
+        <label>Kac parcaya bolunecek?</label>
+        <select id="bol-sayi" onchange="bolOnizle()">
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+        </select>
+      </div>
+      <div id="bol-onizle" style="margin-top:12px;"></div>
+    </div>
+    <div class="trv-modal-foot">
+      <button class="btn-secondary" onclick="modalKapat('modal-bol')">Iptal</button>
+      <button class="btn-primary" onclick="lotBol()">Bol</button>
+    </div>
+  </div>
+</div>
+
+<!-- Detay Modal -->
+<div class="trv-modal-bg" id="modal-detay">
+  <div class="trv-modal" style="width:540px;">
+    <div class="trv-modal-head">
+      <span id="detay-baslik">Traveler Detay</span>
+      <span style="cursor:pointer;font-size:18px;color:#9ca3af;" onclick="modalKapat('modal-detay')">&times;</span>
+    </div>
+    <div class="trv-modal-body" id="detay-icerik"></div>
+  </div>
+</div>
+
+<script>
+var API = '/.netlify/functions/airtable';
+var TBL_TRV = 'Traveller%2FWIP';
+var TBL_IE = '%C4%B0%C5%9F%20Emirleri';
+var TBL_OP = 'Operasyon%20Rotalar%C4%B1';
+
+var tumTravelerler = [];
+var tumWOlar = [];
+var tumOplar = [];
+var seciliBolTrv = null;
+
+// ========== SAYFA YUKLE ==========
+document.addEventListener('DOMContentLoaded', function() {
+  veriYukle();
+  urlParamKontrol();
+});
+
+function veriYukle() {
+  var p1 = fetch(API + '?table=' + TBL_TRV + '&pageSize=100').then(function(r) { return r.json(); });
+  var p2 = fetch(API + '?table=' + TBL_IE + '&pageSize=100').then(function(r) { return r.json(); });
+  var p3 = fetch(API + '?table=' + TBL_OP + '&pageSize=100').then(function(r) { return r.json(); });
+
+  Promise.all([p1, p2, p3]).then(function(sonuclar) {
+    tumTravelerler = (sonuclar[0].records || []).map(function(r) { return { id: r.id, f: r.fields }; });
+    tumWOlar = (sonuclar[1].records || []).map(function(r) { return { id: r.id, f: r.fields }; });
+    tumOplar = (sonuclar[2].records || []).map(function(r) { return { id: r.id, f: r.fields }; });
+
+    woDropdownDoldur();
+    asSeritGuncelle();
+    filtrele();
+  }).catch(function(err) {
+    console.error('Veri yuklenemedi:', err);
+    document.getElementById('trv-alan').innerHTML = '<div class="trv-bos">Veri yuklenirken hata olustu.</div>';
+  });
+}
+
+// ========== WO DROPDOWN ==========
+function woDropdownDoldur() {
+  var sel = document.getElementById('fil-wo');
+  var selYeni = document.getElementById('yeni-wo');
+  var html = '<option value="">Tum Is Emirleri</option>';
+  var htmlYeni = '<option value="">-- Is Emri Secin --</option>';
+
+  tumWOlar.forEach(function(wo) {
+    var no = wo.f['IE No'] || wo.f['WO No'] || wo.f['No'] || ('WO-' + wo.id.substring(3, 8));
+    var parca = wo.f['Parca Adi'] || wo.f['Parça Adı'] || wo.f['Açıklama'] || '';
+    html += '<option value="' + wo.id + '">' + no + (parca ? ' - ' + parca : '') + '</option>';
+    htmlYeni += '<option value="' + wo.id + '" data-parca="' + escHtml(parca) + '" data-malzeme="' + escHtml(wo.f['Malzeme'] || wo.f['Malzeme Cinsi'] || '') + '">' + no + (parca ? ' - ' + parca : '') + '</option>';
+  });
+
+  sel.innerHTML = html;
+  selYeni.innerHTML = htmlYeni;
+
+  selYeni.addEventListener('change', function() {
+    var opt = selYeni.options[selYeni.selectedIndex];
+    document.getElementById('yeni-parca').textContent = opt.getAttribute('data-parca') || '-';
+    document.getElementById('yeni-malzeme').textContent = opt.getAttribute('data-malzeme') || '-';
+  });
+}
+
+// ========== AS9100 SERIT ==========
+function asSeritGuncelle() {
+  var toplam = tumTravelerler.length;
+  var izlenebilir = 0;
+  var eksik = 0;
+  var fason = 0;
+
+  tumTravelerler.forEach(function(t) {
+    var no = t.f['Traveler No'] || t.f['TRV No'] || '';
+    var ops = parseOps(t);
+    if (no && ops.length > 0) { izlenebilir++; }
+    else { eksik++; }
+    var durum = (t.f['Durum'] || t.f['Statü'] || '').toLowerCase();
+    if (durum.indexOf('fason') > -1) fason++;
+  });
+
+  var el = document.getElementById('as-serit');
+  var html = '';
+  html += '<span class="as-chip ' + (izlenebilir === toplam ? 'as-chip-ok' : 'as-chip-uyari') + '">Izlenebilirlik: ' + izlenebilir + '/' + toplam + '</span>';
+  if (eksik > 0) html += '<span class="as-chip as-chip-hata">Eksik Rota: ' + eksik + '</span>';
+  if (fason > 0) html += '<span class="as-chip as-chip-uyari">Fason Dis Kaynak: ' + fason + '</span>';
+  html += '<span class="as-chip as-chip-ok">AS9100 8.5.2 Izlenebilirlik</span>';
+  el.innerHTML = html;
+}
+
+// ========== FILTRE ==========
+function filtrele() {
+  var ara = document.getElementById('fil-ara').value.toLowerCase();
+  var durum = document.getElementById('fil-durum').value;
+  var woId = document.getElementById('fil-wo').value;
+
+  var filtrelenmis = tumTravelerler.filter(function(t) {
+    var no = (t.f['Traveler No'] || t.f['TRV No'] || '').toLowerCase();
+    var parca = (t.f['Parca Adi'] || t.f['Parça Adı'] || t.f['Açıklama'] || '').toLowerCase();
+    var tDurum = t.f['Durum'] || t.f['Statü'] || 'Bekliyor';
+    var tWo = woIDBul(t);
+
+    if (ara && no.indexOf(ara) === -1 && parca.indexOf(ara) === -1) return false;
+    if (durum && tDurum !== durum) return false;
+    if (woId && tWo !== woId) return false;
+    return true;
+  });
+
+  document.getElementById('sonuc-sayi').textContent = filtrelenmis.length + ' traveler';
+  kartlariCiz(filtrelenmis);
+}
+
+// ========== WO ID BUL ==========
+function woIDBul(t) {
+  var woLink = t.f['İş Emri'] || t.f['Is Emri'] || t.f['WO'] || [];
+  if (Array.isArray(woLink) && woLink.length > 0) return woLink[0];
+  if (typeof woLink === 'string') return woLink;
+  return '';
+}
+
+// ========== WO BILGI ==========
+function woBilgiBul(woId) {
+  for (var i = 0; i < tumWOlar.length; i++) {
+    if (tumWOlar[i].id === woId) return tumWOlar[i];
+  }
+  return null;
+}
+
+// ========== OPERASYON PARSE ==========
+function parseOps(t) {
+  var opsField = t.f['Operasyonlar'] || t.f['Operations'] || '';
+  if (!opsField) return [];
+  if (typeof opsField === 'string') {
+    try { return JSON.parse(opsField); } catch(e) { return []; }
+  }
+  if (Array.isArray(opsField)) return opsField;
+  return [];
+}
+
+// ========== KARTLARI CIZ ==========
+function kartlariCiz(liste) {
+  var alan = document.getElementById('trv-alan');
+  if (liste.length === 0) {
+    alan.innerHTML = '<div class="trv-bos">Gosterilecek traveler bulunamadi.</div>';
+    return;
+  }
+
+  // WO bazli gruplama
+  var gruplar = {};
+  var grupSira = [];
+  liste.forEach(function(t) {
+    var woId = woIDBul(t);
+    var key = woId || '_yok';
+    if (!gruplar[key]) {
+      gruplar[key] = [];
+      grupSira.push(key);
+    }
+    gruplar[key].push(t);
+  });
+
+  var html = '';
+  grupSira.forEach(function(key) {
+    var wo = key !== '_yok' ? woBilgiBul(key) : null;
+    var woNo = wo ? (wo.f['IE No'] || wo.f['WO No'] || wo.f['No'] || 'WO-?') : 'Atanmamis';
+    var woParca = wo ? (wo.f['Parca Adi'] || wo.f['Parça Adı'] || wo.f['Açıklama'] || '') : '';
+    var woMiktar = wo ? (wo.f['Miktar'] || wo.f['Adet'] || '') : '';
+
+    html += '<div class="trv-wo-grup">';
+    html += '<div class="trv-wo-head">';
+    html += '<span style="background:#1a2b47;color:#fff;font-size:10px;padding:2px 8px;border-radius:4px;font-family:monospace;">' + escHtml(woNo) + '</span>';
+    if (woParca) html += '<span>' + escHtml(woParca) + '</span>';
+    if (woMiktar) html += '<span style="color:#6b7280;font-size:11px;">' + woMiktar + ' Adet</span>';
+    html += '<span style="color:#9ca3af;font-size:11px;margin-left:auto;">' + gruplar[key].length + ' traveler</span>';
+    html += '</div>';
+
+    html += '<div class="trv-grid">';
+    gruplar[key].forEach(function(t) {
+      html += kartHTML(t);
+    });
+    html += '</div></div>';
+  });
+
+  alan.innerHTML = html;
+  urlHighlight();
+}
+
+// ========== TEK KART HTML ==========
+function kartHTML(t) {
+  var no = t.f['Traveler No'] || t.f['TRV No'] || '-';
+  var parca = t.f['Parca Adi'] || t.f['Parça Adı'] || t.f['Açıklama'] || '';
+  var durum = t.f['Durum'] || t.f['Statü'] || 'Bekliyor';
+  var lot = t.f['Lot'] || t.f['Lot Harfi'] || '';
+  var miktar = t.f['Miktar'] || t.f['Adet'] || '';
+  var birim = t.f['Birim'] || 'Adet';
+  var ops = parseOps(t);
+
+  var woId = woIDBul(t);
+  var wo = woBilgiBul(woId);
+  var woNo = wo ? (wo.f['IE No'] || wo.f['WO No'] || wo.f['No'] || '') : '';
+
+  var durumClass = durumClassBul(durum);
+
+  // Progress hesapla
+  var done = 0;
+  ops.forEach(function(op) {
+    var d = (op.durum || '').toLowerCase();
+    if (d === 'done' || d === 'tamamlandi' || d === 'tamamlandı') done++;
+  });
+  var pct = ops.length > 0 ? Math.round((done / ops.length) * 100) : 0;
+
+  var h = '';
+  h += '<div class="trv-card" data-trv-no="' + escHtml(no) + '" id="trv-' + escHtml(no) + '">';
+
+  // Head
+  h += '<div class="trv-head">';
+  h += '<span class="trv-no">' + escHtml(no) + '</span>';
+  h += '<span class="trv-durum ' + durumClass + '">' + escHtml(durum) + '</span>';
+  h += '</div>';
+
+  // Body
+  h += '<div class="trv-body">';
+  if (parca) h += '<div class="trv-title">' + escHtml(parca) + '</div>';
+  h += '<div class="trv-info">' + escHtml(woNo) + (lot ? ' &middot; Lot ' + escHtml(lot) : '') + (miktar ? ' &middot; ' + miktar + ' ' + escHtml(birim) : '') + '</div>';
+
+  // Operasyonlar
+  if (ops.length > 0) {
+    h += '<div style="font-size:10px;font-weight:600;color:#6b7280;margin-bottom:4px;">Operasyonlar:</div>';
+    h += '<div class="op-list">';
+    ops.forEach(function(op, idx) {
+      var opDurum = (op.durum || 'pending').toLowerCase();
+      var tip = (op.tip || '').toLowerCase();
+      var dotClass = 'op-pending';
+      var icon = '&#9675;';
+
+      if (opDurum === 'done' || opDurum === 'tamamlandi' || opDurum === 'tamamlandı') {
+        dotClass = 'op-done';
+        icon = '&#10003;';
+      } else if (opDurum === 'active' || opDurum === 'aktif') {
+        dotClass = 'op-active';
+        icon = '&#9654;';
+      } else if (tip === 'fason') {
+        dotClass = 'op-fason';
+        icon = '&#9670;';
+      }
+
+      var opAdi = op.adi || op.ad || op.name || ('Op' + ((idx + 1) * 10));
+      h += '<div class="op-step" onclick="opTikla(\'' + t.id + '\',' + idx + ')" title="Tamamlamak icin tikla">';
+      h += '<span class="op-dot ' + dotClass + '">' + icon + '</span>';
+      h += '<span style="flex:1;">' + escHtml(opAdi) + '</span>';
+      if (tip === 'fason') h += '<span style="font-size:9px;color:#7c3aed;font-weight:600;">FASON</span>';
+      h += '</div>';
+    });
+    h += '</div>';
+  }
+
+  // Progress
+  h += '<div class="trv-progress"><div class="trv-progress-fill" style="width:' + pct + '%;"></div></div>';
+  h += '<div class="trv-pct">Ilerleme: %' + pct + '</div>';
+  h += '</div>';
+
+  // Footer
+  h += '<div class="trv-foot">';
+  h += '<button class="trv-btn" onclick="qrYazdir(\'' + escHtml(no) + '\')">&#128424; QR</button>';
+  h += '<button class="trv-btn" onclick="detayGoster(\'' + t.id + '\')">&#128203; Detay</button>';
+  h += '<button class="trv-btn" onclick="lotBolAc(\'' + t.id + '\')">&#9986; Lot Bol</button>';
+  h += '</div>';
+
+  h += '</div>';
+  return h;
+}
+
+// ========== DURUM CLASS ==========
+function durumClassBul(durum) {
+  var d = (durum || '').toLowerCase();
+  if (d.indexOf('uretim') > -1 || d.indexOf('üretim') > -1) return 'trv-durum-uretimde';
+  if (d.indexOf('fai') > -1) return 'trv-durum-fai';
+  if (d.indexOf('fason') > -1) return 'trv-durum-fason';
+  if (d.indexOf('tamamlan') > -1) return 'trv-durum-tamamlandi';
+  if (d.indexOf('iptal') > -1) return 'trv-durum-iptal';
+  return 'trv-durum-bekliyor';
+}
+
+// ========== OPERASYON TIKLA ==========
+function opTikla(trvId, opIdx) {
+  var trv = tumTravelerler.filter(function(t) { return t.id === trvId; })[0];
+  if (!trv) return;
+
+  var ops = parseOps(trv);
+  if (!ops[opIdx]) return;
+
+  var opDurum = (ops[opIdx].durum || 'pending').toLowerCase();
+
+  // Sadece aktif veya pending olanlar tamamlanabilir
+  if (opDurum === 'done' || opDurum === 'tamamlandi' || opDurum === 'tamamlandı') {
+    alert('Bu operasyon zaten tamamlandi.');
+    return;
+  }
+
+  var opAdi = ops[opIdx].adi || ops[opIdx].ad || 'Operasyon';
+  if (!confirm(opAdi + ' operasyonunu tamamla olarak isaretle?')) return;
+
+  opTamamla(trvId, opIdx);
+}
+
+function opTamamla(trvId, opIdx) {
+  var trv = tumTravelerler.filter(function(t) { return t.id === trvId; })[0];
+  if (!trv) return;
+
+  var ops = parseOps(trv);
+  ops[opIdx].durum = 'done';
+
+  // Sonraki operasyonu aktif yap
+  if (opIdx + 1 < ops.length) {
+    var sonraki = ops[opIdx + 1];
+    if ((sonraki.durum || 'pending') === 'pending') {
+      sonraki.durum = 'active';
+    }
+    // Fason kontrolu
+    if ((sonraki.tip || '').toLowerCase() === 'fason') {
+      setTimeout(function() {
+        alert('Dikkat: Siradaki operasyon (' + (sonraki.adi || 'Op') + ') FASON dis kaynaktir. Satin alma talebi olusturmayi unutmayin.');
+      }, 300);
+    }
+  }
+
+  // Tum operasyonlar tamam mi?
+  var tumTamam = ops.every(function(op) {
+    var d = (op.durum || '').toLowerCase();
+    return d === 'done' || d === 'tamamlandi' || d === 'tamamlandı';
+  });
+
+  var yeniDurum = tumTamam ? 'Tamamlandi' : 'Uretimde';
+
+  var body = {
+    table: 'Traveller/WIP',
+    id: trvId,
+    fields: {
+      'Operasyonlar': JSON.stringify(ops),
+      'Durum': yeniDurum
+    }
+  };
+
+  fetch(API, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  }).then(function(r) { return r.json(); }).then(function(d) {
+    // Local guncelle
+    trv.f['Operasyonlar'] = JSON.stringify(ops);
+    trv.f['Durum'] = yeniDurum;
+
+    var opAdi = ops[opIdx].adi || ops[opIdx].ad || 'Op';
+    logIslem('OPERASYON_TAMAMLANDI', 'Traveler', trvId, trv.f['Traveler No'] || trv.f['TRV No'], null, { operasyon: opAdi, index: opIdx });
+
+    asSeritGuncelle();
+    filtrele();
+  }).catch(function(err) {
+    alert('Operasyon guncellenirken hata: ' + err.message);
+  });
+}
+
+// ========== YENI TRAVELER ==========
+function yeniTravelerAc() {
+  document.getElementById('yeni-trv-no').textContent = 'Uretiliyor...';
+  kodUret('TRAVELER').then(function(kod) {
+    document.getElementById('yeni-trv-no').textContent = kod;
+  }).catch(function() {
+    document.getElementById('yeni-trv-no').textContent = 'TRV-' + new Date().getFullYear().toString().substring(2) + '-' + String(tumTravelerler.length + 1).padStart(5, '0') + '-A';
+  });
+
+  document.getElementById('yeni-wo').selectedIndex = 0;
+  document.getElementById('yeni-parca').textContent = 'WO secildikten sonra otomatik';
+  document.getElementById('yeni-malzeme').textContent = 'WO secildikten sonra otomatik';
+  document.getElementById('yeni-lot').value = 'A';
+  document.getElementById('yeni-miktar').value = '1';
+  document.getElementById('yeni-birim').value = 'Adet';
+  document.getElementById('yeni-notlar').value = '';
+  modalAc('modal-yeni');
+}
+
+function travelerOlustur() {
+  var woSel = document.getElementById('yeni-wo');
+  var woId = woSel.value;
+  if (!woId) { alert('Lutfen bir Is Emri secin.'); return; }
+
+  var trvNo = document.getElementById('yeni-trv-no').textContent;
+  var lot = document.getElementById('yeni-lot').value;
+  var miktar = parseInt(document.getElementById('yeni-miktar').value) || 1;
+  var birim = document.getElementById('yeni-birim').value;
+  var notlar = document.getElementById('yeni-notlar').value;
+
+  var wo = woBilgiBul(woId);
+  var parca = wo ? (wo.f['Parca Adi'] || wo.f['Parça Adı'] || wo.f['Açıklama'] || '') : '';
+
+  // WO operasyon rotalarini bul
+  var woOps = tumOplar.filter(function(op) {
+    var opWo = op.f['İş Emri'] || op.f['Is Emri'] || op.f['WO'] || [];
+    if (Array.isArray(opWo)) return opWo.indexOf(woId) > -1;
+    return opWo === woId;
+  }).sort(function(a, b) {
+    var sa = parseInt(a.f['Sira'] || a.f['Sıra'] || a.f['Op No'] || '0');
+    var sb = parseInt(b.f['Sira'] || b.f['Sıra'] || b.f['Op No'] || '0');
+    return sa - sb;
+  });
+
+  var opsJson = woOps.map(function(op, idx) {
+    return {
+      adi: op.f['Operasyon Adi'] || op.f['Operasyon Adı'] || op.f['Ad'] || ('Op' + ((idx + 1) * 10)),
+      durum: idx === 0 ? 'active' : 'pending',
+      tip: op.f['Tip'] || op.f['Tür'] || 'dahili'
+    };
+  });
+
+  // Eger rota yoksa varsayilan bir op ekle
+  if (opsJson.length === 0) {
+    opsJson = [{ adi: 'Op10 Islem', durum: 'active', tip: 'dahili' }];
+  }
+
+  var fields = {
+    'Traveler No': trvNo,
+    'İş Emri': [{ id: woId }],
+    'Lot': lot,
+    'Miktar': miktar,
+    'Birim': birim,
+    'Durum': 'Bekliyor',
+    'Operasyonlar': JSON.stringify(opsJson)
+  };
+  if (notlar) fields['Notlar'] = notlar;
+
+  fetch(API, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ method: 'POST', path: '/v0/app5LDgJMgocw79Ix/Traveller%2FWIP', body: { fields: fields } })
+  }).then(function(r) { return r.json(); }).then(function(d) {
+    if (d.error) { alert('Hata: ' + (d.error.message || d.error)); return; }
+
+    tumTravelerler.push({ id: d.id, f: d.fields || fields });
+    logIslem('TRAVELER_OLUSTURULDU', 'Traveler', d.id, trvNo, null, { wo: woId, lot: lot, miktar: miktar });
+
+    modalKapat('modal-yeni');
+    asSeritGuncelle();
+    filtrele();
+  }).catch(function(err) {
+    alert('Traveler olusturulurken hata: ' + err.message);
+  });
+}
+
+// ========== LOT BOLME ==========
+function lotBolAc(trvId) {
+  var trv = tumTravelerler.filter(function(t) { return t.id === trvId; })[0];
+  if (!trv) return;
+
+  seciliBolTrv = trv;
+  var no = trv.f['Traveler No'] || trv.f['TRV No'] || '-';
+  var miktar = trv.f['Miktar'] || trv.f['Adet'] || 0;
+  var birim = trv.f['Birim'] || 'Adet';
+  document.getElementById('bol-mevcut').textContent = no + ' \u00B7 ' + miktar + ' ' + birim;
+  document.getElementById('bol-sayi').value = '2';
+  bolOnizle();
+  modalAc('modal-bol');
+}
+
+function bolOnizle() {
+  if (!seciliBolTrv) return;
+  var sayi = parseInt(document.getElementById('bol-sayi').value) || 2;
+  var miktar = parseInt(seciliBolTrv.f['Miktar'] || seciliBolTrv.f['Adet'] || 0);
+  var no = seciliBolTrv.f['Traveler No'] || seciliBolTrv.f['TRV No'] || '';
+  var birim = seciliBolTrv.f['Birim'] || 'Adet';
+
+  // No'dan lot harfi cikar: TRV-26-00001-A → base = TRV-26-00001
+  var parts = no.split('-');
+  var lotHarf = parts.length > 3 ? parts[parts.length - 1] : 'A';
+  var base = parts.slice(0, -1).join('-');
+
+  var perLot = Math.floor(miktar / sayi);
+  var kalan = miktar - (perLot * sayi);
+
+  var html = '<div style="font-size:11px;color:#374151;">';
+  var harfler = 'ABCDEF';
+  var startIdx = harfler.indexOf(lotHarf);
+  if (startIdx < 0) startIdx = 0;
+
+  for (var i = 0; i < sayi; i++) {
+    var lotM = perLot + (i === 0 ? kalan : 0);
+    var h = harfler[startIdx + i] || harfler[i];
+    html += '<div style="padding:4px 0;">&rarr; ' + base + '-' + h + ' &middot; ' + lotM + ' ' + birim + '</div>';
+  }
+  html += '</div>';
+  document.getElementById('bol-onizle').innerHTML = html;
+}
+
+function lotBol() {
+  if (!seciliBolTrv) return;
+  var sayi = parseInt(document.getElementById('bol-sayi').value) || 2;
+  var miktar = parseInt(seciliBolTrv.f['Miktar'] || seciliBolTrv.f['Adet'] || 0);
+  var no = seciliBolTrv.f['Traveler No'] || seciliBolTrv.f['TRV No'] || '';
+  var birim = seciliBolTrv.f['Birim'] || 'Adet';
+
+  var parts = no.split('-');
+  var lotHarf = parts.length > 3 ? parts[parts.length - 1] : 'A';
+  var base = parts.slice(0, -1).join('-');
+  var harfler = 'ABCDEF';
+  var startIdx = harfler.indexOf(lotHarf);
+  if (startIdx < 0) startIdx = 0;
+
+  var perLot = Math.floor(miktar / sayi);
+  var kalan = miktar - (perLot * sayi);
+
+  // Ilk lotu guncelle (miktar azalt)
+  var ilkMiktar = perLot + kalan;
+  var patchBody = {
+    table: 'Traveller/WIP',
+    id: seciliBolTrv.id,
+    fields: { 'Miktar': ilkMiktar }
+  };
+
+  fetch(API, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(patchBody)
+  }).then(function(r) { return r.json(); }).then(function() {
+    seciliBolTrv.f['Miktar'] = ilkMiktar;
+
+    // Yeni lotlari olustur
+    var promises = [];
+    for (var i = 1; i < sayi; i++) {
+      var yeniHarf = harfler[startIdx + i] || harfler[i];
+      var yeniNo = base + '-' + yeniHarf;
+      var yeniFields = {};
+      // Mevcut alanlari kopyala
+      var keys = Object.keys(seciliBolTrv.f);
+      keys.forEach(function(k) {
+        if (k === 'Miktar' || k === 'Adet') return;
+        if (k === 'Traveler No' || k === 'TRV No') return;
+        if (k === 'Lot' || k === 'Lot Harfi') return;
+        yeniFields[k] = seciliBolTrv.f[k];
+      });
+      yeniFields['Traveler No'] = yeniNo;
+      yeniFields['Lot'] = yeniHarf;
+      yeniFields['Miktar'] = perLot;
+
+      promises.push(
+        fetch(API, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ method: 'POST', path: '/v0/app5LDgJMgocw79Ix/Traveller%2FWIP', body: { fields: yeniFields } })
+        }).then(function(r) { return r.json(); })
+      );
+    }
+
+    return Promise.all(promises);
+  }).then(function(sonuclar) {
+    sonuclar.forEach(function(d) {
+      if (d.id) tumTravelerler.push({ id: d.id, f: d.fields || {} });
+    });
+
+    logIslem('LOT_BOLUNDU', 'Traveler', seciliBolTrv.id, no, { miktar: miktar }, { parcaSayi: sayi });
+
+    modalKapat('modal-bol');
+    asSeritGuncelle();
+    filtrele();
+  }).catch(function(err) {
+    alert('Lot bolme hatasi: ' + err.message);
+  });
+}
+
+// ========== DETAY MODAL ==========
+function detayGoster(trvId) {
+  var trv = tumTravelerler.filter(function(t) { return t.id === trvId; })[0];
+  if (!trv) return;
+
+  var no = trv.f['Traveler No'] || trv.f['TRV No'] || '-';
+  document.getElementById('detay-baslik').textContent = no + ' - Detay';
+
+  var ops = parseOps(trv);
+  var done = 0;
+  ops.forEach(function(op) {
+    var d = (op.durum || '').toLowerCase();
+    if (d === 'done' || d === 'tamamlandi' || d === 'tamamlandı') done++;
+  });
+  var pct = ops.length > 0 ? Math.round((done / ops.length) * 100) : 0;
+
+  var woId = woIDBul(trv);
+  var wo = woBilgiBul(woId);
+  var woNo = wo ? (wo.f['IE No'] || wo.f['WO No'] || wo.f['No'] || '') : '-';
+
+  var html = '';
+  html += '<table style="width:100%;font-size:12px;border-collapse:collapse;">';
+  html += detaySatir('Traveler No', no);
+  html += detaySatir('Durum', trv.f['Durum'] || trv.f['Statü'] || 'Bekliyor');
+  html += detaySatir('Is Emri', woNo);
+  html += detaySatir('Parca', trv.f['Parca Adi'] || trv.f['Parça Adı'] || trv.f['Açıklama'] || '-');
+  html += detaySatir('Lot', trv.f['Lot'] || trv.f['Lot Harfi'] || '-');
+  html += detaySatir('Miktar', (trv.f['Miktar'] || trv.f['Adet'] || '-') + ' ' + (trv.f['Birim'] || 'Adet'));
+  html += detaySatir('Ilerleme', '%' + pct + ' (' + done + '/' + ops.length + ' operasyon)');
+  html += detaySatir('Notlar', trv.f['Notlar'] || '-');
+  html += '</table>';
+
+  if (ops.length > 0) {
+    html += '<div style="margin-top:16px;font-size:12px;font-weight:600;color:#1a2b47;margin-bottom:8px;">Operasyon Rotasi</div>';
+    html += '<table style="width:100%;font-size:11px;border-collapse:collapse;">';
+    html += '<tr style="background:#f9fafb;"><th style="padding:6px 8px;text-align:left;border-bottom:1px solid #e5e7eb;">Op</th><th style="padding:6px 8px;text-align:left;border-bottom:1px solid #e5e7eb;">Durum</th><th style="padding:6px 8px;text-align:left;border-bottom:1px solid #e5e7eb;">Tip</th></tr>';
+    ops.forEach(function(op) {
+      var opAdi = op.adi || op.ad || op.name || '-';
+      var opDurum = op.durum || 'pending';
+      var opTip = op.tip || 'dahili';
+      html += '<tr><td style="padding:5px 8px;border-bottom:1px solid #f3f4f6;">' + escHtml(opAdi) + '</td>';
+      html += '<td style="padding:5px 8px;border-bottom:1px solid #f3f4f6;">' + escHtml(opDurum) + '</td>';
+      html += '<td style="padding:5px 8px;border-bottom:1px solid #f3f4f6;">' + escHtml(opTip) + '</td></tr>';
+    });
+    html += '</table>';
+  }
+
+  document.getElementById('detay-icerik').innerHTML = html;
+  modalAc('modal-detay');
+}
+
+function detaySatir(etiket, deger) {
+  return '<tr><td style="padding:5px 0;font-weight:600;color:#6b7280;width:120px;">' + etiket + '</td><td style="padding:5px 0;color:#1a2b47;">' + escHtml(String(deger)) + '</td></tr>';
+}
+
+// ========== QR YAZDIR ==========
+function qrYazdir(trvNo) {
+  var w = window.open('', '_blank', 'width=400,height=300');
+  w.document.write('<html><head><title>QR - ' + trvNo + '</title>');
+  w.document.write('<style>body{font-family:monospace;text-align:center;padding:20px;}h2{font-size:16px;margin:8px 0;}img{margin:12px 0;}.info{font-size:11px;color:#666;}</style>');
+  w.document.write('</head><body>');
+  w.document.write('<h2>ERSAN MES</h2>');
+  w.document.write('<img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' + encodeURIComponent('https://ersan-mes.netlify.app/ersan_palet.html?trv=' + trvNo) + '" width="150" height="150">');
+  w.document.write('<h2>' + trvNo + '</h2>');
+  w.document.write('<div class="info">Tarih: ' + new Date().toLocaleDateString('tr-TR') + '</div>');
+  w.document.write('<script>setTimeout(function(){window.print();},500);<\/script>');
+  w.document.write('</body></html>');
+  w.document.close();
+}
+
+function termalYazdir() {
+  alert('Termal yazici entegrasyonu henuz aktif degil. QR butonunu kullanarak tekil yazdirim yapabilirsiniz.');
+}
+
+// ========== URL PARAMS ==========
+function urlParamKontrol() {
+  var params = new URLSearchParams(window.location.search);
+  var woParam = params.get('wo');
+  var trvParam = params.get('trv');
+
+  if (woParam) {
+    // WO'yu filtre dropdown'da sec
+    setTimeout(function() {
+      var sel = document.getElementById('fil-wo');
+      for (var i = 0; i < sel.options.length; i++) {
+        var wo = woBilgiBul(sel.options[i].value);
+        if (wo) {
+          var woNo = wo.f['IE No'] || wo.f['WO No'] || wo.f['No'] || '';
+          if (woNo === woParam) { sel.selectedIndex = i; filtrele(); break; }
+        }
+      }
+    }, 500);
+  }
+
+  if (trvParam) {
+    // Highlight icin global degisken
+    window._highlightTrv = trvParam;
+  }
+}
+
+function urlHighlight() {
+  if (!window._highlightTrv) return;
+  var el = document.getElementById('trv-' + window._highlightTrv);
+  if (el) {
+    el.classList.add('highlight');
+    setTimeout(function() { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 100);
+  }
+}
+
+// ========== MODAL YARDIMCI ==========
+function modalAc(id) {
+  document.getElementById(id).classList.add('acik');
+}
+
+function modalKapat(id) {
+  document.getElementById(id).classList.remove('acik');
+}
+
+// ========== YARDIMCI ==========
+function escHtml(str) {
+  var div = document.createElement('div');
+  div.textContent = str || '';
+  return div.innerHTML;
+}
+</script>
 </body>
 </html>

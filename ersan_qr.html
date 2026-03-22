@@ -5,25 +5,688 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ersan MES — QR Etiketler</title>
 <link rel="stylesheet" href="ersan_styles.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="ersan_nav.js" defer></script>
 <script src="ersan_log.js" defer></script>
+<style>
+.qr-tab-bar { display:flex; background:#fff; border:1px solid #e5e7eb; border-radius:8px 8px 0 0; border-bottom:none; }
+.qr-tab { flex:1; padding:10px 8px; font-size:12px; font-weight:500; text-align:center; cursor:pointer; border:none; background:transparent; color:#6b7280; border-bottom:2px solid transparent; }
+.qr-tab.on { color:#1a2b47; border-bottom-color:#1a2b47; background:#f8faff; }
+.qr-panel { display:none; background:#fff; border:1px solid #e5e7eb; border-top:none; border-radius:0 0 8px 8px; padding:20px; }
+.qr-panel.on { display:block; }
+.qr-form-row { display:flex; gap:12px; align-items:flex-end; margin-bottom:16px; flex-wrap:wrap; }
+.qr-form-group { display:flex; flex-direction:column; gap:4px; flex:1; min-width:180px; }
+.qr-form-group label { font-size:12px; font-weight:600; color:var(--metin3); }
+.qr-form-group select, .qr-form-group input { padding:8px 10px; border:1px solid var(--border); border-radius:6px; font-size:13px; background:#fff; }
+.qr-preview-area { display:flex; align-items:flex-start; gap:20px; padding:16px; background:var(--bg); border-radius:8px; margin-top:12px; }
+.qr-preview-box { min-width:140px; min-height:140px; background:#fff; border:1px solid var(--border); border-radius:8px; display:flex; align-items:center; justify-content:center; padding:8px; }
+.qr-info { flex:1; font-size:13px; line-height:1.7; }
+.qr-info strong { color:var(--laci); }
+.btn-print { display:inline-flex; align-items:center; gap:6px; padding:8px 16px; background:var(--laci); color:#fff; border:none; border-radius:6px; font-size:13px; font-weight:600; cursor:pointer; margin-top:12px; }
+.btn-print:hover { background:var(--laci2); }
+
+/* Operasyon panel */
+.op-panel { background:#fff; border:1px solid #e5e7eb; border-radius:8px; padding:20px; margin-top:20px; }
+.op-panel h3 { font-size:15px; font-weight:700; color:var(--laci); margin-bottom:4px; }
+.op-panel .op-sub { font-size:12px; color:var(--metin3); margin-bottom:12px; }
+.op-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:12px 0; }
+.op-slot { border:2px dashed #d1d5db; border-radius:8px; padding:16px; text-align:center; transition:all .2s; }
+.op-slot.ok { border-color:#10b981; border-style:solid; background:#f0fdf4; }
+.op-slot.err { border-color:#ef4444; border-style:solid; background:#fef2f2; }
+.op-icon { font-size:28px; margin-bottom:6px; }
+.op-label { font-size:13px; font-weight:600; color:var(--laci); }
+.op-status { font-size:11px; color:var(--metin3); margin-top:4px; }
+.op-slot.ok .op-status { color:#059669; }
+.op-slot.err .op-status { color:#dc2626; }
+.op-slot select { margin-top:8px; width:100%; padding:6px; border:1px solid var(--border); border-radius:4px; font-size:12px; }
+
+/* Toplu yazdir */
+.toplu-list { max-height:340px; overflow-y:auto; }
+.toplu-row { display:flex; align-items:center; gap:8px; padding:8px 10px; border-bottom:1px solid var(--bg); font-size:13px; }
+.toplu-row:hover { background:var(--bg); }
+.toplu-row input[type=checkbox] { width:16px; height:16px; cursor:pointer; }
+.toplu-badge { display:inline-block; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:600; }
+.toplu-badge.traveler { background:#dbeafe; color:#1e40af; }
+.toplu-badge.personel { background:#fce7f3; color:#9d174d; }
+.toplu-badge.makine { background:#d1fae5; color:#065f46; }
+.toplu-badge.olcum { background:#fef3c7; color:#92400e; }
+
+@media (max-width:768px) {
+  .op-grid { grid-template-columns:1fr; }
+  .qr-form-row { flex-direction:column; }
+}
+</style>
 </head>
 <body>
 <div id="nav-alani"></div>
 <div class="icerik-alani">
   <div class="topbar">
-    <div class="topbar-baslik">QR Etiketler</div>
+    <div>
+      <div class="topbar-baslik">QR Etiketler</div>
+      <div style="font-size:12px;color:var(--metin3);">AS9100 Izlenebilirlik</div>
+    </div>
     <div style="display:flex;align-items:center;gap:8px;">
       <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
     </div>
   </div>
   <div class="sayfa-icerik">
-    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:60vh;color:var(--metin3);">
-      <div style="font-size:48px;margin-bottom:16px;opacity:0.3;">&#9881;</div>
-      <div style="font-size:16px;font-weight:600;color:var(--laci);margin-bottom:8px;">QR Etiketler</div>
-      <div style="font-size:13px;">Bu modul yapim asamasindadir.</div>
+
+    <!-- TAB BAR -->
+    <div class="qr-tab-bar">
+      <button class="qr-tab on" onclick="tabSec(0)">Traveler</button>
+      <button class="qr-tab" onclick="tabSec(1)">Personel</button>
+      <button class="qr-tab" onclick="tabSec(2)">Makine</button>
+      <button class="qr-tab" onclick="tabSec(3)">Olcum Aleti</button>
+      <button class="qr-tab" onclick="tabSec(4)">Toplu Yazdir</button>
     </div>
+
+    <!-- TAB 0: TRAVELER -->
+    <div class="qr-panel on" id="tab-0">
+      <div class="qr-form-row">
+        <div class="qr-form-group">
+          <label>Traveler / WIP Kaydi</label>
+          <select id="sel-traveler" onchange="travelerSec()">
+            <option value="">-- Traveler Seciniz --</option>
+          </select>
+        </div>
+        <button class="btn-print" onclick="yazdirTraveler()" id="btn-print-trav" disabled>Termal Yazdir</button>
+      </div>
+      <div class="qr-preview-area" id="prev-traveler" style="display:none;">
+        <div class="qr-preview-box" id="qr-traveler"></div>
+        <div class="qr-info" id="info-traveler"></div>
+      </div>
+    </div>
+
+    <!-- TAB 1: PERSONEL -->
+    <div class="qr-panel" id="tab-1">
+      <div class="qr-form-row">
+        <div class="qr-form-group">
+          <label>Personel</label>
+          <select id="sel-personel" onchange="personelSec()">
+            <option value="">-- Personel Seciniz --</option>
+          </select>
+        </div>
+        <button class="btn-print" onclick="yazdirPersonel()" id="btn-print-per" disabled>Termal Yazdir</button>
+      </div>
+      <div class="qr-preview-area" id="prev-personel" style="display:none;">
+        <div class="qr-preview-box" id="qr-personel"></div>
+        <div class="qr-info" id="info-personel"></div>
+      </div>
+    </div>
+
+    <!-- TAB 2: MAKINE -->
+    <div class="qr-panel" id="tab-2">
+      <div class="qr-form-row">
+        <div class="qr-form-group">
+          <label>Tezgah / Makine</label>
+          <select id="sel-makine" onchange="makineSec()">
+            <option value="">-- Makine Seciniz --</option>
+          </select>
+        </div>
+        <button class="btn-print" onclick="yazdirMakine()" id="btn-print-mak" disabled>Termal Yazdir</button>
+      </div>
+      <div class="qr-preview-area" id="prev-makine" style="display:none;">
+        <div class="qr-preview-box" id="qr-makine"></div>
+        <div class="qr-info" id="info-makine"></div>
+      </div>
+    </div>
+
+    <!-- TAB 3: OLCUM ALETI -->
+    <div class="qr-panel" id="tab-3">
+      <div class="qr-form-row">
+        <div class="qr-form-group">
+          <label>Alet No</label>
+          <input type="text" id="olcum-no" placeholder="OA-001">
+        </div>
+        <div class="qr-form-group">
+          <label>Alet Adi</label>
+          <input type="text" id="olcum-adi" placeholder="Kumpas 150mm">
+        </div>
+        <div class="qr-form-group">
+          <label>Kalibrasyon Tarihi</label>
+          <input type="date" id="olcum-kal">
+        </div>
+        <div class="qr-form-group">
+          <label>Gecerlilik Tarihi</label>
+          <input type="date" id="olcum-gec">
+        </div>
+        <div class="qr-form-group">
+          <label>Sertifika No</label>
+          <input type="text" id="olcum-sert" placeholder="KAL-2026-001">
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn-print" onclick="olcumOlustur()" style="background:var(--mavi);">QR Olustur</button>
+        <button class="btn-print" onclick="yazdirOlcum()" id="btn-print-olc" disabled>Termal Yazdir</button>
+      </div>
+      <div class="qr-preview-area" id="prev-olcum" style="display:none;">
+        <div class="qr-preview-box" id="qr-olcum"></div>
+        <div class="qr-info" id="info-olcum"></div>
+      </div>
+    </div>
+
+    <!-- TAB 4: TOPLU YAZDIR -->
+    <div class="qr-panel" id="tab-4">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div style="font-size:13px;color:var(--metin3);">Yazdirilacak etiketleri secin</div>
+        <button class="btn-print" onclick="topluYazdir()" id="btn-toplu">Hepsini Yazdir</button>
+      </div>
+      <div class="toplu-list" id="toplu-list">
+        <div style="text-align:center;color:var(--metin4);padding:40px;font-size:13px;">Veriler yukleniyor...</div>
+      </div>
+    </div>
+
+    <!-- OPERASYON BASLATMA PANEL -->
+    <div class="op-panel">
+      <h3>Operasyon Baslatma — AS9100</h3>
+      <div class="op-sub">Uretim operasyonu baslatmak icin 3 QR okutulmalidir: Traveler + Personel + Makine</div>
+      <div class="op-grid">
+        <div class="op-slot" id="slot-traveler">
+          <div class="op-icon">&#128203;</div>
+          <div class="op-label">Traveler QR</div>
+          <select onchange="slotTravelerSec(this)">
+            <option value="">-- Sec --</option>
+          </select>
+          <div class="op-status">Bekleniyor...</div>
+        </div>
+        <div class="op-slot" id="slot-personel">
+          <div class="op-icon">&#128100;</div>
+          <div class="op-label">Personel QR</div>
+          <select onchange="slotPersonelSec(this)">
+            <option value="">-- Sec --</option>
+          </select>
+          <div class="op-status">Bekleniyor...</div>
+        </div>
+        <div class="op-slot" id="slot-makine">
+          <div class="op-icon">&#9881;</div>
+          <div class="op-label">Makine QR</div>
+          <select onchange="slotMakineSec(this)">
+            <option value="">-- Sec --</option>
+          </select>
+          <div class="op-status">Bekleniyor...</div>
+        </div>
+      </div>
+      <button id="baslat-btn" disabled class="btn-print" style="width:100%;margin-top:10px;padding:10px;justify-content:center;font-size:14px;">
+        Operasyon Baslat
+      </button>
+    </div>
+
   </div>
 </div>
+
+<script>
+var API = '/.netlify/functions/airtable';
+var BASE = 'app5LDgJMgocw79Ix';
+var SITE = 'https://ersan-mes.netlify.app';
+
+var travelerData = [];
+var personelData = [];
+var makineData = [];
+
+var seciliTraveler = null;
+var seciliPersonel = null;
+var seciliMakine = null;
+var seciliOlcum = null;
+
+var opState = { traveler: null, personel: null, makine: null };
+
+/* ── TAB KONTROL ── */
+function tabSec(idx) {
+  var tabs = document.querySelectorAll('.qr-tab');
+  var panels = document.querySelectorAll('.qr-panel');
+  for (var i = 0; i < tabs.length; i++) {
+    tabs[i].classList.toggle('on', i === idx);
+    panels[i].classList.toggle('on', i === idx);
+  }
+}
+
+/* ── VERI YUKLE ── */
+function yukle() {
+  fetch(API + '?table=Traveller%2FWIP&pageSize=100')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      travelerData = (d.records || []);
+      doldurSelect('sel-traveler', travelerData, function(r) {
+        return r.fields['Traveler No'] || r.fields['Name'] || r.id;
+      });
+      doldurSlotSelect('slot-traveler', travelerData, function(r) {
+        return r.fields['Traveler No'] || r.fields['Name'] || r.id;
+      });
+      topluListeGuncelle();
+    });
+
+  fetch(API + '?table=Personel&pageSize=100')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      personelData = (d.records || []);
+      doldurSelect('sel-personel', personelData, function(r) {
+        return r.fields['Ad Soyad'] || r.fields['Name'] || r.id;
+      });
+      doldurSlotSelect('slot-personel', personelData, function(r) {
+        return r.fields['Ad Soyad'] || r.fields['Name'] || r.id;
+      });
+    });
+
+  fetch(API + '?table=Tezgahlar&pageSize=100')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      makineData = (d.records || []);
+      doldurSelect('sel-makine', makineData, function(r) {
+        return r.fields['Tezgah Adi'] || r.fields['Name'] || r.id;
+      });
+      doldurSlotSelect('slot-makine', makineData, function(r) {
+        return r.fields['Tezgah Adi'] || r.fields['Name'] || r.id;
+      });
+    });
+}
+
+function doldurSelect(selId, data, labelFn) {
+  var sel = document.getElementById(selId);
+  for (var i = 0; i < data.length; i++) {
+    var opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = labelFn(data[i]);
+    sel.appendChild(opt);
+  }
+}
+
+function doldurSlotSelect(slotId, data, labelFn) {
+  var sel = document.querySelector('#' + slotId + ' select');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">-- Sec --</option>';
+  for (var i = 0; i < data.length; i++) {
+    var opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = labelFn(data[i]);
+    sel.appendChild(opt);
+  }
+}
+
+/* ── QR OLUSTUR ── */
+function qrOlustur(elemId, icerik) {
+  var el = document.getElementById(elemId);
+  el.innerHTML = '';
+  new QRCode(el, {
+    text: JSON.stringify(icerik),
+    width: 120,
+    height: 120,
+    colorDark: '#0f2744',
+    colorLight: '#ffffff'
+  });
+}
+
+/* ── TAB 0: TRAVELER ── */
+function travelerSec() {
+  var idx = document.getElementById('sel-traveler').value;
+  if (idx === '') { document.getElementById('prev-traveler').style.display = 'none'; seciliTraveler = null; document.getElementById('btn-print-trav').disabled = true; return; }
+  var r = travelerData[idx];
+  var f = r.fields;
+  var no = f['Traveler No'] || f['Name'] || r.id;
+  seciliTraveler = {
+    tip: 'TRAVELER',
+    no: no,
+    wo: f['Is Emri No'] || f['Is Emri'] || '',
+    parca: f['Parca No'] || f['Parca'] || '',
+    lot: f['Lot No'] || f['Lot'] || '',
+    miktar: f['Miktar'] || '',
+    url: SITE + '/ersan_palet.html?id=' + r.id
+  };
+  qrOlustur('qr-traveler', seciliTraveler);
+  document.getElementById('info-traveler').innerHTML =
+    '<strong>Traveler:</strong> ' + no + '<br>' +
+    '<strong>Is Emri:</strong> ' + (seciliTraveler.wo || '-') + '<br>' +
+    '<strong>Parca:</strong> ' + (seciliTraveler.parca || '-') + '<br>' +
+    '<strong>Lot:</strong> ' + (seciliTraveler.lot || '-') + '<br>' +
+    '<strong>Miktar:</strong> ' + (seciliTraveler.miktar || '-');
+  document.getElementById('prev-traveler').style.display = 'flex';
+  document.getElementById('btn-print-trav').disabled = false;
+}
+
+/* ── TAB 1: PERSONEL ── */
+function personelSec() {
+  var idx = document.getElementById('sel-personel').value;
+  if (idx === '') { document.getElementById('prev-personel').style.display = 'none'; seciliPersonel = null; document.getElementById('btn-print-per').disabled = true; return; }
+  var r = personelData[idx];
+  var f = r.fields;
+  var ad = f['Ad Soyad'] || f['Name'] || r.id;
+  var yetkiler = f['Yetkiler'] || f['Yetki'] || [];
+  if (typeof yetkiler === 'string') yetkiler = [yetkiler];
+  seciliPersonel = {
+    tip: 'PERSONEL',
+    no: f['Sicil No'] || f['Personel No'] || r.id,
+    ad: ad,
+    yetkiler: yetkiler,
+    url: SITE + '/ersan_personel.html?id=' + r.id
+  };
+  qrOlustur('qr-personel', seciliPersonel);
+  document.getElementById('info-personel').innerHTML =
+    '<strong>Personel:</strong> ' + ad + '<br>' +
+    '<strong>Sicil No:</strong> ' + (seciliPersonel.no || '-') + '<br>' +
+    '<strong>Yetkiler:</strong> ' + (yetkiler.length > 0 ? yetkiler.join(', ') : '-');
+  document.getElementById('prev-personel').style.display = 'flex';
+  document.getElementById('btn-print-per').disabled = false;
+}
+
+/* ── TAB 2: MAKINE ── */
+function makineSec() {
+  var idx = document.getElementById('sel-makine').value;
+  if (idx === '') { document.getElementById('prev-makine').style.display = 'none'; seciliMakine = null; document.getElementById('btn-print-mak').disabled = true; return; }
+  var r = makineData[idx];
+  var f = r.fields;
+  var adi = f['Tezgah Adi'] || f['Name'] || r.id;
+  seciliMakine = {
+    tip: 'MAKINE',
+    no: f['Tezgah No'] || f['Kod'] || r.id,
+    adi: adi,
+    son_bakim: f['Son Bakim'] || f['Son Bakim Tarihi'] || '',
+    sonraki_bakim: f['Sonraki Bakim'] || f['Sonraki Bakim Tarihi'] || '',
+    url: SITE + '/ersan_bakim.html?id=' + r.id
+  };
+  qrOlustur('qr-makine', seciliMakine);
+  document.getElementById('info-makine').innerHTML =
+    '<strong>Makine:</strong> ' + adi + '<br>' +
+    '<strong>No:</strong> ' + (seciliMakine.no || '-') + '<br>' +
+    '<strong>Son Bakim:</strong> ' + (seciliMakine.son_bakim || '-') + '<br>' +
+    '<strong>Sonraki Bakim:</strong> ' + (seciliMakine.sonraki_bakim || '-');
+  document.getElementById('prev-makine').style.display = 'flex';
+  document.getElementById('btn-print-mak').disabled = false;
+}
+
+/* ── TAB 3: OLCUM ALETI ── */
+function olcumOlustur() {
+  var no = document.getElementById('olcum-no').value.trim();
+  var adi = document.getElementById('olcum-adi').value.trim();
+  var kal = document.getElementById('olcum-kal').value;
+  var gec = document.getElementById('olcum-gec').value;
+  var sert = document.getElementById('olcum-sert').value.trim();
+  if (!no || !adi) { alert('Alet No ve Adi zorunludur.'); return; }
+  seciliOlcum = {
+    tip: 'OLCUM_ALETI',
+    no: no,
+    adi: adi,
+    kalibrasyon: kal,
+    gecerlilik: gec,
+    sertifika: sert,
+    url: SITE + '/ersan_bakim.html?olcum=' + encodeURIComponent(no)
+  };
+  qrOlustur('qr-olcum', seciliOlcum);
+  var gecDurum = '';
+  if (gec) {
+    var bugun = new Date().toISOString().slice(0,10);
+    gecDurum = gec >= bugun ? ' <span style="color:#059669;">(Gecerli)</span>' : ' <span style="color:#dc2626;">(Suresi Dolmus!)</span>';
+  }
+  document.getElementById('info-olcum').innerHTML =
+    '<strong>Alet:</strong> ' + adi + '<br>' +
+    '<strong>No:</strong> ' + no + '<br>' +
+    '<strong>Kalibrasyon:</strong> ' + (kal || '-') + '<br>' +
+    '<strong>Gecerlilik:</strong> ' + (gec || '-') + gecDurum + '<br>' +
+    '<strong>Sertifika:</strong> ' + (sert || '-');
+  document.getElementById('prev-olcum').style.display = 'flex';
+  document.getElementById('btn-print-olc').disabled = false;
+}
+
+/* ── TAB 4: TOPLU YAZDIR ── */
+function topluListeGuncelle() {
+  var html = '';
+  for (var i = 0; i < travelerData.length; i++) {
+    var f = travelerData[i].fields;
+    var no = f['Traveler No'] || f['Name'] || travelerData[i].id;
+    html += '<div class="toplu-row">' +
+      '<input type="checkbox" data-tip="traveler" data-idx="' + i + '">' +
+      '<span class="toplu-badge traveler">Traveler</span>' +
+      '<span>' + no + '</span>' +
+      '</div>';
+  }
+  for (var j = 0; j < personelData.length; j++) {
+    var fp = personelData[j].fields;
+    var ad = fp['Ad Soyad'] || fp['Name'] || personelData[j].id;
+    html += '<div class="toplu-row">' +
+      '<input type="checkbox" data-tip="personel" data-idx="' + j + '">' +
+      '<span class="toplu-badge personel">Personel</span>' +
+      '<span>' + ad + '</span>' +
+      '</div>';
+  }
+  for (var k = 0; k < makineData.length; k++) {
+    var fm = makineData[k].fields;
+    var madi = fm['Tezgah Adi'] || fm['Name'] || makineData[k].id;
+    html += '<div class="toplu-row">' +
+      '<input type="checkbox" data-tip="makine" data-idx="' + k + '">' +
+      '<span class="toplu-badge makine">Makine</span>' +
+      '<span>' + madi + '</span>' +
+      '</div>';
+  }
+  if (!html) html = '<div style="text-align:center;color:var(--metin4);padding:40px;font-size:13px;">Kayit bulunamadi</div>';
+  document.getElementById('toplu-list').innerHTML = html;
+}
+
+function topluYazdir() {
+  var checkboxes = document.querySelectorAll('#toplu-list input[type=checkbox]:checked');
+  if (checkboxes.length === 0) { alert('En az bir etiket seciniz.'); return; }
+  var etiketler = [];
+  for (var i = 0; i < checkboxes.length; i++) {
+    var cb = checkboxes[i];
+    var tip = cb.getAttribute('data-tip');
+    var idx = parseInt(cb.getAttribute('data-idx'));
+    if (tip === 'traveler') {
+      var rt = travelerData[idx]; var ft = rt.fields;
+      etiketler.push({ baslik: ft['Traveler No'] || ft['Name'] || rt.id, icerik: { tip:'TRAVELER', no: ft['Traveler No'] || ft['Name'] || rt.id } });
+    } else if (tip === 'personel') {
+      var rp = personelData[idx]; var fpp = rp.fields;
+      etiketler.push({ baslik: fpp['Ad Soyad'] || fpp['Name'] || rp.id, icerik: { tip:'PERSONEL', no: fpp['Sicil No'] || rp.id, ad: fpp['Ad Soyad'] || fpp['Name'] || '' } });
+    } else if (tip === 'makine') {
+      var rm = makineData[idx]; var fmm = rm.fields;
+      etiketler.push({ baslik: fmm['Tezgah Adi'] || fmm['Name'] || rm.id, icerik: { tip:'MAKINE', no: fmm['Tezgah No'] || rm.id, adi: fmm['Tezgah Adi'] || '' } });
+    }
+  }
+  topluEtiketYazdir(etiketler);
+}
+
+function topluEtiketYazdir(etiketler) {
+  var w = window.open('', '_blank');
+  var html = '<html><head><style>' +
+    '@media print{body{margin:0}.etiket{page-break-inside:avoid}}' +
+    'body{font-family:monospace;font-size:10px;width:80mm;padding:2mm}' +
+    '.etiket{border:1px dashed #ccc;padding:4mm;margin-bottom:2mm}' +
+    '.no{font-size:12px;font-weight:bold;color:#1a2b47}' +
+    '.qr{margin:3px auto;width:80px;height:80px}' +
+    '</style></head><body>';
+  for (var i = 0; i < etiketler.length; i++) {
+    html += '<div class="etiket">' +
+      '<div>ERSAN ENDUSTRIYEL MAKINE</div>' +
+      '<div class="no">' + etiketler[i].baslik + '</div>' +
+      '<div class="qr" id="qr-t-' + i + '"></div>' +
+      '</div>';
+  }
+  html += '<scr' + 'ipt src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></scr' + 'ipt>';
+  html += '<scr' + 'ipt>';
+  html += 'var veriler = ' + JSON.stringify(etiketler.map(function(e) { return e.icerik; })) + ';';
+  html += 'setTimeout(function(){for(var i=0;i<veriler.length;i++){new QRCode(document.getElementById("qr-t-"+i),{text:JSON.stringify(veriler[i]),width:80,height:80})}setTimeout(function(){window.print()},300)},200);';
+  html += '</scr' + 'ipt></body></html>';
+  w.document.write(html);
+  w.document.close();
+}
+
+/* ── TEKIL YAZDIR ── */
+function etiketYazdir(icerik, baslik) {
+  var w = window.open('', '_blank');
+  var icerikStr = JSON.stringify(icerik);
+  w.document.write('<html><head><style>@media print{body{margin:0}}body{font-family:monospace;font-size:10px;width:80mm;padding:2mm}.no{font-size:12px;font-weight:bold;color:#1a2b47}.qr{margin:3px auto}</style></head><body>');
+  w.document.write('<div>ERSAN ENDUSTRIYEL MAKINE</div>');
+  w.document.write('<div class="no">' + baslik + '</div>');
+  w.document.write('<div id="qr" class="qr"></div>');
+  w.document.write('<div style="margin-top:4px;font-size:9px;word-break:break-all;">' + baslik + '</div>');
+  w.document.write('<scr' + 'ipt src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></scr' + 'ipt>');
+  w.document.write('<scr' + 'ipt>setTimeout(function(){new QRCode(document.getElementById("qr"),{text:\'' + icerikStr.replace(/'/g, "\\'") + '\',width:80,height:80});setTimeout(function(){window.print()},300)},200)</scr' + 'ipt>');
+  w.document.write('</body></html>');
+  w.document.close();
+}
+
+function yazdirTraveler() { if (seciliTraveler) etiketYazdir(seciliTraveler, seciliTraveler.no); }
+function yazdirPersonel() { if (seciliPersonel) etiketYazdir(seciliPersonel, seciliPersonel.ad); }
+function yazdirMakine() { if (seciliMakine) etiketYazdir(seciliMakine, seciliMakine.adi); }
+function yazdirOlcum() { if (seciliOlcum) etiketYazdir(seciliOlcum, seciliOlcum.no + ' - ' + seciliOlcum.adi); }
+
+/* ── OPERASYON BASLATMA ── */
+function slotTravelerSec(sel) {
+  var slot = document.getElementById('slot-traveler');
+  var status = slot.querySelector('.op-status');
+  if (sel.value === '') {
+    slot.className = 'op-slot';
+    status.textContent = 'Bekleniyor...';
+    opState.traveler = null;
+    opKontrol();
+    return;
+  }
+  var r = travelerData[sel.value];
+  opState.traveler = r;
+  slot.className = 'op-slot ok';
+  status.textContent = (r.fields['Traveler No'] || r.fields['Name'] || r.id) + ' - OK';
+  opKontrol();
+}
+
+function slotPersonelSec(sel) {
+  var slot = document.getElementById('slot-personel');
+  var status = slot.querySelector('.op-status');
+  if (sel.value === '') {
+    slot.className = 'op-slot';
+    status.textContent = 'Bekleniyor...';
+    opState.personel = null;
+    opKontrol();
+    return;
+  }
+  var r = personelData[sel.value];
+  var f = r.fields;
+  var yetkiler = f['Yetkiler'] || f['Yetki'] || [];
+  if (typeof yetkiler === 'string') yetkiler = [yetkiler];
+
+  opState.personel = r;
+  if (yetkiler.length === 0) {
+    slot.className = 'op-slot err';
+    status.textContent = (f['Ad Soyad'] || f['Name'] || r.id) + ' - Yetki tanimlanmamis!';
+    opState.personel = null;
+  } else {
+    slot.className = 'op-slot ok';
+    status.textContent = (f['Ad Soyad'] || f['Name'] || r.id) + ' - OK';
+  }
+  opKontrol();
+}
+
+function slotMakineSec(sel) {
+  var slot = document.getElementById('slot-makine');
+  var status = slot.querySelector('.op-status');
+  if (sel.value === '') {
+    slot.className = 'op-slot';
+    status.textContent = 'Bekleniyor...';
+    opState.makine = null;
+    opKontrol();
+    return;
+  }
+  var r = makineData[sel.value];
+  var f = r.fields;
+  var sonraki = f['Sonraki Bakim'] || f['Sonraki Bakim Tarihi'] || '';
+  var bugun = new Date().toISOString().slice(0, 10);
+
+  opState.makine = r;
+  if (sonraki && sonraki < bugun) {
+    slot.className = 'op-slot err';
+    status.textContent = (f['Tezgah Adi'] || f['Name'] || r.id) + ' - Bakim suresi gecmis!';
+    opState.makine = null;
+  } else {
+    slot.className = 'op-slot ok';
+    status.textContent = (f['Tezgah Adi'] || f['Name'] || r.id) + ' - OK';
+  }
+  opKontrol();
+}
+
+function opKontrol() {
+  var btn = document.getElementById('baslat-btn');
+  var hazir = opState.traveler && opState.personel && opState.makine;
+  btn.disabled = !hazir;
+  if (hazir) {
+    btn.style.background = '#10b981';
+    btn.textContent = 'Operasyon Baslat';
+  } else {
+    btn.style.background = '';
+    btn.textContent = 'Operasyon Baslat';
+  }
+}
+
+document.getElementById('baslat-btn').addEventListener('click', function() {
+  if (!opState.traveler || !opState.personel || !opState.makine) return;
+  var travNo = opState.traveler.fields['Traveler No'] || opState.traveler.fields['Name'] || opState.traveler.id;
+  var perAd = opState.personel.fields['Ad Soyad'] || opState.personel.fields['Name'] || opState.personel.id;
+  var makAd = opState.makine.fields['Tezgah Adi'] || opState.makine.fields['Name'] || opState.makine.id;
+
+  var mesaj = 'Operasyon baslatiliyor:\n\n' +
+    'Traveler: ' + travNo + '\n' +
+    'Operator: ' + perAd + '\n' +
+    'Makine: ' + makAd + '\n\n' +
+    'Onayliyor musunuz?';
+
+  if (!confirm(mesaj)) return;
+
+  var kayit = {
+    tip: 'OPERASYON_BASLAT',
+    traveler: travNo,
+    traveler_id: opState.traveler.id,
+    operator: perAd,
+    operator_id: opState.personel.id,
+    makine: makAd,
+    makine_id: opState.makine.id,
+    tarih: new Date().toISOString()
+  };
+
+  fetch(API, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      method: 'PATCH',
+      path: '/v0/' + BASE + '/Traveller%2FWIP/' + opState.traveler.id,
+      body: {
+        fields: {
+          'Durum': 'Uretimde',
+          'Operator': perAd,
+          'Makine': makAd,
+          'Baslama Zamani': new Date().toISOString()
+        }
+      }
+    })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(d) {
+    if (d.error) {
+      alert('Hata: ' + (d.error.message || JSON.stringify(d.error)));
+    } else {
+      alert('Operasyon baslatildi!\n' + travNo + ' - ' + perAd + ' - ' + makAd);
+      // Reset slots
+      opState = { traveler: null, personel: null, makine: null };
+      var slots = document.querySelectorAll('.op-slot');
+      for (var i = 0; i < slots.length; i++) {
+        slots[i].className = 'op-slot';
+        slots[i].querySelector('.op-status').textContent = 'Bekleniyor...';
+        slots[i].querySelector('select').value = '';
+      }
+      document.getElementById('baslat-btn').disabled = true;
+      document.getElementById('baslat-btn').style.background = '';
+    }
+  })
+  .catch(function(err) {
+    alert('Baglanti hatasi: ' + err.message);
+  });
+});
+
+/* ── INIT ── */
+yukle();
+
+// Toplu listeyi tum veriler yuklendikten sonra guncelle
+var topluInterval = setInterval(function() {
+  if (travelerData.length > 0 || personelData.length > 0 || makineData.length > 0) {
+    topluListeGuncelle();
+    clearInterval(topluInterval);
+  }
+}, 500);
+
+setTimeout(function() { clearInterval(topluInterval); topluListeGuncelle(); }, 5000);
+</script>
 </body>
 </html>

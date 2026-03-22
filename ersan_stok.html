@@ -3,273 +3,777 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ersan MES — Stok</title>
+<title>Ersan MES — Stok Durumu</title>
 <link rel="stylesheet" href="ersan_styles.css">
 <script src="ersan_nav.js" defer></script>
 <script src="ersan_log.js" defer></script>
+<style>
+.as9100-serit{display:flex;gap:8px;padding:10px 0;flex-wrap:wrap;}
+.as9100-chip{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;border:1px solid transparent;}
+.as9100-chip.ok{background:#ecfdf5;color:#065f46;border-color:#a7f3d0;}
+.as9100-chip.warn{background:#fffbeb;color:#92400e;border-color:#fde68a;}
+.as9100-chip.err{background:#fef2f2;color:#991b1b;border-color:#fecaca;}
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px;}
+.kpi-row .kpi{background:#fff;border:1px solid var(--border);border-radius:8px;padding:14px 16px;border-top:3px solid var(--mavi);}
+.kpi-row .kpi .kpi-val{font-size:26px;font-weight:700;color:var(--laci);}
+.kpi-row .kpi .kpi-lbl{font-size:11px;color:var(--metin4);margin-top:2px;}
+.kpi-row .kpi.s1{border-top-color:var(--mavi);}
+.kpi-row .kpi.s2{border-top-color:var(--kirmizi);}
+.kpi-row .kpi.s3{border-top-color:#f59e0b;}
+.kpi-row .kpi.s4{border-top-color:var(--yesil);}
+.filtre-bar{display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap;}
+.filtre-bar input[type="text"]{flex:1;min-width:180px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;background:var(--bg2);color:var(--metin2);}
+.filtre-bar select{padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;background:#fff;color:var(--metin2);cursor:pointer;}
+.konum-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;}
+.konum-kart{background:#fff;border:1px solid var(--border);border-radius:8px;padding:12px 14px;border-left:4px solid var(--mavi);cursor:pointer;transition:box-shadow .15s;}
+.konum-kart:hover{box-shadow:0 2px 8px rgba(0,0,0,.08);}
+.konum-kart.aktif{box-shadow:0 0 0 2px var(--mavi);}
+.konum-kart .kk-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+.konum-kart .kk-icon{font-size:18px;}
+.konum-kart .kk-name{font-size:12px;font-weight:600;color:var(--laci);}
+.konum-kart .kk-count{font-size:11px;background:var(--bg2);border-radius:10px;padding:1px 8px;color:var(--metin3);font-weight:600;}
+.konum-kart .kk-items{font-size:10px;color:var(--metin4);line-height:1.5;max-height:40px;overflow:hidden;}
+.tbl{width:100%;border-collapse:collapse;font-size:12px;}
+.tbl th{background:var(--bg2);font-weight:600;color:var(--metin3);padding:8px 10px;text-align:left;border-bottom:2px solid var(--border);white-space:nowrap;position:sticky;top:0;z-index:1;}
+.tbl td{padding:7px 10px;border-bottom:1px solid var(--border);color:var(--metin2);vertical-align:middle;}
+.tbl tr:hover{background:#f8fafc;}
+.tbl tr.karantina{background:#fef2f2;}
+.tbl tr.low-stock{border-left:3px solid #f59e0b;}
+.tbl tr.highlight{background:#eff6ff;animation:hl-fade 3s ease;}
+@keyframes hl-fade{0%{background:#dbeafe;}100%{background:#eff6ff;}}
+.mono{font-family:'Cascadia Code','Fira Code',monospace;font-size:11px;}
+.muted{color:var(--metin4);font-size:11px;}
+.bdg{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;white-space:nowrap;}
+.b-grn{background:#ecfdf5;color:#065f46;}
+.b-amr{background:#fffbeb;color:#92400e;}
+.b-red{background:#fef2f2;color:#991b1b;}
+.b-blu{background:#eff6ff;color:#1e40af;}
+.b-gray{background:#f1f5f9;color:#475569;}
+.btn-row{display:flex;gap:6px;flex-wrap:wrap;}
+.stok-tablo-wrap{background:#fff;border:1px solid var(--border);border-radius:8px;overflow:auto;max-height:calc(100vh - 420px);}
+@media(max-width:900px){
+  .kpi-row{grid-template-columns:repeat(2,1fr);}
+  .konum-grid{grid-template-columns:repeat(2,1fr);}
+}
+@media(max-width:600px){
+  .kpi-row{grid-template-columns:1fr;}
+  .konum-grid{grid-template-columns:1fr;}
+}
+</style>
 </head>
 <body>
 <div id="nav-alani"></div>
 <div class="icerik-alani">
   <div class="topbar">
-    <div class="topbar-baslik">Stok Yonetimi</div>
+    <div class="topbar-baslik">Stok Durumu</div>
     <div style="display:flex;align-items:center;gap:8px;">
+      <button class="btn btn-mavi btn-sm" onclick="openModal('giris')">&#128229; Stok Girisi</button>
+      <button class="btn btn-beyaz btn-sm" onclick="openModal('cikis')">&#128228; Stok Cikisi</button>
+      <button class="btn btn-beyaz btn-sm" onclick="openModal('transfer')">&#8596; Transfer</button>
       <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
     </div>
   </div>
   <div class="sayfa-icerik">
 
-    <!-- KPI -->
-    <div class="kpi-grid" id="kpi-area">
-      <div class="kpi-kart">
-        <div class="kpi-etiket">Toplam Kalem</div>
-        <div class="kpi-deger" id="kpi-toplam">-</div>
-      </div>
-      <div class="kpi-kart yesil">
-        <div class="kpi-etiket">Yeterli Stok</div>
-        <div class="kpi-deger" id="kpi-yeterli">-</div>
-      </div>
-      <div class="kpi-kart kirmizi">
-        <div class="kpi-etiket">Kritik Stok</div>
-        <div class="kpi-deger" id="kpi-kritik">-</div>
-      </div>
-      <div class="kpi-kart sari">
-        <div class="kpi-etiket">Bekleyen Giris</div>
-        <div class="kpi-deger" id="kpi-bekleyen">-</div>
-      </div>
+    <!-- AS9100 SERIT -->
+    <div class="as9100-serit">
+      <span class="as9100-chip ok" id="chip-lot">&#9989; Lot Takibi</span>
+      <span class="as9100-chip ok" id="chip-coc">&#128196; CoC Kaydi</span>
+      <span class="as9100-chip warn" id="chip-karantina">&#9888;&#65039; Karantina</span>
+      <span class="as9100-chip ok" id="chip-fifo">&#128260; FIFO Uyumu</span>
     </div>
 
-    <!-- ANA LAYOUT -->
-    <div class="iki-panel">
+    <!-- KPI ROW -->
+    <div class="kpi-row">
+      <div class="kpi s1"><div class="kpi-val" id="kpi-toplam">-</div><div class="kpi-lbl">Toplam Kalem</div></div>
+      <div class="kpi s2"><div class="kpi-val" id="kpi-kritik">-</div><div class="kpi-lbl">Kritik Alti</div></div>
+      <div class="kpi s3"><div class="kpi-val" id="kpi-karantina">-</div><div class="kpi-lbl">Karantina</div></div>
+      <div class="kpi s4"><div class="kpi-val" id="kpi-tuketim">-</div><div class="kpi-lbl">Bu Ay Tuketim</div></div>
+    </div>
 
-      <!-- SOL PANEL -->
-      <div class="sol-panel">
-        <div class="sol-panel-ust">
-          <div class="sol-panel-baslik">Malzemeler</div>
-          <span id="liste-sayi" style="font-size:11px;color:var(--metin4);"></span>
+    <!-- FILTRE BAR -->
+    <div class="filtre-bar">
+      <input type="text" id="f-ara" placeholder="&#128269; Lot no, malzeme ara..." oninput="filtrele()">
+      <select id="f-konum" onchange="filtrele()"><option value="">Konum &#9660;</option></select>
+      <select id="f-tip" onchange="filtrele()">
+        <option value="">Tip &#9660;</option>
+        <option value="Hammadde">Hammadde</option>
+        <option value="Yari Mamul">Yari Mamul</option>
+        <option value="Bitmis Urun">Bitmis Urun</option>
+        <option value="Sarf">Sarf</option>
+      </select>
+      <select id="f-durum" onchange="filtrele()">
+        <option value="">Durum &#9660;</option>
+        <option value="Depoda">Depoda</option>
+        <option value="Karantina">Karantina</option>
+        <option value="Rezerve">Rezerve</option>
+        <option value="Tukendi">Tukendi</option>
+      </select>
+    </div>
+
+    <!-- KONUM KARTLARI -->
+    <div class="konum-grid" id="konum-grid"></div>
+
+    <!-- STOK TABLO -->
+    <div class="stok-tablo-wrap">
+      <table class="tbl">
+        <thead>
+          <tr>
+            <th>Lot No</th>
+            <th>Malzeme</th>
+            <th>Tip</th>
+            <th>Konum</th>
+            <th>Miktar</th>
+            <th>Birim</th>
+            <th>CoC</th>
+            <th>GRN/Kaynak</th>
+            <th>WO</th>
+            <th>Giris Tarihi</th>
+            <th>Durum</th>
+            <th>Islem</th>
+          </tr>
+        </thead>
+        <tbody id="tablo-body">
+          <tr><td colspan="12" style="text-align:center;padding:30px;color:var(--metin4);"><div class="spinner" style="margin:0 auto 8px;"></div>Yukleniyor...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL: STOK GIRISI -->
+<div class="modal-bg" id="modal-giris" style="display:none;" onclick="if(event.target===this)closeModal('giris')">
+  <div class="modal-box" style="max-width:520px;">
+    <div class="modal-head"><div class="modal-title">&#128229; Stok Girisi</div><button onclick="closeModal('giris')" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--metin3);">&times;</button></div>
+    <div class="modal-body">
+      <div class="form-grid-2">
+        <div class="form-grup"><label class="form-label">Lot No</label><input class="form-input mono" id="g-lot" readonly></div>
+        <div class="form-grup"><label class="form-label">Malzeme</label><input class="form-input" id="g-malzeme" placeholder="Malzeme adi"></div>
+        <div class="form-grup"><label class="form-label">Tip</label>
+          <select class="form-select" id="g-tip"><option>Hammadde</option><option>Yari Mamul</option><option>Bitmis Urun</option><option>Sarf</option></select>
         </div>
-        <div class="sol-arama">
-          <input type="text" id="arama" placeholder="MAT no veya malzeme ara..." oninput="filtrele()">
+        <div class="form-grup"><label class="form-label">Konum</label>
+          <select class="form-select" id="g-konum"></select>
         </div>
-        <div class="sol-filtre">
-          <button class="filtre-btn aktif" onclick="sekmeGecis('hammadde',this)">Hammadde</button>
-          <button class="filtre-btn" onclick="sekmeGecis('yari',this)">Yari Mamul</button>
-          <button class="filtre-btn" onclick="sekmeGecis('bitmis',this)">Bitmis Urun</button>
-          <button class="filtre-btn" onclick="sekmeGecis('kritik',this)">Kritik Stok</button>
+        <div class="form-grup"><label class="form-label">Miktar</label><input class="form-input" id="g-miktar" type="number" min="0" step="0.01" placeholder="0"></div>
+        <div class="form-grup"><label class="form-label">Birim</label>
+          <select class="form-select" id="g-birim"><option>Adet</option><option>kg</option><option>m</option><option>mm</option><option>lt</option></select>
         </div>
-        <div class="sol-liste" id="liste">
-          <div class="yukleniyor"><div class="spinner"></div> Yukleniyor...</div>
+        <div class="form-grup"><label class="form-label">GRN / Kaynak</label><input class="form-input" id="g-grn" placeholder="GRN-26-00001"></div>
+        <div class="form-grup"><label class="form-label">CoC</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--metin2);cursor:pointer;padding-top:4px;">
+            <input type="checkbox" id="g-coc"> CoC mevcut
+          </label>
         </div>
       </div>
-
-      <!-- SAG PANEL -->
-      <div class="sag-panel">
-        <div id="detay-icerik">
-          <div class="bos-durum">
-            <svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="6" y="10" width="36" height="28" rx="3" stroke="currentColor" stroke-width="1.5"/><path d="M16 20h16M16 26h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-            <p>Listeden bir malzeme secin</p>
-          </div>
-        </div>
-      </div>
-
+      <div class="form-grup"><label class="form-label">Notlar</label><textarea class="form-textarea" id="g-notlar" rows="2" placeholder="Giris notu..."></textarea></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-beyaz btn-sm" onclick="closeModal('giris')">Iptal</button>
+      <button class="btn btn-mavi btn-sm" id="g-kaydet-btn" onclick="kaydetGiris()">Kaydet</button>
     </div>
   </div>
 </div>
 
+<!-- MODAL: STOK CIKISI -->
+<div class="modal-bg" id="modal-cikis" style="display:none;" onclick="if(event.target===this)closeModal('cikis')">
+  <div class="modal-box" style="max-width:480px;">
+    <div class="modal-head"><div class="modal-title">&#128228; Stok Cikisi</div><button onclick="closeModal('cikis')" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--metin3);">&times;</button></div>
+    <div class="modal-body">
+      <div class="form-grid-2">
+        <div class="form-grup"><label class="form-label">Cikis No</label><input class="form-input mono" id="c-no" readonly></div>
+        <div class="form-grup"><label class="form-label">Lot No</label>
+          <select class="form-select" id="c-lot" onchange="cikisLotSec()"></select>
+        </div>
+        <div class="form-grup"><label class="form-label">Mevcut</label><input class="form-input" id="c-mevcut" readonly></div>
+        <div class="form-grup"><label class="form-label">Cikis Miktari</label><input class="form-input" id="c-miktar" type="number" min="0" step="0.01" placeholder="0"></div>
+        <div class="form-grup"><label class="form-label">Hedef</label>
+          <select class="form-select" id="c-hedef"><option>Uretim</option><option>Sevkiyat</option><option>Fire</option><option>Iade</option></select>
+        </div>
+        <div class="form-grup"><label class="form-label">WO / Is Emri</label><input class="form-input" id="c-wo" placeholder="IE-2026-00001"></div>
+      </div>
+      <div class="form-grup"><label class="form-label">Notlar</label><textarea class="form-textarea" id="c-notlar" rows="2" placeholder="Cikis notu..."></textarea></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-beyaz btn-sm" onclick="closeModal('cikis')">Iptal</button>
+      <button class="btn btn-mavi btn-sm" id="c-kaydet-btn" onclick="kaydetCikis()">Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: TRANSFER -->
+<div class="modal-bg" id="modal-transfer" style="display:none;" onclick="if(event.target===this)closeModal('transfer')">
+  <div class="modal-box" style="max-width:480px;">
+    <div class="modal-head"><div class="modal-title">&#8596; Transfer</div><button onclick="closeModal('transfer')" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--metin3);">&times;</button></div>
+    <div class="modal-body">
+      <div class="form-grid-2">
+        <div class="form-grup"><label class="form-label">Transfer No</label><input class="form-input mono" id="t-no" readonly></div>
+        <div class="form-grup"><label class="form-label">Lot No</label>
+          <select class="form-select" id="t-lot" onchange="transferLotSec()"></select>
+        </div>
+        <div class="form-grup"><label class="form-label">Kaynak Konum</label><input class="form-input" id="t-kaynak" readonly></div>
+        <div class="form-grup"><label class="form-label">Hedef Konum</label>
+          <select class="form-select" id="t-hedef"></select>
+        </div>
+        <div class="form-grup"><label class="form-label">Mevcut Miktar</label><input class="form-input" id="t-mevcut" readonly></div>
+        <div class="form-grup"><label class="form-label">Transfer Miktari</label><input class="form-input" id="t-miktar" type="number" min="0" step="0.01" placeholder="0"></div>
+      </div>
+      <div class="form-grup"><label class="form-label">Notlar</label><textarea class="form-textarea" id="t-notlar" rows="2" placeholder="Transfer notu..."></textarea></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-beyaz btn-sm" onclick="closeModal('transfer')">Iptal</button>
+      <button class="btn btn-mavi btn-sm" id="t-kaydet-btn" onclick="kaydetTransfer()">Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-wrap" style="position:fixed;bottom:20px;right:20px;z-index:9999;"></div>
+
 <script>
 // ── CONFIG ──
-const TABLES = {
-  malzemeGirisleri: 'tblSj5Ep6F9Ir1NGu',
-};
-const BASE = 'app5LDgJMgocw79Ix';
+var BASE = 'app5LDgJMgocw79Ix';
+var T_LOT = 'tbljPBwL1AvdwWeOD';
+var T_LOK = 'tbltaEVWPLUwutn9D';
+var T_WIP = 'tbljfjpefe5Z03S0a';
 
-let malzemeler = [];
-let filtrelenmis = [];
-let aktifId = null;
-let aktifSekme = 'hammadde';
+var lotlar = [];
+var lokasyonlar = [];
+var filtrelenmis = [];
+var aktifKonum = '';
+var sayac = { giris: 0, cikis: 0, transfer: 0 };
+
+// ── KONUM TANIM ──
+var KONUMLAR = [
+  { kod: 'HM-01', ad: 'Hammadde',     icon: '&#128230;', renk: '#3b82f6' },
+  { kod: 'KR-02', ad: 'Karantina',     icon: '&#9888;&#65039;',  renk: '#ef4444' },
+  { kod: 'AT-03', ad: 'Atolye',        icon: '&#9881;&#65039;',  renk: '#22c55e' },
+  { kod: 'YM-04', ad: 'Yari Mamul',    icon: '&#128230;', renk: '#f59e0b' },
+  { kod: 'BU-05', ad: 'Bitmis Urun',   icon: '&#9989;',  renk: '#22c55e' },
+  { kod: 'FR-06', ad: 'Fire/Hurda',    icon: '&#128465;&#65039;', renk: '#94a3b8' }
+];
 
 // ── API ──
-async function apiGet(table, query) {
-  const url = '/.netlify/functions/airtable?table=' + table + (query ? '&' + query : '');
-  const res = await fetch(url);
-  if (!res.ok) throw new Error('API hata: ' + res.status);
-  return res.json();
+function apiGet(tbl, q) {
+  return fetch('/.netlify/functions/airtable', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({method:'GET', path:'/v0/' + BASE + '/' + tbl + '?' + (q || '')})
+  }).then(function(r) { return r.json(); });
+}
+function apiPost(tbl, fields) {
+  return fetch('/.netlify/functions/airtable', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({method:'POST', path:'/v0/' + BASE + '/' + tbl, body:{fields:fields}})
+  }).then(function(r) { return r.json(); });
+}
+function apiPatch(tbl, id, fields) {
+  return fetch('/.netlify/functions/airtable', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({method:'PATCH', path:'/v0/' + BASE + '/' + tbl + '/' + id, body:{fields:fields}})
+  }).then(function(r) { return r.json(); });
+}
+
+// ── HELPERS ──
+function fmtDate(d) { try { return d ? new Date(d).toLocaleDateString('tr-TR') : ''; } catch(e) { return d || ''; } }
+function toast(msg, type) {
+  type = type || 'ok';
+  var el = document.createElement('div');
+  el.style.cssText = 'padding:10px 16px;border-radius:8px;font-size:13px;font-weight:500;color:#fff;margin-top:8px;opacity:0;transform:translateY(10px);transition:all .3s;';
+  el.style.background = type === 'err' ? 'var(--kirmizi)' : type === 'inf' ? 'var(--mavi)' : 'var(--yesil)';
+  el.textContent = msg;
+  document.getElementById('toast-wrap').appendChild(el);
+  setTimeout(function() { el.style.opacity = '1'; el.style.transform = 'translateY(0)'; }, 50);
+  setTimeout(function() { el.remove(); }, 3500);
+}
+function genNo(prefix) {
+  var now = new Date();
+  var yy = String(now.getFullYear()).slice(2);
+  var rnd = String(Math.floor(Math.random() * 9000) + 1000);
+  return prefix + '-' + yy + '-' + rnd;
 }
 
 // ── YUKLE ──
-async function yukle() {
-  try {
-    const data = await apiGet(TABLES.malzemeGirisleri, 'pageSize=100');
-    malzemeler = (data.records || []).map(r => ({
-      id: r.id,
-      matNo: r.fields['MAT No'] || r.fields['Malzeme No'] || '',
-      ad: r.fields['Malzeme Adi'] || r.fields['Malzeme'] || '',
-      miktar: r.fields['Miktar'] || 0,
-      birim: r.fields['Birim'] || 'Adet',
-      tip: (r.fields['Tip'] || r.fields['Kategori'] || 'Hammadde').toLowerCase(),
-      minStok: r.fields['Min Stok'] || 0,
-      durum: r.fields['Durum'] || r.fields['Status'] || 'Depoda',
-      konum: r.fields['Konum'] || '',
-      tarih: r.fields['Giris Tarihi'] || r.fields['Tarih'] || '',
-      fields: r.fields,
-    }));
-    kpiGuncelle();
+function yukle() {
+  var lotPromise = apiGet(T_LOT, 'pageSize=100');
+  var lokPromise = apiGet(T_LOK, 'pageSize=50');
+
+  lotPromise.then(function(data) {
+    lotlar = (data.records || []).map(function(r) {
+      var f = r.fields;
+      return {
+        id: r.id,
+        lotNo: f['Lot No'] || f['LotNo'] || '',
+        malzeme: f['Malzeme'] || f['Malzeme Adi'] || '',
+        tip: f['Tip'] || f['Kategori'] || 'Hammadde',
+        konum: f['Konum'] || '',
+        miktar: parseFloat(f['Miktar']) || 0,
+        birim: f['Birim'] || 'Adet',
+        coc: f['CoC'] || f['CoC Var'] || false,
+        grn: f['GRN'] || f['GRN No'] || f['Kaynak'] || '',
+        wo: f['WO'] || f['Is Emri'] || '',
+        tarih: f['Giris Tarihi'] || f['Tarih'] || f['Created'] || '',
+        durum: f['Durum'] || 'Depoda',
+        notlar: f['Notlar'] || '',
+        minStok: parseFloat(f['Min Stok']) || 0,
+        fields: f
+      };
+    });
     filtrele();
-  } catch(e) {
-    document.getElementById('liste').innerHTML = '<div style="padding:20px;color:var(--kirmizi);font-size:12px;">Yukleme hatasi: ' + e.message + '</div>';
+    kpiGuncelle();
+    konumKartlariRender();
+    chipGuncelle();
+    populateLotDropdowns();
+  }).catch(function(e) {
+    document.getElementById('tablo-body').innerHTML = '<tr><td colspan="12" style="text-align:center;padding:20px;color:var(--kirmizi);">Yukleme hatasi: ' + e.message + '</td></tr>';
+  });
+
+  lokPromise.then(function(data) {
+    lokasyonlar = (data.records || []).map(function(r) {
+      return { id: r.id, ad: r.fields['Lokasyon'] || r.fields['Ad'] || r.fields['Konum'] || '' };
+    });
+    populateKonumDropdowns();
+  }).catch(function() {});
+}
+
+// ── KONUM DROPDOWNS ──
+function populateKonumDropdowns() {
+  var selIds = ['f-konum', 'g-konum', 't-hedef'];
+  var opts = '<option value="">Konum &#9660;</option>';
+  for (var i = 0; i < KONUMLAR.length; i++) {
+    opts += '<option value="' + KONUMLAR[i].kod + '">' + KONUMLAR[i].kod + ' ' + KONUMLAR[i].ad + '</option>';
   }
+  for (var j = 0; j < lokasyonlar.length; j++) {
+    var ad = lokasyonlar[j].ad;
+    var exists = false;
+    for (var k = 0; k < KONUMLAR.length; k++) { if (KONUMLAR[k].kod === ad || KONUMLAR[k].ad === ad) { exists = true; break; } }
+    if (!exists && ad) opts += '<option value="' + ad + '">' + ad + '</option>';
+  }
+  for (var s = 0; s < selIds.length; s++) {
+    var el = document.getElementById(selIds[s]);
+    if (el) {
+      if (selIds[s] === 'g-konum' || selIds[s] === 't-hedef') {
+        el.innerHTML = opts.replace('Konum &#9660;', 'Sec...');
+      } else {
+        el.innerHTML = opts;
+      }
+    }
+  }
+}
+
+// ── LOT DROPDOWNS ──
+function populateLotDropdowns() {
+  var opts = '<option value="">Lot sec...</option>';
+  for (var i = 0; i < lotlar.length; i++) {
+    if (lotlar[i].miktar > 0) {
+      opts += '<option value="' + lotlar[i].id + '">' + lotlar[i].lotNo + ' — ' + lotlar[i].malzeme + ' (' + lotlar[i].miktar + ' ' + lotlar[i].birim + ')</option>';
+    }
+  }
+  var cLot = document.getElementById('c-lot');
+  var tLot = document.getElementById('t-lot');
+  if (cLot) cLot.innerHTML = opts;
+  if (tLot) tLot.innerHTML = opts;
 }
 
 // ── KPI ──
 function kpiGuncelle() {
-  document.getElementById('kpi-toplam').textContent = malzemeler.length;
-  const kritik = malzemeler.filter(m => m.minStok > 0 && m.miktar < m.minStok);
-  document.getElementById('kpi-kritik').textContent = kritik.length;
-  document.getElementById('kpi-yeterli').textContent = malzemeler.length - kritik.length;
-  const bekleyen = malzemeler.filter(m => m.durum === 'Beklemede' || m.durum === 'Yolda');
-  document.getElementById('kpi-bekleyen').textContent = bekleyen.length;
+  document.getElementById('kpi-toplam').textContent = lotlar.length;
+  var kritik = 0, karantina = 0, tuketim = 0;
+  var buAy = new Date().getMonth();
+  var buYil = new Date().getFullYear();
+  for (var i = 0; i < lotlar.length; i++) {
+    var l = lotlar[i];
+    if (l.minStok > 0 && l.miktar < l.minStok) kritik++;
+    if ((l.durum || '').toLowerCase().indexOf('karantina') >= 0 || (l.konum || '').indexOf('KR') >= 0) karantina++;
+    if (l.durum === 'Tukendi' || l.miktar <= 0) {
+      try {
+        var d = new Date(l.tarih);
+        if (d.getMonth() === buAy && d.getFullYear() === buYil) tuketim++;
+      } catch(e) {}
+    }
+  }
+  document.getElementById('kpi-kritik').textContent = kritik;
+  document.getElementById('kpi-karantina').textContent = karantina;
+  document.getElementById('kpi-tuketim').textContent = tuketim;
 }
 
-// ── SEKME ──
-function sekmeGecis(sekme, btn) {
-  aktifSekme = sekme;
-  document.querySelectorAll('.sol-filtre .filtre-btn').forEach(b => b.classList.remove('aktif'));
-  btn.classList.add('aktif');
+// ── AS9100 CHIP GUNCELLE ──
+function chipGuncelle() {
+  var lotOk = lotlar.length > 0;
+  var cocMissing = 0;
+  var karantinaCount = 0;
+  for (var i = 0; i < lotlar.length; i++) {
+    var l = lotlar[i];
+    if ((l.tip || '').indexOf('Hammadde') >= 0 && !l.coc) cocMissing++;
+    if ((l.durum || '').toLowerCase().indexOf('karantina') >= 0) karantinaCount++;
+  }
+  var chipLot = document.getElementById('chip-lot');
+  var chipCoc = document.getElementById('chip-coc');
+  var chipKar = document.getElementById('chip-karantina');
+
+  chipLot.className = 'as9100-chip ' + (lotOk ? 'ok' : 'warn');
+  chipCoc.className = 'as9100-chip ' + (cocMissing === 0 ? 'ok' : 'err');
+  chipCoc.innerHTML = (cocMissing > 0 ? '&#9888;&#65039; CoC Eksik: ' + cocMissing : '&#128196; CoC Tamam');
+  chipKar.className = 'as9100-chip ' + (karantinaCount === 0 ? 'ok' : 'warn');
+  chipKar.innerHTML = (karantinaCount > 0 ? '&#9888;&#65039; Karantina: ' + karantinaCount : '&#9989; Karantina Yok');
+}
+
+// ── KONUM KARTLARI ──
+function konumKartlariRender() {
+  var grid = document.getElementById('konum-grid');
+  var html = '';
+  for (var k = 0; k < KONUMLAR.length; k++) {
+    var kon = KONUMLAR[k];
+    var count = 0;
+    var items = [];
+    for (var i = 0; i < lotlar.length; i++) {
+      var lk = (lotlar[i].konum || '');
+      if (lk.indexOf(kon.kod) >= 0 || lk.indexOf(kon.ad) >= 0 || (kon.kod === 'KR-02' && (lotlar[i].durum || '').toLowerCase().indexOf('karantina') >= 0)) {
+        count++;
+        if (items.length < 3) items.push(lotlar[i].malzeme || lotlar[i].lotNo);
+      }
+    }
+    var isAktif = aktifKonum === kon.kod ? ' aktif' : '';
+    var bgTint = kon.kod === 'KR-02' ? 'background:#fef2f2;' : '';
+    html += '<div class="konum-kart' + isAktif + '" style="border-left-color:' + kon.renk + ';' + bgTint + '" onclick="konumFiltre(\'' + kon.kod + '\')">';
+    html += '<div class="kk-head"><span class="kk-icon">' + kon.icon + '</span><span class="kk-name">' + kon.kod + ' ' + kon.ad + '</span><span class="kk-count">' + count + '</span></div>';
+    html += '<div class="kk-items">' + (items.length > 0 ? items.join(', ') : '<span style="color:var(--metin4);">Bos</span>') + '</div>';
+    html += '</div>';
+  }
+  grid.innerHTML = html;
+}
+
+function konumFiltre(kod) {
+  aktifKonum = aktifKonum === kod ? '' : kod;
   filtrele();
+  konumKartlariRender();
 }
 
 // ── FILTRE ──
 function filtrele() {
-  const q = (document.getElementById('arama').value || '').toLowerCase();
-  let sonuc = malzemeler;
+  var q = (document.getElementById('f-ara').value || '').toLowerCase();
+  var fKonum = document.getElementById('f-konum').value;
+  var fTip = document.getElementById('f-tip').value;
+  var fDurum = document.getElementById('f-durum').value;
 
-  if (aktifSekme === 'hammadde') {
-    sonuc = sonuc.filter(m => m.tip.includes('hammadde') || m.tip.includes('ham'));
-  } else if (aktifSekme === 'yari') {
-    sonuc = sonuc.filter(m => m.tip.includes('yari') || m.tip.includes('wip'));
-  } else if (aktifSekme === 'bitmis') {
-    sonuc = sonuc.filter(m => m.tip.includes('bitmis') || m.tip.includes('urun') || m.tip.includes('finished'));
-  } else if (aktifSekme === 'kritik') {
-    sonuc = sonuc.filter(m => m.minStok > 0 && m.miktar < m.minStok);
-  }
+  filtrelenmis = lotlar.filter(function(l) {
+    var aramaOk = !q || (l.lotNo || '').toLowerCase().indexOf(q) >= 0 || (l.malzeme || '').toLowerCase().indexOf(q) >= 0 || (l.grn || '').toLowerCase().indexOf(q) >= 0;
+    var konumOk = true;
+    if (aktifKonum) {
+      var kon = null;
+      for (var k = 0; k < KONUMLAR.length; k++) { if (KONUMLAR[k].kod === aktifKonum) { kon = KONUMLAR[k]; break; } }
+      konumOk = (l.konum || '').indexOf(aktifKonum) >= 0 || (kon && (l.konum || '').indexOf(kon.ad) >= 0) || (aktifKonum === 'KR-02' && (l.durum || '').toLowerCase().indexOf('karantina') >= 0);
+    }
+    if (fKonum && !aktifKonum) konumOk = (l.konum || '').indexOf(fKonum) >= 0;
+    var tipOk = !fTip || (l.tip || '').indexOf(fTip) >= 0;
+    var durumOk = !fDurum || (l.durum || '') === fDurum;
+    return aramaOk && konumOk && tipOk && durumOk;
+  });
 
-  if (q) {
-    sonuc = sonuc.filter(m =>
-      (m.matNo || '').toLowerCase().includes(q) ||
-      (m.ad || '').toLowerCase().includes(q)
-    );
-  }
-
-  filtrelenmis = sonuc;
-  listeRender();
+  tabloRender();
 }
 
-// ── LISTE RENDER ──
-function listeRender() {
-  const el = document.getElementById('liste');
-  document.getElementById('liste-sayi').textContent = filtrelenmis.length + ' kalem';
-
+// ── TABLO RENDER ──
+function tabloRender() {
+  var el = document.getElementById('tablo-body');
   if (!filtrelenmis.length) {
-    el.innerHTML = '<div class="bos-durum" style="padding:20px;"><p>Kayit bulunamadi</p></div>';
+    el.innerHTML = '<tr><td colspan="12" style="text-align:center;padding:30px;color:var(--metin4);">Kayit bulunamadi</td></tr>';
     return;
   }
 
-  el.innerHTML = filtrelenmis.map(m => {
-    const secili = m.id === aktifId ? ' secili' : '';
-    const kritik = (m.minStok > 0 && m.miktar < m.minStok);
-    return '<div class="liste-satir' + secili + '" onclick="detayYukle(\'' + m.id + '\')">'
-      + '<div class="liste-satir-no">' + (m.matNo || '—') + '</div>'
-      + '<div class="liste-satir-ad">' + (m.ad || '—') + '</div>'
-      + '<div class="liste-satir-alt">'
-      + '<span style="font-size:10px;color:var(--metin4);">' + m.miktar + ' ' + m.birim + '</span>'
-      + (kritik ? '<span class="badge badge-kirmizi">Kritik</span>' : '<span class="badge badge-yesil">Yeterli</span>')
-      + '</div></div>';
-  }).join('');
-}
+  var urlParams = new URLSearchParams(window.location.search);
+  var hlLot = urlParams.get('lot') || '';
 
-// ── DETAY ──
-function detayYukle(id) {
-  aktifId = id;
-  listeRender();
-  const m = malzemeler.find(x => x.id === id);
-  if (!m) return;
+  var html = '';
+  for (var i = 0; i < filtrelenmis.length; i++) {
+    var l = filtrelenmis[i];
+    var isKarantina = (l.durum || '').toLowerCase().indexOf('karantina') >= 0;
+    var isLow = l.minStok > 0 && l.miktar < l.minStok && !isKarantina;
+    var isHL = hlLot && (l.lotNo || '').indexOf(hlLot) >= 0;
+    var trClass = isKarantina ? ' class="karantina"' : isLow ? ' class="low-stock"' : isHL ? ' class="highlight"' : '';
 
-  const kritik = (m.minStok > 0 && m.miktar < m.minStok);
-  const dc = document.getElementById('detay-icerik');
+    // CoC badge
+    var cocBdg = '';
+    if (l.coc) {
+      cocBdg = '<span class="bdg b-grn">Var</span>';
+    } else if ((l.tip || '').indexOf('Hammadde') >= 0) {
+      cocBdg = '<span class="bdg b-red">Eksik</span>';
+    } else {
+      cocBdg = '<span class="bdg b-gray">—</span>';
+    }
 
-  dc.innerHTML = ''
-    + '<div class="sag-panel-ust">'
-    + '<div style="display:flex;align-items:center;gap:10px;">'
-    + '<span style="font-family:monospace;font-size:14px;font-weight:600;color:var(--laci);">' + (m.matNo || 'Malzeme') + '</span>'
-    + (kritik ? '<span class="badge badge-kirmizi">Kritik Stok</span>' : '<span class="badge badge-yesil">Yeterli</span>')
-    + '</div>'
-    + '<div style="display:flex;gap:6px;">'
-    + (kritik ? '<button class="btn btn-mavi btn-sm" onclick="satinalmaTalebi(\'' + m.id + '\')">Satinalma Talebi Olustur</button>' : '')
-    + '</div>'
-    + '</div>'
-    + '<div class="sag-panel-icerik">'
-    + '<div class="kart"><div class="kart-baslik">Malzeme Bilgileri</div>'
-    + '<div class="form-grid-2" style="gap:12px;">'
-    + formAlani('MAT No', m.matNo)
-    + formAlani('Malzeme Adi', m.ad)
-    + formAlani('Miktar', m.miktar + ' ' + m.birim)
-    + formAlani('Min Stok', m.minStok || '—')
-    + formAlani('Tip', m.tip)
-    + formAlani('Durum', m.durum)
-    + formAlani('Konum', m.konum || '—')
-    + formAlani('Giris Tarihi', m.tarih || '—')
-    + '</div></div>'
+    // Durum badge
+    var durumCls = 'b-grn';
+    var dr = (l.durum || '').toLowerCase();
+    if (dr.indexOf('karantina') >= 0) durumCls = 'b-red';
+    else if (dr.indexOf('rezerve') >= 0) durumCls = 'b-amr';
+    else if (dr.indexOf('tukendi') >= 0) durumCls = 'b-gray';
 
-    + '<div class="kart"><div class="kart-baslik">Stok Hareketi Ekle</div>'
-    + '<div class="form-grid-3" style="gap:12px;">'
-    + '<div class="form-grup"><label class="form-label">Hareket Tipi</label>'
-    + '<select class="form-select" id="h-tip"><option>Giris</option><option>Cikis</option><option>Sayim</option></select></div>'
-    + '<div class="form-grup"><label class="form-label">Miktar</label>'
-    + '<input class="form-input" type="number" id="h-miktar" placeholder="0"></div>'
-    + '<div class="form-grup"><label class="form-label">Aciklama</label>'
-    + '<input class="form-input" type="text" id="h-aciklama" placeholder="Hareket notu..."></div>'
-    + '</div>'
-    + '<div style="margin-top:10px;"><button class="btn btn-mavi" onclick="hareketKaydet(\'' + m.id + '\')">Hareketi Kaydet</button></div>'
-    + '</div>'
-    + '</div>';
-}
-
-function formAlani(etiket, deger) {
-  return '<div class="form-grup"><label class="form-label">' + etiket + '</label>'
-    + '<div style="font-size:13px;color:var(--metin2);padding:6px 0;">' + (deger || '—') + '</div></div>';
-}
-
-// ── HAREKET KAYDET (placeholder) ──
-function hareketKaydet(id) {
-  var tip = document.getElementById('h-tip').value;
-  var miktar = document.getElementById('h-miktar').value;
-  if (!miktar || isNaN(miktar)) {
-    alert('Gecerli bir miktar girin');
-    return;
+    html += '<tr' + trClass + '>';
+    html += '<td class="mono">' + (l.lotNo || '—') + '</td>';
+    html += '<td>' + (l.malzeme || '—') + '</td>';
+    html += '<td><span class="bdg b-blu">' + (l.tip || '—') + '</span></td>';
+    html += '<td class="muted">' + (l.konum || '—') + '</td>';
+    html += '<td style="font-weight:600;' + (isLow ? 'color:var(--kirmizi);' : '') + '">' + l.miktar + '</td>';
+    html += '<td class="muted">' + (l.birim || '') + '</td>';
+    html += '<td>' + cocBdg + '</td>';
+    html += '<td class="mono muted">' + (l.grn || '—') + '</td>';
+    html += '<td class="mono muted">' + (l.wo || '—') + '</td>';
+    html += '<td class="muted">' + fmtDate(l.tarih) + '</td>';
+    html += '<td><span class="bdg ' + durumCls + '">' + (l.durum || 'Depoda') + '</span></td>';
+    html += '<td>';
+    html += '<button class="btn btn-beyaz btn-sm" style="padding:2px 8px;font-size:10px;" onclick="openModal(\'cikis\',\'' + l.id + '\')">Cikis</button> ';
+    html += '<button class="btn btn-beyaz btn-sm" style="padding:2px 8px;font-size:10px;" onclick="openModal(\'transfer\',\'' + l.id + '\')">Transfer</button>';
+    html += '</td>';
+    html += '</tr>';
   }
-  alert('Stok hareketi kaydedildi: ' + tip + ' ' + miktar + ' adet\n(Bu ozellik yakin zamanda Airtable ile entegre edilecek)');
+  el.innerHTML = html;
 }
 
-// ── SATINALMA TALEBI ──
-function satinalmaTalebi(id) {
-  var m = malzemeler.find(function(x) { return x.id === id; });
-  if (!m) return;
-  if (confirm(m.ad + ' icin satinalma talebi olusturulsun mu?')) {
-    window.location.href = 'ersan_satinalma.html';
+// ── MODAL ──
+function openModal(type, lotId) {
+  var modal = document.getElementById('modal-' + type);
+  if (!modal) return;
+  modal.style.display = 'flex';
+
+  if (type === 'giris') {
+    document.getElementById('g-lot').value = genNo('LOT');
+    document.getElementById('g-malzeme').value = '';
+    document.getElementById('g-miktar').value = '';
+    document.getElementById('g-grn').value = '';
+    document.getElementById('g-coc').checked = false;
+    document.getElementById('g-notlar').value = '';
+    // URL param pre-fill
+    var urlParams = new URLSearchParams(window.location.search);
+    var grn = urlParams.get('grn');
+    if (grn) document.getElementById('g-grn').value = grn;
+  }
+  if (type === 'cikis') {
+    document.getElementById('c-no').value = genNo('CK');
+    document.getElementById('c-miktar').value = '';
+    document.getElementById('c-wo').value = '';
+    document.getElementById('c-notlar').value = '';
+    document.getElementById('c-mevcut').value = '';
+    if (lotId) {
+      document.getElementById('c-lot').value = lotId;
+      cikisLotSec();
+    }
+  }
+  if (type === 'transfer') {
+    document.getElementById('t-no').value = genNo('TR');
+    document.getElementById('t-miktar').value = '';
+    document.getElementById('t-notlar').value = '';
+    document.getElementById('t-kaynak').value = '';
+    document.getElementById('t-mevcut').value = '';
+    if (lotId) {
+      document.getElementById('t-lot').value = lotId;
+      transferLotSec();
+    }
   }
 }
 
-// ── TOAST ──
-function toast(msg, tip) {
-  var el = document.createElement('div');
-  el.className = 'toast ' + (tip === 'error' ? 'toast-hata' : 'toast-basari') + ' goster';
-  el.textContent = msg;
-  document.body.appendChild(el);
-  setTimeout(function() { el.remove(); }, 3000);
+function closeModal(type) {
+  var modal = document.getElementById('modal-' + type);
+  if (modal) modal.style.display = 'none';
+}
+
+// ── CIKIS LOT SEC ──
+function cikisLotSec() {
+  var id = document.getElementById('c-lot').value;
+  var lot = null;
+  for (var i = 0; i < lotlar.length; i++) { if (lotlar[i].id === id) { lot = lotlar[i]; break; } }
+  if (lot) {
+    document.getElementById('c-mevcut').value = lot.miktar + ' ' + lot.birim;
+    document.getElementById('c-miktar').max = lot.miktar;
+  } else {
+    document.getElementById('c-mevcut').value = '';
+  }
+}
+
+// ── TRANSFER LOT SEC ──
+function transferLotSec() {
+  var id = document.getElementById('t-lot').value;
+  var lot = null;
+  for (var i = 0; i < lotlar.length; i++) { if (lotlar[i].id === id) { lot = lotlar[i]; break; } }
+  if (lot) {
+    document.getElementById('t-kaynak').value = lot.konum || '—';
+    document.getElementById('t-mevcut').value = lot.miktar + ' ' + lot.birim;
+    document.getElementById('t-miktar').max = lot.miktar;
+  } else {
+    document.getElementById('t-kaynak').value = '';
+    document.getElementById('t-mevcut').value = '';
+  }
+}
+
+// ── KAYDET: STOK GIRISI ──
+function kaydetGiris() {
+  var malzeme = document.getElementById('g-malzeme').value.trim();
+  var miktar = parseFloat(document.getElementById('g-miktar').value);
+  if (!malzeme) { toast('Malzeme adi zorunlu', 'err'); return; }
+  if (!miktar || miktar <= 0) { toast('Gecerli miktar girin', 'err'); return; }
+
+  var btn = document.getElementById('g-kaydet-btn');
+  btn.disabled = true; btn.textContent = 'Kaydediliyor...';
+
+  var fields = {
+    'Lot No': document.getElementById('g-lot').value,
+    'Malzeme': malzeme,
+    'Tip': document.getElementById('g-tip').value,
+    'Konum': document.getElementById('g-konum').value,
+    'Miktar': miktar,
+    'Birim': document.getElementById('g-birim').value,
+    'Durum': 'Depoda'
+  };
+  var grn = document.getElementById('g-grn').value.trim();
+  if (grn) fields['GRN'] = grn;
+  var coc = document.getElementById('g-coc').checked;
+  if (coc) fields['CoC'] = true;
+  var notlar = document.getElementById('g-notlar').value.trim();
+  if (notlar) fields['Notlar'] = notlar;
+
+  apiPost(T_LOT, fields).then(function(res) {
+    if (res.error) throw new Error(res.error.message || 'API hatasi');
+    toast('Stok girisi kaydedildi: ' + fields['Lot No']);
+    closeModal('giris');
+    // Create WIP movement record
+    apiPost(T_WIP, {
+      'Hareket': 'Giris',
+      'Lot No': fields['Lot No'],
+      'Miktar': miktar,
+      'Konum': fields['Konum'],
+      'Notlar': 'Stok girisi — ' + (grn || '')
+    }).catch(function() {});
+    yukle();
+  }).catch(function(e) {
+    toast('Hata: ' + e.message, 'err');
+  }).then(function() {
+    btn.disabled = false; btn.textContent = 'Kaydet';
+  });
+}
+
+// ── KAYDET: STOK CIKISI ──
+function kaydetCikis() {
+  var lotId = document.getElementById('c-lot').value;
+  var miktar = parseFloat(document.getElementById('c-miktar').value);
+  if (!lotId) { toast('Lot secin', 'err'); return; }
+  if (!miktar || miktar <= 0) { toast('Gecerli miktar girin', 'err'); return; }
+
+  var lot = null;
+  for (var i = 0; i < lotlar.length; i++) { if (lotlar[i].id === lotId) { lot = lotlar[i]; break; } }
+  if (!lot) { toast('Lot bulunamadi', 'err'); return; }
+  if (miktar > lot.miktar) { toast('Miktar mevcut stoktan fazla! Max: ' + lot.miktar, 'err'); return; }
+
+  var btn = document.getElementById('c-kaydet-btn');
+  btn.disabled = true; btn.textContent = 'Kaydediliyor...';
+
+  var yeniMiktar = lot.miktar - miktar;
+  var yeniDurum = yeniMiktar <= 0 ? 'Tukendi' : lot.durum;
+  var patchFields = { 'Miktar': yeniMiktar };
+  if (yeniDurum !== lot.durum) patchFields['Durum'] = yeniDurum;
+
+  apiPatch(T_LOT, lotId, patchFields).then(function(res) {
+    if (res.error) throw new Error(res.error.message || 'API hatasi');
+    toast('Stok cikisi kaydedildi: ' + miktar + ' ' + lot.birim);
+    closeModal('cikis');
+    // WIP movement
+    apiPost(T_WIP, {
+      'Hareket': 'Cikis',
+      'Lot No': lot.lotNo,
+      'Miktar': miktar,
+      'Konum': lot.konum,
+      'Notlar': 'Cikis — ' + document.getElementById('c-hedef').value + ' ' + (document.getElementById('c-wo').value || '')
+    }).catch(function() {});
+    yukle();
+  }).catch(function(e) {
+    toast('Hata: ' + e.message, 'err');
+  }).then(function() {
+    btn.disabled = false; btn.textContent = 'Kaydet';
+  });
+}
+
+// ── KAYDET: TRANSFER ──
+function kaydetTransfer() {
+  var lotId = document.getElementById('t-lot').value;
+  var miktar = parseFloat(document.getElementById('t-miktar').value);
+  var hedef = document.getElementById('t-hedef').value;
+  if (!lotId) { toast('Lot secin', 'err'); return; }
+  if (!miktar || miktar <= 0) { toast('Gecerli miktar girin', 'err'); return; }
+  if (!hedef) { toast('Hedef konum secin', 'err'); return; }
+
+  var lot = null;
+  for (var i = 0; i < lotlar.length; i++) { if (lotlar[i].id === lotId) { lot = lotlar[i]; break; } }
+  if (!lot) { toast('Lot bulunamadi', 'err'); return; }
+  if (miktar > lot.miktar) { toast('Miktar mevcut stoktan fazla!', 'err'); return; }
+
+  var btn = document.getElementById('t-kaydet-btn');
+  btn.disabled = true; btn.textContent = 'Kaydediliyor...';
+
+  if (miktar === lot.miktar) {
+    // Full transfer — just change location
+    apiPatch(T_LOT, lotId, { 'Konum': hedef }).then(function(res) {
+      if (res.error) throw new Error(res.error.message || 'API hatasi');
+      toast('Transfer tamamlandi: ' + lot.lotNo + ' → ' + hedef);
+      closeModal('transfer');
+      apiPost(T_WIP, {
+        'Hareket': 'Transfer',
+        'Lot No': lot.lotNo,
+        'Miktar': miktar,
+        'Konum': hedef,
+        'Notlar': 'Transfer: ' + lot.konum + ' → ' + hedef
+      }).catch(function() {});
+      yukle();
+    }).catch(function(e) {
+      toast('Hata: ' + e.message, 'err');
+    }).then(function() {
+      btn.disabled = false; btn.textContent = 'Kaydet';
+    });
+  } else {
+    // Partial transfer — reduce source, create new lot at destination
+    var yeniLotNo = genNo('LOT');
+    apiPatch(T_LOT, lotId, { 'Miktar': lot.miktar - miktar }).then(function() {
+      return apiPost(T_LOT, {
+        'Lot No': yeniLotNo,
+        'Malzeme': lot.malzeme,
+        'Tip': lot.tip,
+        'Konum': hedef,
+        'Miktar': miktar,
+        'Birim': lot.birim,
+        'Durum': 'Depoda',
+        'Notlar': 'Transfer: ' + lot.lotNo + ' → ' + yeniLotNo
+      });
+    }).then(function(res) {
+      if (res.error) throw new Error(res.error.message || 'API hatasi');
+      toast('Kismi transfer: ' + miktar + ' ' + lot.birim + ' → ' + hedef + ' (' + yeniLotNo + ')');
+      closeModal('transfer');
+      apiPost(T_WIP, {
+        'Hareket': 'Transfer',
+        'Lot No': lot.lotNo + ' → ' + yeniLotNo,
+        'Miktar': miktar,
+        'Konum': hedef,
+        'Notlar': 'Kismi transfer: ' + lot.konum + ' → ' + hedef
+      }).catch(function() {});
+      yukle();
+    }).catch(function(e) {
+      toast('Hata: ' + e.message, 'err');
+    }).then(function() {
+      btn.disabled = false; btn.textContent = 'Kaydet';
+    });
+  }
+}
+
+// ── URL PARAMS ──
+function handleUrlParams() {
+  var urlParams = new URLSearchParams(window.location.search);
+  var grn = urlParams.get('grn');
+  if (grn) {
+    setTimeout(function() { openModal('giris'); }, 500);
+  }
 }
 
 // ── INIT ──
-document.addEventListener('DOMContentLoaded', yukle);
+document.addEventListener('DOMContentLoaded', function() {
+  yukle();
+  handleUrlParams();
+});
 </script>
 </body>
 </html>

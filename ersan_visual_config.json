@@ -97,6 +97,42 @@
       "canliUrl": "/ersan_teklif.html",
       "viewport": { "width": 1280, "height": 900 },
       "bekle": "#teklif-liste"
+    },
+    {
+      "id": "stok_durumu",
+      "canliUrl": "/ersan_stok.html",
+      "viewport": { "width": 1280, "height": 900 },
+      "bekle": ".kpi-row"
+    },
+    {
+      "id": "stok_hareketler",
+      "canliUrl": "/ersan_stok_hareketleri.html",
+      "viewport": { "width": 1280, "height": 900 },
+      "bekle": ".kpi-row"
+    },
+    {
+      "id": "sayim",
+      "canliUrl": "/ersan_sayim.html",
+      "viewport": { "width": 1280, "height": 900 },
+      "bekle": ".kpi-row"
+    },
+    {
+      "id": "atolye_harita",
+      "canliUrl": "/ersan_atolye_harita.html",
+      "viewport": { "width": 1280, "height": 900 },
+      "bekle": ".map-grid"
+    },
+    {
+      "id": "qr_etiketler",
+      "canliUrl": "/ersan_qr.html",
+      "viewport": { "width": 1280, "height": 900 },
+      "bekle": ".qr-tab-bar"
+    },
+    {
+      "id": "traveler",
+      "canliUrl": "/ersan_palet.html",
+      "viewport": { "width": 1280, "height": 900 },
+      "bekle": ".trv-grid"
     }
   ]
 }
