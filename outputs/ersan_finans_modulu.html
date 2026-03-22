@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ersan MES — Finans Modülü</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,-apple-system,sans-serif}
+body{background:#f3f4f6;display:flex;height:100vh;overflow:hidden}
+
+.sidebar{width:185px;background:#1a2b47;display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
+.sb-logo{padding:14px 12px 10px;border-bottom:1px solid rgba(255,255,255,.08)}
+.sb-brand{font-size:13px;font-weight:700;color:#fff}
+.sb-sub{font-size:9px;color:rgba(255,255,255,.35);margin-top:2px;text-transform:uppercase;letter-spacing:.05em}
+.sb-section{padding:12px 12px 3px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.28)}
+.sb-item{display:flex;align-items:center;gap:7px;padding:7px 12px;font-size:12px;color:rgba(255,255,255,.55);cursor:pointer;border-left:2px solid transparent;transition:all .12s}
+.sb-item:hover{background:rgba(255,255,255,.05);color:#fff}
+.sb-item.on{background:rgba(255,255,255,.08);color:#fff;border-left-color:#f59e0b;font-weight:500}
+.sb-dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.2);flex-shrink:0}
+.sb-item.on .sb-dot{background:#f59e0b}
+.sb-dim{color:rgba(255,255,255,.25)!important}
+.sb-badge{font-size:9px;padding:1px 5px;border-radius:8px;background:rgba(239,68,68,.7);color:#fff;margin-left:auto}
+
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.page{display:none;flex:1;flex-direction:column;overflow:hidden}
+.page.show{display:flex}
+.topbar{background:#fff;border-bottom:1px solid #e5e7eb;padding:0 16px;height:48px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.tb-left{display:flex;align-items:center;gap:8px}
+.tb-title{font-size:15px;font-weight:600;color:#1a2b47}
+.tb-sub{font-size:11px;color:#6b7280}
+.content{flex:1;overflow-y:auto;padding:14px 16px}
+
+.btn{font-size:11px;padding:5px 11px;border-radius:5px;border:1px solid #d1d5db;background:#fff;color:#374151;cursor:pointer;font-weight:500;white-space:nowrap;display:inline-flex;align-items:center;gap:4px;transition:all .12s}
+.btn:hover{background:#f9fafb}
+.btn-p{background:#1a2b47;color:#fff;border-color:#1a2b47}
+.btn-p:hover{background:#243d66}
+.btn-g{background:#d1fae5;color:#065f46;border-color:#6ee7b7}
+.btn-b{background:#dbeafe;color:#1e40af;border-color:#93c5fd}
+.btn-warn{background:#fef3c7;color:#92400e;border-color:#fcd34d}
+.btn-red{background:#fee2e2;color:#991b1b;border-color:#fca5a5}
+.btn-pur{background:#ede9fe;color:#5b21b6;border-color:#c4b5fd}
+.btn-teal{background:#ccfbf1;color:#0f766e;border-color:#5eead4}
+
+.bdg{display:inline-flex;align-items:center;gap:3px;font-size:10px;padding:2px 7px;border-radius:12px;font-weight:500;white-space:nowrap}
+.bdg::before{content:'';width:4px;height:4px;border-radius:50%;flex-shrink:0}
+.b-grn::before{background:#10b981}.b-grn{background:#d1fae5;color:#065f46}
+.b-amr::before{background:#f59e0b}.b-amr{background:#fef3c7;color:#92400e}
+.b-red::before{background:#ef4444}.b-red{background:#fee2e2;color:#991b1b}
+.b-blu::before{background:#3b82f6}.b-blu{background:#dbeafe;color:#1e40af}
+.b-gray::before{background:#9ca3af}.b-gray{background:#f3f4f6;color:#6b7280}
+.b-pur::before{background:#8b5cf6}.b-pur{background:#ede9fe;color:#5b21b6}
+.b-teal::before{background:#0d9488}.b-teal{background:#ccfbf1;color:#0f766e}
+
+.kpi-row{display:grid;gap:10px;margin-bottom:14px}
+.kpi{background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;border-top:3px solid;position:relative;overflow:hidden;cursor:pointer;transition:box-shadow .12s}
+.kpi:hover{box-shadow:0 2px 8px rgba(0,0,0,.07)}
+.kpi::after{content:'';position:absolute;right:-8px;top:-8px;width:50px;height:50px;border-radius:50%;opacity:.06}
+.kpi.s1{border-top-color:#3b82f6}.kpi.s1::after{background:#3b82f6}
+.kpi.s2{border-top-color:#f59e0b}.kpi.s2::after{background:#f59e0b}
+.kpi.s3{border-top-color:#ef4444}.kpi.s3::after{background:#ef4444}
+.kpi.s4{border-top-color:#10b981}.kpi.s4::after{background:#10b981}
+.kpi.s5{border-top-color:#8b5cf6}.kpi.s5::after{background:#8b5cf6}
+.kpi label{font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:#6b7280;display:block;margin-bottom:3px;font-weight:500}
+.kpi .num{font-size:22px;font-weight:700;color:#111827;line-height:1}
+.kpi .det{font-size:10px;color:#9ca3af;margin-top:2px}
+.kpi .trend{font-size:10px;margin-top:3px;font-weight:600}
+.up{color:#10b981}.dn{color:#ef4444}
+
+.card{background:#fff;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;margin-bottom:12px}
+.card-head{padding:10px 14px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;background:#fafafa}
+.card-title{font-size:12px;font-weight:600;color:#374151;display:flex;align-items:center;gap:6px}
+
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{text-align:left;padding:8px 12px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:#9ca3af;background:#f9fafb;border-bottom:1px solid #e5e7eb;cursor:pointer;user-select:none}
+.tbl th:hover{color:#1a2b47}
+.tbl td{padding:9px 12px;border-bottom:1px solid #f3f4f6;color:#374151;vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:#fafafa;cursor:pointer}
+.tbl tr.gecikme td{background:#fff8f8}
+.mono{font-family:monospace;font-size:11px;font-weight:700;color:#1a2b47}
+.muted{color:#6b7280;font-size:11px}
+.fl{display:block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#9ca3af;margin-bottom:3px}
+.fi{width:100%;font-size:12px;padding:6px 9px;border:1px solid #d1d5db;border-radius:5px;background:#fff;color:#111827;outline:none}
+.fi:focus{border-color:#1a2b47}
+.fi-ro{background:#f9fafb;color:#6b7280;border-color:#f3f4f6}
+.fi-grn{background:#f0fdf4;color:#065f46;border-color:#6ee7b7;font-family:monospace;font-weight:600}
+.fi-sel{width:100%;font-size:12px;padding:6px 9px;border:1px solid #d1d5db;border-radius:5px;background:#fff;color:#374151;outline:none}
+.fg2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.fg3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px}
+.fg4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:10px}
+
+/* Modal */
+.modal-ov{display:none;position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:400;align-items:flex-start;justify-content:center;padding:20px 16px 40px;overflow-y:auto;backdrop-filter:blur(3px)}
+.modal-ov.open{display:flex}
+.modal-box{background:#fff;border-radius:10px;width:100%;max-width:700px;overflow:hidden;box-shadow:0 32px 64px rgba(0,0,0,.25);animation:mIn .2s cubic-bezier(.16,1,.3,1)}
+@keyframes mIn{from{opacity:0;transform:translateY(-16px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+.m-head{background:#1a2b47;padding:14px 18px;display:flex;align-items:flex-start;justify-content:space-between}
+.m-title{font-size:14px;font-weight:600;color:#fff}
+.m-sub{font-size:11px;color:rgba(255,255,255,.5);margin-top:2px}
+.m-x{font-size:16px;color:rgba(255,255,255,.4);cursor:pointer;border:none;background:transparent}
+.m-x:hover{color:#fff}
+.m-body{padding:16px 18px;max-height:65vh;overflow-y:auto}
+.m-foot{padding:10px 18px;border-top:1px solid #e5e7eb;background:#f9fafb;display:flex;align-items:center;justify-content:space-between}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;right:24px;z-index:999;background:#1a2b47;color:#fff;padding:10px 16px;border-radius:8px;font-size:12px;font-weight:500;box-shadow:0 8px 24px rgba(0,0,0,.2);transform:translateY(80px);opacity:0;transition:all .3s cubic-bezier(.16,1,.3,1)}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.green{background:#065f46}
+.toast.red{background:#991b1b}
+.toast.orange{background:#92400e}
+
+/* Fatura durumu renkleri */
+.fv-bekliyor{background:#fef3c7;border-left:3px solid #f59e0b}
+.fv-vadegecti{background:#fff8f8;border-left:3px solid #ef4444}
+.fv-odendi{background:#f0fdf4;border-left:3px solid #10b981}
+
+/* Nakit akış çubuğu */
+.cashbar{height:8px;border-radius:4px;margin-top:4px;overflow:hidden;background:#f3f4f6}
+.cb-fill{height:100%;border-radius:4px;transition:width .6s ease}
+
+/* İlerleme / aging */
+.aging-row{display:flex;align-items:center;gap:8px;padding:6px 0;font-size:11px;border-bottom:1px solid #f3f4f6}
+.aging-row:last-child{border-bottom:none}
+.aging-label{width:100px;color:#374151;flex-shrink:0;font-weight:500}
+.aging-bar-wrap{flex:1;background:#f3f4f6;border-radius:3px;height:18px;overflow:hidden;position:relative}
+.aging-bar{height:100%;border-radius:3px;display:flex;align-items:center;padding-left:6px;font-size:10px;font-weight:600;color:#fff}
+.aging-meta{width:60px;text-align:right;font-size:11px;font-family:monospace;font-weight:600;flex-shrink:0}
+.aging-count{width:30px;text-align:right;font-size:10px;color:#9ca3af;flex-shrink:0}
+
+/* 3-Way Match bandı */
+.match-band{background:linear-gradient(135deg,#1a2b47,#243d66);border-radius:7px;padding:8px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.match-chip{font-size:10px;padding:2px 8px;border-radius:4px;font-weight:500;border:1px solid}
+.mc-ok{background:rgba(16,185,129,.2);color:#6ee7b7;border-color:rgba(16,185,129,.3)}
+.mc-warn{background:rgba(245,158,11,.2);color:#fbbf24;border-color:rgba(245,158,11,.3)}
+.mc-err{background:rgba(239,68,68,.2);color:#fca5a5;border-color:rgba(239,68,68,.3)}
+
+/* Nakit akış mini chart */
+.cashflow-chart{display:flex;align-items:flex-end;gap:4px;height:80px;padding:4px 0}
+.cf-bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px}
+.cf-in{border-radius:3px 3px 0 0;width:100%;background:#10b981;min-height:2px}
+.cf-out{border-radius:0 0 3px 3px;width:100%;background:#ef4444;min-height:2px}
+.cf-label{font-size:8px;color:#9ca3af;text-align:center}
+
+/* Vade badge */
+.vade-chip{font-size:9px;padding:1px 5px;border-radius:3px;font-weight:600}
+.vc-ok{background:#d1fae5;color:#065f46}
+.vc-yakın{background:#fef3c7;color:#92400e}
+.vc-geçti{background:#fee2e2;color:#991b1b}
+
+/* Ödeme timeline */
+.timeline{position:relative;padding-left:18px}
+.timeline::before{content:'';position:absolute;left:5px;top:0;bottom:0;width:2px;background:#e5e7eb;border-radius:1px}
+.tl-item{position:relative;padding:0 0 12px 12px;font-size:11px}
+.tl-item::before{content:'';position:absolute;left:-7px;top:4px;width:10px;height:10px;border-radius:50%;background:#1a2b47;border:2px solid #fff;box-shadow:0 0 0 1px #e5e7eb}
+.tl-item.ok::before{background:#10b981}
+.tl-item.warn::before{background:#f59e0b}
+.tl-item.err::before{background:#ef4444}
+.tl-date{color:#9ca3af;font-size:10px;margin-bottom:1px}
+.tl-text{color:#374151;font-weight:500}
+.tl-meta{color:#6b7280;font-size:10px}
+
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:2px}
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+  <div class="sb-logo">
+    <div class="sb-brand">Ersan MES</div>
+    <div class="sb-sub">AS9100 · Üretim Yönetimi</div>
+  </div>
+  <div class="sb-section sb-dim">Satış</div>
+  <div class="sb-item sb-dim"><div class="sb-dot"></div>Teklifler</div>
+  <div class="sb-item sb-dim"><div class="sb-dot"></div>Siparişler</div>
+  <div class="sb-section sb-dim">Satınalma</div>
+  <div class="sb-item sb-dim"><div class="sb-dot"></div>Satınalma Siparişleri</div>
+  <div class="sb-section">Finans</div>
+  <div class="sb-item on" id="sb-panel" onclick="goTo('panel',this)"><div class="sb-dot"></div>Finans Paneli</div>
+  <div class="sb-item" id="sb-mustfat" onclick="goTo('mustfat',this)"><div class="sb-dot"></div>Müşteri Faturaları<span class="sb-badge">3</span></div>
+  <div class="sb-item" id="sb-tedfat" onclick="goTo('tedfat',this)"><div class="sb-dot"></div>Tedarikçi Faturaları<span class="sb-badge">5</span></div>
+  <div class="sb-item" id="sb-nakit" onclick="goTo('nakit',this)"><div class="sb-dot"></div>Nakit Akışı</div>
+  <div class="sb-item" id="sb-karsılık" onclick="goTo('mutabakat',this)"><div class="sb-dot"></div>Mutabakat</div>
+  <div class="sb-section sb-dim">Kalite</div>
+  <div class="sb-item sb-dim"><div class="sb-dot"></div>Kalite Hub<span class="sb-badge">7</span></div>
+  <div class="sb-section sb-dim">Üretim</div>
+  <div class="sb-item sb-dim"><div class="sb-dot"></div>İş Emirleri</div>
+</div>
+
+<div class="main">
+
+<!-- ═══════════════════════════════
+     FİNANS PANELİ
+═══════════════════════════════ -->
+<div class="page show" id="pg-panel">
+  <div class="topbar">
+    <div class="tb-left">
+      <span class="tb-title">Finans Paneli</span>
+      <span class="tb-sub">Mart 2026</span>
+    </div>
+    <div style="display:flex;gap:8px">
+      <select style="font-size:11px;padding:4px 8px;border:1px solid #d1d5db;border-radius:5px;background:#fff;outline:none">
+        <option>Mart 2026</option><option>Şubat 2026</option><option>Ocak 2026</option>
+      </select>
+      <button class="btn btn-p">📊 Rapor</button>
+    </div>
+  </div>
+  <div class="content">
+
+    <!-- KPI -->
+    <div class="kpi-row" style="grid-template-columns:repeat(5,1fr)">
+      <div class="kpi s4" onclick="goTo('mustfat',document.getElementById('sb-mustfat'))">
+        <label>Alacak (Tahsil Edilecek)</label>
+        <div class="num">₺1.84M</div>
+        <div class="det">12 açık fatura</div>
+        <div class="trend up">↑ ₺340K bu ay kesildi</div>
+      </div>
+      <div class="kpi s3" onclick="goTo('tedfat',document.getElementById('sb-tedfat'))">
+        <label>Borç (Ödenecek)</label>
+        <div class="num">₺620K</div>
+        <div class="det">8 açık fatura</div>
+        <div class="trend dn">⚠ 2 fatura vadesi geçti</div>
+      </div>
+      <div class="kpi s1">
+        <label>Net Pozisyon</label>
+        <div class="num" style="color:#065f46">₺1.22M</div>
+        <div class="det">Alacak − Borç</div>
+      </div>
+      <div class="kpi s2">
+        <label>Bu Ay Tahsilat</label>
+        <div class="num">₺905K</div>
+        <div class="det">Beklenen: ₺1.1M</div>
+        <div class="trend dn">↓ %82 gerçekleşme</div>
+      </div>
+      <div class="kpi s5">
+        <label>Gecikmiş Alacak</label>
+        <div class="num" style="color:#dc2626">₺280K</div>
+        <div class="det">3 müşteri · 15-45 gün</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr 340px;gap:12px">
+
+      <!-- Alacak Yaşlandırma -->
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title">📈 Alacak Yaşlandırma</span>
+          <button class="btn btn-warn" style="font-size:10px;padding:3px 8px" onclick="goTo('mustfat',document.getElementById('sb-mustfat'))">Tümünü Gör</button>
+        </div>
+        <div style="padding:10px 14px">
+          <div class="aging-row">
+            <div class="aging-label">0-30 gün</div>
+            <div class="aging-bar-wrap">
+              <div class="aging-bar" style="width:65%;background:#10b981">₺1.56M</div>
+            </div>
+            <div class="aging-meta" style="color:#065f46">₺1.56M</div>
+            <div class="aging-count">9 fatura</div>
+          </div>
+          <div class="aging-row">
+            <div class="aging-label">31-60 gün</div>
+            <div class="aging-bar-wrap">
+              <div class="aging-bar" style="width:8%;background:#f59e0b">₺180K</div>
+            </div>
+            <div class="aging-meta" style="color:#d97706">₺180K</div>
+            <div class="aging-count">2 fatura</div>
+          </div>
+          <div class="aging-row">
+            <div class="aging-label">&gt;60 gün</div>
+            <div class="aging-bar-wrap">
+              <div class="aging-bar" style="width:4%;background:#ef4444">₺100K</div>
+            </div>
+            <div class="aging-meta" style="color:#dc2626">₺100K</div>
+            <div class="aging-count">1 fatura</div>
+          </div>
+          <div style="margin-top:10px;padding-top:10px;border-top:1px solid #f3f4f6;display:flex;justify-content:space-between;font-size:11px">
+            <span style="color:#6b7280">Ortalama tahsilat süresi</span>
+            <span style="font-weight:700;color:#374151">28 gün</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Nakit Akış Mini Chart -->
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title">💰 Nakit Akışı — Son 6 Ay</span>
+          <button class="btn" style="font-size:10px;padding:3px 8px" onclick="goTo('nakit',document.getElementById('sb-nakit'))">Detay</button>
+        </div>
+        <div style="padding:10px 14px">
+          <div style="display:flex;gap:8px;font-size:10px;margin-bottom:8px">
+            <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:2px;background:#10b981;display:inline-block"></span>Tahsilat</span>
+            <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:2px;background:#ef4444;display:inline-block"></span>Ödeme</span>
+          </div>
+          <div class="cashflow-chart">
+            <div class="cf-bar-wrap"><div class="cf-in" style="height:70%"></div><div class="cf-out" style="height:45%"></div><div class="cf-label">Eki</div></div>
+            <div class="cf-bar-wrap"><div class="cf-in" style="height:55%"></div><div class="cf-out" style="height:60%"></div><div class="cf-label">Kas</div></div>
+            <div class="cf-bar-wrap"><div class="cf-in" style="height:80%"></div><div class="cf-out" style="height:40%"></div><div class="cf-label">Ara</div></div>
+            <div class="cf-bar-wrap"><div class="cf-in" style="height:60%"></div><div class="cf-out" style="height:35%"></div><div class="cf-label">Oca</div></div>
+            <div class="cf-bar-wrap"><div class="cf-in" style="height:65%"></div><div class="cf-out" style="height:50%"></div><div class="cf-label">Şub</div></div>
+            <div class="cf-bar-wrap"><div class="cf-in" style="height:75%"></div><div class="cf-out" style="height:42%"></div><div class="cf-label">Mar</div></div>
+          </div>
+          <div style="margin-top:8px;padding-top:8px;border-top:1px solid #f3f4f6;display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:11px">
+            <div><div style="color:#9ca3af;margin-bottom:2px">Bu Ay Giriş</div><div style="font-weight:700;color:#065f46">₺905.000</div></div>
+            <div><div style="color:#9ca3af;margin-bottom:2px">Bu Ay Çıkış</div><div style="font-weight:700;color:#991b1b">₺380.000</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Yaklaşan Vadeler -->
+      <div class="card">
+        <div class="card-head"><span class="card-title">⏰ Yaklaşan Vadeler (7 gün)</span></div>
+        <div style="padding:8px 14px">
+          <div style="padding:6px 0;border-bottom:1px solid #f3f4f6">
+            <div style="display:flex;align-items:center;justify-content:space-between;font-size:11px;margin-bottom:2px">
+              <span style="font-weight:500">Erdem Müşteri</span>
+              <span style="font-weight:700;color:#065f46;font-family:monospace">₺340K</span>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <span class="muted">MFS-26-00008 · SP-2026-034</span>
+              <span class="vade-chip vc-yakın">22.03</span>
+            </div>
+          </div>
+          <div style="padding:6px 0;border-bottom:1px solid #f3f4f6">
+            <div style="display:flex;align-items:center;justify-content:space-between;font-size:11px;margin-bottom:2px">
+              <span style="font-weight:500">Tedarikçi Ödeme</span>
+              <span style="font-weight:700;color:#dc2626;font-family:monospace">₺85K</span>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <span class="muted">TDF-26-00012 · Özdemir Çelik</span>
+              <span class="vade-chip vc-geçti">⚠ Geçti</span>
+            </div>
+          </div>
+          <div style="padding:6px 0;border-bottom:1px solid #f3f4f6">
+            <div style="display:flex;align-items:center;justify-content:space-between;font-size:11px;margin-bottom:2px">
+              <span style="font-weight:500">X Y Z Havacılık</span>
+              <span style="font-weight:700;color:#065f46;font-family:monospace">₺225K</span>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <span class="muted">MFS-26-00007 · SP-2026-033</span>
+              <span class="vade-chip vc-ok">25.03</span>
+            </div>
+          </div>
+          <div style="padding:6px 0">
+            <div style="display:flex;align-items:center;justify-content:space-between;font-size:11px;margin-bottom:2px">
+              <span style="font-weight:500">Tedarikçi Ödeme</span>
+              <span style="font-weight:700;color:#dc2626;font-family:monospace">₺42K</span>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <span class="muted">TDF-26-00011 · Kardemir</span>
+              <span class="vade-chip vc-yakın">26.03</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Son İşlemler -->
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">📋 Son Fatura Hareketleri</span>
+        <div style="display:flex;gap:6px">
+          <button class="btn" style="font-size:11px">Excel</button>
+          <button class="btn btn-p" style="font-size:11px" onclick="yeniFaturaAc()">+ Fatura Kes</button>
+        </div>
+      </div>
+      <table class="tbl">
+        <thead><tr>
+          <th>Fatura No</th><th>Tip</th><th>Taraf</th><th>Sipariş / PO</th>
+          <th>Tarih</th><th>Vade</th><th>Tutar</th><th>Durum</th><th></th>
+        </tr></thead>
+        <tbody>
+          <tr onclick="faturaDetayAc('MFS-26-00008')">
+            <td><span class="mono">MFS-26-00008</span></td>
+            <td><span class="bdg b-grn">Satış</span></td>
+            <td><div style="font-weight:500">Erdem Müşteri</div><div class="muted">PO-2026-789</div></td>
+            <td><span class="mono" style="font-size:10px">SP-2026-034</span></td>
+            <td class="muted">21.03.2026</td>
+            <td><span class="vade-chip vc-yakın">22.03.2026</span></td>
+            <td style="font-weight:700;color:#065f46">₺340.000</td>
+            <td><span class="bdg b-amr">Bekliyor</span></td>
+            <td><button class="btn btn-g" style="font-size:10px;padding:2px 7px" onclick="event.stopPropagation();tahsilatKaydet('MFS-26-00008')">Tahsilat</button></td>
+          </tr>
+          <tr onclick="faturaDetayAc('MFS-26-00007')">
+            <td><span class="mono">MFS-26-00007</span></td>
+            <td><span class="bdg b-grn">Satış</span></td>
+            <td><div style="font-weight:500">X Y Z Havacılık</div></td>
+            <td><span class="mono" style="font-size:10px">SP-2026-033</span></td>
+            <td class="muted">20.03.2026</td>
+            <td><span class="vade-chip vc-ok">25.03.2026</span></td>
+            <td style="font-weight:700;color:#065f46">₺225.000</td>
+            <td><span class="bdg b-amr">Bekliyor</span></td>
+            <td><button class="btn btn-g" style="font-size:10px;padding:2px 7px" onclick="event.stopPropagation();tahsilatKaydet('MFS-26-00007')">Tahsilat</button></td>
+          </tr>
+          <tr class="gecikme" onclick="faturaDetayAc('TDF-26-00012')">
+            <td><span class="mono">TDF-26-00012</span></td>
+            <td><span class="bdg b-red">Alış</span></td>
+            <td><div style="font-weight:500">Özdemir Çelik</div></td>
+            <td><span class="mono" style="font-size:10px">PO-26-00008</span></td>
+            <td class="muted">05.03.2026</td>
+            <td><span class="vade-chip vc-geçti">⚠ 19.03.2026</span></td>
+            <td style="font-weight:700;color:#dc2626">₺85.000</td>
+            <td><span class="bdg b-red">Vadesi Geçti</span></td>
+            <td><button class="btn btn-warn" style="font-size:10px;padding:2px 7px" onclick="event.stopPropagation();odemeYap('TDF-26-00012')">Öde</button></td>
+          </tr>
+          <tr onclick="faturaDetayAc('MFS-26-00006')">
+            <td><span class="mono">MFS-26-00006</span></td>
+            <td><span class="bdg b-grn">Satış</span></td>
+            <td><div style="font-weight:500">Erdem Müşteri</div></td>
+            <td><span class="mono" style="font-size:10px">SP-2026-031</span></td>
+            <td class="muted">15.03.2026</td>
+            <td><span class="vade-chip vc-ok">Ödendi</span></td>
+            <td style="font-weight:700">₺405.000</td>
+            <td><span class="bdg b-teal">Ödendi</span></td>
+            <td><button class="btn" style="font-size:10px;padding:2px 7px">Makbuz</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════
+     MÜŞTERİ FATURALARI
+═══════════════════════════════ -->
+<div class="page" id="pg-mustfat">
+  <div class="topbar">
+    <div class="tb-left">
+      <span class="tb-title">Müşteri Faturaları</span>
+      <span class="tb-sub">Satış faturaları · Tahsilat takibi</span>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-b" onclick="csvExport()">↓ Excel</button>
+      <button class="btn btn-p" onclick="yeniFaturaAc()">+ Fatura Kes</button>
+    </div>
+  </div>
+  <div class="content">
+
+    <div class="kpi-row" style="grid-template-columns:repeat(4,1fr)">
+      <div class="kpi s4"><label>Toplam Alacak</label><div class="num">₺1.84M</div><div class="det">12 açık fatura</div></div>
+      <div class="kpi s3"><label>Vadesi Geçmiş</label><div class="num">₺280K</div><div class="det trend dn">3 müşteri · acil</div></div>
+      <div class="kpi s4"><label>Bu Ay Tahsilat</label><div class="num">₺905K</div><div class="det">10 fatura ödendi</div></div>
+      <div class="kpi s2"><label>Ort. Tahsilat Süresi</label><div class="num">28 gün</div><div class="det">Hedef: 30 gün</div></div>
+    </div>
+
+    <!-- Filtre -->
+    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+      <input class="fi" placeholder="Fatura no, müşteri, sipariş ara..." style="flex:1;min-width:200px;padding:6px 10px">
+      <select class="fi-sel" style="width:auto">
+        <option>Tüm Durumlar</option><option>Bekliyor</option><option>Vadesi Geçti</option><option>Ödendi</option><option>Kısmi Ödeme</option>
+      </select>
+      <select class="fi-sel" style="width:auto">
+        <option>Tüm Müşteriler</option><option>Erdem Müşteri</option><option>X Y Z Havacılık</option>
+      </select>
+      <select class="fi-sel" style="width:auto">
+        <option>Bu Ay</option><option>Son 3 Ay</option><option>Bu Yıl</option><option>Tümü</option>
+      </select>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">📄 Fatura Listesi</span>
+        <div style="display:flex;gap:5px;font-size:10px;align-items:center">
+          <span style="padding:2px 7px;border-radius:4px;background:#fef3c7;color:#92400e;font-weight:600">3 bekliyor</span>
+          <span style="padding:2px 7px;border-radius:4px;background:#fee2e2;color:#991b1b;font-weight:600">1 vadesi geçti</span>
+        </div>
+      </div>
+      <table class="tbl">
+        <thead><tr>
+          <th><input type="checkbox" onchange="tumunuSec(this)"></th>
+          <th>Fatura No ↕</th><th>Müşteri</th><th>Sipariş / Müş.PO</th>
+          <th>Tarih ↕</th><th>Vade ↕</th><th>Tutar ↕</th>
+          <th>Ödenen</th><th>Kalan</th><th>Durum</th><th>İşlem</th>
+        </tr></thead>
+        <tbody>
+          <tr class="fv-bekliyor" onclick="faturaDetayAc('MFS-26-00008')">
+            <td onclick="event.stopPropagation()"><input type="checkbox" onchange="satirSec(this)"></td>
+            <td><span class="mono">MFS-26-00008</span></td>
+            <td><div style="font-weight:500;font-size:12px">Erdem Müşteri</div><div class="muted">PO-2026-789</div></td>
+            <td><span class="mono" style="font-size:10px;color:#059669">SP-2026-034</span></td>
+            <td class="muted">21.03.2026</td>
+            <td><span class="vade-chip vc-yakın">22.03.2026 · 1 gün</span></td>
+            <td style="font-weight:700;color:#065f46;font-family:monospace">₺340.000</td>
+            <td class="muted font-mono">—</td>
+            <td style="font-weight:700;color:#374151;font-family:monospace">₺340.000</td>
+            <td><span class="bdg b-amr">Bekliyor</span></td>
+            <td onclick="event.stopPropagation()" style="display:flex;gap:4px">
+              <button class="btn btn-g" style="font-size:10px;padding:2px 6px" onclick="tahsilatKaydet('MFS-26-00008')">Tahsilat</button>
+              <button class="btn" style="font-size:10px;padding:2px 6px">PDF</button>
+            </td>
+          </tr>
+          <tr class="fv-bekliyor" onclick="faturaDetayAc('MFS-26-00007')">
+            <td onclick="event.stopPropagation()"><input type="checkbox" onchange="satirSec(this)"></td>
+            <td><span class="mono">MFS-26-00007</span></td>
+            <td><div style="font-weight:500;font-size:12px">X Y Z Havacılık</div></td>
+            <td><span class="mono" style="font-size:10px;color:#059669">SP-2026-033</span></td>
+            <td class="muted">20.03.2026</td>
+            <td><span class="vade-chip vc-ok">25.03.2026 · 4 gün</span></td>
+            <td style="font-weight:700;color:#065f46;font-family:monospace">₺225.000</td>
+            <td class="muted">—</td>
+            <td style="font-weight:700;color:#374151;font-family:monospace">₺225.000</td>
+            <td><span class="bdg b-amr">Bekliyor</span></td>
+            <td onclick="event.stopPropagation()" style="display:flex;gap:4px">
+              <button class="btn btn-g" style="font-size:10px;padding:2px 6px" onclick="tahsilatKaydet('MFS-26-00007')">Tahsilat</button>
+              <button class="btn" style="font-size:10px;padding:2px 6px">PDF</button>
+            </td>
+          </tr>
+          <tr class="fv-odendi" onclick="faturaDetayAc('MFS-26-00006')">
+            <td onclick="event.stopPropagation()"><input type="checkbox" onchange="satirSec(this)"></td>
+            <td><span class="mono">MFS-26-00006</span></td>
+            <td><div style="font-weight:500;font-size:12px">Erdem Müşteri</div></td>
+            <td><span class="mono" style="font-size:10px;color:#059669">SP-2026-031</span></td>
+            <td class="muted">15.03.2026</td>
+            <td><span class="vade-chip vc-ok">Ödendi ✓</span></td>
+            <td style="font-weight:700;font-family:monospace">₺405.000</td>
+            <td style="color:#065f46;font-family:monospace;font-weight:600">₺405.000</td>
+            <td style="color:#9ca3af;font-family:monospace">—</td>
+            <td><span class="bdg b-teal">Ödendi</span></td>
+            <td onclick="event.stopPropagation()" style="display:flex;gap:4px">
+              <button class="btn" style="font-size:10px;padding:2px 6px">Makbuz</button>
+              <button class="btn btn-b" style="font-size:10px;padding:2px 6px">PDF</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <!-- Toplu işlem bar -->
+      <div id="toplu-bar" style="display:none;padding:8px 12px;background:#1a2b47;display:flex;align-items:center;gap:8px">
+        <span style="font-size:11px;color:#fff" id="secili-sayi">0 seçili</span>
+        <button class="btn btn-g" style="font-size:10px">Toplu Tahsilat</button>
+        <button class="btn" style="font-size:10px">PDF Toplu Gönder</button>
+        <button class="btn" style="font-size:10px;color:#fff;background:transparent;border-color:rgba(255,255,255,.2)">Excel</button>
+      </div>
+      <div style="padding:8px 12px;border-top:1px solid #e5e7eb;background:#f9fafb;display:flex;justify-content:space-between;font-size:11px;align-items:center">
+        <span class="muted">3 fatura · Toplam: <strong>₺970.000</strong></span>
+        <div style="display:flex;gap:4px">
+          <button class="btn" style="font-size:10px;padding:3px 7px">‹</button>
+          <button class="btn btn-p" style="font-size:10px;padding:3px 7px">1</button>
+          <button class="btn" style="font-size:10px;padding:3px 7px">›</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════
+     TEDARİKÇİ FATURALARI
+═══════════════════════════════ -->
+<div class="page" id="pg-tedfat">
+  <div class="topbar">
+    <div class="tb-left">
+      <span class="tb-title">Tedarikçi Faturaları</span>
+      <span class="tb-sub">Alış faturaları · 3-Way Match · Ödeme planı</span>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-b">↓ Excel</button>
+      <button class="btn btn-p" onclick="yeniAlisFaturaAc()">+ Fatura Gir</button>
+    </div>
+  </div>
+  <div class="content">
+
+    <!-- 3-Way Match Bandı -->
+    <div class="match-band">
+      <span style="font-size:14px">🔗</span>
+      <span style="font-size:11px;font-weight:700;color:#fff">3-Way Match Kontrolü</span>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-left:auto">
+        <span class="match-chip mc-ok">✓ PO Eşleşti: 6</span>
+        <span class="match-chip mc-warn">⚠ GRN Bekliyor: 2</span>
+        <span class="match-chip mc-err">✗ Fiyat Uyuşmazlığı: 1</span>
+        <span class="match-chip mc-warn">⚠ Onay Bekleyen: 3</span>
+      </div>
+    </div>
+
+    <div class="kpi-row" style="grid-template-columns:repeat(4,1fr)">
+      <div class="kpi s3"><label>Toplam Borç</label><div class="num">₺620K</div><div class="det">8 açık fatura</div></div>
+      <div class="kpi s3"><label>Vadesi Geçmiş</label><div class="num">₺85K</div><div class="det trend dn">1 tedarikçi · acil</div></div>
+      <div class="kpi s4"><label>Bu Ay Ödenen</label><div class="num">₺380K</div><div class="det">5 fatura</div></div>
+      <div class="kpi s2"><label>3-Way Match Bekleyen</label><div class="num">3</div><div class="det">Onay gerekiyor</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">📄 Tedarikçi Fatura Listesi</span>
+        <div style="display:flex;gap:5px">
+          <span style="font-size:10px;padding:2px 7px;border-radius:4px;background:#fee2e2;color:#991b1b;font-weight:600">1 Vadesi Geçti</span>
+          <span style="font-size:10px;padding:2px 7px;border-radius:4px;background:#fef3c7;color:#92400e;font-weight:600">3 Onay Bekliyor</span>
+        </div>
+      </div>
+      <table class="tbl">
+        <thead><tr>
+          <th>Fatura No</th><th>Tedarikçi</th><th>PO / GRN</th>
+          <th>Tarih</th><th>Vade</th><th>Tutar</th>
+          <th>3-Way Match</th><th>Durum</th><th>İşlem</th>
+        </tr></thead>
+        <tbody>
+          <tr class="fv-vadegecti" onclick="alisFaturaDetayAc('TDF-26-00012')">
+            <td><span class="mono">TDF-26-00012</span></td>
+            <td><div style="font-weight:500">Özdemir Çelik</div></td>
+            <td>
+              <div><span class="mono" style="font-size:10px;color:#1e40af">PO-26-00008</span></div>
+              <div><span class="mono" style="font-size:10px;color:#059669">GRN-26-00005</span></div>
+            </td>
+            <td class="muted">05.03.2026</td>
+            <td><span class="vade-chip vc-geçti">⚠ 19.03 geçti</span></td>
+            <td style="font-weight:700;color:#dc2626;font-family:monospace">₺85.000</td>
+            <td>
+              <div style="display:flex;flex-direction:column;gap:2px">
+                <span style="font-size:9px;padding:1px 5px;border-radius:3px;background:#d1fae5;color:#065f46;font-weight:600">✓ PO Eşleşti</span>
+                <span style="font-size:9px;padding:1px 5px;border-radius:3px;background:#d1fae5;color:#065f46;font-weight:600">✓ GRN Eşleşti</span>
+                <span style="font-size:9px;padding:1px 5px;border-radius:3px;background:#d1fae5;color:#065f46;font-weight:600">✓ Fiyat OK</span>
+              </div>
+            </td>
+            <td><span class="bdg b-red">Vadesi Geçti</span></td>
+            <td onclick="event.stopPropagation()">
+              <button class="btn btn-warn" style="font-size:10px;padding:2px 7px" onclick="odemeYap('TDF-26-00012')">Öde</button>
+            </td>
+          </tr>
+          <tr onclick="alisFaturaDetayAc('TDF-26-00013')">
+            <td><span class="mono">TDF-26-00013</span></td>
+            <td><div style="font-weight:500">Kardemir A.Ş.</div></td>
+            <td>
+              <div><span class="mono" style="font-size:10px;color:#1e40af">PO-26-00009</span></div>
+              <div><span class="muted" style="font-size:10px">GRN bekleniyor</span></div>
+            </td>
+            <td class="muted">18.03.2026</td>
+            <td><span class="vade-chip vc-yakın">26.03.2026</span></td>
+            <td style="font-weight:700;font-family:monospace">₺42.000</td>
+            <td>
+              <div style="display:flex;flex-direction:column;gap:2px">
+                <span style="font-size:9px;padding:1px 5px;border-radius:3px;background:#d1fae5;color:#065f46;font-weight:600">✓ PO Eşleşti</span>
+                <span style="font-size:9px;padding:1px 5px;border-radius:3px;background:#fef3c7;color:#92400e;font-weight:600">⚠ GRN Bekleniyor</span>
+              </div>
+            </td>
+            <td><span class="bdg b-amr">Onay Bekliyor</span></td>
+            <td onclick="event.stopPropagation()">
+              <button class="btn btn-g" style="font-size:10px;padding:2px 7px" onclick="faturaOnayla('TDF-26-00013')">Onayla</button>
+            </td>
+          </tr>
+          <tr class="gecikme" onclick="alisFaturaDetayAc('TDF-26-00011')">
+            <td><span class="mono">TDF-26-00011</span></td>
+            <td><div style="font-weight:500">Çelik San. A.Ş.</div></td>
+            <td>
+              <div><span class="mono" style="font-size:10px;color:#1e40af">PO-26-00007</span></div>
+              <div><span class="mono" style="font-size:10px;color:#059669">GRN-26-00004</span></div>
+            </td>
+            <td class="muted">10.03.2026</td>
+            <td><span class="vade-chip vc-ok">28.03.2026</span></td>
+            <td style="font-weight:700;font-family:monospace">₺128.000</td>
+            <td>
+              <div style="display:flex;flex-direction:column;gap:2px">
+                <span style="font-size:9px;padding:1px 5px;border-radius:3px;background:#d1fae5;color:#065f46;font-weight:600">✓ PO Eşleşti</span>
+                <span style="font-size:9px;padding:1px 5px;border-radius:3px;background:#d1fae5;color:#065f46;font-weight:600">✓ GRN Eşleşti</span>
+                <span style="font-size:9px;padding:1px 5px;border-radius:3px;background:#fee2e2;color:#991b1b;font-weight:600">✗ Fiyat Farkı: +₺3.200</span>
+              </div>
+            </td>
+            <td><span class="bdg b-red">Uyuşmazlık</span></td>
+            <td onclick="event.stopPropagation()">
+              <button class="btn btn-red" style="font-size:10px;padding:2px 7px" onclick="uyusmazlikAc('TDF-26-00011')">İncele</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════
+     NAKİT AKIŞI
+═══════════════════════════════ -->
+<div class="page" id="pg-nakit">
+  <div class="topbar">
+    <div class="tb-left">
+      <span class="tb-title">Nakit Akışı</span>
+      <span class="tb-sub">Gerçekleşen + 90 günlük projeksiyon</span>
+    </div>
+    <div style="display:flex;gap:8px">
+      <select style="font-size:11px;padding:4px 8px;border:1px solid #d1d5db;border-radius:5px;background:#fff;outline:none">
+        <option>30 Günlük</option><option>60 Günlük</option><option>90 Günlük</option>
+      </select>
+      <button class="btn btn-p">📊 Rapor</button>
+    </div>
+  </div>
+  <div class="content">
+    <div class="kpi-row" style="grid-template-columns:repeat(4,1fr)">
+      <div class="kpi s4"><label>Bu Ay Giriş</label><div class="num">₺905K</div><div class="det trend up">↑ %12 geçen ay</div></div>
+      <div class="kpi s3"><label>Bu Ay Çıkış</label><div class="num">₺380K</div><div class="det">Tedarikçi ödemeleri</div></div>
+      <div class="kpi s1"><label>Net Nakit Akışı</label><div class="num" style="color:#065f46">+₺525K</div><div class="det">Bu ay</div></div>
+      <div class="kpi s2"><label>30 Gün Beklenti</label><div class="num">+₺680K</div><div class="det">Projeksiyon</div></div>
+    </div>
+
+    <!-- Haftalık Nakit Projeksiyonu -->
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">📅 Haftalık Projeksiyon — Mart–Nisan 2026</span>
+        <div style="display:flex;gap:6px;font-size:10px;align-items:center">
+          <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:2px;background:#10b981;display:inline-block"></span>Tahsilat</span>
+          <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:2px;background:#ef4444;display:inline-block"></span>Ödeme</span>
+          <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:2px;background:#1a2b47;display:inline-block"></span>Net</span>
+        </div>
+      </div>
+      <div style="overflow-x:auto;padding:14px">
+        <table class="tbl" id="nakit-tablo">
+          <thead><tr>
+            <th>Hafta</th><th>Beklenen Tahsilat</th><th>Planlanan Ödeme</th>
+            <th>Net</th><th>Kümülatif</th><th>Kaynaklar</th>
+          </tr></thead>
+          <tbody>
+            <tr>
+              <td style="font-weight:600">22–28 Mar</td>
+              <td style="color:#065f46;font-weight:600;font-family:monospace">₺565.000</td>
+              <td style="color:#dc2626;font-family:monospace">₺127.000</td>
+              <td style="font-weight:700;color:#065f46;font-family:monospace">+₺438.000</td>
+              <td style="font-family:monospace;color:#374151">₺963K</td>
+              <td class="muted">MFS-00008, MFS-00007</td>
+            </tr>
+            <tr>
+              <td style="font-weight:600">29 Mar–4 Nis</td>
+              <td style="color:#065f46;font-weight:600;font-family:monospace">₺225.000</td>
+              <td style="color:#dc2626;font-family:monospace">₺85.000</td>
+              <td style="font-weight:700;color:#065f46;font-family:monospace">+₺140.000</td>
+              <td style="font-family:monospace;color:#374151">₺1.10M</td>
+              <td class="muted">MFS-00007, PO-26-009</td>
+            </tr>
+            <tr style="background:#fafafa">
+              <td style="font-weight:600;color:#9ca3af;font-style:italic">5–11 Nis</td>
+              <td style="color:#9ca3af;font-family:monospace;font-style:italic">~₺340.000</td>
+              <td style="color:#9ca3af;font-family:monospace;font-style:italic">~₺120.000</td>
+              <td style="font-weight:700;color:#9ca3af;font-family:monospace">~+₺220K</td>
+              <td style="font-family:monospace;color:#9ca3af">~₺1.32M</td>
+              <td class="muted" style="font-style:italic">Tahmin</td>
+            </tr>
+            <tr style="background:#fafafa">
+              <td style="font-weight:600;color:#9ca3af;font-style:italic">12–18 Nis</td>
+              <td style="color:#9ca3af;font-family:monospace;font-style:italic">~₺280.000</td>
+              <td style="color:#9ca3af;font-family:monospace;font-style:italic">~₺95.000</td>
+              <td style="font-weight:700;color:#9ca3af;font-family:monospace">~+₺185K</td>
+              <td style="font-family:monospace;color:#9ca3af">~₺1.50M</td>
+              <td class="muted" style="font-style:italic">Tahmin</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Ödeme Takvimi Timeline -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="card">
+        <div class="card-head"><span class="card-title">📅 Yaklaşan Ödemeler</span></div>
+        <div style="padding:12px 14px">
+          <div class="timeline">
+            <div class="tl-item err">
+              <div class="tl-date">19 Mart 2026 — GEÇTİ</div>
+              <div class="tl-text">Özdemir Çelik — TDF-26-00012</div>
+              <div class="tl-meta">₺85.000 · PO-26-00008</div>
+            </div>
+            <div class="tl-item warn">
+              <div class="tl-date">22 Mart 2026 — 1 gün kaldı</div>
+              <div class="tl-text">Tahsilat: Erdem Müşteri</div>
+              <div class="tl-meta">₺340.000 · MFS-26-00008</div>
+            </div>
+            <div class="tl-item">
+              <div class="tl-date">25 Mart 2026</div>
+              <div class="tl-text">Tahsilat: X Y Z Havacılık</div>
+              <div class="tl-meta">₺225.000 · MFS-26-00007</div>
+            </div>
+            <div class="tl-item">
+              <div class="tl-date">26 Mart 2026</div>
+              <div class="tl-text">Ödeme: Kardemir A.Ş.</div>
+              <div class="tl-meta">₺42.000 · TDF-26-00011</div>
+            </div>
+            <div class="tl-item">
+              <div class="tl-date">28 Mart 2026</div>
+              <div class="tl-text">Ödeme: Çelik San. A.Ş.</div>
+              <div class="tl-meta">₺128.000 · TDF-26-00010</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="card-title">🏦 Banka Hesapları</span></div>
+        <div style="padding:10px 14px">
+          <div style="padding:8px 0;border-bottom:1px solid #f3f4f6">
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
+              <span style="font-weight:500">İş Bankası — TL Vadesiz</span>
+              <span style="font-weight:700;color:#065f46;font-family:monospace">₺1.240.000</span>
+            </div>
+            <div class="cashbar"><div class="cb-fill" style="width:80%;background:#10b981"></div></div>
+          </div>
+          <div style="padding:8px 0;border-bottom:1px solid #f3f4f6">
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
+              <span style="font-weight:500">Garanti — Döviz (USD)</span>
+              <span style="font-weight:700;color:#374151;font-family:monospace">$28.500</span>
+            </div>
+            <div class="cashbar"><div class="cb-fill" style="width:40%;background:#3b82f6"></div></div>
+          </div>
+          <div style="padding:8px 0">
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
+              <span style="font-weight:500">Akbank — Kredi Limit</span>
+              <span style="font-weight:700;color:#374151;font-family:monospace">₺500K kullanılabilir</span>
+            </div>
+            <div class="cashbar"><div class="cb-fill" style="width:30%;background:#9ca3af"></div></div>
+          </div>
+          <div style="margin-top:10px;padding-top:10px;border-top:1px solid #f3f4f6;font-size:12px;display:flex;justify-content:space-between">
+            <span style="color:#6b7280;font-weight:500">Toplam Nakit</span>
+            <span style="font-weight:700;font-size:14px;color:#065f46">₺1.975.000 + $28.5K</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════
+     MUTABAKAT
+═══════════════════════════════ -->
+<div class="page" id="pg-mutabakat">
+  <div class="topbar">
+    <div class="tb-left">
+      <span class="tb-title">Mutabakat</span>
+      <span class="tb-sub">Cari hesap · Müşteri · Tedarikçi</span>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-b">Mutabakat Mektubu</button>
+      <button class="btn btn-p">+ Yeni Mutabakat</button>
+    </div>
+  </div>
+  <div class="content">
+    <div class="kpi-row" style="grid-template-columns:repeat(3,1fr)">
+      <div class="kpi s4"><label>Mutabık Müşteri</label><div class="num">8 / 12</div><div class="det">4 bekliyor</div></div>
+      <div class="kpi s3"><label>Mutabık Tedarikçi</label><div class="num">5 / 7</div><div class="det">2 uyuşmazlık</div></div>
+      <div class="kpi s2"><label>Toplam Uyuşmazlık</label><div class="num">₺3.200</div><div class="det">1 fatura · inceleniyor</div></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><span class="card-title">🔗 Cari Hesap Mutabakat</span></div>
+      <table class="tbl">
+        <thead><tr>
+          <th>Firma</th><th>Tip</th><th>Bizim Kayıt</th><th>Karşı Kayıt</th>
+          <th>Fark</th><th>Son Mutabakat</th><th>Durum</th><th></th>
+        </tr></thead>
+        <tbody>
+          <tr>
+            <td style="font-weight:500">Erdem Müşteri</td>
+            <td><span class="bdg b-grn">Müşteri</span></td>
+            <td style="font-family:monospace">₺745.000</td>
+            <td style="font-family:monospace">₺745.000</td>
+            <td style="color:#065f46;font-weight:600">₺0</td>
+            <td class="muted">15.03.2026</td>
+            <td><span class="bdg b-teal">Mutabık</span></td>
+            <td><button class="btn" style="font-size:10px;padding:2px 7px">Mektup</button></td>
+          </tr>
+          <tr>
+            <td style="font-weight:500">X Y Z Havacılık</td>
+            <td><span class="bdg b-grn">Müşteri</span></td>
+            <td style="font-family:monospace">₺225.000</td>
+            <td style="font-family:monospace">₺225.000</td>
+            <td style="color:#065f46;font-weight:600">₺0</td>
+            <td class="muted">14.03.2026</td>
+            <td><span class="bdg b-teal">Mutabık</span></td>
+            <td><button class="btn" style="font-size:10px;padding:2px 7px">Mektup</button></td>
+          </tr>
+          <tr class="gecikme">
+            <td style="font-weight:500">Çelik San. A.Ş.</td>
+            <td><span class="bdg b-red">Tedarikçi</span></td>
+            <td style="font-family:monospace">₺128.000</td>
+            <td style="font-family:monospace">₺131.200</td>
+            <td style="color:#dc2626;font-weight:700">₺3.200</td>
+            <td class="muted">—</td>
+            <td><span class="bdg b-red">Uyuşmazlık</span></td>
+            <td><button class="btn btn-red" style="font-size:10px;padding:2px 7px" onclick="uyusmazlikAc('TDF-26-00011')">İncele</button></td>
+          </tr>
+          <tr>
+            <td style="font-weight:500">Kardemir A.Ş.</td>
+            <td><span class="bdg b-red">Tedarikçi</span></td>
+            <td style="font-family:monospace">₺42.000</td>
+            <td class="muted" style="font-style:italic">Bekleniyor</td>
+            <td class="muted">—</td>
+            <td class="muted">—</td>
+            <td><span class="bdg b-amr">Bekliyor</span></td>
+            <td><button class="btn btn-b" style="font-size:10px;padding:2px 7px">Talep Gönder</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<!-- ── YENİ SATIŞ FATURASI MODAL ── -->
+<div class="modal-ov" id="yeni-fatura-modal" onclick="moKapat(event,'yeni-fatura-modal')">
+  <div class="modal-box">
+    <div class="m-head">
+      <div><div class="m-title">Müşteri Faturası Kes</div><div class="m-sub" id="fatura-modal-sub">Fatura No otomatik üretilecek</div></div>
+      <button class="m-x" onclick="document.getElementById('yeni-fatura-modal').classList.remove('open')">✕</button>
+    </div>
+    <div class="m-body">
+      <div class="fg3">
+        <div><label class="fl">Fatura No</label><input class="fi fi-ro" placeholder="MFS-26-XXXXX otomatik" readonly></div>
+        <div><label class="fl">Fatura Tarihi <span style="color:#dc2626">*</span></label><input class="fi" type="date" id="fv-tarih"></div>
+        <div><label class="fl">Vade Tarihi <span style="color:#dc2626">*</span></label><input class="fi" type="date" id="fv-vade"></div>
+      </div>
+      <div class="fg2">
+        <div><label class="fl">Müşteri <span style="color:#dc2626">*</span></label>
+          <select class="fi-sel" id="fv-musteri" onchange="siparisListele(this)">
+            <option value="">— Seçin —</option>
+            <option>Erdem Müşteri</option><option>X Y Z Havacılık A.Ş.</option>
+          </select></div>
+        <div><label class="fl">Müşteri PO No</label><input class="fi" id="fv-mpo" placeholder="Müşterinin sipariş numarası"></div>
+      </div>
+      <div class="fg2">
+        <div><label class="fl">Bağlı Sipariş <span style="color:#dc2626">*</span></label>
+          <select class="fi-sel" id="fv-siparis">
+            <option value="">— Müşteri seçin —</option>
+          </select></div>
+        <div><label class="fl">Ödeme Yöntemi</label>
+          <select class="fi-sel" id="fv-odeme">
+            <option>Havale / EFT</option><option>Çek</option><option>Nakit</option><option>Kredi Kartı</option>
+          </select></div>
+      </div>
+      <div style="margin-bottom:10px"><label class="fl">Fatura Kalemleri</label>
+        <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;padding:8px 10px;font-size:12px">
+          <div style="display:flex;gap:8px;align-items:center;padding:4px 0;border-bottom:1px solid #f3f4f6">
+            <span style="flex:1;font-weight:500">Role İmalatı</span>
+            <span style="font-family:monospace;color:#6b7280">100 Adet × ₺3.400</span>
+            <span style="font-family:monospace;font-weight:700;color:#065f46">₺340.000</span>
+          </div>
+          <div style="display:flex;justify-content:flex-end;padding-top:6px;font-size:13px;font-weight:700;color:#374151">Toplam: ₺340.000</div>
+        </div>
+      </div>
+      <div><label class="fl">Not / Açıklama</label><textarea class="fi" rows="2" placeholder="Fatura açıklaması..."></textarea></div>
+    </div>
+    <div class="m-foot">
+      <div style="font-size:11px;color:#9ca3af">Sipariş seçilince kalemler otomatik gelir</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn" onclick="document.getElementById('yeni-fatura-modal').classList.remove('open')">İptal</button>
+        <button class="btn btn-b" onclick="faturaOnizle()">👁 Önizle</button>
+        <button class="btn btn-p" onclick="faturaKaydet()">✓ Fatura Kes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── TAHSİLAT MODAL ── -->
+<div class="modal-ov" id="tahsilat-modal" onclick="moKapat(event,'tahsilat-modal')">
+  <div class="modal-box" style="max-width:500px">
+    <div class="m-head">
+      <div><div class="m-title">Tahsilat Kaydet</div><div class="m-sub" id="tahsilat-fatura-no">MFS-26-00008</div></div>
+      <button class="m-x" onclick="document.getElementById('tahsilat-modal').classList.remove('open')">✕</button>
+    </div>
+    <div class="m-body">
+      <div style="background:#f0fdf4;border:1px solid #6ee7b7;border-radius:6px;padding:10px 12px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center">
+        <div><div style="font-size:11px;color:#065f46;font-weight:600">Tahsil Edilecek Tutar</div><div class="muted" id="tahsilat-musteri">—</div></div>
+        <div style="font-size:20px;font-weight:700;color:#065f46;font-family:monospace" id="tahsilat-tutar">₺340.000</div>
+      </div>
+      <div class="fg2">
+        <div><label class="fl">Tahsilat Tarihi <span style="color:#dc2626">*</span></label><input class="fi" type="date" id="th-tarih"></div>
+        <div><label class="fl">Tahsil Edilen Tutar <span style="color:#dc2626">*</span></label><input class="fi" type="number" id="th-tutar" placeholder="Tam veya kısmi ödeme"></div>
+      </div>
+      <div class="fg2">
+        <div><label class="fl">Ödeme Yöntemi</label>
+          <select class="fi-sel" id="th-yontem">
+            <option>Havale / EFT</option><option>Çek</option><option>Nakit</option>
+          </select></div>
+        <div><label class="fl">Banka / Hesap</label>
+          <select class="fi-sel" id="th-banka">
+            <option>İş Bankası TL</option><option>Garanti USD</option><option>Akbank</option>
+          </select></div>
+      </div>
+      <div><label class="fl">Açıklama / Referans No</label><input class="fi" id="th-aciklama" placeholder="Havale dekont no, çek no..."></div>
+    </div>
+    <div class="m-foot">
+      <div style="font-size:11px;color:#9ca3af">Kısmi ödeme girilirse fatura "Kısmi Ödeme" olur</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn" onclick="document.getElementById('tahsilat-modal').classList.remove('open')">İptal</button>
+        <button class="btn btn-g" onclick="tahsilatKaydetOnay()">✓ Tahsilatı Kaydet</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── ÖDEME MODAL ── -->
+<div class="modal-ov" id="odeme-modal" onclick="moKapat(event,'odeme-modal')">
+  <div class="modal-box" style="max-width:500px">
+    <div class="m-head">
+      <div><div class="m-title">Ödeme Yap</div><div class="m-sub" id="odeme-fatura-no">TDF-26-00012</div></div>
+      <button class="m-x" onclick="document.getElementById('odeme-modal').classList.remove('open')">✕</button>
+    </div>
+    <div class="m-body">
+      <div style="background:#fff8f8;border:1px solid #fca5a5;border-radius:6px;padding:10px 12px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center">
+        <div><div style="font-size:11px;color:#dc2626;font-weight:600">Ödenecek Tutar</div><div class="muted" id="odeme-tedarikci">—</div></div>
+        <div style="font-size:20px;font-weight:700;color:#dc2626;font-family:monospace" id="odeme-tutar">₺85.000</div>
+      </div>
+      <div class="fg2">
+        <div><label class="fl">Ödeme Tarihi</label><input class="fi" type="date" id="od-tarih"></div>
+        <div><label class="fl">Ödeme Tutarı</label><input class="fi" type="number" id="od-tutar" placeholder="Tutar"></div>
+      </div>
+      <div class="fg2">
+        <div><label class="fl">Ödeme Yöntemi</label>
+          <select class="fi-sel"><option>Havale / EFT</option><option>Çek</option></select></div>
+        <div><label class="fl">Gönderen Hesap</label>
+          <select class="fi-sel"><option>İş Bankası TL</option><option>Akbank</option></select></div>
+      </div>
+      <div><label class="fl">Açıklama</label><input class="fi" placeholder="Ödeme açıklaması..."></div>
+    </div>
+    <div class="m-foot">
+      <div style="font-size:11px;color:#9ca3af">Onay sonrası ödeme kaydedilir</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn" onclick="document.getElementById('odeme-modal').classList.remove('open')">İptal</button>
+        <button class="btn btn-warn" onclick="odemeKaydetOnay()">✓ Ödemeyi Kaydet</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+function goTo(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('show'));
+  document.querySelectorAll('.sb-item').forEach(b => b.classList.remove('on'));
+  document.getElementById('pg-' + id).classList.add('show');
+  if (el) el.classList.add('on');
+}
+function moKapat(e, id) {
+  if (e.target === document.getElementById(id))
+    document.getElementById(id).classList.remove('open');
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape')
+    document.querySelectorAll('.modal-ov.open').forEach(m => m.classList.remove('open'));
+});
+function toast(msg, type = '') {
+  const el = document.getElementById('toast');
+  el.innerHTML = msg;
+  el.className = 'toast ' + type + ' show';
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// Fatura kes
+function yeniFaturaAc() {
+  const d = new Date(); d.setDate(d.getDate() + 30);
+  document.getElementById('fv-tarih').value = new Date().toISOString().split('T')[0];
+  document.getElementById('fv-vade').value  = d.toISOString().split('T')[0];
+  document.getElementById('yeni-fatura-modal').classList.add('open');
+}
+function yeniAlisFaturaAc() {
+  toast('Alış faturası giriş formu açılıyor...', '');
+  document.getElementById('yeni-fatura-modal').classList.add('open');
+}
+function siparisListele(sel) {
+  const sp = document.getElementById('fv-siparis');
+  sp.innerHTML = sel.value
+    ? '<option>SP-2026-034</option><option>SP-2026-033</option>'
+    : '<option>— Müşteri seçin —</option>';
+}
+function faturaOnizle() { toast('📄 PDF önizleme oluşturuluyor...', ''); }
+function faturaKaydet() {
+  const musteri = document.getElementById('fv-musteri').value;
+  if (!musteri) { alert('Müşteri seçiniz.'); return; }
+  document.getElementById('yeni-fatura-modal').classList.remove('open');
+  toast('✓ MFS-26-00009 faturası kesildi!', 'green');
+}
+
+// Tahsilat
+function tahsilatKaydet(no) {
+  document.getElementById('tahsilat-fatura-no').textContent = no;
+  document.getElementById('tahsilat-musteri').textContent =
+    no === 'MFS-26-00008' ? 'Erdem Müşteri' : 'X Y Z Havacılık A.Ş.';
+  document.getElementById('tahsilat-tutar').textContent =
+    no === 'MFS-26-00008' ? '₺340.000' : '₺225.000';
+  document.getElementById('th-tutar').value =
+    no === 'MFS-26-00008' ? 340000 : 225000;
+  document.getElementById('th-tarih').value = new Date().toISOString().split('T')[0];
+  document.getElementById('tahsilat-modal').classList.add('open');
+}
+function tahsilatKaydetOnay() {
+  const tutar = document.getElementById('th-tutar').value;
+  if (!tutar) { alert('Tutar giriniz.'); return; }
+  document.getElementById('tahsilat-modal').classList.remove('open');
+  toast('✓ Tahsilat kaydedildi — ₺' + parseInt(tutar).toLocaleString('tr-TR'), 'green');
+}
+
+// Ödeme
+function odemeYap(no) {
+  document.getElementById('odeme-fatura-no').textContent = no;
+  document.getElementById('odeme-tedarikci').textContent =
+    no === 'TDF-26-00012' ? 'Özdemir Çelik' : 'Kardemir A.Ş.';
+  document.getElementById('odeme-tutar').textContent =
+    no === 'TDF-26-00012' ? '₺85.000' : '₺42.000';
+  document.getElementById('od-tutar').value =
+    no === 'TDF-26-00012' ? 85000 : 42000;
+  document.getElementById('od-tarih').value = new Date().toISOString().split('T')[0];
+  document.getElementById('odeme-modal').classList.add('open');
+}
+function odemeKaydetOnay() {
+  document.getElementById('odeme-modal').classList.remove('open');
+  toast('✓ Ödeme kaydedildi.', 'orange');
+}
+
+// Fatura detay (basit alert simülasyonu)
+function faturaDetayAc(no) {
+  toast('📄 ' + no + ' detayı açılıyor...', '');
+}
+function alisFaturaDetayAc(no) { faturaDetayAc(no); }
+function faturaOnayla(no) {
+  toast('✓ ' + no + ' onaylandı — ödeme planına eklendi.', 'green');
+}
+function uyusmazlikAc(no) {
+  toast('⚠ ' + no + ' uyuşmazlık inceleme ekranı açılıyor...', 'orange');
+}
+function csvExport() {
+  toast('📊 Excel dosyası indiriliyor...', '');
+}
+function tumunuSec(cb) {
+  document.querySelectorAll('#pg-mustfat input[type=checkbox]').forEach(c => c.checked = cb.checked);
+}
+function satirSec(cb) {
+  const secili = document.querySelectorAll('#pg-mustfat tbody input[type=checkbox]:checked').length;
+  const bar = document.getElementById('toplu-bar');
+  if (bar) {
+    bar.style.display = secili > 0 ? 'flex' : 'none';
+    const sayi = bar.querySelector('#secili-sayi');
+    if (sayi) sayi.textContent = secili + ' seçili';
+  }
+}
+</script>
+</body>
+</html>

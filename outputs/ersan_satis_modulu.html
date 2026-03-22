@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ersan MES — Satış Modülü</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,-apple-system,sans-serif}
+body{background:#f3f4f6;display:flex;height:100vh;overflow:hidden}
+
+/* Sidebar */
+.sidebar{width:200px;background:#1a2b47;display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
+.sb-logo{padding:16px 14px 10px;border-bottom:1px solid rgba(255,255,255,.08)}
+.sb-brand{font-size:13px;font-weight:700;color:#fff;letter-spacing:.05em}
+.sb-sub{font-size:10px;color:rgba(255,255,255,.4);margin-top:2px}
+.sb-section{padding:12px 14px 4px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.3)}
+.sb-item{display:flex;align-items:center;gap:8px;padding:8px 14px;font-size:12px;font-weight:500;color:rgba(255,255,255,.6);cursor:pointer;transition:all .12s;border-left:2px solid transparent}
+.sb-item:hover{background:rgba(255,255,255,.06);color:#fff}
+.sb-item.on{background:rgba(255,255,255,.1);color:#fff;border-left-color:#f59e0b}
+.sb-item .ico{font-size:13px;width:16px;flex-shrink:0}
+.sb-dim{color:rgba(255,255,255,.25)!important;font-size:11px}
+
+/* Main */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{background:#fff;border-bottom:1px solid #e5e7eb;padding:10px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.tb-title{font-size:16px;font-weight:600;color:#1a2b47}
+.tb-sub{font-size:11px;color:#6b7280;margin-top:1px}
+.tb-btns{display:flex;gap:8px}
+.content{flex:1;overflow-y:auto;padding:16px 20px}
+
+/* Butonlar */
+.btn{font-size:11px;padding:5px 12px;border-radius:5px;border:1px solid #d1d5db;background:#fff;color:#374151;cursor:pointer;font-weight:500;transition:all .12s}
+.btn:hover{background:#f9fafb}
+.btn-p{background:#1a2b47;color:#fff;border-color:#1a2b47}
+.btn-p:hover{background:#243d66}
+.btn-g{background:#d1fae5;color:#065f46;border-color:#6ee7b7}
+.btn-b{background:#dbeafe;color:#1e40af;border-color:#93c5fd}
+.btn-warn{background:#fef3c7;color:#92400e;border-color:#fcd34d}
+.btn-red{background:#fee2e2;color:#991b1b;border-color:#fca5a5}
+.btn-pur{background:#ede9fe;color:#5b21b6;border-color:#c4b5fd}
+
+/* KPI */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.kpi{background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;border-top:3px solid transparent}
+.kpi.s1{border-top-color:#3b82f6}.kpi.s2{border-top-color:#f59e0b}
+.kpi.s3{border-top-color:#ef4444}.kpi.s4{border-top-color:#10b981}
+.kpi label{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#6b7280;display:block;margin-bottom:4px;font-weight:500}
+.kpi .num{font-size:24px;font-weight:600;color:#111827;line-height:1}
+.kpi.s3 .num{color:#dc2626}
+.kpi .det{font-size:10px;color:#9ca3af;margin-top:3px}
+
+/* Tablo */
+.card{background:#fff;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;margin-bottom:12px}
+.card-head{padding:10px 14px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;background:#f9fafb}
+.tbl table{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{text-align:left;padding:8px 12px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#6b7280;background:#f9fafb;border-bottom:1px solid #e5e7eb}
+.tbl td{padding:9px 12px;border-bottom:1px solid #f3f4f6;color:#111827;vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:#fafafa;cursor:pointer}
+.mono{font-family:monospace;font-size:11px;font-weight:700;color:#1a2b47}
+.muted{color:#6b7280;font-size:11px}
+
+/* Badge */
+.bdg{display:inline-flex;align-items:center;gap:3px;font-size:10px;padding:2px 8px;border-radius:12px;font-weight:500;white-space:nowrap}
+.bdg::before{content:'';width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.b-grn::before{background:#10b981}.b-grn{background:#d1fae5;color:#065f46}
+.b-amr::before{background:#f59e0b}.b-amr{background:#fef3c7;color:#92400e}
+.b-red::before{background:#ef4444}.b-red{background:#fee2e2;color:#991b1b}
+.b-blu::before{background:#3b82f6}.b-blu{background:#dbeafe;color:#1e40af}
+.b-gray::before{background:#9ca3af}.b-gray{background:#f3f4f6;color:#6b7280}
+.b-pur::before{background:#8b5cf6}.b-pur{background:#ede9fe;color:#5b21b6}
+
+/* Sekme */
+.tab-bar{display:flex;background:#fff;border:1px solid #e5e7eb;border-radius:8px 8px 0 0;border-bottom:none}
+.tab-btn{flex:1;padding:10px 8px;font-size:12px;font-weight:500;text-align:center;cursor:pointer;border:none;background:transparent;color:#6b7280;border-bottom:2px solid transparent;transition:all .12s;display:flex;align-items:center;justify-content:center;gap:5px}
+.tab-btn.on{color:#1a2b47;border-bottom-color:#1a2b47;background:#f8faff}
+.tab-btn:hover:not(.on){background:#f9fafb}
+.tab-count{font-size:10px;padding:1px 6px;border-radius:10px;font-weight:600}
+.tc-amr{background:#fef3c7;color:#92400e}.tc-grn{background:#d1fae5;color:#065f46}
+.tc-blu{background:#dbeafe;color:#1e40af}.tc-pur{background:#ede9fe;color:#5b21b6}
+.panel{display:none;background:#fff;border:1px solid #e5e7eb;border-radius:0 0 8px 8px}
+.panel.show{display:block}
+
+/* İki kolon */
+.two-col{display:grid;grid-template-columns:300px 1fr;gap:12px;align-items:start}
+.list-panel{background:#fff;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden}
+.lp-head{padding:10px 14px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;background:#f9fafb;font-size:12px;font-weight:600;color:#374151}
+
+/* Liste item */
+.list-item{padding:10px 14px;border-bottom:1px solid #f3f4f6;cursor:pointer;border-left:3px solid transparent;transition:all .1s}
+.list-item:last-child{border-bottom:none}
+.list-item:hover{background:#f9fafb}
+.list-item.sel{background:#eff6ff;border-left-color:#1a2b47}
+.list-item.warn{border-left-color:#ef4444;background:#fff8f8}
+.list-item.amr{border-left-color:#f59e0b}
+.li-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:3px}
+.li-no{font-family:monospace;font-size:11px;font-weight:700;color:#1a2b47}
+
+/* Detay header */
+.det-head{background:#1a2b47;padding:12px 16px;display:flex;align-items:flex-start;justify-content:space-between}
+.det-no{font-family:monospace;font-size:14px;font-weight:700;color:#fff}
+.det-sub{font-size:11px;color:rgba(255,255,255,.6);margin-top:2px}
+.det-badges{display:flex;gap:5px;margin-top:6px;flex-wrap:wrap}
+.det-bdg{font-size:10px;padding:2px 8px;border-radius:12px;background:rgba(255,255,255,.15);color:#fff}
+
+/* Akış çubuğu */
+.akis{display:flex;border-bottom:1px solid #e5e7eb}
+.as{flex:1;padding:7px 8px;text-align:center;font-size:10px;font-weight:500;color:#9ca3af;border-right:1px solid #f3f4f6;position:relative}
+.as:last-child{border-right:none}
+.as.done{background:#f0fdf4;color:#065f46}
+.as.done::after{content:'✓';position:absolute;right:6px;top:50%;transform:translateY(-50%);font-size:10px}
+.as.active{background:#1a2b47;color:#fff}
+.as .sn{font-size:9px;display:block;opacity:.7;margin-top:1px}
+
+/* Müşteri kart grid */
+.mk-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.mk{border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;cursor:pointer;transition:all .12s}
+.mk:hover{border-color:#93c5fd;box-shadow:0 2px 8px rgba(0,0,0,.06);transform:translateY(-1px)}
+.mk-head{padding:12px;background:#f9fafb;border-bottom:1px solid #e5e7eb}
+.mk-adi{font-size:13px;font-weight:600;color:#111827;margin-bottom:2px}
+.mk-sub{font-size:10px;color:#6b7280}
+.mk-body{padding:10px 12px}
+.mk-row{display:flex;justify-content:space-between;font-size:11px;padding:3px 0;border-bottom:1px solid #f9fafb}
+.mk-row:last-child{border-bottom:none}
+.mk-k{color:#6b7280}.mk-v{font-weight:500;color:#111827}
+.puan-bar{height:4px;background:#f3f4f6;border-radius:2px;overflow:hidden;margin-top:6px}
+.puan-fill{height:100%;border-radius:2px}
+.pf-g{background:linear-gradient(90deg,#10b981,#3b82f6)}
+.pf-a{background:linear-gradient(90deg,#f59e0b,#ef4444)}
+
+/* Revizyon badge */
+.rev-chip{font-size:9px;padding:1px 5px;border-radius:3px;background:#ede9fe;color:#5b21b6;font-weight:600;margin-left:4px;font-family:monospace}
+.rev-eski{opacity:.55;text-decoration:line-through;}
+
+/* Zincir */
+.zincir{display:flex;align-items:center;gap:5px;padding:8px 14px;background:#f0fdf4;border-bottom:1px solid #6ee7b7;flex-wrap:wrap}
+.zi{font-size:11px;padding:3px 9px;border-radius:4px;border:1px solid;font-family:monospace;font-weight:600}
+.zi-g{background:#d1fae5;color:#065f46;border-color:#6ee7b7}
+.zi-a{background:#1a2b47;color:#fff;border-color:#1a2b47}
+.zi-gr{background:#f9fafb;color:#9ca3af;border-color:#e5e7eb}
+.zi-ok{color:#9ca3af;font-size:14px}
+
+/* Modal */
+.modal-back{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;align-items:flex-start;justify-content:center;padding:32px 16px;overflow-y:auto}
+.modal-back.open{display:flex}
+.modal{background:#fff;border-radius:10px;border:1px solid #e5e7eb;width:100%;max-width:660px;overflow:hidden;box-shadow:0 20px 40px rgba(0,0,0,.15)}
+.modal-h{background:#1a2b47;padding:14px 18px;display:flex;align-items:flex-start;justify-content:space-between}
+.modal-h .mt{font-size:14px;font-weight:600;color:#fff}
+.modal-h .ms{font-size:11px;color:rgba(255,255,255,.55);margin-top:2px}
+.modal-h .mx{font-size:16px;color:rgba(255,255,255,.4);cursor:pointer;border:none;background:transparent}
+.modal-b{padding:18px;max-height:62vh;overflow-y:auto}
+.modal-f{padding:10px 18px;border-top:1px solid #e5e7eb;background:#f9fafb;display:flex;align-items:center;justify-content:space-between}
+.mtab-bar{display:flex;border-bottom:1px solid #e5e7eb;margin-bottom:14px}
+.mtab{padding:8px 14px;font-size:12px;font-weight:500;cursor:pointer;border:none;background:transparent;color:#6b7280;border-bottom:2px solid transparent}
+.mtab.on{color:#1a2b47;border-bottom-color:#1a2b47}
+.mpanel{display:none}.mpanel.show{display:block}
+.fg2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.fl{display:block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#6b7280;margin-bottom:3px}
+.fi{width:100%;font-size:13px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;background:#fff;color:#111827;outline:none}
+.fi:focus{border-color:#1a2b47}
+.fi-ro{background:#f9fafb;color:#6b7280}
+
+/* Sevkiyat kargo */
+.kargo-row{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#f0fdf4;border:1px solid #6ee7b7;border-radius:6px;margin-top:8px;font-size:12px}
+
+/* Banner */
+.grn-banner{background:#f0fdf4;border-bottom:1px solid #6ee7b7;padding:8px 16px;font-size:11px;color:#065f46;display:flex;align-items:center;gap:8px}
+.amr-banner{background:#fef3c7;border-bottom:1px solid #fcd34d;padding:8px 16px;font-size:11px;color:#92400e;display:flex;align-items:center;gap:8px}
+
+/* Page */
+.page{display:none}.page.show{display:block}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+  <div class="sb-logo">
+    <div class="sb-brand">ERSAN MES</div>
+    <div class="sb-sub">AS9100 Rev.D</div>
+  </div>
+  <div class="sb-section">CRM</div>
+  <div class="sb-item sb-dim"><span class="ico">🎯</span>Pipeline</div>
+  <div class="sb-item sb-dim"><span class="ico">📊</span>Satış Tahmini</div>
+  <div class="sb-section">Satış</div>
+  <div class="sb-item" onclick="goTo('teklifler',this)"><span class="ico">📄</span>Teklifler</div>
+  <div class="sb-item" onclick="goTo('siparisler',this)"><span class="ico">📦</span>Siparişler</div>
+  <div class="sb-item on" onclick="goTo('musteriler',this)"><span class="ico">👥</span>Müşteriler</div>
+  <div class="sb-item" onclick="goTo('sevkiyat',this)"><span class="ico">🚚</span>Sevkiyat</div>
+  <div class="sb-section">Satınalma</div>
+  <div class="sb-item sb-dim"><span class="ico">📋</span>Satınalma Talepleri</div>
+  <div class="sb-item sb-dim"><span class="ico">📬</span>Satınalma Teklifleri</div>
+  <div class="sb-item sb-dim"><span class="ico">📦</span>Satınalma Siparişleri</div>
+</div>
+
+<div class="main">
+
+<!-- ══ TEKLIFLER ══ -->
+<div class="page" id="pg-teklifler">
+  <div class="topbar">
+    <div><div class="tb-title">Teklif Yönetimi</div><div class="tb-sub">Revizyon sistemi aktif</div></div>
+    <div class="tb-btns"><button class="btn btn-p">+ Yeni Teklif</button></div>
+  </div>
+  <div class="content">
+    <div class="amr-banner">⚠ 2 teklifin geçerlilik tarihi 3 gün içinde dolacak — TK-2026-074, TK-2026-073</div>
+    <div style="height:10px"></div>
+    <div class="two-col">
+      <div class="list-panel">
+        <div class="lp-head"><span>Teklifler (46)</span>
+          <label style="font-size:10px;color:#6b7280;cursor:pointer"><input type="checkbox" style="margin-right:4px">Sadece aktif</label>
+        </div>
+        <div style="padding:8px 10px;border-bottom:1px solid #f3f4f6">
+          <input style="width:100%;font-size:12px;padding:5px 8px;border:1px solid #d1d5db;border-radius:5px;outline:none" placeholder="Teklif no veya müşteri ara...">
+        </div>
+
+        <div class="list-item sel" onclick="showDetay('tk76')">
+          <div class="li-top"><span class="li-no">TK-2026-076</span><span class="bdg b-grn">Onaylandı</span></div>
+          <div style="font-size:12px;font-weight:500">Erdem Müşteri</div>
+          <div class="muted">21.03.2026 · ₺680.000</div>
+        </div>
+
+        <div class="list-item" onclick="showDetay('tk75')">
+          <div class="li-top">
+            <span class="li-no">TK-2026-075<span class="rev-chip">R2</span></span>
+            <span class="bdg b-amr">Taslak</span>
+          </div>
+          <div style="font-size:12px;font-weight:500">X Y Z Havacılık A.Ş.</div>
+          <div class="muted">20.03.2026 · ₺750.000</div>
+        </div>
+
+        <div class="list-item rev-eski">
+          <div class="li-top">
+            <span class="li-no" style="opacity:.5">TK-2026-075-R1</span>
+            <span class="bdg b-pur" style="opacity:.7">Revize Edildi</span>
+          </div>
+          <div class="muted" style="font-size:11px">X Y Z Havacılık A.Ş. · Önceki versiyon</div>
+        </div>
+
+        <div class="list-item warn">
+          <div class="li-top"><span class="li-no">TK-2026-074</span><span class="bdg b-amr">Onaylandı</span></div>
+          <div style="font-size:12px;font-weight:500">X Y Z Havacılık A.Ş.</div>
+          <div class="muted">Geçerlilik: <span style="color:#f59e0b;font-weight:600">23.03.2026 ⚠</span></div>
+        </div>
+      </div>
+
+      <div>
+        <div id="detay-tk76" class="card" style="margin:0">
+          <div class="det-head">
+            <div>
+              <div class="det-no">TK-2026-076</div>
+              <div class="det-sub">Erdem Müşteri · erdem@ersanmakine.com.tr</div>
+              <div class="det-badges">
+                <span class="det-bdg">Onaylandı</span>
+                <span class="det-bdg">₺680.000</span>
+                <span class="det-bdg">Vade: 30 gün</span>
+              </div>
+            </div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <button class="btn btn-pur" onclick="revizeModalAc()">↺ Revize Et</button>
+              <button class="btn" onclick="alert('PDF indiriliyor...')">Proforma PDF</button>
+              <button class="btn btn-g" onclick="sipOlusturAc()">→ Siparişe Dönüştür</button>
+            </div>
+          </div>
+          <div style="padding:12px 16px;border-bottom:1px solid #e5e7eb">
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
+              <div><div class="fl">Teklif No</div><div style="font-size:11px;font-weight:500;font-family:monospace;color:#059669">TK-2026-076</div></div>
+              <div><div class="fl">Müşteri</div><div style="font-size:11px;font-weight:500">Erdem Müşteri</div></div>
+              <div><div class="fl">Geçerlilik</div><div style="font-size:11px;font-weight:500">28.03.2026</div></div>
+              <div><div class="fl">Durum</div><div style="font-size:11px;font-weight:500;color:#065f46">Onaylandı</div></div>
+            </div>
+          </div>
+          <div style="padding:10px 16px;border-bottom:1px solid #e5e7eb">
+            <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#9ca3af;margin-bottom:8px">Teklif Kalemleri</div>
+            <table style="width:100%;border-collapse:collapse;font-size:12px">
+              <thead><tr style="background:#f9fafb"><th style="text-align:left;padding:6px 8px;font-size:10px;color:#6b7280;font-weight:500;border-bottom:1px solid #e5e7eb">Parça Adı</th><th style="padding:6px 8px;color:#6b7280;font-weight:500;border-bottom:1px solid #e5e7eb;text-align:center">Miktar</th><th style="padding:6px 8px;color:#6b7280;font-weight:500;border-bottom:1px solid #e5e7eb;text-align:right">Birim Fiyat</th><th style="padding:6px 8px;color:#6b7280;font-weight:500;border-bottom:1px solid #e5e7eb;text-align:right">Toplam</th><th style="padding:6px 8px;color:#6b7280;font-weight:500;border-bottom:1px solid #e5e7eb;text-align:center">Teslim</th></tr></thead>
+              <tbody>
+                <tr><td style="padding:8px">Role İmalatı <span class="muted">Stok-1020</span></td><td style="padding:8px;text-align:center">100 Adet</td><td style="padding:8px;text-align:right">₺6.800</td><td style="padding:8px;text-align:right;font-weight:600">₺680.000</td><td style="padding:8px;text-align:center">50 gün</td></tr>
+              </tbody>
+            </table>
+            <div style="text-align:right;padding:8px 8px 0;font-size:13px;font-weight:700;color:#065f46">Genel Toplam: ₺680.000</div>
+          </div>
+          <!-- Revizyon geçmişi -->
+          <div style="padding:10px 16px;border-bottom:1px solid #e5e7eb">
+            <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#9ca3af;margin-bottom:8px">Revizyon Geçmişi</div>
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:5px 8px;background:#f9fafb;border-radius:5px;font-size:11px">
+                <span style="font-family:monospace;font-weight:600;color:#1a2b47">TK-2026-076</span>
+                <span class="muted">21.03.2026</span>
+                <span class="bdg b-grn" style="font-size:9px">Aktif</span>
+                <span style="color:#9ca3af;font-size:9px">[Seçili]</span>
+              </div>
+            </div>
+          </div>
+          <div style="padding:8px 16px;background:#f9fafb;display:flex;align-items:center;justify-content:space-between">
+            <div style="font-size:11px;color:#9ca3af">Teklif durumu: <span style="color:#065f46;font-weight:600">Onaylandı</span></div>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-warn" style="font-size:11px">↺ Revize Et</button>
+              <button class="btn" style="font-size:11px;color:#9ca3af">Onaylandı ✓</button>
+              <button class="btn btn-red" style="font-size:11px">✗ Reddet</button>
+              <button class="btn btn-b" style="font-size:11px">→ Gönderildi</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SİPARİŞLER ══ -->
+<div class="page" id="pg-siparisler">
+  <div class="topbar">
+    <div><div class="tb-title">Sipariş Yönetimi</div><div class="tb-sub">Müşteri PO referansı + Sevkiyat entegrasyonu</div></div>
+    <div class="tb-btns"><button class="btn btn-p">+ Yeni Sipariş</button></div>
+  </div>
+  <div class="content">
+    <div class="two-col">
+      <div class="list-panel">
+        <div class="lp-head"><span>Siparişler (16)</span></div>
+        <div style="padding:8px 10px;border-bottom:1px solid #f3f4f6">
+          <input style="width:100%;font-size:12px;padding:5px 8px;border:1px solid #d1d5db;border-radius:5px;outline:none" placeholder="SP no, parça, müşteri PO ara...">
+        </div>
+        <div style="display:flex;border-bottom:1px solid #e5e7eb">
+          <button class="tab-btn on" style="flex:1;padding:6px;font-size:11px;border-bottom:2px solid #1a2b47;color:#1a2b47">Tümü</button>
+          <button class="tab-btn" style="flex:1;padding:6px;font-size:11px">Beklemede</button>
+          <button class="tab-btn" style="flex:1;padding:6px;font-size:11px">Üretimde</button>
+          <button class="tab-btn" style="flex:1;padding:6px;font-size:11px">Tamamlandı</button>
+        </div>
+        <div class="list-item sel">
+          <div class="li-top"><span class="li-no">SP-2026-034</span><span class="bdg b-amr">Beklemede</span></div>
+          <div style="font-size:12px;font-weight:500">Role İmalatı</div>
+          <div class="muted">Erdem Müşteri · 100 Adet</div>
+          <div style="display:flex;gap:4px;margin-top:4px;flex-wrap:wrap">
+            <span style="font-size:9px;padding:1px 5px;border-radius:3px;font-weight:500;background:#fef3c7;color:#92400e">MÜŞ.PO: PO-2026-789</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:4px">
+            <span class="muted">Termin: <span style="color:#dc2626;font-weight:600">28.03.2026</span></span>
+            <span style="font-size:11px;font-weight:600;color:#065f46">₺680.000</span>
+          </div>
+        </div>
+        <div class="list-item">
+          <div class="li-top"><span class="li-no">SP-2026-033</span><span class="bdg b-grn">Tamamlandı</span></div>
+          <div style="font-size:12px;font-weight:500">Role İmalatı</div>
+          <div class="muted">Erdem Müşteri</div>
+          <div style="display:flex;gap:4px;margin-top:4px">
+            <span class="bdg b-grn" style="font-size:9px">🚚 Teslim Edildi</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sipariş Detay -->
+      <div class="card" style="margin:0">
+        <div class="grn-banner"><span style="font-size:14px">🚚</span><span>Üretim tamamlandı — Sevkiyat oluşturulabilir.</span><button class="btn btn-b" style="margin-left:auto;font-size:11px" onclick="sevkiyatModalAc()">Sevkiyat Oluştur →</button></div>
+        <div class="det-head">
+          <div>
+            <div class="det-no">SP-2026-034</div>
+            <div class="det-sub">Erdem Müşteri · 21.03.2026</div>
+            <div class="det-badges">
+              <span class="det-bdg">TK-2026-076</span>
+              <span class="det-bdg">MÜŞ.PO: PO-2026-789</span>
+              <span class="det-bdg">Beklemede</span>
+            </div>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button class="btn btn-warn" style="font-size:11px">Satınalma Talebi</button>
+            <button class="btn btn-b" style="font-size:11px">İş Emri Aç</button>
+            <button class="btn btn-g" style="font-size:11px" onclick="sevkiyatModalAc()">🚚 Sevkiyat →</button>
+          </div>
+        </div>
+        <div class="akis">
+          <div class="as done">Sipariş<span class="sn">21.03.2026</span></div>
+          <div class="as done">PR + WO<span class="sn">Oluşturuldu</span></div>
+          <div class="as done">Üretim<span class="sn">Tamamlandı</span></div>
+          <div class="as active">Sevkiyat<span class="sn">Bekliyor</span></div>
+          <div class="as">Teslim<span class="sn">—</span></div>
+        </div>
+        <div style="padding:12px 16px;border-bottom:1px solid #e5e7eb">
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
+            <div><div class="fl">Sipariş No</div><div style="font-size:11px;font-family:monospace;font-weight:600;color:#059669">SP-2026-034</div></div>
+            <div><div class="fl">Müşteri PO No</div><div style="font-size:11px;font-family:monospace;font-weight:600;color:#d97706">PO-2026-789</div></div>
+            <div><div class="fl">Termin</div><div style="font-size:11px;font-weight:500;color:#dc2626">28.03.2026 ⚠</div></div>
+            <div><div class="fl">Sevkiyat Durumu</div><div style="font-size:11px;font-weight:500;color:#9ca3af">Henüz oluşturulmadı</div></div>
+          </div>
+        </div>
+        <div style="padding:12px 16px">
+          <table style="width:100%;border-collapse:collapse;font-size:12px">
+            <thead><tr style="background:#f9fafb"><th style="text-align:left;padding:6px 8px;font-size:10px;color:#6b7280;font-weight:500;border-bottom:1px solid #e5e7eb">Parça</th><th style="padding:6px 8px;color:#6b7280;font-weight:500;border-bottom:1px solid #e5e7eb;text-align:center">Miktar</th><th style="padding:6px 8px;color:#6b7280;font-weight:500;border-bottom:1px solid #e5e7eb;text-align:center">WO</th><th style="padding:6px 8px;color:#6b7280;font-weight:500;border-bottom:1px solid #e5e7eb;text-align:center">Teknik Resim</th><th style="padding:6px 8px;color:#6b7280;font-weight:500;border-bottom:1px solid #e5e7eb;text-align:center">Durum</th></tr></thead>
+            <tbody>
+              <tr><td style="padding:8px"><div style="font-weight:500">Role İmalatı</div><div class="muted">Stok-1020</div></td><td style="padding:8px;text-align:center">100 Adet</td><td style="padding:8px;text-align:center"><span class="mono" style="font-size:10px">WO-26-001</span></td><td style="padding:8px;text-align:center"><span class="bdg b-grn" style="font-size:9px">PDF mevcut</span></td><td style="padding:8px;text-align:center"><span class="bdg b-grn">Üretim Tamam</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MÜŞTERİLER ══ -->
+<div class="page show" id="pg-musteriler">
+  <div class="topbar">
+    <div><div class="tb-title">Müşteriler</div><div class="tb-sub">Müşteri yönetimi ve geçmiş takibi</div></div>
+    <div class="tb-btns"><button class="btn btn-p" onclick="yeniMusteriAc()">+ Yeni Müşteri</button></div>
+  </div>
+  <div class="content">
+    <div class="kpi-row">
+      <div class="kpi s1"><label>Toplam Müşteri</label><div class="num">18</div><div class="det">Aktif firmalar</div></div>
+      <div class="kpi s4"><label>Aktif Siparişli</label><div class="num">8</div><div class="det">Devam eden</div></div>
+      <div class="kpi s2"><label>Bu Ay Ciro</label><div class="num">₺2.1M</div><div class="det">Sipariş toplamı</div></div>
+      <div class="kpi s4"><label>Ort. Memnuniyet</label><div class="num">87</div><div class="det">100 üzerinden</div></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <input style="flex:1;font-size:12px;padding:7px 12px;border:1px solid #d1d5db;border-radius:6px;background:#fff;outline:none" placeholder="Müşteri adı, kodu, yetkili ara...">
+      <select style="font-size:12px;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;background:#fff;outline:none"><option>Tüm Sektörler</option><option>İmalat</option><option>Havacılık</option><option>Savunma</option></select>
+      <select style="font-size:12px;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;background:#fff;outline:none"><option>Tüm Durumlar</option><option>Aktif</option><option>Pasif</option></select>
+    </div>
+    <div class="mk-grid">
+      <div class="mk" onclick="musteriDetayAc()">
+        <div class="mk-head">
+          <div class="mk-adi">Erdem Müşteri</div>
+          <div class="mk-sub">🏢 İmalat · MUS-001 · İstanbul</div>
+        </div>
+        <div class="mk-body">
+          <div class="mk-row"><span class="mk-k">Yetkili</span><span class="mk-v">Erdem Bey</span></div>
+          <div class="mk-row"><span class="mk-k">Toplam Sipariş</span><span class="mk-v" style="color:#065f46">₺1.310.000</span></div>
+          <div class="mk-row"><span class="mk-k">Aktif Sipariş</span><span class="mk-v" style="color:#1e40af">5 adet</span></div>
+          <div class="mk-row"><span class="mk-k">Son Sipariş</span><span class="mk-v">21.03.2026</span></div>
+          <div class="mk-row"><span class="mk-k">Vade</span><span class="mk-v">30 gün</span></div>
+          <div class="puan-bar"><div class="puan-fill pf-g" style="width:87%"></div></div>
+          <div style="font-size:10px;color:#6b7280;margin-top:3px;display:flex;justify-content:space-between"><span>Memnuniyet</span><span style="font-weight:700;color:#065f46">87/100</span></div>
+        </div>
+      </div>
+      <div class="mk" onclick="musteriDetayAc()">
+        <div class="mk-head">
+          <div class="mk-adi">X Y Z Havacılık A.Ş.</div>
+          <div class="mk-sub">✈️ Havacılık · MUS-002 · Ankara</div>
+        </div>
+        <div class="mk-body">
+          <div class="mk-row"><span class="mk-k">Yetkili</span><span class="mk-v">Ahmet Yılmaz</span></div>
+          <div class="mk-row"><span class="mk-k">Toplam Sipariş</span><span class="mk-v" style="color:#065f46">₺975.000</span></div>
+          <div class="mk-row"><span class="mk-k">Aktif Sipariş</span><span class="mk-v" style="color:#1e40af">3 adet</span></div>
+          <div class="mk-row"><span class="mk-k">Son Sipariş</span><span class="mk-v">20.03.2026</span></div>
+          <div class="mk-row"><span class="mk-k">Vade</span><span class="mk-v">45 gün</span></div>
+          <div class="puan-bar"><div class="puan-fill pf-g" style="width:92%"></div></div>
+          <div style="font-size:10px;color:#6b7280;margin-top:3px;display:flex;justify-content:space-between"><span>Memnuniyet</span><span style="font-weight:700;color:#065f46">92/100</span></div>
+        </div>
+      </div>
+      <div class="mk" style="opacity:.6">
+        <div class="mk-head">
+          <div class="mk-adi">Test Firması Ltd.</div>
+          <div class="mk-sub">🧪 Test · MUS-003 · Kocaeli</div>
+        </div>
+        <div class="mk-body">
+          <div class="mk-row"><span class="mk-k">Toplam Sipariş</span><span class="mk-v" style="color:#9ca3af">₺0</span></div>
+          <div class="mk-row"><span class="mk-k">Durum</span><span class="mk-v" style="color:#d97706">Pasif</span></div>
+          <div class="puan-bar"><div class="puan-fill pf-a" style="width:40%"></div></div>
+          <div style="font-size:10px;color:#6b7280;margin-top:3px;display:flex;justify-content:space-between"><span>Memnuniyet</span><span style="font-weight:700;color:#dc2626">40/100</span></div>
+        </div>
+      </div>
+      <div class="mk" style="border-style:dashed;background:#fafafa;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;text-align:center;cursor:pointer" onclick="yeniMusteriAc()">
+        <div style="font-size:28px;margin-bottom:8px;color:#d1d5db">+</div>
+        <div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:4px">Yeni Müşteri Ekle</div>
+        <div class="muted">Müşteri kartı oluştur</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SEVKİYAT ══ -->
+<div class="page" id="pg-sevkiyat">
+  <div class="topbar">
+    <div><div class="tb-title">Sevkiyat</div><div class="tb-sub">Kargo takibi + İrsaliye yönetimi</div></div>
+    <div class="tb-btns"><button class="btn btn-p">+ Yeni Sevkiyat</button></div>
+  </div>
+  <div class="content">
+    <div class="kpi-row">
+      <div class="kpi s2"><label>Hazırlanıyor</label><div class="num">3</div><div class="det">Paketleniyor</div></div>
+      <div class="kpi s1"><label>Yolda</label><div class="num">5</div><div class="det">Teslim bekleniyor</div></div>
+      <div class="kpi s4"><label>Teslim Edildi</label><div class="num">12</div><div class="det">Bu ay</div></div>
+      <div class="kpi s3"><label>Gecikmiş</label><div class="num">1</div><div class="det">Acil takip</div></div>
+    </div>
+    <div class="two-col">
+      <div class="list-panel">
+        <div class="lp-head"><span>Sevkiyatlar</span></div>
+        <div class="list-item sel">
+          <div class="li-top"><span class="li-no">SEV-26-00003</span><span class="bdg b-blu">Yolda</span></div>
+          <div style="font-size:12px;font-weight:500">Role İmalatı · 100 adet</div>
+          <div class="muted">Erdem Müşteri</div>
+          <div style="display:flex;gap:4px;margin-top:4px;flex-wrap:wrap">
+            <span style="font-size:9px;padding:1px 5px;border-radius:3px;font-weight:500;background:#d1fae5;color:#065f46">SP-2026-034</span>
+            <span style="font-size:9px;padding:1px 5px;border-radius:3px;font-weight:500;background:#fef3c7;color:#92400e">PO-2026-789</span>
+          </div>
+          <div class="muted" style="margin-top:4px">Sevk: 21.03.2026 · Tahmini: 25.03.2026</div>
+        </div>
+        <div class="list-item warn">
+          <div class="li-top"><span class="li-no">SEV-26-00002</span><span class="bdg b-red">Gecikmiş</span></div>
+          <div style="font-size:12px;font-weight:500">Flanş AISI 4140</div>
+          <div class="muted">X Y Z Havacılık</div>
+          <div class="muted" style="color:#dc2626;font-weight:600;margin-top:4px">⚠ Tahmini: 20.03.2026 geçti</div>
+        </div>
+        <div class="list-item">
+          <div class="li-top"><span class="li-no">SEV-26-00001</span><span class="bdg b-grn">Teslim Edildi</span></div>
+          <div style="font-size:12px;font-weight:500">Mil AISI 1045</div>
+          <div class="muted">Erdem Müşteri · 15.03.2026 ✓</div>
+        </div>
+      </div>
+
+      <div class="card" style="margin:0">
+        <div class="det-head">
+          <div>
+            <div class="det-no">SEV-26-00003</div>
+            <div class="det-sub">Erdem Müşteri · 21.03.2026</div>
+            <div class="det-badges">
+              <span class="det-bdg">SP-2026-034</span>
+              <span class="det-bdg">MÜŞ.PO: PO-2026-789</span>
+              <span class="det-bdg">DHL</span>
+            </div>
+          </div>
+          <div style="display:flex;gap:6px">
+            <button class="btn" onclick="alert('İrsaliye PDF yazdırılıyor...')">İrsaliye PDF</button>
+            <button class="btn btn-g" onclick="this.innerHTML='✓ Teslim Edildi';this.className='btn btn-g';this.disabled=true">✓ Teslim Edildi →</button>
+          </div>
+        </div>
+        <div class="akis">
+          <div class="as done">Oluşturuldu<span class="sn">21.03.2026</span></div>
+          <div class="as done">Hazırlandı<span class="sn">21.03.2026</span></div>
+          <div class="as active">Yolda<span class="sn">DHL</span></div>
+          <div class="as">Teslim Edildi<span class="sn">—</span></div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:12px 16px;border-bottom:1px solid #e5e7eb">
+          <div><div class="fl">Sevkiyat No</div><div style="font-size:11px;font-family:monospace;font-weight:600;color:#059669">SEV-26-00003</div></div>
+          <div><div class="fl">Müşteri PO No</div><div style="font-size:11px;font-family:monospace;font-weight:600;color:#d97706">PO-2026-789</div></div>
+          <div><div class="fl">Tahmini Teslim</div><div style="font-size:11px;font-weight:500">25.03.2026</div></div>
+          <div><div class="fl">Kargo Firması</div><div style="font-size:11px;font-weight:500">DHL</div></div>
+        </div>
+        <div class="kargo-row" style="margin:10px 14px;border-radius:6px">
+          <span style="font-size:12px;font-weight:600;color:#065f46">🚚 Kargo Takip:</span>
+          <span style="font-family:monospace;font-size:12px;font-weight:700">1234567890123</span>
+          <a href="#" style="font-size:11px;color:#1e40af;margin-left:auto" onclick="alert('DHL takip sayfası açılıyor...')">DHL'de Takip Et →</a>
+        </div>
+        <div style="padding:10px 16px;border-top:1px solid #e5e7eb">
+          <div class="fl" style="margin-bottom:8px">Kalemler</div>
+          <table style="width:100%;border-collapse:collapse;font-size:12px">
+            <thead><tr style="background:#f9fafb"><th style="text-align:left;padding:6px 8px;font-size:10px;color:#6b7280;font-weight:500;border-bottom:1px solid #e5e7eb">Parça</th><th style="padding:6px 8px;color:#6b7280;font-weight:500;border-bottom:1px solid #e5e7eb;text-align:center">Gönderilen</th><th style="padding:6px 8px;color:#6b7280;font-weight:500;border-bottom:1px solid #e5e7eb;text-align:center">Toplam</th><th style="padding:6px 8px;color:#6b7280;font-weight:500;border-bottom:1px solid #e5e7eb;text-align:center">Durum</th></tr></thead>
+            <tbody>
+              <tr><td style="padding:8px"><div style="font-weight:500">Role İmalatı</div><div class="muted">Stok-1020</div></td><td style="padding:8px;text-align:center;font-weight:700;color:#065f46">100 Adet</td><td style="padding:8px;text-align:center;color:#6b7280">100 Adet</td><td style="padding:8px;text-align:center"><span class="bdg b-blu">Yolda</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<!-- ══ MODAL: Müşteri Detay ══ -->
+<div class="modal-back" id="musteri-modal">
+  <div class="modal">
+    <div class="modal-h">
+      <div><div class="mt">Erdem Müşteri</div><div class="ms">MUS-001 · İmalat · İstanbul</div></div>
+      <button class="mx" onclick="document.getElementById('musteri-modal').classList.remove('open')">✕</button>
+    </div>
+    <div class="modal-b">
+      <div class="mtab-bar">
+        <button class="mtab on" onclick="setMTab('genel',this)">Genel Bilgiler</button>
+        <button class="mtab" onclick="setMTab('kisiler',this)">İletişim Kişileri</button>
+        <button class="mtab" onclick="setMTab('teklifler',this)">Teklif Geçmişi</button>
+        <button class="mtab" onclick="setMTab('siparisler2',this)">Sipariş Geçmişi</button>
+      </div>
+      <div class="mpanel show" id="mp-genel">
+        <div class="fg2">
+          <div><label class="fl">Müşteri Adı</label><input class="fi fi-ro" value="Erdem Müşteri" readonly></div>
+          <div><label class="fl">Müşteri Kodu</label><input class="fi fi-ro" value="MUS-001" readonly style="font-family:monospace;color:#059669"></div>
+          <div><label class="fl">Sektör</label><input class="fi fi-ro" value="İmalat" readonly></div>
+          <div><label class="fl">Şehir</label><input class="fi fi-ro" value="İstanbul" readonly></div>
+          <div><label class="fl">Ana E-posta</label><input class="fi fi-ro" value="erdem@ersanmakine.com.tr" readonly></div>
+          <div><label class="fl">Telefon</label><input class="fi fi-ro" value="05327030731" readonly></div>
+          <div><label class="fl">Ödeme Vadesi (Gün)</label><input class="fi fi-ro" value="30" readonly></div>
+          <div><label class="fl">Para Birimi</label><input class="fi fi-ro" value="TL" readonly></div>
+        </div>
+        <div><label class="fl">Notlar</label><textarea class="fi fi-ro" rows="2" readonly style="resize:none">Güvenilir müşteri. Uzun vadeli iş birliği.</textarea></div>
+      </div>
+      <div class="mpanel" id="mp-kisiler">
+        <div style="display:flex;justify-content:flex-end;margin-bottom:10px"><button class="btn btn-b" style="font-size:11px">+ Kişi Ekle</button></div>
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead><tr style="background:#f9fafb"><th style="text-align:left;padding:7px 10px;font-size:10px;color:#6b7280;font-weight:500;border-bottom:1px solid #e5e7eb">Ad Soyad</th><th style="padding:7px 10px;color:#6b7280;font-weight:500;border-bottom:1px solid #e5e7eb">Ünvan</th><th style="padding:7px 10px;color:#6b7280;font-weight:500;border-bottom:1px solid #e5e7eb">E-posta</th><th style="padding:7px 10px;color:#6b7280;font-weight:500;border-bottom:1px solid #e5e7eb;text-align:center">Birincil</th></tr></thead>
+          <tbody>
+            <tr><td style="padding:8px 10px;border-bottom:1px solid #f3f4f6;font-weight:500">Erdem Bey</td><td style="padding:8px 10px;border-bottom:1px solid #f3f4f6;color:#6b7280">Genel Müdür</td><td style="padding:8px 10px;border-bottom:1px solid #f3f4f6;color:#1e40af">erdem@ersanmakine.com.tr</td><td style="padding:8px 10px;border-bottom:1px solid #f3f4f6;text-align:center">★</td></tr>
+            <tr><td style="padding:8px 10px;font-weight:500">Ayşe Hanım</td><td style="padding:8px 10px;color:#6b7280">Satın Alma</td><td style="padding:8px 10px;color:#1e40af">ayse@ersanmakine.com.tr</td><td style="padding:8px 10px;text-align:center;color:#d1d5db">—</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="mpanel" id="mp-teklifler">
+        <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
+          <select style="font-size:12px;padding:5px 10px;border:1px solid #d1d5db;border-radius:5px;background:#fff;outline:none"><option>Son 3 Ay</option><option>Son 6 Ay</option><option>Tümü</option></select>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead><tr style="background:#f9fafb"><th style="text-align:left;padding:7px 10px;font-size:10px;color:#6b7280;font-weight:500;border-bottom:1px solid #e5e7eb">Teklif No</th><th style="padding:7px 10px;color:#6b7280;font-weight:500;border-bottom:1px solid #e5e7eb">Tarih</th><th style="padding:7px 10px;color:#6b7280;font-weight:500;border-bottom:1px solid #e5e7eb;text-align:right">Tutar</th><th style="padding:7px 10px;color:#6b7280;font-weight:500;border-bottom:1px solid #e5e7eb;text-align:center">Durum</th></tr></thead>
+          <tbody>
+            <tr><td style="padding:8px 10px;border-bottom:1px solid #f3f4f6"><span class="mono">TK-2026-076</span></td><td style="padding:8px 10px;border-bottom:1px solid #f3f4f6;color:#6b7280">21.03.2026</td><td style="padding:8px 10px;border-bottom:1px solid #f3f4f6;text-align:right;font-weight:600">₺680.000</td><td style="padding:8px 10px;border-bottom:1px solid #f3f4f6;text-align:center"><span class="bdg b-grn">Onaylandı</span></td></tr>
+            <tr><td style="padding:8px 10px;border-bottom:1px solid #f3f4f6"><span class="mono">TK-2026-073</span></td><td style="padding:8px 10px;border-bottom:1px solid #f3f4f6;color:#6b7280">20.03.2026</td><td style="padding:8px 10px;border-bottom:1px solid #f3f4f6;text-align:right;font-weight:600">₺225.000</td><td style="padding:8px 10px;border-bottom:1px solid #f3f4f6;text-align:center"><span class="bdg b-pur">Siparişe Dönüştü</span></td></tr>
+          </tbody>
+        </table>
+        <div style="padding:8px 10px;background:#f9fafb;text-align:right;font-size:12px;font-weight:600;color:#065f46;border-top:2px solid #e5e7eb">Toplam Ciro: ₺905.000</div>
+      </div>
+      <div class="mpanel" id="mp-siparisler2">
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead><tr style="background:#f9fafb"><th style="text-align:left;padding:7px 10px;font-size:10px;color:#6b7280;font-weight:500;border-bottom:1px solid #e5e7eb">Sipariş No</th><th style="padding:7px 10px;color:#6b7280;font-weight:500;border-bottom:1px solid #e5e7eb">Termin</th><th style="padding:7px 10px;color:#6b7280;font-weight:500;border-bottom:1px solid #e5e7eb;text-align:right">Tutar</th><th style="padding:7px 10px;color:#6b7280;font-weight:500;border-bottom:1px solid #e5e7eb;text-align:center">Durum</th></tr></thead>
+          <tbody>
+            <tr><td style="padding:8px 10px;border-bottom:1px solid #f3f4f6"><span class="mono">SP-2026-034</span></td><td style="padding:8px 10px;border-bottom:1px solid #f3f4f6;color:#dc2626;font-weight:600">28.03.2026 ⚠</td><td style="padding:8px 10px;border-bottom:1px solid #f3f4f6;text-align:right;font-weight:600">₺680.000</td><td style="padding:8px 10px;border-bottom:1px solid #f3f4f6;text-align:center"><span class="bdg b-amr">Beklemede</span></td></tr>
+            <tr><td style="padding:8px 10px"><span class="mono">SP-2026-033</span></td><td style="padding:8px 10px;color:#6b7280">22.03.2026 ✓</td><td style="padding:8px 10px;text-align:right;font-weight:600">₺225.000</td><td style="padding:8px 10px;text-align:center"><span class="bdg b-grn">Tamamlandı</span></td></tr>
+          </tbody>
+        </table>
+        <div style="padding:8px 10px;background:#f9fafb;text-align:right;font-size:12px;font-weight:600;color:#065f46;border-top:2px solid #e5e7eb">Toplam: ₺905.000</div>
+      </div>
+    </div>
+    <div class="modal-f">
+      <div style="font-size:11px;color:#9ca3af">Son güncelleme: 21.03.2026</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-b" style="font-size:11px">Yeni Teklif Oluştur</button>
+        <button class="btn btn-warn" style="font-size:11px">Düzenle</button>
+        <button class="btn btn-g" style="font-size:11px">Kaydet</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: Sevkiyat Oluştur ══ -->
+<div class="modal-back" id="sevkiyat-modal">
+  <div class="modal">
+    <div class="modal-h">
+      <div><div class="mt">Sevkiyat Oluştur — SP-2026-034</div><div class="ms">1 kalem · Erdem Müşteri · PO-2026-789</div></div>
+      <button class="mx" onclick="document.getElementById('sevkiyat-modal').classList.remove('open')">✕</button>
+    </div>
+    <div class="modal-b">
+      <div class="fg2" style="margin-bottom:14px">
+        <div><label class="fl">Sevkiyat No</label><input class="fi" style="background:#f0fdf4;color:#065f46;border-color:#6ee7b7;font-family:monospace;font-weight:600" value="SEV-26-00004" readonly></div>
+        <div><label class="fl">Müşteri PO No</label><input class="fi" style="background:#fef3c7;color:#92400e;border-color:#fcd34d;font-family:monospace;font-weight:600" value="PO-2026-789" readonly></div>
+        <div><label class="fl">Sevkiyat Tarihi <span style="color:#dc2626">*</span></label><input class="fi" type="date" value="2026-03-21"></div>
+        <div><label class="fl">Tahmini Teslim <span style="color:#dc2626">*</span></label><input class="fi" type="date" value="2026-03-25"></div>
+      </div>
+      <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#9ca3af;margin-bottom:8px">Kalemler</div>
+      <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;padding:10px 12px;margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:10px;font-size:12px">
+          <input type="checkbox" checked>
+          <div style="flex:1;font-weight:500">01 · Role İmalatı <span class="muted">Stok-1020</span></div>
+          <div class="muted">Sipariş: 100 Adet</div>
+          <div style="display:flex;align-items:center;gap:5px"><span class="fl" style="margin:0">Gönderilecek:</span><input class="fi" type="number" value="100" style="width:70px;font-size:12px;padding:4px 8px;text-align:center"></div>
+        </div>
+      </div>
+      <div class="fg2">
+        <div><label class="fl">Kargo Firması <span style="color:#dc2626">*</span></label>
+          <select class="fi"><option>DHL</option><option>MNG Kargo</option><option>Aras Kargo</option><option>Yurtiçi Kargo</option><option>Manuel</option></select>
+        </div>
+        <div><label class="fl">Kargo Takip No</label><input class="fi" placeholder="1234567890123"></div>
+      </div>
+      <div><label class="fl">Not</label><textarea class="fi" rows="2" placeholder="Ambalaj notu, özel talimat..."></textarea></div>
+    </div>
+    <div class="modal-f">
+      <div style="font-size:11px;color:#9ca3af">İrsaliye otomatik oluşturulacak</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn" onclick="document.getElementById('sevkiyat-modal').classList.remove('open')">İptal</button>
+        <button class="btn btn-g" onclick="document.getElementById('sevkiyat-modal').classList.remove('open');alert('SEV-26-00004 oluşturuldu!')">✓ Sevkiyat Oluştur</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: Revize Et ══ -->
+<div class="modal-back" id="revize-modal">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-h">
+      <div><div class="mt">Teklif Revize Et</div><div class="ms">TK-2026-076 → yeni versiyon oluşturulacak</div></div>
+      <button class="mx" onclick="document.getElementById('revize-modal').classList.remove('open')">✕</button>
+    </div>
+    <div class="modal-b">
+      <div style="background:#ede9fe;border:1px solid #c4b5fd;border-radius:6px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:#5b21b6">
+        <strong>TK-2026-076</strong> "Revize Edildi" olarak işaretlenecek.<br>
+        Yeni versiyon: <strong style="font-family:monospace">TK-2026-076-R2</strong> oluşturulacak ve Taslak durumunda açılacak.
+      </div>
+      <div><label class="fl">Revizyon Notu (Opsiyonel)</label><textarea class="fi" rows="3" placeholder="Fiyat güncellendi, termin değişti..."></textarea></div>
+    </div>
+    <div class="modal-f">
+      <div style="font-size:11px;color:#9ca3af">Mevcut teklif revize edildi olarak kalır</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn" onclick="document.getElementById('revize-modal').classList.remove('open')">İptal</button>
+        <button class="btn btn-pur" onclick="document.getElementById('revize-modal').classList.remove('open');alert('TK-2026-076-R2 oluşturuldu!')">↺ Revize Et</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: Sipariş Oluştur ══ -->
+<div class="modal-back" id="sip-modal">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-h">
+      <div><div class="mt">Siparişe Dönüştür — TK-2026-076</div><div class="ms">1 kalem · Erdem Müşteri</div></div>
+      <button class="mx" onclick="document.getElementById('sip-modal').classList.remove('open')">✕</button>
+    </div>
+    <div class="modal-b">
+      <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:6px;padding:10px 12px;margin-bottom:14px;font-size:11px;color:#92400e">
+        Her kalem için teknik resim yükleyebilirsiniz (opsiyonel).
+      </div>
+      <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;padding:10px 12px;margin-bottom:10px">
+        <div style="font-size:11px;font-weight:600;color:#374151;margin-bottom:6px">1. Role İmalatı · Stok-1020 · 100 Adet</div>
+        <div style="border:1px dashed #d1d5db;border-radius:5px;padding:10px;text-align:center;cursor:pointer;font-size:11px;color:#6b7280">
+          📎 Teknik resim yükle (PDF/DWG)
+        </div>
+      </div>
+      <div class="fg2">
+        <div><label class="fl">Müşteri PO No</label><input class="fi" placeholder="Müşterinin sipariş numarası..." style="border-color:#93c5fd"></div>
+        <div><label class="fl">Termin Tarihi <span style="color:#dc2626">*</span></label><input class="fi" type="date" value="2026-03-28"></div>
+      </div>
+    </div>
+    <div class="modal-f">
+      <div style="font-size:11px;color:#9ca3af">SP kodu otomatik üretilecek</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn" onclick="document.getElementById('sip-modal').classList.remove('open')">İptal</button>
+        <button class="btn btn-g" onclick="document.getElementById('sip-modal').classList.remove('open');alert('SP-2026-035 oluşturuldu!')">✓ Siparişi Oluştur</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function goTo(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('show'));
+  document.querySelectorAll('.sb-item').forEach(b => b.classList.remove('on'));
+  document.getElementById('pg-' + id).classList.add('show');
+  if (el) el.classList.add('on');
+}
+function setMTab(id, el) {
+  document.querySelectorAll('.mpanel').forEach(p => p.classList.remove('show'));
+  document.querySelectorAll('.mtab').forEach(b => b.classList.remove('on'));
+  document.getElementById('mp-' + id).classList.add('show');
+  if (el) el.classList.add('on');
+}
+function musteriDetayAc() {
+  document.getElementById('musteri-modal').classList.add('open');
+}
+function yeniMusteriAc() {
+  alert('Yeni Müşteri formu açılıyor...\nMüşteri kodu: MUS-26-00019 otomatik üretilecek.');
+}
+function sevkiyatModalAc() {
+  document.getElementById('sevkiyat-modal').classList.add('open');
+}
+function revizeModalAc() {
+  document.getElementById('revize-modal').classList.add('open');
+}
+function sipOlusturAc() {
+  document.getElementById('sip-modal').classList.add('open');
+}
+function showDetay(id) {}
+
+// Backdrop tıklama
+document.querySelectorAll('.modal-back').forEach(b => {
+  b.addEventListener('click', e => { if (e.target === b) b.classList.remove('open'); });
+});
+</script>
+</body>
+</html>

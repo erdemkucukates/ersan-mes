@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ersan MES — Üretim Modülü</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,-apple-system,sans-serif}
+body{background:#f3f4f6;display:flex;height:100vh;overflow:hidden}
+
+.sidebar{width:185px;background:#1a2b47;display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
+.sb-logo{padding:14px 12px 10px;border-bottom:1px solid rgba(255,255,255,.08)}
+.sb-brand{font-size:13px;font-weight:700;color:#fff}
+.sb-sub{font-size:9px;color:rgba(255,255,255,.35);margin-top:2px;text-transform:uppercase;letter-spacing:.06em}
+.sb-section{padding:12px 12px 3px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.28)}
+.sb-item{display:flex;align-items:center;gap:7px;padding:7px 12px;font-size:12px;color:rgba(255,255,255,.55);cursor:pointer;border-left:2px solid transparent;transition:all .12s}
+.sb-item:hover{background:rgba(255,255,255,.05);color:#fff}
+.sb-item.on{background:rgba(255,255,255,.08);color:#fff;border-left-color:#f59e0b;font-weight:500}
+.sb-dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.2);flex-shrink:0}
+.sb-item.on .sb-dot{background:#f59e0b}
+.sb-dim{color:rgba(255,255,255,.25)!important}
+.sb-badge{font-size:9px;padding:1px 5px;border-radius:8px;background:rgba(239,68,68,.7);color:#fff;margin-left:auto}
+
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+
+/* Split layout */
+.split{display:flex;flex:1;overflow:hidden}
+.split-left{width:260px;flex-shrink:0;background:#fff;border-right:1px solid #e5e7eb;display:flex;flex-direction:column;overflow:hidden}
+.split-right{flex:1;overflow-y:auto;background:#f9fafb}
+
+/* Sol panel */
+.sl-head{padding:10px 12px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.sl-title{font-size:12px;font-weight:600;color:#374151}
+.sl-count{font-size:11px;color:#9ca3af}
+.sl-search{padding:8px 10px;border-bottom:1px solid #e5e7eb;flex-shrink:0}
+.sl-search input{width:100%;font-size:12px;padding:5px 9px;border:1px solid #d1d5db;border-radius:5px;outline:none;background:#fafafa}
+.sl-search input:focus{border-color:#1a2b47;background:#fff}
+.sl-tabs{display:flex;border-bottom:1px solid #e5e7eb;flex-shrink:0}
+.st{flex:1;padding:6px 4px;font-size:11px;text-align:center;cursor:pointer;border:none;background:transparent;color:#6b7280;border-bottom:2px solid transparent}
+.st.on{color:#1a2b47;border-bottom-color:#1a2b47;font-weight:500}
+.sl-list{flex:1;overflow-y:auto}
+
+/* Liste item */
+.li{padding:9px 12px;border-bottom:1px solid #f3f4f6;cursor:pointer;border-left:3px solid transparent;transition:all .1s}
+.li:hover{background:#f9fafb}
+.li.sel{background:#eff6ff;border-left-color:#1a2b47}
+.li.kritik{border-left-color:#ef4444;background:#fff8f8}
+.li.acil{border-left-color:#f59e0b}
+.li-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:2px}
+.li-no{font-family:monospace;font-size:11px;font-weight:700;color:#1a2b47}
+.li-parca{font-size:12px;font-weight:500;color:#374151;margin-top:2px}
+.li-alt{font-size:10px;color:#9ca3af;margin-top:2px;display:flex;align-items:center;gap:6px}
+
+/* Badge */
+.bdg{display:inline-flex;align-items:center;gap:3px;font-size:10px;padding:2px 7px;border-radius:12px;font-weight:500;white-space:nowrap}
+.bdg::before{content:'';width:4px;height:4px;border-radius:50%;flex-shrink:0}
+.b-grn::before{background:#10b981}.b-grn{background:#d1fae5;color:#065f46}
+.b-amr::before{background:#f59e0b}.b-amr{background:#fef3c7;color:#92400e}
+.b-red::before{background:#ef4444}.b-red{background:#fee2e2;color:#991b1b}
+.b-blu::before{background:#3b82f6}.b-blu{background:#dbeafe;color:#1e40af}
+.b-gray::before{background:#9ca3af}.b-gray{background:#f3f4f6;color:#6b7280}
+.b-pur::before{background:#8b5cf6}.b-pur{background:#ede9fe;color:#5b21b6}
+.b-teal::before{background:#0d9488}.b-teal{background:#ccfbf1;color:#0f766e}
+.b-dark{background:#111827;color:#fff;font-size:9px;padding:2px 6px;border-radius:4px;font-weight:700;font-family:monospace}
+
+/* Btn */
+.btn{font-size:11px;padding:5px 11px;border-radius:5px;border:1px solid #d1d5db;background:#fff;color:#374151;cursor:pointer;font-weight:500;white-space:nowrap;transition:all .12s;display:inline-flex;align-items:center;gap:4px}
+.btn:hover{background:#f9fafb}
+.btn-p{background:#1a2b47;color:#fff;border-color:#1a2b47}
+.btn-g{background:#d1fae5;color:#065f46;border-color:#6ee7b7}
+.btn-b{background:#dbeafe;color:#1e40af;border-color:#93c5fd}
+.btn-warn{background:#fef3c7;color:#92400e;border-color:#fcd34d}
+.btn-red{background:#fee2e2;color:#991b1b;border-color:#fca5a5}
+.btn-pur{background:#ede9fe;color:#5b21b6;border-color:#c4b5fd}
+.btn-teal{background:#ccfbf1;color:#0f766e;border-color:#5eead4}
+
+/* Header */
+.rh{background:#fff;border-bottom:1px solid #e5e7eb;padding:10px 16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex-shrink:0}
+.rh-no{font-family:monospace;font-size:14px;font-weight:700;color:#1a2b47}
+
+/* Section */
+.sec{background:#fff;border:1px solid #e5e7eb;border-radius:8px;margin:10px;overflow:hidden}
+.sec-head{padding:9px 14px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;background:#fafafa}
+.sec-title{font-size:12px;font-weight:600;color:#374151;display:flex;align-items:center;gap:6px}
+.sec-body{padding:12px 14px}
+
+/* Form */
+.fg4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:10px}
+.fg3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px}
+.fg2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.fl{display:block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#9ca3af;margin-bottom:3px}
+.fi{width:100%;font-size:12px;padding:6px 9px;border:1px solid #d1d5db;border-radius:5px;background:#fff;color:#111827;outline:none}
+.fi:focus{border-color:#1a2b47}
+.fi-ro{background:#f9fafb;color:#6b7280;border-color:#f3f4f6}
+.fi-grn{background:#f0fdf4;color:#065f46;border-color:#6ee7b7;font-family:monospace;font-weight:600}
+.fi-sel{width:100%;font-size:12px;padding:6px 9px;border:1px solid #d1d5db;border-radius:5px;background:#fff;color:#374151;outline:none}
+
+/* Operasyon rotası */
+.op-table{width:100%;border-collapse:collapse;font-size:12px}
+.op-table th{text-align:left;padding:7px 10px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:#9ca3af;background:#f9fafb;border-bottom:1px solid #e5e7eb}
+.op-table td{padding:8px 10px;border-bottom:1px solid #f3f4f6;vertical-align:middle;color:#374151}
+.op-table tr:last-child td{border-bottom:none}
+.op-table tr:hover td{background:#fafafa}
+
+/* Operasyon sürükle sıra */
+.op-sira{cursor:grab;color:#d1d5db;font-size:14px;margin-right:4px}
+.op-fason{background:#fdf4ff;border-left:3px solid #c4b5fd}
+
+/* Gantt mini */
+.gantt-row{display:flex;align-items:center;gap:8px;margin-bottom:4px;font-size:11px}
+.gantt-label{width:100px;color:#6b7280;flex-shrink:0;font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gantt-bar-wrap{flex:1;background:#f3f4f6;border-radius:3px;height:18px;position:relative;overflow:hidden}
+.gantt-bar{height:100%;border-radius:3px;display:flex;align-items:center;padding-left:6px;font-size:9px;font-weight:600;color:#fff;position:absolute;transition:width .3s}
+.gb-done{background:#10b981}
+.gb-active{background:#1a2b47;animation:blink 2s infinite}
+.gb-wait{background:#e5e7eb}
+.gb-late{background:#ef4444}
+.gb-fason{background:#8b5cf6}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.7}}
+
+/* KPI */
+.kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:10px}
+.kpi{background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;border-top:3px solid}
+.kpi.s1{border-top-color:#3b82f6}.kpi.s2{border-top-color:#f59e0b}
+.kpi.s3{border-top-color:#ef4444}.kpi.s4{border-top-color:#10b981}.kpi.s5{border-top-color:#8b5cf6}
+.kpi label{font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:#6b7280;display:block;margin-bottom:3px;font-weight:500}
+.kpi .num{font-size:20px;font-weight:700;color:#111827;line-height:1}
+.kpi .det{font-size:10px;color:#9ca3af;margin-top:2px}
+
+/* AS9100 şerit */
+.as9100-bar{background:linear-gradient(135deg,#1a2b47,#243d66);border-radius:7px;padding:8px 14px;margin:10px 10px 0;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.as9100-chip{font-size:10px;padding:2px 8px;border-radius:4px;font-weight:500;background:rgba(255,255,255,.12);color:rgba(255,255,255,.8);border:1px solid rgba(255,255,255,.15)}
+.as9100-chip.ok{background:rgba(16,185,129,.2);color:#6ee7b7;border-color:rgba(16,185,129,.3)}
+.as9100-chip.warn{background:rgba(245,158,11,.2);color:#fbbf24;border-color:rgba(245,158,11,.3)}
+.as9100-chip.err{background:rgba(239,68,68,.2);color:#fca5a5;border-color:rgba(239,68,68,.3)}
+
+/* Akış */
+.akis{display:flex;border-bottom:1px solid #e5e7eb}
+.as{flex:1;padding:7px 6px;text-align:center;font-size:10px;font-weight:500;color:#9ca3af;border-right:1px solid #f3f4f6}
+.as:last-child{border-right:none}
+.as.done{background:#f0fdf4;color:#065f46}
+.as.active{background:#1a2b47;color:#fff}
+.as .sn{font-size:9px;display:block;opacity:.7;margin-top:1px}
+
+/* Zincir */
+.zincir{display:flex;align-items:center;gap:5px;padding:8px 14px;background:#f0fdf4;border-bottom:1px solid #6ee7b7;flex-wrap:wrap}
+.zi{font-size:11px;padding:3px 9px;border-radius:4px;border:1px solid;font-family:monospace;font-weight:600}
+.zi-g{background:#d1fae5;color:#065f46;border-color:#6ee7b7}
+.zi-a{background:#1a2b47;color:#fff;border-color:#1a2b47}
+.zi-gr{background:#f9fafb;color:#9ca3af;border-color:#e5e7eb}
+.zi-ok{color:#9ca3af;font-size:14px}
+
+/* Zamanlayıcı */
+.timer-box{background:#1a2b47;border-radius:8px;padding:10px 14px;display:flex;align-items:center;gap:12px}
+.timer-no{font-family:monospace;font-size:12px;color:rgba(255,255,255,.6)}
+.timer-val{font-family:monospace;font-size:24px;font-weight:700;color:#fff;letter-spacing:.05em}
+.timer-btns{display:flex;gap:6px;margin-left:auto}
+.t-btn{font-size:11px;padding:5px 12px;border-radius:5px;border:none;cursor:pointer;font-weight:600}
+.t-start{background:#10b981;color:#fff}
+.t-pause{background:#f59e0b;color:#fff}
+.t-stop{background:#ef4444;color:#fff}
+
+/* Kalite kontrol satırı */
+.kk-row{display:flex;align-items:center;gap:8px;padding:6px 10px;border-bottom:1px solid #f3f4f6;font-size:11px}
+.kk-row:last-child{border-bottom:none}
+.kk-no{font-size:10px;color:#9ca3af;width:20px}
+.kk-adi{flex:1;color:#374151;font-weight:500}
+.kk-olcu{font-family:monospace;font-size:11px;color:#1a2b47;width:80px}
+.kk-tolerans{font-size:10px;color:#6b7280;width:80px}
+.kk-sonuc{width:60px}
+.kk-inp{width:55px;text-align:center;font-size:12px;padding:3px 5px;border-radius:4px;outline:none}
+.kk-ok{border:1px solid #6ee7b7;background:#f0fdf4;color:#065f46}
+.kk-fail{border:1px solid #fca5a5;background:#fff8f8;color:#dc2626}
+
+/* Teknik resim */
+.teknik-resim-box{border:1px solid #e5e7eb;border-radius:7px;overflow:hidden}
+.trb-head{background:#1a2b47;padding:8px 12px;display:flex;align-items:center;justify-content:space-between}
+.trb-adi{font-size:11px;color:rgba(255,255,255,.8)}
+.trb-body{background:#e5e7eb;min-height:180px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#9ca3af}
+
+/* Planlama gantt */
+.plan-row{display:grid;grid-template-columns:120px 1fr;gap:0;margin-bottom:2px;align-items:center}
+.plan-label{font-size:11px;color:#374151;font-weight:500;padding:4px 8px;background:#f9fafb;border:1px solid #e5e7eb;border-right:none;border-radius:4px 0 0 4px}
+.plan-bar-area{background:#f9fafb;border:1px solid #e5e7eb;border-radius:0 4px 4px 0;height:30px;position:relative;overflow:hidden}
+
+/* Atölye sayfası */
+.atolye-kart-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:10px}
+.ak{background:#fff;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden}
+.ak-head{padding:10px 12px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between}
+.ak-adi{font-size:12px;font-weight:600;color:#111827}
+.ak-body{padding:10px 12px}
+.ak-row{display:flex;align-items:center;justify-content:space-between;padding:4px 0;font-size:11px;border-bottom:1px solid #f9fafb}
+.ak-row:last-child{border-bottom:none}
+
+/* Sayfa */
+.page{display:none}.page.show{display:flex;flex-direction:column;flex:1;overflow:hidden}
+.content-scroll{flex:1;overflow-y:auto}
+
+/* Pulse */
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.pulse{animation:pulse 1.5s infinite}
+
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:2px}
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+  <div class="sb-logo">
+    <div class="sb-brand">Ersan MES</div>
+    <div class="sb-sub">AS9100 · Üretim Yönetimi</div>
+  </div>
+  <div class="sb-section sb-dim">Satış</div>
+  <div class="sb-item sb-dim"><div class="sb-dot"></div>Teklifler</div>
+  <div class="sb-item sb-dim"><div class="sb-dot"></div>Siparişler</div>
+  <div class="sb-section sb-dim">Satınalma</div>
+  <div class="sb-item sb-dim"><div class="sb-dot"></div>Satınalma Talepleri</div>
+  <div class="sb-section sb-dim">Stok Yönetimi</div>
+  <div class="sb-item sb-dim"><div class="sb-dot"></div>Stok Durumu</div>
+  <div class="sb-section">Üretim</div>
+  <div class="sb-item on" onclick="goTo('wo',this)"><div class="sb-dot"></div>İş Emirleri</div>
+  <div class="sb-item" onclick="goTo('planlama',this)"><div class="sb-dot"></div>Planlama</div>
+  <div class="sb-item" onclick="goTo('atolye',this)"><div class="sb-dot"></div>Atölye</div>
+  <div class="sb-section sb-dim">Kalite</div>
+  <div class="sb-item sb-dim"><div class="sb-dot"></div>Kalite Hub<span class="sb-badge">7</span></div>
+  <div class="sb-item sb-dim"><div class="sb-dot"></div>Kontrol Planı</div>
+  <div class="sb-item sb-dim"><div class="sb-dot"></div>Girdi Muayene</div>
+  <div class="sb-item sb-dim"><div class="sb-dot"></div>Üretim Muayenesi</div>
+  <div class="sb-item sb-dim"><div class="sb-dot"></div>FAI</div>
+</div>
+
+<div class="main">
+
+<!-- ══════════ İŞ EMİRLERİ ══════════ -->
+<div class="page show" id="pg-wo">
+
+  <!-- Header -->
+  <div style="background:#fff;border-bottom:1px solid #e5e7eb;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+    <div style="font-size:15px;font-weight:600;color:#1a2b47">İş Emirleri</div>
+    <button class="btn btn-p">+ Yeni İş Emri</button>
+  </div>
+
+  <div class="split" style="flex:1">
+
+    <!-- Sol Liste -->
+    <div class="split-left">
+      <div class="sl-head">
+        <span class="sl-title">İş Emirleri</span>
+        <span class="sl-count">14 iş emri</span>
+      </div>
+      <div class="sl-search">
+        <input placeholder="WO no, lot, parça ara...">
+      </div>
+      <div class="sl-tabs">
+        <button class="st on">Tümü</button>
+        <button class="st">Beklemede</button>
+        <button class="st">Üretimde</button>
+        <button class="st">Tamamlandı</button>
+      </div>
+      <div class="sl-list">
+
+        <div class="li acil sel" onclick="woSec('wo28')">
+          <div class="li-top">
+            <span class="li-no">IE-2026-00028</span>
+            <span class="bdg b-gray">Taslak</span>
+          </div>
+          <div class="li-parca">Flanş İmalatı</div>
+          <div class="li-alt">
+            <span class="bdg b-amr" style="font-size:9px;padding:1px 5px">Acil</span>
+            <span style="font-family:monospace;font-size:10px;color:#1a2b47">SP-2026-032</span>
+            <span style="margin-left:auto">150 Adet</span>
+          </div>
+        </div>
+
+        <div class="li kritik" onclick="woSec('wo27')">
+          <div class="li-top">
+            <span class="li-no">IE-2026-00027</span>
+            <span class="bdg b-gray">Taslak</span>
+          </div>
+          <div class="li-parca">Deneme Malzemesi</div>
+          <div class="li-alt">
+            <span class="bdg b-red" style="font-size:9px;padding:1px 5px">Kritik</span>
+            <span style="margin-left:auto">25 Adet</span>
+          </div>
+        </div>
+
+        <div class="li" onclick="woSec('wo26')">
+          <div class="li-top">
+            <span class="li-no">IE-2026-00026</span>
+            <span class="bdg b-blu">Üretimde</span>
+          </div>
+          <div class="li-parca">Role</div>
+          <div class="li-alt">
+            <span style="font-family:monospace;font-size:10px;color:#1a2b47">SP-2026-030</span>
+            <span style="margin-left:auto">50 Adet</span>
+            <span style="color:#10b981;font-size:10px">⏱ 2:34</span>
+          </div>
+        </div>
+
+        <div class="li" onclick="woSec('wo25')">
+          <div class="li-top">
+            <span class="li-no">IE-2026-00025</span>
+            <span class="bdg b-gray">Taslak</span>
+          </div>
+          <div class="li-parca">Avar Role</div>
+          <div class="li-alt">
+            <span class="bdg b-red" style="font-size:9px;padding:1px 5px">Kritik</span>
+            <span style="margin-left:auto">30 Adet</span>
+          </div>
+        </div>
+
+        <div class="li" onclick="woSec('wo24')">
+          <div class="li-top">
+            <span class="li-no">IE-2026-00024</span>
+            <span class="bdg b-blu">Üretimde</span>
+          </div>
+          <div class="li-parca">Tahrik Role</div>
+          <div class="li-alt">
+            <span class="bdg b-amr" style="font-size:9px;padding:1px 5px">Acil</span>
+            <span style="margin-left:auto">50 Adet</span>
+          </div>
+        </div>
+
+        <div class="li" onclick="woSec('wo22')">
+          <div class="li-top">
+            <span class="li-no">IE-2026-00022</span>
+            <span class="bdg b-grn">Tamamlandı</span>
+          </div>
+          <div class="li-parca">TEST Flanş Grubu</div>
+          <div class="li-alt">
+            <span style="font-family:monospace;font-size:10px;color:#9ca3af">FLN-TEST-001 Rev.A</span>
+            <span style="margin-left:auto">10 Adet</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Sağ Detay -->
+    <div class="split-right" id="wo-detay">
+
+      <!-- WO Header -->
+      <div class="rh">
+        <span class="rh-no">IE-2026-00028</span>
+        <span class="bdg b-gray">Taslak</span>
+        <button class="btn btn-b" style="font-size:11px">QR Göster</button>
+        <button class="btn" style="font-size:11px">🖨 Traveler PDF</button>
+        <button class="btn btn-teal" style="font-size:11px">▶ Üretime Al</button>
+        <button class="btn btn-g" style="font-size:11px">✓ Tamamla</button>
+        <button class="btn btn-warn" style="font-size:11px">PR Aç</button>
+        <button class="btn btn-p" style="font-size:11px">💾 Kaydet</button>
+        <button class="btn btn-red" style="font-size:11px">Sil</button>
+      </div>
+
+      <!-- AS9100 şeridi -->
+      <div class="as9100-bar">
+        <span style="font-size:14px">🛡️</span>
+        <span style="font-size:11px;font-weight:700;color:#fff">AS9100</span>
+        <span class="as9100-chip warn">⚠ Operasyon Rotası Eksik</span>
+        <span class="as9100-chip ok">✓ Sipariş Bağlı</span>
+        <span class="as9100-chip warn">⚠ FAI Tanımlanmamış</span>
+        <span class="as9100-chip ok">✓ Teknik Resim Bağlandı</span>
+      </div>
+
+      <!-- Bağlantı Zinciri -->
+      <div class="zincir">
+        <span class="zi zi-g">SP-2026-032</span>
+        <span class="zi-ok">→</span>
+        <span class="zi zi-a">IE-2026-00028</span>
+        <span class="zi-ok">→</span>
+        <span class="zi zi-gr">TRV-26-XXXXX</span>
+        <span class="zi-ok">→</span>
+        <span class="zi zi-gr">FAI</span>
+        <span class="zi-ok">→</span>
+        <span class="zi zi-gr">Sevkiyat</span>
+      </div>
+
+      <!-- Aktif Operasyon Zamanlayıcı (Üretimde ise) -->
+      <div style="margin:10px;display:none" id="timer-box">
+        <div class="timer-box">
+          <div>
+            <div class="timer-no">IE-2026-00026 · Torna Operasyonu</div>
+            <div class="timer-val">02:34:18</div>
+          </div>
+          <div style="font-size:11px;color:rgba(255,255,255,.6);margin-left:8px">
+            <div>Operatör: Erdem K.</div>
+            <div>Tezgah: TRN-01</div>
+          </div>
+          <div class="timer-btns">
+            <button class="t-btn t-pause">⏸ Duraklat</button>
+            <button class="t-btn t-stop">⏹ Bitir</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- İş Emri Bilgileri -->
+      <div class="sec">
+        <div class="sec-head">
+          <span class="sec-title">📋 İş Emri Bilgileri</span>
+        </div>
+        <div class="sec-body">
+          <div class="fg4">
+            <div><label class="fl">IE No</label><input class="fi fi-grn" value="IE-2026-00028" readonly></div>
+            <div><label class="fl">Lot No</label><input class="fi fi-ro" placeholder="Traveler oluşunca dolar" readonly></div>
+            <div><label class="fl">Sipariş No</label><input class="fi fi-ro" value="SP-2026-032" readonly></div>
+            <div>
+              <label class="fl">Durum</label>
+              <select class="fi-sel">
+                <option>Taslak</option><option>Beklemede</option>
+                <option>Üretimde</option><option>FAI Bekliyor</option>
+                <option>Tamamlandı</option><option>İptal</option>
+              </select>
+            </div>
+          </div>
+          <div class="fg3">
+            <div><label class="fl">Parça Adı</label><input class="fi" value="Flanş İmalatı"></div>
+            <div><label class="fl">Parça No</label><input class="fi" value="2500"></div>
+            <div><label class="fl">Revizyon</label><input class="fi" value="ör: B"></div>
+          </div>
+          <div class="fg4">
+            <div><label class="fl">Miktar</label><input class="fi" type="number" value="150"></div>
+            <div>
+              <label class="fl">Birim</label>
+              <select class="fi-sel"><option>Adet</option><option>Kg</option><option>m</option></select>
+            </div>
+            <div><label class="fl">Termin Tarihi</label><input class="fi" type="date" value="2026-03-27"></div>
+            <div><label class="fl">Malzeme ID</label><input class="fi fi-ro" placeholder="Malzeme girişinden" readonly></div>
+          </div>
+          <div class="fg2">
+            <div><label class="fl">Heat No</label><input class="fi fi-ro" placeholder="Malzeme girişinden" readonly></div>
+            <div><label class="fl">Notlar / Özel Talimat</label><input class="fi" placeholder="Özel talimat veya not..."></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- OPERASYON ROTASI — ERPNext/Odoo'dan alınan iyileştirmeler -->
+      <div class="sec">
+        <div class="sec-head">
+          <span class="sec-title">⚙ Operasyon Rotası</span>
+          <div style="display:flex;gap:6px">
+            <span style="font-size:10px;color:#9ca3af;align-self:center">Sürükle-bırak ile sırala</span>
+            <button class="btn btn-b" style="font-size:10px;padding:3px 8px">Şablondan Yükle</button>
+            <button class="btn btn-p" style="font-size:10px;padding:3px 8px">+ Operasyon Ekle</button>
+          </div>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="op-table">
+            <thead>
+              <tr>
+                <th style="width:24px"></th>
+                <th>#</th>
+                <th>Operasyon</th>
+                <th>Notlar / Talimat</th>
+                <th>Tezgah / Tedarikçi</th>
+                <th>Setup (dk)</th>
+                <th>Çevrim (dk/adet)</th>
+                <th>FAI</th>
+                <th>Durum</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="op-sira">⠿</span></td>
+                <td style="color:#9ca3af;font-size:11px">1</td>
+                <td><select class="fi-sel" style="font-size:11px;padding:3px 6px;width:110px"><option>Torna</option><option>CNC Freze</option><option>Taşlama</option><option>Isıl İşlem</option><option>Kaplama</option><option>FAI/IPQC</option><option>Ambalaj</option></select></td>
+                <td><input class="fi" style="font-size:11px;padding:3px 7px" placeholder="Talimat..."></td>
+                <td><select class="fi-sel" style="font-size:11px;padding:3px 6px;width:90px"><option>TRN-01</option><option>TRN-02</option><option>CNC-01</option><option>TSL-01</option></select></td>
+                <td><input class="fi" type="number" style="width:55px;font-size:11px;padding:3px 5px;text-align:center" value="15"></td>
+                <td><input class="fi" type="number" style="width:55px;font-size:11px;padding:3px 5px;text-align:center" value="8"></td>
+                <td><input type="checkbox" style="accent-color:#1a2b47"></td>
+                <td><span class="bdg b-amr">Bekliyor</span></td>
+                <td><button style="border:none;background:none;color:#fca5a5;cursor:pointer;font-size:13px">✕</button></td>
+              </tr>
+              <tr>
+                <td><span class="op-sira">⠿</span></td>
+                <td style="color:#9ca3af;font-size:11px">2</td>
+                <td><select class="fi-sel" style="font-size:11px;padding:3px 6px;width:110px"><option selected>CNC Freze</option></select></td>
+                <td><input class="fi" style="font-size:11px;padding:3px 7px" value="3 eksen, R0.5 köşe"></td>
+                <td><select class="fi-sel" style="font-size:11px;padding:3px 6px;width:90px"><option>CNC-01</option></select></td>
+                <td><input class="fi" type="number" style="width:55px;font-size:11px;padding:3px 5px;text-align:center" value="30"></td>
+                <td><input class="fi" type="number" style="width:55px;font-size:11px;padding:3px 5px;text-align:center" value="12"></td>
+                <td><input type="checkbox" style="accent-color:#1a2b47"></td>
+                <td><span class="bdg b-amr">Bekliyor</span></td>
+                <td><button style="border:none;background:none;color:#fca5a5;cursor:pointer;font-size:13px">✕</button></td>
+              </tr>
+              <tr class="op-fason">
+                <td><span class="op-sira">⠿</span></td>
+                <td style="color:#9ca3af;font-size:11px">3</td>
+                <td><select class="fi-sel" style="font-size:11px;padding:3px 6px;width:110px"><option selected>Isıl İşlem</option></select></td>
+                <td><input class="fi" style="font-size:11px;padding:3px 7px" value="58-62 HRC, 0.8-1.2mm"></td>
+                <td>
+                  <select class="fi-sel" style="font-size:11px;padding:3px 6px;width:90px"><option>Dış Fason</option></select>
+                  <div style="font-size:9px;color:#5b21b6;margin-top:2px">→ Auto PR oluşur</div>
+                </td>
+                <td><input class="fi" type="number" style="width:55px;font-size:11px;padding:3px 5px;text-align:center" value="0"></td>
+                <td><input class="fi" type="number" style="width:55px;font-size:11px;padding:3px 5px;text-align:center" value="0"></td>
+                <td><input type="checkbox" style="accent-color:#1a2b47" checked></td>
+                <td><span class="bdg b-pur">Fason</span></td>
+                <td><button style="border:none;background:none;color:#fca5a5;cursor:pointer;font-size:13px">✕</button></td>
+              </tr>
+              <tr>
+                <td><span class="op-sira">⠿</span></td>
+                <td style="color:#9ca3af;font-size:11px">4</td>
+                <td><select class="fi-sel" style="font-size:11px;padding:3px 6px;width:110px"><option selected>FAI/IPQC</option></select></td>
+                <td><input class="fi" style="font-size:11px;padding:3px 7px" value="Boyut + yüzey kontrolü"></td>
+                <td><select class="fi-sel" style="font-size:11px;padding:3px 6px;width:90px"><option>KNT-01</option></select></td>
+                <td><input class="fi" type="number" style="width:55px;font-size:11px;padding:3px 5px;text-align:center" value="10"></td>
+                <td><input class="fi" type="number" style="width:55px;font-size:11px;padding:3px 5px;text-align:center" value="5"></td>
+                <td><input type="checkbox" checked style="accent-color:#1a2b47"></td>
+                <td><span class="bdg b-amr">Bekliyor</span></td>
+                <td><button style="border:none;background:none;color:#fca5a5;cursor:pointer;font-size:13px">✕</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="padding:8px 14px;border-top:1px solid #f3f4f6;display:flex;align-items:center;gap:10px;background:#fafafa">
+          <button class="btn btn-p" style="font-size:10px;padding:3px 10px">+ Operasyon Ekle</button>
+          <div style="font-size:10px;color:#6b7280;display:flex;gap:12px;margin-left:auto">
+            <span>Toplam Setup: <strong>55 dk</strong></span>
+            <span>Toplam Çevrim: <strong>~37.5 saat</strong></span>
+            <span style="color:#5b21b6">1 Fason operasyon</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- İKİ KOLON: Kalite Kontrol + Teknik Resim -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;margin:0 10px 10px">
+
+        <!-- IPQC Kontrol Planı (ERPNext'ten alınan özellik) -->
+        <div class="sec" style="margin:0 5px 0 0">
+          <div class="sec-head">
+            <span class="sec-title">🔍 IPQC Kontrol Planı</span>
+            <button class="btn btn-b" style="font-size:10px;padding:3px 8px">+ Kontrol Ekle</button>
+          </div>
+          <div>
+            <div class="kk-row" style="background:#f9fafb;font-size:10px;font-weight:600;color:#9ca3af;padding:5px 10px">
+              <span class="kk-no">#</span>
+              <span class="kk-adi">Kontrol Noktası</span>
+              <span class="kk-olcu">Ölçü</span>
+              <span class="kk-tolerans">Tolerans</span>
+              <span class="kk-sonuc">Sonuç</span>
+            </div>
+            <div class="kk-row">
+              <span class="kk-no">1</span>
+              <span class="kk-adi">Dış Çap</span>
+              <span class="kk-olcu">Ø245.00</span>
+              <span class="kk-tolerans">±0.05 mm</span>
+              <span class="kk-sonuc"><input class="kk-inp kk-ok" value="244.97" type="number"></span>
+            </div>
+            <div class="kk-row">
+              <span class="kk-no">2</span>
+              <span class="kk-adi">İç Çap</span>
+              <span class="kk-olcu">Ø215.00</span>
+              <span class="kk-tolerans">+0.02/-0.01</span>
+              <span class="kk-sonuc"><input class="kk-inp kk-ok" value="215.01" type="number"></span>
+            </div>
+            <div class="kk-row">
+              <span class="kk-no">3</span>
+              <span class="kk-adi">Yüzey Pürüzlülüğü</span>
+              <span class="kk-olcu">Ra 1.6</span>
+              <span class="kk-tolerans">max Ra 3.2</span>
+              <span class="kk-sonuc"><input class="kk-inp" value="" type="number" placeholder="—" style="border:1px solid #d1d5db;border-radius:4px;background:#fafafa;color:#9ca3af"></span>
+            </div>
+            <div class="kk-row">
+              <span class="kk-no">4</span>
+              <span class="kk-adi">Sertlik (HRC)</span>
+              <span class="kk-olcu">60 HRC</span>
+              <span class="kk-tolerans">58-62 HRC</span>
+              <span class="kk-sonuc"><input class="kk-inp kk-fail" value="57.2" type="number"></span>
+            </div>
+          </div>
+          <div style="padding:6px 10px;border-top:1px solid #e5e7eb;background:#fafafa;display:flex;gap:6px;justify-content:flex-end">
+            <span style="font-size:10px;color:#dc2626;font-weight:500;align-self:center">⚠ 1 ölçüm tolerans dışı</span>
+            <button class="btn btn-g" style="font-size:10px;padding:3px 8px">Kabul Et</button>
+            <button class="btn btn-red" style="font-size:10px;padding:3px 8px">Red → NCR</button>
+          </div>
+        </div>
+
+        <!-- Teknik Resim -->
+        <div class="sec" style="margin:0 0 0 5px">
+          <div class="sec-head">
+            <span class="sec-title">📐 Teknik Resim</span>
+            <div style="display:flex;gap:5px">
+              <span style="font-size:10px;color:#9ca3af;align-self:center">Rev. B</span>
+              <button class="btn" style="font-size:10px;padding:3px 8px">Sığdır</button>
+              <button class="btn btn-p" style="font-size:10px;padding:3px 8px">⬇ PDF</button>
+            </div>
+          </div>
+          <div class="teknik-resim-box" style="margin:10px;border-radius:6px">
+            <div class="trb-head">
+              <span class="trb-adi">teknik-resim.pdf — Rev. B</span>
+              <div style="display:flex;gap:6px">
+                <button style="font-size:10px;padding:2px 6px;border:1px solid rgba(255,255,255,.2);border-radius:3px;background:transparent;color:rgba(255,255,255,.7);cursor:pointer">−</button>
+                <span style="font-size:10px;color:rgba(255,255,255,.6)">138%</span>
+                <button style="font-size:10px;padding:2px 6px;border:1px solid rgba(255,255,255,.2);border-radius:3px;background:transparent;color:rgba(255,255,255,.7);cursor:pointer">+</button>
+                <button style="font-size:10px;padding:2px 6px;border:1px solid rgba(255,255,255,.2);border-radius:3px;background:transparent;color:rgba(255,255,255,.7);cursor:pointer">Sığdır</button>
+              </div>
+            </div>
+            <div style="background:#e8eaed;height:160px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#9ca3af">
+              📐 Teknik Resim PDF Görüntüleniyor...
+            </div>
+          </div>
+          <!-- Revizyon geçmişi -->
+          <div style="padding:8px 14px;border-top:1px solid #e5e7eb">
+            <div style="font-size:10px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px">Revizyon Geçmişi</div>
+            <div style="display:flex;gap:6px">
+              <span class="bdg b-grn" style="font-size:9px">Rev. B — Güncel ✓</span>
+              <span class="bdg b-gray" style="font-size:9px">Rev. A — 15.02.2026</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /split-right -->
+  </div><!-- /split -->
+</div>
+
+<!-- ══════════ PLANLAMA ══════════ -->
+<div class="page" id="pg-planlama">
+  <div style="background:#fff;border-bottom:1px solid #e5e7eb;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+    <div style="font-size:15px;font-weight:600;color:#1a2b47">Üretim Planlama</div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-b">Haftalık</button>
+      <button class="btn btn-p on" style="background:#1a2b47;color:#fff">Aylık</button>
+      <button class="btn">Gantt</button>
+    </div>
+  </div>
+  <div class="content-scroll">
+    <div class="kpi-row">
+      <div class="kpi s1"><label>Aktif WO</label><div class="num">8</div><div class="det">Üretimde</div></div>
+      <div class="kpi s4"><label>Bu Hafta Planlı</label><div class="num">5</div><div class="det">Teslim edilecek</div></div>
+      <div class="kpi s3"><label>Gecikmiş</label><div class="num">2</div><div class="det">Termin aşıldı</div></div>
+      <div class="kpi s2"><label>Kapasite %</label><div class="num">78</div><div class="det">Bu hafta</div></div>
+      <div class="kpi s5"><label>Fason Bekleyen</label><div class="num">3</div><div class="det">Dış operasyon</div></div>
+    </div>
+
+    <!-- AS9100 -->
+    <div class="as9100-bar">
+      <span style="font-size:14px">📅</span>
+      <span style="font-size:11px;font-weight:700;color:#fff">Planlama Durumu</span>
+      <span class="as9100-chip ok">✓ Kapasitesi Plan Yapıldı</span>
+      <span class="as9100-chip warn">⚠ 2 WO Termin Riski</span>
+      <span class="as9100-chip ok">✓ Malzeme Hazır: 5/8</span>
+      <span class="as9100-chip err">✗ 3 Fason Onay Bekliyor</span>
+    </div>
+
+    <!-- Gantt benzeri görünüm -->
+    <div class="sec">
+      <div class="sec-head">
+        <span class="sec-title">📊 Üretim Gantt — Mart 2026</span>
+        <div style="display:flex;gap:6px">
+          <div style="display:flex;gap:8px;font-size:10px;align-items:center">
+            <span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;background:#10b981;border-radius:2px;display:inline-block"></span>Tamamlandı</span>
+            <span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;background:#1a2b47;border-radius:2px;display:inline-block"></span>Üretimde</span>
+            <span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;background:#e5e7eb;border-radius:2px;display:inline-block"></span>Planlı</span>
+            <span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;background:#ef4444;border-radius:2px;display:inline-block"></span>Gecikmiş</span>
+            <span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;background:#8b5cf6;border-radius:2px;display:inline-block"></span>Fason</span>
+          </div>
+        </div>
+      </div>
+      <div style="padding:12px 14px">
+        <!-- Gün başlıkları -->
+        <div style="display:grid;grid-template-columns:120px 1fr;gap:0;margin-bottom:6px">
+          <div></div>
+          <div style="display:flex">
+            <div style="flex:1;font-size:9px;color:#9ca3af;text-align:center;padding:2px">18</div>
+            <div style="flex:1;font-size:9px;color:#9ca3af;text-align:center;padding:2px">19</div>
+            <div style="flex:1;font-size:9px;color:#9ca3af;text-align:center;padding:2px">20</div>
+            <div style="flex:1;font-size:9px;color:#1a2b47;text-align:center;padding:2px;font-weight:700;background:#eef2ff;border-radius:3px">21 ▼</div>
+            <div style="flex:1;font-size:9px;color:#9ca3af;text-align:center;padding:2px">22</div>
+            <div style="flex:1;font-size:9px;color:#9ca3af;text-align:center;padding:2px">23</div>
+            <div style="flex:1;font-size:9px;color:#9ca3af;text-align:center;padding:2px">24</div>
+            <div style="flex:1;font-size:9px;color:#9ca3af;text-align:center;padding:2px">25</div>
+            <div style="flex:1;font-size:9px;color:#9ca3af;text-align:center;padding:2px">26</div>
+            <div style="flex:1;font-size:9px;color:#9ca3af;text-align:center;padding:2px">27</div>
+            <div style="flex:1;font-size:9px;color:#9ca3af;text-align:center;padding:2px">28</div>
+            <div style="flex:1;font-size:9px;color:#9ca3af;text-align:center;padding:2px">29</div>
+            <div style="flex:1;font-size:9px;color:#9ca3af;text-align:center;padding:2px">30</div>
+            <div style="flex:1;font-size:9px;color:#9ca3af;text-align:center;padding:2px">31</div>
+          </div>
+        </div>
+
+        <!-- WO satırları -->
+        <div class="gantt-row">
+          <div class="gantt-label" title="IE-2026-00026 · Role">IE-28 · Flanş</div>
+          <div class="gantt-bar-wrap">
+            <div class="gantt-bar gb-wait" style="width:40%;left:0">Taslak</div>
+          </div>
+        </div>
+        <div class="gantt-row">
+          <div class="gantt-label" title="IE-2026-00026 · Role">IE-26 · Role</div>
+          <div class="gantt-bar-wrap">
+            <div class="gantt-bar gb-done" style="width:25%;left:0">Torna ✓</div>
+            <div class="gantt-bar gb-active" style="width:20%;left:25%">CNC</div>
+            <div class="gantt-bar gb-fason" style="width:15%;left:45%">Isıl</div>
+            <div class="gantt-bar gb-wait" style="width:20%;left:60%">FAI</div>
+          </div>
+        </div>
+        <div class="gantt-row">
+          <div class="gantt-label">IE-24 · Tahrik Role</div>
+          <div class="gantt-bar-wrap">
+            <div class="gantt-bar gb-done" style="width:20%;left:10%">✓</div>
+            <div class="gantt-bar gb-active" style="width:25%;left:30%">Torna</div>
+          </div>
+        </div>
+        <div class="gantt-row">
+          <div class="gantt-label" style="color:#dc2626">IE-25 · Avar Role ⚠</div>
+          <div class="gantt-bar-wrap">
+            <div class="gantt-bar gb-late" style="width:50%;left:0">Gecikmiş →</div>
+          </div>
+        </div>
+        <div class="gantt-row">
+          <div class="gantt-label">IE-22 · Flanş</div>
+          <div class="gantt-bar-wrap">
+            <div class="gantt-bar gb-done" style="width:100%;left:0">Tamamlandı ✓</div>
+          </div>
+        </div>
+
+        <!-- Tezgah kapasite -->
+        <div style="margin-top:14px;padding-top:12px;border-top:1px solid #e5e7eb">
+          <div style="font-size:10px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">Tezgah Kapasitesi</div>
+          <div class="gantt-row">
+            <div class="gantt-label">TRN-01 Torna</div>
+            <div class="gantt-bar-wrap">
+              <div class="gantt-bar gb-active" style="width:85%">%85</div>
+            </div>
+          </div>
+          <div class="gantt-row">
+            <div class="gantt-label">CNC-01</div>
+            <div class="gantt-bar-wrap">
+              <div class="gantt-bar gb-done" style="width:60%">%60</div>
+            </div>
+          </div>
+          <div class="gantt-row">
+            <div class="gantt-label">TSL-01 Taşlama</div>
+            <div class="gantt-bar-wrap">
+              <div class="gantt-bar gb-wait" style="width:20%">%20</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ ATÖLYE ══════════ -->
+<div class="page" id="pg-atolye">
+  <div style="background:#fff;border-bottom:1px solid #e5e7eb;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+    <div style="font-size:15px;font-weight:600;color:#1a2b47">Atölye</div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-b">QR ile İşlem</button>
+      <button class="btn btn-p">Operasyon Başlat</button>
+    </div>
+  </div>
+  <div class="content-scroll">
+    <div class="kpi-row">
+      <div class="kpi s4"><label>Aktif Operasyon</label><div class="num">3</div><div class="det">Şu an çalışıyor</div></div>
+      <div class="kpi s2"><label>Bekleyen</label><div class="num">5</div><div class="det">Sıra bekliyor</div></div>
+      <div class="kpi s3"><label>Fason Dışarıda</label><div class="num">2</div><div class="det">Isıl işlem / kaplama</div></div>
+      <div class="kpi s1"><label>Bugün Tamamlanan</label><div class="num">4</div><div class="det">Operasyon</div></div>
+      <div class="kpi s5"><label>OEE</label><div class="num">%78</div><div class="det">Bu hafta</div></div>
+    </div>
+
+    <!-- Aktif operasyonlar -->
+    <div class="sec">
+      <div class="sec-head">
+        <span class="sec-title">⚡ Aktif Operasyonlar</span>
+        <span style="font-size:10px;color:#10b981;display:flex;align-items:center;gap:4px">
+          <span class="pulse" style="width:6px;height:6px;border-radius:50%;background:#10b981;display:inline-block"></span>
+          Canlı
+        </span>
+      </div>
+      <div style="padding:10px 14px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+
+        <!-- Aktif operasyon kartı 1 -->
+        <div style="background:#f0fdf4;border:1px solid #6ee7b7;border-radius:8px;padding:10px 12px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+            <span class="b-dark">TRN-01</span>
+            <span class="bdg b-grn">Aktif</span>
+          </div>
+          <div style="font-size:12px;font-weight:600;color:#111827;margin-bottom:2px">Torna</div>
+          <div style="font-size:11px;color:#6b7280;margin-bottom:6px">IE-2026-00026 · Role İmalatı</div>
+          <div style="font-family:monospace;font-size:18px;font-weight:700;color:#1a2b47;margin-bottom:6px">02:34:18</div>
+          <div style="font-size:10px;color:#6b7280;margin-bottom:6px">
+            <div>Operatör: Erdem K.</div>
+            <div>Lot: TRV-26-00042-A · 50 adet</div>
+          </div>
+          <div style="display:flex;gap:5px">
+            <button class="btn btn-warn" style="flex:1;font-size:10px;padding:3px">⏸ Duraklat</button>
+            <button class="btn btn-g" style="flex:1;font-size:10px;padding:3px">✓ Bitir</button>
+          </div>
+        </div>
+
+        <!-- Aktif operasyon kartı 2 -->
+        <div style="background:#f0fdf4;border:1px solid #6ee7b7;border-radius:8px;padding:10px 12px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+            <span class="b-dark">CNC-01</span>
+            <span class="bdg b-grn">Aktif</span>
+          </div>
+          <div style="font-size:12px;font-weight:600;color:#111827;margin-bottom:2px">CNC Freze</div>
+          <div style="font-size:11px;color:#6b7280;margin-bottom:6px">IE-2026-00024 · Tahrik Role</div>
+          <div style="font-family:monospace;font-size:18px;font-weight:700;color:#1a2b47;margin-bottom:6px">01:12:44</div>
+          <div style="font-size:10px;color:#6b7280;margin-bottom:6px">
+            <div>Operatör: İlhan D.</div>
+            <div>Lot: TRV-26-00041-A · 50 adet</div>
+          </div>
+          <div style="display:flex;gap:5px">
+            <button class="btn btn-warn" style="flex:1;font-size:10px;padding:3px">⏸ Duraklat</button>
+            <button class="btn btn-g" style="flex:1;font-size:10px;padding:3px">✓ Bitir</button>
+          </div>
+        </div>
+
+        <!-- Boş tezgah -->
+        <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:120px">
+          <span class="b-dark" style="margin-bottom:8px">TSL-01</span>
+          <div style="font-size:12px;color:#9ca3af;margin-bottom:8px">Taşlama — Boşta</div>
+          <button class="btn btn-p" style="font-size:10px;padding:4px 10px">Operasyon Ata</button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- 3 QR Operasyon Başlatma -->
+    <div class="sec">
+      <div class="sec-head">
+        <span class="sec-title">📱 QR ile Operasyon Başlat (AS9100)</span>
+        <span class="bdg b-amr">3 QR Zorunlu</span>
+      </div>
+      <div style="padding:12px 14px;display:grid;grid-template-columns:1fr auto 1fr auto 1fr auto 100px;gap:8px;align-items:center">
+        <div style="background:#f0fdf4;border:2px solid #6ee7b7;border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:18px;margin-bottom:4px">📦</div>
+          <div style="font-size:11px;font-weight:700;color:#065f46">① Traveler QR</div>
+          <div style="font-family:monospace;font-size:9px;color:#059669;margin-top:3px">TRV-26-00042-A</div>
+          <span class="bdg b-grn" style="margin-top:5px;font-size:9px">✓ Okutuldu</span>
+        </div>
+        <div style="font-size:18px;color:#9ca3af">→</div>
+        <div style="background:#f9fafb;border:2px dashed #d1d5db;border-radius:8px;padding:10px;text-align:center;cursor:pointer" onclick="this.style.background='#f0fdf4';this.style.borderColor='#6ee7b7';this.innerHTML='<div style=\'font-size:18px\'>👤</div><div style=\'font-size:11px;font-weight:700;color:#065f46;margin-top:4px\'>② Personel QR</div><div style=\'font-family:monospace;font-size:9px;color:#059669;margin-top:3px\'>PRS-EK-001</div><span class=\'bdg b-grn\' style=\'margin-top:5px;font-size:9px\'>✓ Okutuldu</span>'">
+          <div style="font-size:18px;opacity:.3">👤</div>
+          <div style="font-size:11px;color:#9ca3af;margin-top:4px">② Personel QR</div>
+          <div style="font-size:10px;color:#d1d5db;margin-top:3px">Okutulmadı</div>
+        </div>
+        <div style="font-size:18px;color:#9ca3af">→</div>
+        <div style="background:#f9fafb;border:2px dashed #d1d5db;border-radius:8px;padding:10px;text-align:center;cursor:pointer">
+          <div style="font-size:18px;opacity:.3">⚙️</div>
+          <div style="font-size:11px;color:#9ca3af;margin-top:4px">③ Makine QR</div>
+          <div style="font-size:10px;color:#d1d5db;margin-top:3px">Okutulmadı</div>
+        </div>
+        <div style="font-size:18px;color:#9ca3af">→</div>
+        <button disabled style="background:#e5e7eb;color:#9ca3af;border:none;border-radius:8px;padding:12px 8px;font-size:12px;font-weight:700;cursor:not-allowed;width:100%">
+          ▶ BAŞLAT
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<script>
+function goTo(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('show'));
+  document.querySelectorAll('.sb-item').forEach(b => b.classList.remove('on'));
+  document.getElementById('pg-' + id).classList.add('show');
+  if (el) el.classList.add('on');
+}
+function woSec(id) {}
+</script>
+</body>
+</html>

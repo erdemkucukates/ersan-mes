@@ -1,0 +1,1562 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ersan MES — Faz 3 Modülleri</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,-apple-system,sans-serif}
+body{background:#f1f5f9;display:flex;height:100vh;overflow:hidden}
+
+/* ── Sidebar ── */
+.sidebar{width:188px;background:#1a2b47;display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
+.sb-logo{padding:14px 12px 10px;border-bottom:1px solid rgba(255,255,255,.08)}
+.sb-brand{font-size:13px;font-weight:700;color:#fff;letter-spacing:.02em}
+.sb-sub{font-size:9px;color:rgba(255,255,255,.35);margin-top:2px;text-transform:uppercase;letter-spacing:.07em}
+.sb-section{padding:12px 12px 3px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.28)}
+.sb-item{display:flex;align-items:center;gap:7px;padding:7px 12px;font-size:12px;color:rgba(255,255,255,.55);cursor:pointer;border-left:2px solid transparent;transition:all .12s}
+.sb-item:hover{background:rgba(255,255,255,.05);color:#fff}
+.sb-item.on{background:rgba(255,255,255,.08);color:#fff;border-left-color:#f59e0b;font-weight:500}
+.sb-dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.2);flex-shrink:0}
+.sb-item.on .sb-dot{background:#f59e0b}
+.sb-dim{color:rgba(255,255,255,.22)!important}
+.sb-new{font-size:8px;padding:1px 5px;border-radius:3px;background:rgba(245,158,11,.3);color:#fbbf24;margin-left:auto;font-weight:700}
+.sb-badge{font-size:9px;padding:1px 5px;border-radius:8px;background:rgba(239,68,68,.7);color:#fff;margin-left:auto}
+
+/* ── Main ── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.page{display:none;flex:1;flex-direction:column;overflow:hidden}
+.page.show{display:flex}
+.topbar{background:#fff;border-bottom:1px solid #e2e8f0;padding:0 18px;height:50px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:10px}
+.tb-title{font-size:15px;font-weight:700;color:#1a2b47}
+.tb-sub{font-size:11px;color:#94a3b8;margin-left:6px;font-weight:400}
+.content{flex:1;overflow-y:auto;padding:16px 18px}
+.topbar-right{display:flex;align-items:center;gap:8px}
+
+/* ── Buttons ── */
+.btn{font-size:11px;padding:5px 12px;border-radius:6px;border:1px solid #e2e8f0;background:#fff;color:#475569;cursor:pointer;font-weight:500;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;transition:all .12s}
+.btn:hover{background:#f8fafc;border-color:#cbd5e1}
+.btn-p{background:#1a2b47;color:#fff;border-color:#1a2b47}
+.btn-p:hover{background:#243d66}
+.btn-g{background:#d1fae5;color:#065f46;border-color:#6ee7b7}
+.btn-b{background:#dbeafe;color:#1e40af;border-color:#93c5fd}
+.btn-warn{background:#fef3c7;color:#92400e;border-color:#fcd34d}
+.btn-red{background:#fee2e2;color:#991b1b;border-color:#fca5a5}
+.btn-pur{background:#ede9fe;color:#5b21b6;border-color:#c4b5fd}
+.btn-teal{background:#ccfbf1;color:#0f766e;border-color:#5eead4}
+.btn-amr{background:#fef3c7;color:#92400e;border-color:#fcd34d}
+
+/* ── Badges ── */
+.bdg{display:inline-flex;align-items:center;gap:3px;font-size:10px;padding:2px 8px;border-radius:12px;font-weight:600;white-space:nowrap}
+.bdg::before{content:'';width:4px;height:4px;border-radius:50%;flex-shrink:0}
+.b-grn::before{background:#10b981}.b-grn{background:#d1fae5;color:#065f46}
+.b-amr::before{background:#f59e0b}.b-amr{background:#fef3c7;color:#92400e}
+.b-red::before{background:#ef4444}.b-red{background:#fee2e2;color:#991b1b}
+.b-blu::before{background:#3b82f6}.b-blu{background:#dbeafe;color:#1e40af}
+.b-gray::before{background:#94a3b8}.b-gray{background:#f1f5f9;color:#64748b}
+.b-pur::before{background:#8b5cf6}.b-pur{background:#ede9fe;color:#5b21b6}
+.b-teal::before{background:#0d9488}.b-teal{background:#ccfbf1;color:#0f766e}
+.b-dark{background:#1e293b;color:#f8fafc;font-size:9px;padding:2px 6px;border-radius:4px;font-weight:700;font-family:monospace}
+
+/* ── KPI ── */
+.kpi-row{display:grid;gap:12px;margin-bottom:16px}
+.kpi{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px 16px;border-top:3px solid;position:relative;overflow:hidden;cursor:pointer;transition:box-shadow .12s}
+.kpi:hover{box-shadow:0 4px 12px rgba(0,0,0,.08)}
+.kpi::after{content:'';position:absolute;right:-10px;top:-10px;width:60px;height:60px;border-radius:50%;opacity:.06}
+.kpi.s1{border-top-color:#3b82f6}.kpi.s1::after{background:#3b82f6}
+.kpi.s2{border-top-color:#f59e0b}.kpi.s2::after{background:#f59e0b}
+.kpi.s3{border-top-color:#ef4444}.kpi.s3::after{background:#ef4444}
+.kpi.s4{border-top-color:#10b981}.kpi.s4::after{background:#10b981}
+.kpi.s5{border-top-color:#8b5cf6}.kpi.s5::after{background:#8b5cf6}
+.kpi.s6{border-top-color:#0d9488}.kpi.s6::after{background:#0d9488}
+.kpi label{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#94a3b8;display:block;margin-bottom:4px;font-weight:600}
+.kpi .num{font-size:24px;font-weight:800;color:#0f172a;line-height:1}
+.kpi .det{font-size:10px;color:#94a3b8;margin-top:3px}
+.kpi .trend{font-size:10px;margin-top:4px;font-weight:600}
+.up{color:#10b981}.dn{color:#ef4444}.nt{color:#f59e0b}
+
+/* ── Card ── */
+.card{background:#fff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;margin-bottom:14px}
+.card-head{padding:12px 16px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;background:#fafafa}
+.card-title{font-size:12px;font-weight:700;color:#334155;display:flex;align-items:center;gap:6px}
+
+/* ── Table ── */
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{text-align:left;padding:9px 14px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#94a3b8;background:#f8fafc;border-bottom:1px solid #e2e8f0;white-space:nowrap}
+.tbl td{padding:10px 14px;border-bottom:1px solid #f1f5f9;color:#334155;vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:#f8fafc;cursor:pointer}
+.tbl tr.kritik td{background:#fff8f8}
+.tbl tr.warn td{background:#fffbeb}
+.mono{font-family:monospace;font-size:11px;font-weight:700;color:#1a2b47}
+.muted{color:#94a3b8;font-size:11px}
+
+/* ── Form ── */
+.fl{display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#94a3b8;margin-bottom:4px}
+.fi{width:100%;font-size:12px;padding:7px 10px;border:1px solid #e2e8f0;border-radius:6px;background:#fff;color:#0f172a;outline:none;transition:border-color .12s}
+.fi:focus{border-color:#1a2b47}
+.fi-ro{background:#f8fafc;color:#94a3b8;border-color:#f1f5f9}
+.fi-grn{background:#f0fdf4;color:#065f46;border-color:#6ee7b7;font-family:monospace;font-weight:700}
+.fi-sel{width:100%;font-size:12px;padding:7px 10px;border:1px solid #e2e8f0;border-radius:6px;background:#fff;color:#334155;outline:none}
+.fg2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.fg3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px}
+.fg4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;margin-bottom:12px}
+
+/* ── Modal ── */
+.modal-ov{display:none;position:fixed;inset:0;background:rgba(15,23,42,.65);z-index:500;align-items:flex-start;justify-content:center;padding:24px 16px 48px;overflow-y:auto;backdrop-filter:blur(4px)}
+.modal-ov.open{display:flex}
+.modal-box{background:#fff;border-radius:12px;width:100%;max-width:760px;overflow:hidden;box-shadow:0 32px 80px rgba(0,0,0,.28);animation:mIn .22s cubic-bezier(.16,1,.3,1)}
+.modal-box.wide{max-width:1000px}
+@keyframes mIn{from{opacity:0;transform:translateY(-20px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+.m-head{background:#1a2b47;padding:16px 20px;display:flex;align-items:flex-start;justify-content:space-between}
+.m-title{font-size:14px;font-weight:700;color:#fff}
+.m-sub{font-size:11px;color:rgba(255,255,255,.5);margin-top:3px}
+.m-x{font-size:18px;color:rgba(255,255,255,.4);cursor:pointer;border:none;background:transparent;transition:color .12s;line-height:1}
+.m-x:hover{color:#fff}
+.m-body{padding:18px 20px;max-height:72vh;overflow-y:auto;background:#f8fafc}
+.m-foot{padding:12px 20px;border-top:1px solid #e2e8f0;background:#fff;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.m-sect{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#94a3b8;margin:14px 0 8px;padding-bottom:5px;border-bottom:1px solid #e2e8f0}
+
+/* ── Toast ── */
+.toast{position:fixed;bottom:28px;right:28px;z-index:999;background:#1a2b47;color:#fff;padding:12px 18px;border-radius:10px;font-size:12px;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,.25);transform:translateY(90px);opacity:0;transition:all .35s cubic-bezier(.16,1,.3,1);display:flex;align-items:center;gap:8px;max-width:340px}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.green{background:#065f46}
+.toast.orange{background:#92400e}
+
+/* ── Sekme ── */
+.sekme-bar{display:flex;gap:0;border-bottom:2px solid #e2e8f0;background:#fff;padding:0 18px;flex-shrink:0}
+.sekme-btn{padding:12px 16px;font-size:12px;font-weight:500;color:#94a3b8;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;white-space:nowrap}
+.sekme-btn:hover{color:#1a2b47}
+.sekme-btn.on{color:#1a2b47;border-bottom-color:#f59e0b;font-weight:700}
+.sekme-panel{display:none;flex:1;overflow-y:auto;padding:16px 18px}
+.sekme-panel.show{display:block}
+
+/* ════════════════════════════════════════
+   KPI DASHBOARD ÖZGÜN STİLLER
+════════════════════════════════════════ */
+
+/* Kaynak Chips */
+.kaynak-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.kaynak-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:20px;border:1px solid;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s}
+.kc-grn{background:#f0fdf4;border-color:#6ee7b7;color:#065f46}
+.kc-amr{background:#fffbeb;border-color:#fcd34d;color:#92400e}
+.kc-red{background:#fff8f8;border-color:#fca5a5;color:#991b1b}
+.kc-blu{background:#eff6ff;border-color:#93c5fd;color:#1e40af}
+.kc-pur{background:#f5f3ff;border-color:#c4b5fd;color:#5b21b6}
+.kc-teal{background:#f0fdfa;border-color:#5eead4;color:#0f766e}
+.kc-dot{width:7px;height:7px;border-radius:50%;background:currentColor;opacity:.7}
+
+/* Büyük Skor Halka */
+.halka-wrap{display:flex;justify-content:center;align-items:center;gap:28px;padding:20px;background:#fff;border-radius:10px;border:1px solid #e2e8f0;margin-bottom:14px}
+.halka-item{display:flex;flex-direction:column;align-items:center;gap:8px}
+.halka-svg{width:90px;height:90px}
+.halka-pct{font-size:16px;font-weight:800;fill:#0f172a}
+.halka-lbl{font-size:10px;font-weight:600;color:#94a3b8;text-align:center;max-width:80px;line-height:1.3}
+.halka-track{fill:none;stroke:#f1f5f9;stroke-width:8}
+.halka-fill{fill:none;stroke-width:8;stroke-linecap:round;transform:rotate(-90deg);transform-origin:center;transition:stroke-dashoffset .6s cubic-bezier(.16,1,.3,1)}
+
+/* Modül Kart Grid */
+.modul-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.modul-kart{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:14px;cursor:pointer;transition:all .15s;position:relative;overflow:hidden}
+.modul-kart:hover{border-color:#1a2b47;box-shadow:0 4px 16px rgba(0,0,0,.08)}
+.mk-icon{font-size:20px;margin-bottom:8px}
+.mk-adi{font-size:11px;font-weight:700;color:#334155;margin-bottom:4px}
+.mk-as9100{font-size:9px;color:#94a3b8;margin-bottom:8px;font-family:monospace}
+.mk-durum{display:flex;align-items:center;gap:6px;font-size:11px}
+.mk-bar-wrap{margin-top:8px;height:4px;background:#f1f5f9;border-radius:2px;overflow:hidden}
+.mk-bar{height:100%;border-radius:2px;transition:width .5s}
+.mk-stat{display:flex;justify-content:space-between;font-size:10px;color:#94a3b8;margin-top:4px}
+.mk-acil{position:absolute;top:8px;right:8px;font-size:9px;background:#fee2e2;color:#991b1b;padding:2px 6px;border-radius:4px;font-weight:700}
+
+/* Hedef Tablosu */
+.hedef-satir{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid #f1f5f9}
+.hedef-satir:last-child{border-bottom:none}
+.hedef-adi{flex:0 0 180px;font-size:11px;font-weight:600;color:#334155}
+.hedef-modul{flex:0 0 100px;font-size:10px;color:#94a3b8}
+.hedef-bar-wrap{flex:1;height:8px;background:#f1f5f9;border-radius:4px;overflow:hidden}
+.hedef-bar{height:100%;border-radius:4px;transition:width .6s}
+.hedef-pct{flex:0 0 36px;text-align:right;font-size:11px;font-weight:700}
+.hedef-hedef{flex:0 0 60px;text-align:right;font-size:10px;color:#94a3b8}
+.hedef-trend{flex:0 0 28px;font-size:12px;text-align:center}
+
+/* Uyarı Akışı */
+.uyari-akis{display:flex;flex-direction:column;gap:6px}
+.uyari-item{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:8px;border:1px solid;cursor:pointer;transition:opacity .12s}
+.uyari-item:hover{opacity:.8}
+.ui-krit{background:#fff8f8;border-color:#fca5a5}
+.ui-warn{background:#fffbeb;border-color:#fcd34d}
+.ui-info{background:#eff6ff;border-color:#93c5fd}
+.uyari-ikon{font-size:14px;margin-top:1px;flex-shrink:0}
+.uyari-icerik{flex:1}
+.uyari-baslik{font-size:11px;font-weight:600;color:#334155}
+.uyari-detay{font-size:10px;color:#94a3b8;margin-top:2px}
+.uyari-link{font-size:10px;font-weight:600;color:#2563eb;margin-top:3px;display:block}
+.uyari-zaman{font-size:9px;color:#94a3b8;white-space:nowrap;margin-top:2px}
+
+/* ════════════════════════════════════════
+   ECN ÖZGÜN STİLLER
+════════════════════════════════════════ */
+.ecn-akis{display:flex;gap:0;margin-bottom:16px;overflow:hidden;border-radius:10px;border:1px solid #e2e8f0}
+.ecn-adim{flex:1;padding:12px 14px;background:#fff;border-right:1px solid #e2e8f0;position:relative;cursor:pointer;transition:all .12s}
+.ecn-adim:last-child{border-right:none}
+.ecn-adim.on{background:#1a2b47;color:#fff}
+.ecn-adim.tamam{background:#f0fdf4}
+.ecn-adim.aktif{background:#fffbeb}
+.ecn-adim-no{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;opacity:.5;margin-bottom:3px}
+.ecn-adim.on .ecn-adim-no{opacity:.6;color:#f59e0b}
+.ecn-adim-adi{font-size:11px;font-weight:700;color:inherit}
+.ecn-adim.on .ecn-adim-adi{color:#fff}
+.ecn-adim-cnt{font-size:10px;opacity:.6;margin-top:2px}
+.ecn-oklar{position:absolute;right:-8px;top:50%;transform:translateY(-50%);font-size:12px;color:#94a3b8;z-index:2}
+
+/* ECN Detay Panel */
+.ecn-detay-grid{display:grid;grid-template-columns:1fr 340px;gap:14px;height:100%}
+.ecn-sol{display:flex;flex-direction:column;gap:12px}
+.ecn-sag{display:flex;flex-direction:column;gap:12px}
+
+/* DWG Onay Akışı */
+.dwg-onay-zincir{display:flex;flex-direction:column;gap:0}
+.doz-adim{display:flex;gap:12px;padding:12px 0}
+.doz-adim:not(:last-child){border-bottom:1px dashed #e2e8f0}
+.doz-ikon-wrap{display:flex;flex-direction:column;align-items:center;gap:0;width:32px;flex-shrink:0}
+.doz-ikon{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;border:2px solid}
+.doz-ikon.tamam{background:#d1fae5;border-color:#6ee7b7;color:#065f46}
+.doz-ikon.aktif{background:#fef3c7;border-color:#fcd34d;color:#92400e}
+.doz-ikon.bekle{background:#f8fafc;border-color:#e2e8f0;color:#94a3b8}
+.doz-cizgi{width:2px;flex:1;background:#e2e8f0;min-height:16px}
+.doz-icerik{flex:1}
+.doz-rol{font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em}
+.doz-kisi{font-size:12px;font-weight:600;color:#334155;margin-top:1px}
+.doz-tarih{font-size:10px;color:#94a3b8;margin-top:2px}
+.doz-aksiyon{margin-top:6px;display:flex;gap:6px}
+
+/* Etkilenen Dokuman Listesi */
+.etk-dok-list{display:flex;flex-direction:column;gap:6px}
+.etk-dok{display:flex;align-items:center;gap:8px;padding:8px 10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;cursor:pointer;transition:all .12s}
+.etk-dok:hover{border-color:#1a2b47;background:#fff}
+.etk-dok-tip{width:28px;height:28px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.td-dwg{background:#dbeafe;color:#1e40af}
+.td-bom{background:#d1fae5;color:#065f46}
+.td-prg{background:#ede9fe;color:#5b21b6}
+.td-tes{background:#fef3c7;color:#92400e}
+.td-fai{background:#ccfbf1;color:#0f766e}
+.etk-dok-bilgi{flex:1}
+.etk-dok-no{font-size:11px;font-weight:700;color:#334155;font-family:monospace}
+.etk-dok-adi{font-size:10px;color:#94a3b8;margin-top:1px}
+.etk-dok-rev{display:flex;align-items:center;gap:4px;font-size:10px}
+.rev-eski{color:#94a3b8;text-decoration:line-through}
+.rev-ok{color:#94a3b8;font-size:9px}
+.rev-yeni{color:#065f46;font-weight:700}
+
+/* ════════════════════════════════════════
+   MÜŞTERİ MÜLKÜ ÖZGÜN STİLLER
+════════════════════════════════════════ */
+.mm-durum-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.mm-durum-kart{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:14px;text-align:center;border-top:3px solid;transition:box-shadow .12s;cursor:pointer}
+.mm-durum-kart:hover{box-shadow:0 4px 12px rgba(0,0,0,.08)}
+.mm-dk-sayi{font-size:28px;font-weight:800;color:#0f172a;margin-bottom:4px}
+.mm-dk-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#94a3b8}
+.mm-dk-alt{font-size:10px;color:#94a3b8;margin-top:3px}
+
+/* Malzeme Durumu Renk Kodları */
+.mm-row-depoda{background:#fff}
+.mm-row-kullanim{background:#f0fdf4}
+.mm-row-bekle{background:#fffbeb}
+.mm-row-hasar{background:#fff8f8}
+.mm-row-iade{background:#f0fdfa}
+
+/* QR Chip */
+.qr-chip{display:inline-flex;align-items:center;gap:5px;background:#1e293b;color:#f8fafc;padding:3px 8px;border-radius:4px;font-size:10px;font-family:monospace;font-weight:700;cursor:pointer}
+.qr-chip:hover{background:#0f172a}
+.qr-ikon{font-size:10px}
+
+/* Müşteri Mülkü Kart */
+.mm-kart{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:14px;cursor:pointer;transition:all .15s;position:relative}
+.mm-kart:hover{border-color:#1a2b47;box-shadow:0 4px 12px rgba(0,0,0,.08)}
+.mm-kart-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px}
+.mm-kart-no{font-size:11px;font-family:monospace;font-weight:700;color:#1a2b47}
+.mm-kart-adi{font-size:13px;font-weight:700;color:#0f172a;margin-bottom:3px}
+.mm-kart-musteri{font-size:11px;color:#94a3b8;margin-bottom:8px}
+.mm-kart-meta{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.mm-meta-chip{font-size:10px;padding:2px 7px;border-radius:4px;background:#f1f5f9;color:#475569;border:1px solid #e2e8f0}
+.mm-kart-ilerleme{display:flex;align-items:center;gap:8px;margin-top:8px}
+.mm-ilerle-lbl{font-size:10px;color:#94a3b8;flex:0 0 80px}
+.mm-ilerle-bar{flex:1;height:5px;background:#f1f5f9;border-radius:3px;overflow:hidden}
+.mm-ilerle-fill{height:100%;border-radius:3px}
+.mm-ilerle-pct{font-size:10px;font-weight:700;flex:0 0 32px;text-align:right}
+
+/* Teslim Alma Formu */
+.ta-form-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px}
+.ta-kontrol{display:flex;flex-direction:column;gap:6px;padding:12px;background:#fff;border:1px solid #e2e8f0;border-radius:8px}
+.ta-k-lbl{font-size:10px;font-weight:700;color:#475569}
+.ta-k-opts{display:flex;gap:6px}
+.ta-k-opt{flex:1;padding:5px;border:1px solid #e2e8f0;border-radius:6px;font-size:11px;text-align:center;cursor:pointer;transition:all .12s}
+.ta-k-opt.ok{background:#d1fae5;border-color:#6ee7b7;color:#065f46;font-weight:700}
+.ta-k-opt.warn{background:#fef3c7;border-color:#fcd34d;color:#92400e;font-weight:700}
+.ta-k-opt.bad{background:#fee2e2;border-color:#fca5a5;color:#991b1b;font-weight:700}
+</style>
+</head>
+<body>
+
+<!-- ═══════════ SIDEBAR ═══════════ -->
+<div class="sidebar">
+  <div class="sb-logo">
+    <div class="sb-brand">⚙ ERSAN MES</div>
+    <div class="sb-sub">AS9100 Rev.D · ISO 9001</div>
+  </div>
+
+  <div class="sb-section">Kalite</div>
+  <div class="sb-item on" onclick="sayfaAc('kpi-panel')">
+    <div class="sb-dot"></div>Yönetim KPI <span class="sb-new">FAZ3</span>
+  </div>
+  <div class="sb-item" onclick="sayfaAc('ecn-liste')">
+    <div class="sb-dot"></div>Değişiklik (ECN) <span class="sb-new">FAZ3</span>
+  </div>
+  <div class="sb-item sb-dim"><div class="sb-dot"></div>İç Denetim</div>
+  <div class="sb-item sb-dim"><div class="sb-dot"></div>YGG</div>
+  <div class="sb-item sb-dim"><div class="sb-dot"></div>Risk & FMEA</div>
+  <div class="sb-item sb-dim"><div class="sb-dot"></div>Bulgular / NCR <span class="sb-badge">3</span></div>
+  <div class="sb-item sb-dim"><div class="sb-dot"></div>CAPA <span class="sb-badge">2</span></div>
+
+  <div class="sb-section">Stok & Depo</div>
+  <div class="sb-item" onclick="sayfaAc('mm-liste')">
+    <div class="sb-dot"></div>Müşteri Mülkü <span class="sb-new">FAZ3</span>
+  </div>
+  <div class="sb-item sb-dim"><div class="sb-dot"></div>Stok Paneli</div>
+  <div class="sb-item sb-dim"><div class="sb-dot"></div>Depo Hareket</div>
+
+  <div class="sb-section">Üretim</div>
+  <div class="sb-item sb-dim"><div class="sb-dot"></div>İş Emirleri</div>
+  <div class="sb-item sb-dim"><div class="sb-dot"></div>Atölye</div>
+
+  <div class="sb-section">Satış</div>
+  <div class="sb-item sb-dim"><div class="sb-dot"></div>Teklifler</div>
+  <div class="sb-item sb-dim"><div class="sb-dot"></div>Siparişler</div>
+
+  <div class="sb-section">Satınalma</div>
+  <div class="sb-item sb-dim"><div class="sb-dot"></div>PO</div>
+  <div class="sb-item sb-dim"><div class="sb-dot"></div>Tedarikçiler</div>
+</div>
+
+<!-- ═══════════ MAIN ═══════════ -->
+<div class="main">
+
+<!-- ╔══════════════════════════════════════════════════════╗
+     ║  SAYFA 1 — YÖNETİM KPI DASHBOARD (§9.1)            ║
+     ╚══════════════════════════════════════════════════════╝ -->
+<div class="page show" id="kpi-panel">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:8px">
+      <span class="tb-title">📊 Yönetim KPI Paneli</span>
+      <span class="tb-sub">§9.1 · Tüm modüllerden beslenir</span>
+    </div>
+    <div class="topbar-right">
+      <select class="fi-sel" style="width:100px;font-size:11px;padding:4px 8px">
+        <option>2026 — Q1</option>
+        <option>2026 — Q2</option>
+        <option>2025 — Q4</option>
+      </select>
+      <select class="fi-sel" style="width:110px;font-size:11px;padding:4px 8px">
+        <option>Tüm Modüller</option>
+        <option>Kalite</option>
+        <option>Üretim</option>
+        <option>Satınalma</option>
+      </select>
+      <button class="btn btn-p">⬇ Rapor İndir</button>
+      <button class="btn btn-g" onclick="alert('YGG Raporu oluşturuluyor...')">📋 YGG Hazırla</button>
+    </div>
+  </div>
+
+  <!-- Kaynak Chips -->
+  <div style="padding:10px 18px 0;background:#fff;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+    <span style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em">Veri Kaynakları:</span>
+    <span class="kaynak-chip kc-grn"><span class="kc-dot"></span>İç Denetim ✓</span>
+    <span class="kaynak-chip kc-amr"><span class="kc-dot"></span>CAPA <b>2 açık</b></span>
+    <span class="kaynak-chip kc-red"><span class="kc-dot"></span>Bulgular <b>3 açık</b></span>
+    <span class="kaynak-chip kc-blu"><span class="kc-dot"></span>Şikayetler ✓</span>
+    <span class="kaynak-chip kc-pur"><span class="kc-dot"></span>Tedarikçi Değerlendirme ✓</span>
+    <span class="kaynak-chip kc-teal"><span class="kc-dot"></span>YGG ✓</span>
+  </div>
+
+  <div class="content">
+
+    <!-- Halka Skorlar -->
+    <div class="halka-wrap">
+      <!-- Genel AS9100 Uyumu -->
+      <div class="halka-item">
+        <svg class="halka-svg" viewBox="0 0 90 90">
+          <circle class="halka-track" cx="45" cy="45" r="36"/>
+          <circle class="halka-fill" cx="45" cy="45" r="36"
+            stroke="#10b981"
+            stroke-dasharray="226.2"
+            stroke-dashoffset="27.1"/>
+          <text x="45" y="50" text-anchor="middle" class="halka-pct">88%</text>
+        </svg>
+        <div class="halka-lbl">Genel AS9100 Uyumu</div>
+      </div>
+      <!-- Kalite Hedef -->
+      <div class="halka-item">
+        <svg class="halka-svg" viewBox="0 0 90 90">
+          <circle class="halka-track" cx="45" cy="45" r="36"/>
+          <circle class="halka-fill" cx="45" cy="45" r="36"
+            stroke="#3b82f6"
+            stroke-dasharray="226.2"
+            stroke-dashoffset="45.2"/>
+          <text x="45" y="50" text-anchor="middle" class="halka-pct">80%</text>
+        </svg>
+        <div class="halka-lbl">Kalite Hedef Gerç.</div>
+      </div>
+      <!-- OTL -->
+      <div class="halka-item">
+        <svg class="halka-svg" viewBox="0 0 90 90">
+          <circle class="halka-track" cx="45" cy="45" r="36"/>
+          <circle class="halka-fill" cx="45" cy="45" r="36"
+            stroke="#f59e0b"
+            stroke-dasharray="226.2"
+            stroke-dashoffset="20.4"/>
+          <text x="45" y="50" text-anchor="middle" class="halka-pct">91%</text>
+        </svg>
+        <div class="halka-lbl">Zamanında Teslimat</div>
+      </div>
+      <!-- Müşteri Mem. -->
+      <div class="halka-item">
+        <svg class="halka-svg" viewBox="0 0 90 90">
+          <circle class="halka-track" cx="45" cy="45" r="36"/>
+          <circle class="halka-fill" cx="45" cy="45" r="36"
+            stroke="#10b981"
+            stroke-dasharray="226.2"
+            stroke-dashoffset="11.3"/>
+          <text x="45" y="50" text-anchor="middle" class="halka-pct">95%</text>
+        </svg>
+        <div class="halka-lbl">Müşteri Memnuniyeti</div>
+      </div>
+      <!-- CAPA Kapanış -->
+      <div class="halka-item">
+        <svg class="halka-svg" viewBox="0 0 90 90">
+          <circle class="halka-track" cx="45" cy="45" r="36"/>
+          <circle class="halka-fill" cx="45" cy="45" r="36"
+            stroke="#8b5cf6"
+            stroke-dasharray="226.2"
+            stroke-dashoffset="67.9"/>
+          <text x="45" y="50" text-anchor="middle" class="halka-pct">70%</text>
+        </svg>
+        <div class="halka-lbl">CAPA Zamanında Kapanış</div>
+      </div>
+      <!-- Tedarikçi Ort. Skor -->
+      <div class="halka-item">
+        <svg class="halka-svg" viewBox="0 0 90 90">
+          <circle class="halka-track" cx="45" cy="45" r="36"/>
+          <circle class="halka-fill" cx="45" cy="45" r="36"
+            stroke="#0d9488"
+            stroke-dasharray="226.2"
+            stroke-dashoffset="31.7"/>
+          <text x="45" y="50" text-anchor="middle" class="halka-pct">86%</text>
+        </svg>
+        <div class="halka-lbl">Tedarikçi Ort. Skor</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 320px;gap:14px">
+
+      <!-- SOL: Modül Grid + Hedef Tablosu -->
+      <div>
+        <!-- Modül Kart Grid -->
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">🔗 Modül Özeti</div>
+            <span class="muted">Son güncelleme: bugün 09:14</span>
+          </div>
+          <div style="padding:12px">
+            <div class="modul-grid">
+
+              <div class="modul-kart" onclick="sayfaAc('kpi-panel')">
+                <div class="mk-ikon">🛡️</div>
+                <div class="mk-adi">İç Denetim</div>
+                <div class="mk-as9100">§9.2</div>
+                <div class="mk-durum"><span class="bdg b-grn">Uyumlu</span></div>
+                <div class="mk-bar-wrap"><div class="mk-bar" style="width:88%;background:#10b981"></div></div>
+                <div class="mk-stat"><span>3 tamamlandı</span><span>88%</span></div>
+              </div>
+
+              <div class="modul-kart" onclick="sayfaAc('kpi-panel')">
+                <div class="mk-acil">2 açık</div>
+                <div class="mk-ikon">🔄</div>
+                <div class="mk-adi">CAPA</div>
+                <div class="mk-as9100">§10.2</div>
+                <div class="mk-durum"><span class="bdg b-amr">Devam Ediyor</span></div>
+                <div class="mk-bar-wrap"><div class="mk-bar" style="width:70%;background:#f59e0b"></div></div>
+                <div class="mk-stat"><span>5 toplam</span><span>70%</span></div>
+              </div>
+
+              <div class="modul-kart">
+                <div class="mk-acil">3 açık</div>
+                <div class="mk-ikon">⚠️</div>
+                <div class="mk-adi">Bulgular / NCR</div>
+                <div class="mk-as9100">§8.7</div>
+                <div class="mk-durum"><span class="bdg b-red">Dikkat</span></div>
+                <div class="mk-bar-wrap"><div class="mk-bar" style="width:60%;background:#ef4444"></div></div>
+                <div class="mk-stat"><span>8 toplam</span><span>60% kapandı</span></div>
+              </div>
+
+              <div class="modul-kart">
+                <div class="mk-ikon">📋</div>
+                <div class="mk-adi">YGG</div>
+                <div class="mk-as9100">§9.3</div>
+                <div class="mk-durum"><span class="bdg b-grn">Güncel</span></div>
+                <div class="mk-bar-wrap"><div class="mk-bar" style="width:100%;background:#10b981"></div></div>
+                <div class="mk-stat"><span>Q1 tamamlandı</span><span>100%</span></div>
+              </div>
+
+              <div class="modul-kart">
+                <div class="mk-ikon">😊</div>
+                <div class="mk-adi">Müşteri Şikayeti</div>
+                <div class="mk-as9100">§9.1.2</div>
+                <div class="mk-durum"><span class="bdg b-grn">İyi</span></div>
+                <div class="mk-bar-wrap"><div class="mk-bar" style="width:95%;background:#10b981"></div></div>
+                <div class="mk-stat"><span>1 açık</span><span>4.8/5.0 mem.</span></div>
+              </div>
+
+              <div class="modul-kart">
+                <div class="mk-ikon">🏭</div>
+                <div class="mk-adi">Tedarikçi Değ.</div>
+                <div class="mk-as9100">§8.4.1</div>
+                <div class="mk-durum"><span class="bdg b-amr">İzleniyor</span></div>
+                <div class="mk-bar-wrap"><div class="mk-bar" style="width:86%;background:#f59e0b"></div></div>
+                <div class="mk-stat"><span>1 D-seviye</span><span>86/100 ort.</span></div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- Kalite Hedefleri Tablosu -->
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">🎯 §9.1.1 Kalite Hedefleri</div>
+            <button class="btn btn-b" style="font-size:10px">+ Hedef Ekle</button>
+          </div>
+          <div>
+            <div class="hedef-satir" style="background:#f8fafc;padding:8px 14px">
+              <div class="hedef-adi" style="font-size:9px;font-weight:700;text-transform:uppercase;color:#94a3b8">HEDEF</div>
+              <div class="hedef-modul" style="font-size:9px;font-weight:700;text-transform:uppercase;color:#94a3b8">MODÜL</div>
+              <div style="flex:1;font-size:9px;font-weight:700;text-transform:uppercase;color:#94a3b8;padding-left:4px">GERÇEKLEŞME</div>
+              <div class="hedef-pct" style="font-size:9px;font-weight:700;text-transform:uppercase;color:#94a3b8">GERÇ.</div>
+              <div class="hedef-hedef" style="font-size:9px;font-weight:700;text-transform:uppercase;color:#94a3b8">HEDEF</div>
+              <div class="hedef-trend" style="font-size:9px;color:#94a3b8">△</div>
+            </div>
+            <div class="hedef-satir">
+              <div class="hedef-adi">Uygunsuzluk Oranı</div>
+              <div class="hedef-modul"><span class="bdg b-pur" style="font-size:9px">Kalite</span></div>
+              <div class="hedef-bar-wrap"><div class="hedef-bar" style="width:92%;background:#10b981"></div></div>
+              <div class="hedef-pct" style="color:#10b981">%1.8</div>
+              <div class="hedef-hedef">≤ %2.0</div>
+              <div class="hedef-trend up">↑</div>
+            </div>
+            <div class="hedef-satir">
+              <div class="hedef-adi">Zamanında Teslimat</div>
+              <div class="hedef-modul"><span class="bdg b-blu" style="font-size:9px">Satış</span></div>
+              <div class="hedef-bar-wrap"><div class="hedef-bar" style="width:91%;background:#3b82f6"></div></div>
+              <div class="hedef-pct" style="color:#3b82f6">%91</div>
+              <div class="hedef-hedef">≥ %95</div>
+              <div class="hedef-trend dn">↓</div>
+            </div>
+            <div class="hedef-satir">
+              <div class="hedef-adi">Tedarikçi OTL</div>
+              <div class="hedef-modul"><span class="bdg b-teal" style="font-size:9px">Satınalma</span></div>
+              <div class="hedef-bar-wrap"><div class="hedef-bar" style="width:87%;background:#0d9488"></div></div>
+              <div class="hedef-pct" style="color:#0d9488">%87</div>
+              <div class="hedef-hedef">≥ %90</div>
+              <div class="hedef-trend nt">→</div>
+            </div>
+            <div class="hedef-satir">
+              <div class="hedef-adi">CAPA Kapanış &lt;30gün</div>
+              <div class="hedef-modul"><span class="bdg b-amr" style="font-size:9px">Kalite</span></div>
+              <div class="hedef-bar-wrap"><div class="hedef-bar" style="width:70%;background:#f59e0b"></div></div>
+              <div class="hedef-pct" style="color:#f59e0b">%70</div>
+              <div class="hedef-hedef">≥ %85</div>
+              <div class="hedef-trend dn">↓</div>
+            </div>
+            <div class="hedef-satir">
+              <div class="hedef-adi">Müşteri Memnuniyeti</div>
+              <div class="hedef-modul"><span class="bdg b-grn" style="font-size:9px">CRM</span></div>
+              <div class="hedef-bar-wrap"><div class="hedef-bar" style="width:96%;background:#10b981"></div></div>
+              <div class="hedef-pct" style="color:#10b981">4.8</div>
+              <div class="hedef-hedef">≥ 4.0</div>
+              <div class="hedef-trend up">↑</div>
+            </div>
+            <div class="hedef-satir">
+              <div class="hedef-adi">İç Denetim Skoru</div>
+              <div class="hedef-modul"><span class="bdg b-pur" style="font-size:9px">Kalite</span></div>
+              <div class="hedef-bar-wrap"><div class="hedef-bar" style="width:88%;background:#8b5cf6"></div></div>
+              <div class="hedef-pct" style="color:#8b5cf6">%88</div>
+              <div class="hedef-hedef">≥ %90</div>
+              <div class="hedef-trend nt">→</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SAĞ: Uyarı Akışı -->
+      <div>
+        <div class="card" style="height:100%">
+          <div class="card-head">
+            <div class="card-title">🔔 Aksiyon Gerektirenler</div>
+            <span class="bdg b-red">6</span>
+          </div>
+          <div style="padding:12px;display:flex;flex-direction:column;gap:6px">
+
+            <div class="uyari-item ui-krit">
+              <div class="uyari-ikon">🚨</div>
+              <div class="uyari-icerik">
+                <div class="uyari-baslik">CAPA-2026-002 vadesi aşıldı</div>
+                <div class="uyari-detay">§8.4 — Tedarikçi sertifika eksikliği · 12 gün gecikmiş</div>
+                <a class="uyari-link" onclick="sayfaAc('kpi-panel')">CAPA sayfasına git →</a>
+              </div>
+              <div class="uyari-zaman">3 gün önce</div>
+            </div>
+
+            <div class="uyari-item ui-krit">
+              <div class="uyari-ikon">⚠️</div>
+              <div class="uyari-icerik">
+                <div class="uyari-baslik">3 KMT Bulgusu kapanmadı</div>
+                <div class="uyari-detay">BLG-2026-004, 006, 008 · 30+ gün açık</div>
+                <a class="uyari-link" onclick="sayfaAc('kpi-panel')">Bulgular sayfasına git →</a>
+              </div>
+              <div class="uyari-zaman">5 gün önce</div>
+            </div>
+
+            <div class="uyari-item ui-warn">
+              <div class="uyari-ikon">🏭</div>
+              <div class="uyari-icerik">
+                <div class="uyari-baslik">Tedarikçi D seviyesine düştü</div>
+                <div class="uyari-detay">ABC Çelik Ltd. — Dönemsel değerlendirme skoru 48/100</div>
+                <a class="uyari-link" onclick="sayfaAc('kpi-panel')">Tedarikçi sayfasına git →</a>
+              </div>
+              <div class="uyari-zaman">2 gün önce</div>
+            </div>
+
+            <div class="uyari-item ui-warn">
+              <div class="uyari-ikon">📅</div>
+              <div class="uyari-icerik">
+                <div class="uyari-baslik">Q2 Denetim planlanmadı</div>
+                <div class="uyari-detay">§9.2 — Nisan başı için plan gerekiyor</div>
+                <a class="uyari-link" onclick="sayfaAc('kpi-panel')">Denetim Planı →</a>
+              </div>
+              <div class="uyari-zaman">bugün</div>
+            </div>
+
+            <div class="uyari-item ui-warn">
+              <div class="uyari-ikon">📝</div>
+              <div class="uyari-icerik">
+                <div class="uyari-baslik">ECN-2026-003 onay bekliyor</div>
+                <div class="uyari-detay">Mühendislik onayı 3 gündür askıda</div>
+                <a class="uyari-link" onclick="sayfaAc('ecn-liste')">ECN sayfasına git →</a>
+              </div>
+              <div class="uyari-zaman">3 gün önce</div>
+            </div>
+
+            <div class="uyari-item ui-info">
+              <div class="uyari-ikon">ℹ️</div>
+              <div class="uyari-icerik">
+                <div class="uyari-baslik">Zamanında Teslimat hedef altında</div>
+                <div class="uyari-detay">%91 gerçekleşme · Hedef %95 · Q1 sonu yaklaşıyor</div>
+                <a class="uyari-link" onclick="sayfaAc('kpi-panel')">Satış paneline git →</a>
+              </div>
+              <div class="uyari-zaman">bugün</div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ╔══════════════════════════════════════════════════════╗
+     ║  SAYFA 2 — ECN DEĞİŞİKLİK YÖNETİMİ LİSTE (§8.5.6) ║
+     ╚══════════════════════════════════════════════════════╝ -->
+<div class="page" id="ecn-liste">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:8px">
+      <span class="tb-title">📝 Değişiklik Yönetimi</span>
+      <span class="tb-sub">§8.5.6 · ECN — Engineering Change Notice</span>
+    </div>
+    <div class="topbar-right">
+      <button class="btn btn-warn" onclick="sayfaAc('ecn-detay')">⏳ Onay Bekleyenler <span class="bdg b-amr" style="margin-left:4px">2</span></button>
+      <button class="btn btn-p" onclick="modalAc('yeni-ecn-modal')">+ Yeni ECN</button>
+    </div>
+  </div>
+
+  <!-- Adım Akış Çubuğu -->
+  <div style="padding:10px 18px;background:#fff;border-bottom:1px solid #e2e8f0;display:flex;gap:12px;align-items:center;flex-shrink:0">
+    <span style="font-size:10px;font-weight:700;text-transform:uppercase;color:#94a3b8;letter-spacing:.06em">DURUM:</span>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <span class="bdg b-gray" style="cursor:pointer">Tümü (12)</span>
+      <span class="bdg b-amr" style="cursor:pointer">⏳ Taslak (2)</span>
+      <span class="bdg b-blu" style="cursor:pointer">🔍 İncelemede (3)</span>
+      <span class="bdg b-pur" style="cursor:pointer">✍ Onay Bekleniyor (2)</span>
+      <span class="bdg b-teal" style="cursor:pointer">⚙ Uygulanıyor (3)</span>
+      <span class="bdg b-grn" style="cursor:pointer">✓ Tamamlandı (2)</span>
+    </div>
+    <div style="margin-left:auto;display:flex;gap:8px">
+      <input type="text" class="fi" placeholder="🔍 ECN No veya başlık ara..." style="width:220px;padding:5px 10px;font-size:11px">
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- KPI -->
+    <div class="kpi-row" style="grid-template-columns:repeat(5,1fr)">
+      <div class="kpi s1">
+        <label>Toplam ECN (2026)</label>
+        <div class="num">12</div>
+        <div class="det">7 tamamlandı, 5 devam</div>
+      </div>
+      <div class="kpi s2">
+        <label>Onay Bekleyen</label>
+        <div class="num">2</div>
+        <div class="det">Ortalama bekleme: 4.2 gün</div>
+      </div>
+      <div class="kpi s4">
+        <label>Ort. Çözüm Süresi</label>
+        <div class="num">8.4 gün</div>
+        <div class="det">Hedef: ≤ 10 gün ✓</div>
+      </div>
+      <div class="kpi s5">
+        <label>Etkilenen DWG</label>
+        <div class="num">34</div>
+        <div class="det">Bu yılki ECN'lerden</div>
+      </div>
+      <div class="kpi s3">
+        <label>Reddedilen</label>
+        <div class="num">1</div>
+        <div class="det">%8.3 red oranı</div>
+      </div>
+    </div>
+
+    <!-- ECN Tablosu -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">📋 ECN Listesi</div>
+        <div style="display:flex;gap:6px">
+          <button class="btn" style="font-size:10px">⬇ Excel</button>
+        </div>
+      </div>
+      <table class="tbl">
+        <thead>
+          <tr>
+            <th>ECN NO</th>
+            <th>BAŞLIK</th>
+            <th>TİP</th>
+            <th>ETKİLENEN</th>
+            <th>TALEP EDEN</th>
+            <th>OLUŞTURMA</th>
+            <th>DURUM / ADIM</th>
+            <th>ÖNCELIK</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="warn" onclick="sayfaAc('ecn-detay')">
+            <td><span class="mono">ECN-2026-005</span></td>
+            <td>
+              <div style="font-weight:600">Bağlantı Flanşı Tolerans Revizyonu</div>
+              <div class="muted">AS9100 §8.3.6 · Tasarım Değişikliği</div>
+            </td>
+            <td><span class="bdg b-pur">Tasarım</span></td>
+            <td>
+              <div style="display:flex;gap:3px;flex-wrap:wrap">
+                <span style="font-size:9px;padding:1px 5px;border-radius:3px;background:#dbeafe;color:#1e40af;font-weight:700">DWG×3</span>
+                <span style="font-size:9px;padding:1px 5px;border-radius:3px;background:#d1fae5;color:#065f46;font-weight:700">BOM</span>
+                <span style="font-size:9px;padding:1px 5px;border-radius:3px;background:#ede9fe;color:#5b21b6;font-weight:700">PRG</span>
+              </div>
+            </td>
+            <td><div style="display:flex;align-items:center;gap:5px"><div style="width:22px;height:22px;border-radius:50%;background:#1a2b47;color:#f59e0b;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center">AY</div><span class="muted">A. Yılmaz</span></div></td>
+            <td><span class="muted">12.03.2026</span></td>
+            <td>
+              <span class="bdg b-amr">✍ Onay Bekleniyor</span>
+              <div style="font-size:9px;color:#94a3b8;margin-top:2px">Adım 3/5 · 3 gün</div>
+            </td>
+            <td><span class="bdg b-red">🔴 Yüksek</span></td>
+            <td><button class="btn btn-b" style="font-size:10px;padding:2px 8px" onclick="sayfaAc('ecn-detay')">Aç →</button></td>
+          </tr>
+          <tr onclick="sayfaAc('ecn-detay')">
+            <td><span class="mono">ECN-2026-004</span></td>
+            <td>
+              <div style="font-weight:600">Gövde Malzeme Kalınlık Güncellemesi</div>
+              <div class="muted">Müşteri talebi · MIL-SPEC uyum</div>
+            </td>
+            <td><span class="bdg b-blu">Malzeme</span></td>
+            <td>
+              <div style="display:flex;gap:3px">
+                <span style="font-size:9px;padding:1px 5px;border-radius:3px;background:#dbeafe;color:#1e40af;font-weight:700">DWG×1</span>
+                <span style="font-size:9px;padding:1px 5px;border-radius:3px;background:#d1fae5;color:#065f46;font-weight:700">BOM</span>
+              </div>
+            </td>
+            <td><div style="display:flex;align-items:center;gap:5px"><div style="width:22px;height:22px;border-radius:50%;background:#065f46;color:#6ee7b7;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center">MK</div><span class="muted">M. Kaya</span></div></td>
+            <td><span class="muted">10.03.2026</span></td>
+            <td>
+              <span class="bdg b-teal">⚙ Uygulanıyor</span>
+              <div style="font-size:9px;color:#94a3b8;margin-top:2px">Adım 4/5 · 6 gün</div>
+            </td>
+            <td><span class="bdg b-amr">🟡 Orta</span></td>
+            <td><button class="btn btn-b" style="font-size:10px;padding:2px 8px">Aç →</button></td>
+          </tr>
+          <tr>
+            <td><span class="mono">ECN-2026-003</span></td>
+            <td>
+              <div style="font-weight:600">Yüzey Kaplama Prosesi Revizyonu</div>
+              <div class="muted">İç iyileştirme · §8.5.1 kontrol planı</div>
+            </td>
+            <td><span class="bdg b-teal">Proses</span></td>
+            <td>
+              <div style="display:flex;gap:3px">
+                <span style="font-size:9px;padding:1px 5px;border-radius:3px;background:#ccfbf1;color:#0f766e;font-weight:700">TES×2</span>
+              </div>
+            </td>
+            <td><div style="display:flex;align-items:center;gap:5px"><div style="width:22px;height:22px;border-radius:50%;background:#5b21b6;color:#ddd6fe;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center">KD</div><span class="muted">K. Demir</span></div></td>
+            <td><span class="muted">05.03.2026</span></td>
+            <td>
+              <span class="bdg b-grn">✓ Tamamlandı</span>
+              <div style="font-size:9px;color:#94a3b8;margin-top:2px">7 günde kapandı</div>
+            </td>
+            <td><span class="bdg b-gray">🟢 Düşük</span></td>
+            <td><button class="btn btn-b" style="font-size:10px;padding:2px 8px">Aç →</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ╔══════════════════════════════════════════════════════╗
+     ║  SAYFA 3 — ECN DETAY (§8.5.6)                      ║
+     ╚══════════════════════════════════════════════════════╝ -->
+<div class="page" id="ecn-detay">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:8px">
+      <button class="btn" onclick="sayfaAc('ecn-liste')" style="padding:4px 8px;font-size:11px">← Geri</button>
+      <span class="mono" style="font-size:14px">ECN-2026-005</span>
+      <span class="tb-sub">Bağlantı Flanşı Tolerans Revizyonu</span>
+      <span class="bdg b-amr">✍ Onay Bekleniyor</span>
+      <span class="bdg b-red">Yüksek Öncelik</span>
+    </div>
+    <div class="topbar-right">
+      <button class="btn btn-warn" onclick="modalAc('onay-modal')">✍ Onayla / Reddet</button>
+      <button class="btn btn-p">📄 PDF Çıktı</button>
+    </div>
+  </div>
+
+  <!-- ECN Adım Akış -->
+  <div style="padding:8px 18px;background:#fff;border-bottom:1px solid #e2e8f0;flex-shrink:0">
+    <div class="ecn-akis">
+      <div class="ecn-adim tamam">
+        <div class="ecn-adim-no">01</div>
+        <div class="ecn-adim-adi">✓ Talep</div>
+        <div class="ecn-adim-cnt">12.03 · A. Yılmaz</div>
+      </div>
+      <div class="ecn-adim tamam">
+        <div class="ecn-adim-no">02</div>
+        <div class="ecn-adim-adi">✓ İnceleme</div>
+        <div class="ecn-adim-cnt">14.03 · M. Kaya</div>
+      </div>
+      <div class="ecn-adim aktif on">
+        <div class="ecn-adim-no">03</div>
+        <div class="ecn-adim-adi">⏳ Onay</div>
+        <div class="ecn-adim-cnt">Müh. + Kalite</div>
+      </div>
+      <div class="ecn-adim bekle">
+        <div class="ecn-adim-no">04</div>
+        <div class="ecn-adim-adi">Uygulama</div>
+        <div class="ecn-adim-cnt">Bekliyor</div>
+      </div>
+      <div class="ecn-adim bekle">
+        <div class="ecn-adim-no">05</div>
+        <div class="ecn-adim-adi">Kapanış</div>
+        <div class="ecn-adim-cnt">Bekliyor</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="ecn-detay-grid">
+
+      <!-- SOL: ECN Bilgileri + Etkilenen Dokümanlar -->
+      <div class="ecn-sol">
+
+        <!-- ECN Temel Bilgi -->
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">📋 ECN Bilgileri</div>
+            <button class="btn btn-b" style="font-size:10px">Düzenle</button>
+          </div>
+          <div style="padding:14px">
+            <div class="fg2">
+              <div>
+                <div class="fl">Değişiklik Tipi</div>
+                <div class="fi fi-ro">Tasarım Değişikliği</div>
+              </div>
+              <div>
+                <div class="fl">Öncelik</div>
+                <div class="fi fi-ro" style="background:#fff8f8;color:#991b1b;border-color:#fca5a5;font-weight:700">🔴 Yüksek</div>
+              </div>
+            </div>
+            <div style="margin-bottom:12px">
+              <div class="fl">Değişiklik Açıklaması</div>
+              <textarea class="fi" style="height:70px;resize:none" readonly>Flanş bağlantı deliği toleransı H7/p6'dan H7/k6'ya değiştirilmiştir. Müşteri MIL-SPEC-5000 gereksinimi nedeniyle montaj boşluğu azaltıldı. İlgili 3 adet DWG revizyonu gerekiyor.</textarea>
+            </div>
+            <div class="fg3">
+              <div>
+                <div class="fl">Etkilenen Parça</div>
+                <div class="fi fi-ro">FLN-2204-A</div>
+              </div>
+              <div>
+                <div class="fl">Müşteri Ref.</div>
+                <div class="fi fi-ro">TUSAŞ-CR-2026-044</div>
+              </div>
+              <div>
+                <div class="fl">Hedef Tarih</div>
+                <div class="fi fi-ro">25.03.2026</div>
+              </div>
+            </div>
+            <div class="fg2">
+              <div>
+                <div class="fl">FAI Gerekli?</div>
+                <div class="fi fi-ro" style="background:#fef3c7;color:#92400e;border-color:#fcd34d;font-weight:700">⚠ Evet — FAI Tetiklenecek</div>
+              </div>
+              <div>
+                <div class="fl">Bağlı WO / Sipariş</div>
+                <div class="fi fi-ro" style="color:#1e40af;font-family:monospace">WO-2026-034 · SP-2026-018</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Etkilenen Dokümanlar -->
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">📁 Etkilenen Dokümanlar</div>
+            <button class="btn btn-b" style="font-size:10px">+ Doküman Ekle</button>
+          </div>
+          <div style="padding:12px">
+            <div class="etk-dok-list">
+
+              <div class="etk-dok">
+                <div class="etk-dok-tip td-dwg">DWG</div>
+                <div class="etk-dok-bilgi">
+                  <div class="etk-dok-no">FLN-2204-A_ASSY.dwg</div>
+                  <div class="etk-dok-adi">Flanş Montaj Çizimi · Tolerans Bölgesi Güncellendi</div>
+                </div>
+                <div class="etk-dok-rev">
+                  <span class="rev-eski">Rev.C</span>
+                  <span class="rev-ok">→</span>
+                  <span class="rev-yeni">Rev.D</span>
+                </div>
+                <span class="bdg b-amr" style="font-size:9px">Bekliyor</span>
+              </div>
+
+              <div class="etk-dok">
+                <div class="etk-dok-tip td-dwg">DWG</div>
+                <div class="etk-dok-bilgi">
+                  <div class="etk-dok-no">FLN-2204-A_DET.dwg</div>
+                  <div class="etk-dok-adi">Flanş Detay Çizimi · ⌀42H7 tolerans değişimi</div>
+                </div>
+                <div class="etk-dok-rev">
+                  <span class="rev-eski">Rev.B</span>
+                  <span class="rev-ok">→</span>
+                  <span class="rev-yeni">Rev.C</span>
+                </div>
+                <span class="bdg b-amr" style="font-size:9px">Bekliyor</span>
+              </div>
+
+              <div class="etk-dok">
+                <div class="etk-dok-tip td-bom">BOM</div>
+                <div class="etk-dok-bilgi">
+                  <div class="etk-dok-no">BOM-FLN-2204-A</div>
+                  <div class="etk-dok-adi">Malzeme Listesi · Yüzey işlem notu eklendi</div>
+                </div>
+                <div class="etk-dok-rev">
+                  <span class="rev-eski">v1.2</span>
+                  <span class="rev-ok">→</span>
+                  <span class="rev-yeni">v1.3</span>
+                </div>
+                <span class="bdg b-amr" style="font-size:9px">Bekliyor</span>
+              </div>
+
+              <div class="etk-dok">
+                <div class="etk-dok-tip td-prg">PRG</div>
+                <div class="etk-dok-bilgi">
+                  <div class="etk-dok-no">CNC-FLN-2204-OP20.nc</div>
+                  <div class="etk-dok-adi">Delik işleme G kodu · Çap ofseti değişimi</div>
+                </div>
+                <div class="etk-dok-rev">
+                  <span class="rev-eski">v3</span>
+                  <span class="rev-ok">→</span>
+                  <span class="rev-yeni">v4</span>
+                </div>
+                <span class="bdg b-gray" style="font-size:9px">Hazır</span>
+              </div>
+
+              <div class="etk-dok">
+                <div class="etk-dok-tip td-fai">FAI</div>
+                <div class="etk-dok-bilgi">
+                  <div class="etk-dok-no">FAI-FLN-2204-A-Rev.D</div>
+                  <div class="etk-dok-adi">İlk Parça Onay Raporu · Otomatik tetiklendi</div>
+                </div>
+                <div class="etk-dok-rev">
+                  <span style="color:#94a3b8">Yeni oluşturulacak</span>
+                </div>
+                <span class="bdg b-pur" style="font-size:9px">Bekliyor</span>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- SAĞ: Onay Zinciri + Notlar -->
+      <div class="ecn-sag">
+
+        <!-- Onay Zinciri -->
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">✍ Onay Zinciri</div>
+          </div>
+          <div style="padding:14px">
+            <div class="dwg-onay-zincir">
+
+              <div class="doz-adim">
+                <div class="doz-ikon-wrap">
+                  <div class="doz-ikon tamam">✓</div>
+                  <div class="doz-cizgi"></div>
+                </div>
+                <div class="doz-icerik">
+                  <div class="doz-rol">Talep Eden</div>
+                  <div class="doz-kisi">Ali Yılmaz</div>
+                  <div class="doz-tarih">12.03.2026 · 09:14</div>
+                </div>
+              </div>
+
+              <div class="doz-adim">
+                <div class="doz-ikon-wrap">
+                  <div class="doz-ikon tamam">✓</div>
+                  <div class="doz-cizgi"></div>
+                </div>
+                <div class="doz-icerik">
+                  <div class="doz-rol">Tasarım İnceleme</div>
+                  <div class="doz-kisi">Mehmet Kaya</div>
+                  <div class="doz-tarih">14.03.2026 · 14:30 · "Tolerans analizi tamamlandı, uygun."</div>
+                </div>
+              </div>
+
+              <div class="doz-adim">
+                <div class="doz-ikon-wrap">
+                  <div class="doz-ikon aktif">⏳</div>
+                  <div class="doz-cizgi"></div>
+                </div>
+                <div class="doz-icerik">
+                  <div class="doz-rol">Mühendislik Onayı</div>
+                  <div class="doz-kisi">Kemal Aydın</div>
+                  <div class="doz-tarih" style="color:#f59e0b">⏳ 3 gündür bekleniyor</div>
+                  <div class="doz-aksiyon">
+                    <button class="btn btn-g" style="font-size:10px" onclick="modalAc('onay-modal')">✓ Onayla</button>
+                    <button class="btn btn-red" style="font-size:10px">✗ Reddet</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="doz-adim">
+                <div class="doz-ikon-wrap">
+                  <div class="doz-ikon bekle">4</div>
+                  <div class="doz-cizgi"></div>
+                </div>
+                <div class="doz-icerik">
+                  <div class="doz-rol">Kalite Onayı</div>
+                  <div class="doz-kisi">Zeynep Çelik</div>
+                  <div class="doz-tarih" style="color:#94a3b8">Mühendislik onayını bekliyor</div>
+                </div>
+              </div>
+
+              <div class="doz-adim">
+                <div class="doz-ikon-wrap">
+                  <div class="doz-ikon bekle">5</div>
+                </div>
+                <div class="doz-icerik">
+                  <div class="doz-rol">Uygulama & Kapanış</div>
+                  <div class="doz-kisi">Sistem</div>
+                  <div class="doz-tarih" style="color:#94a3b8">Tüm onaylar sonrası</div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- Notlar / Aktivite -->
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">💬 Aktivite</div>
+          </div>
+          <div style="padding:12px;display:flex;flex-direction:column;gap:8px">
+            <div style="padding:8px;background:#f0fdf4;border-radius:6px;border-left:3px solid #10b981">
+              <div style="font-size:10px;font-weight:700;color:#065f46">M. Kaya · 14.03.2026</div>
+              <div style="font-size:11px;color:#334155;margin-top:3px">Tolerans analizi tamamlandı. CMM ölçüm raporu eklendi. Montaj simülasyonu uygun sonuç verdi.</div>
+            </div>
+            <div style="padding:8px;background:#fffbeb;border-radius:6px;border-left:3px solid #f59e0b">
+              <div style="font-size:10px;font-weight:700;color:#92400e">A. Yılmaz · 12.03.2026</div>
+              <div style="font-size:11px;color:#334155;margin-top:3px">TUSAŞ talep belgesine göre H7/k6 standardına geçiş zorunlu. 3 tekrarlayan iade geçmişi mevcut.</div>
+            </div>
+            <div style="display:flex;gap:6px;margin-top:4px">
+              <input type="text" class="fi" placeholder="Not ekle..." style="flex:1;font-size:11px">
+              <button class="btn btn-p" style="font-size:11px">Gönder</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ╔══════════════════════════════════════════════════════╗
+     ║  SAYFA 4 — MÜŞTERİ MÜLKÜ (§8.5.3)                 ║
+     ╚══════════════════════════════════════════════════════╝ -->
+<div class="page" id="mm-liste">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:8px">
+      <span class="tb-title">🏷️ Müşteri Mülkü</span>
+      <span class="tb-sub">§8.5.3 · Müşteri tarafından sağlanan malzeme / teçhizat</span>
+    </div>
+    <div class="topbar-right">
+      <button class="btn btn-warn" onclick="modalAc('hasar-modal')">⚠ Hasar / Kayıp Bildir</button>
+      <button class="btn btn-teal" onclick="modalAc('iade-modal')">↩ İade</button>
+      <button class="btn btn-p" onclick="modalAc('teslim-modal')">+ Teslim Al</button>
+    </div>
+  </div>
+
+  <!-- Sekme Bar -->
+  <div class="sekme-bar">
+    <div class="sekme-btn on" onclick="mmSekme('liste')">📦 Tüm Malzemeler</div>
+    <div class="sekme-btn" onclick="mmSekme('bekleyen')">⏳ Teslim Bekleyen <span class="bdg b-amr" style="margin-left:4px">3</span></div>
+    <div class="sekme-btn" onclick="mmSekme('hasar')">⚠ Hasar / Kayıp</div>
+    <div class="sekme-btn" onclick="mmSekme('teslim-al')">✅ Teslim Alma Formu</div>
+  </div>
+
+  <!-- Panel: Liste -->
+  <div class="sekme-panel show" id="mm-panel-liste">
+    <div class="mm-durum-bar">
+      <div class="mm-durum-kart" style="border-top-color:#3b82f6">
+        <div class="mm-dk-sayi" style="color:#3b82f6">18</div>
+        <div class="mm-dk-lbl">Toplam Kayıt</div>
+        <div class="mm-dk-alt">3 müşteri</div>
+      </div>
+      <div class="mm-durum-kart" style="border-top-color:#10b981">
+        <div class="mm-dk-sayi" style="color:#10b981">11</div>
+        <div class="mm-dk-lbl">Depoda</div>
+        <div class="mm-dk-alt">Kontrollü depolama</div>
+      </div>
+      <div class="mm-durum-kart" style="border-top-color:#8b5cf6">
+        <div class="mm-dk-sayi" style="color:#8b5cf6">5</div>
+        <div class="mm-dk-lbl">Kullanımda</div>
+        <div class="mm-dk-alt">Üretimde işleniyor</div>
+      </div>
+      <div class="mm-durum-kart" style="border-top-color:#ef4444">
+        <div class="mm-dk-sayi" style="color:#ef4444">2</div>
+        <div class="mm-dk-lbl">Hasar / Kayıp</div>
+        <div class="mm-dk-alt">Müşteri bilgilendirildi</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">📦 Müşteri Mülkü Envanteri</div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <select class="fi-sel" style="width:130px;font-size:11px;padding:4px 8px">
+            <option>Tüm Müşteriler</option>
+            <option>TUSAŞ</option>
+            <option>Roketsan</option>
+            <option>TAI</option>
+          </select>
+          <select class="fi-sel" style="width:120px;font-size:11px;padding:4px 8px">
+            <option>Tüm Durumlar</option>
+            <option>Depoda</option>
+            <option>Kullanımda</option>
+            <option>Hasar</option>
+            <option>İade Edildi</option>
+          </select>
+          <button class="btn" style="font-size:10px">⬇ Excel</button>
+        </div>
+      </div>
+      <table class="tbl">
+        <thead>
+          <tr>
+            <th>KAYIT NO</th>
+            <th>MALZEME / TANIM</th>
+            <th>MÜŞTERİ</th>
+            <th>MİKTAR</th>
+            <th>DEPO KONUMU</th>
+            <th>TESLİM TARİHİ</th>
+            <th>BAĞLI WO</th>
+            <th>DURUM</th>
+            <th>QR / İşlem</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="mm-row-kullanim">
+            <td><span class="mono">MM-2026-008</span></td>
+            <td>
+              <div style="font-weight:600">AL 7075-T651 Levha</div>
+              <div class="muted">200×300×25mm · Sertifikalı malzeme · CoC eklendi</div>
+            </td>
+            <td>
+              <div style="font-weight:600;color:#1a2b47">TUSAŞ</div>
+              <div class="muted">Sipariş: SP-2026-018</div>
+            </td>
+            <td>
+              <div style="font-weight:700">8 adet</div>
+              <div class="muted">3 kullanıldı</div>
+            </td>
+            <td><span class="b-dark">A-3 / RAF-12</span></td>
+            <td><span class="muted">10.03.2026</span></td>
+            <td><a style="font-size:11px;color:#2563eb;font-family:monospace">WO-2026-034</a></td>
+            <td><span class="bdg b-pur">⚙ Kullanımda</span></td>
+            <td>
+              <span class="qr-chip"><span class="qr-ikon">▣</span>MM-008</span>
+            </td>
+          </tr>
+          <tr class="mm-row-depoda">
+            <td><span class="mono">MM-2026-007</span></td>
+            <td>
+              <div style="font-weight:600">Ti-6Al-4V Dövme Blank</div>
+              <div class="muted">Ø80×120mm · AMS 4928 · Parti: LOT-2024-44</div>
+            </td>
+            <td>
+              <div style="font-weight:600;color:#1a2b47">Roketsan</div>
+              <div class="muted">Sipariş: SP-2026-015</div>
+            </td>
+            <td>
+              <div style="font-weight:700">12 adet</div>
+              <div class="muted">Tamamı depoda</div>
+            </td>
+            <td><span class="b-dark">B-1 / RAF-03</span></td>
+            <td><span class="muted">05.03.2026</span></td>
+            <td><span class="muted">—</span></td>
+            <td><span class="bdg b-grn">✓ Depoda</span></td>
+            <td>
+              <span class="qr-chip"><span class="qr-ikon">▣</span>MM-007</span>
+            </td>
+          </tr>
+          <tr class="mm-row-hasar">
+            <td><span class="mono">MM-2026-005</span></td>
+            <td>
+              <div style="font-weight:600">Özel Conta Seti</div>
+              <div class="muted" style="color:#ef4444">⚠ Depolama sırasında hasar — NCR-2026-011 açıldı</div>
+            </td>
+            <td>
+              <div style="font-weight:600;color:#1a2b47">TAI</div>
+              <div class="muted">Sipariş: SP-2026-010</div>
+            </td>
+            <td>
+              <div style="font-weight:700">1 set</div>
+              <div class="muted" style="color:#ef4444">Hasar</div>
+            </td>
+            <td><span class="b-dark">—</span></td>
+            <td><span class="muted">28.02.2026</span></td>
+            <td><span class="muted">—</span></td>
+            <td><span class="bdg b-red">⚠ Hasar</span></td>
+            <td>
+              <span class="qr-chip"><span class="qr-ikon">▣</span>MM-005</span>
+            </td>
+          </tr>
+          <tr class="mm-row-iade" style="background:#f0fdfa">
+            <td><span class="mono">MM-2026-003</span></td>
+            <td>
+              <div style="font-weight:600">Ölçüm Şablonu (Gauge)</div>
+              <div class="muted">Müşteri temin — sadece bu sipariş için</div>
+            </td>
+            <td>
+              <div style="font-weight:600;color:#1a2b47">TUSAŞ</div>
+              <div class="muted">Sipariş: SP-2026-004</div>
+            </td>
+            <td>
+              <div style="font-weight:700">1 adet</div>
+              <div class="muted">İade edildi</div>
+            </td>
+            <td><span class="b-dark">—</span></td>
+            <td><span class="muted">15.01.2026</span></td>
+            <td><a style="font-size:11px;color:#2563eb;font-family:monospace">WO-2026-009</a></td>
+            <td><span class="bdg b-teal">↩ İade Edildi</span></td>
+            <td>
+              <span class="qr-chip"><span class="qr-ikon">▣</span>MM-003</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Panel: Teslim Alma Formu -->
+  <div class="sekme-panel" id="mm-panel-teslim-al">
+    <div style="max-width:760px">
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">✅ Müşteri Mülkü Teslim Alma Formu</div>
+          <span class="muted">§8.5.3 — AS9100 gereği her teslim kayıt altına alınır</span>
+        </div>
+        <div style="padding:18px">
+
+          <div class="m-sect">Müşteri & Sipariş Bilgisi</div>
+          <div class="fg3" style="margin-bottom:0">
+            <div>
+              <label class="fl">Müşteri *</label>
+              <select class="fi-sel"><option>TUSAŞ</option><option>Roketsan</option><option>TAI</option></select>
+            </div>
+            <div>
+              <label class="fl">Sipariş No</label>
+              <input class="fi" placeholder="SP-2026-XXX">
+            </div>
+            <div>
+              <label class="fl">Müşteri İrsaliye No</label>
+              <input class="fi" placeholder="MUS-IRD-XXXX">
+            </div>
+          </div>
+
+          <div class="m-sect">Malzeme Bilgisi</div>
+          <div class="fg2">
+            <div>
+              <label class="fl">Malzeme / Ürün Tanımı *</label>
+              <input class="fi" placeholder="Örn: AL 7075-T651 Levha">
+            </div>
+            <div>
+              <label class="fl">Malzeme Standardı</label>
+              <input class="fi" placeholder="Örn: AMS 4049, MIL-DTL-7079">
+            </div>
+          </div>
+          <div class="fg4">
+            <div>
+              <label class="fl">Miktar *</label>
+              <input class="fi" type="number" placeholder="0">
+            </div>
+            <div>
+              <label class="fl">Birim</label>
+              <select class="fi-sel"><option>Adet</option><option>Kg</option><option>Set</option><option>M²</option></select>
+            </div>
+            <div>
+              <label class="fl">Parti / Seri No</label>
+              <input class="fi" placeholder="LOT-XXXX">
+            </div>
+            <div>
+              <label class="fl">CoC Belgesi</label>
+              <select class="fi-sel"><option>Eklendi</option><option>Yok</option><option>Sonra Gelecek</option></select>
+            </div>
+          </div>
+
+          <div class="m-sect">Fiziksel Kontrol (Teslim Anı)</div>
+          <div class="ta-form-grid">
+            <div class="ta-kontrol">
+              <div class="ta-k-lbl">Ambalaj Durumu</div>
+              <div class="ta-k-opts">
+                <div class="ta-k-opt ok">✓ İyi</div>
+                <div class="ta-k-opt">⚠ Hasarlı</div>
+              </div>
+            </div>
+            <div class="ta-kontrol">
+              <div class="ta-k-lbl">Miktar Doğrulaması</div>
+              <div class="ta-k-opts">
+                <div class="ta-k-opt ok">✓ Uygun</div>
+                <div class="ta-k-opt">✗ Eksik</div>
+              </div>
+            </div>
+            <div class="ta-kontrol">
+              <div class="ta-k-lbl">CoC / Sertifika</div>
+              <div class="ta-k-opts">
+                <div class="ta-k-opt ok">✓ Var</div>
+                <div class="ta-k-opt warn">⏳ Bekleniyor</div>
+                <div class="ta-k-opt bad">✗ Yok</div>
+              </div>
+            </div>
+            <div class="ta-kontrol">
+              <div class="ta-k-lbl">Görsel Muayene</div>
+              <div class="ta-k-opts">
+                <div class="ta-k-opt ok">✓ Temiz</div>
+                <div class="ta-k-opt">⚠ Not Var</div>
+              </div>
+            </div>
+            <div class="ta-kontrol">
+              <div class="ta-k-lbl">Etiket / Kimlik</div>
+              <div class="ta-k-opts">
+                <div class="ta-k-opt ok">✓ Uygun</div>
+                <div class="ta-k-opt bad">✗ Eksik</div>
+              </div>
+            </div>
+            <div class="ta-kontrol">
+              <div class="ta-k-lbl">Depolama Uygunluğu</div>
+              <div class="ta-k-opts">
+                <div class="ta-k-opt ok">✓ Uygun</div>
+                <div class="ta-k-opt warn">⚠ Özel Koşul</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-bottom:12px">
+            <label class="fl">Depo Konumu *</label>
+            <div style="display:flex;gap:8px">
+              <input class="fi" placeholder="Blok: A, B, C..." style="flex:0 0 80px">
+              <input class="fi" placeholder="Sıra: 1-10" style="flex:0 0 80px">
+              <input class="fi" placeholder="Raf: 01-20" style="flex:0 0 80px">
+              <input class="fi" placeholder="Notlar (opsiyonel)" style="flex:1">
+            </div>
+          </div>
+
+          <div style="margin-bottom:14px">
+            <label class="fl">Teslim Alan (İmza)</label>
+            <input class="fi" placeholder="Ad Soyad · Unvan">
+          </div>
+
+          <div style="display:flex;gap:8px;justify-content:flex-end">
+            <button class="btn">İptal</button>
+            <button class="btn btn-b">QR Etiket Oluştur</button>
+            <button class="btn btn-p" onclick="toast('✓ MM-2026-019 kaydedildi — QR etiket yazdırılıyor.','green')">✓ Teslim Al & Kaydet</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</div><!-- /main -->
+
+<!-- ══════════ MODALLER ══════════ -->
+
+<!-- Yeni ECN Modal -->
+<div class="modal-ov" id="yeni-ecn-modal" onclick="modalKapat(this,event)">
+  <div class="modal-box">
+    <div class="m-head">
+      <div><div class="m-title">📝 Yeni Değişiklik Talebi (ECN)</div><div class="m-sub">§8.5.6 · Engineering Change Notice</div></div>
+      <button class="m-x" onclick="modalKapat2('yeni-ecn-modal')">✕</button>
+    </div>
+    <div class="m-body">
+      <div class="m-sect">Değişiklik Bilgileri</div>
+      <div class="fg2">
+        <div><label class="fl">Değişiklik Tipi *</label>
+          <select class="fi-sel"><option>Tasarım Değişikliği</option><option>Malzeme Değişikliği</option><option>Proses Değişikliği</option><option>Dokümantasyon</option><option>Müşteri Talebi</option></select>
+        </div>
+        <div><label class="fl">Öncelik *</label>
+          <select class="fi-sel"><option>Yüksek</option><option>Orta</option><option>Düşük</option></select>
+        </div>
+      </div>
+      <div style="margin-bottom:12px"><label class="fl">Değişiklik Başlığı *</label><input class="fi" placeholder="Kısa, açıklayıcı başlık"></div>
+      <div style="margin-bottom:12px"><label class="fl">Açıklama / Gerekçe *</label><textarea class="fi" style="height:80px;resize:none" placeholder="Değişikliğin nedeni ve kapsamı..."></textarea></div>
+      <div class="fg3">
+        <div><label class="fl">Etkilenen Parça No</label><input class="fi" placeholder="Örn: FLN-2204-A"></div>
+        <div><label class="fl">Müşteri Ref. No</label><input class="fi" placeholder="TUSAŞ-CR-XXXX"></div>
+        <div><label class="fl">Hedef Tamamlanma</label><input type="date" class="fi"></div>
+      </div>
+      <div class="m-sect">Etkilenen Dokümanlar</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+        <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer"><input type="checkbox" checked> DWG</label>
+        <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer"><input type="checkbox" checked> BOM</label>
+        <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer"><input type="checkbox"> CNC Program</label>
+        <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer"><input type="checkbox"> Test Talimatı</label>
+        <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer"><input type="checkbox"> FAI Raporu</label>
+        <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer"><input type="checkbox"> Kontrol Planı</label>
+      </div>
+      <div class="fg2">
+        <div><label class="fl">FAI Gerekli mi?</label>
+          <select class="fi-sel"><option>Evet</option><option>Hayır</option><option>Değerlendiriliyor</option></select>
+        </div>
+        <div><label class="fl">Talep Eden</label><input class="fi" value="Ali Yılmaz" readonly class="fi-ro"></div>
+      </div>
+    </div>
+    <div class="m-foot">
+      <button class="btn" onclick="modalKapat2('yeni-ecn-modal')">İptal</button>
+      <button class="btn btn-p" onclick="modalKapat2('yeni-ecn-modal');toast('✓ ECN-2026-006 oluşturuldu — onay zinciri başlatıldı.','green')">📝 ECN Oluştur → Onay Zincirine Gönder</button>
+    </div>
+  </div>
+</div>
+
+<!-- Onay Modal -->
+<div class="modal-ov" id="onay-modal" onclick="modalKapat(this,event)">
+  <div class="modal-box" style="max-width:500px">
+    <div class="m-head">
+      <div><div class="m-title">✍ ECN-2026-005 Onay</div><div class="m-sub">Mühendislik Onayı — Adım 3/5</div></div>
+      <button class="m-x" onclick="modalKapat2('onay-modal')">✕</button>
+    </div>
+    <div class="m-body">
+      <div style="padding:12px;background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;margin-bottom:14px">
+        <div style="font-size:11px;font-weight:700;color:#92400e">📋 İncelenen: ECN-2026-005</div>
+        <div style="font-size:11px;color:#92400e;margin-top:4px">Bağlantı Flanşı Tolerans Revizyonu · 3 DWG + BOM + FAI etkilendi</div>
+      </div>
+      <div style="margin-bottom:12px"><label class="fl">Onay Notu</label>
+        <textarea class="fi" style="height:80px;resize:none" placeholder="İnceleme notlarınızı yazın..."></textarea>
+      </div>
+      <div class="fg2">
+        <button class="btn btn-g" style="justify-content:center;padding:12px" onclick="modalKapat2('onay-modal');toast('✓ Onaylandı — Kalite onayına gönderildi.','green')">✓ Onayla</button>
+        <button class="btn btn-red" style="justify-content:center;padding:12px" onclick="modalKapat2('onay-modal');toast('✗ Reddedildi — Talep edene bildirim gönderildi.')">✗ Reddet</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+function sayfaAc(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('show'));
+  document.getElementById(id)?.classList.add('show');
+  document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('on'));
+  const harita = {
+    'kpi-panel': 0,
+    'ecn-liste': 1, 'ecn-detay': 1,
+    'mm-liste': 2,
+  };
+  const idx = harita[id];
+  if (idx !== undefined) {
+    document.querySelectorAll('.sb-item:not(.sb-dim)')[idx]?.classList.add('on');
+  }
+}
+
+function mmSekme(panel) {
+  document.querySelectorAll('.sekme-btn').forEach(b => b.classList.remove('on'));
+  document.querySelectorAll('.sekme-panel').forEach(p => p.classList.remove('show'));
+  event.target.classList.add('on');
+  document.getElementById('mm-panel-' + panel)?.classList.add('show');
+  if (panel === 'teslim-al') document.getElementById('mm-panel-teslim-al')?.classList.add('show');
+}
+
+function modalAc(id) { document.getElementById(id)?.classList.add('open'); }
+function modalKapat2(id) { document.getElementById(id)?.classList.remove('open'); }
+function modalKapat(overlay, e) { if (e.target === overlay) overlay.classList.remove('open'); }
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') document.querySelectorAll('.modal-ov.open').forEach(m => m.classList.remove('open'));
+});
+
+function toast(msg, tip) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (tip ? ' ' + tip : '');
+  t.classList.add('show');
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+// Teslim al sekmesi butonu için
+document.querySelectorAll('.sekme-btn').forEach((btn, i) => {
+  btn.addEventListener('click', function() {
+    const panels = ['liste','bekleyen','hasar','teslim-al'];
+    document.querySelectorAll('.sekme-btn').forEach(b => b.classList.remove('on'));
+    this.classList.add('on');
+    document.querySelectorAll('.sekme-panel').forEach(p => p.classList.remove('show'));
+    const target = document.getElementById('mm-panel-' + panels[i]);
+    if (target) target.classList.add('show');
+  });
+});
+</script>
+</body>
+</html>

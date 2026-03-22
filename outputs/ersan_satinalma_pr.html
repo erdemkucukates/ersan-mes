@@ -1,0 +1,1225 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Satınalma Talepleri — Ersan MES</title>
+  <link rel="stylesheet" href="ersan_styles.css">
+  <style>
+    /* ── Sayfa başlık ── */
+    .page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .page-header h1 { font-size: 20px; font-weight: 600; color: #1a2b47; }
+    .page-header .sub { font-size: 13px; color: #6b7280; margin-top: 2px; }
+
+    /* ── Filtre bar ── */
+    .filter-bar {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .filter-bar input,
+    .filter-bar select {
+      font-size: 13px;
+      padding: 7px 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      background: #fff;
+      color: #111827;
+      outline: none;
+    }
+    .filter-bar input:focus,
+    .filter-bar select:focus { border-color: #1a2b47; }
+    .filter-bar input[type="text"] { min-width: 200px; }
+
+    /* ── Tablo ── */
+    .tablo-wrapper {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .tablo table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .tablo th {
+      background: #f9fafb;
+      text-align: left;
+      padding: 10px 14px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .tablo td {
+      padding: 11px 14px;
+      border-bottom: 1px solid #f3f4f6;
+      color: #111827;
+      vertical-align: middle;
+    }
+    .tablo tr:last-child td { border-bottom: none; }
+    .tablo tr:hover td { background: #f9fafb; cursor: pointer; }
+    .tablo .kod { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #1a2b47; font-weight: 600; }
+    .tablo .muted { color: #6b7280; font-size: 12px; }
+
+    /* durum badge */
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+    .badge-taslak   { background: #f3f4f6; color: #6b7280; }
+    .badge-onay     { background: #fef3c7; color: #92400e; }
+    .badge-onaylandi{ background: #d1fae5; color: #065f46; }
+    .badge-rfq      { background: #dbeafe; color: #1e40af; }
+    .badge-iptal    { background: #fee2e2; color: #991b1b; }
+
+    /* aciliyet badge */
+    .acil-normal { color: #059669; font-size: 12px; }
+    .acil-yuksek { color: #d97706; font-size: 12px; font-weight: 600; }
+    .acil-kritik { color: #dc2626; font-size: 12px; font-weight: 700; }
+
+    /* ── Butonlar ── */
+    .btn {
+      font-size: 13px;
+      padding: 7px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      border: 1px solid #d1d5db;
+      background: #fff;
+      color: #374151;
+      font-weight: 500;
+      transition: background .15s;
+    }
+    .btn:hover { background: #f9fafb; }
+    .btn-primary {
+      background: #1a2b47;
+      color: #fff;
+      border-color: #1a2b47;
+    }
+    .btn-primary:hover { background: #243d66; }
+    .btn-sm { font-size: 12px; padding: 5px 12px; }
+    .btn-danger { border-color: #fca5a5; color: #dc2626; }
+    .btn-danger:hover { background: #fee2e2; }
+
+    /* boş durum */
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+      color: #9ca3af;
+    }
+    .empty-state .icon { font-size: 32px; margin-bottom: 10px; }
+    .empty-state p { font-size: 14px; }
+
+    /* ─────────────────────────────────────
+       MODAL
+    ───────────────────────────────────── */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.45);
+      z-index: 200;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 40px 16px;
+      overflow-y: auto;
+    }
+    .modal-backdrop.open { display: flex; }
+
+    .modal {
+      background: #fff;
+      border-radius: 12px;
+      border: 1px solid #e5e7eb;
+      width: 100%;
+      max-width: 720px;
+      overflow: hidden;
+      box-shadow: 0 20px 40px rgba(0,0,0,.18);
+    }
+
+    .modal-head {
+      background: #1a2b47;
+      padding: 16px 20px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+    }
+    .modal-head .m-title { font-size: 15px; font-weight: 600; color: #fff; }
+    .modal-head .m-sub   { font-size: 12px; color: rgba(255,255,255,.6); margin-top: 3px; }
+    .modal-close {
+      font-size: 18px; color: rgba(255,255,255,.7); cursor: pointer;
+      border: none; background: transparent; line-height: 1; padding: 2px 4px;
+    }
+    .modal-close:hover { color: #fff; }
+
+    /* tabs */
+    .tab-row {
+      display: flex;
+      border-bottom: 1px solid #e5e7eb;
+      background: #fff;
+    }
+    .tab {
+      flex: 1;
+      padding: 10px 14px;
+      font-size: 13px;
+      text-align: center;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      color: #6b7280;
+      border-bottom: 2px solid transparent;
+      font-weight: 500;
+      transition: all .15s;
+    }
+    .tab.active   { color: #1a2b47; border-bottom-color: #1a2b47; }
+    .tab:hover:not(.active) { background: #f9fafb; }
+
+    .modal-body {
+      padding: 20px;
+      max-height: 60vh;
+      overflow-y: auto;
+    }
+
+    /* form alanları */
+    .f-grid    { display: grid; gap: 12px; margin-bottom: 16px; }
+    .f-col-2   { grid-template-columns: 1fr 1fr; }
+    .f-col-3   { grid-template-columns: 1fr 1fr 1fr; }
+    .f-col-1   { grid-template-columns: 1fr; }
+
+    .f-label {
+      display: block;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      color: #6b7280;
+      margin-bottom: 4px;
+    }
+    .f-inp {
+      width: 100%;
+      font-size: 13px;
+      padding: 7px 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      background: #fff;
+      color: #111827;
+      outline: none;
+      box-sizing: border-box;
+    }
+    .f-inp:focus   { border-color: #1a2b47; }
+    .f-inp-ro      { background: #f9fafb; color: #6b7280; }
+    .f-inp-linked  { border-color: #059669; background: #f0fdf4; color: #065f46; font-weight: 600; }
+
+    /* section label */
+    .sec-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      color: #9ca3af;
+      padding-bottom: 6px;
+      margin-bottom: 14px;
+      border-bottom: 1px solid #f3f4f6;
+    }
+
+    /* aciliyet */
+    .acil-group { display: flex; gap: 6px; margin-top: 2px; }
+    .a-btn {
+      font-size: 12px;
+      padding: 5px 12px;
+      border-radius: 5px;
+      border: 1px solid #d1d5db;
+      cursor: pointer;
+      background: #fff;
+      color: #6b7280;
+      font-weight: 500;
+      transition: all .12s;
+    }
+    .a-btn.a-normal.on { background: #d1fae5; color: #065f46; border-color: #059669; }
+    .a-btn.a-yuksek.on { background: #fef3c7; color: #92400e; border-color: #d97706; }
+    .a-btn.a-kritik.on { background: #fee2e2; color: #991b1b; border-color: #dc2626; }
+
+    /* ── kalem blok (Tab A) ── */
+    .kalem-block {
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      overflow: hidden;
+    }
+    .kalem-head {
+      background: #f9fafb;
+      padding: 8px 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .kalem-head .k-num  { font-size: 13px; font-weight: 600; color: #111827; }
+    .kalem-head .k-desc { font-size: 12px; color: #6b7280; }
+    .kalem-head .k-qty  {
+      font-size: 11px;
+      padding: 1px 7px;
+      border-radius: 4px;
+      background: #dbeafe;
+      color: #1e40af;
+      font-weight: 600;
+    }
+    .kalem-head .k-del  {
+      margin-left: auto;
+      font-size: 12px;
+      color: #dc2626;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      font-weight: 500;
+    }
+    .kalem-head .k-del:hover { text-decoration: underline; }
+
+    .satir-block {
+      padding: 12px 14px;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    .satir-block:last-of-type { border-bottom: none; }
+    .satir-head {
+      font-size: 11px;
+      font-weight: 600;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .satir-del {
+      font-size: 11px;
+      color: #dc2626;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      font-weight: 500;
+    }
+    .satir-del:hover { text-decoration: underline; }
+
+    .add-satir {
+      border: 1px dashed #d1d5db;
+      border-radius: 6px;
+      padding: 8px;
+      text-align: center;
+      font-size: 12px;
+      color: #2563eb;
+      cursor: pointer;
+      margin: 8px 14px;
+      transition: background .12s;
+    }
+    .add-satir:hover { background: #eff6ff; }
+
+    /* ── genel alım (Tab B) ── */
+    .gi-item {
+      border: 1px solid #e5e7eb;
+      border-radius: 7px;
+      padding: 12px 14px;
+      margin-bottom: 8px;
+    }
+    .gi-row {
+      display: grid;
+      grid-template-columns: 2fr 80px 80px 1.5fr 30px;
+      gap: 8px;
+      align-items: end;
+    }
+    .gi-del {
+      width: 28px;
+      height: 32px;
+      border: 1px solid #fca5a5;
+      border-radius: 5px;
+      background: #fff;
+      cursor: pointer;
+      color: #dc2626;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background .12s;
+    }
+    .gi-del:hover { background: #fee2e2; }
+
+    .add-genel {
+      border: 1px dashed #d1d5db;
+      border-radius: 7px;
+      padding: 9px;
+      text-align: center;
+      font-size: 12px;
+      color: #2563eb;
+      cursor: pointer;
+      transition: background .12s;
+    }
+    .add-genel:hover { background: #eff6ff; }
+
+    /* modal footer */
+    .modal-foot {
+      padding: 12px 20px;
+      border-top: 1px solid #e5e7eb;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #f9fafb;
+    }
+    .foot-info { font-size: 12px; color: #9ca3af; }
+    .foot-info.ok { color: #059669; font-weight: 500; }
+    .foot-info.err { color: #dc2626; }
+    .foot-btns { display: flex; gap: 8px; }
+
+    /* loading spinner */
+    .spinner {
+      display: inline-block;
+      width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .6s linear infinite;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* detay panel (satır açma) */
+    .detail-panel {
+      display: none;
+      background: #f9fafb;
+      border-top: 1px solid #e5e7eb;
+      padding: 14px 20px;
+    }
+    .detail-panel.open { display: block; }
+    .detail-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; font-size: 12px; }
+    .detail-kv label { color: #6b7280; display: block; margin-bottom: 2px; font-size: 11px; }
+    .detail-kv span  { color: #111827; font-weight: 500; }
+  </style>
+</head>
+<body>
+
+<!-- ── Sidebar ── -->
+<div id="sidebar-container"></div>
+
+<!-- ── Ana içerik ── -->
+<div class="main-content">
+
+  <div class="page-header">
+    <div>
+      <h1>Satınalma Talepleri</h1>
+      <div class="sub">PR — Purchase Requisition</div>
+    </div>
+    <button class="btn btn-primary" onclick="modalAc()">+ Yeni Talep</button>
+  </div>
+
+  <!-- Filtre -->
+  <div class="filter-bar">
+    <input type="text" id="arama" placeholder="PR No, açıklama, iş emri ara..." oninput="filtrele()">
+    <select id="durum-filter" onchange="filtrele()">
+      <option value="">Tüm Durumlar</option>
+      <option value="Taslak">Taslak</option>
+      <option value="Onay Bekliyor">Onay Bekliyor</option>
+      <option value="Onaylandı">Onaylandı</option>
+      <option value="RFQ Oluşturuldu">RFQ Oluşturuldu</option>
+      <option value="İptal">İptal</option>
+    </select>
+    <select id="aciliyet-filter" onchange="filtrele()">
+      <option value="">Tüm Aciliyetler</option>
+      <option value="Normal">Normal</option>
+      <option value="Yüksek">Yüksek</option>
+      <option value="Kritik">Kritik</option>
+    </select>
+    <select id="tip-filter" onchange="filtrele()">
+      <option value="">Tüm Tipler</option>
+      <option value="Siparişe Bağlı">Siparişe Bağlı</option>
+      <option value="Genel Alım">Genel Alım</option>
+    </select>
+  </div>
+
+  <!-- Tablo -->
+  <div class="tablo-wrapper">
+    <div class="tablo">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:130px">PR No</th>
+            <th>Açıklama / Kategori</th>
+            <th>Tip</th>
+            <th>İş Emri</th>
+            <th>Sipariş</th>
+            <th>Aciliyet</th>
+            <th>İhtiyaç Tarihi</th>
+            <th>Durum</th>
+            <th style="width:40px"></th>
+          </tr>
+        </thead>
+        <tbody id="pr-tbody">
+          <tr>
+            <td colspan="9">
+              <div class="empty-state">
+                <div class="icon">📋</div>
+                <p id="empty-msg">Yükleniyor...</p>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div><!-- /main-content -->
+
+
+<!-- ═══════════════════════════════════════════
+     MODAL
+═══════════════════════════════════════════ -->
+<div class="modal-backdrop" id="pr-modal">
+  <div class="modal" id="modal-inner">
+
+    <div class="modal-head">
+      <div>
+        <div class="m-title" id="modal-title">Satınalma Talebi</div>
+        <div class="m-sub"  id="modal-sub">Yeni talep oluşturuluyor...</div>
+      </div>
+      <button class="modal-close" onclick="modalKapat()">✕</button>
+    </div>
+
+    <div class="tab-row">
+      <button class="tab active" id="tab-siparis" onclick="setTab('siparis')">Siparişe Bağlı</button>
+      <button class="tab"        id="tab-genel"   onclick="setTab('genel')">Genel Alım</button>
+    </div>
+
+    <div class="modal-body">
+
+      <!-- ─ ORTAK ALANLAR ─ -->
+      <div class="sec-label">Genel Bilgiler</div>
+      <div class="f-grid f-col-3">
+        <div>
+          <label class="f-label">Talep No</label>
+          <input class="f-inp f-inp-ro" id="f-pr-no" value="—" readonly>
+        </div>
+        <div>
+          <label class="f-label">İş Emri No <span style="font-weight:400;color:#9ca3af">(otomatik)</span></label>
+          <input class="f-inp f-inp-ro" id="f-wo-no" value="—" readonly title="Siparişe bağlı talepte sipariş seçince dolar. Genel alımda iş emri açıldığında güncellenir.">
+        </div>
+        <div>
+          <label class="f-label">Talep Eden</label>
+          <input class="f-inp f-inp-ro" id="f-talep-eden" value="—" readonly>
+        </div>
+      </div>
+
+      <div class="f-grid f-col-2">
+        <div>
+          <label class="f-label">Aciliyet <span style="color:#dc2626">*</span></label>
+          <div class="acil-group">
+            <button class="a-btn a-normal on" onclick="setAcil(this,'Normal')">Normal</button>
+            <button class="a-btn a-yuksek"    onclick="setAcil(this,'Yüksek')">Yüksek</button>
+            <button class="a-btn a-kritik"    onclick="setAcil(this,'Kritik')">Kritik</button>
+          </div>
+        </div>
+        <div>
+          <label class="f-label">İhtiyaç Tarihi <span style="color:#dc2626">*</span></label>
+          <input class="f-inp" type="date" id="f-ihtiyac-tarih">
+        </div>
+      </div>
+
+      <hr style="border:none;border-top:1px solid #f3f4f6;margin:4px 0 16px">
+
+      <!-- ─ TAB A: SİPARİŞE BAĞLI ─ -->
+      <div id="pan-siparis">
+        <div class="sec-label">Sipariş Bağlantısı</div>
+        <div class="f-grid f-col-2" style="margin-bottom:18px">
+          <div>
+            <label class="f-label">Sipariş No</label>
+            <select class="f-inp" id="f-siparis-no" onchange="siparisSecildi()">
+              <option value="">— Sipariş seçin —</option>
+            </select>
+          </div>
+          <div>
+            <label class="f-label">Sipariş Kalemi</label>
+            <select class="f-inp" id="f-kalem-no">
+              <option value="">— Önce sipariş seçin —</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="sec-label">Talep Kalemleri</div>
+        <div id="sp-kalemler"></div>
+        <div class="add-satir" style="margin:0 0 8px" onclick="spKalemEkle()">+ Kalem Ekle</div>
+      </div>
+
+      <!-- ─ TAB B: GENEL ALIM ─ -->
+      <div id="pan-genel" style="display:none">
+        <div class="sec-label">Alım Kategorisi</div>
+        <div class="f-grid f-col-2" style="margin-bottom:16px">
+          <div>
+            <label class="f-label">Kategori <span style="color:#dc2626">*</span></label>
+            <select class="f-inp" id="f-kategori">
+              <option value="">— Seçin —</option>
+              <option>Aparat / Bağlama İmalatı</option>
+              <option>Ar-Ge / Prototip</option>
+              <option>Bakım / Onarım</option>
+              <option>Stok Yenileme</option>
+              <option>Dış Hizmet Alımı</option>
+              <option>İdari / Genel Gider</option>
+            </select>
+          </div>
+          <div>
+            <label class="f-label">Tercih Edilen Tedarikçi</label>
+            <select class="f-inp" id="f-tedarikci-genel">
+              <option value="">— Seçin —</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="sec-label">Talep Kalemleri</div>
+        <div id="genel-list"></div>
+        <div class="add-genel" onclick="genelKalemEkle()">+ Kalem Ekle</div>
+
+        <div style="margin-top:14px">
+          <label class="f-label">Gerekçe / Açıklama</label>
+          <textarea class="f-inp" id="f-gerekce" rows="2"
+            placeholder="Talep gerekçesi veya teknik detaylar..."></textarea>
+        </div>
+      </div>
+
+    </div><!-- /modal-body -->
+
+    <div class="modal-foot">
+      <div class="foot-info" id="foot-info">Kaydedilmedi</div>
+      <div class="foot-btns">
+        <button class="btn" onclick="modalKapat()">İptal</button>
+        <button class="btn btn-primary" id="kaydet-btn" onclick="prKaydet()">Talebi Kaydet</button>
+      </div>
+    </div>
+
+  </div>
+</div><!-- /modal-backdrop -->
+
+
+<!-- ── Scripts ── -->
+<script src="ersan_nav.js"></script>
+<script src="ersan_log.js"></script>
+<script>
+/* ═══════════════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════════════ */
+let prListesi    = [];       // Airtable'dan çekilen PR kayıtları
+let siparisler   = [];       // Mevcut siparişler
+let tedarikciler = [];       // Tedarikçi listesi
+let aktifTab     = 'siparis';
+let acilSev      = 'Normal';
+let spKalemSayac = 0;
+let genelKalemSayac = 0;
+const LOGIN_USER = localStorage.getItem('ersan_user') || 'Kullanıcı';
+
+/* ═══════════════════════════════════════════════════
+   YARDIMCI
+═══════════════════════════════════════════════════ */
+function bugun()  { return new Date().toISOString().split('T')[0]; }
+function haftaSonra() {
+  const d = new Date(); d.setDate(d.getDate() + 7);
+  return d.toISOString().split('T')[0];
+}
+function trTarih(iso) {
+  if (!iso) return '—';
+  const [y,m,d] = iso.split('-');
+  return `${d}.${m}.${y}`;
+}
+function badgeDurum(d) {
+  const map = {
+    'Taslak':         'badge-taslak',
+    'Onay Bekliyor':  'badge-onay',
+    'Onaylandı':      'badge-onaylandi',
+    'RFQ Oluşturuldu':'badge-rfq',
+    'İptal':          'badge-iptal'
+  };
+  return `<span class="badge ${map[d]||'badge-taslak'}">${d||'Taslak'}</span>`;
+}
+function acilClass(a) {
+  if (a === 'Yüksek') return 'acil-yuksek';
+  if (a === 'Kritik')  return 'acil-kritik';
+  return 'acil-normal';
+}
+function escape(str) {
+  return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+/* ═══════════════════════════════════════════════════
+   API ÇAĞRILARI — R2: sadece /.netlify/functions/airtable
+═══════════════════════════════════════════════════ */
+async function apiGet(tablo, params = {}) {
+  const qs = new URLSearchParams({ tablo, ...params });
+  const res = await fetch(`/.netlify/functions/airtable?${qs}`);
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+async function apiPost(tablo, fields) {
+  const res = await fetch('/.netlify/functions/airtable', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ tablo, fields })
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+async function apiPatch(tablo, id, fields) {
+  const res = await fetch('/.netlify/functions/airtable', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ tablo, id, fields })
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+async function generateCode(prefix) {
+  const res = await fetch('/.netlify/functions/airtable', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'generateCode', prefix })
+  });
+  if (!res.ok) throw new Error(await res.text());
+  const data = await res.json();
+  return data.kod;
+}
+
+/* ═══════════════════════════════════════════════════
+   VERİ YÜKLEME
+═══════════════════════════════════════════════════ */
+async function veriYukle() {
+  try {
+    // PR listesi
+    const prData = await apiGet('Satinalma_Talepleri');
+    prListesi = (prData.records || []).map(r => ({
+      id: r.id,
+      ...r.fields
+    }));
+    tabloRender(prListesi);
+
+    // Siparişler (dropdown için)
+    const soData = await apiGet('Siparişler');
+    siparisler = (soData.records || []).map(r => ({
+      id: r.id,
+      no: r.fields['Siparis_No'] || r.fields['Sipariş No'] || '',
+      musteri: r.fields['Musteri'] || r.fields['Müşteri'] || '',
+      termin: r.fields['Termin'] || ''
+    }));
+
+    // Siparişler dropdown doldur
+    const sel = document.getElementById('f-siparis-no');
+    siparisler.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s.no;
+      opt.dataset.id = s.id;
+      opt.textContent = `${s.no} · ${s.musteri}${s.termin ? ' · ' + trTarih(s.termin) : ''}`;
+      sel.appendChild(opt);
+    });
+
+    // Tedarikçiler
+    const tdData = await apiGet('Tedarikciler');
+    tedarikciler = (tdData.records || []).map(r => ({
+      id: r.id,
+      ad: r.fields['Tedarikci_Adi'] || r.fields['Ad'] || ''
+    }));
+    ['f-tedarikci-genel'].forEach(id => {
+      const sel2 = document.getElementById(id);
+      if (!sel2) return;
+      tedarikciler.forEach(t => {
+        const opt = document.createElement('option');
+        opt.value = t.ad; opt.textContent = t.ad;
+        sel2.appendChild(opt);
+      });
+    });
+
+  } catch (e) {
+    console.error('Veri yükleme hatası:', e);
+    document.getElementById('empty-msg').textContent = 'Veriler yüklenemedi.';
+    /* Geliştirme ortamı için demo satırlar */
+    demoPrListesi();
+  }
+}
+
+/* Demo — Airtable bağlantısı yokken */
+function demoPrListesi() {
+  prListesi = [
+    { 'PR_No':'PR-26-00007','Talep_Tipi':'Siparişe Bağlı','Siparis_No':'SO-26-00028',
+      'Is_Emri_No':'WO-26-00024','Aciliyet':'Normal','Ihtiyac_Tarihi':'2026-04-10',
+      'Durum':'Onaylandı','Talep_Eden':'Erdem Küçükateş','Kategori':'—' },
+    { 'PR_No':'PR-26-00008','Talep_Tipi':'Genel Alım','Siparis_No':'—',
+      'Is_Emri_No':'—','Aciliyet':'Yüksek','Ihtiyac_Tarihi':'2026-03-21',
+      'Durum':'Onay Bekliyor','Talep_Eden':'Ahmet Demir','Kategori':'Bakım / Onarım' },
+    { 'PR_No':'PR-26-00006','Talep_Tipi':'Siparişe Bağlı','Siparis_No':'SO-26-00025',
+      'Is_Emri_No':'WO-26-00021','Aciliyet':'Kritik','Ihtiyac_Tarihi':'2026-03-19',
+      'Durum':'RFQ Oluşturuldu','Talep_Eden':'Erdem Küçükateş','Kategori':'—' }
+  ];
+  tabloRender(prListesi);
+  document.getElementById('empty-msg').textContent = 'Kayıt bulunamadı.';
+
+  // Demo tedarikçiler
+  const demotd = ['Çelik A.Ş.','MetalSan Ltd.','Özdemir Çelik','Kardemir','Tekno Hizmet','ProEndüstri'];
+  tedarikciler = demotd.map(a => ({ ad: a }));
+  ['f-tedarikci-genel'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    demotd.forEach(t => {
+      const opt = document.createElement('option');
+      opt.value = t; opt.textContent = t;
+      sel.appendChild(opt);
+    });
+  });
+
+  // Demo siparişler
+  const demoSo = [
+    { no:'SO-26-00030', musteri:'ABC Havacılık A.Ş.', termin:'2026-04-15',
+      kalemler:['SO-26-00030-01 · Flanş imali · 150 Adet','SO-26-00030-02 · Mil işleme · 60 Adet'] },
+    { no:'SO-26-00029', musteri:'XYZ Makina Ltd.', termin:'2026-04-10',
+      kalemler:['SO-26-00029-01 · Gövde imali · 20 Adet'] },
+    { no:'SO-26-00027', musteri:'DEF Savunma A.Ş.', termin:'2026-04-05',
+      kalemler:['SO-26-00027-01 · Braket · 200 Adet','SO-26-00027-02 · Pim · 400 Adet'] }
+  ];
+  siparisler = demoSo;
+  const sel = document.getElementById('f-siparis-no');
+  // temizle mevcut opsiyonlar
+  while (sel.options.length > 1) sel.remove(1);
+  demoSo.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s.no;
+    opt.dataset.kalemler = JSON.stringify(s.kalemler);
+    opt.textContent = `${s.no} · ${s.musteri} · ${trTarih(s.termin)}`;
+    sel.appendChild(opt);
+  });
+}
+
+/* ═══════════════════════════════════════════════════
+   TABLO RENDER
+═══════════════════════════════════════════════════ */
+function tabloRender(liste) {
+  const tbody = document.getElementById('pr-tbody');
+  if (!liste.length) {
+    tbody.innerHTML = `<tr><td colspan="9">
+      <div class="empty-state"><div class="icon">📋</div>
+      <p id="empty-msg">Henüz satınalma talebi yok.</p></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = liste.map((r, i) => {
+    const prNo     = r['PR_No'] || '—';
+    const tip      = r['Talep_Tipi'] || '—';
+    const wo       = r['Is_Emri_No'] || '—';
+    const so       = r['Siparis_No'] || '—';
+    const acil     = r['Aciliyet'] || 'Normal';
+    const tarih    = trTarih(r['Ihtiyac_Tarihi']);
+    const durum    = r['Durum'] || 'Taslak';
+    const kat      = r['Kategori'] || '—';
+    const acikl    = tip === 'Genel Alım' ? kat : (r['Siparis_Kalemi'] || '—');
+    return `
+      <tr onclick="detayToggle(${i})" data-idx="${i}">
+        <td><span class="kod">${escape(prNo)}</span></td>
+        <td>${escape(acikl)}</td>
+        <td><span class="muted">${escape(tip)}</span></td>
+        <td><span class="muted">${escape(wo)}</span></td>
+        <td><span class="muted">${escape(so)}</span></td>
+        <td><span class="${acilClass(acil)}">${escape(acil)}</span></td>
+        <td><span class="muted">${tarih}</span></td>
+        <td>${badgeDurum(durum)}</td>
+        <td style="text-align:center">
+          <button class="btn btn-sm" onclick="event.stopPropagation();rfqAc('${escape(prNo)}')"
+            title="RFQ'ya dönüştür" style="padding:3px 8px;font-size:11px">→ RFQ</button>
+        </td>
+      </tr>
+      <tr>
+        <td colspan="9" style="padding:0">
+          <div class="detail-panel" id="detail-${i}">
+            <div class="detail-grid">
+              <div class="detail-kv"><label>Talep Eden</label><span>${escape(r['Talep_Eden']||'—')}</span></div>
+              <div class="detail-kv"><label>Talep Tarihi</label><span>${trTarih(r['Talep_Tarihi'])}</span></div>
+              <div class="detail-kv"><label>Kalem Sayısı</label><span>${r['Kalem_Sayisi']||'—'}</span></div>
+              <div class="detail-kv"><label>Notlar</label><span>${escape(r['Notlar']||'—')}</span></div>
+            </div>
+          </div>
+        </td>
+      </tr>`;
+  }).join('');
+}
+
+function detayToggle(idx) {
+  const panel = document.getElementById(`detail-${idx}`);
+  if (!panel) return;
+  panel.classList.toggle('open');
+}
+
+/* ═══════════════════════════════════════════════════
+   FİLTRELEME
+═══════════════════════════════════════════════════ */
+function filtrele() {
+  const ara   = document.getElementById('arama').value.toLowerCase();
+  const durum = document.getElementById('durum-filter').value;
+  const acil  = document.getElementById('aciliyet-filter').value;
+  const tip   = document.getElementById('tip-filter').value;
+
+  const filtre = prListesi.filter(r => {
+    const metin = [r['PR_No'],r['Siparis_No'],r['Is_Emri_No'],r['Kategori']].join(' ').toLowerCase();
+    if (ara   && !metin.includes(ara))       return false;
+    if (durum && r['Durum'] !== durum)        return false;
+    if (acil  && r['Aciliyet'] !== acil)      return false;
+    if (tip   && r['Talep_Tipi'] !== tip)     return false;
+    return true;
+  });
+  tabloRender(filtre);
+}
+
+/* ═══════════════════════════════════════════════════
+   MODAL — AÇ / KAPAT
+═══════════════════════════════════════════════════ */
+async function modalAc() {
+  // Sıfırla
+  spKalemSayac    = 0;
+  genelKalemSayac = 0;
+  acilSev         = 'Normal';
+  document.getElementById('f-pr-no').value       = 'Oluşturuluyor...';
+  document.getElementById('f-wo-no').value       = '—';
+  document.getElementById('f-wo-no').className   = 'f-inp f-inp-ro';
+  document.getElementById('f-talep-eden').value  = LOGIN_USER;
+  document.getElementById('f-ihtiyac-tarih').value = haftaSonra();
+  document.getElementById('f-siparis-no').value  = '';
+  document.getElementById('f-kalem-no').innerHTML = '<option value="">— Önce sipariş seçin —</option>';
+  document.getElementById('sp-kalemler').innerHTML = '';
+  document.getElementById('genel-list').innerHTML  = '';
+  document.getElementById('f-gerekce').value = '';
+  document.getElementById('foot-info').textContent = 'Kaydedilmedi';
+  document.getElementById('foot-info').className   = 'foot-info';
+  document.querySelectorAll('.a-btn').forEach(b => b.classList.remove('on'));
+  document.querySelector('.a-btn.a-normal').classList.add('on');
+  setTab('siparis');
+  spKalemEkle();  // varsayılan 1 kalem
+  document.getElementById('pr-modal').classList.add('open');
+
+  // PR No üret
+  try {
+    const kod = await generateCode('PR');
+    document.getElementById('f-pr-no').value = kod;
+    document.getElementById('modal-title').textContent = `Satınalma Talebi — ${kod}`;
+  } catch {
+    document.getElementById('f-pr-no').value = 'PR-??-?????';
+  }
+}
+
+function modalKapat() {
+  document.getElementById('pr-modal').classList.remove('open');
+}
+
+// Dışına tıklama
+document.getElementById('pr-modal').addEventListener('click', function(e) {
+  if (e.target === this) modalKapat();
+});
+
+/* ═══════════════════════════════════════════════════
+   TAB
+═══════════════════════════════════════════════════ */
+function setTab(tab) {
+  aktifTab = tab;
+  document.getElementById('tab-siparis').classList.toggle('active', tab === 'siparis');
+  document.getElementById('tab-genel').classList.toggle('active',   tab === 'genel');
+  document.getElementById('pan-siparis').style.display = tab === 'siparis' ? 'block' : 'none';
+  document.getElementById('pan-genel').style.display   = tab === 'genel'   ? 'block' : 'none';
+  document.getElementById('modal-sub').textContent =
+    tab === 'siparis' ? 'Sipariş kalemlerine bağlı talep' : 'Genel satınalma talebi';
+}
+
+/* ═══════════════════════════════════════════════════
+   ACİLİYET
+═══════════════════════════════════════════════════ */
+function setAcil(btn, sev) {
+  acilSev = sev;
+  document.querySelectorAll('.a-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  const inp = document.getElementById('f-ihtiyac-tarih');
+  inp.value = sev === 'Normal' ? haftaSonra() : bugun();
+}
+
+/* ═══════════════════════════════════════════════════
+   SİPARİŞ SEÇİMİ
+═══════════════════════════════════════════════════ */
+function siparisSecildi() {
+  const sel   = document.getElementById('f-siparis-no');
+  const kalemSel = document.getElementById('f-kalem-no');
+  const secilenVal = sel.value;
+  const secilen    = secilenVal
+    ? siparisler.find(s => s.no === secilenVal)
+    : null;
+
+  kalemSel.innerHTML = '<option value="">— Kalem seçin —</option>';
+
+  if (secilen) {
+    // Kalem listesi — demo'da dataset, gerçekte Siparis_Kalemleri tablosundan çekilir
+    const opt = sel.options[sel.selectedIndex];
+    let kalemler = [];
+    try { kalemler = JSON.parse(opt.dataset.kalemler || '[]'); } catch {}
+    if (!kalemler.length && secilen.kalemler) kalemler = secilen.kalemler;
+    kalemler.forEach(k => {
+      const o = document.createElement('option');
+      o.value = k; o.textContent = k; kalemSel.appendChild(o);
+    });
+
+    // WO bağlantısı — gerçekte Siparişler tablosundan çekilir
+    const woMap = {
+      'SO-26-00030':'WO-26-00026',
+      'SO-26-00029':'WO-26-00025',
+      'SO-26-00027':'WO-26-00024'
+    };
+    const wo = woMap[secilenVal];
+    const woInp = document.getElementById('f-wo-no');
+    if (wo) {
+      woInp.value     = wo;
+      woInp.className = 'f-inp f-inp-linked';
+    } else {
+      woInp.value     = '—';
+      woInp.className = 'f-inp f-inp-ro';
+    }
+  } else {
+    document.getElementById('f-wo-no').value     = '—';
+    document.getElementById('f-wo-no').className = 'f-inp f-inp-ro';
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   TAB A — KALEM / SATIR EKLEME
+═══════════════════════════════════════════════════ */
+const TIP_OPTS = ['Hammadde','Yarı Mamul','Dış Hizmet','Takım','Sarf Malzeme','Kimyasal','Elektrik/Elektronik'];
+const MAL_TIP  = ['Mil','Levha','Boru','Profil','Dökme','Sac','Tel','Kare','Dişli','Flanş','Kaplin'];
+const MAL_YOG  = ['Çelik','Paslanmaz Çelik','Takım Çeliği','Alüminyum','Titanyum','Bakır','Pirinç','Dökme Demir','Plastik/POM','Karbon Fiber'];
+const BIRIM    = ['Adet','Kg','Mt','Lt','Takım','Saat','M²','M³'];
+
+function tedarikciOptions(seciliId) {
+  const baz = '<option value="">— Seçin —</option>';
+  return baz + tedarikciler.map(t =>
+    `<option value="${escape(t.ad)}">${escape(t.ad)}</option>`
+  ).join('');
+}
+
+function tipOptions()  { return TIP_OPTS.map(o=>`<option>${o}</option>`).join(''); }
+function malTipOpts()  { return MAL_TIP.map(o=>`<option>${o}</option>`).join(''); }
+function malYogOpts()  { return MAL_YOG.map(o=>`<option>${o}</option>`).join(''); }
+function birimOpts()   { return BIRIM.map(o=>`<option>${o}</option>`).join(''); }
+
+function spKalemEkle() {
+  spKalemSayac++;
+  const n   = String(spKalemSayac).padStart(2,'0');
+  const kid = `sp-k-${spKalemSayac}`;
+  const div = document.createElement('div');
+  div.className = 'kalem-block';
+  div.id = kid;
+  div.innerHTML = `
+    <div class="kalem-head">
+      <span class="k-num">Kalem ${n}</span>
+      <span class="k-desc"></span>
+      <span class="k-qty"></span>
+      <button class="k-del" onclick="spKalemSil('${kid}')">Sil</button>
+    </div>
+    <div class="satir-wrapper"></div>
+    <div class="add-satir" onclick="spSatirEkle(this)">+ Talep Satırı Ekle</div>`;
+  document.getElementById('sp-kalemler').appendChild(div);
+  // İlk satırı otomatik ekle
+  spSatirEkle(div.querySelector('.add-satir'));
+}
+
+function spKalemSil(kid) {
+  const el = document.getElementById(kid);
+  if (el) el.remove();
+  // Numaraları güncelle
+  document.querySelectorAll('#sp-kalemler .kalem-block .k-num').forEach((el,i) => {
+    el.textContent = 'Kalem ' + String(i+1).padStart(2,'0');
+  });
+}
+
+function spSatirEkle(btn) {
+  const block  = btn.closest('.kalem-block');
+  const wrapper = block.querySelector('.satir-wrapper');
+  const idx = wrapper.querySelectorAll('.satir-block').length + 1;
+  const satir = document.createElement('div');
+  satir.className = 'satir-block';
+  satir.innerHTML = `
+    <div class="satir-head">
+      <span>${idx}. Satır</span>
+      <button class="satir-del" onclick="spSatirSil(this)">Sil</button>
+    </div>
+    <div class="f-grid f-col-3" style="margin-bottom:8px">
+      <div><label class="f-label">Tip</label>
+        <select class="f-inp"><option value="">— Seçin —</option>${tipOptions()}</select></div>
+      <div><label class="f-label">Malzeme Tipi</label>
+        <select class="f-inp"><option value="">— Seçin —</option>${malTipOpts()}</select></div>
+      <div><label class="f-label">Malzeme / Alaşım</label>
+        <select class="f-inp"><option value="">— Seçin —</option>${malYogOpts()}</select></div>
+    </div>
+    <div class="f-grid f-col-3" style="margin-bottom:8px">
+      <div><label class="f-label">Malzeme Cinsi</label>
+        <input class="f-inp" placeholder="Örn: AISI 4140, EN 10025-S355..."></div>
+      <div><label class="f-label">Çap (mm)</label>
+        <input class="f-inp" type="number" placeholder="0" min="0"></div>
+      <div><label class="f-label">Boy (mm)</label>
+        <input class="f-inp" type="number" placeholder="0" min="0"></div>
+    </div>
+    <div class="f-grid f-col-3">
+      <div><label class="f-label">Miktar</label>
+        <input class="f-inp" type="number" value="1" min="1"></div>
+      <div><label class="f-label">Birim</label>
+        <select class="f-inp">${birimOpts()}</select></div>
+      <div><label class="f-label">Tercih Edilen Tedarikçi</label>
+        <select class="f-inp">${tedarikciOptions()}</select></div>
+    </div>`;
+  wrapper.appendChild(satir);
+}
+
+function spSatirSil(btn) {
+  btn.closest('.satir-block').remove();
+  // Satır numaralarını güncelle
+  const wrapper = btn.closest('.satir-wrapper');
+  wrapper.querySelectorAll('.satir-head span:first-child').forEach((el,i) => {
+    el.textContent = `${i+1}. Satır`;
+  });
+}
+
+/* ═══════════════════════════════════════════════════
+   TAB B — GENEL KALEM
+═══════════════════════════════════════════════════ */
+function genelKalemEkle() {
+  genelKalemSayac++;
+  const div = document.createElement('div');
+  div.className = 'gi-item';
+  div.innerHTML = `
+    <div class="gi-row">
+      <div><label class="f-label">Açıklama</label>
+        <input class="f-inp" placeholder="Malzeme veya hizmet tanımı..."></div>
+      <div><label class="f-label">Miktar</label>
+        <input class="f-inp" type="number" value="1" min="1"></div>
+      <div><label class="f-label">Birim</label>
+        <select class="f-inp">${birimOpts()}</select></div>
+      <div><label class="f-label">Not</label>
+        <input class="f-inp" placeholder="Opsiyonel..."></div>
+      <div><button class="gi-del" onclick="this.closest('.gi-item').remove()" title="Sil">✕</button></div>
+    </div>`;
+  document.getElementById('genel-list').appendChild(div);
+}
+
+/* ═══════════════════════════════════════════════════
+   KAYDET
+═══════════════════════════════════════════════════ */
+async function prKaydet() {
+  const btn      = document.getElementById('kaydet-btn');
+  const prNo     = document.getElementById('f-pr-no').value;
+  const woNo     = document.getElementById('f-wo-no').value;
+  const tarih    = document.getElementById('f-ihtiyac-tarih').value;
+  const info     = document.getElementById('foot-info');
+
+  // Validasyon
+  if (!tarih) {
+    info.textContent = '⚠ İhtiyaç tarihi girilmedi.';
+    info.className   = 'foot-info err';
+    return;
+  }
+  if (aktifTab === 'siparis' && !document.getElementById('f-siparis-no').value) {
+    info.textContent = '⚠ Sipariş seçilmedi.';
+    info.className   = 'foot-info err';
+    return;
+  }
+  if (aktifTab === 'genel' && !document.getElementById('f-kategori').value) {
+    info.textContent = '⚠ Kategori seçilmedi.';
+    info.className   = 'foot-info err';
+    return;
+  }
+
+  // Buton yükleniyor
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Kaydediliyor...';
+
+  try {
+    const fields = {
+      'PR_No':          prNo,
+      'Talep_Tipi':     aktifTab === 'siparis' ? 'Siparişe Bağlı' : 'Genel Alım',
+      'Talep_Eden':     document.getElementById('f-talep-eden').value,
+      'Is_Emri_No':     woNo !== '—' ? woNo : '',
+      'Siparis_No':     aktifTab === 'siparis'
+                          ? document.getElementById('f-siparis-no').value : '',
+      'Siparis_Kalemi': aktifTab === 'siparis'
+                          ? document.getElementById('f-kalem-no').value : '',
+      'Kategori':       aktifTab === 'genel'
+                          ? document.getElementById('f-kategori').value : '',
+      'Aciliyet':       acilSev,
+      'Ihtiyac_Tarihi': tarih,
+      'Talep_Tarihi':   bugun(),
+      'Durum':          'Onay Bekliyor',
+      'Notlar':         aktifTab === 'genel'
+                          ? document.getElementById('f-gerekce').value : ''
+    };
+
+    await apiPost('Satinalma_Talepleri', fields);
+
+    // R5: Log
+    if (typeof logIslem === 'function') {
+      logIslem('PR_OLUSTURULDU', `${prNo} talebi oluşturuldu. Tip: ${fields['Talep_Tipi']}, Aciliyet: ${acilSev}`);
+    }
+
+    info.textContent = `✓ ${prNo} kaydedildi · Satınalma Taleplerine eklendi`;
+    info.className   = 'foot-info ok';
+    btn.innerHTML    = 'Talebi Kaydet';
+    btn.disabled     = false;
+
+    // Listeyi yenile ve modalı kapat
+    await veriYukle();
+    setTimeout(() => modalKapat(), 1200);
+
+  } catch (e) {
+    console.error('Kayıt hatası:', e);
+    info.textContent = '⚠ Kayıt başarısız: ' + (e.message || 'Sunucu hatası');
+    info.className   = 'foot-info err';
+    btn.innerHTML    = 'Talebi Kaydet';
+    btn.disabled     = false;
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   RFQ'YA DÖNÜŞTÜR
+═══════════════════════════════════════════════════ */
+async function rfqAc(prNo) {
+  if (!confirm(`${prNo} nolu talep için RFQ oluşturulsun mu?`)) return;
+  try {
+    // Durumu güncelle
+    const kayit = prListesi.find(r => r['PR_No'] === prNo);
+    if (kayit && kayit.id) {
+      await apiPatch('Satinalma_Talepleri', kayit.id, { 'Durum': 'RFQ Oluşturuldu' });
+    }
+    if (typeof logIslem === 'function') {
+      logIslem('PR_RFQ_DONUSTURULDU', `${prNo} → RFQ oluşturuldu`);
+    }
+    // Satınalma Teklifleri sayfasına yönlendir
+    window.location.href = `ersan_satinalma_rfq.html?pr=${encodeURIComponent(prNo)}`;
+  } catch (e) {
+    alert('RFQ oluşturulamadı: ' + e.message);
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   BAŞLAT
+═══════════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', () => {
+  veriYukle();
+  // Nav yükle
+  if (typeof initNav === 'function') initNav('Satınalma Talepleri');
+});
+</script>
+
+</body>
+</html>

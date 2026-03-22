@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,-apple-system,sans-serif}
+body{background:#f3f4f6;padding:16px;color:#111827}
+
+/* ── Başlık ── */
+.page-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;gap:12px}
+.ph-left h1{font-size:17px;font-weight:600;color:#1a2b47}
+.ph-left .sub{font-size:11px;color:#6b7280;margin-top:3px;display:flex;align-items:center;gap:6px}
+.sub-tag{font-size:10px;padding:1px 7px;border-radius:3px;font-weight:500}
+.st-pr{background:#d1fae5;color:#065f46}
+.st-wo{background:#dbeafe;color:#1e40af}
+.st-mal{background:#f3f4f6;color:#374151}
+.ph-btns{display:flex;gap:7px;flex-shrink:0}
+.btn{font-size:12px;padding:6px 14px;border-radius:6px;border:1px solid #d1d5db;background:#fff;color:#374151;cursor:pointer;font-weight:500;transition:all .12s}
+.btn:hover{background:#f9fafb}
+.btn-p{background:#1a2b47;color:#fff;border-color:#1a2b47}
+.btn-p:hover{background:#243d66}
+.btn-g{background:#d1fae5;color:#065f46;border-color:#6ee7b7}
+.btn-g:hover{background:#a7f3d0}
+.btn-warn{background:#fef3c7;color:#92400e;border-color:#fcd34d}
+
+/* ── Talep özet kartı ── */
+.talep-kart{background:#f0fdf4;border:1px solid #6ee7b7;border-radius:8px;padding:12px 16px;margin-bottom:16px;display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+.tk-item label{display:block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#6b7280;margin-bottom:3px}
+.tk-item span{font-size:12px;font-weight:500;color:#111827}
+.tk-item span.grn{color:#065f46;font-family:monospace;font-size:11px}
+
+/* ── Durum bar ── */
+.durum-bar{display:flex;align-items:center;gap:0;margin-bottom:16px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden}
+.db-step{flex:1;padding:8px 12px;text-align:center;font-size:11px;font-weight:500;color:#9ca3af;border-right:1px solid #e5e7eb;position:relative}
+.db-step:last-child{border-right:none}
+.db-step.done{background:#f0fdf4;color:#065f46}
+.db-step.active{background:#1a2b47;color:#fff}
+.db-step.done::after{content:'✓';position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:11px;color:#10b981}
+.db-step .sn{font-size:9px;font-weight:400;display:block;margin-top:1px;opacity:.7}
+
+/* ── Ana ızgara ── */
+.main-grid{display:grid;grid-template-columns:1fr 280px;gap:12px;align-items:start}
+
+/* ── Sol: Karşılaştırma ── */
+.cft-card{background:#fff;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;margin-bottom:12px}
+.cft-card-head{padding:10px 16px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;background:#f9fafb}
+.cft-card-title{font-size:12px;font-weight:600;color:#374151}
+.cft-card-sub{font-size:11px;color:#6b7280;margin-top:1px}
+
+/* Tedarikçi kolonları */
+.tc-table{width:100%;border-collapse:collapse}
+.tc-table th{text-align:center;padding:10px 8px;font-size:11px;font-weight:600;border-bottom:1px solid #e5e7eb;border-right:1px solid #f3f4f6}
+.tc-table th:first-child{text-align:left;color:#6b7280;font-size:10px;text-transform:uppercase;letter-spacing:.05em;background:#f9fafb;font-weight:500;width:160px}
+.tc-table th.td-h{color:#fff;font-size:12px}
+.tc-table th.h-best{background:#065f46}
+.tc-table th.h-mid{background:#1e40af}
+.tc-table th.h-high{background:#6b7280}
+.tc-table td{padding:8px 12px;border-bottom:1px solid #f3f4f6;border-right:1px solid #f3f4f6;text-align:center;font-size:12px;vertical-align:middle}
+.tc-table td:first-child{text-align:left;font-size:11px;color:#6b7280;background:#fafafa;font-weight:500;padding-left:16px}
+.tc-table td:last-child{border-right:none}
+.tc-table th:last-child{border-right:none}
+.tc-table tr:last-child td{border-bottom:none}
+.tc-table tr:hover td{background:#fafafa}
+.tc-table tr:hover td:first-child{background:#f3f4f6}
+
+/* Hücre stilleri */
+.best-cell{background:#f0fdf4;font-weight:700;color:#065f46;font-size:13px}
+.mid-cell{color:#111827;font-size:12px}
+.high-cell{color:#dc2626;font-size:12px}
+.diff-tag{display:block;font-size:9px;margin-top:2px;font-weight:400}
+.dt-best{color:#10b981}.dt-high{color:#dc2626}.dt-mid{color:#374151}
+.winner-row td{background:#f0fdf4!important}
+.winner-row td:first-child{background:#d1fae5!important;font-weight:600;color:#065f46}
+
+/* Kademe göstergesi */
+.kademe{display:flex;gap:3px;justify-content:center;margin-top:4px}
+.k-bar{height:4px;width:20px;border-radius:2px;background:#e5e7eb}
+.k-bar.on{background:#10b981}
+.k-bar.on-mid{background:#3b82f6}
+.k-bar.on-high{background:#ef4444}
+
+/* Özet satırı */
+.ozet-satir td{background:#f9fafb;font-weight:600;font-size:12px;border-top:2px solid #e5e7eb}
+.ozet-satir td:first-child{color:#374151}
+
+/* Seç butonu satırı */
+.sec-satir td{padding:10px 12px;border-top:1px solid #e5e7eb}
+.sec-satir td:first-child{font-size:10px;color:#9ca3af}
+
+/* ── Pazarlık paneli ── */
+.pazar-card{background:#fff;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden}
+.pazar-head{background:#1a2b47;padding:10px 14px;display:flex;align-items:center;justify-content:space-between}
+.pazar-head .pt{font-size:12px;font-weight:600;color:#fff}
+.pazar-head .ps{font-size:10px;color:rgba(255,255,255,.55);margin-top:1px}
+
+/* Tedarikçi seçici */
+.td-selector{display:flex;gap:0;border-bottom:1px solid #e5e7eb}
+.td-sel-btn{flex:1;padding:7px 8px;font-size:11px;text-align:center;cursor:pointer;border:none;background:transparent;color:#6b7280;border-bottom:2px solid transparent;font-weight:500;transition:all .1s}
+.td-sel-btn.on{color:#1a2b47;border-bottom-color:#1a2b47;background:#f8faff}
+
+.pazar-body{padding:12px}
+.pazar-sec{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#9ca3af;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid #f3f4f6}
+
+/* Mevcut fiyat kutusu */
+.fiyat-kutu{background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;padding:10px 12px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
+.fk-label{font-size:11px;color:#6b7280}
+.fk-val{font-size:16px;font-weight:700;color:#111827}
+.fk-sub{font-size:10px;color:#9ca3af;margin-top:1px}
+
+/* Hedef fiyat girişi */
+.hedef-row{display:flex;gap:6px;margin-bottom:10px;align-items:flex-end}
+.hedef-inp-wrap{flex:1}
+.hedef-inp-wrap label{display:block;font-size:10px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
+.hedef-inp{width:100%;font-size:14px;font-weight:600;padding:7px 10px;border:1px solid #93c5fd;border-radius:6px;background:#eff6ff;color:#1e40af;outline:none;text-align:center}
+.hedef-inp:focus{border-color:#1a2b47;background:#fff}
+.param-sel-wrap label{display:block;font-size:10px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
+.param-sel{font-size:11px;padding:7px 8px;border:1px solid #d1d5db;border-radius:6px;background:#fff;color:#374151;outline:none}
+
+/* Tasarruf hesabı */
+.tasarruf-box{background:#f0fdf4;border:1px solid #6ee7b7;border-radius:6px;padding:8px 12px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
+.tb-label{font-size:11px;color:#065f46}
+.tb-val{font-size:14px;font-weight:700;color:#065f46}
+.tasarruf-box.none{background:#fff8f8;border-color:#fca5a5}
+.tasarruf-box.none .tb-label,.tasarruf-box.none .tb-val{color:#991b1b}
+
+/* Not alanı */
+.not-alan{width:100%;font-size:12px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;background:#fff;color:#374151;outline:none;resize:none;min-height:56px;font-family:inherit}
+.not-alan:focus{border-color:#1a2b47}
+
+/* Pazarlık geçmişi */
+.pazar-gecmis{padding:0 12px 12px}
+.pg-item{display:flex;gap:8px;margin-bottom:8px;font-size:11px}
+.pg-avatar{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;margin-top:1px}
+.pga-biz{background:#1a2b47;color:#fff}
+.pga-td{background:#dbeafe;color:#1e40af}
+.pg-bubble{flex:1;background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;padding:7px 10px}
+.pg-bubble.biz{background:#eef2ff;border-color:#c7d2fe}
+.pg-name{font-size:10px;font-weight:600;color:#374151;margin-bottom:2px}
+.pg-text{color:#374151;line-height:1.4}
+.pg-time{font-size:9px;color:#9ca3af;margin-top:3px}
+.pg-fiyat{display:inline-block;font-weight:700;color:#065f46;background:#d1fae5;padding:1px 6px;border-radius:3px;margin-left:4px}
+.pg-fiyat.red{color:#991b1b;background:#fee2e2}
+
+/* Aksiyon butonları */
+.pazar-btns{padding:10px 12px;border-top:1px solid #e5e7eb;display:flex;gap:6px;flex-wrap:wrap;background:#fafafa}
+.pazar-btns .btn{font-size:11px;padding:5px 10px;flex:1}
+
+/* Kazanan seçim */
+.kazanan-sec{padding:10px 12px;border-top:1px solid #e5e7eb;background:#f0fdf4}
+.ks-title{font-size:11px;font-weight:600;color:#065f46;margin-bottom:6px}
+.ks-row{display:flex;gap:6px}
+.ks-row .btn{flex:1;font-size:11px;padding:5px 8px}
+</style>
+</head>
+<body>
+
+<!-- Başlık -->
+<div class="page-head">
+  <div class="ph-left">
+    <h1>Fiyat Karşılaştırma & Pazarlık</h1>
+    <div class="sub">
+      <span class="sub-tag st-pr">PR-26-00009</span>
+      <span class="sub-tag st-wo">WO-26-00026</span>
+      <span class="sub-tag st-mal">Boru AISI 4140 · Ø168×154×2000 · 2 adet</span>
+    </div>
+  </div>
+  <div class="ph-btns">
+    <button class="btn">PDF İndir</button>
+    <button class="btn btn-g" onclick="alert('Kazanan seçildi → PO-26-00019 oluşturulacak')">Kazananı Seç → PO Oluştur</button>
+  </div>
+</div>
+
+<!-- Durum çubuğu -->
+<div class="durum-bar">
+  <div class="db-step done">RFQ Gönderildi<span class="sn">20.03.2026</span></div>
+  <div class="db-step done">Teklifler Alındı<span class="sn">3 / 3</span></div>
+  <div class="db-step active">Karşılaştırma & Pazarlık<span class="sn">Devam ediyor</span></div>
+  <div class="db-step">Kazanan Seçimi<span class="sn">Bekliyor</span></div>
+  <div class="db-step">PO Oluşturuldu<span class="sn">—</span></div>
+</div>
+
+<!-- Talep özet -->
+<div class="talep-kart">
+  <div class="tk-item"><label>Talep Edilen</label><span>Boru · Ø168×154×2000</span></div>
+  <div class="tk-item"><label>Miktar</label><span>2 Adet</span></div>
+  <div class="tk-item"><label>Standart</label><span>AISI 4140</span></div>
+  <div class="tk-item"><label>Termin</label><span>04.04.2026</span></div>
+  <div class="tk-item"><label>Tahmini Ağırlık</label><span>~87 kg/adet</span></div>
+</div>
+
+<!-- Ana içerik -->
+<div class="main-grid">
+
+  <!-- SOL: Karşılaştırma tablosu -->
+  <div>
+
+    <div class="cft-card">
+      <div class="cft-card-head">
+        <div>
+          <div class="cft-card-title">Tedarikçi Teklifleri Karşılaştırması</div>
+          <div class="cft-card-sub">3 teklif alındı · En uygun otomatik vurgulandı</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span style="font-size:11px;color:#6b7280">Sırala:</span>
+          <select style="font-size:11px;padding:4px 8px;border:1px solid #d1d5db;border-radius:5px;background:#fff;cursor:pointer">
+            <option>Toplam Fiyat</option>
+            <option>Birim Fiyat</option>
+            <option>Vade</option>
+            <option>Teslim Süresi</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="overflow-x:auto">
+        <table class="tc-table">
+          <thead>
+            <tr>
+              <th></th>
+              <th class="td-h h-best">
+                Özdemir Çelik
+                <div style="font-size:9px;font-weight:400;margin-top:2px;opacity:.85">★ En Uygun</div>
+                <div class="kademe"><div class="k-bar on"></div><div class="k-bar on"></div><div class="k-bar on"></div></div>
+              </th>
+              <th class="td-h h-mid">
+                MetalSan Ltd.
+                <div style="font-size:9px;font-weight:400;margin-top:2px;opacity:.85">Orta</div>
+                <div class="kademe"><div class="k-bar on-mid"></div><div class="k-bar on-mid"></div><div class="k-bar"></div></div>
+              </th>
+              <th class="td-h h-high">
+                Çelik A.Ş.
+                <div style="font-size:9px;font-weight:400;margin-top:2px;opacity:.85">Pahalı</div>
+                <div class="kademe"><div class="k-bar on-high"></div><div class="k-bar"></div><div class="k-bar"></div></div>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Teklif Edilen Tip</td>
+              <td class="best-cell">Boru</td>
+              <td class="mid-cell">Boru</td>
+              <td class="mid-cell">Mil (alternatif)</td>
+            </tr>
+            <tr>
+              <td>Teklif Ölçüsü</td>
+              <td class="best-cell">Ø169×154×2000</td>
+              <td class="mid-cell">Ø170×155×2050</td>
+              <td class="mid-cell" style="color:#f59e0b">Ø170×2000 ⚠</td>
+            </tr>
+            <tr>
+              <td>Standart / Sertifika</td>
+              <td class="best-cell">AISI 4140 + CoC</td>
+              <td class="mid-cell">AISI 4140</td>
+              <td class="mid-cell" style="color:#6b7280">EN 10083 (benzer)</td>
+            </tr>
+            <tr>
+              <td>Birim Fiyat (₺/kg)</td>
+              <td class="best-cell">₺22,50/kg
+                <span class="diff-tag dt-best">— en ucuz</span>
+              </td>
+              <td class="mid-cell">₺24,00/kg
+                <span class="diff-tag dt-high">+₺1,50/kg</span>
+              </td>
+              <td class="high-cell">₺27,50/kg
+                <span class="diff-tag dt-high">+₺5,00/kg</span>
+              </td>
+            </tr>
+            <tr class="winner-row">
+              <td>Toplam Fiyat (2 adet)</td>
+              <td class="best-cell" style="font-size:16px">₺3.915
+                <span class="diff-tag dt-best">referans fiyat</span>
+              </td>
+              <td class="mid-cell" style="font-size:14px">₺4.176
+                <span class="diff-tag dt-high">+₺261 fazla</span>
+              </td>
+              <td class="high-cell" style="font-size:14px">₺4.785
+                <span class="diff-tag dt-high">+₺870 fazla</span>
+              </td>
+            </tr>
+            <tr>
+              <td>Ödeme Vadesi</td>
+              <td class="best-cell">45 gün</td>
+              <td class="mid-cell">30 gün</td>
+              <td class="mid-cell">15 gün</td>
+            </tr>
+            <tr>
+              <td>Teslim Süresi</td>
+              <td class="best-cell">5 iş günü</td>
+              <td class="mid-cell">3 iş günü
+                <span class="diff-tag" style="color:#3b82f6">⚡ En hızlı</span>
+              </td>
+              <td class="mid-cell">7 iş günü</td>
+            </tr>
+            <tr>
+              <td>CoC / Sertifika</td>
+              <td class="best-cell">✓ Var</td>
+              <td class="mid-cell">✓ Var</td>
+              <td class="mid-cell" style="color:#f59e0b">⚠ Talep edilebilir</td>
+            </tr>
+            <tr>
+              <td>Son Pazarlık Teklifi</td>
+              <td class="best-cell">₺3.800 ✓
+                <span class="diff-tag dt-best">kabul etti</span>
+              </td>
+              <td class="mid-cell" style="color:#f59e0b">₺4.000 bekliyor
+                <span class="diff-tag" style="color:#f59e0b">yanıt bekleniyor</span>
+              </td>
+              <td class="high-cell">Pazarlık yok</td>
+            </tr>
+            <tr class="ozet-satir">
+              <td>Puan (ağırlıklı)</td>
+              <td class="best-cell" style="font-size:15px;color:#065f46">92 / 100</td>
+              <td class="mid-cell" style="font-size:14px">78 / 100</td>
+              <td class="high-cell" style="font-size:14px">61 / 100</td>
+            </tr>
+            <tr class="sec-satir">
+              <td>Karar</td>
+              <td>
+                <button class="btn btn-g" style="width:100%;font-size:11px" onclick="alert('Özdemir Çelik kazanan seçildi → PO oluşturulacak')">✓ Kazanan Seç → PO</button>
+              </td>
+              <td>
+                <button class="btn btn-warn" style="width:100%;font-size:11px" onclick="showPazar('metalsan')">Pazarlık Et</button>
+              </td>
+              <td>
+                <button class="btn" style="width:100%;font-size:11px;color:#9ca3af" onclick="alert('Red edildi')">Reddet</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Tasarruf özeti -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+      <div style="background:#fff;border:1px solid #e5e7eb;border-radius:7px;padding:10px 14px">
+        <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#6b7280;margin-bottom:4px">En Yüksek Teklife Göre Tasarruf</div>
+        <div style="font-size:20px;font-weight:700;color:#065f46">₺985</div>
+        <div style="font-size:10px;color:#9ca3af;margin-top:2px">Çelik A.Ş.'ye göre</div>
+      </div>
+      <div style="background:#fff;border:1px solid #e5e7eb;border-radius:7px;padding:10px 14px">
+        <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#6b7280;margin-bottom:4px">Pazarlık Sonrası Tasarruf</div>
+        <div style="font-size:20px;font-weight:700;color:#1e40af">₺115</div>
+        <div style="font-size:10px;color:#9ca3af;margin-top:2px">İlk teklife (₺3.915) göre</div>
+      </div>
+      <div style="background:#fff;border:1px solid #e5e7eb;border-radius:7px;padding:10px 14px">
+        <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#6b7280;margin-bottom:4px">Termin Uyumu</div>
+        <div style="font-size:20px;font-weight:700;color:#065f46">✓ 5 gün</div>
+        <div style="font-size:10px;color:#9ca3af;margin-top:2px">04.04.2026 terminine yetişir</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SAĞ: Pazarlık paneli -->
+  <div>
+    <div class="pazar-card">
+      <div class="pazar-head">
+        <div>
+          <div class="pt">Pazarlık Paneli</div>
+          <div class="ps">Tedarikçiyle müzakere takibi</div>
+        </div>
+      </div>
+
+      <!-- Tedarikçi seçici -->
+      <div class="td-selector">
+        <button class="td-sel-btn" onclick="showPazar('ozdemir',this)" id="btn-ozdemir">Özdemir</button>
+        <button class="td-sel-btn on" onclick="showPazar('metalsan',this)" id="btn-metalsan">MetalSan</button>
+        <button class="td-sel-btn" onclick="showPazar('celik',this)" id="btn-celik">Çelik A.Ş.</button>
+      </div>
+
+      <div class="pazar-body">
+        <!-- Mevcut fiyat -->
+        <div class="pazar-sec">Mevcut Durum</div>
+        <div class="fiyat-kutu">
+          <div>
+            <div class="fk-label" id="p-td-label">MetalSan Ltd. — İlk Teklif</div>
+            <div class="fk-sub" id="p-td-sub">30 gün vade · 3 iş günü teslim</div>
+          </div>
+          <div style="text-align:right">
+            <div class="fk-val" id="p-ilk-fiyat">₺4.176</div>
+            <div class="fk-sub">toplam</div>
+          </div>
+        </div>
+
+        <!-- Hedef fiyat -->
+        <div class="pazar-sec">Pazarlık Hedefi</div>
+        <div class="hedef-row">
+          <div class="hedef-inp-wrap">
+            <label>Hedef Fiyat Teklifi (₺)</label>
+            <input class="hedef-inp" type="number" id="hedef-inp" value="3900" oninput="hesapla()">
+          </div>
+          <div class="param-sel-wrap">
+            <label>Kriter</label>
+            <select class="param-sel" id="kriter-sel" onchange="hesapla()">
+              <option value="fiyat">Fiyat ↓</option>
+              <option value="vade">Vade ↑</option>
+              <option value="her">Her İkisi</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Tasarruf hesabı -->
+        <div class="tasarruf-box" id="tasarruf-box">
+          <div class="tb-label" id="ts-label">Hedef tasarruf</div>
+          <div class="tb-val" id="ts-val">₺276</div>
+        </div>
+
+        <!-- Not -->
+        <div class="pazar-sec" style="margin-top:10px">Gönderilecek Not</div>
+        <textarea class="not-alan" id="pazar-not" placeholder="Örn: Uzun vadeli iş birliği planladığımızdan fiyatta esneklik bekliyoruz. ₺3.900 toplam fiyatta mutabakata varabiliriz..."></textarea>
+      </div>
+
+      <!-- Pazarlık geçmişi -->
+      <div class="pazar-gecmis">
+        <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#9ca3af;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid #f3f4f6">Pazarlık Geçmişi</div>
+
+        <div class="pg-item" id="gecmis-container">
+          <div class="pg-avatar pga-biz">EK</div>
+          <div class="pg-bubble biz">
+            <div class="pg-name">Erdem Küçükateş — Ersan MES</div>
+            <div class="pg-text">Merhaba, teklifiniz için teşekkürler. <span class="pg-fiyat red">₺4.176</span> yerine <span class="pg-fiyat">₺4.000</span> olması halinde sipariş verebiliriz.</div>
+            <div class="pg-time">21.03.2026 · 14:32</div>
+          </div>
+        </div>
+
+        <div class="pg-item">
+          <div class="pg-avatar pga-td">M</div>
+          <div class="pg-bubble">
+            <div class="pg-name">MetalSan Ltd. — Satış</div>
+            <div class="pg-text">Değerlendiriyoruz, yarın sabah net cevap vereceğiz.</div>
+            <div class="pg-time">21.03.2026 · 15:45</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Aksiyon butonları -->
+      <div class="pazar-btns">
+        <button class="btn" style="font-size:11px" onclick="teklifGonder()">Teklif Gönder →</button>
+        <button class="btn" style="font-size:11px;color:#6b7280" onclick="alert('Not kaydedildi')">Not Ekle</button>
+      </div>
+
+      <!-- Kazanan seçim alanı -->
+      <div class="kazanan-sec" id="kazanan-ozdemir" style="display:none">
+        <div class="ks-title">✓ Özdemir Çelik — Pazarlık tamamlandı, ₺3.800</div>
+        <div class="ks-row">
+          <button class="btn btn-g">Kazanan Seç → PO Oluştur</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* Tedarikçi verileri */
+const PAZAR_DATA = {
+  ozdemir: {
+    label:'Özdemir Çelik — Pazarlık Tamamlandı',sub:'45 gün vade · 5 iş günü teslim',
+    ilk:'₺3.915',durum:'kabul',
+    gecmis:[
+      {kim:'biz',ad:'Erdem K.',metin:'Teklifiniz için teşekkürler. ₺3.800 toplam fiyatta anlaşabilir miyiz?',fiyat:'₺3.800',tarih:'20.03.2026 · 11:15'},
+      {kim:'td',ad:'Özdemir Çelik',metin:'₺3.800 kabul ediyoruz. CoC dahil teslim ederiz.',fiyat:null,tarih:'20.03.2026 · 14:02'}
+    ]
+  },
+  metalsan: {
+    label:'MetalSan Ltd. — İlk Teklif',sub:'30 gün vade · 3 iş günü teslim',
+    ilk:'₺4.176',durum:'bekliyor',
+    gecmis:[
+      {kim:'biz',ad:'Erdem K.',metin:'Merhaba, teklifiniz için teşekkürler.',fiyat:'₺4.176',fiyat2:'₺4.000',tarih:'21.03.2026 · 14:32'},
+      {kim:'td',ad:'MetalSan Satış',metin:'Değerlendiriyoruz, yarın sabah net cevap vereceğiz.',fiyat:null,tarih:'21.03.2026 · 15:45'}
+    ]
+  },
+  celik: {
+    label:'Çelik A.Ş. — İlk Teklif',sub:'15 gün vade · 7 iş günü teslim',
+    ilk:'₺4.785',durum:'yok',
+    gecmis:[]
+  }
+};
+
+function showPazar(td, el) {
+  document.querySelectorAll('.td-sel-btn').forEach(b=>b.classList.remove('on'));
+  if(el) el.classList.add('on');
+  else document.getElementById('btn-'+td).classList.add('on');
+
+  const d = PAZAR_DATA[td];
+  document.getElementById('p-td-label').textContent = d.label;
+  document.getElementById('p-td-sub').textContent = d.sub;
+  document.getElementById('p-ilk-fiyat').textContent = d.ilk;
+
+  // Geçmiş
+  const gc = document.getElementById('gecmis-container');
+  if(d.gecmis.length === 0){
+    gc.innerHTML = '<div style="font-size:11px;color:#9ca3af;padding:4px 0">Henüz pazarlık başlatılmadı.</div>';
+  } else {
+    gc.innerHTML = d.gecmis.map(g=>`
+      <div class="pg-item">
+        <div class="pg-avatar ${g.kim==='biz'?'pga-biz':'pga-td'}">${g.ad.split(' ')[0][0]}</div>
+        <div class="pg-bubble ${g.kim==='biz'?'biz':''}">
+          <div class="pg-name">${g.ad}</div>
+          <div class="pg-text">${g.fiyat?`<span class="pg-fiyat red">${g.fiyat}</span> yerine `:''} ${g.fiyat2?`<span class="pg-fiyat">${g.fiyat2}</span> olması halinde`:''} ${!g.fiyat&&!g.fiyat2?g.metin:g.metin}</div>
+          <div class="pg-time">${g.tarih}</div>
+        </div>
+      </div>`).join('');
+  }
+
+  // Kazanan kutusu
+  document.getElementById('kazanan-ozdemir').style.display =
+    td==='ozdemir' ? 'block' : 'none';
+
+  hesapla();
+}
+
+function hesapla() {
+  const hedef = parseFloat(document.getElementById('hedef-inp').value)||0;
+  const aktifTd = document.querySelector('.td-sel-btn.on')?.id?.replace('btn-','') || 'metalsan';
+  const mevcutStr = PAZAR_DATA[aktifTd].ilk.replace('₺','').replace('.','').replace(',','.');
+  const mevcut = parseFloat(mevcutStr)||0;
+  const tasarruf = mevcut - hedef;
+  const box = document.getElementById('tasarruf-box');
+  const lbl = document.getElementById('ts-label');
+  const val = document.getElementById('ts-val');
+  if(tasarruf > 0){
+    box.className='tasarruf-box';
+    lbl.textContent='Hedef tasarruf';
+    val.textContent='₺'+Math.round(tasarruf).toLocaleString('tr-TR');
+  } else {
+    box.className='tasarruf-box none';
+    lbl.textContent='⚠ Hedef mevcut fiyattan yüksek';
+    val.textContent='—';
+  }
+}
+
+function teklifGonder() {
+  const not = document.getElementById('pazar-not').value;
+  const hedef = document.getElementById('hedef-inp').value;
+  if(!not && !hedef){alert('Not veya hedef fiyat girin'); return;}
+  const gc = document.getElementById('gecmis-container');
+  const yeni = document.createElement('div');
+  yeni.className='pg-item';
+  yeni.innerHTML=`
+    <div class="pg-avatar pga-biz">EK</div>
+    <div class="pg-bubble biz">
+      <div class="pg-name">Erdem Küçükateş — Ersan MES</div>
+      <div class="pg-text">${not || `₺${parseInt(hedef).toLocaleString('tr-TR')} fiyat teklifimiz.`} ${hedef?`<span class="pg-fiyat">₺${parseInt(hedef).toLocaleString('tr-TR')}</span>`:''}</div>
+      <div class="pg-time">Şimdi · gönderildi</div>
+    </div>`;
+  gc.appendChild(yeni);
+  document.getElementById('pazar-not').value='';
+  alert('Pazarlık teklifi gönderildi.');
+}
+
+hesapla();
+</script>
+</body>
+</html>

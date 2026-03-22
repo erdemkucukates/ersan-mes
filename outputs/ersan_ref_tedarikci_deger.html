@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ersan MES — Onaylı Tedarikçi Listesi & Değerlendirme</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,-apple-system,sans-serif}
+body{background:#f1f5f9;display:flex;height:100vh;overflow:hidden}
+.sidebar{width:185px;background:#1a2b47;flex-shrink:0;overflow-y:auto;display:flex;flex-direction:column}
+.sb-logo{padding:14px 12px 10px;border-bottom:1px solid rgba(255,255,255,.08)}
+.sb-brand{font-size:13px;font-weight:700;color:#fff}
+.sb-sub{font-size:9px;color:rgba(255,255,255,.35);margin-top:2px;text-transform:uppercase;letter-spacing:.06em}
+.sb-section{padding:12px 12px 3px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.28)}
+.sb-item{display:flex;align-items:center;gap:7px;padding:7px 12px;font-size:12px;color:rgba(255,255,255,.55);cursor:pointer;border-left:2px solid transparent;transition:all .12s}
+.sb-item:hover{background:rgba(255,255,255,.05);color:#fff}
+.sb-item.on{background:rgba(255,255,255,.08);color:#fff;border-left-color:#f59e0b;font-weight:500}
+.sb-dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.2);flex-shrink:0}
+.sb-item.on .sb-dot{background:#f59e0b}
+.sb-dim{color:rgba(255,255,255,.22)!important}
+
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{background:#fff;border-bottom:1px solid #e2e8f0;padding:0 18px;height:50px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.tb-title{font-size:15px;font-weight:700;color:#1a2b47}
+.tb-sub{font-size:11px;color:#94a3b8;margin-left:6px}
+.content{flex:1;overflow-y:auto;padding:16px 18px}
+
+/* Tabs */
+.tab-bar{background:#fff;border-bottom:1px solid #e2e8f0;display:flex;padding:0 18px;flex-shrink:0}
+.tab{padding:12px 18px;font-size:12px;font-weight:500;color:#94a3b8;cursor:pointer;border-bottom:2px solid transparent;transition:all .12s;white-space:nowrap}
+.tab:hover{color:#475569}
+.tab.on{color:#1a2b47;border-bottom-color:#f59e0b;font-weight:700}
+.tab-panel{display:none}
+.tab-panel.show{display:block}
+
+.btn{font-size:11px;padding:5px 12px;border-radius:6px;border:1px solid #e2e8f0;background:#fff;color:#475569;cursor:pointer;font-weight:500;display:inline-flex;align-items:center;gap:5px;transition:all .12s;white-space:nowrap}
+.btn:hover{background:#f8fafc}
+.btn-p{background:#1a2b47;color:#fff;border-color:#1a2b47}
+.btn-g{background:#d1fae5;color:#065f46;border-color:#6ee7b7}
+.btn-r{background:#fee2e2;color:#991b1b;border-color:#fca5a5}
+.btn-warn{background:#fef3c7;color:#92400e;border-color:#fcd34d}
+.btn-b{background:#dbeafe;color:#1e40af;border-color:#93c5fd}
+.btn-pur{background:#ede9fe;color:#5b21b6;border-color:#c4b5fd}
+
+.bdg{display:inline-flex;align-items:center;gap:3px;font-size:10px;padding:2px 8px;border-radius:12px;font-weight:600;white-space:nowrap}
+.bdg::before{content:'';width:4px;height:4px;border-radius:50%;flex-shrink:0}
+.b-grn::before{background:#10b981}.b-grn{background:#d1fae5;color:#065f46}
+.b-amr::before{background:#f59e0b}.b-amr{background:#fef3c7;color:#92400e}
+.b-red::before{background:#ef4444}.b-red{background:#fee2e2;color:#991b1b}
+.b-gray::before{background:#94a3b8}.b-gray{background:#f1f5f9;color:#64748b}
+.b-teal::before{background:#0d9488}.b-teal{background:#ccfbf1;color:#0f766e}
+.b-pur::before{background:#8b5cf6}.b-pur{background:#ede9fe;color:#5b21b6}
+
+.card{background:#fff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;margin-bottom:14px}
+.card-head{padding:11px 16px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;background:#fafafa}
+.card-title{font-size:12px;font-weight:700;color:#334155;display:flex;align-items:center;gap:6px}
+
+.kpi{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px 14px;border-top:3px solid}
+.kpi label{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#94a3b8;display:block;margin-bottom:4px;font-weight:600}
+.kpi .num{font-size:22px;font-weight:800;color:#0f172a;line-height:1}
+.kpi .det{font-size:10px;color:#94a3b8;margin-top:3px}
+.kpi.s1{border-top-color:#3b82f6}.kpi.s2{border-top-color:#f59e0b}
+.kpi.s3{border-top-color:#ef4444}.kpi.s4{border-top-color:#10b981}
+
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{text-align:left;padding:8px 14px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#94a3b8;background:#f8fafc;border-bottom:1px solid #e2e8f0;white-space:nowrap;cursor:pointer}
+.tbl th:hover{color:#1a2b47}
+.tbl td{padding:10px 14px;border-bottom:1px solid #f1f5f9;color:#334155;vertical-align:middle}
+.tbl tr:hover td{background:#f8fafc;cursor:pointer}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr.kirmizi td{background:#fff8f8}
+.tbl tr.sari td{background:#fffbeb}
+.mono{font-family:monospace;font-size:11px;font-weight:700;color:#1a2b47}
+.muted{color:#94a3b8;font-size:11px}
+
+.fl{display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#94a3b8;margin-bottom:4px}
+.fi{width:100%;font-size:12px;padding:7px 10px;border:1px solid #e2e8f0;border-radius:6px;background:#fff;color:#0f172a;outline:none}
+.fi:focus{border-color:#1a2b47}
+.fi-sel{width:100%;font-size:12px;padding:7px 10px;border:1px solid #e2e8f0;border-radius:6px;background:#fff;color:#334155;outline:none}
+.fg2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.fg3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px}
+
+/* Skor kartı */
+.skor-kart{background:#fff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden}
+.sk-baslik{padding:12px 16px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between}
+.sk-skor-ring{position:relative;width:88px;height:88px;flex-shrink:0}
+.sk-svg{width:88px;height:88px;transform:rotate(-90deg)}
+.sk-bg{fill:none;stroke:#f1f5f9;stroke-width:8}
+.sk-fill{fill:none;stroke-width:8;stroke-linecap:round;transition:stroke-dasharray .8s ease}
+.sk-text{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column}
+.sk-num{font-size:20px;font-weight:800;line-height:1}
+.sk-label{font-size:9px;color:#94a3b8;text-align:center}
+
+/* Skor kriter satırı */
+.kriter-satir{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #f8fafc;font-size:11px}
+.kriter-satir:last-child{border-bottom:none}
+.ks-ad{width:130px;color:#334155;flex-shrink:0;font-weight:500}
+.ks-agirlik{width:40px;color:#94a3b8;text-align:center;flex-shrink:0;font-size:10px}
+.ks-puan-wrap{display:flex;gap:4px;flex-shrink:0}
+.ks-puan{width:22px;height:22px;border-radius:5px;border:1px solid #e2e8f0;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;transition:all .12s;background:#f8fafc;color:#94a3b8}
+.ks-puan.aktif{background:#1a2b47;border-color:#1a2b47;color:#fff}
+.ks-puan:hover{border-color:#1a2b47;color:#1a2b47}
+.ks-agirlik-skor{flex:1;text-align:right;font-family:monospace;font-weight:700}
+.ks-bar-wrap{flex:1;background:#f1f5f9;border-radius:3px;height:5px;overflow:hidden}
+.ks-bar{height:100%;border-radius:3px}
+
+/* Modal */
+.modal-ov{display:none;position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:500;align-items:flex-start;justify-content:center;padding:24px 16px 48px;overflow-y:auto;backdrop-filter:blur(4px)}
+.modal-ov.open{display:flex}
+.modal-box{background:#fff;border-radius:12px;width:100%;max-width:720px;overflow:hidden;box-shadow:0 32px 80px rgba(0,0,0,.28);animation:mIn .2s cubic-bezier(.16,1,.3,1)}
+@keyframes mIn{from{opacity:0;transform:translateY(-16px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+.m-head{background:#1a2b47;padding:15px 20px;display:flex;align-items:flex-start;justify-content:space-between}
+.m-title{font-size:14px;font-weight:700;color:#fff}
+.m-sub{font-size:11px;color:rgba(255,255,255,.5);margin-top:3px}
+.m-x{font-size:18px;color:rgba(255,255,255,.4);cursor:pointer;border:none;background:transparent}
+.m-x:hover{color:#fff}
+.m-body{padding:18px 20px;max-height:68vh;overflow-y:auto}
+.m-foot{padding:12px 20px;border-top:1px solid #e2e8f0;background:#f9fafb;display:flex;align-items:center;justify-content:space-between}
+
+.toast{position:fixed;bottom:28px;right:28px;z-index:999;background:#1a2b47;color:#fff;padding:12px 18px;border-radius:10px;font-size:12px;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,.25);transform:translateY(90px);opacity:0;transition:all .35s cubic-bezier(.16,1,.3,1)}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.green{background:#065f46}
+.toast.orange{background:#92400e}
+
+/* Radar chart basit */
+.radar-wrap{display:flex;align-items:center;justify-content:center;padding:12px}
+canvas{max-width:220px}
+
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-thumb{background:#e2e8f0;border-radius:2px}
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="sb-logo"><div class="sb-brand">Ersan MES</div><div class="sb-sub">AS9100 Rev.D</div></div>
+  <div class="sb-section">Satınalma</div>
+  <div class="sb-item sb-dim"><div class="sb-dot"></div>Satınalma Talepleri</div>
+  <div class="sb-item sb-dim"><div class="sb-dot"></div>Teklifler (RFQ)</div>
+  <div class="sb-item sb-dim"><div class="sb-dot"></div>Satınalma Siparişleri</div>
+  <div class="sb-item sb-dim"><div class="sb-dot"></div>Ön Kabul (GRN)</div>
+  <div class="sb-item on"><div class="sb-dot"></div>Tedarikçiler</div>
+  <div class="sb-item sb-dim"><div class="sb-dot"></div>Faturalar</div>
+  <div class="sb-section sb-dim">Kalite</div>
+  <div class="sb-item sb-dim"><div class="sb-dot"></div>İç Denetim</div>
+  <div class="sb-item sb-dim"><div class="sb-dot"></div>Risk & FMEA</div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <div><span class="tb-title">Tedarikçiler</span><span class="tb-sub">§8.4.1 Onaylı Tedarikçi Listesi (OTL)</span></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-warn" onclick="topluDegerlendirAc()">📊 Dönemsel Değerlendirme</button>
+      <button class="btn btn-p" onclick="yeniTedarikciAc()">+ Yeni Tedarikçi</button>
+    </div>
+  </div>
+
+  <!-- Tab Bar -->
+  <div class="tab-bar">
+    <div class="tab on" onclick="tabGec('otl',this)">📋 OTL — Onaylı Tedarikçi Listesi</div>
+    <div class="tab" onclick="tabGec('skorlar',this)">⭐ Değerlendirme & Skor Kartı</div>
+    <div class="tab" onclick="tabGec('form',this)">📝 Dönemsel Form</div>
+  </div>
+
+  <div class="content">
+
+    <!-- TAB 1: OTL -->
+    <div class="tab-panel show" id="tab-otl">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">
+        <div class="kpi s4"><label>Onaylı Tedarikçi</label><div class="num">18</div><div class="det">OTL'de kayıtlı</div></div>
+        <div class="kpi s2"><label>Koşullu Onaylı</label><div class="num">3</div><div class="det">Geliştirme planı var</div></div>
+        <div class="kpi s3"><label>Askıya Alınan</label><div class="num">1</div><div class="det">Kalite sorunu</div></div>
+        <div class="kpi s1"><label>Bu Çeyrek Değerlend.</label><div class="num">8</div><div class="det">4 kalan</div></div>
+      </div>
+
+      <!-- Filtreler -->
+      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+        <input class="fi" placeholder="Tedarikçi adı, ürün grubu ara..." style="flex:1;min-width:200px;padding:6px 10px">
+        <select class="fi-sel" style="width:auto">
+          <option>Tüm Durumlar</option><option>Onaylı</option><option>Koşullu Onaylı</option><option>Askıya Alınan</option><option>Çıkarılan</option>
+        </select>
+        <select class="fi-sel" style="width:auto">
+          <option>Tüm Kategoriler</option><option>Hammadde</option><option>İşlenmiş Parça</option><option>Hizmet (Fason)</option><option>Kaplama</option>
+        </select>
+        <select class="fi-sel" style="width:auto">
+          <option>Skor: Tümü</option><option>≥ 80 (İyi)</option><option>60–79 (Orta)</option><option>< 60 (Zayıf)</option>
+        </select>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title">🏭 Onaylı Tedarikçi Listesi</span>
+          <div style="display:flex;gap:6px">
+            <button class="btn" style="font-size:10px" onclick="otlExport()">⬇ Excel</button>
+            <span class="bdg b-grn">18 Onaylı</span>
+            <span class="bdg b-amr">3 Koşullu</span>
+            <span class="bdg b-red">1 Askı</span>
+          </div>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="tbl">
+            <thead><tr>
+              <th>Tedarikçi Kodu</th>
+              <th>Tedarikçi Adı</th>
+              <th>Ürün / Hizmet Kategorisi</th>
+              <th>Onay Tarihi</th>
+              <th>Son Değerl.</th>
+              <th>Genel Skor ↕</th>
+              <th>Sertifika</th>
+              <th>Durum</th>
+              <th>İşlem</th>
+            </tr></thead>
+            <tbody>
+              <tr onclick="skorKartAc('TDR-001')">
+                <td><span class="mono">TDR-001</span></td>
+                <td><div style="font-weight:600">Özdemir Çelik A.Ş.</div><div class="muted">İstanbul</div></td>
+                <td><span style="font-size:10px;padding:2px 7px;border-radius:4px;background:#dbeafe;color:#1e40af;font-weight:600">Hammadde</span></td>
+                <td class="muted">15.01.2024</td>
+                <td class="muted">Q1 2026</td>
+                <td>
+                  <div style="display:flex;align-items:center;gap:6px">
+                    <div style="width:50px;height:6px;background:#f1f5f9;border-radius:3px;overflow:hidden"><div style="width:88%;height:100%;background:#10b981;border-radius:3px"></div></div>
+                    <span style="font-weight:800;color:#065f46">88</span>
+                  </div>
+                </td>
+                <td><span style="font-size:10px;padding:1px 6px;background:#d1fae5;color:#065f46;border-radius:3px;font-weight:600">ISO 9001</span></td>
+                <td><span class="bdg b-grn">Onaylı</span></td>
+                <td onclick="event.stopPropagation()" style="display:flex;gap:4px">
+                  <button class="btn btn-b" style="font-size:10px;padding:2px 7px" onclick="skorKartAc('TDR-001')">Skor Kartı</button>
+                  <button class="btn" style="font-size:10px;padding:2px 7px" onclick="degerlendir('TDR-001')">Değerlendir</button>
+                </td>
+              </tr>
+              <tr onclick="skorKartAc('TDR-002')">
+                <td><span class="mono">TDR-002</span></td>
+                <td><div style="font-weight:600">Kardemir A.Ş.</div><div class="muted">Karabük</div></td>
+                <td><span style="font-size:10px;padding:2px 7px;border-radius:4px;background:#dbeafe;color:#1e40af;font-weight:600">Hammadde</span></td>
+                <td class="muted">20.03.2023</td>
+                <td class="muted">Q4 2025</td>
+                <td>
+                  <div style="display:flex;align-items:center;gap:6px">
+                    <div style="width:50px;height:6px;background:#f1f5f9;border-radius:3px;overflow:hidden"><div style="width:76%;height:100%;background:#f59e0b;border-radius:3px"></div></div>
+                    <span style="font-weight:800;color:#d97706">76</span>
+                  </div>
+                </td>
+                <td><span style="font-size:10px;padding:1px 6px;background:#d1fae5;color:#065f46;border-radius:3px;font-weight:600">ISO 9001</span></td>
+                <td><span class="bdg b-amr">Koşullu</span></td>
+                <td onclick="event.stopPropagation()" style="display:flex;gap:4px">
+                  <button class="btn btn-b" style="font-size:10px;padding:2px 7px" onclick="skorKartAc('TDR-002')">Skor Kartı</button>
+                  <button class="btn btn-warn" style="font-size:10px;padding:2px 7px">Geliştirme Planı</button>
+                </td>
+              </tr>
+              <tr class="kirmizi" onclick="skorKartAc('TDR-003')">
+                <td><span class="mono">TDR-003</span></td>
+                <td><div style="font-weight:600">Çelik San. Ltd.</div><div class="muted">Bursa</div></td>
+                <td><span style="font-size:10px;padding:2px 7px;border-radius:4px;background:#ede9fe;color:#5b21b6;font-weight:600">İşlenmiş Parça</span></td>
+                <td class="muted">05.06.2022</td>
+                <td class="muted">Q3 2025</td>
+                <td>
+                  <div style="display:flex;align-items:center;gap:6px">
+                    <div style="width:50px;height:6px;background:#f1f5f9;border-radius:3px;overflow:hidden"><div style="width:45%;height:100%;background:#ef4444;border-radius:3px"></div></div>
+                    <span style="font-weight:800;color:#dc2626">45</span>
+                  </div>
+                </td>
+                <td><span style="font-size:10px;padding:1px 6px;background:#fee2e2;color:#991b1b;border-radius:3px;font-weight:600">Süresi Doldu</span></td>
+                <td><span class="bdg b-red">Askıya Alındı</span></td>
+                <td onclick="event.stopPropagation()" style="display:flex;gap:4px">
+                  <button class="btn btn-r" style="font-size:10px;padding:2px 7px">Çıkar / OTL</button>
+                  <button class="btn" style="font-size:10px;padding:2px 7px" onclick="degerlendir('TDR-003')">Yeniden Değerlendir</button>
+                </td>
+              </tr>
+              <tr onclick="skorKartAc('TDR-004')">
+                <td><span class="mono">TDR-004</span></td>
+                <td><div style="font-weight:600">Termo Kaplama A.Ş.</div><div class="muted">İzmir</div></td>
+                <td><span style="font-size:10px;padding:2px 7px;border-radius:4px;background:#ccfbf1;color:#0f766e;font-weight:600">Hizmet (Fason)</span></td>
+                <td class="muted">10.09.2023</td>
+                <td class="muted">Q1 2026</td>
+                <td>
+                  <div style="display:flex;align-items:center;gap:6px">
+                    <div style="width:50px;height:6px;background:#f1f5f9;border-radius:3px;overflow:hidden"><div style="width:92%;height:100%;background:#10b981;border-radius:3px"></div></div>
+                    <span style="font-weight:800;color:#065f46">92</span>
+                  </div>
+                </td>
+                <td>
+                  <span style="font-size:10px;padding:1px 6px;background:#d1fae5;color:#065f46;border-radius:3px;font-weight:600">NADCAP</span>
+                  <span style="font-size:10px;padding:1px 6px;background:#d1fae5;color:#065f46;border-radius:3px;font-weight:600;margin-left:2px">AS9100</span>
+                </td>
+                <td><span class="bdg b-teal">Tercih Edilen</span></td>
+                <td onclick="event.stopPropagation()" style="display:flex;gap:4px">
+                  <button class="btn btn-b" style="font-size:10px;padding:2px 7px" onclick="skorKartAc('TDR-004')">Skor Kartı</button>
+                  <button class="btn" style="font-size:10px;padding:2px 7px">Değerlendir</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: SKOR KARTI -->
+    <div class="tab-panel" id="tab-skorlar">
+      <div style="display:grid;grid-template-columns:340px 1fr;gap:14px">
+
+        <!-- Sol: Skor kartı -->
+        <div>
+          <div class="skor-kart">
+            <div class="sk-baslik">
+              <div>
+                <div style="font-size:13px;font-weight:700;color:#0f172a">Özdemir Çelik A.Ş.</div>
+                <div style="font-size:10px;color:#94a3b8;margin-top:2px">TDR-001 · Q1 2026 Değerlendirmesi</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px">
+                <div class="sk-skor-ring">
+                  <svg class="sk-svg" viewBox="0 0 100 100">
+                    <circle class="sk-bg" cx="50" cy="50" r="42"/>
+                    <circle class="sk-fill" cx="50" cy="50" r="42" stroke="#10b981" stroke-dasharray="232 264"/>
+                  </svg>
+                  <div class="sk-text">
+                    <span class="sk-num" style="color:#065f46">88</span>
+                    <span class="sk-label">/ 100</span>
+                  </div>
+                </div>
+                <span class="bdg b-grn" style="font-size:11px;padding:4px 10px">Onaylı</span>
+              </div>
+            </div>
+            <div style="padding:12px 16px">
+              <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Değerlendirme Kriterleri</div>
+
+              <!-- Kriter satırları -->
+              <div class="kriter-satir">
+                <span class="ks-ad">Kalite / Ret Oranı</span>
+                <span class="ks-agirlik">%35</span>
+                <div class="ks-puan-wrap">
+                  <div class="ks-puan">1</div><div class="ks-puan">2</div><div class="ks-puan">3</div><div class="ks-puan">4</div><div class="ks-puan aktif">5</div>
+                </div>
+                <div class="ks-bar-wrap"><div class="ks-bar" style="width:100%;background:#10b981"></div></div>
+                <span class="ks-agirlik-skor" style="color:#065f46">35</span>
+              </div>
+              <div class="kriter-satir">
+                <span class="ks-ad">Zamanında Teslimat</span>
+                <span class="ks-agirlik">%25</span>
+                <div class="ks-puan-wrap">
+                  <div class="ks-puan">1</div><div class="ks-puan">2</div><div class="ks-puan">3</div><div class="ks-puan aktif">4</div><div class="ks-puan">5</div>
+                </div>
+                <div class="ks-bar-wrap"><div class="ks-bar" style="width:80%;background:#f59e0b"></div></div>
+                <span class="ks-agirlik-skor" style="color:#d97706">20</span>
+              </div>
+              <div class="kriter-satir">
+                <span class="ks-ad">Fiyat Rekabeti</span>
+                <span class="ks-agirlik">%20</span>
+                <div class="ks-puan-wrap">
+                  <div class="ks-puan">1</div><div class="ks-puan">2</div><div class="ks-puan">3</div><div class="ks-puan">4</div><div class="ks-puan aktif">5</div>
+                </div>
+                <div class="ks-bar-wrap"><div class="ks-bar" style="width:100%;background:#10b981"></div></div>
+                <span class="ks-agirlik-skor" style="color:#065f46">20</span>
+              </div>
+              <div class="kriter-satir">
+                <span class="ks-ad">İletişim & Yanıt</span>
+                <span class="ks-agirlik">%10</span>
+                <div class="ks-puan-wrap">
+                  <div class="ks-puan">1</div><div class="ks-puan">2</div><div class="ks-puan">3</div><div class="ks-puan aktif">4</div><div class="ks-puan">5</div>
+                </div>
+                <div class="ks-bar-wrap"><div class="ks-bar" style="width:80%;background:#3b82f6"></div></div>
+                <span class="ks-agirlik-skor" style="color:#1e40af">8</span>
+              </div>
+              <div class="kriter-satir">
+                <span class="ks-ad">Sertifika / Uyum</span>
+                <span class="ks-agirlik">%10</span>
+                <div class="ks-puan-wrap">
+                  <div class="ks-puan">1</div><div class="ks-puan">2</div><div class="ks-puan">3</div><div class="ks-puan">4</div><div class="ks-puan aktif">5</div>
+                </div>
+                <div class="ks-bar-wrap"><div class="ks-bar" style="width:100%;background:#10b981"></div></div>
+                <span class="ks-agirlik-skor" style="color:#065f46">10</span>
+              </div>
+
+              <div style="margin-top:10px;padding-top:10px;border-top:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center">
+                <span style="font-size:11px;color:#64748b">Ağırlıklı Toplam:</span>
+                <span style="font-size:18px;font-weight:800;color:#065f46">93 / 100</span>
+              </div>
+
+              <div style="display:flex;gap:8px;margin-top:10px">
+                <button class="btn btn-g" style="flex:1;justify-content:center" onclick="skorKaydet()">💾 Skor Kaydet</button>
+                <button class="btn btn-b" style="font-size:11px" onclick="skorRaporuIndir()">⬇ Rapor</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sağ: Trend + Geçmiş -->
+        <div>
+          <div class="card" style="margin-bottom:12px">
+            <div class="card-head">
+              <span class="card-title">📈 Tedarikçi Performans Trendi</span>
+              <select style="font-size:11px;padding:3px 7px;border:1px solid #e2e8f0;border-radius:5px;background:#fff;outline:none">
+                <option>Son 4 Çeyrek</option><option>Son 2 Yıl</option>
+              </select>
+            </div>
+            <div style="padding:12px 16px">
+              <div style="display:flex;align-items:flex-end;gap:16px;height:80px;margin-bottom:6px">
+                <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px">
+                  <span style="font-size:10px;font-weight:700;color:#65a30d">82</span>
+                  <div style="width:100%;background:#bef264;border-radius:4px 4px 0 0;height:66%"></div>
+                  <span style="font-size:9px;color:#94a3b8">Q2'25</span>
+                </div>
+                <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px">
+                  <span style="font-size:10px;font-weight:700;color:#d97706">78</span>
+                  <div style="width:100%;background:#fde68a;border-radius:4px 4px 0 0;height:62%"></div>
+                  <span style="font-size:9px;color:#94a3b8">Q3'25</span>
+                </div>
+                <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px">
+                  <span style="font-size:10px;font-weight:700;color:#65a30d">85</span>
+                  <div style="width:100%;background:#bef264;border-radius:4px 4px 0 0;height:68%"></div>
+                  <span style="font-size:9px;color:#94a3b8">Q4'25</span>
+                </div>
+                <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px">
+                  <span style="font-size:10px;font-weight:700;color:#065f46">88</span>
+                  <div style="width:100%;background:#10b981;border-radius:4px 4px 0 0;height:70%"></div>
+                  <span style="font-size:9px;color:#94a3b8">Q1'26</span>
+                </div>
+              </div>
+              <div style="font-size:10px;color:#94a3b8;text-align:center">Son çeyrekte <strong style="color:#10b981">+3 puan</strong> iyileşme</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-head"><span class="card-title">📊 Tedarikçi Karşılaştırma</span></div>
+            <table class="tbl">
+              <thead><tr><th>Tedarikçi</th><th>Kalite</th><th>Teslimat</th><th>Fiyat</th><th>Genel</th><th>Durum</th></tr></thead>
+              <tbody>
+                <tr><td style="font-weight:600">Özdemir Çelik</td><td style="color:#065f46;font-weight:700">5/5</td><td style="color:#d97706;font-weight:700">4/5</td><td style="color:#065f46;font-weight:700">5/5</td><td style="font-weight:800;color:#065f46">88</td><td><span class="bdg b-grn">Onaylı</span></td></tr>
+                <tr><td style="font-weight:600">Kardemir</td><td style="color:#d97706;font-weight:700">4/5</td><td style="color:#d97706;font-weight:700">3/5</td><td style="color:#065f46;font-weight:700">4/5</td><td style="font-weight:800;color:#d97706">76</td><td><span class="bdg b-amr">Koşullu</span></td></tr>
+                <tr><td style="font-weight:600">Termo Kaplama</td><td style="color:#065f46;font-weight:700">5/5</td><td style="color:#065f46;font-weight:700">5/5</td><td style="color:#d97706;font-weight:700">4/5</td><td style="font-weight:800;color:#065f46">92</td><td><span class="bdg b-teal">Tercih</span></td></tr>
+                <tr class="kirmizi"><td style="font-weight:600">Çelik San.</td><td style="color:#dc2626;font-weight:700">2/5</td><td style="color:#dc2626;font-weight:700">2/5</td><td style="color:#d97706;font-weight:700">3/5</td><td style="font-weight:800;color:#dc2626">45</td><td><span class="bdg b-red">Askıda</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: DÖNEMSEl FORM -->
+    <div class="tab-panel" id="tab-form">
+      <div style="display:grid;grid-template-columns:1fr 300px;gap:14px">
+        <div>
+          <div class="card">
+            <div class="card-head">
+              <span class="card-title">📝 Q1 2026 Dönemsel Değerlendirme Formu</span>
+              <span class="bdg b-amr">4 / 12 Tamamlandı</span>
+            </div>
+            <div style="padding:14px 16px">
+              <div class="fg2" style="margin-bottom:14px">
+                <div><label class="fl">Değerlendirme Dönemi</label>
+                  <select class="fi-sel"><option>Q1 2026 (Oca–Mar)</option><option>Q4 2025</option><option>Q3 2025</option></select>
+                </div>
+                <div><label class="fl">Değerlendiren</label>
+                  <select class="fi-sel"><option>Erdem K.</option><option>İlhan D.</option></select>
+                </div>
+              </div>
+
+              <!-- Tedarikçi satırları -->
+              <div style="border:1px solid #e2e8f0;border-radius:8px;overflow:hidden">
+                <div style="display:grid;grid-template-columns:1fr 80px 80px 80px 80px 80px 100px;gap:0;background:#f8fafc;border-bottom:1px solid #e2e8f0;padding:8px 12px;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.04em">
+                  <span>Tedarikçi</span><span style="text-align:center">Kalite</span><span style="text-align:center">Teslimat</span><span style="text-align:center">Fiyat</span><span style="text-align:center">İletişim</span><span style="text-align:center">Genel</span><span style="text-align:center">İşlem</span>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 80px 80px 80px 80px 80px 100px;gap:0;padding:10px 12px;border-bottom:1px solid #f1f5f9;align-items:center;background:#f0fdf4">
+                  <div style="font-size:12px;font-weight:600">Özdemir Çelik <span style="font-size:9px;font-weight:400;color:#94a3b8">TDR-001</span></div>
+                  <div style="text-align:center;font-weight:700;color:#065f46">5</div>
+                  <div style="text-align:center;font-weight:700;color:#d97706">4</div>
+                  <div style="text-align:center;font-weight:700;color:#065f46">5</div>
+                  <div style="text-align:center;font-weight:700;color:#065f46">4</div>
+                  <div style="text-align:center;font-weight:800;color:#065f46;font-size:14px">88</div>
+                  <div style="text-align:center"><span class="bdg b-teal" style="font-size:9px">Tamamlandı ✓</span></div>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 80px 80px 80px 80px 80px 100px;gap:0;padding:10px 12px;border-bottom:1px solid #f1f5f9;align-items:center">
+                  <div style="font-size:12px;font-weight:600">Kardemir A.Ş. <span style="font-size:9px;font-weight:400;color:#94a3b8">TDR-002</span></div>
+                  <div style="text-align:center"><input type="number" min="1" max="5" class="fi" style="width:50px;text-align:center;padding:4px;font-size:12px" placeholder="1-5"></div>
+                  <div style="text-align:center"><input type="number" min="1" max="5" class="fi" style="width:50px;text-align:center;padding:4px;font-size:12px" placeholder="1-5"></div>
+                  <div style="text-align:center"><input type="number" min="1" max="5" class="fi" style="width:50px;text-align:center;padding:4px;font-size:12px" placeholder="1-5"></div>
+                  <div style="text-align:center"><input type="number" min="1" max="5" class="fi" style="width:50px;text-align:center;padding:4px;font-size:12px" placeholder="1-5"></div>
+                  <div style="text-align:center;font-weight:800;color:#94a3b8" id="kardemir-skor">—</div>
+                  <div style="text-align:center"><button class="btn btn-g" style="font-size:10px;padding:3px 8px" onclick="formSatirKaydet('TDR-002')">Kaydet</button></div>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 80px 80px 80px 80px 80px 100px;gap:0;padding:10px 12px;border-bottom:1px solid #f1f5f9;align-items:center">
+                  <div style="font-size:12px;font-weight:600">Termo Kaplama <span style="font-size:9px;font-weight:400;color:#94a3b8">TDR-004</span></div>
+                  <div style="text-align:center"><input type="number" min="1" max="5" class="fi" style="width:50px;text-align:center;padding:4px;font-size:12px" placeholder="1-5"></div>
+                  <div style="text-align:center"><input type="number" min="1" max="5" class="fi" style="width:50px;text-align:center;padding:4px;font-size:12px" placeholder="1-5"></div>
+                  <div style="text-align:center"><input type="number" min="1" max="5" class="fi" style="width:50px;text-align:center;padding:4px;font-size:12px" placeholder="1-5"></div>
+                  <div style="text-align:center"><input type="number" min="1" max="5" class="fi" style="width:50px;text-align:center;padding:4px;font-size:12px" placeholder="1-5"></div>
+                  <div style="text-align:center;font-weight:800;color:#94a3b8">—</div>
+                  <div style="text-align:center"><button class="btn btn-g" style="font-size:10px;padding:3px 8px" onclick="formSatirKaydet('TDR-004')">Kaydet</button></div>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 80px 80px 80px 80px 80px 100px;gap:0;padding:10px 12px;align-items:center">
+                  <div style="font-size:12px;font-weight:600;color:#94a3b8;font-style:italic">Çelik San. (Askıda)</div>
+                  <div colspan="5" style="grid-column:2/7;text-align:center;font-size:11px;color:#94a3b8;font-style:italic">Askıya alınan tedarikçiler yeniden değerlendirme formuna girer</div>
+                  <div style="text-align:center"><button class="btn btn-r" style="font-size:10px;padding:3px 8px">Yeniden Değerlendir</button></div>
+                </div>
+              </div>
+
+              <div style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end">
+                <button class="btn btn-b" onclick="formOnayla()">✓ Formu Onayla & Kaydet</button>
+                <button class="btn btn-p" onclick="raporOlustur()">📊 Değerlendirme Raporu Oluştur</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sağ özet -->
+        <div>
+          <div class="card" style="margin-bottom:12px">
+            <div class="card-head"><span class="card-title">📅 Değerlendirme Takvimi</span></div>
+            <div style="padding:10px 14px;font-size:11px">
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #f1f5f9">
+                <span style="color:#334155;font-weight:500">Q1 2026</span>
+                <span class="bdg b-amr">Devam · 4/12</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #f1f5f9">
+                <span style="color:#334155;font-weight:500">Q4 2025</span>
+                <span class="bdg b-teal">Tamamlandı</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #f1f5f9">
+                <span style="color:#334155;font-weight:500">Q3 2025</span>
+                <span class="bdg b-teal">Tamamlandı</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0">
+                <span style="color:#334151;font-weight:500">Q2 2025</span>
+                <span class="bdg b-gray">Arşiv</span>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head"><span class="card-title">⚠ Uyarılar</span></div>
+            <div style="padding:10px 14px">
+              <div style="padding:6px 0;border-bottom:1px solid #f1f5f9;font-size:11px">
+                <div style="font-weight:600;color:#991b1b;margin-bottom:2px">Çelik San. — Askıya Alındı</div>
+                <div class="muted">Skor 45, 2 KMT şikayeti var</div>
+              </div>
+              <div style="padding:6px 0;font-size:11px">
+                <div style="font-weight:600;color:#92400e;margin-bottom:2px">Kardemir — Koşullu Onaylı</div>
+                <div class="muted">Q1 değerlendirmesi bekleniyor</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+function tabGec(id, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('show'));
+  el.classList.add('on');
+  document.getElementById('tab-' + id).classList.add('show');
+}
+function toast(msg, type='') {
+  const el = document.getElementById('toast');
+  el.innerHTML = msg;
+  el.className = 'toast ' + type + ' show';
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+function skorKartAc(kod) { tabGec('skorlar', document.querySelector('.tab:nth-child(2)')); toast('📊 ' + kod + ' skor kartı yüklendi.',''); }
+function degerlendir(kod) { tabGec('form', document.querySelector('.tab:nth-child(3)')); toast('📝 ' + kod + ' değerlendirme formu açıldı.',''); }
+function skorKaydet() { toast('💾 Skor kaydedildi — OTL güncellendi.','green'); }
+function skorRaporuIndir() { toast('⬇ Skor kartı raporu indiriliyor...',''); }
+function otlExport() { toast('⬇ OTL Excel dosyası indiriliyor...',''); }
+function yeniTedarikciAc() { toast('+ Yeni tedarikçi formu açılıyor...',''); }
+function topluDegerlendirAc() { tabGec('form', document.querySelector('.tab:nth-child(3)')); }
+function formSatirKaydet(kod) { toast('✓ ' + kod + ' değerlendirmesi kaydedildi.','green'); }
+function formOnayla() { toast('✓ Q1 2026 değerlendirme formu onaylandı.','green'); }
+function raporOlustur() { toast('📊 Dönemsel değerlendirme raporu oluşturuluyor...',''); }
+document.addEventListener('keydown', e => { if(e.key==='Escape') document.querySelectorAll('.modal-ov.open').forEach(m=>m.classList.remove('open')); });
+</script>
+</body>
+</html>

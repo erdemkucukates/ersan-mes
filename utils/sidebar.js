@@ -241,15 +241,15 @@
     if (!mount) return;
     mount.className = 'sb';
     mount.innerHTML = buildHTML();
-    mount.style.cssText = 'width:210px!important;min-width:210px!important;flex-shrink:0!important;height:100vh!important;overflow-y:scroll!important;overflow-x:hidden!important;';
+    mount.style.cssText = 'flex:0 0 210px!important;width:210px!important;min-width:210px!important;max-width:210px!important;height:100vh!important;overflow-y:scroll!important;overflow-x:hidden!important;margin:0!important;border-right:none!important;';
 
     var appEl = mount.parentElement;
     if (appEl) {
-      appEl.style.cssText = 'display:flex!important;flex-direction:row!important;height:100vh!important;width:100vw!important;overflow:hidden!important;';
+      appEl.style.cssText = 'display:flex!important;flex-direction:row!important;height:100vh!important;width:100vw!important;overflow:hidden!important;gap:0!important;padding:0!important;margin:0!important;';
     }
     var mainEl = appEl ? (appEl.querySelector('.main') || appEl.querySelector('.icerik-alani')) : null;
     if (mainEl) {
-      mainEl.style.cssText = 'flex:1 1 0!important;min-width:0!important;height:100vh!important;overflow:hidden!important;display:flex!important;flex-direction:column!important;';
+      mainEl.style.cssText = 'flex:1 1 0!important;min-width:0!important;height:100vh!important;overflow:hidden!important;display:flex!important;flex-direction:column!important;margin:0!important;padding:0!important;';
       var children = Array.from(mainEl.children).filter(function(c){ return c.tagName!=='SCRIPT' && c.tagName!=='STYLE'; });
       children.forEach(function(child, i) {
         var isTb = child.classList.contains('tb') || child.className.indexOf('topbar')>=0 || child.tagName==='NAV';
@@ -258,6 +258,9 @@
       });
     }
     document.querySelectorAll('.sb-ni').forEach(function(ni){ var t=ni.querySelector('.sb-ni-txt'); if(t) ni.title=t.textContent.trim(); });
+
+    var sbBot = document.querySelector('.sb-bot');
+    if (sbBot) sbBot.style.marginTop = '16px';
 
     sbHighlight();
     sbClock();

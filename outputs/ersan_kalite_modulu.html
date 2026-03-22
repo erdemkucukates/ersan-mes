@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — Kalite Modülü</title>
+<style>
+:root {
+  --lacivert:#1a2b47; --blue:#2563eb; --blue-l:#dbeafe;
+  --green:#059669; --green-l:#d1fae5;
+  --red:#dc2626; --red-l:#fee2e2;
+  --amber:#d97706; --amber-l:#fef3c7;
+  --purple:#7c3aed; --purple-l:#ede9fe;
+  --g50:#f9fafb; --g100:#f3f4f6; --g200:#e5e7eb;
+  --g300:#d1d5db; --g400:#9ca3af; --g500:#6b7280; --g700:#374151; --g900:#111827;
+  --r:7px; --sh:0 1px 3px rgba(0,0,0,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#f0f2f5;color:var(--g700);font-size:13px}
+.app{display:flex;height:100vh;overflow:hidden}
+
+/* SIDEBAR */
+.sb{width:210px;background:var(--lacivert);display:flex;flex-direction:column;flex-shrink:0}
+.sb-logo{padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.08)}
+.sb-logo .t{font-size:13px;font-weight:700;color:#fff}
+.sb-logo .s{font-size:10px;color:rgba(255,255,255,.4);margin-top:1px}
+.sb-sec{padding:6px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+.sb-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.3);padding:5px 14px 3px}
+.ni{display:flex;align-items:center;gap:8px;padding:7px 14px;cursor:pointer;color:rgba(255,255,255,.55);font-size:11.5px;transition:all .15s;border-left:2px solid transparent}
+.ni:hover{background:rgba(255,255,255,.05);color:rgba(255,255,255,.85)}
+.ni.active{background:rgba(255,255,255,.1);color:#fff;border-left-color:#60a5fa;font-weight:600}
+.nb{margin-left:auto;color:#fff;font-size:9px;padding:1px 5px;border-radius:10px;font-weight:700}
+.nb.red{background:#dc2626}.nb.amb{background:#d97706}.nb.blue{background:#2563eb}
+
+/* MAIN */
+.main{flex:1;overflow-y:auto;display:flex;flex-direction:column}
+.page{display:none;flex:1;flex-direction:column}
+.page.active{display:flex}
+
+/* TOP BAR */
+.tb{background:#fff;border-bottom:1px solid var(--g200);padding:0 20px;display:flex;align-items:center;gap:10px;height:48px;flex-shrink:0}
+.tb-t{font-size:14px;font-weight:700;color:var(--lacivert)}
+.tb-r{margin-left:auto;display:flex;gap:8px;align-items:center}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:5px;font-size:11.5px;font-weight:600;cursor:pointer;border:none;transition:all .15s}
+.btn-p{background:var(--lacivert);color:#fff}
+.btn-o{background:#fff;border:1px solid var(--g300);color:var(--g700)}
+.btn-g{background:var(--green);color:#fff}
+.btn-r{background:var(--red);color:#fff}
+.btn-a{background:var(--amber);color:#fff}
+.btn-sm{padding:4px 9px;font-size:10.5px}
+.srch{border:1px solid var(--g300);border-radius:5px;padding:6px 10px;outline:none;font-size:12px;width:180px}
+.srch:focus{border-color:var(--lacivert)}
+
+/* KPI */
+.kpi-row{display:grid;gap:10px;margin-bottom:12px}
+.k5{grid-template-columns:repeat(5,1fr)}.k4{grid-template-columns:repeat(4,1fr)}
+.kc{background:#fff;border:1px solid var(--g200);border-radius:var(--r);padding:12px 14px;box-shadow:var(--sh);position:relative;overflow:hidden}
+.kc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.kc.b::before{background:var(--blue)}.kc.g::before{background:var(--green)}.kc.r::before{background:var(--red)}.kc.a::before{background:var(--amber)}.kc.p::before{background:var(--purple)}
+.kl{font-size:9.5px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--g400)}
+.kv{font-size:24px;font-weight:700;color:var(--g900);margin:3px 0 1px;line-height:1}
+.ks{font-size:10px;color:var(--g400)}
+
+/* AS BAR */
+.asbar{background:#fff;border:1px solid var(--g200);border-radius:var(--r);padding:7px 14px;margin-bottom:12px;display:flex;gap:7px;align-items:center;flex-wrap:wrap;box-shadow:var(--sh)}
+.asl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--g400);margin-right:2px}
+.chip{display:inline-flex;align-items:center;padding:3px 8px;border-radius:4px;font-size:10px;font-weight:600}
+.c-ok{background:var(--green-l);color:#065f46}.c-w{background:var(--amber-l);color:#92400e}.c-e{background:var(--red-l);color:#991b1b}.c-b{background:var(--blue-l);color:#1e40af}
+
+/* TWO COL */
+.two{display:grid;grid-template-columns:330px 1fr;gap:12px;flex:1;min-height:0}
+.pnl{background:#fff;border:1px solid var(--g200);border-radius:var(--r);box-shadow:var(--sh);display:flex;flex-direction:column;overflow:hidden}
+.ph{padding:9px 14px;border-bottom:1px solid var(--g200);background:var(--g50);display:flex;align-items:center;gap:8px;flex-shrink:0}
+.pht{font-size:12px;font-weight:700;color:var(--lacivert)}
+.pb{flex:1;overflow-y:auto}
+
+/* LIST */
+.li{padding:9px 12px;border-bottom:1px solid #f3f4f6;cursor:pointer;display:flex;align-items:flex-start;gap:8px;border-left:3px solid transparent;transition:all .12s}
+.li:hover{background:#f9fafb}
+.li.sel{background:#eff6ff;border-left-color:var(--lacivert)}
+.li.lr{border-left-color:var(--red)}.li.la{border-left-color:var(--amber)}.li.lg{border-left-color:var(--green)}.li.lp{border-left-color:var(--purple)}
+.lc{font-family:monospace;font-size:11px;font-weight:700;color:var(--lacivert)}
+.lt{font-size:11.5px;color:var(--g700);margin:2px 0}
+.ls{font-size:10px;color:var(--g400)}
+
+/* BADGE */
+.bx{display:inline-flex;align-items:center;padding:2px 7px;border-radius:12px;font-size:9.5px;font-weight:600}
+.bg{background:var(--green-l);color:#065f46}.br{background:var(--red-l);color:#991b1b}.ba{background:var(--amber-l);color:#92400e}.bb{background:var(--blue-l);color:#1e40af}.bz{background:var(--g100);color:var(--g500)}.bp{background:var(--purple-l);color:#4c1d95}
+
+/* FLOW */
+.flow{display:flex;align-items:center;padding:9px 14px;background:#fff;border-bottom:1px solid var(--g200);overflow-x:auto;flex-shrink:0;gap:3px}
+.fs{padding:5px 9px;border-radius:4px;font-size:10px;font-weight:600;white-space:nowrap}
+.fd{background:var(--green-l);color:#065f46}.fa{background:var(--lacivert);color:#fff}.ft{background:var(--g100);color:var(--g400)}
+.far{color:var(--g300);font-size:11px;padding:0 2px}
+
+/* TABS */
+.tabs{display:flex;border-bottom:1px solid var(--g200);background:#fff;padding:0 12px;gap:2px;flex-shrink:0}
+.tab{padding:8px 10px;font-size:11px;font-weight:500;color:var(--g400);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.tab:hover{color:var(--g700)}.tab.active{color:var(--lacivert);border-bottom-color:var(--lacivert);font-weight:700}
+.tc{display:none}.tc.on{display:block}
+
+/* SECTION */
+.sec{padding:12px 14px;border-bottom:1px solid #f3f4f6}
+.st{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--g400);margin-bottom:8px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.fl{font-size:9.5px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--g400);margin-bottom:2px}
+.fv{font-size:12px;color:var(--g900);font-weight:500}
+.mono{font-family:monospace;color:var(--lacivert);font-weight:700}
+
+/* TABLE */
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--g400);background:var(--g50);padding:7px 9px;border-bottom:1px solid var(--g200);text-align:left;white-space:nowrap}
+.tbl td{padding:8px 9px;border-bottom:1px solid #f3f4f6;font-size:11.5px;color:var(--g700);vertical-align:middle}
+.tbl tr:hover td{background:#fafafa}
+.tbl tr.pass td{background:#f0fdf4}.tbl tr.fail td{background:#fff1f2}
+.tick{color:var(--green);font-weight:700;font-size:15px}.cross{color:var(--red);font-size:15px}
+
+/* MEASURE */
+.mr{display:grid;grid-template-columns:2.5fr 0.8fr 0.8fr 1.3fr 80px;gap:6px;align-items:center;padding:6px 9px;border-bottom:1px solid #f3f4f6}
+.mr.mh{background:var(--g50);font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--g400)}
+.mr.pass{background:#f0fdf4}.mr.fail{background:#fff1f2}
+.mi{border:1.5px solid var(--g300);border-radius:4px;padding:4px 6px;font-size:11.5px;width:100%;outline:none;text-align:right}
+.mi.p{border-color:var(--green);background:#f0fdf4}.mi.f{border-color:var(--red);background:#fff1f2}
+
+/* CAPA */
+.cs{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid #f3f4f6}
+.cn{width:22px;height:22px;border-radius:50%;background:var(--g300);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.cn.d{background:var(--green)}.cn.ac{background:var(--blue)}
+.ctt{font-size:11.5px;font-weight:700;color:var(--g900)}.cd{font-size:10.5px;color:var(--g400);margin-top:1px}
+
+/* KALIB */
+.kcrd{background:#fff;border:1px solid var(--g200);border-radius:var(--r);padding:10px 12px;margin-bottom:7px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:all .12s}
+.kcrd:hover{border-color:#93c5fd}
+.kci{width:34px;height:34px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.kci-ok{background:var(--green-l)}.kci-w{background:var(--amber-l)}.kci-e{background:var(--red-l)}
+.kd{font-size:18px;font-weight:700}
+.kd-ok{color:var(--green)}.kd-w{color:var(--amber)}.kd-e{color:var(--red)}
+
+/* SEV */
+.sev{display:flex;gap:6px;margin-bottom:10px}
+.sv{flex:1;text-align:center;padding:7px;border-radius:5px;font-size:10.5px;font-weight:700;cursor:pointer;border:2px solid transparent;transition:all .15s}
+.sv-ob{background:var(--green-l);color:#065f46;border-color:#6ee7b7}
+.sv-mi{background:var(--amber-l);color:#92400e;border-color:#fde68a}
+.sv-ma{background:var(--red-l);color:#991b1b;border-color:#fca5a5}
+.sv-cr{background:#450a0a;color:#fff}
+.sv.sel{box-shadow:0 0 0 3px rgba(26,43,71,.25)}
+
+/* QR */
+.qrb{display:inline-flex;align-items:center;gap:5px;background:var(--g100);border:1px solid var(--g200);border-radius:5px;padding:4px 8px;font-size:10.5px;color:var(--g500);cursor:pointer}
+.qrb:hover{background:#e0e7ef}
+
+/* util */
+.row{display:flex;align-items:center;gap:8px}
+.mla{margin-left:auto}
+.mt8{margin-top:8px}.mt6{margin-top:6px}
+.w100{width:100%}
+textarea,input{font-family:inherit}
+.pad{padding:16px 20px}
+.pad0{padding:0 20px 16px}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- SIDEBAR -->
+<div class="sb">
+  <div class="sb-logo">
+    <div class="t">⚙ ERSAN MES</div>
+    <div class="s">v7.0 · AS9100 Rev.D</div>
+  </div>
+  <div class="sb-sec">
+    <div class="sb-lbl">Kalite Yönetimi</div>
+    <div class="ni active" onclick="pg('iqc')" id="nv-iqc">📥 Girdi Kalite (IQC) <span class="nb amb">3</span></div>
+    <div class="ni" onclick="pg('fai')" id="nv-fai">🔬 FAI — İlk Parça <span class="nb red">2</span></div>
+    <div class="ni" onclick="pg('ipqc')" id="nv-ipqc">🏭 Süreç İçi (IPQC)</div>
+    <div class="ni" onclick="pg('ncr')" id="nv-ncr">⛔ Uygunsuzluk (NCR) <span class="nb red">5</span></div>
+    <div class="ni" onclick="pg('capa')" id="nv-capa">🔧 Düzeltici (CAPA) <span class="nb amb">2</span></div>
+    <div class="ni" onclick="pg('kalib')" id="nv-kalib">📏 Kalibrasyon <span class="nb amb">4</span></div>
+  </div>
+  <div class="sb-sec">
+    <div class="sb-lbl">Diğer Modüller</div>
+    <div class="ni">🛒 Satınalma</div>
+    <div class="ni">📦 Stok / Depo</div>
+    <div class="ni">⚙ Üretim / WO</div>
+  </div>
+</div>
+
+<div class="main">
+
+<!-- ═══════════════════════════════
+     IQC
+═══════════════════════════════ -->
+<div class="page active" id="page-iqc">
+  <div class="tb">
+    <div class="tb-t">Girdi Kalite Kontrolü (IQC)</div>
+    <div class="tb-r">
+      <input class="srch" placeholder="🔍 IQC no, lot, tedarikçi...">
+      <button class="btn btn-p">+ Yeni IQC</button>
+    </div>
+  </div>
+  <div class="pad" style="padding-bottom:6px">
+    <div class="kpi-row k5">
+      <div class="kc b"><div class="kl">Bu Ay Toplam</div><div class="kv">28</div><div class="ks">IQC kaydı</div></div>
+      <div class="kc g"><div class="kl">Kabul Edildi</div><div class="kv">22</div><div class="ks" style="color:var(--green)">%78.6</div></div>
+      <div class="kc a"><div class="kl">Koşullu Kabul</div><div class="kv">3</div><div class="ks">Deviyasyon açık</div></div>
+      <div class="kc r"><div class="kl">Reddedildi</div><div class="kv">3</div><div class="ks" style="color:var(--red)">NCR açıldı</div></div>
+      <div class="kc p"><div class="kl">Bekleyen</div><div class="kv">3</div><div class="ks">İnceleme bekliyor</div></div>
+    </div>
+    <div class="asbar">
+      <span class="asl">AS9100 §8.4</span>
+      <span class="chip c-ok">✓ CoC Zorunlu</span>
+      <span class="chip c-ok">✓ ISO 2859 AQL</span>
+      <span class="chip c-w">⚠ 3 Tedarikçi İzlemede</span>
+      <span class="chip c-ok">✓ Lot Takibi Aktif</span>
+      <span class="chip c-ok">✓ NCR Otomatik Tetikleme</span>
+    </div>
+  </div>
+  <div class="pad0" style="flex:1;display:flex;flex-direction:column;min-height:0">
+    <div class="two" style="flex:1;min-height:0">
+      <!-- Sol Liste -->
+      <div class="pnl">
+        <div class="ph">
+          <span class="pht">IQC Kayıtları</span>
+          <select style="font-size:10.5px;padding:3px 6px;border-radius:4px;border:1px solid var(--g300);margin-left:auto"><option>Tümü</option><option>Bekleyen</option><option>Kabul</option><option>Red</option></select>
+        </div>
+        <div class="pb">
+          <div class="li la sel" onclick="selLi(this)">
+            <div style="flex:1">
+              <div class="row" style="margin-bottom:3px"><span class="lc">IQC-26-00031</span><span class="bx ba">Bekleyen</span></div>
+              <div class="lt">Ø169×154×2000 Boru · AISI 4140</div>
+              <div class="ls">Özdemir Çelik · GRN-26-00044 · LOT-26-00061</div>
+            </div>
+            <div style="font-size:10px;color:var(--g400)">22.03</div>
+          </div>
+          <div class="li la" onclick="selLi(this)">
+            <div style="flex:1">
+              <div class="row" style="margin-bottom:3px"><span class="lc">IQC-26-00030</span><span class="bx ba">Bekleyen</span></div>
+              <div class="lt">Ø80 Mil · 42CrMo4</div>
+              <div class="ls">MetalSan A.Ş. · GRN-26-00043 · LOT-26-00059</div>
+            </div>
+            <div style="font-size:10px;color:var(--g400)">21.03</div>
+          </div>
+          <div class="li la" onclick="selLi(this)">
+            <div style="flex:1">
+              <div class="row" style="margin-bottom:3px"><span class="lc">IQC-26-00029</span><span class="bx ba">Bekleyen</span></div>
+              <div class="lt">Takım Çeliği D2 Levha 25mm</div>
+              <div class="ls">Çelik A.Ş. · GRN-26-00041 · LOT-26-00057</div>
+            </div>
+            <div style="font-size:10px;color:var(--g400)">20.03</div>
+          </div>
+          <div class="li lg" onclick="selLi(this)">
+            <div style="flex:1">
+              <div class="row" style="margin-bottom:3px"><span class="lc">IQC-26-00028</span><span class="bx bg">Kabul</span></div>
+              <div class="lt">Bronz CuSn8 Ø60×120</div>
+              <div class="ls">Özdemir Çelik · GRN-26-00039 · LOT-26-00054</div>
+            </div>
+            <div style="font-size:10px;color:var(--g400)">19.03</div>
+          </div>
+          <div class="li lr" onclick="selLi(this)">
+            <div style="flex:1">
+              <div class="row" style="margin-bottom:3px"><span class="lc">IQC-26-00027</span><span class="bx br">Red</span></div>
+              <div class="lt">Alüminyum AlSi12 Levha 10mm</div>
+              <div class="ls">AluMet · GRN-26-00038 · LOT-26-00052</div>
+            </div>
+            <div style="font-size:10px;color:var(--g400)">18.03</div>
+          </div>
+          <div class="li lp" onclick="selLi(this)">
+            <div style="flex:1">
+              <div class="row" style="margin-bottom:3px"><span class="lc">IQC-26-00026</span><span class="bx bp">Koşullu</span></div>
+              <div class="lt">Ø120 Mil · 1.2312</div>
+              <div class="ls">MetalSan A.Ş. · GRN-26-00036 · LOT-26-00049</div>
+            </div>
+            <div style="font-size:10px;color:var(--g400)">17.03</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sağ Detay -->
+      <div class="pnl" style="display:flex;flex-direction:column">
+        <div class="flow">
+          <div class="fs fd">✓ GRN Teslim</div><div class="far">›</div>
+          <div class="fs fd">✓ Belge Kontrol</div><div class="far">›</div>
+          <div class="fs fa">⏵ Boyutsal Muayene</div><div class="far">›</div>
+          <div class="fs ft">Lot Kararı</div><div class="far">›</div>
+          <div class="fs ft">Stok / NCR</div>
+        </div>
+        <div class="tabs">
+          <div class="tab active" onclick="st(this,'tb1')">📄 Belge Kontrolü</div>
+          <div class="tab" onclick="st(this,'tb2')">📐 Boyutsal Muayene</div>
+          <div class="tab" onclick="st(this,'tb3')">⚖ Lot Kararı</div>
+          <div class="tab" onclick="st(this,'tb4')">📜 Tedarikçi Geçmişi</div>
+        </div>
+
+        <!-- BELGE -->
+        <div class="tc on pb" id="tb1">
+          <div class="sec">
+            <div class="st">Malzeme ve Kaynak Bilgisi</div>
+            <div class="g2">
+              <div><div class="fl">IQC No</div><div class="fv mono">IQC-26-00031</div></div>
+              <div><div class="fl">GRN Bağlantısı</div><div class="fv mono" style="color:var(--blue);cursor:pointer">GRN-26-00044 ↗</div></div>
+              <div><div class="fl">Lot No</div><div class="fv mono">LOT-26-00061</div></div>
+              <div><div class="fl">PO Bağlantısı</div><div class="fv mono" style="color:var(--blue);cursor:pointer">PO-26-00037 ↗</div></div>
+              <div><div class="fl">Malzeme Cinsi</div><div class="fv">Boru — AISI 4140</div></div>
+              <div><div class="fl">Tedarikçi</div><div class="fv">Özdemir Çelik Ltd.</div></div>
+              <div><div class="fl">Teslim Miktarı</div><div class="fv">4 adet</div></div>
+              <div><div class="fl">AQL II Numune</div><div class="fv" style="color:var(--blue);font-weight:700">3 adet — Ac:0 Re:1</div></div>
+            </div>
+          </div>
+          <div class="sec">
+            <div class="st">AS9100 §8.4.3 — Belge İncelemesi</div>
+            <table class="tbl">
+              <thead><tr><th>Belge</th><th style="text-align:center">Zorunlu</th><th style="text-align:center">Alındı</th><th style="text-align:center">Uygun</th><th>Not</th></tr></thead>
+              <tbody>
+                <tr class="pass">
+                  <td style="font-weight:600">Malzeme Uygunluk Sertifikası (CoC)</td>
+                  <td style="text-align:center"><span class="tick">✓</span></td><td style="text-align:center"><span class="tick">✓</span></td><td style="text-align:center"><span class="tick">✓</span></td>
+                  <td style="font-size:10.5px;color:var(--g500)">Mill cert — AISI 4140 doğrulandı</td>
+                </tr>
+                <tr class="pass">
+                  <td style="font-weight:600">Test Raporu (Çekme / Sertlik)</td>
+                  <td style="text-align:center"><span class="tick">✓</span></td><td style="text-align:center"><span class="tick">✓</span></td><td style="text-align:center"><span class="tick">✓</span></td>
+                  <td style="font-size:10.5px;color:var(--g500)">UTS 985 MPa — Spec. min 960</td>
+                </tr>
+                <tr class="pass">
+                  <td style="font-weight:600">Teknik Resim Revizyon Uyumu</td>
+                  <td style="text-align:center"><span class="tick">✓</span></td><td style="text-align:center"><span class="tick">✓</span></td><td style="text-align:center"><span class="tick">✓</span></td>
+                  <td style="font-size:10.5px;color:var(--g500)">Rev C — güncel</td>
+                </tr>
+                <tr>
+                  <td style="font-weight:600">Isıl İşlem Sertifikası</td>
+                  <td style="text-align:center"><span class="bx bz">—</span></td><td style="text-align:center"><span class="bx bz">—</span></td><td style="text-align:center"><span class="bx bz">—</span></td>
+                  <td style="font-size:10.5px;color:var(--g400)">Bu malzeme için gerekmiyor</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="sec">
+            <div class="row">
+              <div class="qrb">◼ LOT-26-00061 QR</div>
+              <div class="qrb">📎 CoC.pdf</div>
+              <div class="qrb">📎 TestRaporu.pdf</div>
+              <button class="btn btn-p btn-sm mla" onclick="st(document.querySelector('[onclick*=tb2]'),'tb2')">→ Boyutsal Muayene</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- BOYUTSAL -->
+        <div class="tc pb" id="tb2">
+          <div class="sec">
+            <div class="row" style="margin-bottom:10px">
+              <div class="st" style="margin-bottom:0">Boyutsal Kontrol — AQL: 3 Numune</div>
+              <span class="chip c-b mla">EQP-KMP-002 ✓ Kalibre</span>
+            </div>
+            <div class="mr mh"><div>Özellik</div><div>Min</div><div>Max</div><div style="text-align:center">Ölçülen</div><div style="text-align:center">Sonuç</div></div>
+            <div class="mr pass"><div style="font-weight:600">Dış Çap (mm)</div><div style="color:var(--g500)">168.0</div><div style="color:var(--g500)">170.5</div><input class="mi p" type="number" value="169.4"><div style="text-align:center"><span class="bx bg">PASS</span></div></div>
+            <div class="mr pass"><div style="font-weight:600">İç Çap (mm)</div><div style="color:var(--g500)">152.0</div><div style="color:var(--g500)">155.0</div><input class="mi p" type="number" value="153.6"><div style="text-align:center"><span class="bx bg">PASS</span></div></div>
+            <div class="mr pass"><div style="font-weight:600">Boy (mm)</div><div style="color:var(--g500)">1995</div><div style="color:var(--g500)">2010</div><input class="mi p" type="number" value="2001"><div style="text-align:center"><span class="bx bg">PASS</span></div></div>
+            <div class="mr pass"><div style="font-weight:600">Et Kalınlığı (mm)</div><div style="color:var(--g500)">7.0</div><div style="color:var(--g500)">8.0</div><input class="mi p" type="number" value="7.9"><div style="text-align:center"><span class="bx bg">PASS</span></div></div>
+            <div class="mr pass"><div style="font-weight:600">Ovality (mm)</div><div style="color:var(--g500)">—</div><div style="color:var(--g500)">0.30</div><input class="mi p" type="number" value="0.18"><div style="text-align:center"><span class="bx bg">PASS</span></div></div>
+            <div style="margin-top:8px;padding:8px 10px;background:var(--green-l);border-radius:5px;font-size:11px;font-weight:600;color:#065f46">✓ Tüm ölçümler tolerans içinde — 3/3 numune geçti</div>
+          </div>
+          <div class="sec">
+            <div class="row">
+              <button class="btn btn-o btn-sm">+ Özellik Ekle</button>
+              <button class="btn btn-o btn-sm">📋 Şablondan Yükle</button>
+              <button class="btn btn-p btn-sm mla" onclick="st(document.querySelector('[onclick*=tb3]'),'tb3')">→ Lot Kararı</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- LOT KARARI -->
+        <div class="tc pb" id="tb3">
+          <div class="sec">
+            <div class="st">Muayene Özeti</div>
+            <div class="g3" style="margin-bottom:12px">
+              <div style="background:var(--green-l);border-radius:6px;padding:10px;text-align:center"><div style="font-size:20px;font-weight:700;color:#065f46">3/3</div><div style="font-size:10px;color:#065f46">Numune Geçti</div></div>
+              <div style="background:var(--green-l);border-radius:6px;padding:10px;text-align:center"><div style="font-size:20px;font-weight:700;color:#065f46">Ac: 0</div><div style="font-size:10px;color:#065f46">Kabul Sayısı</div></div>
+              <div style="background:var(--blue-l);border-radius:6px;padding:10px;text-align:center"><div style="font-size:20px;font-weight:700;color:#1e40af">AQL II</div><div style="font-size:10px;color:#1e40af">ISO 2859</div></div>
+            </div>
+            <div class="row" style="margin-bottom:12px">
+              <button class="btn btn-g" style="flex:1;justify-content:center" onclick="alert('LOT-26-00061 kabul edildi.\nHM-01 Hammadde Rafına alınıyor...')">✓ KABUL — Stoka Al</button>
+              <button class="btn btn-a" style="flex:1;justify-content:center" onclick="alert('Koşullu kabul seçildi.\nDeviyasyon talebi açılıyor...')">◑ Koşullu Kabul</button>
+              <button class="btn btn-r" style="flex:1;justify-content:center" onclick="alert('Lot reddedildi!\nKR-02 Karantina + NCR-26-00043 otomatik açıldı.')">✕ RED — NCR Aç</button>
+            </div>
+            <div>
+              <div class="fl">Karar Notu (AS9100 §8.4 kaydı)</div>
+              <textarea style="width:100%;height:58px;resize:none;border:1px solid var(--g300);border-radius:5px;padding:6px;font-size:11.5px;margin-top:3px">Tüm boyutsal özellikler tolerans içinde. CoC ve test raporları uygun. Lot kabul edilmiştir.</textarea>
+            </div>
+            <div class="row mt8">
+              <div class="qrb">🖨 Onay Etiketi Bas</div>
+              <div class="qrb">📄 IQC Raporu PDF</div>
+              <div class="qrb">👤 Kalite Müdürü Onayı</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- GEÇMİŞ -->
+        <div class="tc pb" id="tb4" style="padding:12px 14px">
+          <div style="font-size:11px;color:var(--g400);margin-bottom:8px">Son 12 ay — Özdemir Çelik tedarikçi kalite skoru</div>
+          <table class="tbl">
+            <thead><tr><th>Tarih</th><th>IQC No</th><th>Malzeme</th><th>Numune</th><th>Sonuç</th></tr></thead>
+            <tbody>
+              <tr><td>22.03</td><td class="mono" style="font-size:11px">IQC-26-00031</td><td>Boru Ø169</td><td>3/3</td><td><span class="bx bg">Kabul</span></td></tr>
+              <tr><td>05.03</td><td class="mono" style="font-size:11px">IQC-26-00024</td><td>Mil Ø80</td><td>3/3</td><td><span class="bx bg">Kabul</span></td></tr>
+              <tr><td>18.02</td><td class="mono" style="font-size:11px">IQC-26-00019</td><td>Boru Ø169</td><td>2/3</td><td><span class="bx ba">Koşullu</span></td></tr>
+              <tr><td>02.02</td><td class="mono" style="font-size:11px">IQC-26-00014</td><td>Mil Ø60</td><td>3/3</td><td><span class="bx bg">Kabul</span></td></tr>
+              <tr><td>15.01</td><td class="mono" style="font-size:11px">IQC-26-00008</td><td>Boru Ø219</td><td>0/3</td><td><span class="bx br">Red</span></td></tr>
+            </tbody>
+          </table>
+          <div style="margin-top:10px;padding:8px 10px;background:var(--amber-l);border-radius:5px;font-size:11px;color:#92400e">
+            ⚠ Tedarikçi Skoru: <strong>74 / 100</strong> — Son 12 ayda 1 red, 1 koşullu kabul. İzleme listesine eklendi.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════
+     NCR
+═══════════════════════════════ -->
+<div class="page" id="page-ncr">
+  <div class="tb">
+    <div class="tb-t">Uygunsuzluk Raporu (NCR)</div>
+    <div class="tb-r">
+      <input class="srch" placeholder="🔍 NCR no, parça...">
+      <button class="btn btn-p">+ Manuel NCR</button>
+    </div>
+  </div>
+  <div class="pad" style="padding-bottom:6px">
+    <div class="kpi-row k5">
+      <div class="kc r"><div class="kl">Açık NCR</div><div class="kv">5</div><div class="ks">İşlem bekliyor</div></div>
+      <div class="kc a"><div class="kl">CAPA Açık</div><div class="kv">3</div><div class="ks">Aksiyon alınıyor</div></div>
+      <div class="kc g"><div class="kl">Bu Ay Kapalı</div><div class="kv">7</div><div class="ks">Ort. 4.2 gün</div></div>
+      <div class="kc b"><div class="kl">Tedarikçi Kaynaklı</div><div class="kv">3</div><div class="ks">SCR bekleyen</div></div>
+      <div class="kc p"><div class="kl">İşlem Kaynaklı</div><div class="kv">2</div><div class="ks">Dahili</div></div>
+    </div>
+  </div>
+  <div class="pad0" style="flex:1;display:flex;flex-direction:column;min-height:0">
+    <div class="two" style="flex:1;min-height:0">
+      <div class="pnl">
+        <div class="ph"><span class="pht">NCR Listesi</span><select style="font-size:10.5px;padding:3px 6px;border-radius:4px;border:1px solid var(--g300);margin-left:auto"><option>Açık</option><option>Tümü</option><option>Kapalı</option></select></div>
+        <div class="pb">
+          <div class="li lr sel" onclick="selLi(this)">
+            <div style="flex:1">
+              <div class="row" style="margin-bottom:3px"><span class="lc">NCR-26-00042</span><span class="bx ba">Major</span><span class="bx bz" style="font-size:9px">Tedarikçi</span></div>
+              <div class="lt">AlSi12 boyut sapması — boy 4mm kısa</div>
+              <div class="ls">IQC-26-00027 bağlı · 4 gün önce</div>
+            </div>
+          </div>
+          <div class="li lr" onclick="selLi(this)">
+            <div style="flex:1">
+              <div class="row" style="margin-bottom:3px"><span class="lc">NCR-26-00041</span><span class="bx br">Kritik</span><span class="bx bz" style="font-size:9px">İşlem</span></div>
+              <div class="lt">Piston çap tolerans dışı — +0.12mm</div>
+              <div class="ls">IPQC-KP-26-00005 bağlı · 2 gün önce</div>
+            </div>
+          </div>
+          <div class="li la" onclick="selLi(this)">
+            <div style="flex:1">
+              <div class="row" style="margin-bottom:3px"><span class="lc">NCR-26-00040</span><span class="bx bz">Minor</span><span class="bx bz" style="font-size:9px">Müşteri</span></div>
+              <div class="lt">Müşteri şikayeti — yüzey pürüzlülüğü</div>
+              <div class="ls">Manuel · 7 gün önce</div>
+            </div>
+          </div>
+          <div class="li la" onclick="selLi(this)">
+            <div style="flex:1">
+              <div class="row" style="margin-bottom:3px"><span class="lc">NCR-26-00039</span><span class="bx ba">Major</span><span class="bx bz" style="font-size:9px">Tedarikçi</span></div>
+              <div class="lt">CoC eksik — geri iade bekleniyor</div>
+              <div class="ls">IQC-26-00025 bağlı · 9 gün önce</div>
+            </div>
+          </div>
+          <div class="li lr" onclick="selLi(this)">
+            <div style="flex:1">
+              <div class="row" style="margin-bottom:3px"><span class="lc">NCR-26-00038</span><span class="bx ba">Major</span><span class="bx bz" style="font-size:9px">İşlem</span></div>
+              <div class="lt">Delik pozisyon sapması 0.18mm</div>
+              <div class="ls">FAI-26-00011 bağlı · 6 gün önce</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="pnl">
+        <div class="tabs">
+          <div class="tab active">📋 NCR Detay</div>
+          <div class="tab">🔍 Kök Neden</div>
+          <div class="tab">📊 İzlenebilirlik</div>
+        </div>
+        <div class="pb">
+          <div class="sec">
+            <div class="st">Şiddet Seviyesi</div>
+            <div class="sev">
+              <div class="sv sv-ob" onclick="setSev(this)">Gözlem</div>
+              <div class="sv sv-mi" onclick="setSev(this)">Minor</div>
+              <div class="sv sv-ma sel" onclick="setSev(this)">Major ✓</div>
+              <div class="sv sv-cr" onclick="setSev(this)">Kritik</div>
+            </div>
+          </div>
+          <div class="sec">
+            <div class="st">NCR-26-00042 Bilgileri</div>
+            <div class="g2">
+              <div><div class="fl">NCR No</div><div class="fv mono">NCR-26-00042</div></div>
+              <div><div class="fl">Kaynak</div><div class="fv mono" style="color:var(--blue);cursor:pointer">IQC-26-00027 ↗</div></div>
+              <div><div class="fl">Malzeme</div><div class="fv">AlSi12 Levha 10mm</div></div>
+              <div><div class="fl">Tedarikçi</div><div class="fv">AluMet A.Ş.</div></div>
+              <div><div class="fl">WO Bağlantısı</div><div class="fv mono" style="color:var(--blue);cursor:pointer">WO-26-00036 ↗</div></div>
+              <div><div class="fl">Lot No</div><div class="fv mono">LOT-26-00052</div></div>
+            </div>
+          </div>
+          <div class="sec">
+            <div class="fl">Uygunsuzluk Tanımı</div>
+            <textarea style="width:100%;height:55px;resize:none;border:1px solid var(--g300);border-radius:5px;padding:6px;font-size:11.5px;margin-top:3px">AlSi12 levha boyutu IQC'de 4mm kısa tespit edildi. Sipariş: 500mm — Gelen: 496mm. AQL tolerans dışı (Re:1).</textarea>
+          </div>
+          <div class="sec">
+            <div class="fl" style="margin-bottom:6px">Anlık Aksiyon</div>
+            <div class="row" style="flex-wrap:wrap">
+              <button class="btn btn-o btn-sm" onclick="this.style.background='#eff6ff';this.style.borderColor='#93c5fd'">Karantinaya Al</button>
+              <button class="btn btn-o btn-sm" onclick="this.style.background='#eff6ff';this.style.borderColor='#93c5fd'">Tedarikçiye İade</button>
+              <button class="btn btn-o btn-sm" onclick="this.style.background='#eff6ff';this.style.borderColor='#93c5fd'">Deviyasyon İste</button>
+              <button class="btn btn-o btn-sm" onclick="this.style.background='#eff6ff';this.style.borderColor='#93c5fd'">Hurdaya Ayır</button>
+            </div>
+          </div>
+          <div class="sec">
+            <div class="fl" style="margin-bottom:6px">Tedarikçi Düzeltme Talebi (SCR)</div>
+            <div class="row">
+              <span class="bx ba">SCR Bekliyor</span>
+              <span style="font-size:11px;color:var(--g400)">AluMet'e bildirim — 8 gün önce</span>
+              <button class="btn btn-a btn-sm mla" onclick="alert('Hatırlatma gönderildi.')">Hatırlat</button>
+              <button class="btn btn-p btn-sm" onclick="pg('capa')">→ CAPA Aç</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════
+     CAPA
+═══════════════════════════════ -->
+<div class="page" id="page-capa">
+  <div class="tb">
+    <div class="tb-t">Düzeltici ve Önleyici Faaliyet (CAPA)</div>
+    <div class="tb-r"><button class="btn btn-p">+ Yeni CAPA</button></div>
+  </div>
+  <div class="pad" style="padding-bottom:6px">
+    <div class="kpi-row k4">
+      <div class="kc r"><div class="kl">Açık CAPA</div><div class="kv">2</div><div class="ks">Aksiyon bekliyor</div></div>
+      <div class="kc a"><div class="kl">İncelemede</div><div class="kv">3</div><div class="ks">Etkinlik doğrulama</div></div>
+      <div class="kc g"><div class="kl">Bu Yıl Kapalı</div><div class="kv">11</div><div class="ks">Ort. 12 gün</div></div>
+      <div class="kc b"><div class="kl">8D Raporu</div><div class="kv">4</div><div class="ks">Tamamlanan</div></div>
+    </div>
+  </div>
+  <div class="pad0" style="flex:1;display:flex;flex-direction:column;min-height:0">
+    <div class="two" style="flex:1;min-height:0">
+      <div class="pnl">
+        <div class="ph"><span class="pht">CAPA Listesi</span></div>
+        <div class="pb">
+          <div class="li lr sel" onclick="selLi(this)">
+            <div style="flex:1">
+              <div class="row" style="margin-bottom:3px"><span class="lc">CAPA-26-00012</span><span class="bx br">8D Açık</span></div>
+              <div class="lt">AlSi12 boyut sapması — tedarikçi süreci</div>
+              <div class="ls">NCR-26-00042 bağlı · 4 gündür açık</div>
+            </div>
+          </div>
+          <div class="li la" onclick="selLi(this)">
+            <div style="flex:1">
+              <div class="row" style="margin-bottom:3px"><span class="lc">CAPA-26-00011</span><span class="bx ba">Etkinlik Doğrulanıyor</span></div>
+              <div class="lt">CNC tolerans hatası — program güncelleme</div>
+              <div class="ls">NCR-26-00041 bağlı · 10 gündür açık</div>
+            </div>
+          </div>
+          <div class="li lg" onclick="selLi(this)">
+            <div style="flex:1">
+              <div class="row" style="margin-bottom:3px"><span class="lc">CAPA-26-00010</span><span class="bx bg">Kapalı</span></div>
+              <div class="lt">Delik pozisyon sapması — aparat değişimi</div>
+              <div class="ls">NCR-26-00038 bağlı · 18 günde kapatıldı</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="pnl">
+        <div class="ph"><span class="pht">8D Adım Zinciri — CAPA-26-00012</span><span class="bx br mla">Adım 3 / 8</span></div>
+        <div class="pb" style="padding:12px 14px">
+          <div class="cs"><div class="cn d">1</div><div><div class="ctt">D1 — Ekip Oluşturma</div><div class="cd">Kalite Müdürü (lider), Satınalma, Üretim — 22.03.2026</div></div></div>
+          <div class="cs"><div class="cn d">2</div><div><div class="ctt">D2 — Problemin Tanımlanması</div><div class="cd">AluMet AlSi12 levha boy sapması 4mm. 3 lot etkileniyor, toplam 12 adet.</div></div></div>
+          <div class="cs"><div class="cn ac">3</div>
+            <div style="flex:1">
+              <div class="ctt">D3 — Anlık Konteyment</div>
+              <div class="cd">Etkilenen stok karantinaya alındı (QRN-26-00004). Tedarikçiye bildirim gönderildi.</div>
+              <textarea style="margin-top:6px;width:100%;height:46px;resize:none;border:1px solid var(--lacivert);border-radius:4px;padding:5px 7px;font-size:11px" placeholder="Aksiyon notu girin..."></textarea>
+              <div class="row mt6">
+                <button class="btn btn-o btn-sm">📎 Dosya Ekle</button>
+                <button class="btn btn-p btn-sm mla" onclick="alert('Adım 3 tamamlandı. Adım 4 başlıyor...')">✓ Adımı Tamamla</button>
+              </div>
+            </div>
+          </div>
+          <div class="cs"><div class="cn">4</div><div><div class="ctt">D4 — Kök Neden Analizi</div><div class="cd">5-Why: Tedarikçi kesim programı kalibrasyon hatası. Ishikawa hazırlanıyor.</div></div></div>
+          <div class="cs"><div class="cn">5</div><div><div class="ctt">D5 — Kalıcı Düzeltici Faaliyet</div><div class="cd">Tedarikçi kesim programını güncelleyecek + prosedür revizyonu.</div></div></div>
+          <div class="cs"><div class="cn">6</div><div><div class="ctt">D6 — Doğrulama</div><div class="cd">3 yeni lot IQC'den geçmeden onay verilmeyecek.</div></div></div>
+          <div class="cs"><div class="cn">7</div><div><div class="ctt">D7 — Tekrar Oluşmayı Önleme</div><div class="cd">Tedarikçi değerlendirme kriterleri güncellendi.</div></div></div>
+          <div class="cs" style="border:none"><div class="cn">8</div><div><div class="ctt">D8 — Kapanış ve Yönetim Onayı</div><div class="cd">Yönetim onayı + AS9100 §10.2 kaydı.</div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════
+     KALİBRASYON
+═══════════════════════════════ -->
+<div class="page" id="page-kalib">
+  <div class="tb">
+    <div class="tb-t">Kalibrasyon Yönetimi</div>
+    <div class="tb-r">
+      <input class="srch" placeholder="🔍 EQP kodu, alet adı...">
+      <button class="btn btn-p">+ Ekipman Ekle</button>
+    </div>
+  </div>
+  <div class="pad" style="padding-bottom:6px">
+    <div class="kpi-row k5">
+      <div class="kc b"><div class="kl">Toplam Ekipman</div><div class="kv">24</div><div class="ks">Kayıtlı</div></div>
+      <div class="kc g"><div class="kl">Kalibre Edilmiş</div><div class="kv">18</div><div class="ks">%75 hazır</div></div>
+      <div class="kc a"><div class="kl">30 Günde Dolacak</div><div class="kv">4</div><div class="ks">Planlama gerekli</div></div>
+      <div class="kc r"><div class="kl">Süresi Geçmiş</div><div class="kv">2</div><div class="ks">Kullanım bloklandı</div></div>
+      <div class="kc p"><div class="kl">Dış Kalibrasyon</div><div class="kv">6</div><div class="ks">Akredite lab</div></div>
+    </div>
+    <div class="asbar">
+      <span class="asl">AS9100 §7.1.5</span>
+      <span class="chip c-e">✗ 2 Ekipman Süresi Geçmiş — Kullanım Bloklandı</span>
+      <span class="chip c-w">⚠ 4 Ekipman 30 Gün İçinde Dolacak</span>
+      <span class="chip c-ok">✓ Otomatik QR Blok Aktif</span>
+    </div>
+  </div>
+  <div class="pad0" style="flex:1;display:flex;flex-direction:column;min-height:0">
+    <div class="two" style="flex:1;min-height:0">
+      <div class="pnl">
+        <div class="ph"><span class="pht">Ölçüm Ekipmanları</span><select style="font-size:10.5px;padding:3px 6px;border-radius:4px;border:1px solid var(--g300);margin-left:auto"><option>Tümü</option><option>Kalibre</option><option>Yaklaşıyor</option><option>Geçmiş</option></select></div>
+        <div class="pb" style="padding:10px">
+          <div class="kcrd" onclick="selKc(this)">
+            <div class="kci kci-ok">📏</div>
+            <div style="flex:1"><div class="row"><span class="mono" style="font-size:10px">EQP-KMP-001</span><span class="bx bg" style="font-size:9px">Kalibre</span></div><div style="font-size:11.5px;font-weight:700;color:var(--g900)">Dış Mikrometre 0–25mm</div><div style="font-size:10px;color:var(--g400)">Mitutoyo 103-137</div></div>
+            <div style="text-align:right"><div class="kd kd-ok">89</div><div style="font-size:9.5px;color:var(--g400)">gün kaldı</div></div>
+          </div>
+          <div class="kcrd" onclick="selKc(this)" style="border-color:#93c5fd">
+            <div class="kci kci-ok">📏</div>
+            <div style="flex:1"><div class="row"><span class="mono" style="font-size:10px">EQP-KMP-002</span><span class="bx bg" style="font-size:9px">Kalibre</span></div><div style="font-size:11.5px;font-weight:700;color:var(--g900)">Kumpas 0–300mm Dijital</div><div style="font-size:10px;color:var(--g400)">Mitutoyo 500-196-30</div></div>
+            <div style="text-align:right"><div class="kd kd-ok">45</div><div style="font-size:9.5px;color:var(--g400)">gün kaldı</div></div>
+          </div>
+          <div class="kcrd" onclick="selKc(this)">
+            <div class="kci kci-w">📐</div>
+            <div style="flex:1"><div class="row"><span class="mono" style="font-size:10px">EQP-KMP-003</span><span class="bx ba" style="font-size:9px">Yaklaşıyor</span></div><div style="font-size:11.5px;font-weight:700;color:var(--g900)">Kumpas 0–150mm Mekanik</div><div style="font-size:10px;color:var(--g400)">Insize 1108-150</div></div>
+            <div style="text-align:right"><div class="kd kd-w">22</div><div style="font-size:9.5px;color:var(--g400)">gün kaldı</div></div>
+          </div>
+          <div class="kcrd" onclick="selKc(this)">
+            <div class="kci kci-w">🔧</div>
+            <div style="flex:1"><div class="row"><span class="mono" style="font-size:10px">EQP-DLM-001</span><span class="bx ba" style="font-size:9px">Yaklaşıyor</span></div><div style="font-size:11.5px;font-weight:700;color:var(--g900)">Dial Komparatör 0.001mm</div><div style="font-size:10px;color:var(--g400)">Mitutoyo 1044S</div></div>
+            <div style="text-align:right"><div class="kd kd-w">15</div><div style="font-size:9.5px;color:var(--g400)">gün kaldı</div></div>
+          </div>
+          <div class="kcrd" onclick="selKc(this)">
+            <div class="kci kci-e">⛔</div>
+            <div style="flex:1"><div class="row"><span class="mono" style="font-size:10px">EQP-TRK-001</span><span class="bx br" style="font-size:9px">Bloklandı</span></div><div style="font-size:11.5px;font-weight:700;color:var(--g900)">Torsiyon Anahtarı 5–25Nm</div><div style="font-size:10px;color:var(--g400)">Stahlwille 714</div></div>
+            <div style="text-align:right"><div class="kd kd-e">3</div><div style="font-size:9.5px;color:var(--red)">gün geçti</div></div>
+          </div>
+          <div class="kcrd" onclick="selKc(this)">
+            <div class="kci kci-e">⛔</div>
+            <div style="flex:1"><div class="row"><span class="mono" style="font-size:10px">EQP-KMP-004</span><span class="bx br" style="font-size:9px">Bloklandı</span></div><div style="font-size:11.5px;font-weight:700;color:var(--g900)">Bore Gauge 18–35mm</div><div style="font-size:10px;color:var(--g400)">Insize 2322-35</div></div>
+            <div style="text-align:right"><div class="kd kd-e">12</div><div style="font-size:9.5px;color:var(--red)">gün geçti</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="pnl">
+        <div class="ph"><span class="pht">EQP-KMP-002 — Kalibrasyon Detayı</span></div>
+        <div class="pb">
+          <div class="sec">
+            <div class="st">Ekipman Bilgisi</div>
+            <div class="g2">
+              <div><div class="fl">EQP Kodu</div><div class="fv mono">EQP-KMP-002</div></div>
+              <div><div class="fl">Tip</div><div class="fv">Kumpas — Dijital</div></div>
+              <div><div class="fl">Marka / Model</div><div class="fv">Mitutoyo 500-196-30</div></div>
+              <div><div class="fl">Seri No</div><div class="fv mono">MTY-2891-44C</div></div>
+              <div><div class="fl">Son Kalibrasyon</div><div class="fv">06.01.2026</div></div>
+              <div><div class="fl">Sonraki Kalibrasyon</div><div class="fv" style="color:var(--amber);font-weight:700">06.07.2026 (45 gün)</div></div>
+              <div><div class="fl">Periyot</div><div class="fv">6 Ay</div></div>
+              <div><div class="fl">Kalibrasyon Tipi</div><div class="fv">Dış — Akredite Lab</div></div>
+            </div>
+          </div>
+          <div class="sec">
+            <div class="st">QR Bağlantı Durumu</div>
+            <div class="row">
+              <div class="qrb">◼ EQP-KMP-002 QR</div>
+              <div style="padding:5px 10px;background:var(--green-l);border-radius:5px;font-size:11px;font-weight:700;color:#065f46">✓ FAI ve IPQC'de okunabilir</div>
+            </div>
+            <div style="margin-top:6px;font-size:11px;color:var(--g400)">Son kullanım: FAI-26-00014 · 22.03.2026 · Ahmet Kaya</div>
+          </div>
+          <div class="sec">
+            <div class="st">Kalibrasyon Geçmişi</div>
+            <table class="tbl">
+              <thead><tr><th>Tarih</th><th>Laboratuvar</th><th>Sertifika No</th><th>Sonuç</th></tr></thead>
+              <tbody>
+                <tr><td>06.01.2026</td><td>TÜBİTAK UME</td><td class="mono" style="font-size:11px">CAL-2026-00881</td><td><span class="bx bg">Uygun</span></td></tr>
+                <tr><td>06.07.2025</td><td>TÜBİTAK UME</td><td class="mono" style="font-size:11px">CAL-2025-00512</td><td><span class="bx bg">Uygun</span></td></tr>
+                <tr><td>06.01.2025</td><td>TÜBİTAK UME</td><td class="mono" style="font-size:11px">CAL-2025-00041</td><td><span class="bx bg">Uygun</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="sec">
+            <div class="row">
+              <button class="btn btn-o btn-sm">📎 Sertifika PDF</button>
+              <button class="btn btn-o btn-sm">🖨 QR Etiket Bas</button>
+              <button class="btn btn-a btn-sm mla" onclick="alert('Hatırlatma kuruldu — 30 gün öncesi.')">⏰ Hatırlatma</button>
+              <button class="btn btn-p btn-sm" onclick="alert('Yeni kalibrasyon kaydı açılıyor...')">+ Kalibrasyon Ekle</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FAI ve IPQC (basit stub) -->
+<div class="page" id="page-fai">
+  <div class="tb"><div class="tb-t">FAI — İlk Parça Muayenesi</div><div class="tb-r"><button class="btn btn-p">+ Yeni FAI</button></div></div>
+  <div class="pad">
+    <div class="kpi-row k4">
+      <div class="kc b"><div class="kl">Toplam FAI</div><div class="kv">14</div><div class="ks">Bu yıl</div></div>
+      <div class="kc g"><div class="kl">Onaylı</div><div class="kv">10</div><div class="ks">%71</div></div>
+      <div class="kc a"><div class="kl">Bekleyen</div><div class="kv">2</div><div class="ks">Ölçüm bekleniyor</div></div>
+      <div class="kc r"><div class="kl">Revize Gerekli</div><div class="kv">2</div><div class="ks">NCR açık</div></div>
+    </div>
+    <div class="asbar">
+      <span class="asl">AS9100 §8.5.1.1</span>
+      <span class="chip c-ok">✓ İlk Parça Zorunlu</span>
+      <span class="chip c-ok">✓ Teknik Resim Rev. Bağlı</span>
+      <span class="chip c-ok">✓ Ölçüm Aleti QR Kayıtlı</span>
+      <span class="chip c-w">⚠ 2 FAI Onay Bekliyor</span>
+    </div>
+    <div class="two">
+      <div class="pnl">
+        <div class="ph"><span class="pht">FAI Kayıtları</span></div>
+        <div class="pb">
+          <div class="li la sel" onclick="selLi(this)"><div style="flex:1"><div class="row" style="margin-bottom:3px"><span class="lc">FAI-26-00014</span><span class="bx ba">Bekleyen</span></div><div class="lt">Flanş Ø200 — AISI 4140</div><div class="ls">WO-26-00038 · Rev C</div></div></div>
+          <div class="li la" onclick="selLi(this)"><div style="flex:1"><div class="row" style="margin-bottom:3px"><span class="lc">FAI-26-00013</span><span class="bx ba">Bekleyen</span></div><div class="lt">Dişli Mili — 1.2312</div><div class="ls">WO-26-00035 · Rev B</div></div></div>
+          <div class="li lg" onclick="selLi(this)"><div style="flex:1"><div class="row" style="margin-bottom:3px"><span class="lc">FAI-26-00012</span><span class="bx bg">Onaylı</span></div><div class="lt">Boru Adaptörü Ø60</div><div class="ls">WO-26-00031 · Rev A</div></div></div>
+          <div class="li lr" onclick="selLi(this)"><div style="flex:1"><div class="row" style="margin-bottom:3px"><span class="lc">FAI-26-00011</span><span class="bx br">Revize</span></div><div class="lt">Piston Gövdesi — CuSn8</div><div class="ls">WO-26-00028 · Rev D</div></div></div>
+        </div>
+      </div>
+      <div class="pnl">
+        <div class="ph"><span class="pht">FAI-26-00014 — Boyutsal Ölçümler</span><span class="mla" style="display:flex;gap:6px"><div class="qrb">📐 DWG-26-00441 Rev C</div><div class="qrb">◼ EQP-KMP-001</div></span></div>
+        <div class="pb">
+          <div class="sec">
+            <div class="mr mh"><div>Özellik / GD&T</div><div>Nominal</div><div>Tolerans</div><div style="text-align:center">Ölçülen</div><div style="text-align:center">Sonuç</div></div>
+            <div class="mr pass"><div style="font-weight:600">Dış Çap ⌀200</div><div style="font-family:monospace">200.00</div><div style="color:var(--blue)">±0.05</div><input class="mi p" type="number" value="200.02"><div style="text-align:center"><span class="bx bg">PASS</span></div></div>
+            <div class="mr pass"><div style="font-weight:600">İç Çap ⌀150</div><div style="font-family:monospace">150.00</div><div style="color:var(--blue)">±0.05</div><input class="mi p" type="number" value="150.01"><div style="text-align:center"><span class="bx bg">PASS</span></div></div>
+            <div class="mr pass"><div style="font-weight:600">Flanş Düzlüğü</div><div style="font-family:monospace">—</div><div style="color:var(--blue)">≤0.05</div><input class="mi p" type="number" value="0.03"><div style="text-align:center"><span class="bx bg">PASS</span></div></div>
+            <div class="mr pass"><div style="font-weight:600">Delik Pozisyonu 4×⌀12</div><div style="font-family:monospace">⌀160</div><div style="color:var(--blue)">±0.10</div><input class="mi p" type="number" value="0.08"><div style="text-align:center"><span class="bx bg">PASS</span></div></div>
+            <div class="mr pass"><div style="font-weight:600">Yüzey Pürüzlülüğü Ra</div><div style="font-family:monospace">—</div><div style="color:var(--blue)">≤1.6</div><input class="mi p" type="number" value="0.95"><div style="text-align:center"><span class="bx bg">PASS</span></div></div>
+            <div style="margin-top:8px;padding:8px;background:var(--green-l);border-radius:5px;font-size:11px;font-weight:600;color:#065f46">✓ 5/5 özellik tolerans içinde — FAI onay için hazır</div>
+          </div>
+          <div class="sec">
+            <div class="row">
+              <button class="btn btn-o btn-sm">📋 FAI Paketi PDF</button>
+              <button class="btn btn-o btn-sm">📷 Fotoğraf Ekle</button>
+              <button class="btn btn-g btn-sm mla" onclick="alert('FAI onaylandı! Seri üretime izin verildi.')">✓ FAI Onayla</button>
+              <button class="btn btn-r btn-sm" onclick="alert('FAI reddedildi — NCR açılıyor...')">✕ Revize Gerekli</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="page" id="page-ipqc">
+  <div class="tb"><div class="tb-t">Süreç İçi Kalite Kontrol (IPQC)</div><div class="tb-r"><button class="btn btn-p">+ Kontrol Planı Ekle</button></div></div>
+  <div class="pad">
+    <div class="kpi-row k4">
+      <div class="kc b"><div class="kl">Aktif Kontrol Planı</div><div class="kv">8</div><div class="ks">WO bağlı</div></div>
+      <div class="kc g"><div class="kl">Geçen Kontrol</div><div class="kv">42</div><div class="ks">Bu hafta</div></div>
+      <div class="kc r"><div class="kl">Başarısız</div><div class="kv">3</div><div class="ks">NCR tetiklendi</div></div>
+      <div class="kc a"><div class="kl">Kritik Parametre</div><div class="kv">7</div><div class="ks">İzlemede</div></div>
+    </div>
+    <div class="two">
+      <div class="pnl">
+        <div class="ph"><span class="pht">Aktif Kontrol Planları</span></div>
+        <div class="pb">
+          <div class="li" style="border-left-color:var(--blue)" onclick="selLi(this)"><div style="flex:1"><div class="row" style="margin-bottom:3px"><span class="lc">KP-26-00008</span><span class="bx bb">Aktif</span></div><div class="lt">Flanş Ø200 — Torna OP10</div><div class="ls">WO-26-00038 · Her 5. parçada</div></div></div>
+          <div class="li" style="border-left-color:var(--blue)" onclick="selLi(this)"><div style="flex:1"><div class="row" style="margin-bottom:3px"><span class="lc">KP-26-00007</span><span class="bx bb">Aktif</span></div><div class="lt">Dişli Mili — CNC OP20</div><div class="ls">WO-26-00035 · Her 3. parçada</div></div></div>
+          <div class="li lg" onclick="selLi(this)"><div style="flex:1"><div class="row" style="margin-bottom:3px"><span class="lc">KP-26-00006</span><span class="bx bg">Tamamlandı</span></div><div class="lt">Boru Adaptörü — Taşlama OP30</div><div class="ls">WO-26-00031</div></div></div>
+          <div class="li lr" onclick="selLi(this)"><div style="flex:1"><div class="row" style="margin-bottom:3px"><span class="lc">KP-26-00005</span><span class="bx br">NCR Açıldı</span></div><div class="lt">Piston Gövdesi — CNC OP20</div><div class="ls">WO-26-00028 · Durduruldu</div></div></div>
+        </div>
+      </div>
+      <div class="pnl">
+        <div class="ph"><span class="pht">KP-26-00008 — Ölçüm Girişi</span><span class="bx bb mla">Her 5. Parça</span></div>
+        <div class="pb">
+          <div class="sec">
+            <div class="row" style="margin-bottom:10px">
+              <div class="qrb">◼ TRV-26-00042 Traveler</div>
+              <div class="qrb">◼ PRS-AK-001</div>
+              <div class="qrb">◼ MCH-TRN-001</div>
+            </div>
+            <table class="tbl">
+              <thead><tr><th>Kontrol Noktası</th><th>Kritik?</th><th>Spesifikasyon</th><th>Ölçülen</th><th>Sonuç</th></tr></thead>
+              <tbody>
+                <tr class="pass"><td style="font-weight:600">Dış Çap — OP10</td><td style="text-align:center;color:var(--red);font-weight:700;font-size:11px">✓ Krit.</td><td style="font-family:monospace;font-size:11px">199.95–200.05</td><td><input type="number" value="200.02" style="width:70px;border:1.5px solid var(--green);background:#f0fdf4;border-radius:4px;padding:3px 6px;font-size:11px;text-align:right"></td><td><span class="bx bg">PASS</span></td></tr>
+                <tr class="pass"><td style="font-weight:600">Yüzey Pürüzlülüğü Ra</td><td style="text-align:center">—</td><td style="font-family:monospace;font-size:11px">≤1.6</td><td><input type="number" value="1.1" style="width:70px;border:1.5px solid var(--green);background:#f0fdf4;border-radius:4px;padding:3px 6px;font-size:11px;text-align:right"></td><td><span class="bx bg">PASS</span></td></tr>
+                <tr class="pass"><td style="font-weight:600">Görsel — Çizik / Burr</td><td style="text-align:center;color:var(--red);font-weight:700;font-size:11px">✓ Krit.</td><td style="font-family:monospace;font-size:11px">0 adet</td><td><input type="number" value="0" style="width:70px;border:1.5px solid var(--green);background:#f0fdf4;border-radius:4px;padding:3px 6px;font-size:11px;text-align:right"></td><td><span class="bx bg">PASS</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="sec">
+            <div class="row">
+              <button class="btn btn-o btn-sm">+ Kontrol Noktası Ekle</button>
+              <button class="btn btn-g btn-sm mla" onclick="alert('IPQC kaydedildi. WO devam ediyor.')">✓ Kaydet & Devam</button>
+              <button class="btn btn-r btn-sm" onclick="alert('NCR-26-00043 otomatik açıldı — WO durduruldu.')">✕ Red → NCR</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /main -->
+</div><!-- /app -->
+
+<script>
+function pg(id){
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active')});
+  document.querySelectorAll('.ni').forEach(function(n){n.classList.remove('active')});
+  var p=document.getElementById('page-'+id);
+  var n=document.getElementById('nv-'+id);
+  if(p)p.classList.add('active');
+  if(n)n.classList.add('active');
+}
+function st(el,tabId){
+  var bar=el.closest('.tabs');
+  if(!bar)return;
+  bar.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active')});
+  el.classList.add('active');
+  var panel=el.closest('.pnl');
+  if(!panel)return;
+  panel.querySelectorAll('.tc').forEach(function(t){t.classList.remove('on')});
+  var tgt=document.getElementById(tabId);
+  if(tgt)tgt.classList.add('on');
+}
+function selLi(el){
+  var pb=el.closest('.pb');
+  if(pb)pb.querySelectorAll('.li').forEach(function(i){i.classList.remove('sel')});
+  el.classList.add('sel');
+}
+function setSev(el){
+  el.closest('.sev').querySelectorAll('.sv').forEach(function(b){b.classList.remove('sel')});
+  el.classList.add('sel');
+}
+function selKc(el){
+  el.closest('.pb').querySelectorAll('.kcrd').forEach(function(c){c.style.borderColor='var(--g200)'});
+  el.style.borderColor='#93c5fd';
+}
+</script>
+</body>
+</html>

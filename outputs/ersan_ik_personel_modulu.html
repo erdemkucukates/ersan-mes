@@ -1,0 +1,1239 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — İK & Personel Yetkinliği</title>
+<style>
+:root{
+  --lacivert:#1a2b47;--blue:#2563eb;--blue-l:#dbeafe;
+  --green:#059669;--green-l:#d1fae5;
+  --red:#dc2626;--red-l:#fee2e2;
+  --amber:#d97706;--amber-l:#fef3c7;
+  --purple:#7c3aed;--purple-l:#ede9fe;
+  --teal:#0d9488;--teal-l:#ccfbf1;
+  --g50:#f9fafb;--g100:#f3f4f6;--g200:#e5e7eb;
+  --g300:#d1d5db;--g400:#9ca3af;--g500:#6b7280;--g700:#374151;--g900:#111827;
+  --r:7px;--sh:0 1px 3px rgba(0,0,0,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#f0f2f5;color:var(--g700);font-size:13px}
+.app{display:flex;height:100vh;overflow:hidden}
+
+/* SIDEBAR */
+.sb{width:214px;background:var(--lacivert);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
+.sb-logo{padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0}
+.sb-logo .t{font-size:13px;font-weight:700;color:#fff}
+.sb-logo .s{font-size:10px;color:rgba(255,255,255,.4);margin-top:1px}
+.sb-sec{padding:5px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+.sb-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.3);padding:5px 14px 3px}
+.ni{display:flex;align-items:center;gap:8px;padding:7px 14px;cursor:pointer;color:rgba(255,255,255,.55);font-size:11.5px;transition:all .15s;border-left:2px solid transparent}
+.ni:hover{background:rgba(255,255,255,.05);color:rgba(255,255,255,.85)}
+.ni.active{background:rgba(255,255,255,.1);color:#fff;border-left-color:#60a5fa;font-weight:600}
+.nb{margin-left:auto;color:#fff;font-size:9px;padding:1px 5px;border-radius:10px;font-weight:700}
+.nb.red{background:#dc2626}.nb.amb{background:#d97706}
+
+/* MAIN */
+.main{flex:1;overflow:hidden;display:flex;flex-direction:column}
+.page{display:none;flex:1;flex-direction:column;overflow:hidden}
+.page.active{display:flex}
+
+/* TOP BAR */
+.tb{background:#fff;border-bottom:1px solid var(--g200);padding:0 18px;display:flex;align-items:center;gap:10px;height:48px;flex-shrink:0}
+.tb-t{font-size:14px;font-weight:700;color:var(--lacivert)}
+.tb-r{margin-left:auto;display:flex;gap:8px;align-items:center}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:5px;font-size:11.5px;font-weight:600;cursor:pointer;border:none;transition:all .15s;white-space:nowrap}
+.btn-p{background:var(--lacivert);color:#fff}.btn-p:hover{background:#243555}
+.btn-o{background:#fff;border:1px solid var(--g300);color:var(--g700)}.btn-o:hover{background:var(--g50)}
+.btn-g{background:var(--green);color:#fff}.btn-r{background:var(--red);color:#fff}
+.btn-a{background:var(--amber);color:#fff}.btn-t{background:var(--teal);color:#fff}
+.btn-sm{padding:4px 9px;font-size:10.5px}
+.srch{border:1px solid var(--g300);border-radius:5px;padding:6px 10px;outline:none;font-size:12px;width:190px}
+.srch:focus{border-color:var(--lacivert)}
+
+/* KPI */
+.kpi-row{display:grid;gap:10px;margin-bottom:12px}
+.k5{grid-template-columns:repeat(5,1fr)}.k4{grid-template-columns:repeat(4,1fr)}.k6{grid-template-columns:repeat(6,1fr)}
+.kc{background:#fff;border:1px solid var(--g200);border-radius:var(--r);padding:11px 13px;box-shadow:var(--sh);position:relative;overflow:hidden;cursor:pointer;transition:.15s}
+.kc:hover{border-color:#93c5fd}
+.kc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.kc.b::before{background:var(--blue)}.kc.g::before{background:var(--green)}.kc.r::before{background:var(--red)}.kc.a::before{background:var(--amber)}.kc.p::before{background:var(--purple)}.kc.t::before{background:var(--teal)}
+.kl{font-size:9.5px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--g400)}
+.kv{font-size:22px;font-weight:700;color:var(--g900);margin:3px 0 1px;line-height:1}
+.ks{font-size:10px;color:var(--g400)}
+
+/* AS BAR */
+.asbar{background:#fff;border:1px solid var(--g200);border-radius:var(--r);padding:7px 13px;margin-bottom:11px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;box-shadow:var(--sh)}
+.asl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--g400);margin-right:2px}
+.chip{display:inline-flex;align-items:center;padding:3px 8px;border-radius:4px;font-size:10px;font-weight:600}
+.c-ok{background:var(--green-l);color:#065f46}.c-w{background:var(--amber-l);color:#92400e}
+.c-e{background:var(--red-l);color:#991b1b}.c-b{background:var(--blue-l);color:#1e40af}
+
+/* TWO COL */
+.two{display:grid;grid-template-columns:300px 1fr;gap:11px;flex:1;min-height:0}
+.two-w{display:grid;grid-template-columns:340px 1fr;gap:11px;flex:1;min-height:0}
+.pnl{background:#fff;border:1px solid var(--g200);border-radius:var(--r);box-shadow:var(--sh);display:flex;flex-direction:column;overflow:hidden}
+.ph{padding:8px 13px;border-bottom:1px solid var(--g200);background:var(--g50);display:flex;align-items:center;gap:8px;flex-shrink:0}
+.pht{font-size:11.5px;font-weight:700;color:var(--lacivert)}
+.pb{flex:1;overflow-y:auto}
+
+/* LIST */
+.li{padding:9px 11px;border-bottom:1px solid #f3f4f6;cursor:pointer;display:flex;align-items:flex-start;gap:9px;border-left:3px solid transparent;transition:.12s}
+.li:hover{background:#f9fafb}
+.li.sel{background:#eff6ff;border-left-color:var(--lacivert)}
+.li.lg{border-left-color:var(--green)}.li.la{border-left-color:var(--amber)}.li.lr{border-left-color:var(--red)}.li.lp{border-left-color:var(--purple)}.li.lt{border-left-color:var(--teal)}
+.lc{font-family:monospace;font-size:10.5px;font-weight:700;color:var(--lacivert)}
+.lt2{font-size:11.5px;color:var(--g700);margin:2px 0}
+.ls{font-size:10px;color:var(--g400)}
+
+/* BADGE */
+.bx{display:inline-flex;align-items:center;padding:2px 7px;border-radius:12px;font-size:9.5px;font-weight:600}
+.bg{background:var(--green-l);color:#065f46}.br{background:var(--red-l);color:#991b1b}
+.ba{background:var(--amber-l);color:#92400e}.bb{background:var(--blue-l);color:#1e40af}
+.bz{background:var(--g100);color:var(--g500)}.bp{background:var(--purple-l);color:#4c1d95}
+
+/* TABS */
+.tabs{display:flex;border-bottom:1px solid var(--g200);background:#fff;padding:0 11px;gap:2px;flex-shrink:0}
+.tab{padding:8px 10px;font-size:11px;font-weight:500;color:var(--g400);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.tab:hover{color:var(--g700)}.tab.active{color:var(--lacivert);border-bottom-color:var(--lacivert);font-weight:700}
+.tc{display:none}.tc.on{display:block}
+
+/* SECTION */
+.sec{padding:11px 13px;border-bottom:1px solid #f3f4f6}
+.sec:last-child{border-bottom:none}
+.st{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--g400);margin-bottom:7px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px}
+.fl{font-size:9.5px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--g400);margin-bottom:2px}
+.fv{font-size:12px;color:var(--g900);font-weight:500}
+.mono{font-family:monospace;color:var(--lacivert);font-weight:700}
+
+/* TABLE */
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--g400);background:var(--g50);padding:6px 9px;border-bottom:1px solid var(--g200);text-align:left;white-space:nowrap}
+.tbl td{padding:7px 9px;border-bottom:1px solid #f3f4f6;font-size:11.5px;color:var(--g700);vertical-align:middle}
+.tbl tr:hover td{background:#fafafa}
+
+/* AVATAR */
+.ava{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0}
+
+/* PROGRESS BAR */
+.prog{height:6px;background:var(--g200);border-radius:3px;overflow:hidden;margin-top:3px}
+.prog-f{height:100%;border-radius:3px}
+
+/* YETKİNLİK MATRİKSİ */
+.matrix-wrap{overflow:auto;flex:1}
+.matrix-tbl{border-collapse:collapse;font-size:11px}
+.matrix-tbl th{background:var(--lacivert);color:#fff;padding:8px 10px;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;position:sticky;top:0;z-index:2}
+.matrix-tbl th:first-child{position:sticky;left:0;z-index:3;min-width:160px;text-align:left}
+.matrix-tbl th.op-header{text-align:center;min-width:90px;border-left:1px solid rgba(255,255,255,.15)}
+.matrix-tbl td{border:1px solid var(--g200);padding:0;text-align:center;vertical-align:middle}
+.matrix-tbl td:first-child{position:sticky;left:0;background:#fff;z-index:1;border-right:2px solid var(--g200);padding:8px 10px;text-align:left}
+.matrix-tbl tr:hover td{background:#f5f8ff}
+.matrix-tbl tr:hover td:first-child{background:#eff6ff}
+.yetki-cell{width:88px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.12s;font-size:13px}
+.yetki-cell:hover{background:rgba(37,99,235,.08)}
+/* Yetkinlik seviyeleri */
+.y0{color:var(--g300);font-size:16px}          /* Yok — boş */
+.y1{color:var(--amber);font-size:14px}          /* Eğitimde */
+.y2{color:var(--blue);font-size:14px}           /* Denetim altında yapabilir */
+.y3{color:var(--green);font-size:16px}          /* Bağımsız yapabilir */
+.y4{color:var(--purple);font-size:14px}         /* Eğitmen seviyesi */
+
+/* SERTIFIKA KART */
+.sertKart{background:#fff;border:1px solid var(--g200);border-radius:var(--r);padding:10px 12px;margin-bottom:7px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:.12s}
+.sertKart:hover{border-color:#93c5fd}
+.sertIc{width:34px;height:34px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.sertGun{font-size:18px;font-weight:700}
+.gok{color:var(--green)}.gw{color:var(--amber)}.ge{color:var(--red)}
+.sertIc-ok{background:var(--green-l)}.sertIc-w{background:var(--amber-l)}.sertIc-e{background:var(--red-l)}
+
+/* EĞİTİM TAKVİMİ */
+.egitimKarti{background:#fff;border:1px solid var(--g200);border-radius:var(--r);padding:10px 13px;margin-bottom:7px;display:flex;gap:10px;align-items:flex-start;box-shadow:var(--sh)}
+.egitimTarih{background:var(--lacivert);color:#fff;border-radius:6px;padding:6px 8px;text-align:center;min-width:44px;flex-shrink:0}
+.egTAy{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;opacity:.7}
+.egTGun{font-size:18px;font-weight:800;line-height:1}
+
+/* SKILL BAR */
+.skill-item{margin-bottom:8px}
+.skill-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;font-size:11px}
+.skill-name{font-weight:600;color:var(--g700)}
+.skill-score{font-weight:700;font-size:10px}
+
+/* GAP ANALİZİ */
+.gap-kart{background:#fff;border:1px solid var(--g200);border-radius:var(--r);padding:11px 13px;margin-bottom:7px;box-shadow:var(--sh)}
+.gap-head{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.gap-score{font-size:22px;font-weight:800}
+
+/* UTILS */
+.row{display:flex;align-items:center;gap:8px}
+.mla{margin-left:auto}
+.mt8{margin-top:8px}
+.pad{padding:14px 18px}
+.pad0{padding:0 18px 14px}
+input,select,textarea{font-family:inherit}
+input[type=text],input[type=date],select,textarea{border:1px solid var(--g300);border-radius:5px;padding:5px 8px;outline:none;color:var(--g900);background:#fff;font-size:11.5px}
+input:focus,select:focus,textarea:focus{border-color:var(--lacivert)}
+.qrb{display:inline-flex;align-items:center;gap:5px;background:var(--g100);border:1px solid var(--g200);border-radius:5px;padding:4px 8px;font-size:10.5px;color:var(--g500);cursor:pointer}
+.qrb:hover{background:#e0e7ef}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- SIDEBAR -->
+<div class="sb">
+  <div class="sb-logo">
+    <div class="t">⚙ ERSAN MES</div>
+    <div class="s">v7.0 · AS9100 Rev.D §7.2</div>
+  </div>
+  <div class="sb-sec">
+    <div class="sb-lbl">İK & Yetkinlik</div>
+    <div class="ni active" onclick="pg('personel')" id="nv-personel">👤 Personel Defteri</div>
+    <div class="ni" onclick="pg('matris')" id="nv-matris">🔢 Yetkinlik Matriksi</div>
+    <div class="ni" onclick="pg('egitim')" id="nv-egitim">📚 Eğitim Planı <span class="nb amb">3</span></div>
+    <div class="ni" onclick="pg('sertifika')" id="nv-sertifika">🏆 Sertifikalar <span class="nb red">2</span></div>
+    <div class="ni" onclick="pg('gap')" id="nv-gap">📊 Gap Analizi</div>
+  </div>
+  <div class="sb-sec">
+    <div class="sb-lbl">Diğer Modüller</div>
+    <div class="ni">🔬 Kalite</div>
+    <div class="ni">⚙ Ekipman & Bakım</div>
+    <div class="ni">⚙ Üretim / WO</div>
+    <div class="ni">📂 Doküman (DMS)</div>
+  </div>
+</div>
+
+<div class="main">
+
+<!-- ══════════════════════════════
+     PERSONEL DEFTERİ
+══════════════════════════════ -->
+<div class="page active" id="page-personel">
+  <div class="tb">
+    <div class="tb-t">Personel Defteri</div>
+    <div class="tb-r">
+      <input class="srch" id="prs-ara" placeholder="🔍 Ad, PRS kodu, departman...">
+      <select id="prs-dept" style="font-size:11px;padding:5px 8px;border-radius:5px;border:1px solid var(--g300)">
+        <option>Tüm Departmanlar</option><option>Üretim</option><option>Kalite</option><option>Satınalma</option><option>Depo</option><option>Bakım</option>
+      </select>
+      <button class="btn btn-p">+ Personel Ekle</button>
+    </div>
+  </div>
+  <div class="pad" style="padding-bottom:6px">
+    <div class="kpi-row k5">
+      <div class="kc b"><div class="kl">Toplam Personel</div><div class="kv">18</div><div class="ks">Aktif çalışan</div></div>
+      <div class="kc g"><div class="kl">Yetkin ≥ %80</div><div class="kv">11</div><div class="ks">Hedef karşılandı</div></div>
+      <div class="kc a"><div class="kl">Eğitim Bekleyen</div><div class="kv">4</div><div class="ks">Bu ay planlandı</div></div>
+      <div class="kc r"><div class="kl">Sertifika Dolan</div><div class="kv">2</div><div class="ks">30 gün içinde</div></div>
+      <div class="kc p"><div class="kl">Eğitmen</div><div class="kv">3</div><div class="ks">İç eğitim verebilir</div></div>
+    </div>
+    <div class="asbar">
+      <span class="asl">AS9100 §7.2</span>
+      <span class="chip c-ok">✓ Yetkinlik Kayıtları Güncel</span>
+      <span class="chip c-ok">✓ Eğitim Planı Aktif</span>
+      <span class="chip c-e">✗ 2 Sertifika Süresi Dolacak</span>
+      <span class="chip c-w">⚠ 4 Personel Eğitim Bekliyor</span>
+      <span class="chip c-ok">✓ Operatör QR Sistemi Aktif</span>
+    </div>
+  </div>
+  <div class="pad0" style="flex:1;display:flex;flex-direction:column;min-height:0">
+    <div class="two-w" style="flex:1;min-height:0">
+
+      <!-- Sol: Personel Listesi -->
+      <div class="pnl">
+        <div class="ph"><span class="pht">Personel</span>
+          <span style="margin-left:auto;font-size:10px;color:var(--g400)" id="prs-sayac">18 kişi</span>
+        </div>
+        <div class="pb" id="prs-liste">
+
+          <div class="li lg sel" onclick="selPrs(this,'ahmet')">
+            <div class="ava" style="background:var(--blue)">AK</div>
+            <div style="flex:1">
+              <div class="row" style="margin-bottom:2px">
+                <span style="font-size:12px;font-weight:700;color:var(--g900)">Ahmet Kaya</span>
+                <span class="lc" style="font-size:9.5px">PRS-AK-001</span>
+                <span class="bx bg" style="font-size:9px">Aktif</span>
+              </div>
+              <div class="ls">CNC Operatörü · Üretim · %91 yetkin</div>
+              <div class="prog mt8" style="margin-top:4px;width:120px"><div class="prog-f" style="width:91%;background:var(--green)"></div></div>
+            </div>
+          </div>
+
+          <div class="li lg" onclick="selPrs(this,'mehmet')">
+            <div class="ava" style="background:var(--teal)">MA</div>
+            <div style="flex:1">
+              <div class="row" style="margin-bottom:2px">
+                <span style="font-size:12px;font-weight:700;color:var(--g900)">Mehmet Aydın</span>
+                <span class="lc" style="font-size:9.5px">PRS-MA-002</span>
+                <span class="bx bg" style="font-size:9px">Aktif</span>
+              </div>
+              <div class="ls">Üretim Müdürü · Üretim · %96 yetkin</div>
+              <div class="prog mt8" style="margin-top:4px;width:120px"><div class="prog-f" style="width:96%;background:var(--green)"></div></div>
+            </div>
+          </div>
+
+          <div class="li la" onclick="selPrs(this,'ayse')">
+            <div class="ava" style="background:var(--purple)">AK</div>
+            <div style="flex:1">
+              <div class="row" style="margin-bottom:2px">
+                <span style="font-size:12px;font-weight:700;color:var(--g900)">Ayşe Kaya</span>
+                <span class="lc" style="font-size:9.5px">PRS-AK-003</span>
+                <span class="bx bg" style="font-size:9px">Aktif</span>
+              </div>
+              <div class="ls">Kalite Müdürü · Kalite · %100 yetkin</div>
+              <div class="prog mt8" style="margin-top:4px;width:120px"><div class="prog-f" style="width:100%;background:var(--green)"></div></div>
+            </div>
+          </div>
+
+          <div class="li la" onclick="selPrs(this,'ali')">
+            <div class="ava" style="background:var(--amber)">AY</div>
+            <div style="flex:1">
+              <div class="row" style="margin-bottom:2px">
+                <span style="font-size:12px;font-weight:700;color:var(--g900)">Ali Yıldız</span>
+                <span class="lc" style="font-size:9.5px">PRS-AY-004</span>
+                <span class="bx ba" style="font-size:9px">Eğitimde</span>
+              </div>
+              <div class="ls">Freze Operatörü · Üretim · %62 yetkin</div>
+              <div class="prog mt8" style="margin-top:4px;width:120px"><div class="prog-f" style="width:62%;background:var(--amber)"></div></div>
+            </div>
+          </div>
+
+          <div class="li lg" onclick="selPrs(this,'fatma')">
+            <div class="ava" style="background:var(--green)">FC</div>
+            <div style="flex:1">
+              <div class="row" style="margin-bottom:2px">
+                <span style="font-size:12px;font-weight:700;color:var(--g900)">Fatma Çelik</span>
+                <span class="lc" style="font-size:9.5px">PRS-FC-005</span>
+                <span class="bx bg" style="font-size:9px">Aktif</span>
+              </div>
+              <div class="ls">Depo Sorumlusu · Depo · %88 yetkin</div>
+              <div class="prog mt8" style="margin-top:4px;width:120px"><div class="prog-f" style="width:88%;background:var(--green)"></div></div>
+            </div>
+          </div>
+
+          <div class="li lr" onclick="selPrs(this,'hasan')">
+            <div class="ava" style="background:var(--red)">HD</div>
+            <div style="flex:1">
+              <div class="row" style="margin-bottom:2px">
+                <span style="font-size:12px;font-weight:700;color:var(--g900)">Hasan Demir</span>
+                <span class="lc" style="font-size:9.5px">PRS-HD-006</span>
+                <span class="bx br" style="font-size:9px">Sertifika Doluyor!</span>
+              </div>
+              <div class="ls">Bakım Teknisyeni · Bakım · %78 yetkin</div>
+              <div class="prog mt8" style="margin-top:4px;width:120px"><div class="prog-f" style="width:78%;background:var(--amber)"></div></div>
+            </div>
+          </div>
+
+          <div class="li lg" onclick="selPrs(this,'can')">
+            <div class="ava" style="background:#0369a1">CO</div>
+            <div style="flex:1">
+              <div class="row" style="margin-bottom:2px">
+                <span style="font-size:12px;font-weight:700;color:var(--g900)">Can Öztürk</span>
+                <span class="lc" style="font-size:9.5px">PRS-CO-007</span>
+                <span class="bx bg" style="font-size:9px">Aktif</span>
+              </div>
+              <div class="ls">Taşlama Operatörü · Üretim · %83 yetkin</div>
+              <div class="prog mt8" style="margin-top:4px;width:120px"><div class="prog-f" style="width:83%;background:var(--green)"></div></div>
+            </div>
+          </div>
+
+          <div class="li la" onclick="selPrs(this,'zeynep')">
+            <div class="ava" style="background:#7c3aed">ZS</div>
+            <div style="flex:1">
+              <div class="row" style="margin-bottom:2px">
+                <span style="font-size:12px;font-weight:700;color:var(--g900)">Zeynep Şahin</span>
+                <span class="lc" style="font-size:9.5px">PRS-ZS-008</span>
+                <span class="bx ba" style="font-size:9px">Eğitimde</span>
+              </div>
+              <div class="ls">Kalite Teknikeri · Kalite · %55 yetkin</div>
+              <div class="prog mt8" style="margin-top:4px;width:120px"><div class="prog-f" style="width:55%;background:var(--amber)"></div></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Sağ: Personel Detayı -->
+      <div class="pnl" style="display:flex;flex-direction:column" id="prs-detay">
+        <div class="tabs">
+          <div class="tab active" onclick="st(this,'p-genel')">👤 Genel Bilgi</div>
+          <div class="tab" onclick="st(this,'p-yetkinlik')">🎯 Yetkinlikler</div>
+          <div class="tab" onclick="st(this,'p-egitim')">📚 Eğitim Geçmişi</div>
+          <div class="tab" onclick="st(this,'p-sertifika')">🏆 Sertifikalar</div>
+          <div class="tab" onclick="st(this,'p-grev')">🔑 Yetki & Görev</div>
+        </div>
+
+        <!-- GENEL BİLGİ -->
+        <div class="tc on pb" id="p-genel">
+          <div class="sec">
+            <div class="row" style="margin-bottom:12px">
+              <div class="ava" style="width:52px;height:52px;background:var(--blue);font-size:18px">AK</div>
+              <div style="flex:1">
+                <div style="font-size:16px;font-weight:800;color:var(--g900)">Ahmet Kaya</div>
+                <div style="font-size:11px;color:var(--g400);margin-top:2px">CNC Operatörü · Üretim Departmanı</div>
+                <div class="row" style="margin-top:5px;gap:6px">
+                  <span class="bx bg">Aktif</span>
+                  <span class="lc">PRS-AK-001</span>
+                  <span class="bx bp">★ Eğitmen</span>
+                </div>
+              </div>
+              <div style="text-align:right">
+                <div style="font-size:28px;font-weight:800;color:var(--green)">91%</div>
+                <div style="font-size:10px;color:var(--g400)">Yetkinlik Skoru</div>
+                <div class="prog" style="width:80px;margin-top:4px"><div class="prog-f" style="width:91%;background:var(--green)"></div></div>
+              </div>
+            </div>
+            <div class="g3">
+              <div><div class="fl">PRS Kodu</div><div class="fv mono">PRS-AK-001</div></div>
+              <div><div class="fl">İşe Giriş</div><div class="fv">15.03.2019</div></div>
+              <div><div class="fl">Kıdem</div><div class="fv">7 yıl</div></div>
+              <div><div class="fl">Departman</div><div class="fv">Üretim</div></div>
+              <div><div class="fl">Unvan</div><div class="fv">CNC Operatörü</div></div>
+              <div><div class="fl">Eğitim Düzeyi</div><div class="fv">Meslek Lisesi</div></div>
+              <div><div class="fl">Sorumlu Müdür</div><div class="fv">Mehmet Aydın</div></div>
+              <div><div class="fl">Son Değerlendirme</div><div class="fv">10.01.2026</div></div>
+              <div><div class="fl">Sonraki Değ.</div><div class="fv" style="color:var(--amber)">10.07.2026</div></div>
+            </div>
+          </div>
+          <div class="sec">
+            <div class="st">Yetkili Operasyonlar</div>
+            <div class="row" style="flex-wrap:wrap;gap:6px">
+              <span class="chip c-ok">✓ CNC Torna</span>
+              <span class="chip c-ok">✓ Freze — Denetim Altında</span>
+              <span class="chip c-ok">✓ Traveler QR İşlemi</span>
+              <span class="chip c-ok">✓ FAI Ölçüm</span>
+              <span class="chip" style="background:var(--purple-l);color:#4c1d95">★ CNC Eğitmen</span>
+              <span class="chip" style="background:var(--g100);color:var(--g500)">— Taşlama (Yetkisiz)</span>
+            </div>
+          </div>
+          <div class="sec">
+            <div class="st">Yetkili Makineler</div>
+            <div class="row" style="flex-wrap:wrap;gap:6px">
+              <div class="qrb">◼ MCH-TRN-001 CNC Torna T-01</div>
+              <div class="qrb">◼ MCH-TRN-002 CNC Torna T-02</div>
+              <div class="qrb">◼ MCH-FRZ-001 Freze F-01 (Denetim)</div>
+            </div>
+          </div>
+          <div class="sec">
+            <div class="row">
+              <div class="qrb">◼ PRS-AK-001 QR Bas</div>
+              <div class="qrb">📄 Görev Tanımı</div>
+              <button class="btn btn-o btn-sm mla">✏ Düzenle</button>
+              <button class="btn btn-p btn-sm" onclick="alert('Eğitim planı sayfasına yönlendiriliyorsunuz...')">📚 Eğitim Planla</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- YETKİNLİKLER -->
+        <div class="tc pb" id="p-yetkinlik">
+          <div class="sec">
+            <div class="st">Operasyon Yetkinlik Seviyeleri</div>
+            <div style="margin-bottom:8px;padding:6px 9px;background:var(--g50);border-radius:5px;font-size:10px;color:var(--g500);display:flex;gap:14px">
+              <span>● Yok</span>
+              <span style="color:var(--amber)">◐ Eğitimde</span>
+              <span style="color:var(--blue)">◑ Denetim Altında</span>
+              <span style="color:var(--green)">◆ Bağımsız</span>
+              <span style="color:var(--purple)">★ Eğitmen</span>
+            </div>
+            <div id="yetkinlik-skill-list">
+              <div class="skill-item">
+                <div class="skill-head">
+                  <span class="skill-name">CNC Torna Operasyonu</span>
+                  <span class="skill-score" style="color:var(--purple)">★ Eğitmen</span>
+                </div>
+                <div class="prog"><div class="prog-f" style="width:100%;background:var(--purple)"></div></div>
+                <div style="font-size:9.5px;color:var(--g400);margin-top:2px">Son değerlendirme: 10.01.2026 · Mehmet Aydın</div>
+              </div>
+              <div class="skill-item">
+                <div class="skill-head">
+                  <span class="skill-name">CNC Freze Operasyonu</span>
+                  <span class="skill-score" style="color:var(--blue)">◑ Denetim Altında</span>
+                </div>
+                <div class="prog"><div class="prog-f" style="width:55%;background:var(--blue)"></div></div>
+                <div style="font-size:9.5px;color:var(--g400);margin-top:2px">Son değerlendirme: 15.11.2025 · Mehmet Aydın</div>
+              </div>
+              <div class="skill-item">
+                <div class="skill-head">
+                  <span class="skill-name">FAI / Boyutsal Ölçüm</span>
+                  <span class="skill-score" style="color:var(--green)">◆ Bağımsız</span>
+                </div>
+                <div class="prog"><div class="prog-f" style="width:80%;background:var(--green)"></div></div>
+                <div style="font-size:9.5px;color:var(--g400);margin-top:2px">Son değerlendirme: 10.01.2026 · Ayşe Kaya</div>
+              </div>
+              <div class="skill-item">
+                <div class="skill-head">
+                  <span class="skill-name">Traveler QR Sistemi</span>
+                  <span class="skill-score" style="color:var(--green)">◆ Bağımsız</span>
+                </div>
+                <div class="prog"><div class="prog-f" style="width:90%;background:var(--green)"></div></div>
+                <div style="font-size:9.5px;color:var(--g400);margin-top:2px">Son değerlendirme: 20.12.2025</div>
+              </div>
+              <div class="skill-item">
+                <div class="skill-head">
+                  <span class="skill-name">IPQC Süreç İçi Kontrol</span>
+                  <span class="skill-score" style="color:var(--green)">◆ Bağımsız</span>
+                </div>
+                <div class="prog"><div class="prog-f" style="width:85%;background:var(--green)"></div></div>
+                <div style="font-size:9.5px;color:var(--g400);margin-top:2px">Son değerlendirme: 10.01.2026 · Ayşe Kaya</div>
+              </div>
+              <div class="skill-item">
+                <div class="skill-head">
+                  <span class="skill-name">Taşlama Operasyonu</span>
+                  <span class="skill-score" style="color:var(--g300)">● Yetkisiz</span>
+                </div>
+                <div class="prog"><div class="prog-f" style="width:0%;background:var(--g300)"></div></div>
+                <div style="font-size:9.5px;color:var(--g400);margin-top:2px">Henüz eğitim alınmadı</div>
+              </div>
+            </div>
+          </div>
+          <div class="sec">
+            <div class="row">
+              <button class="btn btn-o btn-sm" onclick="pg('matris')">🔢 Matriksde Gör</button>
+              <button class="btn btn-p btn-sm mla" onclick="alert('Yetkinlik değerlendirme formu açılıyor...')">+ Değerlendirme Ekle</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- EĞİTİM GEÇMİŞİ -->
+        <div class="tc pb" id="p-egitim">
+          <div class="sec">
+            <div class="st">Tamamlanan Eğitimler</div>
+            <table class="tbl">
+              <thead><tr><th>Eğitim</th><th>Tarih</th><th>Süre</th><th>Veren</th><th>Sonuç</th><th>Doküman</th></tr></thead>
+              <tbody>
+                <tr><td style="font-weight:600">CNC Torna İleri Seviye</td><td>10.01.2026</td><td>16 saat</td><td>Mehmet Aydın (İç)</td><td><span class="bx bg">Geçti</span></td><td><span class="qrb">📄</span></td></tr>
+                <tr><td style="font-weight:600">AS9100 Farkındalık</td><td>15.11.2025</td><td>4 saat</td><td>Ayşe Kaya (İç)</td><td><span class="bx bg">Geçti</span></td><td><span class="qrb">📄</span></td></tr>
+                <tr><td style="font-weight:600">İş Güvenliği Temel</td><td>20.08.2025</td><td>8 saat</td><td>Dış — SGK</td><td><span class="bx bg">Geçti</span></td><td><span class="qrb">📄</span></td></tr>
+                <tr><td style="font-weight:600">Freze Operatörü Giriş</td><td>05.06.2025</td><td>12 saat</td><td>Mehmet Aydın (İç)</td><td><span class="bx ba">Devam</span></td><td><span class="qrb">📄</span></td></tr>
+                <tr><td style="font-weight:600">Kalite Bilinçlendirme</td><td>10.01.2025</td><td>4 saat</td><td>Ayşe Kaya (İç)</td><td><span class="bx bg">Geçti</span></td><td><span class="qrb">📄</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="sec">
+            <div class="row">
+              <span style="font-size:11px;color:var(--g500)">Toplam: 44 saat eğitim — Bu yıl: 20 saat</span>
+              <button class="btn btn-p btn-sm mla" onclick="alert('Eğitim kaydı ekleme formu açılıyor...')">+ Eğitim Ekle</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- SERTİFİKALAR -->
+        <div class="tc pb" id="p-sertifika" style="padding:12px 13px">
+          <div class="g2" style="margin-bottom:10px">
+            <div class="sertKart" style="margin-bottom:0">
+              <div class="sertIc sertIc-ok">🏆</div>
+              <div style="flex:1">
+                <div style="font-size:11.5px;font-weight:700;color:var(--g900)">CNC Operatör Belgesi</div>
+                <div style="font-size:10px;color:var(--g400)">MEB Mesleki Yeterlilik</div>
+                <div style="font-size:10px;color:var(--g400)">Bitiş: 15.08.2027</div>
+              </div>
+              <div style="text-align:right"><div class="sertGun gok">512</div><div style="font-size:9px;color:var(--g400)">gün kaldı</div></div>
+            </div>
+            <div class="sertKart" style="margin-bottom:0">
+              <div class="sertIc sertIc-ok">🛡</div>
+              <div style="flex:1">
+                <div style="font-size:11.5px;font-weight:700;color:var(--g900)">İş Güvenliği Eğitimi</div>
+                <div style="font-size:10px;color:var(--g400)">Zorunlu — SGK</div>
+                <div style="font-size:10px;color:var(--g400)">Bitiş: 20.08.2027</div>
+              </div>
+              <div style="text-align:right"><div class="sertGun gok">517</div><div style="font-size:9px;color:var(--g400)">gün kaldı</div></div>
+            </div>
+            <div class="sertKart" style="margin-bottom:0">
+              <div class="sertIc sertIc-ok">📋</div>
+              <div style="flex:1">
+                <div style="font-size:11.5px;font-weight:700;color:var(--g900)">AS9100 Farkındalık</div>
+                <div style="font-size:10px;color:var(--g400)">İç Eğitim Belgesi</div>
+                <div style="font-size:10px;color:var(--g400)">Bitiş: 15.11.2026</div>
+              </div>
+              <div style="text-align:right"><div class="sertGun gok">238</div><div style="font-size:9px;color:var(--g400)">gün kaldı</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- YETKİ & GÖREV -->
+        <div class="tc pb" id="p-grev">
+          <div class="sec">
+            <div class="st">Görev Tanımı ve Yetkiler</div>
+            <div style="font-size:11.5px;color:var(--g700);line-height:1.6;margin-bottom:10px">
+              Ahmet Kaya, CNC Torna operasyonlarından birincil sorumlu operatördür. §8.5 kapsamında ürün muayenesi yapma, Traveler kaydı oluşturma ve kapama yetkisine sahiptir. CNC konusunda eğitmen sertifikasyonu mevcuttur.
+            </div>
+            <div class="g2">
+              <div>
+                <div class="fl" style="margin-bottom:5px">Yetkili Olduğu İşlemler</div>
+                <div style="display:flex;flex-direction:column;gap:4px">
+                  <div style="font-size:11px;padding:4px 8px;background:var(--green-l);border-radius:4px;color:#065f46">✓ WO başlatma ve kapama</div>
+                  <div style="font-size:11px;padding:4px 8px;background:var(--green-l);border-radius:4px;color:#065f46">✓ Traveler QR oluşturma</div>
+                  <div style="font-size:11px;padding:4px 8px;background:var(--green-l);border-radius:4px;color:#065f46">✓ IPQC ölçüm girişi</div>
+                  <div style="font-size:11px;padding:4px 8px;background:var(--green-l);border-radius:4px;color:#065f46">✓ FAI boyutsal ölçüm</div>
+                  <div style="font-size:11px;padding:4px 8px;background:var(--blue-l);border-radius:4px;color:#1e40af">◑ Freze (Denetim altında)</div>
+                </div>
+              </div>
+              <div>
+                <div class="fl" style="margin-bottom:5px">Yetkisiz İşlemler</div>
+                <div style="display:flex;flex-direction:column;gap:4px">
+                  <div style="font-size:11px;padding:4px 8px;background:var(--g100);border-radius:4px;color:var(--g500)">— Taşlama operasyonu</div>
+                  <div style="font-size:11px;padding:4px 8px;background:var(--g100);border-radius:4px;color:var(--g500)">— NCR açma/kapama</div>
+                  <div style="font-size:11px;padding:4px 8px;background:var(--g100);border-radius:4px;color:var(--g500)">— Satınalma talebi</div>
+                  <div style="font-size:11px;padding:4px 8px;background:var(--g100);border-radius:4px;color:var(--g500)">— Tedarikçi onayı</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     YETKİNLİK MATRİKSİ
+══════════════════════════════ -->
+<div class="page" id="page-matris">
+  <div class="tb">
+    <div class="tb-t">Yetkinlik Matriksi</div>
+    <div class="tb-r">
+      <select style="font-size:11px;padding:5px 8px;border-radius:5px;border:1px solid var(--g300)">
+        <option>Tüm Operasyonlar</option><option>Üretim</option><option>Kalite</option><option>Bakım</option>
+      </select>
+      <button class="btn btn-o btn-sm">📥 Excel'e Aktar</button>
+      <button class="btn btn-p btn-sm">+ Operasyon Ekle</button>
+    </div>
+  </div>
+  <div class="pad" style="padding-bottom:8px">
+    <div class="asbar">
+      <span class="asl">AS9100 §7.2</span>
+      <span class="chip c-ok">✓ Tüm Operasyonlar Tanımlı</span>
+      <span class="chip c-w">⚠ 4 Personel Eksik Yetkinlik</span>
+      <span class="chip c-ok">✓ Eğitmen Atandı</span>
+      <span class="chip c-b">ℹ Matriks: 8 Personel × 10 Operasyon</span>
+    </div>
+    <!-- Açıklama -->
+    <div style="display:flex;gap:16px;font-size:10.5px;color:var(--g500);background:#fff;border:1px solid var(--g200);border-radius:var(--r);padding:7px 13px;box-shadow:var(--sh)">
+      <span style="font-weight:700;color:var(--g700)">Seviyeler:</span>
+      <span>● Yok</span>
+      <span style="color:var(--amber)">◐ Eğitimde (kısmi)</span>
+      <span style="color:var(--blue)">◑ Denetim Altında</span>
+      <span style="color:var(--green)">◆ Bağımsız / Yetkin</span>
+      <span style="color:var(--purple)">★ Eğitmen Seviyesi</span>
+      <span style="margin-left:auto;font-style:italic">Hücreye tıklayarak seviye güncellenebilir</span>
+    </div>
+  </div>
+  <div class="pad0" style="flex:1;min-height:0;overflow:auto">
+    <div class="matrix-wrap">
+      <table class="matrix-tbl" id="matris-tbl">
+        <thead>
+          <tr>
+            <th>Personel</th>
+            <th class="op-header">CNC Torna</th>
+            <th class="op-header">CNC Freze</th>
+            <th class="op-header">Taşlama</th>
+            <th class="op-header">Kaynak</th>
+            <th class="op-header">FAI Ölçüm</th>
+            <th class="op-header">IQC Kontrol</th>
+            <th class="op-header">IPQC</th>
+            <th class="op-header">Bakım PM</th>
+            <th class="op-header">Arıza Teşhis</th>
+            <th class="op-header">Traveler QR</th>
+          </tr>
+        </thead>
+        <tbody id="matris-tbody">
+          <!-- JS ile doldurulur -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     EĞİTİM PLANI
+══════════════════════════════ -->
+<div class="page" id="page-egitim">
+  <div class="tb">
+    <div class="tb-t">Eğitim Planı</div>
+    <div class="tb-r">
+      <select style="font-size:11px;padding:5px 8px;border-radius:5px;border:1px solid var(--g300)"><option>2026 Tümü</option><option>Q1 2026</option><option>Q2 2026</option></select>
+      <button class="btn btn-p">+ Eğitim Planla</button>
+    </div>
+  </div>
+  <div class="pad" style="padding-bottom:6px">
+    <div class="kpi-row k4">
+      <div class="kc a"><div class="kl">Planlanan</div><div class="kv">8</div><div class="ks">Bu yıl</div></div>
+      <div class="kc g"><div class="kl">Tamamlanan</div><div class="kv">5</div><div class="ks">%62 oranı</div></div>
+      <div class="kc b"><div class="kl">Bu Ay</div><div class="kv">3</div><div class="ks">Yaklaşan</div></div>
+      <div class="kc r"><div class="kl">Geciken</div><div class="kv">1</div><div class="ks">Acil planlanmalı</div></div>
+    </div>
+  </div>
+  <div class="pad0" style="flex:1;display:flex;flex-direction:column;min-height:0">
+    <div class="two" style="flex:1;min-height:0">
+      <!-- Sol: Eğitim Listesi -->
+      <div class="pnl">
+        <div class="ph"><span class="pht">Eğitim Takvimi</span></div>
+        <div class="pb" style="padding:10px">
+
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--g400);margin-bottom:8px">MART 2026</div>
+
+          <div class="egitimKarti">
+            <div class="egitimTarih"><div class="egTAy">MAR</div><div class="egTGun">25</div></div>
+            <div style="flex:1">
+              <div style="font-size:12px;font-weight:700;color:var(--g900)">AS9100 Farkındalık Eğitimi</div>
+              <div style="font-size:10.5px;color:var(--g500);margin-top:2px">Ali Yıldız, Zeynep Şahin · 4 saat · İç Eğitim</div>
+              <div class="row" style="margin-top:5px;gap:5px"><span class="bx ba">Yaklaşıyor</span><span class="bx bp">Ayşe Kaya (Eğitmen)</span></div>
+            </div>
+            <button class="btn btn-o btn-sm" onclick="selEgitim(this)">Detay</button>
+          </div>
+
+          <div class="egitimKarti">
+            <div class="egitimTarih"><div class="egTAy">MAR</div><div class="egTGun">28</div></div>
+            <div style="flex:1">
+              <div style="font-size:12px;font-weight:700;color:var(--g900)">Freze Operatör Eğitimi — Seviye 2</div>
+              <div style="font-size:10.5px;color:var(--g500);margin-top:2px">Ali Yıldız · 12 saat · 3 Gün</div>
+              <div class="row" style="margin-top:5px;gap:5px"><span class="bx ba">Yaklaşıyor</span><span class="bx bp">Mehmet Aydın (Eğitmen)</span></div>
+            </div>
+            <button class="btn btn-o btn-sm" onclick="selEgitim(this)">Detay</button>
+          </div>
+
+          <div class="egitimKarti" style="border-color:#fca5a5;background:#fff8f8">
+            <div class="egitimTarih" style="background:var(--red)"><div class="egTAy">MAR</div><div class="egTGun">20</div></div>
+            <div style="flex:1">
+              <div style="font-size:12px;font-weight:700;color:var(--red)">⚠ Taşlama Güvenlik Eğitimi — GECİKMİŞ</div>
+              <div style="font-size:10.5px;color:var(--g500);margin-top:2px">Can Öztürk · 4 saat · 2 gün geçti</div>
+              <div class="row" style="margin-top:5px;gap:5px"><span class="bx br">Gecikmiş</span></div>
+            </div>
+            <button class="btn btn-r btn-sm" onclick="alert('Eğitim yeniden tarihlendirme...')">Tarihlendır</button>
+          </div>
+
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--g400);margin:12px 0 8px">NİSAN 2026</div>
+
+          <div class="egitimKarti">
+            <div class="egitimTarih"><div class="egTAy">NİS</div><div class="egTGun">05</div></div>
+            <div style="flex:1">
+              <div style="font-size:12px;font-weight:700;color:var(--g900)">Kalibrasyon / Ölçüm Teknikleri</div>
+              <div style="font-size:10.5px;color:var(--g500);margin-top:2px">Zeynep Şahin · 8 saat · Dış Eğitim</div>
+              <div class="row" style="margin-top:5px;gap:5px"><span class="bx bb">Planlandı</span></div>
+            </div>
+            <button class="btn btn-o btn-sm" onclick="selEgitim(this)">Detay</button>
+          </div>
+
+          <div class="egitimKarti">
+            <div class="egitimTarih"><div class="egTAy">NİS</div><div class="egTGun">15</div></div>
+            <div style="flex:1">
+              <div style="font-size:12px;font-weight:700;color:var(--g900)">Periyodik İş Güvenliği Yenilemesi</div>
+              <div style="font-size:10.5px;color:var(--g500);margin-top:2px">Hasan Demir · 8 saat · Zorunlu</div>
+              <div class="row" style="margin-top:5px;gap:5px"><span class="bx bb">Planlandı</span><span class="bx br">Sertifika Doluyor!</span></div>
+            </div>
+            <button class="btn btn-o btn-sm">Detay</button>
+          </div>
+
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--g400);margin:12px 0 8px">TAMAMLANANLAR</div>
+
+          <div class="egitimKarti" style="opacity:.7">
+            <div class="egitimTarih" style="background:var(--green)"><div class="egTAy">OCA</div><div class="egTGun">10</div></div>
+            <div style="flex:1">
+              <div style="font-size:12px;font-weight:700;color:var(--g900)">CNC Torna İleri Seviye</div>
+              <div style="font-size:10.5px;color:var(--g500);margin-top:2px">Ahmet Kaya · 16 saat · Tamamlandı</div>
+              <div class="row" style="margin-top:5px"><span class="bx bg">✓ Tamamlandı</span></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Sağ: Eğitim Detayı -->
+      <div class="pnl" style="display:flex;flex-direction:column" id="egitim-detay">
+        <div class="ph"><span class="pht">AS9100 Farkındalık Eğitimi</span><span class="bx ba mla">25.03.2026</span></div>
+        <div class="pb">
+          <div class="sec">
+            <div class="st">Eğitim Bilgisi</div>
+            <div class="g3">
+              <div><div class="fl">Eğitim Adı</div><div class="fv">AS9100 Farkındalık</div></div>
+              <div><div class="fl">Tür</div><div class="fv">İç Eğitim</div></div>
+              <div><div class="fl">Tarih</div><div class="fv" style="color:var(--amber);font-weight:700">25.03.2026</div></div>
+              <div><div class="fl">Süre</div><div class="fv">4 saat</div></div>
+              <div><div class="fl">Eğitmen</div><div class="fv">Ayşe Kaya</div></div>
+              <div><div class="fl">Mekan</div><div class="fv">Toplantı Odası A</div></div>
+              <div><div class="fl">AS9100 Maddesi</div><div class="fv mono">§7.3 Farkındalık</div></div>
+              <div><div class="fl">Kayıt Türü</div><div class="fv">İç Eğitim Belgesi</div></div>
+              <div><div class="fl">Sertifika Süresi</div><div class="fv">1 Yıl</div></div>
+            </div>
+          </div>
+          <div class="sec">
+            <div class="st">Katılımcılar</div>
+            <table class="tbl">
+              <thead><tr><th>Personel</th><th>Unvan</th><th>Katılım</th><th>Sınav</th><th>Sonuç</th></tr></thead>
+              <tbody>
+                <tr><td>Ali Yıldız</td><td>Freze Op.</td><td><span class="bx bz">—</span></td><td><span class="bx bz">—</span></td><td><span class="bx ba">Bekliyor</span></td></tr>
+                <tr><td>Zeynep Şahin</td><td>Kalite Tek.</td><td><span class="bx bz">—</span></td><td><span class="bx bz">—</span></td><td><span class="bx ba">Bekliyor</span></td></tr>
+                <tr><td>Hasan Demir</td><td>Bakım Tek.</td><td><span class="bx bz">—</span></td><td><span class="bx bz">—</span></td><td><span class="bx ba">Bekliyor</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="sec">
+            <div class="st">Eğitim İçeriği / Müfredatı</div>
+            <div style="font-size:11.5px;color:var(--g700);line-height:1.7">
+              1. AS9100 Rev.D genel yapısı ve Ersan MES uyum durumu<br>
+              2. Kalite politikası ve hedefler (§6.2)<br>
+              3. Personelin KYS'ye katkısı ve farkındalık zorunlulukları (§7.3)<br>
+              4. Uygunsuzluk raporlama prosedürü — nasıl NCR açılır?<br>
+              5. Soru-cevap ve sınav (min. 70 puan geçme notu)
+            </div>
+          </div>
+          <div class="sec">
+            <div class="row">
+              <div class="qrb">📄 Eğitim Materyali</div>
+              <div class="qrb">📋 Devam Takip Formu</div>
+              <button class="btn btn-g btn-sm mla" onclick="alert('Eğitim tamamlandı olarak işaretlendi. Katılımcılara sertifika oluşturuldu.')">✓ Eğitimi Tamamla</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     SERTİFİKALAR
+══════════════════════════════ -->
+<div class="page" id="page-sertifika">
+  <div class="tb">
+    <div class="tb-t">Sertifika Takibi</div>
+    <div class="tb-r">
+      <input class="srch" placeholder="🔍 Personel, sertifika adı...">
+      <select style="font-size:11px;padding:5px 8px;border-radius:5px;border:1px solid var(--g300)"><option>Tümü</option><option>Dolmak Üzere</option><option>Geçerli</option><option>Dolmuş</option></select>
+      <button class="btn btn-p">+ Sertifika Ekle</button>
+    </div>
+  </div>
+  <div class="pad" style="padding-bottom:6px">
+    <div class="kpi-row k5">
+      <div class="kc b"><div class="kl">Toplam Sertifika</div><div class="kv">24</div><div class="ks">Aktif kayıt</div></div>
+      <div class="kc g"><div class="kl">Geçerli</div><div class="kv">20</div><div class="ks">Süresi dolmamış</div></div>
+      <div class="kc a"><div class="kl">90 Günde Dolacak</div><div class="kv">4</div><div class="ks">Yenileme planla</div></div>
+      <div class="kc r"><div class="kl">Süresi Dolmuş</div><div class="kv">2</div><div class="ks">Acil yenilenecek!</div></div>
+      <div class="kc p"><div class="kl">Zorunlu Sertifika</div><div class="kv">8</div><div class="ks">AS9100 / Yasal</div></div>
+    </div>
+    <div class="asbar">
+      <span class="asl">AS9100 §7.2</span>
+      <span class="chip c-e">✗ Hasan Demir — İş Güvenliği 18 gün içinde doluyor!</span>
+      <span class="chip c-e">✗ Can Öztürk — Taşlama Operatör Belgesi 5 gün geçti!</span>
+      <span class="chip c-ok">✓ Diğer 20 sertifika geçerli</span>
+    </div>
+  </div>
+  <div class="pad0" style="flex:1;display:flex;flex-direction:column;min-height:0">
+    <div class="two-w" style="flex:1;min-height:0">
+
+      <!-- Sol: Sertifika Listesi -->
+      <div class="pnl">
+        <div class="ph"><span class="pht">Sertifikalar</span></div>
+        <div class="pb" style="padding:10px">
+
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--red);margin-bottom:6px">⚠ Acil — Süresi Dolmuş / Dolmak Üzere</div>
+
+          <div class="sertKart" style="border-color:var(--red);background:#fff8f8" onclick="selSert(this)">
+            <div class="sertIc sertIc-e">⛔</div>
+            <div style="flex:1">
+              <div style="font-size:12px;font-weight:700;color:var(--red)">Taşlama Operatör Belgesi</div>
+              <div style="font-size:10.5px;color:var(--g500)">Can Öztürk · MEB Yeterlilik</div>
+              <div style="font-size:10px;color:var(--red);font-weight:600">17.03.2026'da doldu!</div>
+            </div>
+            <div style="text-align:right"><div class="sertGun ge">5</div><div style="font-size:9px;color:var(--red)">gün geçti</div></div>
+          </div>
+
+          <div class="sertKart" style="border-color:var(--amber);background:#fffdf0" onclick="selSert(this)">
+            <div class="sertIc sertIc-w">⚠</div>
+            <div style="flex:1">
+              <div style="font-size:12px;font-weight:700;color:var(--amber)">İş Güvenliği Yenileme</div>
+              <div style="font-size:10.5px;color:var(--g500)">Hasan Demir · Zorunlu — SGK</div>
+              <div style="font-size:10px;color:var(--amber);font-weight:600">09.04.2026'da dolacak</div>
+            </div>
+            <div style="text-align:right"><div class="sertGun gw">18</div><div style="font-size:9px;color:var(--amber)">gün kaldı</div></div>
+          </div>
+
+          <div class="sertKart" style="border-color:var(--amber)" onclick="selSert(this)">
+            <div class="sertIc sertIc-w">📋</div>
+            <div style="flex:1">
+              <div style="font-size:12px;font-weight:700;color:var(--g900)">AS9100 Farkındalık</div>
+              <div style="font-size:10.5px;color:var(--g500)">Ali Yıldız · İç Eğitim</div>
+              <div style="font-size:10px;color:var(--amber)">25.04.2026'da dolacak</div>
+            </div>
+            <div style="text-align:right"><div class="sertGun gw">34</div><div style="font-size:9px;color:var(--amber)">gün kaldı</div></div>
+          </div>
+
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--g400);margin:10px 0 6px">✓ Geçerli Sertifikalar</div>
+
+          <div class="sertKart" onclick="selSert(this)">
+            <div class="sertIc sertIc-ok">🏆</div>
+            <div style="flex:1">
+              <div style="font-size:12px;font-weight:700;color:var(--g900)">CNC Operatör Belgesi</div>
+              <div style="font-size:10.5px;color:var(--g500)">Ahmet Kaya · MEB Yeterlilik</div>
+            </div>
+            <div style="text-align:right"><div class="sertGun gok">512</div><div style="font-size:9px;color:var(--g400)">gün kaldı</div></div>
+          </div>
+
+          <div class="sertKart" onclick="selSert(this)">
+            <div class="sertIc sertIc-ok">🛡</div>
+            <div style="flex:1">
+              <div style="font-size:12px;font-weight:700;color:var(--g900)">İş Güvenliği Temel</div>
+              <div style="font-size:10.5px;color:var(--g500)">Ahmet Kaya · SGK Zorunlu</div>
+            </div>
+            <div style="text-align:right"><div class="sertGun gok">517</div><div style="font-size:9px;color:var(--g400)">gün kaldı</div></div>
+          </div>
+
+          <div class="sertKart" onclick="selSert(this)">
+            <div class="sertIc sertIc-ok">🏅</div>
+            <div style="flex:1">
+              <div style="font-size:12px;font-weight:700;color:var(--g900)">Kaynak Operatör Belgesi</div>
+              <div style="font-size:10.5px;color:var(--g500)">Mustafa Er · TS EN 287</div>
+            </div>
+            <div style="text-align:right"><div class="sertGun gok">244</div><div style="font-size:9px;color:var(--g400)">gün kaldı</div></div>
+          </div>
+
+          <div class="sertKart" onclick="selSert(this)">
+            <div class="sertIc sertIc-ok">📋</div>
+            <div style="flex:1">
+              <div style="font-size:12px;font-weight:700;color:var(--g900)">İç Denetçi Sertifikası</div>
+              <div style="font-size:10.5px;color:var(--g500)">Ayşe Kaya · Burg Group</div>
+            </div>
+            <div style="text-align:right"><div class="sertGun gok">389</div><div style="font-size:9px;color:var(--g400)">gün kaldı</div></div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Sağ: Sertifika Detay -->
+      <div class="pnl" style="display:flex;flex-direction:column">
+        <div class="ph"><span class="pht">Taşlama Operatör Belgesi — Can Öztürk</span><span class="bx br mla">Süresi Doldu!</span></div>
+        <div class="pb">
+          <div style="background:var(--red-l);border-bottom:1px solid #fca5a5;padding:10px 13px;display:flex;align-items:center;gap:10px">
+            <span style="font-size:18px">⛔</span>
+            <div>
+              <div style="font-size:12px;font-weight:700;color:var(--red)">Sertifika Süresi 5 Gün Önce Doldu!</div>
+              <div style="font-size:10.5px;color:#991b1b">Can Öztürk artık taşlama operasyonu yapamaz. Yetki bloğu uygulandı.</div>
+            </div>
+            <button class="btn btn-r btn-sm mla" onclick="alert('Yenileme eğitimi planlamasına yönlendiriliyorsunuz...')">🔄 Yenile</button>
+          </div>
+          <div class="sec">
+            <div class="st">Sertifika Bilgisi</div>
+            <div class="g3">
+              <div><div class="fl">Sertifika Adı</div><div class="fv">Taşlama Operatör Belgesi</div></div>
+              <div><div class="fl">Veren Kurum</div><div class="fv">MEB — Mesleki Yeterlilik</div></div>
+              <div><div class="fl">Belge No</div><div class="fv mono">MEB-2024-87441</div></div>
+              <div><div class="fl">Verilme Tarihi</div><div class="fv">17.03.2024</div></div>
+              <div><div class="fl">Bitiş Tarihi</div><div class="fv" style="color:var(--red);font-weight:700">17.03.2026</div></div>
+              <div><div class="fl">Geçerlilik Süresi</div><div class="fv">2 Yıl</div></div>
+              <div><div class="fl">Türü</div><div class="fv">Yasal Zorunlu</div></div>
+              <div><div class="fl">AS9100 Maddesi</div><div class="fv mono">§7.2</div></div>
+              <div><div class="fl">Durum</div><div class="fv"><span class="bx br">Süresi Doldu — Blok</span></div></div>
+            </div>
+          </div>
+          <div class="sec">
+            <div class="st">Yetki Bloğu</div>
+            <div style="padding:9px 11px;background:var(--red-l);border-radius:6px;font-size:11px;color:#991b1b;display:flex;align-items:center;gap:8px">
+              <span>⛔</span>
+              <div>
+                <strong>Can Öztürk — Taşlama operasyonu yetkisi askıya alındı.</strong><br>
+                Taşlama makinelerinde (MCH-TSL-001, MCH-TSL-002, MCH-TSL-003) QR okutması engellenmiştir.
+              </div>
+            </div>
+          </div>
+          <div class="sec">
+            <div class="st">Yenileme Planı</div>
+            <div class="g2">
+              <div>
+                <div class="fl" style="margin-bottom:5px">Planlanan Yenileme Eğitimi</div>
+                <input type="date" style="width:100%" value="2026-04-10">
+              </div>
+              <div>
+                <div class="fl" style="margin-bottom:5px">Yenileme Kurumu</div>
+                <select style="width:100%"><option>MEB — Mesleki Yeterlilik</option><option>Dış Eğitim Şirketi</option></select>
+              </div>
+            </div>
+            <div class="row mt8">
+              <div class="qrb">📄 Eski Sertifika PDF</div>
+              <button class="btn btn-g btn-sm mla" onclick="alert('Yenileme planı kaydedildi. Eğitim takvime eklendi.')">✓ Yenileme Planla</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     GAP ANALİZİ
+══════════════════════════════ -->
+<div class="page" id="page-gap">
+  <div class="tb">
+    <div class="tb-t">Gap Analizi — Yetkinlik Boşlukları</div>
+    <div class="tb-r">
+      <select style="font-size:11px;padding:5px 8px;border-radius:5px;border:1px solid var(--g300)"><option>Tüm Departmanlar</option><option>Üretim</option><option>Kalite</option></select>
+      <button class="btn btn-o btn-sm">📄 Rapor</button>
+      <button class="btn btn-p btn-sm">📚 Toplu Eğitim Planla</button>
+    </div>
+  </div>
+  <div class="pad" style="flex:1;overflow-y:auto">
+    <div class="kpi-row k4">
+      <div class="kc r"><div class="kl">Kritik Boşluk</div><div class="kv">3</div><div class="ks">Acil eğitim gerekli</div></div>
+      <div class="kc a"><div class="kl">Orta Boşluk</div><div class="kv">7</div><div class="ks">Bu yıl planlanmalı</div></div>
+      <div class="kc g"><div class="kl">Tamamlanan</div><div class="kl">Tamamlanan</div><div class="kv">11</div><div class="ks">Yetkinlik kazanıldı</div></div>
+      <div class="kc b"><div class="kl">Ortalama Skor</div><div class="kv">79<span style="font-size:12px">%</span></div><div class="ks">Hedef: %85</div></div>
+    </div>
+    <div class="asbar">
+      <span class="asl">Boşluk Özeti</span>
+      <span class="chip c-e">✗ Taşlama — 3 personel yetersiz yetkinlik</span>
+      <span class="chip c-e">✗ Kaynak — Yedek operatör yok</span>
+      <span class="chip c-w">⚠ IQC Kontrol — Ali Yıldız henüz eğitimde</span>
+      <span class="chip c-ok">✓ CNC Torna — Yeterli kapsama</span>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+
+      <!-- Kritik Boşluklar -->
+      <div>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--g400);margin-bottom:10px;display:flex;align-items:center;gap:8px">
+          🔴 Kritik Boşluklar — Acil
+          <span style="flex:1;height:1px;background:var(--g200);display:block"></span>
+        </div>
+
+        <div class="gap-kart" style="border-left:3px solid var(--red)">
+          <div class="gap-head">
+            <div class="gap-score" style="color:var(--red)">3</div>
+            <div>
+              <div style="font-size:12px;font-weight:700;color:var(--g900)">Taşlama Operasyonu</div>
+              <div style="font-size:10px;color:var(--g400)">1 yetkin / 4 gerekli — %75 eksik</div>
+            </div>
+            <button class="btn btn-r btn-sm mla" onclick="alert('Taşlama eğitimi planlama sayfasına yönlendiriliyorsunuz...')">Planla</button>
+          </div>
+          <div style="font-size:10.5px;color:var(--g700);margin-bottom:7px">
+            Sadece Can Öztürk (sertifikası da dolmuş!) yetkin. Risik: tek nokta başarısızlık.
+          </div>
+          <table class="tbl" style="font-size:10.5px">
+            <tbody>
+              <tr><td>Ahmet Kaya</td><td><span class="bx bz">Yok</span></td><td>→ 16 saat eğitim gerekli</td></tr>
+              <tr><td>Ali Yıldız</td><td><span class="bx bz">Yok</span></td><td>→ 16 saat eğitim gerekli</td></tr>
+              <tr><td>Can Öztürk</td><td><span class="bx br">Sertifika Doldu</span></td><td>→ Yenileme acil</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="gap-kart" style="border-left:3px solid var(--red)">
+          <div class="gap-head">
+            <div class="gap-score" style="color:var(--red)">!</div>
+            <div>
+              <div style="font-size:12px;font-weight:700;color:var(--g900)">Kaynak Operasyonu — Yedeksiz</div>
+              <div style="font-size:10px;color:var(--g400)">1 yetkin / 2 gerekli — Yedek yok</div>
+            </div>
+            <button class="btn btn-r btn-sm mla">Planla</button>
+          </div>
+          <div style="font-size:10.5px;color:var(--g700)">
+            Mustafa Er tek yetkin kaynak operatörü. İzin veya hastalıkta üretim durur.
+          </div>
+        </div>
+
+        <div class="gap-kart" style="border-left:3px solid var(--amber)">
+          <div class="gap-head">
+            <div class="gap-score" style="color:var(--amber)">2</div>
+            <div>
+              <div style="font-size:12px;font-weight:700;color:var(--g900)">IQC / Kalite Kontrol</div>
+              <div style="font-size:10px;color:var(--g400)">2 yetkin / 4 gerekli</div>
+            </div>
+            <button class="btn btn-a btn-sm mla">Planla</button>
+          </div>
+          <div style="font-size:10.5px;color:var(--g700)">
+            Ali Yıldız ve Zeynep Şahin eğitimleri tamamlanınca kapanacak.
+          </div>
+        </div>
+      </div>
+
+      <!-- Operasyon Kapsama Haritası -->
+      <div>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--g400);margin-bottom:10px;display:flex;align-items:center;gap:8px">
+          📊 Operasyon Kapsama Oranları
+          <span style="flex:1;height:1px;background:var(--g200);display:block"></span>
+        </div>
+
+        <div class="pnl">
+          <div class="pb" style="padding:12px 14px">
+            <div id="kapsama-listesi">
+              <!-- JS ile doldurulur -->
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:12px">
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--g400);margin-bottom:8px">
+            📋 Önerilen Eğitim Planı
+          </div>
+          <div class="pnl">
+            <div class="pb" style="padding:10px 13px">
+              <table class="tbl">
+                <thead><tr><th>Eğitim</th><th>Personel</th><th>Süre</th><th>Öncelik</th></tr></thead>
+                <tbody>
+                  <tr style="background:#fff8f8"><td style="font-weight:600">Taşlama Operatör</td><td>Ahmet K., Ali Y.</td><td>16 saat / kişi</td><td><span class="bx br">Kritik</span></td></tr>
+                  <tr style="background:#fff8f8"><td style="font-weight:600">Kaynak Giriş</td><td>Ahmet K.</td><td>24 saat</td><td><span class="bx br">Kritik</span></td></tr>
+                  <tr style="background:#fef9ee"><td style="font-weight:600">IQC Muayene</td><td>Ali Y., Zeynep Ş.</td><td>8 saat / kişi</td><td><span class="bx ba">Orta</span></td></tr>
+                  <tr><td style="font-weight:600">Bakım PM Temel</td><td>Ahmet K., Can Ö.</td><td>8 saat / kişi</td><td><span class="bx bb">Düşük</span></td></tr>
+                </tbody>
+              </table>
+              <div class="row mt8">
+                <span style="font-size:10.5px;color:var(--g500)">Toplam tahmini: 104 saat eğitim</span>
+                <button class="btn btn-p btn-sm mla" onclick="alert('Toplu eğitim planı oluşturuldu ve takvime eklendi!')">✓ Hepsini Planla</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /main -->
+</div><!-- /app -->
+
+<script>
+// ─── Sayfa geçişi ───
+function pg(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));
+  var p=document.getElementById('page-'+id);
+  var n=document.getElementById('nv-'+id);
+  if(p)p.classList.add('active');
+  if(n)n.classList.add('active');
+  if(id==='matris') matris_olustur();
+  if(id==='gap') kapsama_yukle();
+}
+
+// ─── Sekme geçişi ───
+function st(el,tabId){
+  var bar=el.closest('.tabs');
+  if(!bar)return;
+  bar.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  var pnl=el.closest('.pnl');
+  if(!pnl)return;
+  pnl.querySelectorAll('.tc').forEach(t=>t.classList.remove('on'));
+  var tgt=document.getElementById(tabId);
+  if(tgt)tgt.classList.add('on');
+}
+
+// ─── Liste seçimi ───
+function selLi(el){
+  var pb=el.closest('.pb');
+  if(pb)pb.querySelectorAll('.li').forEach(i=>i.classList.remove('sel'));
+  el.classList.add('sel');
+}
+function selPrs(el){ selLi(el); }
+function selSert(el){ el.closest('.pb').querySelectorAll('.sertKart').forEach(s=>s.style.outline=''); el.style.outline='2px solid var(--blue)'; }
+function selEgitim(btn){ /* detay paneli zaten statik */ }
+
+// ─── Arama ───
+document.getElementById('prs-ara').addEventListener('input', function(){
+  var q=this.value.toLowerCase();
+  document.querySelectorAll('#prs-liste .li').forEach(li=>{
+    var txt=li.textContent.toLowerCase();
+    li.style.display=txt.includes(q)?'':'none';
+  });
+});
+
+// ─── YETKİNLİK MATRİKSİ verisi ───
+var matrisData = [
+  { isim:'Ahmet Kaya',  kod:'PRS-AK-001', dept:'Üretim',    seviyeleri:[4,2,0,0,3,0,3,0,0,3] },
+  { isim:'Mehmet Aydın',kod:'PRS-MA-002', dept:'Üretim',    seviyeleri:[4,4,3,0,4,3,4,3,2,4] },
+  { isim:'Ayşe Kaya',   kod:'PRS-AK-003', dept:'Kalite',    seviyeleri:[0,0,0,0,4,4,4,0,0,3] },
+  { isim:'Ali Yıldız',  kod:'PRS-AY-004', dept:'Üretim',    seviyeleri:[0,2,0,0,0,1,1,0,0,2] },
+  { isim:'Fatma Çelik', kod:'PRS-FC-005', dept:'Depo',      seviyeleri:[0,0,0,0,0,0,0,0,0,3] },
+  { isim:'Hasan Demir', kod:'PRS-HD-006', dept:'Bakım',     seviyeleri:[2,0,0,0,2,0,0,4,4,2] },
+  { isim:'Can Öztürk',  kod:'PRS-CO-007', dept:'Üretim',    seviyeleri:[3,3,1,0,3,0,2,0,0,3] },
+  { isim:'Zeynep Şahin',kod:'PRS-ZS-008', dept:'Kalite',    seviyeleri:[0,0,0,0,2,2,1,0,0,2] },
+];
+
+var operasyonlar = ['CNC Torna','CNC Freze','Taşlama','Kaynak','FAI Ölçüm','IQC Kontrol','IPQC','Bakım PM','Arıza Teşhis','Traveler QR'];
+
+var seviyeIkonu = {
+  0: '<span class="y0">●</span>',
+  1: '<span class="y1">◐</span>',
+  2: '<span class="y2">◑</span>',
+  3: '<span class="y3">◆</span>',
+  4: '<span class="y4">★</span>'
+};
+var seviyeAdi=['Yok','Eğitimde','Denetim Altında','Bağımsız','Eğitmen'];
+
+function matris_olustur() {
+  var tbody = document.getElementById('matris-tbody');
+  if(tbody.children.length>0)return; // zaten oluşturulmuş
+
+  matrisData.forEach(function(prs){
+    var tr=document.createElement('tr');
+    // Personel adı kolonu
+    var tdPrs=document.createElement('td');
+    tdPrs.innerHTML=`<div style="font-weight:700;font-size:11.5px;color:var(--g900)">${prs.isim}</div>
+                     <div style="font-size:9.5px;color:var(--g400)">${prs.kod}</div>`;
+    tr.appendChild(tdPrs);
+
+    prs.seviyeleri.forEach(function(sev,opIdx){
+      var td=document.createElement('td');
+      var div=document.createElement('div');
+      div.className='yetki-cell';
+      div.innerHTML=seviyeIkonu[sev];
+      div.title=prs.isim+' — '+operasyonlar[opIdx]+': '+seviyeAdi[sev];
+      div.onclick=function(){ matris_hucre_degistir(div,prs,opIdx); };
+      td.appendChild(div);
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+}
+
+function matris_hucre_degistir(div,prs,opIdx){
+  var mevcutSev=prs.seviyeleri[opIdx];
+  var yeniSev=(mevcutSev+1)%5;
+  prs.seviyeleri[opIdx]=yeniSev;
+  div.innerHTML=seviyeIkonu[yeniSev];
+  div.title=prs.isim+' — '+operasyonlar[opIdx]+': '+seviyeAdi[yeniSev];
+  // Toast bildirimi
+  toast(prs.isim+' → '+operasyonlar[opIdx]+': '+seviyeAdi[yeniSev]);
+}
+
+// ─── Kapsama Oranları (Gap Analizi) ───
+function kapsama_yukle(){
+  var listesi=document.getElementById('kapsama-listesi');
+  if(listesi.children.length>0)return;
+
+  var opsKapsama=operasyonlar.map(function(op,i){
+    var yetkinler=matrisData.filter(p=>p.seviyeleri[i]>=3).length;
+    var toplam=matrisData.length;
+    return { op:op, yetkin:yetkinler, toplam:toplam, pct:Math.round(yetkinler/toplam*100) };
+  });
+
+  opsKapsama.sort((a,b)=>a.pct-b.pct);
+
+  opsKapsama.forEach(function(d){
+    var renk=d.pct>=75?'var(--green)':d.pct>=50?'var(--amber)':'var(--red)';
+    var div=document.createElement('div');
+    div.style.marginBottom='7px';
+    div.innerHTML=`
+      <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px">
+        <span style="font-weight:600;color:var(--g700)">${d.op}</span>
+        <span style="font-weight:700;color:${renk}">${d.yetkin}/${d.toplam} · %${d.pct}</span>
+      </div>
+      <div class="prog"><div class="prog-f" style="width:${d.pct}%;background:${renk}"></div></div>
+    `;
+    listesi.appendChild(div);
+  });
+}
+
+// ─── Toast ───
+function toast(msg){
+  var el=document.createElement('div');
+  el.style.cssText='position:fixed;top:16px;right:16px;z-index:9999;padding:8px 14px;background:var(--lacivert);color:#fff;border-radius:6px;font-size:11.5px;font-weight:600;box-shadow:0 4px 12px rgba(0,0,0,.2)';
+  el.textContent=msg;
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(),2200);
+}
+
+// İlk yüklemede matris için
+window.addEventListener('load',function(){
+  // kapsama grafikleri için hazırlık
+});
+</script>
+</body>
+</html>

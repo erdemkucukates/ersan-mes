@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ersan MES — CRM</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,-apple-system,sans-serif}
+body{background:#f3f4f6;display:flex;height:100vh;overflow:hidden}
+
+/* ── Sidebar ── */
+.sidebar{width:185px;background:#1a2b47;display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
+.sb-logo{padding:14px 12px 10px;border-bottom:1px solid rgba(255,255,255,.08)}
+.sb-brand{font-size:13px;font-weight:700;color:#fff}
+.sb-sub{font-size:9px;color:rgba(255,255,255,.35);margin-top:2px;text-transform:uppercase;letter-spacing:.06em}
+.sb-section{padding:12px 12px 3px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.28)}
+.sb-item{display:flex;align-items:center;gap:7px;padding:7px 12px;font-size:12px;color:rgba(255,255,255,.55);cursor:pointer;border-left:2px solid transparent;transition:all .12s}
+.sb-item:hover{background:rgba(255,255,255,.05);color:#fff}
+.sb-item.on{background:rgba(255,255,255,.08);color:#fff;border-left-color:#f59e0b;font-weight:500}
+.sb-dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.2);flex-shrink:0}
+.sb-item.on .sb-dot{background:#f59e0b}
+.sb-dim{color:rgba(255,255,255,.25)!important}
+
+/* ── Layout ── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.page{display:none;flex:1;flex-direction:column;overflow:hidden}
+.page.show{display:flex}
+.topbar{background:#fff;border-bottom:1px solid #e5e7eb;padding:0 16px;height:48px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.tb-title{font-size:15px;font-weight:600;color:#1a2b47}
+.tb-sub{font-size:11px;color:#6b7280;margin-left:8px}
+.content{flex:1;overflow-y:auto;padding:14px 16px}
+
+/* ── Buttons ── */
+.btn{font-size:11px;padding:5px 11px;border-radius:5px;border:1px solid #d1d5db;background:#fff;color:#374151;cursor:pointer;font-weight:500;white-space:nowrap;display:inline-flex;align-items:center;gap:4px;transition:all .12s}
+.btn:hover{background:#f9fafb}
+.btn-p{background:#1a2b47;color:#fff;border-color:#1a2b47}
+.btn-p:hover{background:#243d66}
+.btn-g{background:#d1fae5;color:#065f46;border-color:#6ee7b7}
+.btn-b{background:#dbeafe;color:#1e40af;border-color:#93c5fd}
+.btn-warn{background:#fef3c7;color:#92400e;border-color:#fcd34d}
+.btn-red{background:#fee2e2;color:#991b1b;border-color:#fca5a5}
+.btn-pur{background:#ede9fe;color:#5b21b6;border-color:#c4b5fd}
+
+/* ── Badges ── */
+.bdg{display:inline-flex;align-items:center;gap:3px;font-size:10px;padding:2px 7px;border-radius:12px;font-weight:500;white-space:nowrap}
+.bdg::before{content:'';width:4px;height:4px;border-radius:50%;flex-shrink:0}
+.b-grn::before{background:#10b981}.b-grn{background:#d1fae5;color:#065f46}
+.b-amr::before{background:#f59e0b}.b-amr{background:#fef3c7;color:#92400e}
+.b-red::before{background:#ef4444}.b-red{background:#fee2e2;color:#991b1b}
+.b-blu::before{background:#3b82f6}.b-blu{background:#dbeafe;color:#1e40af}
+.b-gray::before{background:#9ca3af}.b-gray{background:#f3f4f6;color:#6b7280}
+.b-pur::before{background:#8b5cf6}.b-pur{background:#ede9fe;color:#5b21b6}
+.b-teal::before{background:#0d9488}.b-teal{background:#ccfbf1;color:#0f766e}
+
+/* ── KPI ── */
+.kpi-row{display:grid;gap:10px;margin-bottom:14px}
+.kpi{background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;border-top:3px solid;position:relative;overflow:hidden}
+.kpi::after{content:'';position:absolute;right:-8px;top:-8px;width:50px;height:50px;border-radius:50%;opacity:.06}
+.kpi.s1{border-top-color:#3b82f6}.kpi.s1::after{background:#3b82f6}
+.kpi.s2{border-top-color:#f59e0b}.kpi.s2::after{background:#f59e0b}
+.kpi.s3{border-top-color:#ef4444}.kpi.s3::after{background:#ef4444}
+.kpi.s4{border-top-color:#10b981}.kpi.s4::after{background:#10b981}
+.kpi.s5{border-top-color:#8b5cf6}.kpi.s5::after{background:#8b5cf6}
+.kpi label{font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:#6b7280;display:block;margin-bottom:3px;font-weight:500}
+.kpi .num{font-size:22px;font-weight:700;color:#111827;line-height:1}
+.kpi .det{font-size:10px;color:#9ca3af;margin-top:2px}
+.kpi .trend{font-size:10px;margin-top:3px;font-weight:500}
+.up{color:#10b981}.dn{color:#ef4444}
+
+/* ── Card ── */
+.card{background:#fff;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;margin-bottom:12px}
+.card-head{padding:10px 14px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;background:#fafafa}
+.card-title{font-size:12px;font-weight:600;color:#374151;display:flex;align-items:center;gap:6px}
+.fl{display:block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#9ca3af;margin-bottom:3px}
+.fi{width:100%;font-size:12px;padding:6px 9px;border:1px solid #d1d5db;border-radius:5px;background:#fff;color:#111827;outline:none}
+.fi:focus{border-color:#1a2b47}
+.fi-sel{width:100%;font-size:12px;padding:6px 9px;border:1px solid #d1d5db;border-radius:5px;background:#fff;color:#374151;outline:none}
+.fg2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.fg3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px}
+.fg4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:10px}
+.muted{color:#6b7280;font-size:11px}
+.mono{font-family:monospace;font-size:11px;font-weight:700;color:#1a2b47}
+
+/* ── Modal ── */
+.modal-ov{display:none;position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:400;align-items:flex-start;justify-content:center;padding:20px 16px 40px;overflow-y:auto;backdrop-filter:blur(3px)}
+.modal-ov.open{display:flex}
+.modal-box{background:#fff;border-radius:10px;width:100%;max-width:640px;overflow:hidden;box-shadow:0 32px 64px rgba(0,0,0,.25);animation:mIn .2s cubic-bezier(.16,1,.3,1)}
+@keyframes mIn{from{opacity:0;transform:translateY(-16px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+.m-head{background:#1a2b47;padding:14px 18px;display:flex;align-items:flex-start;justify-content:space-between}
+.m-title{font-size:14px;font-weight:600;color:#fff}
+.m-sub{font-size:11px;color:rgba(255,255,255,.5);margin-top:2px}
+.m-x{font-size:16px;color:rgba(255,255,255,.4);cursor:pointer;border:none;background:transparent;transition:color .12s}
+.m-x:hover{color:#fff}
+.m-body{padding:16px 18px;max-height:65vh;overflow-y:auto}
+.m-foot{padding:10px 18px;border-top:1px solid #e5e7eb;background:#f9fafb;display:flex;align-items:center;justify-content:space-between}
+
+/* ── Toast ── */
+.toast{position:fixed;bottom:24px;right:24px;z-index:999;background:#1a2b47;color:#fff;padding:10px 16px;border-radius:8px;font-size:12px;font-weight:500;display:flex;align-items:center;gap:8px;box-shadow:0 8px 24px rgba(0,0,0,.2);transform:translateY(80px);opacity:0;transition:all .3s cubic-bezier(.16,1,.3,1)}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.green{background:#065f46}
+.toast.red{background:#991b1b}
+
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:2px}
+
+/* ═══════════════════════════════
+   PIPELINE KANBAN
+═══════════════════════════════ */
+.kanban-wrap{display:flex;gap:12px;overflow-x:auto;padding-bottom:8px;flex:1}
+.k-col{flex-shrink:0;width:240px;display:flex;flex-direction:column;gap:0}
+.k-head{padding:10px 12px;border-radius:8px 8px 0 0;display:flex;align-items:center;justify-content:space-between;font-size:11px;font-weight:600}
+.k-body{flex:1;min-height:200px;border:1px solid;border-top:none;border-radius:0 0 8px 8px;padding:8px;display:flex;flex-direction:column;gap:6px;overflow-y:auto;max-height:calc(100vh - 280px)}
+.kc-temas{border-color:#e5e7eb;background:#f9fafb}
+.kc-nitelik{border-color:#bfdbfe;background:#eff6ff}
+.kc-teklif{border-color:#fcd34d;background:#fffbeb}
+.kc-musteri{border-color:#6ee7b7;background:#f0fdf4}
+.kc-kazanildi{border-color:#6ee7b7;background:#dcfce7}
+.kc-kayip{border-color:#fca5a5;background:#fff5f5}
+.kh-temas{background:#f3f4f6;color:#374151}
+.kh-nitelik{background:#dbeafe;color:#1e40af}
+.kh-teklif{background:#fef3c7;color:#92400e}
+.kh-musteri{background:#d1fae5;color:#065f46}
+.kh-kazanildi{background:#bbf7d0;color:#14532d}
+.kh-kayip{background:#fee2e2;color:#991b1b}
+.k-count{font-size:10px;padding:1px 6px;border-radius:10px;font-weight:700;background:rgba(0,0,0,.1)}
+.k-tutar{font-size:9px;opacity:.7;margin-top:1px}
+
+/* Kanban kart */
+.kart{background:#fff;border:1px solid #e5e7eb;border-radius:7px;padding:9px 10px;cursor:pointer;transition:all .12s;position:relative}
+.kart:hover{border-color:#93c5fd;box-shadow:0 2px 8px rgba(0,0,0,.06);transform:translateY(-1px)}
+.kart-firma{font-size:12px;font-weight:600;color:#111827;margin-bottom:2px}
+.kart-konu{font-size:11px;color:#6b7280;margin-bottom:5px;line-height:1.3}
+.kart-meta{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.kart-tutar{font-size:11px;font-weight:700;color:#065f46;font-family:monospace}
+.kart-termin{font-size:10px;color:#9ca3af}
+.kart-termin.gecmis{color:#dc2626;font-weight:600}
+.kart-atanan{width:20px;height:20px;border-radius:50%;background:#1a2b47;color:#fff;font-size:8px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-left:auto;flex-shrink:0}
+.kart-aci{font-size:9px;padding:1px 5px;border-radius:3px;font-weight:600}
+.aci-s{background:#fef3c7;color:#92400e}
+.aci-y{background:#dcfce7;color:#14532d}
+.kart-drag{position:absolute;top:6px;right:6px;color:#e5e7eb;font-size:12px;opacity:0}
+.kart:hover .kart-drag{opacity:1}
+.progress-bar{height:3px;background:#f3f4f6;border-radius:2px;margin-top:6px;overflow:hidden}
+.pb-fill{height:100%;border-radius:2px}
+
+/* Ekle butonu */
+.k-add{width:100%;padding:5px;font-size:11px;border:1px dashed #d1d5db;border-radius:5px;background:transparent;color:#9ca3af;cursor:pointer;transition:all .12s}
+.k-add:hover{border-color:#1a2b47;color:#1a2b47;background:#f9fafb}
+
+/* Pipeline özet bar */
+.pipe-bar{display:flex;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;margin-bottom:12px;background:#fff}
+.pb-step{flex:1;padding:8px 10px;text-align:center;border-right:1px solid #e5e7eb;position:relative;transition:background .12s;cursor:pointer}
+.pb-step:last-child{border-right:none}
+.pb-step:hover{background:#f9fafb}
+.pb-step.on{background:#eff6ff}
+.pb-step-name{font-size:10px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.04em}
+.pb-step.on .pb-step-name{color:#1a2b47}
+.pb-step-count{font-size:18px;font-weight:700;color:#111827;line-height:1.2}
+.pb-step-tutar{font-size:10px;color:#9ca3af}
+.pb-step-bar{position:absolute;bottom:0;left:0;right:0;height:3px}
+
+/* ═══════════════════════════════
+   TAKİP LİSTESİ
+═══════════════════════════════ */
+.tablo{width:100%;border-collapse:collapse;font-size:12px}
+.tablo th{text-align:left;padding:8px 12px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:#9ca3af;background:#f9fafb;border-bottom:1px solid #e5e7eb;cursor:pointer;user-select:none;white-space:nowrap}
+.tablo th:hover{color:#1a2b47}
+.tablo td{padding:9px 12px;border-bottom:1px solid #f3f4f6;color:#374151;vertical-align:middle}
+.tablo tr:last-child td{border-bottom:none}
+.tablo tr:hover td{background:#fafafa;cursor:pointer}
+.tablo tr.gecmis td{background:#fff8f8}
+
+/* Öncelik göstergesi */
+.onc{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600}
+.onc-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.o-y{color:#dc2626}.oy-d{background:#dc2626}
+.o-o{color:#d97706}.oo-d{background:#f59e0b}
+.o-d{color:#6b7280}.od-d{background:#9ca3af}
+
+/* Aktivite log */
+.akt-row{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid #f3f4f6;font-size:11px}
+.akt-row:last-child{border-bottom:none}
+.akt-icon{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;margin-top:1px}
+.ai-tel{background:#dbeafe;color:#1e40af}
+.ai-mail{background:#fef3c7;color:#92400e}
+.ai-top{background:#d1fae5;color:#065f46}
+.ai-ziy{background:#ede9fe;color:#5b21b6}
+.ai-not{background:#f3f4f6;color:#6b7280}
+.akt-text{flex:1;color:#374151;line-height:1.4}
+.akt-meta{font-size:10px;color:#9ca3af;white-space:nowrap}
+
+/* Filtre bar */
+.flt-bar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center}
+.flt-bar input,.flt-bar select{font-size:12px;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;background:#fff;outline:none;color:#374151}
+.flt-bar input:focus,.flt-bar select:focus{border-color:#1a2b47}
+
+/* ═══════════════════════════════
+   SATIŞ TAHMİNİ
+═══════════════════════════════ */
+.tahmin-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.chart-wrap{position:relative;height:200px;padding:12px 14px}
+.chart-bars{display:flex;align-items:flex-end;gap:8px;height:160px;padding-top:16px}
+.bar-group{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px}
+.bar-stack{width:100%;display:flex;flex-direction:column-reverse;border-radius:4px 4px 0 0;overflow:hidden;cursor:pointer;transition:opacity .12s;position:relative}
+.bar-stack:hover{opacity:.85}
+.bar-seg{width:100%;transition:height .5s ease}
+.bar-label{font-size:9px;color:#9ca3af;font-weight:500;margin-top:3px}
+.bar-val{font-size:9px;font-weight:700;color:#374151}
+.chart-y{position:absolute;left:14px;top:12px;bottom:28px;display:flex;flex-direction:column;justify-content:space-between;font-size:9px;color:#d1d5db}
+.chart-line{position:absolute;left:0;right:0;border-top:1px dashed #f3f4f6}
+
+/* Doughnut / gauge göstergesi */
+.gauge-wrap{display:flex;align-items:center;justify-content:center;flex-direction:column;padding:16px;gap:8px}
+.gauge-ring{position:relative;width:100px;height:100px}
+.gauge-svg{width:100px;height:100px;transform:rotate(-90deg)}
+.gauge-bg{fill:none;stroke:#f3f4f6;stroke-width:10}
+.gauge-val{fill:none;stroke-width:10;stroke-linecap:round;transition:stroke-dasharray .8s ease}
+.gauge-text{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column}
+.gauge-num{font-size:18px;font-weight:700;color:#111827}
+.gauge-sub{font-size:9px;color:#9ca3af;text-align:center}
+
+/* Aylık tablo */
+.ay-tablo td,.ay-tablo th{padding:7px 12px;border-bottom:1px solid #f3f4f6;font-size:12px;vertical-align:middle}
+.ay-tablo th{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:#9ca3af;background:#f9fafb;border-bottom:1px solid #e5e7eb}
+.ay-progress{height:6px;background:#f3f4f6;border-radius:3px;overflow:hidden;margin-top:3px}
+.ap-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#1a2b47,#3b82f6)}
+
+/* Funnel */
+.funnel{padding:12px 14px}
+.funnel-item{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.funnel-bar-wrap{flex:1;background:#f3f4f6;border-radius:4px;height:28px;overflow:hidden;position:relative}
+.funnel-bar{height:100%;border-radius:4px;display:flex;align-items:center;padding-left:8px;font-size:11px;font-weight:600;color:#fff;transition:width .6s ease}
+.funnel-label{width:80px;font-size:11px;font-weight:500;color:#374151;flex-shrink:0}
+.funnel-meta{width:70px;text-align:right;font-size:11px;color:#374151;font-family:monospace;flex-shrink:0}
+.funnel-pct{width:40px;text-align:right;font-size:10px;color:#9ca3af;flex-shrink:0}
+
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+  <div class="sb-logo">
+    <div class="sb-brand">Ersan MES</div>
+    <div class="sb-sub">AS9100 · Üretim Yönetimi</div>
+  </div>
+  <div class="sb-section">CRM</div>
+  <div class="sb-item on" id="sb-pipeline" onclick="goTo('pipeline',this)"><div class="sb-dot"></div>Pipeline</div>
+  <div class="sb-item" id="sb-takip" onclick="goTo('takip',this)"><div class="sb-dot"></div>Takip Listesi</div>
+  <div class="sb-item" id="sb-tahmin" onclick="goTo('tahmin',this)"><div class="sb-dot"></div>Satış Tahmini</div>
+  <div class="sb-section">Satış</div>
+  <div class="sb-item sb-dim"><div class="sb-dot"></div>Teklifler</div>
+  <div class="sb-item sb-dim"><div class="sb-dot"></div>Siparişler</div>
+  <div class="sb-item sb-dim"><div class="sb-dot"></div>Müşteriler</div>
+  <div class="sb-item sb-dim"><div class="sb-dot"></div>Sevkiyat</div>
+  <div class="sb-section sb-dim">Satınalma</div>
+  <div class="sb-item sb-dim"><div class="sb-dot"></div>Satınalma Talepleri</div>
+  <div class="sb-section sb-dim">Üretim</div>
+  <div class="sb-item sb-dim"><div class="sb-dot"></div>İş Emirleri</div>
+  <div class="sb-section sb-dim">Kalite</div>
+  <div class="sb-item sb-dim"><div class="sb-dot"></div>Kalite Hub</div>
+</div>
+
+<div class="main">
+
+<!-- ══════════════════════════════
+     PIPELINE SAYFASI
+══════════════════════════════ -->
+<div class="page show" id="pg-pipeline">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:8px">
+      <span class="tb-title">Satış Pipeline</span>
+      <span class="tb-sub">6 aşama · 24 fırsat</span>
+    </div>
+    <div style="display:flex;gap:8px">
+      <select style="font-size:11px;padding:4px 8px;border:1px solid #d1d5db;border-radius:5px;background:#fff;outline:none;color:#374151">
+        <option>Tüm Sorumlar</option><option>Erdem K.</option><option>İlhan D.</option>
+      </select>
+      <button class="btn">📊 Özet</button>
+      <button class="btn btn-p" onclick="yeniFirsatAc()">+ Yeni Fırsat</button>
+    </div>
+  </div>
+  <div style="padding:10px 16px 0;flex-shrink:0">
+    <!-- KPI özet şeridi -->
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:10px">
+      <div class="kpi s1" style="padding:8px 12px"><label>Toplam Fırsat</label><div class="num">24</div><div class="det">Bu ay</div></div>
+      <div class="kpi s2" style="padding:8px 12px"><label>Pipeline Değeri</label><div class="num">₺4.2M</div><div class="det trend up">↑ %12 geçen aya göre</div></div>
+      <div class="kpi s4" style="padding:8px 12px"><label>Bu Ay Kazanılan</label><div class="num">₺680K</div><div class="det trend up">↑ 3 fırsat</div></div>
+      <div class="kpi s3" style="padding:8px 12px"><label>Kayıp</label><div class="num">₺120K</div><div class="det trend dn">↓ 1 fırsat</div></div>
+      <div class="kpi s5" style="padding:8px 12px"><label>Kazanma Oranı</label><div class="num">%75</div><div class="det">Son 3 ay</div></div>
+    </div>
+    <!-- Pipeline özet bar -->
+    <div class="pipe-bar">
+      <div class="pb-step on"><div class="pb-step-name">Temas</div><div class="pb-step-count">8</div><div class="pb-step-tutar">₺480K</div><div class="pb-step-bar" style="background:#e5e7eb"></div></div>
+      <div class="pb-step"><div class="pb-step-name">Nitelendirme</div><div class="pb-step-count">5</div><div class="pb-step-tutar">₺820K</div><div class="pb-step-bar" style="background:#93c5fd"></div></div>
+      <div class="pb-step"><div class="pb-step-name">Teklif</div><div class="pb-step-count">6</div><div class="pb-step-tutar">₺1.85M</div><div class="pb-step-bar" style="background:#fcd34d"></div></div>
+      <div class="pb-step"><div class="pb-step-name">Müzakere</div><div class="pb-step-count">3</div><div class="pb-step-tutar">₺960K</div><div class="pb-step-bar" style="background:#6ee7b7"></div></div>
+      <div class="pb-step"><div class="pb-step-name">Kazanıldı</div><div class="pb-step-count">2</div><div class="pb-step-tutar">₺680K</div><div class="pb-step-bar" style="background:#34d399"></div></div>
+      <div class="pb-step"><div class="pb-step-name">Kayıp</div><div class="pb-step-count">0</div><div class="pb-step-tutar">₺0</div><div class="pb-step-bar" style="background:#fca5a5"></div></div>
+    </div>
+  </div>
+  <!-- Kanban colonlar -->
+  <div style="padding:0 16px 8px;flex:1;overflow:hidden;display:flex">
+    <div class="kanban-wrap">
+
+      <!-- Temas -->
+      <div class="k-col">
+        <div class="k-head kh-temas"><span>📞 Temas</span><span class="k-count">8</span></div>
+        <div class="k-body kc-temas">
+          <div class="kart" onclick="firsatDetayAc('K001')">
+            <div class="kart-firma">Maksan Makine Ltd.</div>
+            <div class="kart-konu">CNC Parça Üretimi — 500 adet/ay</div>
+            <div class="kart-meta">
+              <span class="kart-tutar">₺85K</span>
+              <span class="kart-termin">📅 25.03</span>
+              <span class="kart-aci aci-s">Sıcak</span>
+              <span class="kart-atanan">EK</span>
+            </div>
+            <div class="progress-bar"><div class="pb-fill" style="width:15%;background:#9ca3af"></div></div>
+          </div>
+          <div class="kart" onclick="firsatDetayAc('K002')">
+            <div class="kart-firma">Teknoform A.Ş.</div>
+            <div class="kart-konu">Flanş İmalatı — Prototip</div>
+            <div class="kart-meta">
+              <span class="kart-tutar">₺42K</span>
+              <span class="kart-termin">📅 28.03</span>
+              <span class="kart-aci aci-y">Soğuk</span>
+              <span class="kart-atanan">İD</span>
+            </div>
+            <div class="progress-bar"><div class="pb-fill" style="width:10%;background:#9ca3af"></div></div>
+          </div>
+          <div class="kart" onclick="firsatDetayAc('K003')">
+            <div class="kart-firma">Aero Savunma Sistemleri</div>
+            <div class="kart-konu">Mil Üretimi — AS9100 zorunlu</div>
+            <div class="kart-meta">
+              <span class="kart-tutar">₺220K</span>
+              <span class="kart-termin gecmis">⚠ 20.03</span>
+              <span class="kart-aci aci-s">Sıcak</span>
+              <span class="kart-atanan">EK</span>
+            </div>
+            <div class="progress-bar"><div class="pb-fill" style="width:20%;background:#9ca3af"></div></div>
+          </div>
+          <button class="k-add" onclick="yeniFirsatAc('Temas')">+ Ekle</button>
+        </div>
+      </div>
+
+      <!-- Nitelendirme -->
+      <div class="k-col">
+        <div class="k-head kh-nitelik"><span>🔍 Nitelendirme</span><span class="k-count">5</span></div>
+        <div class="k-body kc-nitelik">
+          <div class="kart" onclick="firsatDetayAc('K004')">
+            <div class="kart-firma">Türk Havacılık Tek.</div>
+            <div class="kart-konu">Rotor Mil Seti — 200 adet</div>
+            <div class="kart-meta">
+              <span class="kart-tutar">₺380K</span>
+              <span class="kart-termin">📅 01.04</span>
+              <span class="kart-aci aci-s">Sıcak</span>
+              <span class="kart-atanan">EK</span>
+            </div>
+            <div class="progress-bar"><div class="pb-fill" style="width:30%;background:#3b82f6"></div></div>
+          </div>
+          <div class="kart" onclick="firsatDetayAc('K005')">
+            <div class="kart-firma">Bosch Sanayi A.Ş.</div>
+            <div class="kart-konu">Prototip Dişli Takımı</div>
+            <div class="kart-meta">
+              <span class="kart-tutar">₺95K</span>
+              <span class="kart-termin">📅 05.04</span>
+              <span class="kart-aci aci-y">Soğuk</span>
+              <span class="kart-atanan">İD</span>
+            </div>
+            <div class="progress-bar"><div class="pb-fill" style="width:25%;background:#3b82f6"></div></div>
+          </div>
+          <button class="k-add" onclick="yeniFirsatAc('Nitelendirme')">+ Ekle</button>
+        </div>
+      </div>
+
+      <!-- Teklif -->
+      <div class="k-col">
+        <div class="k-head kh-teklif"><span>📄 Teklif Aşaması</span><span class="k-count">6</span></div>
+        <div class="k-body kc-teklif">
+          <div class="kart" onclick="firsatDetayAc('K006')">
+            <div class="kart-firma">X Y Z Havacılık A.Ş.</div>
+            <div class="kart-konu">Flanş İmalatı — 150 adet</div>
+            <div class="kart-meta">
+              <span class="kart-tutar">₺225K</span>
+              <span class="kart-termin gecmis">⚠ TK-074 süresi doluyor</span>
+              <span class="kart-atanan">EK</span>
+            </div>
+            <div class="progress-bar"><div class="pb-fill" style="width:55%;background:#f59e0b"></div></div>
+          </div>
+          <div class="kart" onclick="firsatDetayAc('K007')">
+            <div class="kart-firma">Figes Mühendislik</div>
+            <div class="kart-konu">Özel Bağlantı Elemanı — 1000 adet</div>
+            <div class="kart-meta">
+              <span class="kart-tutar">₺540K</span>
+              <span class="kart-termin">📅 10.04</span>
+              <span class="kart-aci aci-s">Sıcak</span>
+              <span class="kart-atanan">İD</span>
+            </div>
+            <div class="progress-bar"><div class="pb-fill" style="width:50%;background:#f59e0b"></div></div>
+          </div>
+          <div class="kart" onclick="firsatDetayAc('K008')">
+            <div class="kart-firma">Roketsan A.Ş.</div>
+            <div class="kart-konu">Hassas İşlenmiş Mil — 50 adet</div>
+            <div class="kart-meta">
+              <span class="kart-tutar">₺680K</span>
+              <span class="kart-termin">📅 15.04</span>
+              <span class="kart-aci aci-s">Sıcak</span>
+              <span class="kart-atanan">EK</span>
+            </div>
+            <div class="progress-bar"><div class="pb-fill" style="width:60%;background:#f59e0b"></div></div>
+          </div>
+          <button class="k-add" onclick="yeniFirsatAc('Teklif')">+ Ekle</button>
+        </div>
+      </div>
+
+      <!-- Müzakere -->
+      <div class="k-col">
+        <div class="k-head kh-musteri"><span>🤝 Müzakere</span><span class="k-count">3</span></div>
+        <div class="k-body kc-musteri">
+          <div class="kart" onclick="firsatDetayAc('K009')">
+            <div class="kart-firma">Erdem Müşteri</div>
+            <div class="kart-konu">Role İmalatı — 100 adet</div>
+            <div class="kart-meta">
+              <span class="kart-tutar">₺680K</span>
+              <span class="kart-termin">📅 28.03</span>
+              <span class="kart-aci aci-s">Sıcak</span>
+              <span class="kart-atanan">EK</span>
+            </div>
+            <div class="progress-bar"><div class="pb-fill" style="width:80%;background:#10b981"></div></div>
+          </div>
+          <button class="k-add" onclick="yeniFirsatAc('Müzakere')">+ Ekle</button>
+        </div>
+      </div>
+
+      <!-- Kazanıldı -->
+      <div class="k-col">
+        <div class="k-head kh-kazanildi"><span>🏆 Kazanıldı</span><span class="k-count">2</span></div>
+        <div class="k-body kc-kazanildi">
+          <div class="kart" onclick="firsatDetayAc('K010')">
+            <div class="kart-firma">Erdem Müşteri</div>
+            <div class="kart-konu">Role İmalatı — TK-2026-076</div>
+            <div class="kart-meta">
+              <span class="kart-tutar">₺680K</span>
+              <span class="bdg b-grn" style="font-size:9px">Sipariş oluşturuldu</span>
+            </div>
+            <div class="progress-bar"><div class="pb-fill" style="width:100%;background:#10b981"></div></div>
+          </div>
+          <button class="k-add" onclick="yeniFirsatAc('Kazanıldı')">+ Ekle</button>
+        </div>
+      </div>
+
+      <!-- Kayıp -->
+      <div class="k-col">
+        <div class="k-head kh-kayip"><span>❌ Kayıp</span><span class="k-count">0</span></div>
+        <div class="k-body kc-kayip">
+          <div style="text-align:center;padding:16px;font-size:11px;color:#9ca3af">Kayıp fırsat yok</div>
+          <button class="k-add" onclick="yeniFirsatAc('Kayıp')">+ Ekle</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     TAKİP LİSTESİ
+══════════════════════════════ -->
+<div class="page" id="pg-takip">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:8px">
+      <span class="tb-title">Takip Listesi</span>
+      <span class="tb-sub">Aktiviteler · Görevler · Hatırlatmalar</span>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-g" onclick="yeniAktiviteAc()">+ Aktivite Ekle</button>
+      <button class="btn btn-b" onclick="yeniGorevAc()">+ Görev Ekle</button>
+    </div>
+  </div>
+  <div class="content">
+
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px">
+      <div class="kpi s3"><label>Bugün Yapılacak</label><div class="num">5</div><div class="det trend dn">2 gecikmiş</div></div>
+      <div class="kpi s2"><label>Bu Hafta</label><div class="num">12</div><div class="det">Planlı aktivite</div></div>
+      <div class="kpi s4"><label>Tamamlanan</label><div class="num">8</div><div class="det">Bu hafta</div></div>
+      <div class="kpi s1"><label>Açık Fırsat</label><div class="num">14</div><div class="det">Aktif takipte</div></div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 320px;gap:12px">
+      <div>
+        <!-- Görev/Takip Tablosu -->
+        <div class="card">
+          <div class="card-head">
+            <span class="card-title">📋 Takip Görevleri</span>
+            <div style="display:flex;gap:6px;align-items:center">
+              <div class="flt-bar" style="margin:0">
+                <input placeholder="Firma, kişi, konu ara..." style="padding:4px 8px;font-size:11px">
+                <select style="padding:4px 8px;font-size:11px;border:1px solid #d1d5db;border-radius:5px;background:#fff;outline:none">
+                  <option>Tümü</option><option>Arama Yap</option><option>E-posta</option><option>Toplantı</option><option>Teklif Gönder</option>
+                </select>
+                <select style="padding:4px 8px;font-size:11px;border:1px solid #d1d5db;border-radius:5px;background:#fff;outline:none">
+                  <option>Tüm Öncelikler</option><option>Yüksek</option><option>Orta</option><option>Düşük</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div style="overflow-x:auto">
+            <table class="tablo">
+              <thead><tr>
+                <th style="width:28px"><input type="checkbox"></th>
+                <th>Firma / Kişi</th>
+                <th>Görev</th>
+                <th>Öncelik</th>
+                <th>Son Tarih</th>
+                <th>Sorumlu</th>
+                <th>Durum</th>
+                <th></th>
+              </tr></thead>
+              <tbody>
+                <tr class="gecmis">
+                  <td><input type="checkbox"></td>
+                  <td><div style="font-weight:500">Aero Savunma Sistemleri</div><div class="muted">Ahmet Yılmaz</div></td>
+                  <td><div style="font-weight:500">Teknik görüşme yapılacak</div><div class="muted">Mil üretimi teklifi için ön görüşme</div></td>
+                  <td><span class="onc o-y"><span class="onc-dot oy-d"></span>Yüksek</span></td>
+                  <td style="color:#dc2626;font-weight:600">20.03.2026 ⚠</td>
+                  <td><div style="display:flex;align-items:center;gap:5px"><div style="width:20px;height:20px;border-radius:50%;background:#1a2b47;color:#fff;font-size:8px;font-weight:700;display:flex;align-items:center;justify-content:center">EK</div><span class="muted">Erdem K.</span></div></td>
+                  <td><span class="bdg b-red">Gecikmiş</span></td>
+                  <td><button class="btn btn-g" style="font-size:10px;padding:2px 7px" onclick="gorevTamamla(this)">✓</button></td>
+                </tr>
+                <tr>
+                  <td><input type="checkbox"></td>
+                  <td><div style="font-weight:500">X Y Z Havacılık A.Ş.</div><div class="muted">Ahmet Yılmaz</div></td>
+                  <td><div style="font-weight:500">Teklif hatırlatması gönder</div><div class="muted">TK-074 süresi dolmadan</div></td>
+                  <td><span class="onc o-y"><span class="onc-dot oy-d"></span>Yüksek</span></td>
+                  <td style="color:#f59e0b;font-weight:600">22.03.2026</td>
+                  <td><div style="display:flex;align-items:center;gap:5px"><div style="width:20px;height:20px;border-radius:50%;background:#1a2b47;color:#fff;font-size:8px;font-weight:700;display:flex;align-items:center;justify-content:center">EK</div><span class="muted">Erdem K.</span></div></td>
+                  <td><span class="bdg b-amr">Bugün</span></td>
+                  <td><button class="btn btn-g" style="font-size:10px;padding:2px 7px" onclick="gorevTamamla(this)">✓</button></td>
+                </tr>
+                <tr>
+                  <td><input type="checkbox"></td>
+                  <td><div style="font-weight:500">Türk Havacılık Tek.</div><div class="muted">Murat Demir</div></td>
+                  <td><div style="font-weight:500">Demo sunum hazırla</div><div class="muted">AS9100 sertifika ve kapasite bilgisi</div></td>
+                  <td><span class="onc o-o"><span class="onc-dot oo-d"></span>Orta</span></td>
+                  <td>25.03.2026</td>
+                  <td><div style="display:flex;align-items:center;gap:5px"><div style="width:20px;height:20px;border-radius:50%;background:#065f46;color:#fff;font-size:8px;font-weight:700;display:flex;align-items:center;justify-content:center">İD</div><span class="muted">İlhan D.</span></div></td>
+                  <td><span class="bdg b-blu">Bu Hafta</span></td>
+                  <td><button class="btn btn-g" style="font-size:10px;padding:2px 7px" onclick="gorevTamamla(this)">✓</button></td>
+                </tr>
+                <tr>
+                  <td><input type="checkbox"></td>
+                  <td><div style="font-weight:500">Roketsan A.Ş.</div><div class="muted">Fatih Özdemir</div></td>
+                  <td><div style="font-weight:500">Teklif revize et ve gönder</div><div class="muted">Fiyat güncelleme talep edildi</div></td>
+                  <td><span class="onc o-y"><span class="onc-dot oy-d"></span>Yüksek</span></td>
+                  <td>28.03.2026</td>
+                  <td><div style="display:flex;align-items:center;gap:5px"><div style="width:20px;height:20px;border-radius:50%;background:#1a2b47;color:#fff;font-size:8px;font-weight:700;display:flex;align-items:center;justify-content:center">EK</div><span class="muted">Erdem K.</span></div></td>
+                  <td><span class="bdg b-gray">Bekliyor</span></td>
+                  <td><button class="btn btn-g" style="font-size:10px;padding:2px 7px" onclick="gorevTamamla(this)">✓</button></td>
+                </tr>
+                <tr>
+                  <td><input type="checkbox"></td>
+                  <td><div style="font-weight:500">Figes Mühendislik</div><div class="muted">Selin Kaya</div></td>
+                  <td><div style="font-weight:500">Fabrika ziyareti planla</div><div class="muted">Üretim kapasitesini göstermek için</div></td>
+                  <td><span class="onc o-d"><span class="onc-dot od-d"></span>Düşük</span></td>
+                  <td>05.04.2026</td>
+                  <td><div style="display:flex;align-items:center;gap:5px"><div style="width:20px;height:20px;border-radius:50%;background:#065f46;color:#fff;font-size:8px;font-weight:700;display:flex;align-items:center;justify-content:center">İD</div><span class="muted">İlhan D.</span></div></td>
+                  <td><span class="bdg b-gray">Bekliyor</span></td>
+                  <td><button class="btn btn-g" style="font-size:10px;padding:2px 7px" onclick="gorevTamamla(this)">✓</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div style="padding:8px 12px;border-top:1px solid #e5e7eb;background:#f9fafb;display:flex;align-items:center;justify-content:space-between;font-size:11px;color:#6b7280">
+            <span>5 görev · 2 gecikmiş</span>
+            <button class="btn" style="font-size:10px">Tamamlananları Göster</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sağ: Aktivite Akışı -->
+      <div>
+        <div class="card" style="height:100%">
+          <div class="card-head">
+            <span class="card-title">⚡ Son Aktiviteler</span>
+            <button class="btn" style="font-size:10px;padding:3px 7px" onclick="yeniAktiviteAc()">+ Ekle</button>
+          </div>
+          <div style="padding:4px 12px">
+            <div class="akt-row">
+              <div class="akt-icon ai-tel">📞</div>
+              <div>
+                <div class="akt-text"><strong>Erdem Müşteri</strong> — Arama yapıldı<br>Sipariş onaylandı. Termin: 28.03 isteniyor.</div>
+                <div class="akt-meta">Erdem K. · 21.03 14:32</div>
+              </div>
+            </div>
+            <div class="akt-row">
+              <div class="akt-icon ai-mail">📧</div>
+              <div>
+                <div class="akt-text"><strong>X Y Z Havacılık</strong> — E-posta gönderildi<br>TK-074 hatırlatması iletildi.</div>
+                <div class="akt-meta">Erdem K. · 21.03 11:15</div>
+              </div>
+            </div>
+            <div class="akt-row">
+              <div class="akt-icon ai-top">🤝</div>
+              <div>
+                <div class="akt-text"><strong>Türk Havacılık</strong> — Toplantı yapıldı<br>Rotor mil seti projesini değerlendirdik.</div>
+                <div class="akt-meta">İlhan D. · 20.03 10:00</div>
+              </div>
+            </div>
+            <div class="akt-row">
+              <div class="akt-icon ai-ziy">🏭</div>
+              <div>
+                <div class="akt-text"><strong>Roketsan A.Ş.</strong> — Fabrika ziyareti<br>CNC kapasitesi ve AS9100 belgesi gösterildi.</div>
+                <div class="akt-meta">Erdem K. · 19.03 09:30</div>
+              </div>
+            </div>
+            <div class="akt-row">
+              <div class="akt-icon ai-not">📝</div>
+              <div>
+                <div class="akt-text"><strong>Figes Mühendislik</strong> — Not<br>Özel bağlantı elemanı için teknik çizim talep edildi.</div>
+                <div class="akt-meta">İlhan D. · 18.03 16:45</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     SATIŞ TAHMİNİ
+══════════════════════════════ -->
+<div class="page" id="pg-tahmin">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:8px">
+      <span class="tb-title">Satış Tahmini</span>
+      <span class="tb-sub">2026 · Aylık · Sektör · Ürün grubu</span>
+    </div>
+    <div style="display:flex;gap:8px">
+      <select style="font-size:11px;padding:4px 8px;border:1px solid #d1d5db;border-radius:5px;background:#fff;outline:none">
+        <option>2026</option><option>2025</option>
+      </select>
+      <button class="btn btn-p">📊 Rapor İndir</button>
+    </div>
+  </div>
+  <div class="content">
+
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px">
+      <div class="kpi s4"><label>Bu Ay Gerçekleşen</label><div class="num">₺1.34M</div><div class="det trend up">↑ %18 hedefin üzerinde</div></div>
+      <div class="kpi s2"><label>Q1 Hedef</label><div class="num">₺3.5M</div><div class="det">Gerçekleşen: ₺3.2M (%91)</div></div>
+      <div class="kpi s1"><label>Yıl Sonu Tahmini</label><div class="num">₺14.8M</div><div class="det trend up">↑ %8 geçen yıl</div></div>
+      <div class="kpi s5"><label>Pipeline'dan Beklenen</label><div class="num">₺2.1M</div><div class="det">Bu çeyrek</div></div>
+    </div>
+
+    <div class="tahmin-grid">
+
+      <!-- Aylık Grafik -->
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title">📊 Aylık Gelir — 2026</span>
+          <div style="display:flex;gap:6px;font-size:10px;align-items:center">
+            <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:2px;background:#1a2b47;display:inline-block"></span>Gerçekleşen</span>
+            <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:2px;background:#bfdbfe;display:inline-block"></span>Hedef</span>
+            <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:2px;background:#dcfce7;display:inline-block"></span>Tahmin</span>
+          </div>
+        </div>
+        <div class="chart-wrap">
+          <div class="chart-y">
+            <span>₺2M</span><span>₺1.5M</span><span>₺1M</span><span>₺500K</span><span>₺0</span>
+          </div>
+          <div class="chart-bars" id="aylik-bars" style="padding-left:30px">
+            <!-- JS ile doldurulur -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Kazanma Oranı Göstergesi -->
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title">🎯 Hedef Gerçekleşme</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0">
+          <div class="gauge-wrap" style="border-right:1px solid #f3f4f6">
+            <div class="gauge-ring">
+              <svg class="gauge-svg" viewBox="0 0 100 100">
+                <circle class="gauge-bg" cx="50" cy="50" r="40"/>
+                <circle class="gauge-val" cx="50" cy="50" r="40" stroke="#1a2b47" stroke-dasharray="226 252" stroke-dashoffset="0"/>
+              </svg>
+              <div class="gauge-text">
+                <div class="gauge-num">%91</div>
+                <div class="gauge-sub">Q1 Hedef</div>
+              </div>
+            </div>
+            <div style="font-size:11px;color:#6b7280;text-align:center">₺3.2M / ₺3.5M</div>
+          </div>
+          <div class="gauge-wrap">
+            <div class="gauge-ring">
+              <svg class="gauge-svg" viewBox="0 0 100 100">
+                <circle class="gauge-bg" cx="50" cy="50" r="40"/>
+                <circle class="gauge-val" cx="50" cy="50" r="40" stroke="#10b981" stroke-dasharray="189 252" stroke-dashoffset="0"/>
+              </svg>
+              <div class="gauge-text">
+                <div class="gauge-num">%75</div>
+                <div class="gauge-sub">Kazanma</div>
+              </div>
+            </div>
+            <div style="font-size:11px;color:#6b7280;text-align:center">Pipeline dönüşümü</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+
+      <!-- Satış Hunisi (Funnel) -->
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title">📐 Satış Hunisi</span>
+          <span class="muted">Bu çeyrek</span>
+        </div>
+        <div class="funnel">
+          <div class="funnel-item">
+            <div class="funnel-label">Temas</div>
+            <div class="funnel-bar-wrap">
+              <div class="funnel-bar" style="width:100%;background:#9ca3af">24 fırsat</div>
+            </div>
+            <div class="funnel-meta">₺4.2M</div>
+            <div class="funnel-pct">100%</div>
+          </div>
+          <div class="funnel-item">
+            <div class="funnel-label">Nitelendirme</div>
+            <div class="funnel-bar-wrap">
+              <div class="funnel-bar" style="width:67%;background:#3b82f6">16 fırsat</div>
+            </div>
+            <div class="funnel-meta">₺3.1M</div>
+            <div class="funnel-pct">67%</div>
+          </div>
+          <div class="funnel-item">
+            <div class="funnel-label">Teklif</div>
+            <div class="funnel-bar-wrap">
+              <div class="funnel-bar" style="width:46%;background:#f59e0b">11 fırsat</div>
+            </div>
+            <div class="funnel-meta">₺2.4M</div>
+            <div class="funnel-pct">46%</div>
+          </div>
+          <div class="funnel-item">
+            <div class="funnel-label">Müzakere</div>
+            <div class="funnel-bar-wrap">
+              <div class="funnel-bar" style="width:21%;background:#10b981">5 fırsat</div>
+            </div>
+            <div class="funnel-meta">₺1.2M</div>
+            <div class="funnel-pct">21%</div>
+          </div>
+          <div class="funnel-item">
+            <div class="funnel-label">Kazanıldı</div>
+            <div class="funnel-bar-wrap">
+              <div class="funnel-bar" style="width:13%;background:#065f46">3 fırsat</div>
+            </div>
+            <div class="funnel-meta">₺680K</div>
+            <div class="funnel-pct">13%</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Aylık Karşılaştırma -->
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title">📅 Aylık Karşılaştırma</span>
+          <button class="btn" style="font-size:10px;padding:3px 8px">Excel</button>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="ay-tablo" style="width:100%;border-collapse:collapse">
+            <thead><tr>
+              <th>Ay</th><th>Hedef</th><th>Gerçekleşen</th><th>Fark</th><th>Durum</th>
+            </tr></thead>
+            <tbody>
+              <tr>
+                <td><strong>Ocak</strong></td>
+                <td class="muted">₺1.0M</td>
+                <td style="font-weight:600">₺1.12M</td>
+                <td style="color:#10b981;font-weight:600">+₺120K</td>
+                <td>
+                  <div style="font-size:10px;color:#065f46;font-weight:600">%112</div>
+                  <div class="ay-progress"><div class="ap-fill" style="width:100%"></div></div>
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Şubat</strong></td>
+                <td class="muted">₺1.2M</td>
+                <td style="font-weight:600">₺1.08M</td>
+                <td style="color:#dc2626;font-weight:600">-₺120K</td>
+                <td>
+                  <div style="font-size:10px;color:#dc2626;font-weight:600">%90</div>
+                  <div class="ay-progress"><div class="ap-fill" style="width:90%;background:linear-gradient(90deg,#f59e0b,#ef4444)"></div></div>
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Mart</strong></td>
+                <td class="muted">₺1.3M</td>
+                <td style="font-weight:600">₺1.34M</td>
+                <td style="color:#10b981;font-weight:600">+₺40K</td>
+                <td>
+                  <div style="font-size:10px;color:#065f46;font-weight:600">%103</div>
+                  <div class="ay-progress"><div class="ap-fill" style="width:100%"></div></div>
+                </td>
+              </tr>
+              <tr style="background:#fafafa">
+                <td><strong style="color:#9ca3af">Nisan</strong></td>
+                <td class="muted">₺1.4M</td>
+                <td style="color:#9ca3af;font-style:italic">₺~1.45M (tahmin)</td>
+                <td style="color:#10b981">+₺50K?</td>
+                <td>
+                  <div style="font-size:10px;color:#9ca3af">Tahmin</div>
+                  <div class="ay-progress"><div class="ap-fill" style="width:0%"></div></div>
+                </td>
+              </tr>
+              <tr style="background:#fafafa">
+                <td><strong style="color:#9ca3af">Mayıs</strong></td>
+                <td class="muted">₺1.5M</td>
+                <td style="color:#9ca3af;font-style:italic">₺~1.4M (tahmin)</td>
+                <td style="color:#9ca3af">—</td>
+                <td>
+                  <div style="font-size:10px;color:#9ca3af">Tahmin</div>
+                  <div class="ay-progress"><div class="ap-fill" style="width:0%"></div></div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+
+<!-- ════════════════════════════
+     YENİ FIRSAT MODALI
+════════════════════════════ -->
+<div class="modal-ov" id="firsat-modal" onclick="moKapat(event,'firsat-modal')">
+  <div class="modal-box">
+    <div class="m-head">
+      <div><div class="m-title">Yeni Fırsat Ekle</div><div class="m-sub" id="fm-asama-label">Pipeline aşaması seçildi</div></div>
+      <button class="m-x" onclick="document.getElementById('firsat-modal').classList.remove('open')">✕</button>
+    </div>
+    <div class="m-body">
+      <div class="fg2">
+        <div><label class="fl">Firma / Müşteri <span style="color:#dc2626">*</span></label>
+          <input class="fi" id="fm-firma" placeholder="Firma adı"></div>
+        <div><label class="fl">İlgili Kişi</label>
+          <input class="fi" id="fm-kisi" placeholder="İsim ve unvan"></div>
+      </div>
+      <div class="fg1" style="margin-bottom:10px">
+        <label class="fl">Fırsat Konusu <span style="color:#dc2626">*</span></label>
+        <input class="fi" id="fm-konu" placeholder="Ürün/hizmet ve miktar bilgisi">
+      </div>
+      <div class="fg3">
+        <div><label class="fl">Tahmini Değer (₺)</label>
+          <input class="fi" id="fm-deger" type="number" placeholder="0"></div>
+        <div><label class="fl">Aşama</label>
+          <select class="fi-sel" id="fm-asama">
+            <option>Temas</option><option>Nitelendirme</option>
+            <option>Teklif</option><option>Müzakere</option>
+            <option>Kazanıldı</option><option>Kayıp</option>
+          </select></div>
+        <div><label class="fl">Sıcaklık</label>
+          <select class="fi-sel" id="fm-sicaklik">
+            <option>Sıcak</option><option>Soğuk</option><option>Nötr</option>
+          </select></div>
+      </div>
+      <div class="fg2">
+        <div><label class="fl">Son Temas / Takip Tarihi</label>
+          <input class="fi" id="fm-tarih" type="date"></div>
+        <div><label class="fl">Sorumlu</label>
+          <select class="fi-sel" id="fm-sorumlu">
+            <option>Erdem K.</option><option>İlhan D.</option>
+          </select></div>
+      </div>
+      <div style="margin-bottom:0">
+        <label class="fl">Notlar</label>
+        <textarea class="fi" id="fm-not" rows="3" placeholder="Müşteri ihtiyacı, özel gereksinimler..."></textarea>
+      </div>
+    </div>
+    <div class="m-foot">
+      <div style="font-size:11px;color:#9ca3af">Kanban kartı otomatik oluşturulacak</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn" onclick="document.getElementById('firsat-modal').classList.remove('open')">İptal</button>
+        <button class="btn btn-p" onclick="firsatKaydet()">✓ Fırsat Ekle</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Aktivite Modal -->
+<div class="modal-ov" id="aktivite-modal" onclick="moKapat(event,'aktivite-modal')">
+  <div class="modal-box" style="max-width:500px">
+    <div class="m-head">
+      <div><div class="m-title">Aktivite / Görev Ekle</div><div class="m-sub">Arama · E-posta · Toplantı · Not</div></div>
+      <button class="m-x" onclick="document.getElementById('aktivite-modal').classList.remove('open')">✕</button>
+    </div>
+    <div class="m-body">
+      <div class="fg2">
+        <div><label class="fl">Aktivite Tipi</label>
+          <select class="fi-sel" id="ak-tip">
+            <option>📞 Arama Yap</option><option>📧 E-posta Gönder</option>
+            <option>🤝 Toplantı</option><option>🏭 Ziyaret</option>
+            <option>📝 Not</option><option>📄 Teklif Gönder</option>
+          </select></div>
+        <div><label class="fl">Öncelik</label>
+          <select class="fi-sel" id="ak-onc">
+            <option>Yüksek</option><option>Orta</option><option>Düşük</option>
+          </select></div>
+      </div>
+      <div class="fg1" style="margin-bottom:10px">
+        <label class="fl">Firma / İlgili Kişi <span style="color:#dc2626">*</span></label>
+        <input class="fi" id="ak-firma" placeholder="Firma ve kişi adı">
+      </div>
+      <div class="fg1" style="margin-bottom:10px">
+        <label class="fl">Görev / Açıklama <span style="color:#dc2626">*</span></label>
+        <input class="fi" id="ak-aciklama" placeholder="Ne yapılacak?">
+      </div>
+      <div class="fg2">
+        <div><label class="fl">Son Tarih</label>
+          <input class="fi" id="ak-tarih" type="date"></div>
+        <div><label class="fl">Sorumlu</label>
+          <select class="fi-sel" id="ak-sorumlu">
+            <option>Erdem K.</option><option>İlhan D.</option>
+          </select></div>
+      </div>
+    </div>
+    <div class="m-foot">
+      <div style="font-size:11px;color:#9ca3af">Takip listesine eklenecek</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn" onclick="document.getElementById('aktivite-modal').classList.remove('open')">İptal</button>
+        <button class="btn btn-g" onclick="aktiviteKaydet()">✓ Ekle</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Fırsat Detay Modal -->
+<div class="modal-ov" id="detay-modal" onclick="moKapat(event,'detay-modal')">
+  <div class="modal-box" style="max-width:560px">
+    <div class="m-head" id="detay-head">
+      <div><div class="m-title" id="detay-firma">Firma Adı</div><div class="m-sub" id="detay-konu">Fırsat konusu</div></div>
+      <button class="m-x" onclick="document.getElementById('detay-modal').classList.remove('open')">✕</button>
+    </div>
+    <div class="m-body">
+      <div id="detay-icerik" style="font-size:12px;line-height:1.8;color:#374151"></div>
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid #e5e7eb">
+        <div style="font-size:11px;font-weight:600;color:#374151;margin-bottom:8px">Hızlı Aksiyonlar</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="btn btn-g" onclick="document.getElementById('detay-modal').classList.remove('open');yeniAktiviteAc()">+ Aktivite Ekle</button>
+          <button class="btn btn-b" onclick="firsatTeklifOlustur()">📄 Teklif Oluştur</button>
+          <button class="btn btn-warn" onclick="firsatSonrakiAsama()">→ Sonraki Aşama</button>
+        </div>
+      </div>
+    </div>
+    <div class="m-foot">
+      <button class="btn btn-red" style="font-size:11px" onclick="firsatKaybet()">✕ Kayıp İşaretle</button>
+      <button class="btn btn-p" onclick="document.getElementById('detay-modal').classList.remove('open')">Kapat</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Sayfa geçişi ──
+function goTo(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('show'));
+  document.querySelectorAll('.sb-item').forEach(b => b.classList.remove('on'));
+  document.getElementById('pg-' + id).classList.add('show');
+  if (el) el.classList.add('on');
+}
+
+// ── Modal yardımcıları ──
+function moKapat(e, id) {
+  if (e.target === document.getElementById(id))
+    document.getElementById(id).classList.remove('open');
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape')
+    document.querySelectorAll('.modal-ov.open').forEach(m => m.classList.remove('open'));
+});
+
+// ── Toast ──
+function toast(msg, type = '') {
+  const el = document.getElementById('toast');
+  el.innerHTML = msg;
+  el.className = 'toast' + (type ? ' ' + type : '') + ' show';
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// ── Fırsat Modali ──
+function yeniFirsatAc(asama) {
+  const modal = document.getElementById('firsat-modal');
+  if (asama) {
+    document.getElementById('fm-asama').value = asama;
+    document.getElementById('fm-asama-label').textContent = asama + ' aşamasına eklenecek';
+  }
+  const bugun = new Date(); bugun.setDate(bugun.getDate() + 7);
+  document.getElementById('fm-tarih').value = bugun.toISOString().split('T')[0];
+  modal.classList.add('open');
+}
+
+function firsatKaydet() {
+  const firma = document.getElementById('fm-firma').value.trim();
+  const konu  = document.getElementById('fm-konu').value.trim();
+  if (!firma) { alert('Firma adı zorunlu.'); document.getElementById('fm-firma').focus(); return; }
+  if (!konu)  { alert('Fırsat konusu zorunlu.'); document.getElementById('fm-konu').focus(); return; }
+
+  const asama  = document.getElementById('fm-asama').value;
+  const deger  = parseInt(document.getElementById('fm-deger').value) || 0;
+  const sicak  = document.getElementById('fm-sicaklik').value;
+  const sorumlu= document.getElementById('fm-sorumlu').value.split(' ')[0].substring(0,2).toUpperCase();
+
+  // Kanban kolonuna kart ekle
+  const asamaMap = { 'Temas':'kc-temas','Nitelendirme':'kc-nitelik','Teklif':'kc-teklif','Müzakere':'kc-musteri','Kazanıldı':'kc-kazanildi','Kayıp':'kc-kayip' };
+  const kolBody = document.querySelector('.' + asamaMap[asama]);
+  if (kolBody) {
+    const yeni = document.createElement('div');
+    yeni.className = 'kart';
+    yeni.style.animation = 'mIn .3s ease';
+    yeni.innerHTML = `
+      <div class="kart-firma">${firma}</div>
+      <div class="kart-konu">${konu}</div>
+      <div class="kart-meta">
+        ${deger > 0 ? '<span class="kart-tutar">₺'+formatTutar(deger)+'</span>' : ''}
+        <span class="kart-aci ${sicak==='Sıcak'?'aci-s':'aci-y'}">${sicak}</span>
+        <span class="kart-atanan">${sorumlu}</span>
+      </div>
+      <div class="progress-bar"><div class="pb-fill" style="width:5%;background:#9ca3af"></div></div>`;
+    const addBtn = kolBody.querySelector('.k-add');
+    kolBody.insertBefore(yeni, addBtn);
+  }
+
+  document.getElementById('firsat-modal').classList.remove('open');
+  toast('✓ <strong>' + firma + '</strong> fırsatı eklendi — ' + asama, 'green');
+}
+
+// ── Fırsat Detay ──
+const firsatlar = {
+  'K001': { firma:'Maksan Makine Ltd.', konu:'CNC Parça Üretimi — 500 adet/ay', deger:'₺85.000', asama:'Temas', sicaklik:'Sıcak', sorumlu:'Erdem K.', not:'Aylık tekrarlayan sipariş potansiyeli. Standart parçalar.' },
+  'K002': { firma:'Teknoform A.Ş.', konu:'Flanş İmalatı — Prototip', deger:'₺42.000', asama:'Temas', sicaklik:'Soğuk', sorumlu:'İlhan D.', not:'Prototip aşamasında. Onay gelmeden büyük sipariş vermeyecekler.' },
+  'K003': { firma:'Aero Savunma Sistemleri', konu:'Mil Üretimi — AS9100 zorunlu', deger:'₺220.000', asama:'Temas', sicaklik:'Sıcak', sorumlu:'Erdem K.', not:'AS9100 sertifikamız kritik. Teknik görüşme gecikti!' },
+  'K004': { firma:'Türk Havacılık Tek.', konu:'Rotor Mil Seti — 200 adet', deger:'₺380.000', asama:'Nitelendirme', sicaklik:'Sıcak', sorumlu:'Erdem K.', not:'Büyük potansiyel. Kapasite ve süre doğrulama gerekiyor.' },
+  'K006': { firma:'X Y Z Havacılık A.Ş.', konu:'Flanş İmalatı — 150 adet', deger:'₺225.000', asama:'Teklif', sicaklik:'Sıcak', sorumlu:'Erdem K.', not:'TK-074 süresi doluyor! Hatırlatma gönderilmeli.' },
+  'K008': { firma:'Roketsan A.Ş.', konu:'Hassas İşlenmiş Mil — 50 adet', deger:'₺680.000', asama:'Teklif', sicaklik:'Sıcak', sorumlu:'Erdem K.', not:'Yüksek değerli fırsat. Fiyat revizyonu bekleniyor.' },
+  'K009': { firma:'Erdem Müşteri', konu:'Role İmalatı — 100 adet', deger:'₺680.000', asama:'Müzakere', sicaklik:'Sıcak', sorumlu:'Erdem K.', not:'Sipariş neredeyse kesinleşti. Son fiyat görüşmesi.' },
+  'K010': { firma:'Erdem Müşteri', konu:'Role İmalatı — TK-2026-076', deger:'₺680.000', asama:'Kazanıldı', sicaklik:'—', sorumlu:'Erdem K.', not:'✓ Sipariş oluşturuldu. SP-2026-034 ile devam.' },
+};
+function firsatDetayAc(kod) {
+  const f = firsatlar[kod]; if (!f) return;
+  document.getElementById('detay-firma').textContent = f.firma;
+  document.getElementById('detay-konu').textContent = f.konu;
+  document.getElementById('detay-icerik').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div><span style="font-size:10px;color:#9ca3af;text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:2px">Tahmini Değer</span><span style="font-size:16px;font-weight:700;color:#065f46">${f.deger}</span></div>
+      <div><span style="font-size:10px;color:#9ca3af;text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:2px">Aşama</span><span class="bdg ${asamaBadge(f.asama)}">${f.asama}</span></div>
+      <div><span style="font-size:10px;color:#9ca3af;text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:2px">Sıcaklık</span><strong>${f.sicaklik}</strong></div>
+      <div><span style="font-size:10px;color:#9ca3af;text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:2px">Sorumlu</span><strong>${f.sorumlu}</strong></div>
+    </div>
+    <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;padding:10px 12px;font-size:11px;color:#374151;line-height:1.6">${f.not}</div>`;
+  document.getElementById('detay-modal').classList.add('open');
+}
+function asamaBadge(a){ const m={'Temas':'b-gray','Nitelendirme':'b-blu','Teklif':'b-amr','Müzakere':'b-teal','Kazanıldı':'b-grn','Kayıp':'b-red'}; return m[a]||'b-gray'; }
+function firsatTeklifOlustur(){ document.getElementById('detay-modal').classList.remove('open'); toast('→ Teklifler sayfası açılıyor...',''); setTimeout(()=>window.location.href='ersan_teklif.html',800); }
+function firsatSonrakiAsama(){ document.getElementById('detay-modal').classList.remove('open'); toast('→ Fırsat bir sonraki aşamaya taşındı.','green'); }
+function firsatKaybet(){ document.getElementById('detay-modal').classList.remove('open'); toast('✕ Fırsat kayıp olarak işaretlendi.','red'); }
+
+// ── Aktivite Modali ──
+function yeniAktiviteAc() {
+  const bugun = new Date(); bugun.setDate(bugun.getDate() + 1);
+  document.getElementById('ak-tarih').value = bugun.toISOString().split('T')[0];
+  document.getElementById('aktivite-modal').classList.add('open');
+}
+function yeniGorevAc() { yeniAktiviteAc(); }
+function aktiviteKaydet() {
+  const firma = document.getElementById('ak-firma').value.trim();
+  const acik  = document.getElementById('ak-aciklama').value.trim();
+  if (!firma || !acik) { alert('Firma ve açıklama zorunlu.'); return; }
+  document.getElementById('aktivite-modal').classList.remove('open');
+  toast('✓ Aktivite eklendi — ' + firma, 'green');
+}
+
+// ── Görev tamamla ──
+function gorevTamamla(btn) {
+  const row = btn.closest('tr');
+  row.style.opacity = '0.4';
+  row.style.textDecoration = 'line-through';
+  btn.textContent = '✓';
+  btn.style.background = '#065f46';
+  btn.style.color = '#fff';
+  btn.disabled = true;
+  const bdg = row.querySelector('.bdg');
+  if (bdg) { bdg.className = 'bdg b-grn'; bdg.textContent = ''; bdg.innerHTML='<span class="bdg b-grn">Tamamlandı</span>'.replace(/<[^>]+>/g,'Tamamlandı'); }
+  toast('✓ Görev tamamlandı.', 'green');
+}
+
+// ── Formatlar ──
+function formatTutar(n) {
+  if (!n) return '—';
+  if (n >= 1000000) return (n/1000000).toFixed(1).replace('.0','') + 'M';
+  if (n >= 1000) return Math.round(n/1000) + 'K';
+  return n;
+}
+
+// ── Aylık grafik çiz ──
+const ayData = [
+  { ay:'Oca', hedef:1000000, gercek:1120000, renk:'#1a2b47' },
+  { ay:'Şub', hedef:1200000, gercek:1080000, renk:'#1a2b47' },
+  { ay:'Mar', hedef:1300000, gercek:1340000, renk:'#1a2b47' },
+  { ay:'Nis', hedef:1400000, gercek:0, renk:'#bfdbfe', tahmin:true },
+  { ay:'May', hedef:1500000, gercek:0, renk:'#bfdbfe', tahmin:true },
+  { ay:'Haz', hedef:1500000, gercek:0, renk:'#bfdbfe', tahmin:true },
+];
+window.addEventListener('DOMContentLoaded', () => {
+  const wrap = document.getElementById('aylik-bars');
+  const max = 2000000;
+  ayData.forEach(d => {
+    const pct = h => Math.round((h / max) * 148);
+    const div = document.createElement('div');
+    div.className = 'bar-group';
+    const hedefH = pct(d.hedef);
+    const gercekH = pct(d.gercek || (d.tahmin ? d.hedef * 1.03 : 0));
+    div.innerHTML = `
+      <div style="display:flex;gap:2px;align-items:flex-end;height:148px">
+        <div style="width:14px;background:#e5e7eb;border-radius:3px 3px 0 0;height:${hedefH}px" title="Hedef: ₺${formatTutar(d.hedef)}"></div>
+        <div style="width:18px;background:${d.renk};border-radius:3px 3px 0 0;height:${gercekH}px;${d.tahmin?'opacity:.5;border:1px dashed #93c5fd;background:#dbeafe':''}" title="${d.tahmin?'Tahmin':'Gerçekleşen'}: ₺${formatTutar(d.gercek||d.hedef)}"></div>
+      </div>
+      <div class="bar-label">${d.ay}</div>`;
+    wrap.appendChild(div);
+  });
+});
+</script>
+</body>
+</html>

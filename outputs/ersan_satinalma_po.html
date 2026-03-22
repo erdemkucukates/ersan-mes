@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,-apple-system,sans-serif}
+body{background:#f3f4f6;padding:16px;color:#111827}
+
+/* ── Temel ── */
+.btn{font-size:12px;padding:6px 14px;border-radius:6px;border:1px solid #d1d5db;background:#fff;color:#374151;cursor:pointer;font-weight:500;transition:all .12s}
+.btn:hover{background:#f9fafb}
+.btn-p{background:#1a2b47;color:#fff;border-color:#1a2b47}
+.btn-p:hover{background:#243d66}
+.btn-g{background:#d1fae5;color:#065f46;border-color:#6ee7b7}
+.btn-g:hover{background:#a7f3d0}
+.btn-b{background:#dbeafe;color:#1e40af;border-color:#93c5fd}
+.btn-warn{background:#fef3c7;color:#92400e;border-color:#fcd34d}
+.btn-red{background:#fee2e2;color:#991b1b;border-color:#fca5a5}
+.mono{font-family:monospace;font-size:11px;font-weight:700;color:#1a2b47}
+.muted{color:#6b7280;font-size:11px}
+
+/* ── Sayfa ── */
+.page-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.page-head h1{font-size:17px;font-weight:600;color:#1a2b47}
+.page-head .sub{font-size:12px;color:#6b7280;margin-top:2px}
+
+/* ── KPI ── */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.kpi{background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;border-top:2px solid transparent}
+.kpi.s1{border-top-color:#3b82f6}.kpi.s2{border-top-color:#f59e0b}
+.kpi.s3{border-top-color:#ef4444}.kpi.s4{border-top-color:#10b981}
+.kpi label{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#6b7280;display:block;margin-bottom:4px;font-weight:500}
+.kpi .num{font-size:24px;font-weight:600;color:#111827;line-height:1}
+.kpi.s3 .num{color:#dc2626}
+.kpi .detail{font-size:10px;color:#9ca3af;margin-top:3px}
+
+/* ── Filtre bar ── */
+.filter-bar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center}
+.f-inp{font-size:12px;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;background:#fff;color:#111827;outline:none;flex:1;min-width:160px}
+.f-inp:focus{border-color:#1a2b47}
+.f-sel{font-size:12px;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;background:#fff;color:#374151;outline:none;cursor:pointer}
+
+/* ── İki kolon layout ── */
+.two-col{display:grid;grid-template-columns:320px 1fr;gap:12px;align-items:start}
+
+/* ── Sol: Liste ── */
+.list-panel{background:#fff;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden}
+.lp-head{padding:10px 14px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;background:#f9fafb}
+.lp-title{font-size:12px;font-weight:600;color:#374151}
+.lp-count{font-size:11px;color:#6b7280}
+
+.po-item{padding:10px 14px;border-bottom:1px solid #f3f4f6;cursor:pointer;border-left:3px solid transparent;transition:all .1s}
+.po-item:last-child{border-bottom:none}
+.po-item:hover{background:#f9fafb}
+.po-item.sel{background:#eff6ff;border-left-color:#1a2b47}
+.po-item.gecikmis{border-left-color:#ef4444;background:#fff8f8}
+.po-item.gecikmis:hover{background:#fee2e2}
+.poi-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+.poi-no{font-family:monospace;font-size:11px;font-weight:700;color:#1a2b47}
+.poi-durum{font-size:9px;padding:1px 7px;border-radius:10px;font-weight:500}
+.ds-onay{background:#fef3c7;color:#92400e}
+.ds-gond{background:#dbeafe;color:#1e40af}
+.ds-bek{background:#e0e7ff;color:#4338ca}
+.ds-kism{background:#fef3c7;color:#92400e}
+.ds-tam{background:#d1fae5;color:#065f46}
+.ds-iptal{background:#f3f4f6;color:#6b7280}
+.poi-mal{font-size:12px;font-weight:500;color:#111827;margin-bottom:2px}
+.poi-sub{font-size:10px;color:#6b7280}
+.poi-refs{display:flex;gap:4px;margin-top:4px;flex-wrap:wrap}
+.ref-chip{font-size:9px;padding:1px 5px;border-radius:3px;font-weight:500}
+.rc-g{background:#d1fae5;color:#065f46}
+.rc-b{background:#dbeafe;color:#1e40af}
+.rc-r{background:#fef3c7;color:#92400e}
+.rc-gray{background:#f3f4f6;color:#6b7280}
+.poi-foot{display:flex;align-items:center;justify-content:space-between;margin-top:5px}
+.poi-td{font-size:10px;color:#6b7280}
+.poi-tutar{font-size:12px;font-weight:700;color:#065f46}
+
+/* ── Sağ: Detay ── */
+.detail-card{background:#fff;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden}
+.dc-head{background:#1a2b47;padding:14px 18px;display:flex;align-items:flex-start;justify-content:space-between}
+.dc-no{font-family:monospace;font-size:14px;font-weight:700;color:#fff}
+.dc-td{font-size:11px;color:rgba(255,255,255,.6);margin-top:3px}
+.dc-badges{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
+.dc-bdg{font-size:10px;padding:2px 8px;border-radius:12px;font-weight:500;background:rgba(255,255,255,.15);color:#fff}
+.dc-btns{display:flex;gap:6px;flex-wrap:wrap}
+.dc-btns .btn{font-size:11px;padding:4px 10px}
+
+/* Akış çubuğu */
+.akis-bar{display:flex;border-bottom:1px solid #e5e7eb}
+.ab-step{flex:1;padding:7px 8px;text-align:center;font-size:10px;font-weight:500;color:#9ca3af;border-right:1px solid #f3f4f6;position:relative}
+.ab-step:last-child{border-right:none}
+.ab-step.done{background:#f0fdf4;color:#065f46}
+.ab-step.done::after{content:'✓';position:absolute;right:6px;top:50%;transform:translateY(-50%);font-size:10px}
+.ab-step.active{background:#1a2b47;color:#fff}
+.ab-step .sn{font-size:9px;font-weight:400;display:block;opacity:.7;margin-top:1px}
+
+/* Detay body */
+.dc-body{padding:16px 18px}
+.dc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.dc-item label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#9ca3af;display:block;margin-bottom:3px}
+.dc-item span{font-size:12px;font-weight:500;color:#111827}
+.dc-item span.grn{color:#065f46;font-family:monospace;font-size:11px}
+.dc-item span.red{color:#dc2626}
+
+.dc-sec{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#9ca3af;margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid #f3f4f6;display:flex;align-items:center;justify-content:space-between}
+
+/* Kalem tablosu */
+.kalem-tbl{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:14px}
+.kalem-tbl th{text-align:left;padding:7px 10px;font-size:10px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;background:#f9fafb;border-bottom:1px solid #e5e7eb}
+.kalem-tbl td{padding:8px 10px;border-bottom:1px solid #f3f4f6;color:#111827;vertical-align:middle}
+.kalem-tbl tr:last-child td{border-bottom:none}
+.kalem-tbl .toplam-row td{background:#f9fafb;font-weight:600;border-top:2px solid #e5e7eb}
+.kalem-durum{font-size:10px;padding:2px 7px;border-radius:3px;font-weight:500}
+.kd-bek{background:#dbeafe;color:#1e40af}
+.kd-gel{background:#d1fae5;color:#065f46}
+.kd-kism{background:#fef3c7;color:#92400e}
+
+/* Tedarikçi & ödeme */
+.td-od-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.info-box{background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;padding:12px}
+.ib-title{font-size:11px;font-weight:600;color:#374151;margin-bottom:8px;display:flex;align-items:center;gap:5px}
+.ib-row{display:flex;justify-content:space-between;font-size:11px;margin-bottom:5px}
+.ib-row:last-child{margin-bottom:0}
+.ib-label{color:#6b7280}
+.ib-val{font-weight:500;color:#111827;text-align:right}
+.ib-val.grn{color:#065f46}
+
+/* Bağlantı zinciri */
+.zincir{display:flex;align-items:center;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.zincir-item{font-size:11px;padding:4px 10px;border-radius:5px;border:1px solid #e5e7eb;background:#f9fafb;font-family:monospace;font-weight:600;color:#374151}
+.zincir-item.aktif{background:#1a2b47;color:#fff;border-color:#1a2b47}
+.zincir-item.grn{background:#d1fae5;color:#065f46;border-color:#6ee7b7}
+.zincir-ok{color:#9ca3af;font-size:14px}
+
+/* Notlar & timeline */
+.timeline{display:flex;flex-direction:column;gap:8px}
+.tl-item{display:flex;gap:8px;font-size:11px}
+.tl-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:3px;border:2px solid}
+.tld-g{background:#d1fae5;border-color:#10b981}
+.tld-b{background:#dbeafe;border-color:#3b82f6}
+.tld-a{background:#fef3c7;border-color:#f59e0b}
+.tl-content{flex:1}
+.tl-title{font-weight:600;color:#374151}
+.tl-sub{color:#6b7280;margin-top:1px}
+.tl-time{font-size:9px;color:#9ca3af;margin-top:2px}
+
+/* Detay footer */
+.dc-foot{padding:10px 18px;border-top:1px solid #e5e7eb;background:#f9fafb;display:flex;align-items:center;justify-content:space-between}
+.dc-foot-info{font-size:11px;color:#6b7280}
+.dc-foot-btns{display:flex;gap:6px}
+
+/* GRN uyarı banner */
+.grn-banner{background:#eff6ff;border-bottom:1px solid #93c5fd;padding:8px 18px;font-size:11px;color:#1e40af;display:flex;align-items:center;gap:8px}
+
+/* ── MODAL: PO Oluştur ── */
+.modal-back{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;align-items:flex-start;justify-content:center;padding:32px 16px;overflow-y:auto}
+.modal-back.open{display:flex}
+.modal{background:#fff;border-radius:10px;border:1px solid #e5e7eb;width:100%;max-width:640px;overflow:hidden;box-shadow:0 20px 40px rgba(0,0,0,.15)}
+.modal-h{background:#1a2b47;padding:14px 18px;display:flex;align-items:flex-start;justify-content:space-between}
+.modal-h .mt{font-size:14px;font-weight:600;color:#fff}
+.modal-h .ms{font-size:11px;color:rgba(255,255,255,.55);margin-top:2px}
+.modal-h .mx{font-size:16px;color:rgba(255,255,255,.4);cursor:pointer;border:none;background:transparent;padding:2px}
+.modal-b{padding:18px;max-height:62vh;overflow-y:auto}
+.modal-f{padding:10px 18px;border-top:1px solid #e5e7eb;background:#f9fafb;display:flex;align-items:center;justify-content:space-between}
+.mf-info{font-size:11px;color:#9ca3af}
+
+.fg{display:grid;gap:10px;margin-bottom:14px}
+.f2{grid-template-columns:1fr 1fr}
+.f3{grid-template-columns:1fr 1fr 1fr}
+.f1{grid-template-columns:1fr}
+.fl{display:block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#6b7280;margin-bottom:3px}
+.fl .req{color:#dc2626}
+.fi{width:100%;font-size:13px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;background:#fff;color:#111827;outline:none}
+.fi:focus{border-color:#1a2b47}
+.fi-ro{background:#f9fafb;color:#6b7280}
+.fi-linked{background:#f0fdf4;color:#065f46;border-color:#6ee7b7;font-weight:500}
+.fi-auto{background:#f0fdf4;color:#065f46;border-color:#6ee7b7;font-style:italic}
+
+.m-sec{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#9ca3af;padding-bottom:5px;margin-bottom:10px;border-bottom:1px solid #f3f4f6}
+.m-zincir{display:flex;align-items:center;gap:5px;margin-bottom:14px;padding:8px 12px;background:#f0fdf4;border:1px solid #6ee7b7;border-radius:6px;font-size:11px;flex-wrap:wrap}
+.mz-item{font-family:monospace;font-weight:700;color:#065f46}
+.mz-ok{color:#9ca3af}
+
+/* Kalem tablo modal */
+.m-kalem-tbl{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:8px}
+.m-kalem-tbl th{text-align:left;padding:6px 10px;font-size:10px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;background:#f9fafb;border-bottom:1px solid #e5e7eb}
+.m-kalem-tbl td{padding:7px 10px;border-bottom:1px solid #f3f4f6;color:#111827}
+.m-kalem-tbl tr:last-child td{border-bottom:none}
+.m-kalem-tbl .toplam-row td{font-weight:600;background:#f9fafb;border-top:2px solid #e5e7eb;color:#065f46}
+
+.spinner{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:5px}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<!-- Sayfa başlık -->
+<div class="page-head">
+  <div>
+    <h1>Satınalma Siparişleri</h1>
+    <div class="sub">PO — Purchase Order</div>
+  </div>
+  <button class="btn btn-p" onclick="poModalAc()">+ Yeni PO</button>
+</div>
+
+<!-- KPI -->
+<div class="kpi-row">
+  <div class="kpi s1"><label>Onay Bekliyor</label><div class="num">4</div><div class="detail">İmza bekleniyor</div></div>
+  <div class="kpi s2"><label>Gönderildi</label><div class="num">7</div><div class="detail">Tedarikçide aktif</div></div>
+  <div class="kpi s3"><label>Gecikmiş</label><div class="num">2</div><div class="detail">Teslim tarihi geçti</div></div>
+  <div class="kpi s4"><label>Bu Ay Teslim</label><div class="num">₺48K</div><div class="detail">11 PO tamamlandı</div></div>
+</div>
+
+<!-- Filtre bar -->
+<div class="filter-bar">
+  <input class="f-inp" placeholder="PO no, tedarikçi, malzeme, PR, WO ara...">
+  <select class="f-sel"><option>Tüm Durumlar</option><option>Onay Bekliyor</option><option>Gönderildi</option><option>Kısmi Teslim</option><option>Tamamlandı</option></select>
+  <select class="f-sel"><option>Tüm Tedarikçiler</option><option>Özdemir Çelik</option><option>MetalSan Ltd.</option><option>Kardemir</option></select>
+</div>
+
+<!-- İki kolon -->
+<div class="two-col">
+
+  <!-- SOL: Liste -->
+  <div class="list-panel">
+    <div class="lp-head">
+      <span class="lp-title">Siparişler</span>
+      <span class="lp-count" id="lp-count">9 PO</span>
+    </div>
+
+    <div class="po-item sel" onclick="seciPO('19')">
+      <div class="poi-top">
+        <span class="poi-no">PO-26-00019</span>
+        <span class="poi-durum ds-onay">Onay Bekliyor</span>
+      </div>
+      <div class="poi-mal">Boru AISI 4140</div>
+      <div class="poi-sub">Özdemir Çelik · 2 adet</div>
+      <div class="poi-refs">
+        <span class="ref-chip rc-g">PR-26-00009</span>
+        <span class="ref-chip rc-b">RFQ-26-00015</span>
+        <span class="ref-chip rc-b">WO-26-00026</span>
+      </div>
+      <div class="poi-foot">
+        <span class="poi-td">Teslim: 28.03.2026</span>
+        <span class="poi-tutar">₺3.800</span>
+      </div>
+    </div>
+
+    <div class="po-item" onclick="seciPO('18')">
+      <div class="poi-top">
+        <span class="poi-no">PO-26-00018</span>
+        <span class="poi-durum ds-gond">Gönderildi</span>
+      </div>
+      <div class="poi-mal">Flanş AISI 4140</div>
+      <div class="poi-sub">MetalSan Ltd. · 150 adet</div>
+      <div class="poi-refs">
+        <span class="ref-chip rc-g">PR-26-00003</span>
+        <span class="ref-chip rc-b">WO-26-00019</span>
+      </div>
+      <div class="poi-foot">
+        <span class="poi-td">Teslim: 01.04.2026</span>
+        <span class="poi-tutar">₺12.000</span>
+      </div>
+    </div>
+
+    <div class="po-item gecikmis" onclick="seciPO('17')">
+      <div class="poi-top">
+        <span class="poi-no">PO-26-00017</span>
+        <span class="poi-durum ds-kism">Kısmi Teslim</span>
+      </div>
+      <div class="poi-mal">Mil AISI 1045</div>
+      <div class="poi-sub">Özdemir Çelik · 5/10 teslim</div>
+      <div class="poi-refs">
+        <span class="ref-chip rc-g">PR-26-00007</span>
+        <span class="ref-chip rc-b">WO-26-00021</span>
+      </div>
+      <div class="poi-foot">
+        <span class="poi-td" style="color:#dc2626;font-weight:600">⚠ 18.03.2026 geçti</span>
+        <span class="poi-tutar">₺6.250</span>
+      </div>
+    </div>
+
+    <div class="po-item" onclick="seciPO('16')">
+      <div class="poi-top">
+        <span class="poi-no">PO-26-00016</span>
+        <span class="poi-durum ds-tam">Tamamlandı</span>
+      </div>
+      <div class="poi-mal">Levha S355</div>
+      <div class="poi-sub">Kardemir · 3 adet</div>
+      <div class="poi-refs">
+        <span class="ref-chip rc-g">PR-26-00005</span>
+        <span class="ref-chip rc-gray">Stok</span>
+      </div>
+      <div class="poi-foot">
+        <span class="poi-td">Teslim: 15.03.2026 ✓</span>
+        <span class="poi-tutar">₺8.400</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SAĞ: Detay -->
+  <div class="detail-card" id="detail-card">
+
+    <!-- GRN uyarı (teslim sonrası) -->
+    <div class="grn-banner" id="grn-banner" style="display:none">
+      <span style="font-size:14px">📦</span>
+      <span>Bu PO için teslim alındı — <strong>Ön Kabul (GRN)</strong> açılabilir.</span>
+      <button class="btn btn-b" style="font-size:11px;padding:3px 10px;margin-left:auto" onclick="alert('GRN-26-00005 oluşturuldu')">GRN Aç →</button>
+    </div>
+
+    <div class="dc-head">
+      <div>
+        <div class="dc-no" id="dc-no">PO-26-00019</div>
+        <div class="dc-td" id="dc-td">Özdemir Çelik · 21.03.2026</div>
+        <div class="dc-badges">
+          <span class="dc-bdg" id="dc-rfq-bdg">RFQ-26-00015</span>
+          <span class="dc-bdg" id="dc-pr-bdg">PR-26-00009</span>
+          <span class="dc-bdg" id="dc-wo-bdg">WO-26-00026</span>
+        </div>
+      </div>
+      <div class="dc-btns">
+        <button class="btn btn-warn" style="font-size:11px;padding:4px 10px" onclick="alert('PO PDF indirildi')">PDF</button>
+        <button class="btn btn-p" style="font-size:11px;padding:4px 10px" id="dc-ana-btn" onclick="alert('PO onaylandı → Tedarikçiye gönderildi')">Onayla & Gönder →</button>
+      </div>
+    </div>
+
+    <!-- Akış çubuğu -->
+    <div class="akis-bar" id="akis-bar">
+      <div class="ab-step done">PR<span class="sn">Onaylandı</span></div>
+      <div class="ab-step done">RFQ<span class="sn">Gönderildi</span></div>
+      <div class="ab-step done">Karşılaştırma<span class="sn">Tamamlandı</span></div>
+      <div class="ab-step active">PO Oluşturuldu<span class="sn">Onay bekliyor</span></div>
+      <div class="ab-step">GRN / Teslim<span class="sn">Bekliyor</span></div>
+      <div class="ab-step">Fatura<span class="sn">Bekliyor</span></div>
+    </div>
+
+    <div class="dc-body">
+
+      <!-- Bağlantı zinciri -->
+      <div class="zincir">
+        <span class="zincir-item grn">PR-26-00009</span>
+        <span class="zincir-ok">→</span>
+        <span class="zincir-item grn">RFQ-26-00015</span>
+        <span class="zincir-ok">→</span>
+        <span class="zincir-item aktif">PO-26-00019</span>
+        <span class="zincir-ok">→</span>
+        <span class="zincir-item">GRN</span>
+        <span class="zincir-ok">→</span>
+        <span class="zincir-item">SINV</span>
+      </div>
+
+      <!-- Genel bilgiler -->
+      <div class="dc-sec">Genel Bilgiler</div>
+      <div class="dc-grid" id="dc-grid">
+        <div class="dc-item"><label>PO No</label><span class="grn">PO-26-00019</span></div>
+        <div class="dc-item"><label>Sipariş Tarihi</label><span>21.03.2026</span></div>
+        <div class="dc-item"><label>İstenen Teslim</label><span>28.03.2026</span></div>
+        <div class="dc-item"><label>Durum</label><span style="color:#92400e;font-weight:600">Onay Bekliyor</span></div>
+        <div class="dc-item"><label>Tedarikçi</label><span>Özdemir Çelik</span></div>
+        <div class="dc-item"><label>İletişim</label><span style="color:#1e40af;font-size:11px">satis@ozdemir.com</span></div>
+        <div class="dc-item"><label>Ödeme Vadesi</label><span>45 gün · 05.05.2026</span></div>
+        <div class="dc-item"><label>Para Birimi</label><span>₺ TL</span></div>
+      </div>
+
+      <!-- Kalem tablosu -->
+      <div class="dc-sec">Sipariş Kalemleri</div>
+      <table class="kalem-tbl" id="kalem-tbl">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Malzeme / Tanım</th>
+            <th>Ölçüler</th>
+            <th>Miktar</th>
+            <th>Birim Fiyat</th>
+            <th>Toplam</th>
+            <th>Teslim Durumu</th>
+          </tr>
+        </thead>
+        <tbody id="kalem-tbody">
+          <tr>
+            <td>1</td>
+            <td>
+              <div style="font-weight:500">Boru AISI 4140</div>
+              <div class="muted">CoC dahil · Ø169×154×2000</div>
+            </td>
+            <td class="muted">Ø169×154×2000 mm</td>
+            <td>2 Adet</td>
+            <td>₺1.900/adet</td>
+            <td style="font-weight:600">₺3.800</td>
+            <td><span class="kalem-durum kd-bek">Bekleniyor</span></td>
+          </tr>
+          <tr class="toplam-row">
+            <td colspan="5" style="text-align:right;color:#6b7280;font-size:11px">Genel Toplam</td>
+            <td style="color:#065f46;font-size:14px">₺3.800</td>
+            <td></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Tedarikçi & Ödeme bilgisi -->
+      <div class="td-od-grid">
+        <div class="info-box">
+          <div class="ib-title">🏭 Tedarikçi Bilgileri</div>
+          <div class="ib-row"><span class="ib-label">Tedarikçi</span><span class="ib-val">Özdemir Çelik</span></div>
+          <div class="ib-row"><span class="ib-label">E-posta</span><span class="ib-val" style="color:#1e40af;font-size:11px">satis@ozdemir.com</span></div>
+          <div class="ib-row"><span class="ib-label">Telefon</span><span class="ib-val">0262 XXX XX XX</span></div>
+          <div class="ib-row"><span class="ib-label">RFQ Teklifi</span><span class="ib-val" style="color:#065f46">₺3.800 (pazarlıkla)</span></div>
+        </div>
+        <div class="info-box">
+          <div class="ib-title">💳 Ödeme Koşulları</div>
+          <div class="ib-row"><span class="ib-label">Vade</span><span class="ib-val">45 gün</span></div>
+          <div class="ib-row"><span class="ib-label">Vade Tarihi</span><span class="ib-val">05.05.2026</span></div>
+          <div class="ib-row"><span class="ib-label">Para Birimi</span><span class="ib-val">₺ TL</span></div>
+          <div class="ib-row"><span class="ib-label">KDV</span><span class="ib-val">%20 · ₺760</span></div>
+          <div class="ib-row"><span class="ib-label">KDV Dahil Toplam</span><span class="ib-val grn" style="font-size:13px;font-weight:700">₺4.560</span></div>
+        </div>
+      </div>
+
+      <!-- Zaman çizelgesi -->
+      <div class="dc-sec">Aktivite Zaman Çizelgesi</div>
+      <div class="timeline" id="timeline">
+        <div class="tl-item">
+          <div class="tl-dot tld-g"></div>
+          <div class="tl-content">
+            <div class="tl-title">PO-26-00019 oluşturuldu</div>
+            <div class="tl-sub">RFQ-26-00015 karşılaştırmasından — Özdemir Çelik kazandı · ₺3.800</div>
+            <div class="tl-time">21.03.2026 · 15:42 · Erdem Küçükateş</div>
+          </div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot tld-b"></div>
+          <div class="tl-content">
+            <div class="tl-title">RFQ pazarlık tamamlandı</div>
+            <div class="tl-sub">İlk teklif ₺3.915 → Pazarlık sonucu ₺3.800</div>
+            <div class="tl-time">20.03.2026 · 14:02</div>
+          </div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot tld-a"></div>
+          <div class="tl-content">
+            <div class="tl-title">Yönetici onayı bekleniyor</div>
+            <div class="tl-sub">₺3.800 — onay limiti dahilinde</div>
+            <div class="tl-time">21.03.2026 · 15:42</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="dc-foot">
+      <div class="dc-foot-info" id="dc-foot-info">PO onaylandıktan sonra tedarikçiye e-posta gönderilir</div>
+      <div class="dc-foot-btns">
+        <button class="btn" onclick="alert('Düzenleme modu')">Düzenle</button>
+        <button class="btn btn-red" onclick="alert('PO iptal edildi')">İptal</button>
+        <button class="btn btn-g" id="grn-btn" style="display:none" onclick="alert('GRN-26-00005 oluşturuldu')">GRN Aç →</button>
+        <button class="btn btn-p" id="ana-btn" onclick="poOnayla()">Onayla & Gönder →</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ PO OLUŞTUR MODAL ══ -->
+<div class="modal-back" id="po-modal">
+  <div class="modal">
+    <div class="modal-h">
+      <div>
+        <div class="mt" id="mo-title">Satınalma Siparişi — PO-26-00019</div>
+        <div class="ms" id="mo-sub">RFQ-26-00015 · Özdemir Çelik · Kazanan teklif</div>
+      </div>
+      <button class="mx" onclick="modalKapat()">✕</button>
+    </div>
+    <div class="modal-b">
+
+      <!-- Bağlantı zinciri -->
+      <div class="m-sec">Bağlantı Zinciri</div>
+      <div class="m-zincir">
+        <span class="mz-item">PR-26-00009</span>
+        <span class="mz-ok">→</span>
+        <span class="mz-item">RFQ-26-00015</span>
+        <span class="mz-ok">→</span>
+        <span class="mz-item">PO-26-00019</span>
+        <span class="mz-ok">→</span>
+        <span style="font-size:11px;color:#9ca3af">GRN → SINV</span>
+      </div>
+
+      <!-- Temel bilgiler -->
+      <div class="m-sec">Sipariş Bilgileri</div>
+      <div class="fg f3" style="margin-bottom:14px">
+        <div><label class="fl">PO No</label><input class="fi fi-auto" value="PO-26-00019" readonly></div>
+        <div><label class="fl">Sipariş Tarihi</label><input class="fi fi-ro" type="date" value="2026-03-21" readonly></div>
+        <div><label class="fl">İstenen Teslim <span class="req">*</span></label><input class="fi" type="date" value="2026-03-28"></div>
+      </div>
+
+      <!-- Tedarikçi (RFQ'dan otomatik) -->
+      <div class="m-sec">Tedarikçi <span style="font-size:9px;padding:1px 5px;border-radius:3px;background:#d1fae5;color:#065f46;text-transform:none;letter-spacing:0;font-weight:500">RFQ'dan otomatik</span></div>
+      <div class="fg f2" style="margin-bottom:14px">
+        <div><label class="fl">Tedarikçi</label><input class="fi fi-linked" value="Özdemir Çelik" readonly></div>
+        <div><label class="fl">İletişim</label><input class="fi fi-linked" value="satis@ozdemir.com" readonly></div>
+      </div>
+      <div class="fg f3" style="margin-bottom:14px">
+        <div><label class="fl">Ödeme Vadesi</label><input class="fi fi-linked" value="45 gün" readonly></div>
+        <div><label class="fl">Para Birimi</label>
+          <select class="fi"><option>₺ TL</option><option>€ EUR</option><option>$ USD</option></select>
+        </div>
+        <div><label class="fl">KDV Oranı</label>
+          <select class="fi"><option>%20</option><option>%10</option><option>%0</option></select>
+        </div>
+      </div>
+
+      <!-- Kalemler (RFQ'dan otomatik) -->
+      <div class="m-sec">Sipariş Kalemleri <span style="font-size:9px;padding:1px 5px;border-radius:3px;background:#d1fae5;color:#065f46;text-transform:none;letter-spacing:0;font-weight:500">RFQ'dan otomatik</span></div>
+      <table class="m-kalem-tbl">
+        <thead>
+          <tr><th>#</th><th>Malzeme / Tanım</th><th>Ölçüler</th><th>Miktar</th><th>Birim Fiyat (₺)</th><th>Toplam</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td><div style="font-weight:500">Boru AISI 4140</div><div style="font-size:10px;color:#6b7280">CoC dahil teslim</div></td>
+            <td style="font-size:11px;color:#6b7280">Ø169×154×2000 mm</td>
+            <td><input class="fi" type="number" value="2" style="width:60px;font-size:12px;padding:4px 6px"></td>
+            <td><input class="fi fi-linked" value="1900" type="number" style="font-size:12px;padding:4px 8px"></td>
+            <td style="font-weight:600;color:#065f46">₺3.800</td>
+          </tr>
+          <tr class="toplam-row">
+            <td colspan="4" style="text-align:right;color:#6b7280;font-size:11px">KDV Hariç</td>
+            <td colspan="2">₺3.800</td>
+          </tr>
+          <tr class="toplam-row">
+            <td colspan="4" style="text-align:right;color:#6b7280;font-size:11px">KDV %20</td>
+            <td colspan="2">₺760</td>
+          </tr>
+          <tr class="toplam-row">
+            <td colspan="4" style="text-align:right;font-size:12px">Genel Toplam</td>
+            <td colspan="2" style="font-size:15px;color:#065f46">₺4.560</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Teslimat & Not -->
+      <div class="fg f2" style="margin-top:4px">
+        <div><label class="fl">Teslimat Adresi</label>
+          <input class="fi fi-ro" value="Başiskele Sanayi, 12. Blok No:2, Kocaeli" readonly>
+        </div>
+        <div><label class="fl">Onay Durumu</label>
+          <select class="fi">
+            <option>Onay Bekliyor</option>
+            <option>Yönetici Onaylı</option>
+          </select>
+        </div>
+      </div>
+      <div class="fg f1" style="margin-top:4px">
+        <div><label class="fl">Sipariş Notu</label>
+          <textarea class="fi" rows="2" placeholder="CoC, ambalaj şartları, teslimat notu...">CoC belgesi ile birlikte teslim edilecektir. Malzeme sertifikası zorunludur.</textarea>
+        </div>
+      </div>
+
+    </div>
+    <div class="modal-f">
+      <div class="mf-info" id="mo-info">Kaydedilmedi</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn" onclick="modalKapat()">İptal</button>
+        <button class="btn btn-b">Taslak Kaydet</button>
+        <button class="btn btn-p" onclick="poKaydet()">PO Oluştur & Onayla →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const PO_DATA = {
+  '19':{
+    no:'PO-26-00019',td:'Özdemir Çelik · 21.03.2026',
+    rfq:'RFQ-26-00015',pr:'PR-26-00009',wo:'WO-26-00026',
+    durum:'Onay Bekliyor',teslim:'28.03.2026',gecikme:false,tamamlandi:false,
+    anaBtn:'Onayla & Gönder →',grn:false,
+    akis:[
+      {label:'PR',sn:'Onaylandı',durum:'done'},
+      {label:'RFQ',sn:'Gönderildi',durum:'done'},
+      {label:'Karşılaştırma',sn:'Tamamlandı',durum:'done'},
+      {label:'PO Oluşturuldu',sn:'Onay bekliyor',durum:'active'},
+      {label:'GRN / Teslim',sn:'Bekliyor',durum:''},
+      {label:'Fatura',sn:'Bekliyor',durum:''}
+    ]
+  },
+  '18':{
+    no:'PO-26-00018',td:'MetalSan Ltd. · 18.03.2026',
+    rfq:'—',pr:'PR-26-00003',wo:'WO-26-00019',
+    durum:'Gönderildi',teslim:'01.04.2026',gecikme:false,tamamlandi:false,
+    anaBtn:'GRN Aç →',grn:true,
+    akis:[
+      {label:'PR',sn:'Onaylandı',durum:'done'},
+      {label:'RFQ',sn:'Gönderildi',durum:'done'},
+      {label:'Karşılaştırma',sn:'Tamamlandı',durum:'done'},
+      {label:'PO Oluşturuldu',sn:'18.03.2026',durum:'done'},
+      {label:'Tedarikçide',sn:'Aktif',durum:'active'},
+      {label:'GRN / Teslim',sn:'Bekleniyor',durum:''}
+    ]
+  },
+  '17':{
+    no:'PO-26-00017',td:'Özdemir Çelik · 10.03.2026',
+    rfq:'RFQ-26-00013',pr:'PR-26-00007',wo:'WO-26-00021',
+    durum:'Kısmi Teslim',teslim:'18.03.2026 ⚠',gecikme:true,tamamlandi:false,
+    anaBtn:'GRN Güncelle →',grn:true,
+    akis:[
+      {label:'PR',sn:'Onaylandı',durum:'done'},
+      {label:'RFQ',sn:'Gönderildi',durum:'done'},
+      {label:'PO',sn:'10.03.2026',durum:'done'},
+      {label:'Kısmi Teslim',sn:'5/10 geldi',durum:'active'},
+      {label:'Kalan Teslim',sn:'Gecikmiş',durum:''},
+      {label:'Fatura',sn:'Bekliyor',durum:''}
+    ]
+  },
+  '16':{
+    no:'PO-26-00016',td:'Kardemir · 05.03.2026',
+    rfq:'RFQ-26-00011',pr:'PR-26-00005',wo:'—',
+    durum:'Tamamlandı',teslim:'15.03.2026 ✓',gecikme:false,tamamlandi:true,
+    anaBtn:'Fatura Eşleştir →',grn:false,
+    akis:[
+      {label:'PR',sn:'Onaylandı',durum:'done'},
+      {label:'RFQ',sn:'Gönderildi',durum:'done'},
+      {label:'PO',sn:'05.03.2026',durum:'done'},
+      {label:'GRN',sn:'15.03.2026',durum:'done'},
+      {label:'Teslim',sn:'Tamamlandı',durum:'done'},
+      {label:'Fatura',sn:'Bekleniyor',durum:'active'}
+    ]
+  }
+};
+
+function seciPO(id) {
+  document.querySelectorAll('.po-item').forEach(p=>p.classList.remove('sel'));
+  event.currentTarget.classList.add('sel');
+  const d = PO_DATA[id];
+  if(!d) return;
+
+  document.getElementById('dc-no').textContent     = d.no;
+  document.getElementById('dc-td').textContent     = d.td;
+  document.getElementById('dc-rfq-bdg').textContent = d.rfq;
+  document.getElementById('dc-pr-bdg').textContent  = d.pr;
+  document.getElementById('dc-wo-bdg').textContent  = d.wo;
+  document.getElementById('dc-ana-btn').textContent = d.anaBtn;
+  document.getElementById('ana-btn').textContent    = d.anaBtn;
+
+  // GRN banner & buton
+  document.getElementById('grn-banner').style.display = d.grn ? 'flex' : 'none';
+  document.getElementById('grn-btn').style.display    = d.grn ? 'inline-block' : 'none';
+
+  // Akış çubuğu
+  const akis = document.getElementById('akis-bar');
+  akis.innerHTML = d.akis.map(s=>`
+    <div class="ab-step ${s.durum}">
+      ${s.label}
+      <span class="sn">${s.sn}</span>
+      ${s.durum==='done'?'':''}
+    </div>`).join('');
+
+  // Gecikme rengi
+  const foot = document.getElementById('dc-foot-info');
+  if(d.gecikme){
+    foot.textContent='⚠ Teslim tarihi geçti — tedarikçiyle iletişime geçin';
+    foot.style.color='#dc2626';
+  } else if(d.tamamlandi){
+    foot.textContent='✓ Teslim tamamlandı — fatura bekleniyor';
+    foot.style.color='#065f46';
+  } else {
+    foot.textContent='PO onaylandıktan sonra tedarikçiye e-posta gönderilir';
+    foot.style.color='#6b7280';
+  }
+}
+
+function poOnayla() {
+  const btn = document.getElementById('ana-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Gönderiliyor...';
+  setTimeout(()=>{
+    btn.disabled = false;
+    btn.textContent = 'GRN Aç →';
+    document.getElementById('grn-banner').style.display='flex';
+    document.getElementById('grn-btn').style.display='inline-block';
+    document.getElementById('dc-foot-info').textContent='✓ PO onaylandı ve tedarikçiye gönderildi';
+    document.getElementById('dc-foot-info').style.color='#065f46';
+    document.querySelector('.poi-durum').textContent='Gönderildi';
+    document.querySelector('.poi-durum').className='poi-durum ds-gond';
+    const tl = document.getElementById('timeline');
+    const yeni = document.createElement('div');
+    yeni.className='tl-item';
+    yeni.innerHTML=`<div class="tl-dot tld-g"></div><div class="tl-content">
+      <div class="tl-title">PO onaylandı & tedarikçiye gönderildi</div>
+      <div class="tl-sub">satis@ozdemir.com adresine PO PDF iletildi</div>
+      <div class="tl-time">Şimdi · Erdem Küçükateş</div></div>`;
+    tl.prepend(yeni);
+  }, 1200);
+}
+
+function poModalAc() {
+  document.getElementById('po-modal').classList.add('open');
+}
+function modalKapat() {
+  document.getElementById('po-modal').classList.remove('open');
+}
+document.getElementById('po-modal').addEventListener('click', function(e){
+  if(e.target===this) modalKapat();
+});
+function poKaydet() {
+  document.getElementById('mo-info').textContent='✓ PO-26-00019 oluşturuldu';
+  document.getElementById('mo-info').style.color='#065f46';
+  setTimeout(()=>modalKapat(), 900);
+}
+</script>
+</body>
+</html>

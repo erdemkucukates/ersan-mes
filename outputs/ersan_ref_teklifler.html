@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ersan MES — Teklifler</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,-apple-system,sans-serif}
+body{background:#f3f4f6;display:flex;height:100vh;overflow:hidden}
+
+.sidebar{width:185px;background:#1a2b47;display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
+.sb-logo{padding:14px 12px 10px;border-bottom:1px solid rgba(255,255,255,.08)}
+.sb-brand{font-size:13px;font-weight:700;color:#fff}
+.sb-sub{font-size:9px;color:rgba(255,255,255,.35);margin-top:2px;text-transform:uppercase}
+.sb-section{padding:12px 12px 3px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.28)}
+.sb-item{display:flex;align-items:center;gap:7px;padding:7px 12px;font-size:12px;color:rgba(255,255,255,.55);cursor:pointer;border-left:2px solid transparent}
+.sb-item:hover{background:rgba(255,255,255,.05);color:#fff}
+.sb-item.on{background:rgba(255,255,255,.08);color:#fff;border-left-color:#f59e0b;font-weight:500}
+.sb-dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.2);flex-shrink:0}
+.sb-item.on .sb-dot{background:#f59e0b}
+.sb-dim{color:rgba(255,255,255,.25)!important}
+
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.split{display:flex;flex:1;overflow:hidden}
+.split-left{width:260px;flex-shrink:0;background:#fff;border-right:1px solid #e5e7eb;display:flex;flex-direction:column;overflow:hidden}
+.split-right{flex:1;overflow-y:auto;background:#f9fafb}
+
+.sl-head{padding:10px 12px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#fff}
+.sl-title{font-size:12px;font-weight:600;color:#374151}
+.new-btn{font-size:11px;padding:5px 11px;border-radius:5px;border:none;background:#7c3aed;color:#fff;cursor:pointer;font-weight:600}
+.new-btn:hover{background:#6d28d9}
+.sl-search{padding:8px 10px;border-bottom:1px solid #e5e7eb;flex-shrink:0}
+.sl-search input{width:100%;font-size:12px;padding:5px 9px;border:1px solid #d1d5db;border-radius:5px;outline:none;background:#fafafa}
+.sl-search input:focus{border-color:#1a2b47;background:#fff}
+.sl-filter{padding:4px 10px 6px;border-bottom:1px solid #e5e7eb;flex-shrink:0;display:flex;align-items:center;gap:5px;font-size:11px;color:#6b7280}
+.sl-filter input{accent-color:#1a2b47}
+.sl-list{flex:1;overflow-y:auto}
+
+/* Liste item + düzenle ikonu */
+.li{padding:9px 12px;border-bottom:1px solid #f3f4f6;cursor:pointer;border-left:3px solid transparent;position:relative}
+.li:hover{background:#f9fafb}
+.li:hover .edit-ico{opacity:1}
+.li.sel{background:#eff6ff;border-left-color:#1a2b47}
+.li.warn{border-left-color:#ef4444;background:#fff8f8}
+.li-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;padding-right:24px}
+.li-no{font-family:monospace;font-size:11px;font-weight:700;color:#1a2b47}
+.rev-chip{font-size:9px;padding:1px 5px;border-radius:3px;background:#ede9fe;color:#5b21b6;font-weight:600;margin-left:4px;font-family:monospace}
+.rev-eski{opacity:.55}
+
+/* Düzenle ikonu (kalem) */
+.edit-ico{
+  position:absolute;right:8px;top:50%;transform:translateY(-50%);
+  width:24px;height:24px;border-radius:5px;
+  background:#ede9fe;border:1px solid #c4b5fd;
+  color:#5b21b6;font-size:11px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;opacity:0;transition:opacity .15s;
+  z-index:2;flex-shrink:0;
+}
+.edit-ico:hover{background:#7c3aed;border-color:#7c3aed;color:#fff}
+
+.bdg{display:inline-flex;align-items:center;gap:3px;font-size:10px;padding:2px 7px;border-radius:12px;font-weight:500;white-space:nowrap}
+.bdg::before{content:'';width:4px;height:4px;border-radius:50%;flex-shrink:0}
+.b-grn::before{background:#10b981}.b-grn{background:#d1fae5;color:#065f46}
+.b-amr::before{background:#f59e0b}.b-amr{background:#fef3c7;color:#92400e}
+.b-gray::before{background:#9ca3af}.b-gray{background:#f3f4f6;color:#6b7280}
+.b-pur::before{background:#8b5cf6}.b-pur{background:#ede9fe;color:#5b21b6}
+.b-red::before{background:#ef4444}.b-red{background:#fee2e2;color:#991b1b}
+.b-teal::before{background:#0d9488}.b-teal{background:#ccfbf1;color:#0f766e}
+.muted{color:#6b7280;font-size:11px}
+.btn{font-size:11px;padding:5px 11px;border-radius:5px;border:1px solid #d1d5db;background:#fff;color:#374151;cursor:pointer;font-weight:500}
+.btn:hover{background:#f9fafb}
+.btn-p{background:#1a2b47;color:#fff;border-color:#1a2b47;font-weight:600}
+.btn-p:hover{background:#243d66}
+.btn-g{background:#d1fae5;color:#065f46;border-color:#6ee7b7}
+.btn-red{background:#fee2e2;color:#991b1b;border-color:#fca5a5}
+.btn-pur{background:#ede9fe;color:#5b21b6;border-color:#c4b5fd}
+.btn-warn{background:#fef3c7;color:#92400e;border-color:#fcd34d}
+.btn-teal{background:#ccfbf1;color:#0f766e;border-color:#5eead4}
+
+.amr-banner{background:#fef3c7;border-bottom:1px solid #fcd34d;padding:8px 14px;font-size:11px;color:#92400e;display:flex;align-items:center;gap:8px;flex-shrink:0}
+.rh{background:#fff;border-bottom:1px solid #e5e7eb;padding:10px 16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.rh-no{font-family:monospace;font-size:14px;font-weight:700;color:#1a2b47}
+.sec{background:#fff;border:1px solid #e5e7eb;border-radius:8px;margin:10px;overflow:hidden}
+.sec-head{padding:9px 14px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;background:#fafafa;font-size:12px;font-weight:600;color:#374151}
+.sec-body{padding:12px 14px}
+.fg4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:10px}
+.fg3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px}
+.fg1{margin-bottom:10px}
+.fl{display:block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#9ca3af;margin-bottom:3px}
+.fi{width:100%;font-size:12px;padding:6px 9px;border:1px solid #d1d5db;border-radius:5px;background:#fff;color:#111827;outline:none}
+.fi:focus{border-color:#1a2b47}
+.fi-ro{background:#f9fafb;color:#9ca3af;border-color:#f3f4f6}
+.fi-grn{background:#f0fdf4;color:#065f46;border-color:#6ee7b7;font-family:monospace;font-weight:600}
+.fi-sel{width:100%;font-size:12px;padding:6px 9px;border:1px solid #d1d5db;border-radius:5px;background:#fff;color:#374151;outline:none}
+.musteri-wrap{display:flex;gap:4px}
+.musteri-wrap select{flex:1}
+.add-btn{width:28px;height:28px;border-radius:5px;background:#dbeafe;color:#1e40af;border:1px solid #93c5fd;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ktbl{width:100%;border-collapse:collapse;font-size:12px}
+.ktbl th{text-align:left;padding:7px 10px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:#9ca3af;background:#f9fafb;border-bottom:1px solid #e5e7eb}
+.ktbl td{padding:7px 10px;border-bottom:1px solid #f3f4f6;color:#374151;vertical-align:middle}
+.ktbl tr:last-child td{border-bottom:none}
+.k-add-btn{font-size:11px;padding:4px 8px;background:#1a2b47;color:#fff;border:none;border-radius:4px;cursor:pointer;font-weight:600}
+.k-add-btn:hover{background:#243d66}
+.durum-bar{background:#fff;border-top:1px solid #e5e7eb;padding:10px 14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ds-btn{font-size:11px;padding:5px 12px;border-radius:5px;cursor:pointer;font-weight:500;border:1px solid}
+
+/* ══════════════════════════════
+   MODAL ORTAK STİL
+══════════════════════════════ */
+.modal-overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(15,23,42,.6);z-index:400;
+  align-items:flex-start;justify-content:center;
+  padding:20px 16px 40px;overflow-y:auto;
+  backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
+}
+.modal-overlay.open{display:flex}
+.modal-box{
+  background:#fff;border-radius:10px;width:100%;max-width:860px;
+  overflow:hidden;box-shadow:0 32px 64px rgba(0,0,0,.25);
+  animation:slideIn .2s cubic-bezier(.16,1,.3,1);
+}
+@keyframes slideIn{
+  from{opacity:0;transform:translateY(-16px) scale(.98)}
+  to{opacity:1;transform:translateY(0) scale(1)}
+}
+
+/* Modal topbar */
+.modal-topbar{
+  background:#fff;border-bottom:1px solid #e5e7eb;
+  padding:10px 14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  position:sticky;top:0;z-index:10;
+}
+.m-nav{display:flex;gap:2px}
+.m-nav span{font-size:14px;color:#d1d5db;cursor:default;padding:2px 5px;border-radius:3px}
+.m-no{font-family:monospace;font-size:14px;font-weight:700;color:#1a2b47}
+.m-status{font-size:11px;padding:2px 8px;border-radius:12px;background:#f3f4f6;color:#6b7280;font-weight:500}
+.m-musteri{font-size:12px;color:#9ca3af}
+.m-btns{margin-left:auto;display:flex;gap:6px;align-items:center}
+.close-x{width:28px;height:28px;border-radius:5px;background:transparent;border:1px solid #e5e7eb;color:#9ca3af;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;flex-shrink:0}
+.close-x:hover{background:#fee2e2;border-color:#fca5a5;color:#991b1b}
+.modal-body{background:#f9fafb;overflow-y:auto;max-height:calc(100vh - 200px)}
+.modal-footer{background:#fff;border-top:1px solid #e5e7eb;padding:10px 14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;position:sticky;bottom:0;z-index:10}
+
+/* Revizyon geçmişi (modal içi) */
+.rev-gecmis{padding:10px 14px}
+.rg-item{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:6px;font-size:11px;margin-bottom:4px;border:1px solid #e5e7eb;background:#fff;cursor:pointer;transition:all .1s}
+.rg-item:hover{border-color:#93c5fd;background:#f0f9ff}
+.rg-item.aktif{border-color:#1a2b47;background:#eff6ff}
+.rg-no{font-family:monospace;font-weight:700;color:#1a2b47;flex-shrink:0}
+.rg-musteri{flex:1;color:#374151}
+.rg-tarih{color:#9ca3af;flex-shrink:0}
+.rg-rev{font-size:9px;padding:1px 5px;border-radius:3px;background:#ede9fe;color:#5b21b6;font-weight:600;font-family:monospace}
+
+/* Toast bildirimi */
+.toast{
+  position:fixed;bottom:24px;right:24px;z-index:999;
+  background:#1a2b47;color:#fff;padding:10px 16px;border-radius:8px;
+  font-size:12px;font-weight:500;display:flex;align-items:center;gap:8px;
+  box-shadow:0 8px 24px rgba(0,0,0,.2);
+  transform:translateY(80px);opacity:0;
+  transition:all .3s cubic-bezier(.16,1,.3,1);
+}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.green{background:#065f46}
+.toast.purple{background:#5b21b6}
+
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:2px}
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+  <div class="sb-logo">
+    <div class="sb-brand">Ersan MES</div>
+    <div class="sb-sub">AS9100 · Üretim Yönetimi</div>
+  </div>
+  <div class="sb-section sb-dim">CRM</div>
+  <div class="sb-item sb-dim"><div class="sb-dot"></div>Pipeline</div>
+  <div class="sb-section">Satış</div>
+  <div class="sb-item on"><div class="sb-dot"></div>Teklifler</div>
+  <div class="sb-item"><div class="sb-dot"></div>Siparişler</div>
+  <div class="sb-item"><div class="sb-dot"></div>Müşteriler</div>
+  <div class="sb-item"><div class="sb-dot"></div>Sevkiyat</div>
+  <div class="sb-section sb-dim">Satınalma</div>
+  <div class="sb-item sb-dim"><div class="sb-dot"></div>Satınalma Talepleri</div>
+  <div class="sb-item sb-dim"><div class="sb-dot"></div>Satınalma Teklifleri</div>
+  <div class="sb-item sb-dim"><div class="sb-dot"></div>Satınalma Siparişleri</div>
+</div>
+
+<div class="main">
+  <div class="amr-banner">
+    ⚠ 2 teklifin geçerlilik tarihi 3 gün içinde dolacak — TK-2026-074, TK-2026-073
+    <button class="btn btn-warn" style="margin-left:auto;font-size:10px;padding:3px 8px">Hatırlatma Gönder</button>
+  </div>
+  <div class="split">
+
+    <!-- Sol Liste -->
+    <div class="split-left">
+      <div class="sl-head">
+        <span class="sl-title">Teklifler</span>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="font-size:11px;color:#9ca3af">46 teklif</span>
+          <button class="new-btn" onclick="yeniTeklifAc()">+ Yeni Teklif</button>
+        </div>
+      </div>
+      <div class="sl-search"><input placeholder="Teklif no veya müşteri ara..."></div>
+      <div class="sl-filter"><input type="checkbox" checked> Sadece Aktif Versiyonlar</div>
+      <div class="sl-list">
+
+        <!-- Her .li item'a .edit-ico eklendi -->
+        <div class="li sel" onclick="liSecSelected(this,'TK-2026-076')">
+          <div class="li-top">
+            <span class="li-no">TK-2026-076</span>
+            <span class="bdg b-grn">Onaylandı</span>
+          </div>
+          <div style="font-size:12px;font-weight:500">Erdem Müşteri</div>
+          <div class="muted">21.03.2026 · ₺680.000</div>
+          <button class="edit-ico" onclick="duzenleAc(event,'TK-2026-076','Erdem Müşteri','Onaylandı','21.03.2026','680.000','MUS-001')" title="Düzenle">✏</button>
+        </div>
+
+        <div class="li" onclick="liSecSelected(this,'TK-2026-075')">
+          <div class="li-top">
+            <span class="li-no">TK-2026-075<span class="rev-chip">R2</span></span>
+            <span class="bdg b-amr">Taslak</span>
+          </div>
+          <div style="font-size:12px;font-weight:500">X Y Z Havacılık A.Ş.</div>
+          <div class="muted">20.03.2026 · ₺750.000</div>
+          <button class="edit-ico" onclick="duzenleAc(event,'TK-2026-075','X Y Z Havacılık A.Ş.','Taslak','20.03.2026','750.000','MUS-002')" title="Düzenle">✏</button>
+        </div>
+
+        <div class="li rev-eski">
+          <div class="li-top">
+            <span class="li-no" style="opacity:.5">TK-2026-075-R1</span>
+            <span class="bdg b-pur" style="opacity:.7">Revize Edildi</span>
+          </div>
+          <div class="muted">X Y Z Havacılık · Önceki versiyon</div>
+          <button class="edit-ico" onclick="duzenleAc(event,'TK-2026-075-R1','X Y Z Havacılık A.Ş.','Revize Edildi','18.03.2026','748.000','MUS-002')" title="Düzenle">✏</button>
+        </div>
+
+        <div class="li warn" onclick="liSecSelected(this,'TK-2026-074')">
+          <div class="li-top">
+            <span class="li-no">TK-2026-074</span>
+            <span class="bdg b-amr">Onaylandı</span>
+          </div>
+          <div style="font-size:12px;font-weight:500">X Y Z Havacılık A.Ş.</div>
+          <div class="muted">Geçerlilik: <span style="color:#f59e0b;font-weight:600">23.03.2026 ⚠</span></div>
+          <button class="edit-ico" onclick="duzenleAc(event,'TK-2026-074','X Y Z Havacılık A.Ş.','Onaylandı','20.03.2026','225.000','MUS-002')" title="Düzenle">✏</button>
+        </div>
+
+        <div class="li" onclick="liSecSelected(this,'TK-2026-073')">
+          <div class="li-top">
+            <span class="li-no">TK-2026-073</span>
+            <span class="bdg b-grn">Onaylandı</span>
+          </div>
+          <div style="font-size:12px;font-weight:500">Erdem Müşteri</div>
+          <div class="muted">20.03.2026 · ₺225.000</div>
+          <button class="edit-ico" onclick="duzenleAc(event,'TK-2026-073','Erdem Müşteri','Onaylandı','20.03.2026','225.000','MUS-001')" title="Düzenle">✏</button>
+        </div>
+
+        <div class="li"><div class="li-top"><span class="li-no">TK-2026-072</span><span class="bdg b-grn">Onaylandı</span></div><div style="font-size:12px;font-weight:500">Erdem Müşteri</div><div class="muted">20.03.2026 · ₺405.000</div>
+          <button class="edit-ico" onclick="duzenleAc(event,'TK-2026-072','Erdem Müşteri','Onaylandı','20.03.2026','405.000','MUS-001')" title="Düzenle">✏</button>
+        </div>
+        <div class="li"><div class="li-top"><span class="li-no">TK-2026-068</span><span class="bdg b-gray">Taslak</span></div><div class="muted">— · 19.03.2026</div>
+          <button class="edit-ico" onclick="duzenleAc(event,'TK-2026-068','—','Taslak','19.03.2026','—','MUS-001')" title="Düzenle">✏</button>
+        </div>
+        <div class="li"><div class="li-top"><span class="li-no">TK-2026-067</span><span class="bdg b-gray">Taslak</span></div><div class="muted">— · 19.03.2026</div>
+          <button class="edit-ico" onclick="duzenleAc(event,'TK-2026-067','—','Taslak','19.03.2026','—','MUS-001')" title="Düzenle">✏</button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Sağ: Teklif Detay -->
+    <div class="split-right">
+      <div class="rh">
+        <div style="display:flex;gap:4px"><span style="font-size:14px;color:#9ca3af">↑</span><span style="font-size:14px;color:#9ca3af">↓</span></div>
+        <span class="rh-no">TK-2026-076</span>
+        <span class="bdg b-grn">Onaylandı</span>
+        <span style="font-size:12px;color:#6b7280">Erdem Müşteri</span>
+        <div style="margin-left:auto;display:flex;gap:6px">
+          <button class="btn">🔄 Yenile</button>
+          <button class="btn btn-p">⬇ Proforma PDF</button>
+          <!-- Düzenle butonu sağ panelde de var -->
+          <button class="btn btn-pur" onclick="duzenleAc(null,'TK-2026-076','Erdem Müşteri','Onaylandı','21.03.2026','680.000','MUS-001')">✏ Düzenle</button>
+          <button class="btn btn-red">Sil</button>
+        </div>
+      </div>
+
+      <div class="sec">
+        <div class="sec-head">≡ Teklif Bilgileri</div>
+        <div class="sec-body">
+          <div class="fg4">
+            <div><label class="fl">Teklif No</label><input class="fi fi-grn" id="det-no" value="TK-2026-076" readonly></div>
+            <div><label class="fl">Teklif Tarihi</label><input class="fi" value="21.03.2026" readonly style="background:#f9fafb;color:#6b7280"></div>
+            <div><label class="fl">Geçerlilik Tarihi</label><input class="fi" value="28.03.2026" readonly style="background:#f9fafb;color:#6b7280"></div>
+            <div><label class="fl">Vade Süresi (Gün)</label><input class="fi" value="30" readonly style="background:#f9fafb;color:#6b7280"></div>
+          </div>
+          <div class="fg3">
+            <div><label class="fl">Müşteri</label><input class="fi" value="Erdem Müşteri" readonly style="background:#f9fafb;color:#6b7280"></div>
+            <div><label class="fl">Müşteri Kodu</label><input class="fi fi-ro" value="MUS-001" readonly></div>
+            <div><label class="fl">Yetkili Kişi</label><input class="fi" value="Erdem" readonly style="background:#f9fafb;color:#6b7280"></div>
+          </div>
+          <div class="fg3">
+            <div><label class="fl">Telefon</label><input class="fi" value="05327030731" readonly style="background:#f9fafb;color:#6b7280"></div>
+            <div><label class="fl">E-Posta</label><input class="fi" value="erdem@ersanmakine.com.tr" readonly style="background:#f9fafb;color:#6b7280"></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <div><label class="fl">Hazırlayan</label><input class="fi" value="İlhan Dursun" readonly style="background:#f9fafb;color:#6b7280"></div>
+              <div><label class="fl">Para Birimi</label><input class="fi" value="TL" readonly style="background:#f9fafb;color:#6b7280"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sec">
+        <div class="sec-head">≡ Teklif Kalemleri <span style="font-size:11px;color:#9ca3af;font-weight:400;margin-left:auto">1 kalem</span></div>
+        <div style="overflow-x:auto">
+          <table class="ktbl">
+            <thead><tr>
+              <th>#</th><th>Stok Kodu</th><th>Malzeme No</th>
+              <th>Parça Adı / Açıklama</th><th>Miktar</th><th>Birim</th>
+              <th>Birim Fiyat</th><th>İskonto%</th><th>Toplam</th><th>Teslim</th>
+            </tr></thead>
+            <tbody>
+              <tr>
+                <td style="color:#9ca3af">1</td>
+                <td>Stok</td>
+                <td>Role 1020</td>
+                <td style="font-weight:500">Role İmalatı</td>
+                <td style="text-align:right">10</td><td>Adet</td>
+                <td style="text-align:right">68.000</td>
+                <td style="text-align:right">0</td>
+                <td style="font-weight:600;color:#065f46">680.000,00</td>
+                <td style="text-align:right">50 gün</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="padding:8px 14px;background:#f9fafb;text-align:right;font-size:12px;font-weight:700;color:#374151">
+          Genel Toplam: 680.000,00 TL
+        </div>
+      </div>
+
+      <div class="durum-bar">
+        <span style="font-size:11px;font-weight:500;color:#6b7280">Teklif Durumu:</span>
+        <span class="bdg b-grn">Onaylandı</span>
+        <div style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap">
+          <button class="ds-btn" style="border-color:#c4b5fd;color:#5b21b6;background:#fff">↺ Revize Et</button>
+          <button class="ds-btn" style="background:#d1fae5;border-color:#6ee7b7;color:#065f46">✓ Onaylandı</button>
+          <button class="ds-btn" style="background:#fee2e2;border-color:#fca5a5;color:#991b1b">✗ Reddedildi</button>
+          <button class="ds-btn" style="border-color:#d1d5db;color:#374151;background:#fff">→ Gönderildi</button>
+          <button class="ds-btn" style="background:#1a2b47;border-color:#1a2b47;color:#fff">📧 Müşteriye Hatırlatma Gönder</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+     DÜZENLEME MODALI
+═══════════════════════════════════════════ -->
+<div class="modal-overlay" id="duzenle-modal" onclick="duzenleOverlayKapat(event)">
+  <div class="modal-box">
+
+    <!-- Topbar -->
+    <div class="modal-topbar">
+      <div class="m-nav"><span>↑</span><span>↓</span></div>
+      <span class="m-no" id="duz-no-label">TK-2026-076</span>
+      <span class="m-status" id="duz-status-label">• Onaylandı</span>
+      <span class="m-musteri" id="duz-musteri-label">Erdem Müşteri</span>
+      <div class="m-btns">
+        <!-- Üzerine Kaydet -->
+        <button class="btn btn-p" id="btn-kaydet-uzeri" onclick="uzerinaKaydet()">💾 Kaydet</button>
+        <!-- Revizyon olarak kaydet -->
+        <button class="btn btn-teal" id="btn-rev-kaydet" onclick="revizyonKaydet()">↺ Revizyon olarak Kaydet</button>
+        <button class="close-x" onclick="duzenleMoKapat()" title="Kapat (ESC)">✕</button>
+      </div>
+    </div>
+
+    <!-- Gövde -->
+    <div class="modal-body">
+
+      <!-- Bilgi notu — düzenlenebilir -->
+      <div style="background:#fffbeb;border-bottom:1px solid #fcd34d;padding:7px 14px;font-size:11px;color:#92400e;display:flex;align-items:center;gap:8px">
+        <span>✏</span>
+        <span>Tüm alanlar düzenlenebilir. <strong>Kaydet</strong> → mevcut teklifi günceller. <strong>Revizyon olarak Kaydet</strong> → yeni revizyon kodu ile ayrı kaydeder.</span>
+      </div>
+
+      <!-- Teklif Bilgileri -->
+      <div class="sec">
+        <div class="sec-head">≡ Teklif Bilgileri</div>
+        <div class="sec-body">
+          <div class="fg4">
+            <div><label class="fl">Teklif No</label>
+              <input class="fi fi-grn" id="duz-no" readonly></div>
+            <div><label class="fl">Teklif Tarihi</label>
+              <input class="fi" type="date" id="duz-tarih" value="2026-03-21"></div>
+            <div><label class="fl">Geçerlilik Tarihi</label>
+              <input class="fi" type="date" id="duz-gecerlilik" value="2026-03-28"></div>
+            <div><label class="fl">Vade Süresi (Gün)</label>
+              <input class="fi" type="number" id="duz-vade" value="30"></div>
+          </div>
+          <div class="fg3">
+            <div><label class="fl">Müşteri</label>
+              <div class="musteri-wrap">
+                <select class="fi-sel" id="duz-musteri" onchange="duzMusteriSec(this)">
+                  <option value="MUS-001" data-yetkili="Erdem Bey" data-tel="05327030731" data-mail="erdem@ersanmakine.com.tr">Erdem Müşteri</option>
+                  <option value="MUS-002" data-yetkili="Ahmet Yılmaz" data-tel="03121234567" data-mail="info@xyz.com">X Y Z Havacılık A.Ş.</option>
+                </select>
+                <button class="add-btn">+</button>
+              </div>
+            </div>
+            <div><label class="fl">Müşteri Kodu</label>
+              <input class="fi fi-ro" id="duz-mkodu" readonly></div>
+            <div><label class="fl">Yetkili Kişi</label>
+              <input class="fi" id="duz-yetkili"></div>
+          </div>
+          <div class="fg3">
+            <div><label class="fl">Müşteri Telefon</label>
+              <input class="fi" id="duz-tel"></div>
+            <div><label class="fl">Müşteri E-Posta</label>
+              <input class="fi" id="duz-mail"></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <div><label class="fl">Hazırlayan</label>
+                <select class="fi-sel" id="duz-hazirlayan">
+                  <option>İlhan Dursun</option><option>Erdem K.</option>
+                </select></div>
+              <div><label class="fl">Durum</label>
+                <select class="fi-sel" id="duz-durum">
+                  <option>Taslak</option><option>Onaylandı</option>
+                  <option>Gönderildi</option><option>Reddedildi</option>
+                </select></div>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:120px 1fr;gap:10px;margin-bottom:10px">
+            <div><label class="fl">Para Birimi</label>
+              <select class="fi-sel" id="duz-para">
+                <option>TL</option><option>USD</option><option>EUR</option>
+              </select></div>
+          </div>
+          <div class="fg1"><label class="fl">Teklif Notu</label>
+            <input class="fi" id="duz-not" placeholder="Müşteri talep / proje no..."></div>
+          <div style="margin-bottom:0"><label class="fl">Dosya No / Proje No</label>
+            <input class="fi" id="duz-dosya" placeholder="DOS-2026-001 (opsiyonel)"></div>
+        </div>
+      </div>
+
+      <!-- Teklif Kalemleri -->
+      <div class="sec">
+        <div class="sec-head">
+          <span>≡ Teklif Kalemleri</span>
+          <span id="duz-kalem-sayisi" style="font-size:11px;color:#9ca3af;font-weight:400">0 kalem</span>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="ktbl">
+            <thead><tr>
+              <th style="width:28px"><input type="checkbox"></th>
+              <th>#</th><th>Stok Kodu</th><th>Malzeme No</th>
+              <th>Parça Adı / Açıklama</th><th>Miktar</th><th>Birim</th>
+              <th>Birim Fiyat</th><th>İskonto%</th><th>Toplam</th><th>Teslim</th><th></th>
+            </tr></thead>
+            <tbody id="duz-kalemler">
+              <tr id="duz-bos">
+                <td colspan="12" style="text-align:center;padding:20px;color:#9ca3af;font-size:12px">Henüz kalem eklenmedi</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="padding:8px 14px;border-top:1px solid #f3f4f6;display:flex;align-items:center;justify-content:space-between;background:#fafafa">
+          <button class="k-add-btn" onclick="duzKalemEkle()">+ Kalem Ekle</button>
+          <span id="duz-toplam" style="font-size:12px;font-weight:600;color:#374151">Genel Toplam — TL</span>
+        </div>
+      </div>
+
+      <!-- Revizyon Geçmişi -->
+      <div class="sec">
+        <div class="sec-head">↺ Revizyon Geçmişi</div>
+        <div class="rev-gecmis" id="rev-gecmis-body">
+          <!-- JS ile doldurulur -->
+        </div>
+      </div>
+
+    </div><!-- /modal-body -->
+
+    <!-- Footer -->
+    <div class="modal-footer">
+      <span style="font-size:11px;font-weight:500;color:#6b7280">Teklif Durumu:</span>
+      <span class="bdg b-grn" id="duz-footer-status">Onaylandı</span>
+      <div style="margin-left:auto;display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+        <button class="btn" onclick="duzenleMoKapat()">İptal</button>
+        <button class="btn btn-teal" onclick="revizyonKaydet()">↺ Revizyon olarak Kaydet</button>
+        <button class="btn btn-p" onclick="uzerinaKaydet()">💾 Kaydet</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+     YENİ TEKLİF MODALI
+═══════════════════════════════════════════ -->
+<div class="modal-overlay" id="yeni-teklif-modal" onclick="yeniOverlayKapat(event)">
+  <div class="modal-box">
+    <div class="modal-topbar">
+      <div class="m-nav"><span>↑</span><span>↓</span></div>
+      <span class="m-no">Yeni Teklif</span>
+      <span class="m-status">• Taslak</span>
+      <span class="m-musteri" id="modal-musteri-adi">—</span>
+      <div class="m-btns">
+        <button class="btn btn-p" onclick="yeniTeklifKaydet()">✓ Teklifi Kaydet</button>
+        <button class="close-x" onclick="yeniTeklifKapat()">✕</button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="sec">
+        <div class="sec-head">≡ Teklif Bilgileri</div>
+        <div class="sec-body">
+          <div class="fg4">
+            <div><label class="fl">Teklif No</label><input class="fi fi-ro" placeholder="Otomatik üretilecek" readonly style="font-style:italic"></div>
+            <div><label class="fl">Teklif Tarihi</label><input class="fi" type="date" id="nt-tarih" value="2026-03-22"></div>
+            <div><label class="fl">Geçerlilik Tarihi</label><input class="fi" type="date" id="nt-gecerlilik" value="2026-03-29"></div>
+            <div><label class="fl">Vade (Gün)</label><input class="fi" type="number" id="nt-vade" placeholder="30"></div>
+          </div>
+          <div class="fg3">
+            <div><label class="fl">Müşteri</label>
+              <div class="musteri-wrap">
+                <select class="fi-sel" id="nt-musteri" onchange="musteriSec(this)">
+                  <option value="">— Seçin —</option>
+                  <option value="MUS-001" data-yetkili="Erdem Bey" data-tel="05327030731" data-mail="erdem@ersanmakine.com.tr">Erdem Müşteri</option>
+                  <option value="MUS-002" data-yetkili="Ahmet Yılmaz" data-tel="03121234567" data-mail="info@xyz.com">X Y Z Havacılık A.Ş.</option>
+                </select>
+                <button class="add-btn">+</button>
+              </div>
+            </div>
+            <div><label class="fl">Müşteri Kodu</label><input class="fi fi-ro" id="nt-mkodu" placeholder="Otomatik" readonly></div>
+            <div><label class="fl">Yetkili Kişi</label><input class="fi" id="nt-yetkili" placeholder="Yetkili kişi adı"></div>
+          </div>
+          <div class="fg3">
+            <div><label class="fl">Telefon</label><input class="fi" id="nt-tel" placeholder="Telefon"></div>
+            <div><label class="fl">E-Posta</label><input class="fi" id="nt-mail" placeholder="E-posta"></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <div><label class="fl">Hazırlayan</label><select class="fi-sel" id="nt-hazirlayan"><option>İlhan Dursun</option><option>Erdem K.</option></select></div>
+              <div><label class="fl">Para Birimi</label><select class="fi-sel" id="nt-para"><option>TL</option><option>USD</option><option>EUR</option></select></div>
+            </div>
+          </div>
+          <div class="fg1"><label class="fl">Teklif Notu</label><input class="fi" id="nt-not" placeholder="Müşteri talep / proje no..."></div>
+          <div style="margin-bottom:0"><label class="fl">Dosya No</label><input class="fi" id="nt-dosya" placeholder="DOS-2026-001 (opsiyonel)"></div>
+        </div>
+      </div>
+      <div class="sec">
+        <div class="sec-head">≡ Teklif Kalemleri <span id="nt-kalem-sayisi" style="font-size:11px;color:#9ca3af;font-weight:400;margin-left:auto">0 kalem</span></div>
+        <div style="overflow-x:auto">
+          <table class="ktbl">
+            <thead><tr>
+              <th style="width:28px"><input type="checkbox"></th>
+              <th>#</th><th>Stok Kodu</th><th>Malzeme No</th>
+              <th>Parça Adı / Açıklama</th><th>Miktar</th><th>Birim</th>
+              <th>Birim Fiyat</th><th>İskonto%</th><th>Toplam</th><th>Teslim</th><th></th>
+            </tr></thead>
+            <tbody id="nt-kalemler">
+              <tr id="bos-satir"><td colspan="12" style="text-align:center;padding:20px;color:#9ca3af;font-size:12px">Henüz kalem eklenmedi</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="padding:8px 14px;border-top:1px solid #f3f4f6;display:flex;align-items:center;justify-content:space-between;background:#fafafa">
+          <button class="k-add-btn" onclick="ntKalemEkle()">+ Kalem Ekle</button>
+          <span id="nt-toplam" style="font-size:12px;font-weight:600;color:#374151">Genel Toplam — TL</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <span style="font-size:11px;font-weight:500;color:#6b7280">Teklif Durumu:</span>
+      <span class="bdg b-gray">• Taslak</span>
+      <div style="margin-left:auto;display:flex;gap:6px;align-items:center">
+        <span style="font-size:11px;color:#9ca3af">Kaydedilmeden durum değiştirilemez</span>
+        <button class="btn" onclick="yeniTeklifKapat()">İptal</button>
+        <button class="btn btn-p" onclick="yeniTeklifKaydet()">✓ Teklifi Kaydet</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Veri (örnek) ──
+const teklifler = {
+  'TK-2026-076': { musteri:'MUS-001', musteriAdi:'Erdem Müşteri', durum:'Onaylandı', tarih:'2026-03-21', gecerlilik:'2026-03-28', vade:30, yetkili:'Erdem Bey', tel:'05327030731', mail:'erdem@ersanmakine.com.tr', hazirlayan:'İlhan Dursun', para:'TL', not:'', dosya:'DOS-2026-001', revizyonlar:[], kalemler:[{no:1,stok:'Stok',malzeme:'Role 1020',parca:'Role İmalatı',miktar:10,birim:'Adet',fiyat:68000,iskonto:0,teslim:50}] },
+  'TK-2026-075': { musteri:'MUS-002', musteriAdi:'X Y Z Havacılık A.Ş.', durum:'Taslak', tarih:'2026-03-20', gecerlilik:'2026-03-27', vade:30, yetkili:'Ahmet Yılmaz', tel:'03121234567', mail:'info@xyz.com', hazirlayan:'Erdem K.', para:'TL', not:'', dosya:'', revizyonlar:['TK-2026-075-R1'], kalemler:[] },
+  'TK-2026-075-R1': { musteri:'MUS-002', musteriAdi:'X Y Z Havacılık A.Ş.', durum:'Revize Edildi', tarih:'2026-03-18', gecerlilik:'2026-03-25', vade:30, yetkili:'Ahmet Yılmaz', tel:'03121234567', mail:'info@xyz.com', hazirlayan:'Erdem K.', para:'TL', not:'İlk versiyon', dosya:'', revizyonlar:[], kalemler:[] },
+  'TK-2026-074': { musteri:'MUS-002', musteriAdi:'X Y Z Havacılık A.Ş.', durum:'Onaylandı', tarih:'2026-03-20', gecerlilik:'2026-03-23', vade:45, yetkili:'Ahmet Yılmaz', tel:'03121234567', mail:'info@xyz.com', hazirlayan:'İlhan Dursun', para:'TL', not:'', dosya:'', revizyonlar:[], kalemler:[] },
+  'TK-2026-073': { musteri:'MUS-001', musteriAdi:'Erdem Müşteri', durum:'Onaylandı', tarih:'2026-03-20', gecerlilik:'2026-03-27', vade:30, yetkili:'Erdem Bey', tel:'05327030731', mail:'erdem@ersanmakine.com.tr', hazirlayan:'İlhan Dursun', para:'TL', not:'', dosya:'', revizyonlar:[], kalemler:[] },
+};
+let aktifNo = 'TK-2026-076';
+
+// ── Liste seçim ──
+function liSecSelected(el, no) {
+  document.querySelectorAll('.li').forEach(l => l.classList.remove('sel'));
+  el.classList.add('sel');
+  aktifNo = no;
+}
+
+// ── DÜZENLEME MODALI AC ──
+let duzKNo = 0;
+function duzenleAc(e, no, musteriAdi, durum, tarih, tutar, mkodu) {
+  if (e) e.stopPropagation();
+  aktifNo = no;
+  const data = teklifler[no] || {};
+
+  // Topbar
+  document.getElementById('duz-no-label').textContent = no;
+  document.getElementById('duz-status-label').textContent = '• ' + (data.durum || durum);
+  document.getElementById('duz-musteri-label').textContent = data.musteriAdi || musteriAdi;
+
+  // Alanları doldur
+  document.getElementById('duz-no').value          = no;
+  document.getElementById('duz-tarih').value        = data.tarih || '';
+  document.getElementById('duz-gecerlilik').value   = data.gecerlilik || '';
+  document.getElementById('duz-vade').value         = data.vade || 30;
+  document.getElementById('duz-mkodu').value        = data.musteri || mkodu;
+  document.getElementById('duz-yetkili').value      = data.yetkili || '';
+  document.getElementById('duz-tel').value          = data.tel || '';
+  document.getElementById('duz-mail').value         = data.mail || '';
+  document.getElementById('duz-not').value          = data.not || '';
+  document.getElementById('duz-dosya').value        = data.dosya || '';
+
+  // Müşteri dropdown
+  const mSel = document.getElementById('duz-musteri');
+  mSel.value = data.musteri || mkodu;
+
+  // Durum dropdown
+  const dSel = document.getElementById('duz-durum');
+  dSel.value = data.durum || durum;
+
+  // Para birimi
+  const pSel = document.getElementById('duz-para');
+  pSel.value = data.para || 'TL';
+
+  // Footer badge
+  const fBdg = document.getElementById('duz-footer-status');
+  fBdg.textContent = data.durum || durum;
+  const renkler = { 'Onaylandı':'b-grn', 'Taslak':'b-gray', 'Gönderildi':'b-blu', 'Reddedildi':'b-red', 'Revize Edildi':'b-pur' };
+  fBdg.className = 'bdg ' + (renkler[data.durum || durum] || 'b-gray');
+
+  // Kalemleri doldur
+  duzKNo = 0;
+  const tbody = document.getElementById('duz-kalemler');
+  tbody.innerHTML = '';
+  const kalemler = data.kalemler || [];
+  if (kalemler.length === 0) {
+    tbody.innerHTML = '<tr id="duz-bos"><td colspan="12" style="text-align:center;padding:20px;color:#9ca3af;font-size:12px">Henüz kalem eklenmedi</td></tr>';
+  } else {
+    kalemler.forEach(k => {
+      duzKNo++;
+      _duzKalemSatirEkle(k);
+    });
+  }
+  duzSayi(); duzToplamGuncelle();
+
+  // Revizyon geçmişi
+  const revBody = document.getElementById('rev-gecmis-body');
+  const revler = data.revizyonlar || [];
+  if (revler.length === 0) {
+    revBody.innerHTML = `<div class="rg-item aktif"><span class="rg-no">${no}</span><span class="rg-musteri">${data.musteriAdi || musteriAdi}</span><span class="rg-tarih">${data.tarih || tarih}</span><span class="bdg b-grn" style="font-size:9px">Aktif ✓</span></div>`;
+  } else {
+    revBody.innerHTML = `<div class="rg-item aktif"><span class="rg-no">${no}</span><span class="rg-musteri">${data.musteriAdi || musteriAdi}</span><span class="rg-tarih">${data.tarih || tarih}</span><span class="bdg b-grn" style="font-size:9px">Aktif ✓</span></div>` +
+      revler.map(r => `<div class="rg-item"><span class="rg-no">${r}</span><span class="rg-musteri ${r.includes('-R') ? 'rev-eski' : ''}">${data.musteriAdi || musteriAdi}</span><span class="rg-tarih">—</span><span class="rg-rev">${r.split('-R')[1] ? 'R'+r.split('-R')[1] : 'Revize'}</span></div>`).join('');
+  }
+
+  document.getElementById('duzenle-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function _duzKalemSatirEkle(k) {
+  document.getElementById('duz-bos')?.remove();
+  const n = ++duzKNo;
+  const tbody = document.getElementById('duz-kalemler');
+  const tr = document.createElement('tr');
+  tr.id = `dk${n}`;
+  tr.innerHTML = `
+    <td><input type="checkbox" checked></td>
+    <td style="color:#9ca3af;font-size:11px;text-align:center">${n}</td>
+    <td><select class="fi-sel" style="font-size:11px;padding:3px 5px;width:65px"><option ${k&&k.stok==='Stok'?'selected':''}>Stok</option><option ${k&&k.stok==='Hizmet'?'selected':''}>Hizmet</option></select></td>
+    <td><input class="fi" style="min-width:80px;font-size:11px;padding:3px 6px" value="${k?k.malzeme||'':''}" placeholder="Malzeme no"></td>
+    <td><input class="fi" style="min-width:130px;font-size:11px;padding:3px 6px" value="${k?k.parca||'':''}" placeholder="Parça adı"></td>
+    <td><input class="fi" type="number" style="width:60px;font-size:11px;padding:3px 5px;text-align:right" value="${k?k.miktar||0:0}" oninput="duzHesapla(${n})"></td>
+    <td><select class="fi-sel" style="font-size:11px;padding:3px 5px;width:65px"><option>Adet</option></select></td>
+    <td><input class="fi" type="number" style="width:75px;font-size:11px;padding:3px 5px;text-align:right" value="${k?k.fiyat||0:0}" oninput="duzHesapla(${n})"></td>
+    <td><input class="fi" type="number" style="width:55px;font-size:11px;padding:3px 5px;text-align:right" value="${k?k.iskonto||0:0}" oninput="duzHesapla(${n})"></td>
+    <td id="dkt${n}" style="font-weight:600;min-width:80px;white-space:nowrap">${k?(k.miktar||0)*(k.fiyat||0)*(1-(k.iskonto||0)/100)|0:0}</td>
+    <td><input class="fi" type="number" style="width:55px;font-size:11px;padding:3px 5px;text-align:right" value="${k?k.teslim||'':''}" placeholder="gün"></td>
+    <td><button onclick="duzKalemSil(${n},'dk${n}')" style="border:none;background:none;color:#fca5a5;cursor:pointer;font-size:14px">✕</button></td>`;
+  tbody.appendChild(tr);
+}
+
+function duzKalemEkle() { _duzKalemSatirEkle(null); duzSayi(); }
+function duzKalemSil(n,id){ document.getElementById(id)?.remove(); duzToplamGuncelle(); duzSayi(); }
+function duzHesapla(n){ const r=document.getElementById(`dk${n}`); if(!r) return; const inps=r.querySelectorAll('input[type=number]'); const t=(parseFloat(inps[0].value)||0)*(parseFloat(inps[1].value)||0)*(1-(parseFloat(inps[2].value)||0)/100); const c=document.getElementById(`dkt${n}`); if(c) c.textContent=t.toLocaleString('tr-TR',{minimumFractionDigits:2}); duzToplamGuncelle(); }
+function duzToplamGuncelle(){ let t=0; document.querySelectorAll('[id^="dkt"]').forEach(c=>{t+=parseFloat(c.textContent.replace(/[.\s]/g,'').replace(',','.'))||0;}); const el=document.getElementById('duz-toplam'); if(el) el.textContent=t>0?'Genel Toplam '+t.toLocaleString('tr-TR',{minimumFractionDigits:2})+' TL':'Genel Toplam — TL'; }
+function duzSayi(){ const n=document.querySelectorAll('#duz-kalemler tr[id^="dk"]').length; const el=document.getElementById('duz-kalem-sayisi'); if(el) el.textContent=n+' kalem'; }
+function duzMusteriSec(sel){ const opt=sel.options[sel.selectedIndex]; document.getElementById('duz-mkodu').value=opt.value; document.getElementById('duz-yetkili').value=opt.dataset.yetkili||''; document.getElementById('duz-tel').value=opt.dataset.tel||''; document.getElementById('duz-mail').value=opt.dataset.mail||''; }
+
+// ── Üzerine Kaydet ──
+function uzerinaKaydet() {
+  const no = document.getElementById('duz-no').value;
+  toast('💾 ' + no + ' kaydedildi.', 'green');
+  duzenleMoKapat();
+  // Gerçek: apiPatch('Teklifler', id, {...form alanları})
+}
+
+// ── Revizyon olarak Kaydet ──
+function revizyonKaydet() {
+  const no = document.getElementById('duz-no').value;
+  // Revizyon numarası hesapla
+  const anaNo = no.includes('-R') ? no.split('-R')[0] : no;
+  const mevcutRevler = (teklifler[no]?.revizyonlar || []).filter(r => r.startsWith(anaNo + '-R'));
+  const sonNo = mevcutRevler.length > 0
+    ? Math.max(...mevcutRevler.map(r => parseInt(r.split('-R')[1]) || 0))
+    : 0;
+  const yeniRevNo = sonNo + 1;
+  const yeniKod = anaNo + '-R' + String(yeniRevNo).padStart(2, '0');
+
+  // Liste'ye yeni item ekle (simülasyon)
+  const liste = document.querySelector('.sl-list');
+  const aktifLi = liste.querySelector('.li.sel') || liste.querySelector('.li');
+  if (aktifLi) {
+    const yeniLi = document.createElement('div');
+    yeniLi.className = 'li';
+    yeniLi.innerHTML = `
+      <div class="li-top">
+        <span class="li-no">${yeniKod}<span class="rev-chip">R${String(yeniRevNo).padStart(2,'0')}</span></span>
+        <span class="bdg b-gray">Taslak</span>
+      </div>
+      <div style="font-size:12px;font-weight:500">${document.getElementById('duz-musteri').options[document.getElementById('duz-musteri').selectedIndex]?.text || '—'}</div>
+      <div class="muted">Yeni oluşturuldu · ${new Date().toLocaleDateString('tr-TR')}</div>
+      <button class="edit-ico" onclick="duzenleAc(event,'${yeniKod}','—','Taslak','—','—','—')" title="Düzenle">✏</button>`;
+    // Ana teklif sonrasına ekle
+    aktifLi.insertAdjacentElement('afterend', yeniLi);
+    // Eski teklifi soluk göster
+    aktifLi.classList.add('rev-eski');
+    aktifLi.querySelector('.bdg')?.setAttribute('class','bdg b-pur');
+    aktifLi.querySelector('.bdg').textContent = '';
+    aktifLi.querySelector('.bdg').insertAdjacentHTML('afterbegin', '<span class="bdg b-pur">Revize Edildi</span>');
+  }
+
+  toast('↺ ' + yeniKod + ' revizyon olarak oluşturuldu.', 'purple');
+  duzenleMoKapat();
+  // Gerçek: generateCode('TK') + apiPost('Teklifler', {..., TeklifNo: yeniKod, AnaNo: anaNo, RevNo: yeniRevNo})
+}
+
+function duzenleMoKapat() {
+  document.getElementById('duzenle-modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function duzenleOverlayKapat(e) { if (e.target.id === 'duzenle-modal') duzenleMoKapat(); }
+
+// ── YENİ TEKLİF MODALI ──
+let ntKNo = 0;
+function yeniTeklifAc() { ntSifirla(); document.getElementById('yeni-teklif-modal').classList.add('open'); document.body.style.overflow='hidden'; }
+function yeniTeklifKapat() { document.getElementById('yeni-teklif-modal').classList.remove('open'); document.body.style.overflow=''; }
+function yeniOverlayKapat(e) { if (e.target.id === 'yeni-teklif-modal') yeniTeklifKapat(); }
+function musteriSec(sel) { const o=sel.options[sel.selectedIndex]; document.getElementById('nt-mkodu').value=o.value; document.getElementById('nt-yetkili').value=o.dataset.yetkili||''; document.getElementById('nt-tel').value=o.dataset.tel||''; document.getElementById('nt-mail').value=o.dataset.mail||''; document.getElementById('modal-musteri-adi').textContent=o.value?o.text:'—'; }
+function ntKalemEkle() { document.getElementById('bos-satir')?.remove(); ntKNo++; const tbody=document.getElementById('nt-kalemler'); const tr=document.createElement('tr'); tr.id=`ntk${ntKNo}`; tr.innerHTML=`<td><input type="checkbox" checked></td><td style="color:#9ca3af;font-size:11px;text-align:center">${ntKNo}</td><td><select class="fi-sel" style="font-size:11px;padding:3px 5px;width:65px"><option>Stok</option></select></td><td><input class="fi" style="min-width:80px;font-size:11px;padding:3px 6px" placeholder="Malzeme no"></td><td><input class="fi" style="min-width:130px;font-size:11px;padding:3px 6px" placeholder="Parça adı"></td><td><input class="fi" type="number" style="width:60px;font-size:11px;padding:3px 5px;text-align:right" value="0"></td><td><select class="fi-sel" style="font-size:11px;padding:3px 5px;width:65px"><option>Adet</option></select></td><td><input class="fi" type="number" style="width:75px;font-size:11px;padding:3px 5px;text-align:right" value="0"></td><td><input class="fi" type="number" style="width:55px;font-size:11px;padding:3px 5px;text-align:right" value="0"></td><td id="ntkt${ntKNo}" style="font-weight:600">0,00</td><td><input class="fi" type="number" style="width:55px;font-size:11px;padding:3px 5px;text-align:right"></td><td><button onclick="this.closest('tr').remove()" style="border:none;background:none;color:#fca5a5;cursor:pointer;font-size:14px">✕</button></td>`; tbody.appendChild(tr); const el=document.getElementById('nt-kalem-sayisi'); if(el) el.textContent=ntKNo+' kalem'; }
+function yeniTeklifKaydet() { if(!document.getElementById('nt-musteri').value){alert('Lütfen müşteri seçin.');return;} toast('✓ Teklif kaydedildi!','green'); yeniTeklifKapat(); }
+function ntSifirla() { ntKNo=0; ['nt-mkodu','nt-yetkili','nt-tel','nt-mail','nt-not','nt-dosya'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';}); const ms=document.getElementById('nt-musteri');if(ms)ms.value=''; document.getElementById('modal-musteri-adi').textContent='—'; document.getElementById('nt-kalemler').innerHTML='<tr id="bos-satir"><td colspan="12" style="text-align:center;padding:20px;color:#9ca3af;font-size:12px">Henüz kalem eklenmedi</td></tr>'; const s=document.getElementById('nt-kalem-sayisi');if(s)s.textContent='0 kalem'; const tt=document.getElementById('nt-toplam');if(tt)tt.textContent='Genel Toplam — TL'; }
+
+// ── Toast ──
+function toast(msg, type='') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast' + (type ? ' '+type : '') + ' show';
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// ESC
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { duzenleMoKapat(); yeniTeklifKapat(); }
+});
+</script>
+</body>
+</html>

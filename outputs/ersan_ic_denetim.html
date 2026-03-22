@@ -1,0 +1,1423 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ersan MES — İç Denetim</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,-apple-system,sans-serif}
+body{background:#f1f5f9;display:flex;height:100vh;overflow:hidden}
+
+/* ── Sidebar ── */
+.sidebar{width:188px;background:#1a2b47;display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
+.sb-logo{padding:14px 12px 10px;border-bottom:1px solid rgba(255,255,255,.08)}
+.sb-brand{font-size:13px;font-weight:700;color:#fff;letter-spacing:.02em}
+.sb-sub{font-size:9px;color:rgba(255,255,255,.35);margin-top:2px;text-transform:uppercase;letter-spacing:.07em}
+.sb-section{padding:12px 12px 3px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.28)}
+.sb-item{display:flex;align-items:center;gap:7px;padding:7px 12px;font-size:12px;color:rgba(255,255,255,.55);cursor:pointer;border-left:2px solid transparent;transition:all .12s}
+.sb-item:hover{background:rgba(255,255,255,.05);color:#fff}
+.sb-item.on{background:rgba(255,255,255,.08);color:#fff;border-left-color:#f59e0b;font-weight:500}
+.sb-dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.2);flex-shrink:0}
+.sb-item.on .sb-dot{background:#f59e0b}
+.sb-dim{color:rgba(255,255,255,.22)!important}
+.sb-badge{font-size:9px;padding:1px 5px;border-radius:8px;background:rgba(239,68,68,.75);color:#fff;margin-left:auto}
+
+/* ── Main ── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.page{display:none;flex:1;flex-direction:column;overflow:hidden}
+.page.show{display:flex}
+.topbar{background:#fff;border-bottom:1px solid #e2e8f0;padding:0 18px;height:50px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:10px}
+.tb-title{font-size:15px;font-weight:700;color:#1a2b47}
+.tb-sub{font-size:11px;color:#94a3b8;margin-left:6px;font-weight:400}
+.content{flex:1;overflow-y:auto;padding:16px 18px}
+
+/* ── Buttons ── */
+.btn{font-size:11px;padding:5px 12px;border-radius:6px;border:1px solid #e2e8f0;background:#fff;color:#475569;cursor:pointer;font-weight:500;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;transition:all .12s}
+.btn:hover{background:#f8fafc;border-color:#cbd5e1}
+.btn-p{background:#1a2b47;color:#fff;border-color:#1a2b47}
+.btn-p:hover{background:#243d66}
+.btn-g{background:#d1fae5;color:#065f46;border-color:#6ee7b7}
+.btn-b{background:#dbeafe;color:#1e40af;border-color:#93c5fd}
+.btn-warn{background:#fef3c7;color:#92400e;border-color:#fcd34d}
+.btn-red{background:#fee2e2;color:#991b1b;border-color:#fca5a5}
+.btn-pur{background:#ede9fe;color:#5b21b6;border-color:#c4b5fd}
+.btn-teal{background:#ccfbf1;color:#0f766e;border-color:#5eead4}
+
+/* ── Badges ── */
+.bdg{display:inline-flex;align-items:center;gap:3px;font-size:10px;padding:2px 8px;border-radius:12px;font-weight:600;white-space:nowrap}
+.bdg::before{content:'';width:4px;height:4px;border-radius:50%;flex-shrink:0}
+.b-grn::before{background:#10b981}.b-grn{background:#d1fae5;color:#065f46}
+.b-amr::before{background:#f59e0b}.b-amr{background:#fef3c7;color:#92400e}
+.b-red::before{background:#ef4444}.b-red{background:#fee2e2;color:#991b1b}
+.b-blu::before{background:#3b82f6}.b-blu{background:#dbeafe;color:#1e40af}
+.b-gray::before{background:#94a3b8}.b-gray{background:#f1f5f9;color:#64748b}
+.b-pur::before{background:#8b5cf6}.b-pur{background:#ede9fe;color:#5b21b6}
+.b-teal::before{background:#0d9488}.b-teal{background:#ccfbf1;color:#0f766e}
+.b-dark{background:#1e293b;color:#f8fafc;font-size:9px;padding:2px 6px;border-radius:4px;font-weight:700;font-family:monospace}
+
+/* ── KPI ── */
+.kpi-row{display:grid;gap:12px;margin-bottom:16px}
+.kpi{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px 16px;border-top:3px solid;position:relative;overflow:hidden;cursor:pointer;transition:box-shadow .12s}
+.kpi:hover{box-shadow:0 4px 12px rgba(0,0,0,.08)}
+.kpi::after{content:'';position:absolute;right:-10px;top:-10px;width:60px;height:60px;border-radius:50%;opacity:.06}
+.kpi.s1{border-top-color:#3b82f6}.kpi.s1::after{background:#3b82f6}
+.kpi.s2{border-top-color:#f59e0b}.kpi.s2::after{background:#f59e0b}
+.kpi.s3{border-top-color:#ef4444}.kpi.s3::after{background:#ef4444}
+.kpi.s4{border-top-color:#10b981}.kpi.s4::after{background:#10b981}
+.kpi.s5{border-top-color:#8b5cf6}.kpi.s5::after{background:#8b5cf6}
+.kpi label{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#94a3b8;display:block;margin-bottom:4px;font-weight:600}
+.kpi .num{font-size:24px;font-weight:800;color:#0f172a;line-height:1}
+.kpi .det{font-size:10px;color:#94a3b8;margin-top:3px}
+.kpi .trend{font-size:10px;margin-top:4px;font-weight:600}
+.up{color:#10b981}.dn{color:#ef4444}
+
+/* ── Card ── */
+.card{background:#fff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;margin-bottom:14px}
+.card-head{padding:12px 16px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;background:#fafafa}
+.card-title{font-size:12px;font-weight:700;color:#334155;display:flex;align-items:center;gap:6px}
+
+/* ── Table ── */
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{text-align:left;padding:9px 14px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#94a3b8;background:#f8fafc;border-bottom:1px solid #e2e8f0;cursor:pointer;user-select:none;white-space:nowrap}
+.tbl th:hover{color:#1a2b47}
+.tbl td{padding:10px 14px;border-bottom:1px solid #f1f5f9;color:#334155;vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:#f8fafc;cursor:pointer}
+.tbl tr.kritik td{background:#fff8f8}
+.mono{font-family:monospace;font-size:11px;font-weight:700;color:#1a2b47}
+.muted{color:#94a3b8;font-size:11px}
+
+/* ── Form ── */
+.fl{display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#94a3b8;margin-bottom:4px}
+.fi{width:100%;font-size:12px;padding:7px 10px;border:1px solid #e2e8f0;border-radius:6px;background:#fff;color:#0f172a;outline:none;transition:border-color .12s}
+.fi:focus{border-color:#1a2b47;box-shadow:0 0 0 3px rgba(26,43,71,.08)}
+.fi-ro{background:#f8fafc;color:#94a3b8;border-color:#f1f5f9}
+.fi-grn{background:#f0fdf4;color:#065f46;border-color:#6ee7b7;font-family:monospace;font-weight:700}
+.fi-sel{width:100%;font-size:12px;padding:7px 10px;border:1px solid #e2e8f0;border-radius:6px;background:#fff;color:#334155;outline:none}
+.fg2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.fg3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px}
+.fg4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;margin-bottom:12px}
+
+/* ── Modal ── */
+.modal-ov{display:none;position:fixed;inset:0;background:rgba(15,23,42,.65);z-index:500;align-items:flex-start;justify-content:center;padding:24px 16px 48px;overflow-y:auto;backdrop-filter:blur(4px)}
+.modal-ov.open{display:flex}
+.modal-box{background:#fff;border-radius:12px;width:100%;max-width:720px;overflow:hidden;box-shadow:0 32px 80px rgba(0,0,0,.28);animation:mIn .22s cubic-bezier(.16,1,.3,1)}
+@keyframes mIn{from{opacity:0;transform:translateY(-20px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+.m-head{background:#1a2b47;padding:16px 20px;display:flex;align-items:flex-start;justify-content:space-between}
+.m-title{font-size:14px;font-weight:700;color:#fff}
+.m-sub{font-size:11px;color:rgba(255,255,255,.5);margin-top:3px}
+.m-x{font-size:18px;color:rgba(255,255,255,.4);cursor:pointer;border:none;background:transparent;transition:color .12s;line-height:1}
+.m-x:hover{color:#fff}
+.m-body{padding:18px 20px;max-height:68vh;overflow-y:auto;background:#f8fafc}
+.m-foot{padding:12px 20px;border-top:1px solid #e2e8f0;background:#fff;display:flex;align-items:center;justify-content:space-between;gap:8px}
+
+/* ── Toast ── */
+.toast{position:fixed;bottom:28px;right:28px;z-index:999;background:#1a2b47;color:#fff;padding:12px 18px;border-radius:10px;font-size:12px;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,.25);transform:translateY(90px);opacity:0;transition:all .35s cubic-bezier(.16,1,.3,1);display:flex;align-items:center;gap:8px;max-width:340px}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.green{background:#065f46}
+.toast.red{background:#991b1b}
+.toast.orange{background:#92400e}
+.toast.purple{background:#5b21b6}
+
+/* ── AS9100 Şeridi ── */
+.as9100-bar{background:linear-gradient(135deg,#1a2b47,#1e3a5f);border-radius:10px;padding:10px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.as9100-chip{font-size:10px;padding:2px 9px;border-radius:5px;font-weight:600;border:1px solid}
+.mc-ok{background:rgba(16,185,129,.2);color:#6ee7b7;border-color:rgba(16,185,129,.35)}
+.mc-warn{background:rgba(245,158,11,.2);color:#fbbf24;border-color:rgba(245,158,11,.35)}
+.mc-err{background:rgba(239,68,68,.2);color:#fca5a5;border-color:rgba(239,68,68,.35)}
+
+/* ── Denetim Takvim ── */
+.takvim-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:4px;margin:12px 0}
+.tk-ay{text-align:center;font-size:9px;font-weight:700;color:#94a3b8;text-transform:uppercase;padding-bottom:4px}
+.tk-hucre{border-radius:5px;padding:4px 3px;text-align:center;font-size:10px;font-weight:600;cursor:pointer;transition:all .12s;border:1px solid transparent;min-height:32px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
+.tk-hucre:hover{transform:scale(1.08)}
+.th-plan{background:#dbeafe;color:#1e40af;border-color:#93c5fd}
+.th-tamam{background:#d1fae5;color:#065f46;border-color:#6ee7b7}
+.th-devam{background:#1a2b47;color:#fff;border-color:#1a2b47}
+.th-gecikti{background:#fee2e2;color:#991b1b;border-color:#fca5a5}
+.th-bos{background:#f8fafc;color:#cbd5e1;border-color:#f1f5f9}
+.th-bug{font-size:7px;font-weight:500;opacity:.75}
+
+/* ── Risk Matrisi ── */
+.risk-matrix{display:grid;grid-template-columns:repeat(5,1fr);gap:3px}
+.rm-cell{border-radius:4px;padding:6px 4px;text-align:center;font-size:9px;font-weight:700;cursor:pointer;transition:all .12s}
+.rm-cell:hover{transform:scale(1.05);z-index:2}
+.rm-d1{background:#d1fae5;color:#065f46}
+.rm-d2{background:#fef3c7;color:#92400e}
+.rm-d3{background:#fee2e2;color:#991b1b}
+.rm-d4{background:#dc2626;color:#fff}
+.rm-count{font-size:11px;font-weight:800;display:block;margin-bottom:2px}
+
+/* ── Kontrol Listesi (Checklist) ── */
+.cl-item{background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:10px 14px;margin-bottom:6px;display:flex;align-items:flex-start;gap:12px;transition:all .12s}
+.cl-item:hover{border-color:#93c5fd;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+.cl-item.tamam{background:#f0fdf4;border-color:#6ee7b7}
+.cl-item.bulgu{background:#fff8f8;border-color:#fca5a5}
+.cl-item.uygulanamaz{background:#f8fafc;opacity:.6}
+.cl-no{font-size:9px;font-weight:700;color:#94a3b8;flex-shrink:0;font-family:monospace;width:40px;padding-top:2px}
+.cl-madde{font-size:12px;font-weight:600;color:#0f172a;margin-bottom:3px}
+.cl-aciklama{font-size:11px;color:#64748b;line-height:1.4}
+.cl-butonlar{display:flex;gap:5px;margin-top:8px;flex-wrap:wrap}
+.cl-btn{font-size:10px;padding:3px 9px;border-radius:4px;cursor:pointer;border:1px solid;font-weight:600;transition:all .12s}
+.cb-tamam{background:#d1fae5;color:#065f46;border-color:#6ee7b7}
+.cb-tamam:hover{background:#a7f3d0}
+.cb-bulgu{background:#fee2e2;color:#991b1b;border-color:#fca5a5}
+.cb-bulgu:hover{background:#fecaca}
+.cb-ua{background:#f1f5f9;color:#64748b;border-color:#e2e8f0}
+.cb-not{background:#ede9fe;color:#5b21b6;border-color:#c4b5fd}
+.cl-sonuc{font-size:11px;font-weight:600;padding:3px 8px;border-radius:4px;flex-shrink:0}
+
+/* ── Bulgu Kartı ── */
+.bulgu-kart{background:#fff;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;margin-bottom:8px;cursor:pointer;transition:all .12s}
+.bulgu-kart:hover{border-color:#93c5fd;box-shadow:0 3px 10px rgba(0,0,0,.07)}
+.bk-head{padding:10px 14px;display:flex;align-items:flex-start;gap:10px;border-bottom:1px solid #f1f5f9}
+.bk-sinif{font-size:9px;font-weight:700;padding:2px 8px;border-radius:4px;flex-shrink:0;margin-top:1px}
+.bs-kmt{background:#fee2e2;color:#991b1b}
+.bs-gözlem{background:#fef3c7;color:#92400e}
+.bs-iyilestirme{background:#dbeafe;color:#1e40af}
+.bk-no{font-size:10px;font-family:monospace;font-weight:700;color:#1a2b47;flex-shrink:0;margin-top:1px}
+.bk-madde{font-size:11px;font-weight:600;color:#0f172a;flex:1}
+.bk-body{padding:8px 14px;font-size:11px;color:#64748b;line-height:1.5}
+.bk-foot{padding:7px 14px;background:#f8fafc;border-top:1px solid #f1f5f9;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+
+/* ── CAPA Tracker ── */
+.capa-step{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid #f1f5f9}
+.capa-step:last-child{border-bottom:none}
+.cs-icon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;margin-top:1px}
+.cs-tamam{background:#d1fae5;color:#065f46}
+.cs-devam{background:#1a2b47;color:#fff}
+.cs-bekle{background:#f1f5f9;color:#94a3b8}
+.cs-gecikti{background:#fee2e2;color:#991b1b}
+.cs-info{flex:1}
+.cs-baslik{font-size:12px;font-weight:600;color:#0f172a}
+.cs-meta{font-size:10px;color:#94a3b8;margin-top:2px}
+.cs-tarih{font-size:10px;color:#94a3b8;white-space:nowrap;flex-shrink:0}
+
+/* ── İlerleme ── */
+.progress{height:6px;background:#f1f5f9;border-radius:3px;overflow:hidden;margin-top:4px}
+.prog-fill{height:100%;border-radius:3px;transition:width .6s ease}
+
+/* ── Madde Renkleri (AS9100 Maddeleri) ── */
+.madde-chip{font-size:10px;padding:2px 7px;border-radius:4px;font-weight:600;background:#ede9fe;color:#5b21b6;font-family:monospace}
+
+/* ── Denetim Durumu Adımları ── */
+.durum-adim{display:flex;align-items:center;gap:0}
+.da{flex:1;text-align:center;padding:8px 4px;font-size:10px;font-weight:600;color:#94a3b8;border-bottom:2px solid #f1f5f9;position:relative}
+.da.on{color:#1a2b47;border-bottom-color:#1a2b47}
+.da.tamam{color:#065f46;border-bottom-color:#10b981}
+.da-num{display:block;font-size:14px;font-weight:800;margin-bottom:2px}
+
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-thumb{background:#e2e8f0;border-radius:2px}
+</style>
+</head>
+<body>
+
+<!-- ── Sidebar ── -->
+<div class="sidebar">
+  <div class="sb-logo">
+    <div class="sb-brand">Ersan MES</div>
+    <div class="sb-sub">AS9100 Rev.D</div>
+  </div>
+  <div class="sb-section">İç Denetim</div>
+  <div class="sb-item on" onclick="goTo('panel',this)"><div class="sb-dot"></div>Denetim Paneli</div>
+  <div class="sb-item" onclick="goTo('plan',this)"><div class="sb-dot"></div>Denetim Planı</div>
+  <div class="sb-item" onclick="goTo('yurutme',this)"><div class="sb-dot"></div>Denetim Yürütme</div>
+  <div class="sb-item" onclick="goTo('bulgular',this)"><div class="sb-dot"></div>Bulgular / NCR <span class="sb-badge">4</span></div>
+  <div class="sb-item" onclick="goTo('capa',this)"><div class="sb-dot"></div>CAPA <span class="sb-badge">2</span></div>
+  <div class="sb-item" onclick="goTo('raporlar',this)"><div class="sb-dot"></div>Denetim Raporları</div>
+  <div class="sb-section sb-dim">Satış</div>
+  <div class="sb-item sb-dim"><div class="sb-dot"></div>Teklifler</div>
+  <div class="sb-item sb-dim"><div class="sb-dot"></div>Siparişler</div>
+  <div class="sb-section sb-dim">Üretim</div>
+  <div class="sb-item sb-dim"><div class="sb-dot"></div>İş Emirleri</div>
+  <div class="sb-section sb-dim">Kalite</div>
+  <div class="sb-item sb-dim"><div class="sb-dot"></div>Kalite Hub</div>
+  <div class="sb-item sb-dim"><div class="sb-dot"></div>Girdi Muayene</div>
+  <div class="sb-item sb-dim"><div class="sb-dot"></div>FAI</div>
+</div>
+
+<div class="main">
+
+<!-- ══════════════════════════════════
+     1. DENETİM PANELİ
+══════════════════════════════════ -->
+<div class="page show" id="pg-panel">
+  <div class="topbar">
+    <div style="display:flex;align-items:center">
+      <span class="tb-title">İç Denetim Paneli</span>
+      <span class="tb-sub">AS9100 Rev.D · 2026</span>
+    </div>
+    <div style="display:flex;gap:8px">
+      <select style="font-size:11px;padding:4px 9px;border:1px solid #e2e8f0;border-radius:6px;background:#fff;outline:none;color:#475569">
+        <option>2026</option><option>2025</option>
+      </select>
+      <button class="btn btn-b" onclick="goTo('plan',document.querySelector('[onclick*=plan]'))">📅 Planla</button>
+      <button class="btn btn-p" onclick="yeniDenetimAc()">+ Yeni Denetim</button>
+    </div>
+  </div>
+  <div class="content">
+
+    <!-- AS9100 Uyum Bandı -->
+    <div class="as9100-bar">
+      <span style="font-size:16px">🛡️</span>
+      <span style="font-size:12px;font-weight:700;color:#fff">AS9100 Rev.D — İç Denetim Uyum Durumu 2026</span>
+      <div style="display:flex;gap:7px;flex-wrap:wrap;margin-left:auto">
+        <span class="as9100-chip mc-ok">✓ Yıllık Plan Hazır</span>
+        <span class="as9100-chip mc-ok">✓ Tüm Maddeler Kapsanıyor</span>
+        <span class="as9100-chip mc-warn">⚠ 4 Açık Bulgu</span>
+        <span class="as9100-chip mc-warn">⚠ 2 CAPA Gecikiyor</span>
+        <span class="as9100-chip mc-ok">✓ Son Denetim: 15.03.2026</span>
+      </div>
+    </div>
+
+    <!-- KPI'lar -->
+    <div class="kpi-row" style="grid-template-columns:repeat(5,1fr)">
+      <div class="kpi s4" onclick="goTo('yurutme',document.querySelector('[onclick*=yurutme]'))">
+        <label>2026 Toplam Denetim</label>
+        <div class="num">12</div>
+        <div class="det">8 planlandı · 4 tamamlandı</div>
+        <div class="trend up">↑ %33 tamamlanma</div>
+      </div>
+      <div class="kpi s3" onclick="goTo('bulgular',document.querySelector('[onclick*=bulgu]'))">
+        <label>Açık Bulgular</label>
+        <div class="num">4</div>
+        <div class="det">2 KMT · 1 Gözlem · 1 İyileştirme</div>
+        <div class="trend dn">⚠ 1 acil</div>
+      </div>
+      <div class="kpi s2" onclick="goTo('capa',document.querySelector('[onclick*=capa]'))">
+        <label>CAPA Durumu</label>
+        <div class="num">6</div>
+        <div class="det">4 devam · 2 gecikiyor</div>
+        <div class="trend dn">2 vade aşıldı</div>
+      </div>
+      <div class="kpi s1">
+        <label>Uyumluluk Skoru</label>
+        <div class="num">%87</div>
+        <div class="det">Hedef: %95</div>
+        <div class="progress" style="margin-top:6px"><div class="prog-fill" style="width:87%;background:#3b82f6"></div></div>
+      </div>
+      <div class="kpi s5">
+        <label>Ortalama Kapatma</label>
+        <div class="num">18 gün</div>
+        <div class="det">Hedef: 30 gün ✓</div>
+        <div class="trend up">↑ İyi performans</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+
+      <!-- Yıllık Takvim Görünümü -->
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title">📅 2026 Denetim Takvimi</span>
+          <div style="display:flex;gap:6px;font-size:10px;align-items:center">
+            <span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:2px;background:#d1fae5;border:1px solid #6ee7b7;display:inline-block"></span>Tamam</span>
+            <span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:2px;background:#1a2b47;display:inline-block"></span>Devam</span>
+            <span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:2px;background:#dbeafe;border:1px solid #93c5fd;display:inline-block"></span>Planlı</span>
+            <span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:2px;background:#fee2e2;border:1px solid #fca5a5;display:inline-block"></span>Gecikti</span>
+          </div>
+        </div>
+        <div style="padding:12px 16px">
+          <div class="takvim-grid" id="takvim-basliklar"></div>
+          <div class="takvim-grid" id="takvim-hucreleri"></div>
+          <div style="margin-top:12px;padding-top:12px;border-top:1px solid #f1f5f9;font-size:11px;color:#64748b;display:flex;justify-content:space-between">
+            <span>Planlanan: <strong>12</strong></span>
+            <span>Tamamlanan: <strong style="color:#065f46">4</strong></span>
+            <span>Devam: <strong style="color:#1a2b47">1</strong></span>
+            <span>Kalan: <strong>7</strong></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Risk Matrisi -->
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title">🎯 Risk Skoru Matrisi</span>
+          <button class="btn" style="font-size:10px;padding:3px 8px" onclick="goTo('plan',document.querySelector('[onclick*=plan]'))">Detaylı Risk Analizi</button>
+        </div>
+        <div style="padding:12px 16px">
+          <div style="display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:center">
+            <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:20px">
+              <span style="font-size:9px;color:#94a3b8;font-weight:700;writing-mode:vertical-rl;transform:rotate(180deg);text-align:center;letter-spacing:.06em;align-self:center">OLASILIK →</span>
+            </div>
+            <div>
+              <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:2px;margin-bottom:2px">
+                <div class="rm-cell rm-d2"><span class="rm-count">2</span>Orta</div>
+                <div class="rm-cell rm-d3"><span class="rm-count">1</span>Yüksek</div>
+                <div class="rm-cell rm-d4"><span class="rm-count">0</span>Kritik</div>
+                <div class="rm-cell rm-d4"><span class="rm-count">0</span>Kritik</div>
+                <div class="rm-cell rm-d4"><span class="rm-count">0</span>Kritik</div>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:2px;margin-bottom:2px">
+                <div class="rm-cell rm-d1"><span class="rm-count">3</span>Düşük</div>
+                <div class="rm-cell rm-d2"><span class="rm-count">2</span>Orta</div>
+                <div class="rm-cell rm-d3"><span class="rm-count">1</span>Yüksek</div>
+                <div class="rm-cell rm-d3"><span class="rm-count">0</span>Yüksek</div>
+                <div class="rm-cell rm-d4"><span class="rm-count">0</span>Kritik</div>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:2px;margin-bottom:2px">
+                <div class="rm-cell rm-d1"><span class="rm-count">4</span>Düşük</div>
+                <div class="rm-cell rm-d1"><span class="rm-count">2</span>Düşük</div>
+                <div class="rm-cell rm-d2"><span class="rm-count">0</span>Orta</div>
+                <div class="rm-cell rm-d3"><span class="rm-count">0</span>Yüksek</div>
+                <div class="rm-cell rm-d3"><span class="rm-count">0</span>Yüksek</div>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding-top:6px;font-size:9px;color:#94a3b8;font-weight:700;letter-spacing:.04em">
+                <span>1-ÇOK AZ</span><span>2</span><span>3-ORTA</span><span>4</span><span>5-ÇOK FAZLA</span>
+              </div>
+              <div style="text-align:center;font-size:9px;color:#94a3b8;font-weight:700;letter-spacing:.06em;margin-top:2px">ETKİ →</div>
+            </div>
+          </div>
+          <div style="margin-top:10px;padding-top:10px;border-top:1px solid #f1f5f9;display:flex;gap:10px;flex-wrap:wrap">
+            <span style="font-size:10px;display:flex;align-items:center;gap:4px"><span style="width:12px;height:12px;border-radius:3px;background:#dc2626;display:inline-block"></span>Kritik: 0</span>
+            <span style="font-size:10px;display:flex;align-items:center;gap:4px"><span style="width:12px;height:12px;border-radius:3px;background:#ef4444;display:inline-block"></span>Yüksek: 2</span>
+            <span style="font-size:10px;display:flex;align-items:center;gap:4px"><span style="width:12px;height:12px;border-radius:3px;background:#f59e0b;display:inline-block"></span>Orta: 4</span>
+            <span style="font-size:10px;display:flex;align-items:center;gap:4px"><span style="width:12px;height:12px;border-radius:3px;background:#10b981;display:inline-block"></span>Düşük: 9</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Son Denetimler Özet -->
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">📋 Denetim Listesi</span>
+        <button class="btn btn-p" style="font-size:11px" onclick="yeniDenetimAc()">+ Yeni Denetim</button>
+      </div>
+      <table class="tbl">
+        <thead><tr>
+          <th>Denetim No</th><th>Kapsam / Süreç</th><th>AS9100 Maddeleri</th>
+          <th>Baş Denetçi</th><th>Tarih</th><th>Bulgu</th><th>Durum</th><th>Skor</th><th></th>
+        </tr></thead>
+        <tbody>
+          <tr onclick="goTo('yurutme',document.querySelector('[onclick*=yurutme]'))">
+            <td><span class="mono">DEN-2026-004</span></td>
+            <td><div style="font-weight:500">Satınalma Süreci</div><div class="muted">Tedarikçi Değerlendirme</div></td>
+            <td><span class="madde-chip">§8.4</span></td>
+            <td><div style="display:flex;align-items:center;gap:5px"><div style="width:22px;height:22px;border-radius:50%;background:#1a2b47;color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center">EK</div><span class="muted">Erdem K.</span></div></td>
+            <td style="color:#1a2b47;font-weight:600">15.03.2026</td>
+            <td><span class="bdg b-red">2 KMT</span></td>
+            <td><span class="bdg b-amr">Devam Ediyor</span></td>
+            <td><div style="font-weight:700;color:#d97706">%74</div><div class="progress" style="width:60px"><div class="prog-fill" style="width:74%;background:#f59e0b"></div></div></td>
+            <td><button class="btn btn-b" style="font-size:10px;padding:2px 8px" onclick="event.stopPropagation();goTo('yurutme',document.querySelector('[onclick*=yurutme]'))">Aç →</button></td>
+          </tr>
+          <tr>
+            <td><span class="mono">DEN-2026-003</span></td>
+            <td><div style="font-weight:500">Üretim Süreci</div><div class="muted">Operasyon Kontrolü</div></td>
+            <td><span class="madde-chip">§8.5</span> <span class="madde-chip">§8.1</span></td>
+            <td><div style="display:flex;align-items:center;gap:5px"><div style="width:22px;height:22px;border-radius:50%;background:#065f46;color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center">İD</div><span class="muted">İlhan D.</span></div></td>
+            <td class="muted">28.02.2026</td>
+            <td><span class="bdg b-amr">1 Gözlem</span></td>
+            <td><span class="bdg b-teal">Tamamlandı</span></td>
+            <td><div style="font-weight:700;color:#065f46">%92</div><div class="progress" style="width:60px"><div class="prog-fill" style="width:92%;background:#10b981"></div></div></td>
+            <td><button class="btn" style="font-size:10px;padding:2px 8px">Rapor</button></td>
+          </tr>
+          <tr>
+            <td><span class="mono">DEN-2026-002</span></td>
+            <td><div style="font-weight:500">Kalite Yönetim Sistemi</div><div class="muted">Liderlik ve Planlama</div></td>
+            <td><span class="madde-chip">§5</span> <span class="madde-chip">§6</span></td>
+            <td><div style="display:flex;align-items:center;gap:5px"><div style="width:22px;height:22px;border-radius:50%;background:#1a2b47;color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center">EK</div><span class="muted">Erdem K.</span></div></td>
+            <td class="muted">20.01.2026</td>
+            <td><span class="bdg b-grn">Bulgu Yok</span></td>
+            <td><span class="bdg b-teal">Tamamlandı</span></td>
+            <td><div style="font-weight:700;color:#065f46">%96</div><div class="progress" style="width:60px"><div class="prog-fill" style="width:96%;background:#10b981"></div></div></td>
+            <td><button class="btn" style="font-size:10px;padding:2px 8px">Rapor</button></td>
+          </tr>
+          <tr>
+            <td><span class="mono">DEN-2026-001</span></td>
+            <td><div style="font-weight:500">Müşteri Odaklılık</div><div class="muted">Müşteri Şikayetleri</div></td>
+            <td><span class="madde-chip">§8.2</span> <span class="madde-chip">§9.1.2</span></td>
+            <td><div style="display:flex;align-items:center;gap:5px"><div style="width:22px;height:22px;border-radius:50%;background:#1a2b47;color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center">EK</div><span class="muted">Erdem K.</span></div></td>
+            <td class="muted">10.01.2026</td>
+            <td><span class="bdg b-grn">Bulgu Yok</span></td>
+            <td><span class="bdg b-teal">Tamamlandı</span></td>
+            <td><div style="font-weight:700;color:#065f46">%94</div><div class="progress" style="width:60px"><div class="prog-fill" style="width:94%;background:#10b981"></div></div></td>
+            <td><button class="btn" style="font-size:10px;padding:2px 8px">Rapor</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     2. DENETİM PLANI
+══════════════════════════════════ -->
+<div class="page" id="pg-plan">
+  <div class="topbar">
+    <div style="display:flex;align-items:center">
+      <span class="tb-title">Denetim Planı 2026</span>
+      <span class="tb-sub">Risk Tabanlı · AS9100 Madde 9.2</span>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn" onclick="planExport()">⬇ Excel</button>
+      <button class="btn btn-p" onclick="yeniDenetimAc()">+ Yeni Denetim Ekle</button>
+    </div>
+  </div>
+  <div class="content">
+    <div class="kpi-row" style="grid-template-columns:repeat(4,1fr)">
+      <div class="kpi s4"><label>Planlanan Denetim</label><div class="num">12</div><div class="det">Yılın tamamı</div></div>
+      <div class="kpi s1"><label>Kapsanan Madde</label><div class="num">18/22</div><div class="det">AS9100 zorunlu madde</div></div>
+      <div class="kpi s2"><label>Ortalama Süre</label><div class="num">1.5 gün</div><div class="det">Denetim başına</div></div>
+      <div class="kpi s5"><label>Denetçi Sayısı</label><div class="num">3</div><div class="det">İç + Baş Denetçi</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">📋 Yıllık Denetim Programı</span>
+        <div style="display:flex;gap:6px;font-size:10px;align-items:center">
+          <span class="bdg b-grn">4 Tamamlandı</span>
+          <span class="bdg b-amr">1 Devam</span>
+          <span class="bdg b-gray">7 Planlandı</span>
+        </div>
+      </div>
+      <table class="tbl">
+        <thead><tr>
+          <th>Denetim No</th><th>Kapsam / Alan</th><th>AS9100 Maddeleri</th>
+          <th>Risk Skoru</th><th>Plan Tarihi</th><th>Süre</th>
+          <th>Denetçi</th><th>Durum</th><th></th>
+        </tr></thead>
+        <tbody id="plan-tbody">
+          <tr class="kritik">
+            <td><span class="mono">DEN-2026-004</span></td>
+            <td><div style="font-weight:600">Satınalma & Tedarikçi Yönetimi</div><div class="muted">Tedarikçi Değerlendirme, Alt Yüklenici</div></td>
+            <td><span class="madde-chip">§8.4</span></td>
+            <td><div style="display:flex;align-items:center;gap:5px"><span style="font-weight:700;color:#d97706">18</span><div style="width:40px;height:5px;background:#f1f5f9;border-radius:2px;overflow:hidden"><div style="width:72%;height:100%;background:#f59e0b;border-radius:2px"></div></div><span style="font-size:9px;color:#d97706">YÜKSEK</span></div></td>
+            <td style="font-weight:600">15.03.2026</td>
+            <td class="muted">2 gün</td>
+            <td class="muted">Erdem K.</td>
+            <td><span class="bdg b-amr">Devam Ediyor</span></td>
+            <td><button class="btn btn-b" style="font-size:10px;padding:2px 8px" onclick="goTo('yurutme',document.querySelector('[onclick*=yurutme]'))">Aç →</button></td>
+          </tr>
+          <tr>
+            <td><span class="mono">DEN-2026-005</span></td>
+            <td><div style="font-weight:600">Ölçüm, Analiz ve İyileştirme</div><div class="muted">İstatistik, Süreç İzleme</div></td>
+            <td><span class="madde-chip">§9.1</span> <span class="madde-chip">§10</span></td>
+            <td><div style="display:flex;align-items:center;gap:5px"><span style="font-weight:700;color:#d97706">15</span><div style="width:40px;height:5px;background:#f1f5f9;border-radius:2px;overflow:hidden"><div style="width:60%;height:100%;background:#f59e0b;border-radius:2px"></div></div><span style="font-size:9px;color:#d97706">ORTA</span></div></td>
+            <td style="font-weight:600">Nisan 2026</td>
+            <td class="muted">1.5 gün</td>
+            <td class="muted">İlhan D.</td>
+            <td><span class="bdg b-gray">Planlandı</span></td>
+            <td><button class="btn" style="font-size:10px;padding:2px 8px" onclick="planDuzenle('DEN-2026-005')">Düzenle</button></td>
+          </tr>
+          <tr>
+            <td><span class="mono">DEN-2026-006</span></td>
+            <td><div style="font-weight:600">İnsan Kaynakları / Yeterlilik</div><div class="muted">Eğitim, Farkındalık</div></td>
+            <td><span class="madde-chip">§7.1</span> <span class="madde-chip">§7.2</span></td>
+            <td><div style="display:flex;align-items:center;gap:5px"><span style="font-weight:700;color:#6b7280">8</span><div style="width:40px;height:5px;background:#f1f5f9;border-radius:2px;overflow:hidden"><div style="width:32%;height:100%;background:#10b981;border-radius:2px"></div></div><span style="font-size:9px;color:#6b7280">DÜŞÜK</span></div></td>
+            <td style="font-weight:600">Mayıs 2026</td>
+            <td class="muted">1 gün</td>
+            <td class="muted">Erdem K.</td>
+            <td><span class="bdg b-gray">Planlandı</span></td>
+            <td><button class="btn" style="font-size:10px;padding:2px 8px" onclick="planDuzenle('DEN-2026-006')">Düzenle</button></td>
+          </tr>
+          <tr>
+            <td><span class="mono">DEN-2026-007</span></td>
+            <td><div style="font-weight:600">Ürün/Hizmet Tasarım</div><div class="muted">FAI, Konfigürasyon Yönetimi</div></td>
+            <td><span class="madde-chip">§8.3</span></td>
+            <td><div style="display:flex;align-items:center;gap:5px"><span style="font-weight:700;color:#d97706">16</span><div style="width:40px;height:5px;background:#f1f5f9;border-radius:2px;overflow:hidden"><div style="width:64%;height:100%;background:#f59e0b;border-radius:2px"></div></div><span style="font-size:9px;color:#d97706">ORTA</span></div></td>
+            <td style="font-weight:600">Haziran 2026</td>
+            <td class="muted">2 gün</td>
+            <td class="muted">Erdem K.</td>
+            <td><span class="bdg b-gray">Planlandı</span></td>
+            <td><button class="btn" style="font-size:10px;padding:2px 8px" onclick="planDuzenle('DEN-2026-007')">Düzenle</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     3. DENETİM YÜRÜTME (AuditBoard tarzı)
+══════════════════════════════════ -->
+<div class="page" id="pg-yurutme">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:10px">
+      <span class="tb-title">Denetim Yürütme</span>
+      <span class="mono">DEN-2026-004</span>
+      <span class="bdg b-amr">Devam Ediyor</span>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-g" onclick="checklistKaydet()">💾 Kaydet</button>
+      <button class="btn btn-p" onclick="raporOlustur()">📄 Rapor Oluştur</button>
+    </div>
+  </div>
+  <div class="content">
+
+    <!-- Durum Adımları -->
+    <div class="card" style="margin-bottom:14px">
+      <div class="durum-adim">
+        <div class="da tamam"><span class="da-num">1</span>Planlama</div>
+        <div class="da tamam"><span class="da-num">2</span>Açılış Toplantısı</div>
+        <div class="da on"><span class="da-num">3</span>Saha Çalışması</div>
+        <div class="da"><span class="da-num">4</span>Bulgu Değerlendirme</div>
+        <div class="da"><span class="da-num">5</span>Kapanış Toplantısı</div>
+        <div class="da"><span class="da-num">6</span>Rapor</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 280px;gap:14px">
+
+      <!-- Checklist Bölümü -->
+      <div>
+        <div class="card">
+          <div class="card-head">
+            <span class="card-title">✅ Denetim Kontrol Listesi — §8.4 Dış Tedarik</span>
+            <div style="display:flex;gap:6px;align-items:center">
+              <span style="font-size:11px;color:#94a3b8" id="cl-ilerleme">3/8 kontrol</span>
+              <div style="width:80px;height:6px;background:#f1f5f9;border-radius:3px;overflow:hidden"><div class="prog-fill" style="width:37%;background:#1a2b47" id="cl-bar"></div></div>
+              <button class="btn" style="font-size:10px;padding:3px 8px" onclick="topluTamam()">Tümünü Tamam</button>
+            </div>
+          </div>
+          <div style="padding:10px" id="checklist-container">
+
+            <div class="cl-item tamam" id="cl-1">
+              <div class="cl-no">8.4.1</div>
+              <div style="flex:1">
+                <div class="cl-madde">Tedarikçi seçim kriterleri tanımlı ve uygulanıyor mu?</div>
+                <div class="cl-aciklama">Onaylı tedarikçi listesi, değerlendirme kriterleri</div>
+                <div class="cl-butonlar">
+                  <button class="cl-btn cb-tamam" onclick="clDurumGuncelle(1,'tamam')">✓ Uygun</button>
+                  <button class="cl-btn cb-bulgu" onclick="clDurumGuncelle(1,'bulgu')">⚠ Bulgu</button>
+                  <button class="cl-btn cb-ua" onclick="clDurumGuncelle(1,'ua')">N/A</button>
+                  <button class="cl-btn cb-not" onclick="clNotEkle(1)">📝 Not</button>
+                </div>
+                <div style="margin-top:6px;font-size:11px;color:#065f46;background:#f0fdf4;padding:4px 8px;border-radius:4px">✓ Onaylı tedarikçi listesi güncel. Son güncelleme: 10.03.2026</div>
+              </div>
+              <span class="cl-sonuc" style="background:#d1fae5;color:#065f46">Uygun</span>
+            </div>
+
+            <div class="cl-item tamam" id="cl-2">
+              <div class="cl-no">8.4.1</div>
+              <div style="flex:1">
+                <div class="cl-madde">Tedarikçi performans değerlendirmesi yapılıyor mu?</div>
+                <div class="cl-aciklama">Kalite, teslimat, fiyat bazlı periyodik değerlendirme</div>
+                <div class="cl-butonlar">
+                  <button class="cl-btn cb-tamam" onclick="clDurumGuncelle(2,'tamam')">✓ Uygun</button>
+                  <button class="cl-btn cb-bulgu" onclick="clDurumGuncelle(2,'bulgu')">⚠ Bulgu</button>
+                  <button class="cl-btn cb-ua" onclick="clDurumGuncelle(2,'ua')">N/A</button>
+                  <button class="cl-btn cb-not" onclick="clNotEkle(2)">📝 Not</button>
+                </div>
+                <div style="margin-top:6px;font-size:11px;color:#065f46;background:#f0fdf4;padding:4px 8px;border-radius:4px">✓ 2025 yılı değerlendirmeleri tamamlanmış</div>
+              </div>
+              <span class="cl-sonuc" style="background:#d1fae5;color:#065f46">Uygun</span>
+            </div>
+
+            <div class="cl-item bulgu" id="cl-3">
+              <div class="cl-no">8.4.2</div>
+              <div style="flex:1">
+                <div class="cl-madde">Satın alma kriterleri (teknik şartname) yeterli mi?</div>
+                <div class="cl-aciklama">Malzeme standartları, toleranslar, CoC gereksinimleri</div>
+                <div class="cl-butonlar">
+                  <button class="cl-btn cb-tamam" onclick="clDurumGuncelle(3,'tamam')">✓ Uygun</button>
+                  <button class="cl-btn cb-bulgu" onclick="clDurumGuncelle(3,'bulgu')">⚠ Bulgu</button>
+                  <button class="cl-btn cb-ua" onclick="clDurumGuncelle(3,'ua')">N/A</button>
+                  <button class="cl-btn cb-not" onclick="clNotEkle(3)">📝 Not</button>
+                </div>
+                <div style="margin-top:6px;font-size:11px;color:#991b1b;background:#fff8f8;padding:4px 8px;border-radius:4px">⚠ KMT: 3 sipariş emrinde CoC şartı belirtilmemiş — BLG-2026-004 açıldı</div>
+              </div>
+              <span class="cl-sonuc" style="background:#fee2e2;color:#991b1b">Uygunsuz</span>
+            </div>
+
+            <div class="cl-item" id="cl-4">
+              <div class="cl-no">8.4.3</div>
+              <div style="flex:1">
+                <div class="cl-madde">Tedarikçi ürünleri girdi kalite kontrolünden geçiyor mu?</div>
+                <div class="cl-aciklama">IQC prosedürü, ön kabul kayıtları</div>
+                <div class="cl-butonlar">
+                  <button class="cl-btn cb-tamam" onclick="clDurumGuncelle(4,'tamam')">✓ Uygun</button>
+                  <button class="cl-btn cb-bulgu" onclick="clDurumGuncelle(4,'bulgu')">⚠ Bulgu</button>
+                  <button class="cl-btn cb-ua" onclick="clDurumGuncelle(4,'ua')">N/A</button>
+                  <button class="cl-btn cb-not" onclick="clNotEkle(4)">📝 Not</button>
+                </div>
+              </div>
+              <span class="cl-sonuc" style="background:#f1f5f9;color:#94a3b8">Değerlendir</span>
+            </div>
+
+            <div class="cl-item" id="cl-5">
+              <div class="cl-no">8.4.3</div>
+              <div style="flex:1">
+                <div class="cl-madde">Dış kaynaklı süreç kontrol kayıtları muhafaza ediliyor mu?</div>
+                <div class="cl-aciklama">Fason hizmetler, ısıl işlem sertifikaları</div>
+                <div class="cl-butonlar">
+                  <button class="cl-btn cb-tamam" onclick="clDurumGuncelle(5,'tamam')">✓ Uygun</button>
+                  <button class="cl-btn cb-bulgu" onclick="clDurumGuncelle(5,'bulgu')">⚠ Bulgu</button>
+                  <button class="cl-btn cb-ua" onclick="clDurumGuncelle(5,'ua')">N/A</button>
+                  <button class="cl-btn cb-not" onclick="clNotEkle(5)">📝 Not</button>
+                </div>
+              </div>
+              <span class="cl-sonuc" style="background:#f1f5f9;color:#94a3b8">Değerlendir</span>
+            </div>
+
+          </div>
+          <div style="padding:10px 14px;background:#f8fafc;border-top:1px solid #f1f5f9;display:flex;gap:8px;align-items:center">
+            <button class="btn btn-b" style="font-size:11px" onclick="sorEkle()">+ Soru Ekle</button>
+            <button class="btn btn-p" style="font-size:11px" onclick="bulguEkleAc()">⚠ Bulgu Ekle</button>
+            <span style="font-size:10px;color:#94a3b8;margin-left:auto">Tamamlanan: 3/8 — Bulgu: 1</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sağ Panel: Özet + Denetçi Notları -->
+      <div>
+        <div class="card" style="margin-bottom:12px">
+          <div class="card-head"><span class="card-title">📊 Denetim Özeti</span></div>
+          <div style="padding:12px 14px">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+              <div style="background:#f0fdf4;border-radius:6px;padding:8px;text-align:center">
+                <div style="font-size:18px;font-weight:800;color:#065f46" id="ozet-uygun">2</div>
+                <div style="font-size:10px;color:#065f46;font-weight:600">Uygun</div>
+              </div>
+              <div style="background:#fff8f8;border-radius:6px;padding:8px;text-align:center">
+                <div style="font-size:18px;font-weight:800;color:#dc2626" id="ozet-bulgu">1</div>
+                <div style="font-size:10px;color:#dc2626;font-weight:600">Bulgu</div>
+              </div>
+            </div>
+            <div style="font-size:11px;color:#64748b;margin-bottom:6px">Skor:</div>
+            <div style="font-size:24px;font-weight:800;color:#d97706;text-align:center" id="ozet-skor">%74</div>
+            <div class="progress" style="margin:6px 0 10px"><div class="prog-fill" style="width:74%;background:#f59e0b" id="ozet-bar"></div></div>
+            <div style="font-size:10px;color:#94a3b8;text-align:center">Hedef: %85 ve üzeri</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><span class="card-title">📝 Denetçi Notları</span></div>
+          <div style="padding:10px 14px">
+            <textarea class="fi" rows="5" placeholder="Gözlemler, kanıtlar, açıklamalar..." id="denetci-notlari"
+              style="resize:vertical">Tedarikçi listesi incelendi. Değerlendirmeler 2025 için tamamlanmış. CoC şartnameleri bazı siparişlerde eksik — acil düzeltme gerekiyor.</textarea>
+            <div style="display:flex;gap:6px;margin-top:8px">
+              <button class="btn btn-g" style="font-size:10px;flex:1" onclick="notKaydet()">Kaydet</button>
+              <button class="btn" style="font-size:10px" onclick="kanıtEkle()">📎 Kanıt</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     4. BULGULAR / NCR
+══════════════════════════════════ -->
+<div class="page" id="pg-bulgular">
+  <div class="topbar">
+    <div style="display:flex;align-items:center">
+      <span class="tb-title">Bulgular &amp; Uygunsuzluklar</span>
+      <span class="tb-sub">NCR Takibi · AS9100 Madde 10.2</span>
+    </div>
+    <div style="display:flex;gap:8px">
+      <select style="font-size:11px;padding:4px 9px;border:1px solid #e2e8f0;border-radius:6px;background:#fff;outline:none;color:#475569">
+        <option>Tüm Sınıflar</option><option>Uygunsuzluk (KMT)</option><option>Gözlem</option><option>İyileştirme Fırsatı</option>
+      </select>
+      <select style="font-size:11px;padding:4px 9px;border:1px solid #e2e8f0;border-radius:6px;background:#fff;outline:none;color:#475569">
+        <option>Tüm Durumlar</option><option>Açık</option><option>CAPA'da</option><option>Kapalı</option>
+      </select>
+      <button class="btn btn-p" onclick="bulguEkleAc()">+ Yeni Bulgu</button>
+    </div>
+  </div>
+  <div class="content">
+    <div class="kpi-row" style="grid-template-columns:repeat(4,1fr)">
+      <div class="kpi s3"><label>Toplam Açık Bulgu</label><div class="num">4</div><div class="det">2 KMT · 1 Gözlem · 1 İyileştirme</div></div>
+      <div class="kpi s2"><label>CAPA Bekleyen</label><div class="num">3</div><div class="det">Aksiyon alınması gerekiyor</div></div>
+      <div class="kpi s4"><label>Bu Ay Kapatılan</label><div class="num">2</div><div class="det">Ort. 15 günde kapatıldı</div></div>
+      <div class="kpi s1"><label>2026 Toplam</label><div class="num">11</div><div class="det">7 kapatıldı · 4 açık</div></div>
+    </div>
+
+    <div id="bulgular-container">
+
+      <div class="bulgu-kart" onclick="bulguDetayAc('BLG-2026-004')">
+        <div class="bk-head">
+          <span class="bk-sinif bs-kmt">KMT — Uygunsuzluk</span>
+          <span class="bk-no">BLG-2026-004</span>
+          <div class="bk-madde">CoC şartı satın alma emirlerinde belirtilmiyor</div>
+          <div style="margin-left:auto;display:flex;gap:6px">
+            <span class="madde-chip">§8.4.2</span>
+            <span class="bdg b-red">Açık</span>
+          </div>
+        </div>
+        <div class="bk-body">3 farklı satın alma emrinde (PO-26-00007, 00008, 00009) Malzeme Uygunluk Belgesi (CoC) şartı sipariş özel gereksinimlerinde belirtilmemektedir. Tedarikçi CoC sağlamadan malzeme teslim edebilmektedir.</div>
+        <div class="bk-foot">
+          <span class="muted">DEN-2026-004 · 15.03.2026</span>
+          <span class="muted">Denetçi: Erdem K.</span>
+          <span style="margin-left:auto;font-size:10px;color:#dc2626;font-weight:600">CAPA gerektiriyor</span>
+          <button class="btn btn-warn" style="font-size:10px;padding:2px 8px" onclick="event.stopPropagation();capaAc('BLG-2026-004')">CAPA Aç →</button>
+          <button class="btn btn-b" style="font-size:10px;padding:2px 8px" onclick="event.stopPropagation();bulguDetayAc('BLG-2026-004')">Detay</button>
+        </div>
+      </div>
+
+      <div class="bulgu-kart" onclick="bulguDetayAc('BLG-2026-003')">
+        <div class="bk-head">
+          <span class="bk-sinif bs-kmt">KMT — Uygunsuzluk</span>
+          <span class="bk-no">BLG-2026-003</span>
+          <div class="bk-madde">Ölçüm aleti kalibrasyon kaydı eksik</div>
+          <div style="margin-left:auto;display:flex;gap:6px">
+            <span class="madde-chip">§7.1.5</span>
+            <span class="bdg b-pur">CAPA'da</span>
+          </div>
+        </div>
+        <div class="bk-body">EQP-KMP-003 kodlu kumpasta son kalibrasyon tarihi geçmiş (01.02.2026) ve kalibrasyon sertifikası sistemde kayıtlı değil. Bu ölçüm aleti üretim kontrolünde kullanılmaktadır.</div>
+        <div class="bk-foot">
+          <span class="muted">DEN-2026-003 · 28.02.2026</span>
+          <span class="muted">Denetçi: İlhan D.</span>
+          <span style="margin-left:auto;font-size:10px;color:#5b21b6;font-weight:600">CAPA-2026-005 devam ediyor</span>
+          <button class="btn btn-pur" style="font-size:10px;padding:2px 8px" onclick="event.stopPropagation();goTo('capa',document.querySelector('[onclick*=capa]'))">CAPA →</button>
+        </div>
+      </div>
+
+      <div class="bulgu-kart" onclick="bulguDetayAc('BLG-2026-002')">
+        <div class="bk-head">
+          <span class="bk-sinif bs-gözlem">Gözlem</span>
+          <span class="bk-no">BLG-2026-002</span>
+          <div class="bk-madde">Operatör yeterlilik kayıtları güncel değil</div>
+          <div style="margin-left:auto;display:flex;gap:6px">
+            <span class="madde-chip">§7.2</span>
+            <span class="bdg b-amr">Açık</span>
+          </div>
+        </div>
+        <div class="bk-body">2 operatörün yeterlilik matrisinde güncelleme yapılmamış. Eğitim tamamlanmış fakat sistemde kayıt bulunmuyor.</div>
+        <div class="bk-foot">
+          <span class="muted">DEN-2026-003 · 28.02.2026</span>
+          <span class="muted">Denetçi: İlhan D.</span>
+          <button class="btn btn-warn" style="font-size:10px;padding:2px 8px;margin-left:auto" onclick="event.stopPropagation();capaAc('BLG-2026-002')">CAPA Aç</button>
+        </div>
+      </div>
+
+      <div class="bulgu-kart" onclick="bulguDetayAc('BLG-2026-001')">
+        <div class="bk-head">
+          <span class="bk-sinif bs-iyilestirme">İyileştirme Fırsatı</span>
+          <span class="bk-no">BLG-2026-001</span>
+          <div class="bk-madde">Müşteri geri bildirim sistemi geliştirilebilir</div>
+          <div style="margin-left:auto;display:flex;gap:6px">
+            <span class="madde-chip">§9.1.2</span>
+            <span class="bdg b-gray">Açık</span>
+          </div>
+        </div>
+        <div class="bk-body">Müşteri memnuniyet anketi yılda 1 kez yapılıyor. Daha sık ve sistematik geri bildirim toplanması önerilebilir.</div>
+        <div class="bk-foot">
+          <span class="muted">DEN-2026-001 · 10.01.2026</span>
+          <span class="muted">Denetçi: Erdem K.</span>
+          <button class="btn btn-b" style="font-size:10px;padding:2px 8px;margin-left:auto" onclick="event.stopPropagation()">Değerlendir</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     5. CAPA
+══════════════════════════════════ -->
+<div class="page" id="pg-capa">
+  <div class="topbar">
+    <div style="display:flex;align-items:center">
+      <span class="tb-title">CAPA Takibi</span>
+      <span class="tb-sub">Düzeltici ve Önleyici Faaliyetler · AS9100 Madde 10.2</span>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-b">Gecikenleri Göster</button>
+      <button class="btn btn-p" onclick="capaAc()">+ Yeni CAPA</button>
+    </div>
+  </div>
+  <div class="content">
+    <div class="kpi-row" style="grid-template-columns:repeat(4,1fr)">
+      <div class="kpi s1"><label>Toplam CAPA</label><div class="num">6</div><div class="det">2026 yılı</div></div>
+      <div class="kpi s4"><label>Tamamlanan</label><div class="num">2</div><div class="det trend up">Zamanında kapatıldı</div></div>
+      <div class="kpi s3"><label>Gecikmiş</label><div class="num">2</div><div class="det trend dn">Vade aşıldı</div></div>
+      <div class="kpi s2"><label>Ort. Kapatma</label><div class="num">22 gün</div><div class="det">Hedef: 30 gün</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">🔄 CAPA Listesi</span>
+        <div style="display:flex;gap:5px">
+          <span class="bdg b-pur">2 Devam</span>
+          <span class="bdg b-red">2 Gecikmiş</span>
+          <span class="bdg b-teal">2 Kapatıldı</span>
+        </div>
+      </div>
+      <table class="tbl">
+        <thead><tr>
+          <th>CAPA No</th><th>Bağlı Bulgu</th><th>Kök Neden</th>
+          <th>Aksiyon</th><th>Sorumlu</th><th>Termin</th><th>İlerleme</th><th>Durum</th><th></th>
+        </tr></thead>
+        <tbody>
+          <tr class="kritik" onclick="capaDetayAc('CAPA-2026-006')">
+            <td><span class="mono">CAPA-2026-006</span></td>
+            <td><span class="mono" style="font-size:10px;color:#dc2626">BLG-2026-004</span></td>
+            <td><div style="font-weight:500;font-size:11px">Prosedür eksikliği</div><div class="muted">PO şablonunda CoC alanı yok</div></td>
+            <td style="font-size:11px;max-width:160px">PO şablonunu güncelle, CoC şartını zorunlu hale getir</td>
+            <td><div style="display:flex;align-items:center;gap:4px"><div style="width:20px;height:20px;border-radius:50%;background:#1a2b47;color:#fff;font-size:8px;font-weight:700;display:flex;align-items:center;justify-content:center">EK</div><span class="muted">Erdem K.</span></div></td>
+            <td style="color:#dc2626;font-weight:600">28.03.2026<br><span style="font-size:9px">7 gün kaldı</span></td>
+            <td>
+              <div style="display:flex;align-items:center;gap:5px">
+                <div class="progress" style="width:60px;display:inline-block"><div class="prog-fill" style="width:40%;background:#1a2b47"></div></div>
+                <span style="font-size:10px;color:#64748b">%40</span>
+              </div>
+            </td>
+            <td><span class="bdg b-pur">Devam</span></td>
+            <td><button class="btn btn-b" style="font-size:10px;padding:2px 7px" onclick="event.stopPropagation();capaDetayAc('CAPA-2026-006')">Detay</button></td>
+          </tr>
+          <tr class="kritik" onclick="capaDetayAc('CAPA-2026-005')">
+            <td><span class="mono">CAPA-2026-005</span></td>
+            <td><span class="mono" style="font-size:10px;color:#dc2626">BLG-2026-003</span></td>
+            <td><div style="font-weight:500;font-size:11px">Takip sistemi yetersiz</div><div class="muted">Kalibrasyon hatırlatması yok</div></td>
+            <td style="font-size:11px;max-width:160px">Kalibrasyon hatırlatma sistemi kur, tüm aletleri kaydet</td>
+            <td><div style="display:flex;align-items:center;gap:4px"><div style="width:20px;height:20px;border-radius:50%;background:#065f46;color:#fff;font-size:8px;font-weight:700;display:flex;align-items:center;justify-content:center">İD</div><span class="muted">İlhan D.</span></div></td>
+            <td style="color:#dc2626;font-weight:600">⚠ 15.03.2026<br><span style="font-size:9px">Geçti!</span></td>
+            <td>
+              <div style="display:flex;align-items:center;gap:5px">
+                <div class="progress" style="width:60px;display:inline-block"><div class="prog-fill" style="width:70%;background:#f59e0b"></div></div>
+                <span style="font-size:10px;color:#64748b">%70</span>
+              </div>
+            </td>
+            <td><span class="bdg b-red">Gecikmiş</span></td>
+            <td><button class="btn btn-warn" style="font-size:10px;padding:2px 7px" onclick="event.stopPropagation();capaDetayAc('CAPA-2026-005')">Güncelle</button></td>
+          </tr>
+          <tr onclick="capaDetayAc('CAPA-2026-004')">
+            <td><span class="mono">CAPA-2026-004</span></td>
+            <td><span class="mono" style="font-size:10px;color:#dc2626">BLG-2026-002</span></td>
+            <td><div style="font-weight:500;font-size:11px">Süreç tanımlanmamış</div><div class="muted">Eğitim sonrası kayıt adımı yok</div></td>
+            <td style="font-size:11px;max-width:160px">Eğitim sonrası kayıt prosedürü yaz ve uygula</td>
+            <td><div style="display:flex;align-items:center;gap:4px"><div style="width:20px;height:20px;border-radius:50%;background:#065f46;color:#fff;font-size:8px;font-weight:700;display:flex;align-items:center;justify-content:center">İD</div><span class="muted">İlhan D.</span></div></td>
+            <td>05.04.2026</td>
+            <td>
+              <div style="display:flex;align-items:center;gap:5px">
+                <div class="progress" style="width:60px;display:inline-block"><div class="prog-fill" style="width:20%;background:#94a3b8"></div></div>
+                <span style="font-size:10px;color:#64748b">%20</span>
+              </div>
+            </td>
+            <td><span class="bdg b-pur">Devam</span></td>
+            <td><button class="btn btn-b" style="font-size:10px;padding:2px 7px" onclick="event.stopPropagation();capaDetayAc('CAPA-2026-004')">Detay</button></td>
+          </tr>
+          <tr style="opacity:.6" onclick="capaDetayAc('CAPA-2026-003')">
+            <td><span class="mono">CAPA-2026-003</span></td>
+            <td><span class="mono" style="font-size:10px">BLG-2025-012</span></td>
+            <td><div style="font-weight:500;font-size:11px">Tedarikçi performans</div></td>
+            <td style="font-size:11px">Tedarikçi gelişim planı</td>
+            <td><div style="display:flex;align-items:center;gap:4px"><div style="width:20px;height:20px;border-radius:50%;background:#1a2b47;color:#fff;font-size:8px;font-weight:700;display:flex;align-items:center;justify-content:center">EK</div><span class="muted">Erdem K.</span></div></td>
+            <td class="muted">28.02.2026 ✓</td>
+            <td>
+              <div style="display:flex;align-items:center;gap:5px">
+                <div class="progress" style="width:60px;display:inline-block"><div class="prog-fill" style="width:100%;background:#10b981"></div></div>
+                <span style="font-size:10px;color:#065f46">%100</span>
+              </div>
+            </td>
+            <td><span class="bdg b-teal">Kapatıldı</span></td>
+            <td><button class="btn" style="font-size:10px;padding:2px 7px">Görüntüle</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- CAPA Detay — Adım Takibi -->
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">🔍 CAPA-2026-005 Adım Detayı</span>
+        <span class="bdg b-red">Gecikmiş</span>
+      </div>
+      <div style="padding:12px 16px">
+        <div class="capa-step">
+          <div class="cs-icon cs-tamam">✓</div>
+          <div class="cs-info">
+            <div class="cs-baslik">Kök Neden Analizi</div>
+            <div class="cs-meta">Balık Kılçığı yöntemi kullanıldı — Kalibrasyon takip sistemi tanımsız</div>
+          </div>
+          <div class="cs-tarih">01.03.2026</div>
+        </div>
+        <div class="capa-step">
+          <div class="cs-icon cs-tamam">✓</div>
+          <div class="cs-info">
+            <div class="cs-baslik">Düzeltici Aksiyon Planı Onayı</div>
+            <div class="cs-meta">Kalibrasyon prosedürü yazılacak, sistem kurulacak</div>
+          </div>
+          <div class="cs-tarih">03.03.2026</div>
+        </div>
+        <div class="capa-step">
+          <div class="cs-icon cs-devam">→</div>
+          <div class="cs-info">
+            <div class="cs-baslik">Uygulama — Kalibrasyon Hatırlatma Sistemi</div>
+            <div class="cs-meta">Tüm ölçüm aletleri kayıt altına alınıyor — 12/18 tamamlandı</div>
+            <div class="progress" style="margin-top:5px;width:200px"><div class="prog-fill" style="width:67%;background:#1a2b47"></div></div>
+          </div>
+          <div class="cs-tarih">Devam</div>
+        </div>
+        <div class="capa-step">
+          <div class="cs-icon cs-gecikti">⚠</div>
+          <div class="cs-info">
+            <div class="cs-baslik">Doğrulama ve Etkinlik Değerlendirme</div>
+            <div class="cs-meta">Uygulama tamamlandıktan 30 gün sonra kontrol edilecek</div>
+          </div>
+          <div class="cs-tarih" style="color:#dc2626">Bekliyor</div>
+        </div>
+        <div class="capa-step">
+          <div class="cs-icon cs-bekle">○</div>
+          <div class="cs-info">
+            <div class="cs-baslik">Kapanış ve Kayıt</div>
+            <div class="cs-meta">Etkinlik doğrulandıktan sonra CAPA kapatılacak</div>
+          </div>
+          <div class="cs-tarih">—</div>
+        </div>
+        <div style="margin-top:10px;display:flex;gap:8px">
+          <button class="btn btn-g" onclick="capaGuncelle()">✓ Adım Tamamla</button>
+          <button class="btn btn-warn" onclick="capaTerminUzat()">📅 Termin Uzat</button>
+          <button class="btn btn-pur" style="margin-left:auto" onclick="capaKapat()">Kapat ve Doğrula</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     6. RAPORLAR
+══════════════════════════════════ -->
+<div class="page" id="pg-raporlar">
+  <div class="topbar">
+    <div style="display:flex;align-items:center">
+      <span class="tb-title">Denetim Raporları</span>
+      <span class="tb-sub">Yönetim Gözden Geçirme · Arşiv</span>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-b" onclick="yonetimRaporu()">📊 Yönetim Özeti</button>
+      <button class="btn btn-p" onclick="raporOlustur()">+ Rapor Oluştur</button>
+    </div>
+  </div>
+  <div class="content">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px">
+      <!-- Hızlı Rapor Kartları -->
+      <div class="card" style="cursor:pointer" onclick="raporAc('ozet')" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow=''">
+        <div style="padding:20px;text-align:center">
+          <div style="font-size:36px;margin-bottom:10px">📊</div>
+          <div style="font-weight:700;color:#0f172a;margin-bottom:4px">Yönetim Gözden Geçirme</div>
+          <div class="muted">İç denetim özet raporu · PDF</div>
+          <button class="btn btn-p" style="margin-top:12px;width:100%">Oluştur</button>
+        </div>
+      </div>
+      <div class="card" style="cursor:pointer" onclick="raporAc('bulgu')" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow=''">
+        <div style="padding:20px;text-align:center">
+          <div style="font-size:36px;margin-bottom:10px">⚠️</div>
+          <div style="font-weight:700;color:#0f172a;margin-bottom:4px">Bulgu & CAPA Raporu</div>
+          <div class="muted">Açık bulgular ve aksiyon durumu</div>
+          <button class="btn btn-warn" style="margin-top:12px;width:100%">Oluştur</button>
+        </div>
+      </div>
+      <div class="card" style="cursor:pointer" onclick="raporAc('uyumluluk')" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow=''">
+        <div style="padding:20px;text-align:center">
+          <div style="font-size:36px;margin-bottom:10px">🛡️</div>
+          <div style="font-weight:700;color:#0f172a;margin-bottom:4px">AS9100 Uyumluluk Raporu</div>
+          <div class="muted">Madde bazlı uyumluluk analizi</div>
+          <button class="btn btn-teal" style="margin-top:12px;width:100%">Oluştur</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">📁 Rapor Arşivi</span>
+        <input class="fi" placeholder="Rapor ara..." style="width:200px;padding:4px 9px">
+      </div>
+      <table class="tbl">
+        <thead><tr>
+          <th>Rapor No</th><th>Başlık</th><th>Denetim</th><th>Tarih</th>
+          <th>Oluşturan</th><th>Tip</th><th></th>
+        </tr></thead>
+        <tbody>
+          <tr onclick="raporIndir('RPR-2026-004')">
+            <td><span class="mono">RPR-2026-004</span></td>
+            <td style="font-weight:500">Satınalma Süreci Denetim Raporu</td>
+            <td><span class="mono" style="font-size:10px">DEN-2026-004</span></td>
+            <td class="muted">15.03.2026</td>
+            <td class="muted">Erdem K.</td>
+            <td><span class="bdg b-amr">Taslak</span></td>
+            <td onclick="event.stopPropagation()" style="display:flex;gap:4px">
+              <button class="btn btn-b" style="font-size:10px;padding:2px 8px" onclick="raporIndir('RPR-2026-004')">⬇ PDF</button>
+              <button class="btn" style="font-size:10px;padding:2px 8px">Düzenle</button>
+            </td>
+          </tr>
+          <tr onclick="raporIndir('RPR-2026-003')">
+            <td><span class="mono">RPR-2026-003</span></td>
+            <td style="font-weight:500">Üretim Süreci Denetim Raporu</td>
+            <td><span class="mono" style="font-size:10px">DEN-2026-003</span></td>
+            <td class="muted">02.03.2026</td>
+            <td class="muted">İlhan D.</td>
+            <td><span class="bdg b-teal">Final</span></td>
+            <td onclick="event.stopPropagation()" style="display:flex;gap:4px">
+              <button class="btn btn-b" style="font-size:10px;padding:2px 8px" onclick="raporIndir('RPR-2026-003')">⬇ PDF</button>
+              <button class="btn btn-g" style="font-size:10px;padding:2px 8px">Paylaş</button>
+            </td>
+          </tr>
+          <tr onclick="raporIndir('RPR-2026-002')">
+            <td><span class="mono">RPR-2026-002</span></td>
+            <td style="font-weight:500">KYS Liderlik ve Planlama Denetim Raporu</td>
+            <td><span class="mono" style="font-size:10px">DEN-2026-002</span></td>
+            <td class="muted">25.01.2026</td>
+            <td class="muted">Erdem K.</td>
+            <td><span class="bdg b-teal">Final</span></td>
+            <td onclick="event.stopPropagation()" style="display:flex;gap:4px">
+              <button class="btn btn-b" style="font-size:10px;padding:2px 8px">⬇ PDF</button>
+              <button class="btn btn-g" style="font-size:10px;padding:2px 8px">Paylaş</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- AS9100 Madde Uyumluluk Özeti -->
+    <div class="card">
+      <div class="card-head"><span class="card-title">🛡️ AS9100 Madde Bazlı Uyumluluk Özeti — 2026</span></div>
+      <div style="padding:14px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px" id="madde-grid">
+        <!-- JS ile doldurulacak -->
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<!-- ════════════ MODALLAR ════════════ -->
+
+<!-- Yeni Denetim Modal -->
+<div class="modal-ov" id="yeni-denetim-modal" onclick="moKapat(event,'yeni-denetim-modal')">
+  <div class="modal-box">
+    <div class="m-head">
+      <div><div class="m-title">Yeni Denetim Oluştur</div><div class="m-sub">AS9100 Madde 9.2 — İç Denetim</div></div>
+      <button class="m-x" onclick="document.getElementById('yeni-denetim-modal').classList.remove('open')">✕</button>
+    </div>
+    <div class="m-body" style="background:#fff">
+      <div class="fg2">
+        <div><label class="fl">Denetim No</label><input class="fi fi-grn" placeholder="DEN-2026-XXXXX otomatik" readonly></div>
+        <div><label class="fl">Denetim Tipi <span style="color:#dc2626">*</span></label>
+          <select class="fi-sel">
+            <option>Planlı İç Denetim</option><option>Ani Denetim</option><option>Takip Denetimi</option>
+          </select></div>
+      </div>
+      <div style="margin-bottom:12px"><label class="fl">Kapsam / Denetlenecek Süreç <span style="color:#dc2626">*</span></label>
+        <input class="fi" id="nd-kapsam" placeholder="Satınalma, Üretim, KYS..."></div>
+      <div style="margin-bottom:12px"><label class="fl">AS9100 Maddeleri <span style="color:#dc2626">*</span></label>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;padding:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px" id="madde-secim">
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer"><input type="checkbox"> §4 Bağlam</label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer"><input type="checkbox"> §5 Liderlik</label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer"><input type="checkbox"> §6 Planlama</label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer"><input type="checkbox"> §7 Destek</label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer"><input type="checkbox" checked> §8.1 Operasyon</label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer"><input type="checkbox"> §8.2 Müşteri</label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer"><input type="checkbox"> §8.3 Tasarım</label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer"><input type="checkbox" checked> §8.4 Satınalma</label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer"><input type="checkbox"> §8.5 Üretim</label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer"><input type="checkbox"> §8.6 Ürün Muayene</label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer"><input type="checkbox"> §9 Performans</label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer"><input type="checkbox"> §10 İyileştirme</label>
+        </div>
+      </div>
+      <div class="fg3">
+        <div><label class="fl">Plan Tarihi <span style="color:#dc2626">*</span></label><input class="fi" type="date" id="nd-tarih"></div>
+        <div><label class="fl">Süre (Gün)</label><input class="fi" type="number" id="nd-sure" value="1" min="0.5" step="0.5"></div>
+        <div><label class="fl">Risk Skoru (1-25)</label><input class="fi" type="number" id="nd-risk" placeholder="Ör: 15" min="1" max="25"></div>
+      </div>
+      <div class="fg2">
+        <div><label class="fl">Baş Denetçi <span style="color:#dc2626">*</span></label>
+          <select class="fi-sel"><option>Erdem K.</option><option>İlhan D.</option><option>Dış Denetçi</option></select></div>
+        <div><label class="fl">Yardımcı Denetçi</label>
+          <select class="fi-sel"><option>— Seçin —</option><option>Erdem K.</option><option>İlhan D.</option></select></div>
+      </div>
+      <div><label class="fl">Denetim Amacı / Notlar</label>
+        <textarea class="fi" rows="3" id="nd-not" placeholder="Denetim hedefi, özel kapsam bilgisi..."></textarea></div>
+    </div>
+    <div class="m-foot">
+      <div style="font-size:11px;color:#94a3b8">Kaydedilince kontrol listesi otomatik oluşturulur</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn" onclick="document.getElementById('yeni-denetim-modal').classList.remove('open')">İptal</button>
+        <button class="btn btn-p" onclick="denetimKaydet()">✓ Denetim Oluştur</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bulgu Ekle Modal -->
+<div class="modal-ov" id="bulgu-modal" onclick="moKapat(event,'bulgu-modal')">
+  <div class="modal-box" style="max-width:600px">
+    <div class="m-head">
+      <div><div class="m-title">Bulgu / Uygunsuzluk Kaydet</div><div class="m-sub">DEN-2026-004 · §8.4 Satınalma</div></div>
+      <button class="m-x" onclick="document.getElementById('bulgu-modal').classList.remove('open')">✕</button>
+    </div>
+    <div class="m-body" style="background:#fff">
+      <div class="fg2">
+        <div><label class="fl">Bulgu No</label><input class="fi fi-grn" placeholder="BLG-2026-XXXXX" readonly></div>
+        <div><label class="fl">Sınıflandırma <span style="color:#dc2626">*</span></label>
+          <select class="fi-sel" id="bg-sinif">
+            <option>Uygunsuzluk (KMT)</option><option>Gözlem</option><option>İyileştirme Fırsatı</option>
+          </select></div>
+      </div>
+      <div class="fg2">
+        <div><label class="fl">AS9100 Maddesi <span style="color:#dc2626">*</span></label><input class="fi" id="bg-madde" placeholder="§8.4.2"></div>
+        <div><label class="fl">Süreç / Bölüm</label><input class="fi" id="bg-surec" placeholder="Satınalma, Üretim..."></div>
+      </div>
+      <div style="margin-bottom:12px"><label class="fl">Bulgu Açıklaması <span style="color:#dc2626">*</span></label>
+        <textarea class="fi" rows="3" id="bg-aciklama" placeholder="Gözlemlenen durum, uygunsuzluk detayı..."></textarea></div>
+      <div style="margin-bottom:12px"><label class="fl">Objektif Kanıt</label>
+        <textarea class="fi" rows="2" id="bg-kanit" placeholder="Görülen belge, kayıt, gözlem..."></textarea></div>
+      <div class="fg2">
+        <div><label class="fl">İlgili PO / Kayıt No</label><input class="fi" id="bg-referans" placeholder="PO-26-00007, vb."></div>
+        <div><label class="fl">CAPA Gerekli mi?</label>
+          <select class="fi-sel" id="bg-capa"><option>Evet — CAPA Açılsın</option><option>Hayır — İzleme Yeterli</option></select></div>
+      </div>
+    </div>
+    <div class="m-foot">
+      <div style="font-size:11px;color:#94a3b8">KMT sınıfındaki bulgular için CAPA otomatik açılır</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn" onclick="document.getElementById('bulgu-modal').classList.remove('open')">İptal</button>
+        <button class="btn btn-red" onclick="bulguKaydet()">⚠ Bulgu Kaydet</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CAPA Modal -->
+<div class="modal-ov" id="capa-modal" onclick="moKapat(event,'capa-modal')">
+  <div class="modal-box" style="max-width:600px">
+    <div class="m-head">
+      <div><div class="m-title">CAPA Oluştur</div><div class="m-sub" id="capa-modal-sub">Düzeltici ve Önleyici Faaliyet</div></div>
+      <button class="m-x" onclick="document.getElementById('capa-modal').classList.remove('open')">✕</button>
+    </div>
+    <div class="m-body" style="background:#fff">
+      <div class="fg2">
+        <div><label class="fl">CAPA No</label><input class="fi fi-grn" placeholder="CAPA-2026-XXXXX" readonly></div>
+        <div><label class="fl">Bağlı Bulgu</label><input class="fi fi-ro" id="capa-bulgu-no" placeholder="BLG-2026-XXX" readonly></div>
+      </div>
+      <div style="margin-bottom:12px"><label class="fl">Kök Neden Analizi <span style="color:#dc2626">*</span></label>
+        <select class="fi-sel" style="margin-bottom:6px">
+          <option>5-Neden Analizi</option><option>Balık Kılçığı (Ishikawa)</option><option>Pareto Analizi</option><option>Diğer</option>
+        </select>
+        <textarea class="fi" rows="3" id="capa-kok" placeholder="Kök neden açıklaması..."></textarea></div>
+      <div style="margin-bottom:12px"><label class="fl">Düzeltici Aksiyon <span style="color:#dc2626">*</span></label>
+        <textarea class="fi" rows="3" id="capa-aksiyon" placeholder="Yapılacak düzeltici aksiyon..."></textarea></div>
+      <div style="margin-bottom:12px"><label class="fl">Önleyici Aksiyon</label>
+        <textarea class="fi" rows="2" id="capa-onleyici" placeholder="Tekrarı önlemek için..."></textarea></div>
+      <div class="fg3">
+        <div><label class="fl">Sorumlu <span style="color:#dc2626">*</span></label>
+          <select class="fi-sel"><option>Erdem K.</option><option>İlhan D.</option></select></div>
+        <div><label class="fl">Termin <span style="color:#dc2626">*</span></label>
+          <input class="fi" type="date" id="capa-termin"></div>
+        <div><label class="fl">Öncelik</label>
+          <select class="fi-sel"><option>Yüksek</option><option>Orta</option><option>Düşük</option></select></div>
+      </div>
+    </div>
+    <div class="m-foot">
+      <div style="font-size:11px;color:#94a3b8">Sorumluya otomatik bildirim gönderilir</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn" onclick="document.getElementById('capa-modal').classList.remove('open')">İptal</button>
+        <button class="btn btn-p" onclick="capaKaydet()">✓ CAPA Oluştur</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Sayfa Yönlendirme ──
+function goTo(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('show'));
+  document.querySelectorAll('.sb-item').forEach(b => b.classList.remove('on'));
+  document.getElementById('pg-' + id).classList.add('show');
+  if (el) el.classList.add('on');
+}
+function moKapat(e, id) {
+  if (e.target === document.getElementById(id))
+    document.getElementById(id).classList.remove('open');
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape')
+    document.querySelectorAll('.modal-ov.open').forEach(m => m.classList.remove('open'));
+});
+function toast(msg, type = '') {
+  const el = document.getElementById('toast');
+  el.innerHTML = msg;
+  el.className = 'toast ' + type + ' show';
+  setTimeout(() => el.classList.remove('show'), 3200);
+}
+
+// ── Takvim Oluştur ──
+const AYLAR = ['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
+const TAKVIM_DATA = [
+  { ay:0, tip:'tamam', etiket:'KYS\n§5,6' },
+  { ay:0, tip:'tamam', etiket:'Müş.\n§8.2' },
+  { ay:1, tip:'tamam', etiket:'Ürt.\n§8.5' },
+  { ay:2, tip:'devam', etiket:'Sat.\n§8.4' },
+  { ay:3, tip:'plan', etiket:'Ölç.\n§9' },
+  { ay:4, tip:'plan', etiket:'İK\n§7' },
+  { ay:5, tip:'plan', etiket:'Tas.\n§8.3' },
+  { ay:6, tip:'plan', etiket:'İnt.\n§4' },
+  { ay:7, tip:'plan', etiket:'Risk\n§6' },
+  { ay:8, tip:'plan', etiket:'Sat.\n§8.4' },
+  { ay:9, tip:'plan', etiket:'YGG\n§9.3' },
+  { ay:11, tip:'plan', etiket:'KYS\n§10' },
+];
+window.addEventListener('DOMContentLoaded', () => {
+  const bas  = document.getElementById('takvim-basliklar');
+  const huc  = document.getElementById('takvim-hucreleri');
+  const dataMap = {};
+  TAKVIM_DATA.forEach(d => dataMap[d.ay] = d);
+  AYLAR.forEach((ay, i) => {
+    const bDiv = document.createElement('div');
+    bDiv.className = 'tk-ay';
+    bDiv.textContent = ay;
+    bas.appendChild(bDiv);
+    const hDiv = document.createElement('div');
+    const d = dataMap[i];
+    hDiv.className = 'tk-hucre ' + (d ? 'th-' + d.tip : 'th-bos');
+    if (d) {
+      hDiv.innerHTML = d.etiket.replace('\n','<br>');
+      hDiv.title = AYLAR[i] + ' — ' + (d.tip === 'tamam' ? 'Tamamlandı' : d.tip === 'devam' ? 'Devam Ediyor' : 'Planlandı');
+      hDiv.onclick = () => toast('📅 ' + AYLAR[i] + ' denetimi: ' + hDiv.title, '');
+    } else {
+      hDiv.textContent = '—';
+    }
+    huc.appendChild(hDiv);
+  });
+
+  // AS9100 Madde Grid
+  const maddeler = [
+    { no:'§4', ad:'Bağlam', skor:95 },{ no:'§5', ad:'Liderlik', skor:92 },
+    { no:'§6', ad:'Planlama', skor:88 },{ no:'§7', ad:'Destek', skor:82 },
+    { no:'§8.1', ad:'Operasyon', skor:85 },{ no:'§8.2', ad:'Müşteri', skor:94 },
+    { no:'§8.3', ad:'Tasarım', skor:90 },{ no:'§8.4', ad:'Satınalma', skor:74 },
+    { no:'§8.5', ad:'Üretim', skor:88 },{ no:'§8.6', ad:'Muayene', skor:91 },
+    { no:'§8.7', ad:'Uygunsuz', skor:86 },{ no:'§9.1', ad:'İzleme', skor:83 },
+    { no:'§9.2', ad:'İç Denetim', skor:89 },{ no:'§9.3', ad:'Yön.Gözden', skor:91 },
+    { no:'§10.1', ad:'İyileştirme', skor:87 },{ no:'§10.2', ad:'CAPA', skor:79 },
+  ];
+  const grid = document.getElementById('madde-grid');
+  maddeler.forEach(m => {
+    const renk = m.skor >= 90 ? '#10b981' : m.skor >= 80 ? '#f59e0b' : '#ef4444';
+    const bg   = m.skor >= 90 ? '#f0fdf4' : m.skor >= 80 ? '#fffbeb' : '#fff8f8';
+    const div  = document.createElement('div');
+    div.style.cssText = `background:${bg};border:1px solid ${renk}33;border-radius:8px;padding:10px;text-align:center;cursor:pointer;transition:all .12s`;
+    div.innerHTML = `<div style="font-family:monospace;font-weight:800;color:#1a2b47;font-size:11px">${m.no}</div><div style="font-size:10px;color:#64748b;margin:2px 0">${m.ad}</div><div style="font-size:18px;font-weight:800;color:${renk}">${m.skor}%</div><div style="height:5px;background:#f1f5f9;border-radius:2px;overflow:hidden;margin-top:4px"><div style="width:${m.skor}%;height:100%;border-radius:2px;background:${renk}"></div></div>`;
+    div.onmouseover = () => div.style.boxShadow = '0 3px 10px rgba(0,0,0,.1)';
+    div.onmouseout  = () => div.style.boxShadow = '';
+    div.onclick = () => toast(`${m.no} ${m.ad}: %${m.skor} uyumluluk`, m.skor >= 90 ? 'green' : m.skor >= 80 ? 'orange' : 'red');
+    grid.appendChild(div);
+  });
+});
+
+// ── Checklist Fonksiyonları ──
+let clDurumlar = {};
+function clDurumGuncelle(no, durum) {
+  clDurumlar[no] = durum;
+  const item = document.getElementById('cl-' + no);
+  const sonuc = item.querySelector('.cl-sonuc');
+  item.className = 'cl-item ' + (durum === 'tamam' ? 'tamam' : durum === 'bulgu' ? 'bulgu' : 'uygulanamaz');
+  if (durum === 'tamam') { sonuc.style.background='#d1fae5'; sonuc.style.color='#065f46'; sonuc.textContent='Uygun'; }
+  else if (durum === 'bulgu') { sonuc.style.background='#fee2e2'; sonuc.style.color='#991b1b'; sonuc.textContent='Uygunsuz'; }
+  else { sonuc.style.background='#f1f5f9'; sonuc.style.color='#94a3b8'; sonuc.textContent='N/A'; }
+  skorGuncelle();
+  toast(durum === 'tamam' ? '✓ Madde uygun olarak işaretlendi.' : durum === 'bulgu' ? '⚠ Bulgu kaydedildi.' : 'Madde uygulanamaz işaretlendi.', durum === 'tamam' ? 'green' : '');
+}
+function skorGuncelle() {
+  const tamamlar = Object.values(clDurumlar).filter(d => d === 'tamam').length;
+  const bulgular = Object.values(clDurumlar).filter(d => d === 'bulgu').length;
+  const toplam   = Object.keys(clDurumlar).length;
+  const skor     = toplam > 0 ? Math.round((tamamlar / toplam) * 100) : 74;
+  document.getElementById('ozet-uygun').textContent = tamamlar;
+  document.getElementById('ozet-bulgu').textContent = bulgular;
+  document.getElementById('ozet-skor').textContent = '%' + skor;
+  document.getElementById('ozet-bar').style.width = skor + '%';
+  document.getElementById('ozet-bar').style.background = skor >= 90 ? '#10b981' : skor >= 75 ? '#f59e0b' : '#ef4444';
+  document.getElementById('cl-ilerleme').textContent = toplam + '/8 kontrol';
+  document.getElementById('cl-bar').style.width = (toplam / 8 * 100) + '%';
+}
+function topluTamam() {
+  [1,2,3,4,5].forEach(n => { if (!clDurumlar[n]) clDurumGuncelle(n, 'tamam'); });
+  toast('✓ Tüm kontroller uygun işaretlendi.', 'green');
+}
+function clNotEkle(no) {
+  const not = prompt('Not girin (Madde §8.4.' + no + '):');
+  if (not) {
+    const item = document.getElementById('cl-' + no);
+    const notDiv = document.createElement('div');
+    notDiv.style.cssText = 'margin-top:5px;font-size:11px;color:#5b21b6;background:#ede9fe;padding:4px 8px;border-radius:4px';
+    notDiv.textContent = '📝 ' + not;
+    item.querySelector('.cl-butonlar').insertAdjacentElement('afterend', notDiv);
+    toast('📝 Not eklendi.', 'purple');
+  }
+}
+function sorEkle() { toast('✓ Yeni kontrol sorusu ekleme formu açılıyor...', ''); }
+function kanıtEkle() { toast('📎 Kanıt/belge yükleme alanı açılıyor...', ''); }
+function notKaydet() { toast('💾 Denetçi notu kaydedildi.', 'green'); }
+function checklistKaydet() { toast('💾 Kontrol listesi kaydedildi.', 'green'); }
+
+// ── Denetim Fonksiyonları ──
+function yeniDenetimAc() {
+  const d = new Date(); d.setDate(d.getDate() + 14);
+  document.getElementById('nd-tarih').value = d.toISOString().split('T')[0];
+  document.getElementById('yeni-denetim-modal').classList.add('open');
+}
+function denetimKaydet() {
+  const kapsam = document.getElementById('nd-kapsam').value.trim();
+  if (!kapsam) { alert('Kapsam giriniz.'); return; }
+  document.getElementById('yeni-denetim-modal').classList.remove('open');
+  toast('✓ Yeni denetim oluşturuldu — kontrol listesi hazırlanıyor...', 'green');
+}
+function planDuzenle(no) { toast('✏ ' + no + ' düzenleme formu açılıyor...', ''); }
+function planExport() { toast('⬇ Denetim planı Excel olarak indiriliyor...', ''); }
+
+// ── Bulgu Fonksiyonları ──
+function bulguEkleAc() {
+  document.getElementById('bulgu-modal').classList.add('open');
+}
+function bulguKaydet() {
+  const aciklama = document.getElementById('bg-aciklama').value.trim();
+  if (!aciklama) { alert('Bulgu açıklaması giriniz.'); return; }
+  document.getElementById('bulgu-modal').classList.remove('open');
+  const capa = document.getElementById('bg-capa').value;
+  if (capa.includes('Evet')) {
+    setTimeout(() => { capaAc(); }, 300);
+    toast('⚠ Bulgu kaydedildi — CAPA formu açılıyor...', 'orange');
+  } else {
+    toast('⚠ Bulgu kaydedildi.', 'orange');
+  }
+}
+function bulguDetayAc(no) { toast('📋 ' + no + ' bulgu detayı açılıyor...', ''); }
+
+// ── CAPA Fonksiyonları ──
+function capaAc(bulguNo = '') {
+  const d = new Date(); d.setDate(d.getDate() + 30);
+  document.getElementById('capa-termin').value = d.toISOString().split('T')[0];
+  document.getElementById('capa-bulgu-no').value = bulguNo;
+  document.getElementById('capa-modal-sub').textContent = bulguNo ? 'Bağlı Bulgu: ' + bulguNo : 'Düzeltici ve Önleyici Faaliyet';
+  document.getElementById('capa-modal').classList.add('open');
+}
+function capaKaydet() {
+  const aksiyon = document.getElementById('capa-aksiyon').value.trim();
+  if (!aksiyon) { alert('Düzeltici aksiyon giriniz.'); return; }
+  document.getElementById('capa-modal').classList.remove('open');
+  toast('✓ CAPA oluşturuldu — sorumluya bildirim gönderildi.', 'green');
+}
+function capaDetayAc(no) { toast('🔍 ' + no + ' CAPA detayı açılıyor...', ''); }
+function capaGuncelle() { toast('✓ CAPA adımı tamamlandı.', 'green'); }
+function capaTerminUzat() {
+  const yeni = prompt('Yeni termin tarihi (GG.AA.YYYY):');
+  if (yeni) toast('📅 Termin güncellendi: ' + yeni, 'orange');
+}
+function capaKapat() {
+  if (confirm('CAPA etkinliği doğrulandı mı? Kapatılsın mı?')) {
+    toast('✅ CAPA kapatıldı ve doğrulandı.', 'green');
+  }
+}
+
+// ── Rapor Fonksiyonları ──
+function raporOlustur() {
+  toast('📄 DEN-2026-004 raporu oluşturuluyor...', '');
+  setTimeout(() => toast('✓ Rapor hazır — PDF indirmeye hazır.', 'green'), 1500);
+}
+function raporIndir(no) { toast('⬇ ' + no + ' PDF indiriliyor...', ''); }
+function raporAc(tip) {
+  const mesajlar = { ozet:'📊 Yönetim Gözden Geçirme raporu oluşturuluyor...', bulgu:'⚠ Bulgu & CAPA raporu oluşturuluyor...', uyumluluk:'🛡️ AS9100 Uyumluluk raporu oluşturuluyor...' };
+  toast(mesajlar[tip] || 'Rapor hazırlanıyor...', '');
+  setTimeout(() => toast('✓ Rapor hazır!', 'green'), 1500);
+}
+function yonetimRaporu() { raporAc('ozet'); }
+</script>
+</body>
+</html>

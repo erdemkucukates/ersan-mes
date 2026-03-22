@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — Tam AS9100 Sidebar</title>
+<style>
+:root{
+  --nav:#111c2d;--nav2:#1a2b47;--nav3:#243555;
+  --blue:#3b82f6;--blue-l:#dbeafe;
+  --green:#10b981;--green-l:#d1fae5;
+  --red:#ef4444;--amber:#f59e0b;--purple:#8b5cf6;--teal:#14b8a6;
+  --orange:#f97316;--pink:#ec4899;--lime:#84cc16;--cyan:#06b6d4;
+  --g50:#f9fafb;--g100:#f3f4f6;--g200:#e5e7eb;
+  --g300:#d1d5db;--g400:#9ca3af;--g500:#6b7280;--g700:#374151;--g900:#111827;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#0f1c30;display:flex;min-height:100vh}
+.layout{display:flex;height:100vh;width:100%;overflow:hidden}
+
+/* ═══ SIDEBAR ═══ */
+.sb{
+  width:242px;background:var(--nav);
+  display:flex;flex-direction:column;flex-shrink:0;
+  overflow-y:auto;overflow-x:hidden;
+  scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.08) transparent;
+}
+.sb::-webkit-scrollbar{width:3px}
+.sb::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:2px}
+
+/* LOGO */
+.sb-logo{padding:14px 16px 12px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;display:flex;align-items:center;gap:10px}
+.sb-logo-ic{width:30px;height:30px;background:var(--blue);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.sb-logo-t{font-size:13px;font-weight:800;color:#fff;letter-spacing:-.2px}
+.sb-logo-s{font-size:9px;color:rgba(255,255,255,.3);margin-top:1px}
+
+/* USER */
+.sb-user{margin:8px 10px 4px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:7px 10px;display:flex;align-items:center;gap:8px;cursor:pointer;transition:.12s;flex-shrink:0}
+.sb-user:hover{background:rgba(255,255,255,.08)}
+.sb-user-ava{width:26px;height:26px;background:var(--blue);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0}
+.sb-user-n{font-size:11px;font-weight:600;color:#fff}
+.sb-user-r{font-size:9.5px;color:rgba(255,255,255,.35)}
+
+/* SEARCH */
+.sb-srch{margin:6px 10px 4px;position:relative;flex-shrink:0}
+.sb-srch input{width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);border-radius:6px;padding:5px 9px 5px 26px;font-size:11px;color:rgba(255,255,255,.65);outline:none;font-family:inherit}
+.sb-srch input::placeholder{color:rgba(255,255,255,.25)}
+.sb-srch input:focus{background:rgba(255,255,255,.09);border-color:rgba(59,130,246,.4)}
+.srch-ic{position:absolute;left:8px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,.25);font-size:11px;pointer-events:none}
+
+/* STATUS */
+.sb-status{margin:4px 10px 6px;padding:5px 9px;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.18);border-radius:6px;display:flex;align-items:center;gap:6px;flex-shrink:0;cursor:pointer}
+.st-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.st-txt{font-size:10px;font-weight:600;color:rgba(255,255,255,.5)}
+.st-val{margin-left:auto;font-size:9px;color:rgba(16,185,129,.85);font-weight:700}
+
+/* DIVIDER */
+.div{height:1px;background:rgba(255,255,255,.05);margin:2px 0;flex-shrink:0}
+
+/* NAV GROUP HEADER */
+.grp{display:flex;align-items:center;gap:8px;padding:6px 12px 5px 12px;cursor:pointer;color:rgba(255,255,255,.6);font-size:11.5px;font-weight:600;transition:.12s;flex-shrink:0}
+.grp:hover{color:rgba(255,255,255,.9);background:rgba(255,255,255,.03)}
+.grp-ic{font-size:13px;flex-shrink:0;opacity:.8;width:18px;text-align:center}
+.grp-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-left:2px}
+.grp-ct{font-size:9px;color:rgba(255,255,255,.2);font-weight:400;margin-left:2px}
+.grp-arr{margin-left:auto;font-size:9px;color:rgba(255,255,255,.25);transition:transform .18s;flex-shrink:0}
+.grp.open .grp-arr{transform:rotate(90deg)}
+
+/* NAV ITEM */
+.ni{display:flex;align-items:center;gap:7px;padding:5px 12px 5px 34px;cursor:pointer;color:rgba(255,255,255,.45);font-size:11px;transition:.1s;border-left:2px solid transparent;position:relative}
+.ni:hover{background:rgba(255,255,255,.04);color:rgba(255,255,255,.8)}
+.ni.active{background:rgba(59,130,246,.13);color:#fff;border-left-color:var(--blue);font-weight:600}
+.ni-ic{font-size:12px;flex-shrink:0;opacity:.55;width:16px;text-align:center}
+.ni.active .ni-ic{opacity:1}
+.ni-txt{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* PLANNED ITEM (Faz 2/3) */
+.ni.faz2{color:rgba(255,255,255,.28);cursor:default}
+.ni.faz2:hover{background:none;color:rgba(255,255,255,.35)}
+.ni.faz3{color:rgba(255,255,255,.2);cursor:default}
+.ni.faz3:hover{background:none;color:rgba(255,255,255,.28)}
+
+/* SUB-LABEL */
+.sub-lbl{padding:5px 12px 1px 34px;font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:rgba(255,255,255,.18);flex-shrink:0}
+
+/* CHILDREN */
+.children{overflow:hidden;max-height:600px;transition:max-height .22s ease}
+.children.closed{max-height:0}
+
+/* BADGE */
+.nb{font-size:8px;padding:1px 5px;border-radius:9px;font-weight:700;color:#fff;flex-shrink:0;margin-left:auto}
+.nb.r{background:var(--red)}.nb.a{background:var(--amber);color:#111}.nb.b{background:var(--blue)}.nb.g{background:var(--green)}.nb.p{background:var(--purple)}.nb.dim{background:rgba(255,255,255,.12);color:rgba(255,255,255,.4)}
+
+/* FAZ BADGE */
+.faz{font-size:8px;padding:1px 5px;border-radius:9px;font-weight:700;flex-shrink:0;margin-left:auto;white-space:nowrap}
+.faz.f2{background:rgba(245,158,11,.2);color:rgba(245,158,11,.7)}
+.faz.f3{background:rgba(139,92,246,.2);color:rgba(139,92,246,.6)}
+
+/* SECTION DIVIDER WITH LABEL */
+.sec-div{display:flex;align-items:center;gap:8px;padding:10px 12px 4px;flex-shrink:0}
+.sec-div-line{flex:1;height:1px;background:rgba(255,255,255,.06)}
+.sec-div-lbl{font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.2)}
+
+/* BOTTOM */
+.sb-bot{margin-top:auto;padding:8px 10px;border-top:1px solid rgba(255,255,255,.05);flex-shrink:0;display:flex;flex-direction:column;gap:2px}
+.bot-item{display:flex;align-items:center;gap:7px;padding:5px 8px;color:rgba(255,255,255,.35);font-size:10.5px;cursor:pointer;border-radius:5px;transition:.12s}
+.bot-item:hover{background:rgba(255,255,255,.05);color:rgba(255,255,255,.7)}
+
+/* ═══ RIGHT PANEL ═══ */
+.right{flex:1;display:flex;flex-direction:column;overflow:hidden;background:#1a2b47}
+
+/* TOPBAR */
+.topbar{background:rgba(255,255,255,.04);border-bottom:1px solid rgba(255,255,255,.07);padding:0 20px;height:48px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.tb-title{font-size:14px;font-weight:700;color:#fff}
+.tb-mad{font-size:11px;color:rgba(255,255,255,.35);background:rgba(255,255,255,.08);padding:2px 8px;border-radius:4px;font-family:monospace}
+.tb-right{margin-left:auto;display:flex;gap:8px}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:5px;font-size:11.5px;font-weight:600;cursor:pointer;border:none}
+.btn-p{background:var(--blue);color:#fff}.btn-o{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.7)}
+
+/* INFO PANEL */
+.info{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:16px;overflow:auto}
+.card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:10px;overflow:hidden}
+.card-h{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.06);font-size:12px;font-weight:700;color:rgba(255,255,255,.7);display:flex;align-items:center;gap:7px}
+.card-b{padding:12px 14px}
+
+/* CHANGE ROW */
+.cr{display:flex;align-items:flex-start;gap:9px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.cr:last-child{border:none}
+.cr-ic{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;margin-top:1px;font-weight:700}
+.ic-add{background:rgba(16,185,129,.2);color:#10b981}
+.ic-rem{background:rgba(239,68,68,.2);color:#ef4444}
+.ic-mod{background:rgba(245,158,11,.2);color:#f59e0b}
+.ic-mov{background:rgba(59,130,246,.2);color:#3b82f6}
+.cr-t{font-size:11.5px;color:rgba(255,255,255,.7)}
+.cr-s{font-size:10px;color:rgba(255,255,255,.35);margin-top:1px}
+
+/* MODULE TABLE */
+.mod-tbl{width:100%;border-collapse:collapse}
+.mod-tbl th{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.3);padding:6px 10px;border-bottom:1px solid rgba(255,255,255,.07);text-align:left}
+.mod-tbl td{padding:6px 10px;border-bottom:1px solid rgba(255,255,255,.04);font-size:11px;color:rgba(255,255,255,.6);vertical-align:middle}
+.mod-tbl tr:hover td{background:rgba(255,255,255,.02)}
+.mad{font-family:monospace;color:rgba(59,130,246,.9);font-size:10.5px}
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block}
+</style>
+</head>
+<body>
+<div class="layout">
+
+<!-- ═══════════════ SIDEBAR ═══════════════ -->
+<div class="sb" id="sidebar">
+
+  <div class="sb-logo">
+    <div class="sb-logo-ic">⚙</div>
+    <div>
+      <div class="sb-logo-t">ERSAN MES</div>
+      <div class="sb-logo-s">v7.0 · AS9100 Rev.D · ersan-mes.netlify.app</div>
+    </div>
+  </div>
+
+  <div class="sb-user">
+    <div class="sb-user-ava">AK</div>
+    <div><div class="sb-user-n">Ahmet Kaya</div><div class="sb-user-r">Üretim Müdürü · Admin</div></div>
+    <span style="margin-left:auto;font-size:10px;color:rgba(255,255,255,.25)">⌄</span>
+  </div>
+
+  <div class="sb-srch">
+    <span class="srch-ic">⌕</span>
+    <input type="text" placeholder="Modül veya sayfa ara..." id="sb-q" oninput="sbSearch(this.value)">
+  </div>
+
+  <div class="sb-status">
+    <div class="st-dot"></div>
+    <span class="st-txt">Sistem Aktif</span>
+    <span class="st-val">🔔 5</span>
+  </div>
+
+  <div class="div"></div>
+
+  <!-- ─── SATINALMA §8.4 ─── -->
+  <div class="grp open" onclick="tog(this)" id="g-satinalma">
+    <span class="grp-ic">🛒</span><span>Satınalma</span>
+    <div class="grp-dot" style="background:#3b82f6"></div>
+    <span class="grp-ct">§8.4</span>
+    <span class="grp-arr">›</span>
+  </div>
+  <div class="children" id="c-satinalma">
+    <div class="ni active" onclick="sel(this)"><span class="ni-ic">📝</span><span class="ni-txt">Satınalma Talepleri (PR)</span></div>
+    <div class="ni" onclick="sel(this)"><span class="ni-ic">📋</span><span class="ni-txt">Teklifler (RFQ)</span></div>
+    <div class="ni" onclick="sel(this)"><span class="ni-ic">📦</span><span class="ni-txt">Siparişler (PO)</span></div>
+    <div class="ni" onclick="sel(this)"><span class="ni-ic">🚚</span><span class="ni-txt">Ön Kabul (GRN)</span></div>
+    <div class="ni" onclick="sel(this)"><span class="ni-ic">🏭</span><span class="ni-txt">Tedarikçiler</span></div>
+    <div class="ni" onclick="sel(this)"><span class="ni-ic">⭐</span><span class="ni-txt">Tedarikçi Değerlendirme</span><span class="nb a">§8.4.1</span></div>
+    <div class="ni" onclick="sel(this)"><span class="ni-ic">🧾</span><span class="ni-txt">Satınalma Faturaları</span></div>
+  </div>
+
+  <div class="div"></div>
+
+  <!-- ─── SATIŞ §8.2 ─── -->
+  <div class="grp open" onclick="tog(this)" id="g-satis">
+    <span class="grp-ic">💼</span><span>Satış</span>
+    <div class="grp-dot" style="background:#14b8a6"></div>
+    <span class="grp-ct">§8.2</span>
+    <span class="grp-arr">›</span>
+  </div>
+  <div class="children" id="c-satis">
+    <div class="ni" onclick="sel(this)"><span class="ni-ic">💰</span><span class="ni-txt">Teklifler</span></div>
+    <div class="ni" onclick="sel(this)"><span class="ni-ic">📋</span><span class="ni-txt">Müşteri Siparişleri</span></div>
+    <div class="ni" onclick="sel(this)"><span class="ni-ic">🤝</span><span class="ni-txt">Müşteriler</span></div>
+    <div class="ni" onclick="sel(this)"><span class="ni-ic">📤</span><span class="ni-txt">Sevkiyat</span></div>
+    <div class="ni" onclick="sel(this)"><span class="ni-ic">🧾</span><span class="ni-txt">Müşteri Faturaları</span></div>
+  </div>
+
+  <div class="div"></div>
+
+  <!-- ─── CRM §8.2 ─── -->
+  <div class="grp open" onclick="tog(this)" id="g-crm">
+    <span class="grp-ic">🤝</span><span>CRM</span>
+    <div class="grp-dot" style="background:#e879f9"></div>
+    <span class="grp-ct">§8.2</span>
+    <span class="nb" style="background:#e879f9;margin-left:4px">1</span>
+    <span class="grp-arr">›</span>
+  </div>
+  <div class="children" id="c-crm">
+    <div class="sub-lbl">Müşteri Yönetimi</div>
+    <div class="ni" onclick="sel(this)"><span class="ni-ic">🏢</span><span class="ni-txt">Müşteri Defteri</span></div>
+    <div class="ni" onclick="sel(this)"><span class="ni-ic">👤</span><span class="ni-txt">Kişi Rehberi</span></div>
+    <div class="ni" onclick="sel(this)"><span class="ni-ic">📜</span><span class="ni-txt">Sözleşmeler</span></div>
+    <div class="sub-lbl">Fırsat & Takip</div>
+    <div class="ni" onclick="sel(this)"><span class="ni-ic">🎯</span><span class="ni-txt">Fırsat Pipeline</span></div>
+    <div class="ni" onclick="sel(this)"><span class="ni-ic">📞</span><span class="ni-txt">Görüşme Notları</span></div>
+    <div class="ni" onclick="sel(this)"><span class="ni-ic">📅</span><span class="ni-txt">Ziyaret Planı</span></div>
+    <div class="sub-lbl">Memnuniyet §9.1.2</div>
+    <div class="ni" onclick="sel(this)"><span class="ni-ic">📊</span><span class="ni-txt">Memnuniyet Anketi</span></div>
+    <div class="ni" onclick="sel(this)"><span class="ni-ic">😊</span><span class="ni-txt">Şikayet Yönetimi</span><span class="nb r">1</span></div>
+    <div class="ni" onclick="sel(this)"><span class="ni-ic">📈</span><span class="ni-txt">Müşteri Skoru</span></div>
+  </div>
+
+  <div class="div"></div>
+
+  <!-- ─── STOK & DEPO §8.5.2 ─── -->
+  <div class="grp open" onclick="tog(this)" id="g-stok">
+    <span class="grp-ic">📦</span><span>Stok & Depo</span>
+    <div class="grp-dot" style="background:#f59e0b"></div>
+    <span class="grp-ct">§8.5.2</span>
+    <span class="grp-arr">›</span>
+  </div>
+  <div class="children" id="c-stok">
+    <div class="ni" onclick="sel(this)"><span class="ni-ic">📊</span><span class="ni-txt">Stok Durumu</span></div>
+    <div class="ni" onclick="sel(this)"><span class="ni-ic">🔄</span><span class="ni-txt">Stok Hareketleri</span></div>
+    <div class="ni" onclick="sel(this)"><span class="ni-ic">🏷</span><span class="ni-txt">Lot & İzlenebilirlik</span></div>
+    <div class="ni" onclick="sel(this)"><span class="ni-ic">🗺</span><span class="ni-txt">Atölye & Raf Haritası</span></div>
+    <div class="ni" onclick="sel(this)"><span class="ni-ic">◼</span><span class="ni-txt">QR Etiket & Traveller</span></div>
+    <div class="ni" onclick="sel(this)"><span class="ni-ic">🔢</span><span class="ni-txt">Sayım</span></div>
+    <div class="ni faz3" title="Faz 3"><span class="ni-ic">👤</span><span class="ni-txt">Müşteri Mülkü</span><span class="faz f3">Faz 3</span></div>
+  </div>
+
+  <div class="div"></div>
+
+  <!-- ─── ÜRETİM §8.5.1 ─── -->
+  <div class="grp open" onclick="tog(this)" id="g-uretim">
+    <span class="grp-ic">⚙</span><span>Üretim</span>
+    <div class="grp-dot" style="background:#10b981"></div>
+    <span class="grp-ct">§8.5.1</span>
+    <span class="grp-arr">›</span>
+  </div>
+  <div class="children" id="c-uretim">
+    <div class="ni" onclick="sel(this)"><span class="ni-ic">📋</span><span class="ni-txt">İş Emirleri (WO)</span></div>
+    <div class="ni" onclick="sel(this)"><span class="ni-ic">📅</span><span class="ni-txt">Üretim Planlama</span></div>
+    <div class="ni" onclick="sel(this)"><span class="ni-ic">🏭</span><span class="ni-txt">Atölye Takibi</span></div>
+    <div class="ni faz3" title="Faz 3 — §8.5.6"><span class="ni-ic">🔄</span><span class="ni-txt">Değişiklik Yönetimi (ECN)</span><span class="faz f3">Faz 3</span></div>
+  </div>
+
+  <div class="div"></div>
+
+  <!-- ─── KALİTE §8.4–10.2 ─── -->
+  <div class="grp open" onclick="tog(this)" id="g-kalite">
+    <span class="grp-ic">🔬</span><span>Kalite</span>
+    <div class="grp-dot" style="background:#ef4444"></div>
+    <span class="grp-ct">§8.4–10.2</span>
+    <span class="nb r" style="margin-left:4px">5</span>
+    <span class="grp-arr">›</span>
+  </div>
+  <div class="children" id="c-kalite">
+    <div class="sub-lbl">Muayene</div>
+    <div class="ni" onclick="sel(this)"><span class="ni-ic">📥</span><span class="ni-txt">Girdi Kalite (IQC)</span><span class="nb r">3</span></div>
+    <div class="ni" onclick="sel(this)"><span class="ni-ic">🔭</span><span class="ni-txt">İlk Parça (FAI)</span></div>
+    <div class="ni" onclick="sel(this)"><span class="ni-ic">🏭</span><span class="ni-txt">Süreç İçi (IPQC)</span><span class="nb a">2</span></div>
+    <div class="sub-lbl">Uygunsuzluk & Düzeltme</div>
+    <div class="ni" onclick="sel(this)"><span class="ni-ic">⛔</span><span class="ni-txt">NCR Kayıtları</span></div>
+    <div class="ni" onclick="sel(this)"><span class="ni-ic">🔧</span><span class="ni-txt">CAPA (8D)</span></div>
+    <div class="sub-lbl">Ölçüm & Kalibrasyon</div>
+    <div class="ni" onclick="sel(this)"><span class="ni-ic">📏</span><span class="ni-txt">Kalibrasyon (EQP)</span><span class="nb a">1</span></div>
+  </div>
+
+  <div class="div"></div>
+
+  <!-- ─── EKİPMAN & BAKIM §7.1.3 ─── -->
+  <div class="grp open" onclick="tog(this)" id="g-ekipman">
+    <span class="grp-ic">🔧</span><span>Ekipman & Bakım</span>
+    <div class="grp-dot" style="background:#f97316"></div>
+    <span class="grp-ct">§7.1.3</span>
+    <span class="nb r" style="margin-left:4px">3</span>
+    <span class="grp-arr">›</span>
+  </div>
+  <div class="children" id="c-ekipman">
+    <div class="ni" onclick="sel(this)"><span class="ni-ic">📊</span><span class="ni-txt">Dashboard</span></div>
+    <div class="ni" onclick="sel(this)"><span class="ni-ic">📋</span><span class="ni-txt">Ekipman Defteri (MCH)</span></div>
+    <div class="ni" onclick="sel(this)"><span class="ni-ic">📅</span><span class="ni-txt">Bakım Planı (PM)</span></div>
+    <div class="ni" onclick="sel(this)"><span class="ni-ic">⚡</span><span class="ni-txt">Arıza Kaydı</span><span class="nb r">3</span></div>
+    <div class="ni" onclick="sel(this)"><span class="ni-ic">📝</span><span class="ni-txt">Bakım İş Emirleri (BWO)</span></div>
+  </div>
+
+  <div class="div"></div>
+
+  <!-- ─── DOKÜMAN YÖNETİMİ §7.5 ─── -->
+  <div class="grp open" onclick="tog(this)" id="g-dms">
+    <span class="grp-ic">📂</span><span>Doküman Yönetimi</span>
+    <div class="grp-dot" style="background:#8b5cf6"></div>
+    <span class="grp-ct">§7.5</span>
+    <span class="nb p" style="margin-left:4px">4</span>
+    <span class="grp-arr">›</span>
+  </div>
+  <div class="children" id="c-dms">
+    <div class="ni" onclick="sel(this)"><span class="ni-ic">📋</span><span class="ni-txt">Master Liste</span></div>
+    <div class="ni" onclick="sel(this)"><span class="ni-ic">✅</span><span class="ni-txt">Onay Bekleyenler</span><span class="nb p">4</span></div>
+    <div class="ni" onclick="sel(this)"><span class="ni-ic">🔄</span><span class="ni-txt">Revizyon Takibi</span></div>
+    <div class="ni" onclick="sel(this)"><span class="ni-ic">📤</span><span class="ni-txt">Dağıtım Listesi</span></div>
+  </div>
+
+  <div class="div"></div>
+
+  <!-- ─── İK & YETKİNLİK §7.2 ─── -->
+  <div class="grp open" onclick="tog(this)" id="g-ik">
+    <span class="grp-ic">👥</span><span>İK & Yetkinlik</span>
+    <div class="grp-dot" style="background:#ec4899"></div>
+    <span class="grp-ct">§7.2</span>
+    <span class="nb a" style="margin-left:4px">2</span>
+    <span class="grp-arr">›</span>
+  </div>
+  <div class="children" id="c-ik">
+    <div class="ni" onclick="sel(this)"><span class="ni-ic">👤</span><span class="ni-txt">Personel Defteri</span></div>
+    <div class="ni" onclick="sel(this)"><span class="ni-ic">🔢</span><span class="ni-txt">Yetkinlik Matriksi</span></div>
+    <div class="ni" onclick="sel(this)"><span class="ni-ic">📚</span><span class="ni-txt">Eğitim Planı</span><span class="nb a">3</span></div>
+    <div class="ni" onclick="sel(this)"><span class="ni-ic">🏆</span><span class="ni-txt">Sertifikalar</span><span class="nb r">2</span></div>
+    <div class="ni" onclick="sel(this)"><span class="ni-ic">📊</span><span class="ni-txt">Gap Analizi</span></div>
+  </div>
+
+  <div class="div"></div>
+
+  <!-- ─── PLANLANANILAR BAŞLIĞI ─── -->
+  <div class="sec-div">
+    <div class="sec-div-line"></div>
+    <div class="sec-div-lbl">Gelecek Modüller</div>
+    <div class="sec-div-line"></div>
+  </div>
+
+  <!-- ─── RİSK & FMEA §6.1 — FAZ 2 ─── -->
+  <div class="grp" onclick="tog(this)" id="g-risk">
+    <span class="grp-ic" style="opacity:.5">⚠</span>
+    <span style="opacity:.5">Risk & FMEA</span>
+    <div class="grp-dot" style="background:#f59e0b;opacity:.5"></div>
+    <span class="grp-ct" style="opacity:.5">§6.1</span>
+    <span class="faz f2" style="margin-left:auto;margin-right:4px">Faz 2</span>
+    <span class="grp-arr">›</span>
+  </div>
+  <div class="children closed" id="c-risk">
+    <div class="ni faz2"><span class="ni-ic">📋</span><span class="ni-txt">Risk Kaydı</span></div>
+    <div class="ni faz2"><span class="ni-ic">🔢</span><span class="ni-txt">FMEA Tablosu</span></div>
+    <div class="ni faz2"><span class="ni-ic">📊</span><span class="ni-txt">RPN Hesabı</span></div>
+    <div class="ni faz2"><span class="ni-ic">📝</span><span class="ni-txt">Aksiyon Planı</span></div>
+  </div>
+
+  <div class="div"></div>
+
+  <!-- ─── YGG §9.3 — FAZ 2 ─── -->
+  <div class="grp" onclick="tog(this)" id="g-ygg">
+    <span class="grp-ic" style="opacity:.5">📊</span>
+    <span style="opacity:.5">Yönetim Gözden Geçirme</span>
+    <div class="grp-dot" style="background:#84cc16;opacity:.5"></div>
+    <span class="grp-ct" style="opacity:.5">§9.3</span>
+    <span class="faz f2" style="margin-left:auto;margin-right:4px">Faz 2</span>
+    <span class="grp-arr">›</span>
+  </div>
+  <div class="children closed" id="c-ygg">
+    <div class="ni faz2"><span class="ni-ic">📅</span><span class="ni-txt">YGG Toplantı Kaydı</span></div>
+    <div class="ni faz2"><span class="ni-ic">📥</span><span class="ni-txt">Girdi Matrisi</span></div>
+    <div class="ni faz2"><span class="ni-ic">✅</span><span class="ni-txt">Aksiyon Takibi</span></div>
+    <div class="ni faz2"><span class="ni-ic">📄</span><span class="ni-txt">Tutanak & Rapor</span></div>
+  </div>
+
+  <div class="div"></div>
+
+  <!-- ─── İÇ DENETİM §9.2 ─── -->
+  <div class="grp" onclick="tog(this)" id="g-denetim">
+    <span class="grp-ic" style="opacity:.5">🔍</span>
+    <span style="opacity:.5">İç Denetim</span>
+    <div class="grp-dot" style="background:#84cc16;opacity:.5"></div>
+    <span class="grp-ct" style="opacity:.5">§9.2</span>
+    <span class="faz f2" style="margin-left:auto;margin-right:4px">Faz 2</span>
+    <span class="grp-arr">›</span>
+  </div>
+  <div class="children closed" id="c-denetim">
+    <div class="ni faz2"><span class="ni-ic">📊</span><span class="ni-txt">Denetim Paneli</span></div>
+    <div class="ni faz2"><span class="ni-ic">📅</span><span class="ni-txt">Denetim Planı</span></div>
+    <div class="ni faz2"><span class="ni-ic">▶</span><span class="ni-txt">Denetim Yürütme</span></div>
+    <div class="ni faz2"><span class="ni-ic">📋</span><span class="ni-txt">Bulgular</span></div>
+    <div class="ni faz2"><span class="ni-ic">📈</span><span class="ni-txt">Raporlar</span></div>
+  </div>
+
+  <div class="div"></div>
+
+  <!-- ─── KPI DASHBOARD §9.1 — FAZ 3 ─── -->
+  <div class="grp" onclick="tog(this)" id="g-kpi">
+    <span class="grp-ic" style="opacity:.4">📈</span>
+    <span style="opacity:.4">Yönetim KPI Dashboard</span>
+    <div class="grp-dot" style="background:#8b5cf6;opacity:.4"></div>
+    <span class="grp-ct" style="opacity:.4">§9.1</span>
+    <span class="faz f3" style="margin-left:auto;margin-right:4px">Faz 3</span>
+    <span class="grp-arr">›</span>
+  </div>
+  <div class="children closed" id="c-kpi">
+    <div class="ni faz3"><span class="ni-ic">📊</span><span class="ni-txt">KPI Özet Tablosu</span></div>
+    <div class="ni faz3"><span class="ni-ic">🎯</span><span class="ni-txt">Hedef Yönetimi</span></div>
+    <div class="ni faz3"><span class="ni-ic">📉</span><span class="ni-txt">Trend Grafikleri</span></div>
+    <div class="ni faz3"><span class="ni-ic">💰</span><span class="ni-txt">Kalite Maliyeti (CoQ)</span></div>
+  </div>
+
+  <div class="div"></div>
+
+  <!-- ─── FİNANS ─── -->
+  <div class="grp" onclick="tog(this)" id="g-finans">
+    <span class="grp-ic">💰</span><span>Finans</span>
+    <div class="grp-dot" style="background:#06b6d4"></div>
+    <span class="grp-arr">›</span>
+  </div>
+  <div class="children closed" id="c-finans">
+    <div class="ni" onclick="sel(this)"><span class="ni-ic">📊</span><span class="ni-txt">Finans Paneli</span></div>
+    <div class="ni" onclick="sel(this)"><span class="ni-ic">🧾</span><span class="ni-txt">Tedarikçi Faturaları</span></div>
+    <div class="ni" onclick="sel(this)"><span class="ni-ic">💳</span><span class="ni-txt">Nakit Akışı</span></div>
+    <div class="ni" onclick="sel(this)"><span class="ni-ic">⚖</span><span class="ni-txt">Mutabakat</span></div>
+  </div>
+
+  <!-- BOTTOM -->
+  <div class="sb-bot">
+    <div class="bot-item"><span style="font-size:12px">⚙</span>Sistem Ayarları</div>
+    <div class="bot-item"><span style="font-size:12px">🔔</span>Bildirimler<span class="nb r" style="margin-left:auto">5</span></div>
+    <div class="bot-item"><span style="font-size:12px">❓</span>Yardım & Döküman</div>
+    <div class="bot-item" style="color:rgba(255,100,100,.5)"><span style="font-size:12px">↩</span>Çıkış</div>
+  </div>
+
+</div><!-- /sb -->
+
+<!-- ═══════════════ SAĞ PANEL ═══════════════ -->
+<div class="right">
+  <div class="topbar">
+    <span class="tb-title">CRM Modülü Eklendi — Güncel Sidebar</span>
+    <span class="tb-mad">v7.0 · 12 Modül · 62 Sayfa</span>
+    <div class="tb-right">
+      <button class="btn btn-o">📋 Eski Sidebar</button>
+      <button class="btn btn-p">✓ Bu Tasarımı Kullan</button>
+    </div>
+  </div>
+
+  <div class="info">
+
+    <!-- Sol: Değişiklikler -->
+    <div class="card">
+      <div class="card-h">📝 Eski Sidebar'dan Yapılan Değişiklikler</div>
+      <div class="card-b">
+
+        <div class="cr">
+          <div class="cr-ic ic-add">+</div>
+          <div><div class="cr-t"><strong>CRM modülü eklendi</strong> — Satış ile Stok arasına</div><div class="cr-s">§8.2 + §9.1.2 · Müşteri Defteri, Pipeline, Görüşme, Memnuniyet, Şikayet</div></div>
+        </div>
+        <div class="cr">
+          <div class="cr-ic ic-mov">→</div>
+          <div><div class="cr-t"><strong>Şikayet Yönetimi</strong> Satış'tan → CRM'e taşındı</div><div class="cr-s">§9.1.2 · Müşteri ilişkisi konusu — CRM'de daha doğru</div></div>
+        </div>
+        <div class="cr">
+          <div class="cr-ic ic-add">+</div>
+          <div><div class="cr-t"><strong>Tedarikçi Değerlendirme</strong> eklendi (Satınalma altı)</div><div class="cr-s">§8.4.1 · OTL yönetimi, dönemsel değerlendirme formu</div></div>
+        </div>
+        <div class="cr">
+          <div class="cr-ic ic-add">+</div>
+          <div><div class="cr-t"><strong>Risk & FMEA</strong> modülü eklendi (Faz 2)</div><div class="cr-s">§6.1 · Risk kaydı, FMEA tablosu, RPN hesabı</div></div>
+        </div>
+        <div class="cr">
+          <div class="cr-ic ic-add">+</div>
+          <div><div class="cr-t"><strong>YGG, İç Denetim, KPI Dashboard</strong> eklendi</div><div class="cr-s">§9.3, §9.2, §9.1 · Faz 2 ve Faz 3 planlaması</div></div>
+        </div>
+        <div class="cr">
+          <div class="cr-ic ic-add">+</div>
+          <div><div class="cr-t"><strong>ECN, Müşteri Mülkü</strong> eklendi (Faz 3)</div><div class="cr-s">§8.5.6, §8.5.3 · Değişiklik yönetimi ve müşteri mülkü</div></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Sağ: Tam AS9100 Madde Tablosu -->
+    <div class="card">
+      <div class="card-h">📊 AS9100 Madde → Sidebar Konumu</div>
+      <div class="card-b" style="padding:0">
+        <table class="mod-tbl">
+          <thead>
+            <tr>
+              <th>Madde</th>
+              <th>Gereksinim</th>
+              <th>Sidebar Konumu</th>
+              <th>Durum</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td class="mad">§6.1</td><td>Risk Yönetimi / FMEA</td><td>Risk & FMEA</td><td><span style="font-size:9px;padding:2px 6px;border-radius:8px;background:rgba(245,158,11,.2);color:#f59e0b;font-weight:700">Faz 2</span></td></tr>
+            <tr><td class="mad">§7.1.2</td><td>İnsan Kaynakları</td><td>İK & Yetkinlik</td><td><span style="font-size:9px;padding:2px 6px;border-radius:8px;background:rgba(16,185,129,.2);color:#10b981;font-weight:700">✓ Hazır</span></td></tr>
+            <tr><td class="mad">§7.1.3</td><td>Altyapı / Ekipman</td><td>Ekipman & Bakım</td><td><span style="font-size:9px;padding:2px 6px;border-radius:8px;background:rgba(16,185,129,.2);color:#10b981;font-weight:700">✓ Hazır</span></td></tr>
+            <tr><td class="mad">§7.1.5</td><td>Kalibrasyon</td><td>Kalite → Kalibrasyon</td><td><span style="font-size:9px;padding:2px 6px;border-radius:8px;background:rgba(16,185,129,.2);color:#10b981;font-weight:700">✓ Hazır</span></td></tr>
+            <tr><td class="mad">§7.2</td><td>Yetkinlik / Eğitim</td><td>İK & Yetkinlik</td><td><span style="font-size:9px;padding:2px 6px;border-radius:8px;background:rgba(16,185,129,.2);color:#10b981;font-weight:700">✓ Hazır</span></td></tr>
+            <tr><td class="mad">§7.5</td><td>Dokümante Bilgi</td><td>Doküman Yönetimi</td><td><span style="font-size:9px;padding:2px 6px;border-radius:8px;background:rgba(16,185,129,.2);color:#10b981;font-weight:700">✓ Hazır</span></td></tr>
+            <tr><td class="mad">§8.2</td><td>Müşteri İletişimi</td><td>Satış + <strong>CRM</strong></td><td><span style="font-size:9px;padding:2px 6px;border-radius:8px;background:rgba(16,185,129,.2);color:#10b981;font-weight:700">✓ Hazır</span></td></tr>
+            <tr><td class="mad">§8.2 CRM</td><td>Müşteri İlişkileri</td><td><strong>CRM → Müşteri Defteri</strong></td><td><span style="font-size:9px;padding:2px 6px;border-radius:8px;background:rgba(232,121,249,.3);color:#e879f9;font-weight:700">★ Yeni</span></td></tr>
+            <tr><td class="mad">§8.4</td><td>Dış Sağlayıcı</td><td>Satınalma + IQC</td><td><span style="font-size:9px;padding:2px 6px;border-radius:8px;background:rgba(16,185,129,.2);color:#10b981;font-weight:700">✓ Hazır</span></td></tr>
+            <tr><td class="mad">§8.4.1</td><td>Tedarikçi Değerlendirme</td><td>Satınalma → Tdr. Değ.</td><td><span style="font-size:9px;padding:2px 6px;border-radius:8px;background:rgba(245,158,11,.2);color:#f59e0b;font-weight:700">Faz 2</span></td></tr>
+            <tr><td class="mad">§8.5.1.1</td><td>İlk Parça (FAI)</td><td>Kalite → FAI</td><td><span style="font-size:9px;padding:2px 6px;border-radius:8px;background:rgba(16,185,129,.2);color:#10b981;font-weight:700">✓ Hazır</span></td></tr>
+            <tr><td class="mad">§8.5.2</td><td>İzlenebilirlik</td><td>Stok & Depo → Lot</td><td><span style="font-size:9px;padding:2px 6px;border-radius:8px;background:rgba(16,185,129,.2);color:#10b981;font-weight:700">✓ Hazır</span></td></tr>
+            <tr><td class="mad">§8.5.3</td><td>Müşteri Mülkü</td><td>Stok → Müşteri Mülkü</td><td><span style="font-size:9px;padding:2px 6px;border-radius:8px;background:rgba(139,92,246,.2);color:#8b5cf6;font-weight:700">Faz 3</span></td></tr>
+            <tr><td class="mad">§8.5.6</td><td>Değişiklik Yönetimi</td><td>Üretim → ECN</td><td><span style="font-size:9px;padding:2px 6px;border-radius:8px;background:rgba(139,92,246,.2);color:#8b5cf6;font-weight:700">Faz 3</span></td></tr>
+            <tr><td class="mad">§8.6</td><td>Ürün Serbest Bırakma</td><td>Kalite → IQC + FAI</td><td><span style="font-size:9px;padding:2px 6px;border-radius:8px;background:rgba(16,185,129,.2);color:#10b981;font-weight:700">✓ Hazır</span></td></tr>
+            <tr><td class="mad">§8.7</td><td>Uygunsuz Ürün</td><td>Kalite → NCR</td><td><span style="font-size:9px;padding:2px 6px;border-radius:8px;background:rgba(16,185,129,.2);color:#10b981;font-weight:700">✓ Hazır</span></td></tr>
+            <tr><td class="mad">§9.1</td><td>Performans İzleme</td><td>KPI Dashboard</td><td><span style="font-size:9px;padding:2px 6px;border-radius:8px;background:rgba(139,92,246,.2);color:#8b5cf6;font-weight:700">Faz 3</span></td></tr>
+            <tr><td class="mad">§9.1.2</td><td>Müşteri Memnuniyeti</td><td><strong>CRM → Memnuniyet + Şikayet</strong></td><td><span style="font-size:9px;padding:2px 6px;border-radius:8px;background:rgba(232,121,249,.3);color:#e879f9;font-weight:700">★ Yeni</span></td></tr>
+            <tr><td class="mad">§9.2</td><td>İç Denetim</td><td>İç Denetim</td><td><span style="font-size:9px;padding:2px 6px;border-radius:8px;background:rgba(245,158,11,.2);color:#f59e0b;font-weight:700">Faz 2</span></td></tr>
+            <tr><td class="mad">§9.3</td><td>Yönetim Gözden Geçirme</td><td>YGG</td><td><span style="font-size:9px;padding:2px 6px;border-radius:8px;background:rgba(245,158,11,.2);color:#f59e0b;font-weight:700">Faz 2</span></td></tr>
+            <tr><td class="mad">§10.2</td><td>Düzeltici Faaliyet</td><td>Kalite → CAPA (8D)</td><td><span style="font-size:9px;padding:2px 6px;border-radius:8px;background:rgba(16,185,129,.2);color:#10b981;font-weight:700">✓ Hazır</span></td></tr>
+          </tbody>
+        </table>
+
+        <!-- Summary -->
+        <div style="padding:10px 14px;background:rgba(255,255,255,.02);border-top:1px solid rgba(255,255,255,.06);display:flex;gap:16px;font-size:11px">
+          <div style="display:flex;align-items:center;gap:5px"><div class="dot" style="background:#10b981"></div><span style="color:rgba(255,255,255,.5)">12 Madde Tam</span></div>
+          <div style="display:flex;align-items:center;gap:5px"><div class="dot" style="background:#f59e0b"></div><span style="color:rgba(255,255,255,.5)">5 Madde Faz 2</span></div>
+          <div style="display:flex;align-items:center;gap:5px"><div class="dot" style="background:#8b5cf6"></div><span style="color:rgba(255,255,255,.5)">3 Madde Faz 3</span></div>
+          <div style="display:flex;align-items:center;gap:5px"><div class="dot" style="background:#e879f9"></div><span style="color:rgba(255,255,255,.5)">CRM Yeni</span></div>
+          <div style="margin-left:auto;color:rgba(255,255,255,.7);font-weight:700">21 / 21 Madde Planlandı ✓</div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</div><!-- /layout -->
+
+<script>
+// Toggle accordion
+function tog(el) {
+  const isOpen = el.classList.toggle('open');
+  const id = el.id.replace('g-', 'c-');
+  const ch = document.getElementById(id);
+  if (ch) ch.classList.toggle('closed', !isOpen);
+}
+
+// Set active nav item
+function sel(el) {
+  if (el.classList.contains('faz2') || el.classList.contains('faz3')) return;
+  document.querySelectorAll('.ni').forEach(n => n.classList.remove('active'));
+  el.classList.add('active');
+  // Update topbar title
+  const tb = document.querySelector('.tb-title');
+  if (tb) tb.textContent = el.querySelector('.ni-txt')?.textContent || 'Ersan MES';
+}
+
+// Sidebar search
+function sbSearch(q) {
+  q = q.toLowerCase().trim();
+  const allNi = document.querySelectorAll('.ni');
+  const allGrp = document.querySelectorAll('.grp');
+
+  if (!q) {
+    allNi.forEach(n => n.style.display = '');
+    allGrp.forEach(g => g.style.display = '');
+    return;
+  }
+
+  // Show/hide items
+  allNi.forEach(n => {
+    const txt = n.textContent.toLowerCase();
+    const match = txt.includes(q);
+    n.style.display = match ? '' : 'none';
+    if (match) {
+      // Open parent group
+      const ch = n.closest('.children');
+      if (ch) {
+        ch.classList.remove('closed');
+        const grpId = 'g-' + ch.id.replace('c-', '');
+        const grp = document.getElementById(grpId);
+        if (grp) grp.classList.add('open');
+      }
+    }
+  });
+
+  // Hide group headers that have no visible children
+  allGrp.forEach(g => {
+    const id = g.id.replace('g-', 'c-');
+    const ch = document.getElementById(id);
+    if (!ch) return;
+    const anyVisible = Array.from(ch.querySelectorAll('.ni')).some(n => n.style.display !== 'none');
+    g.style.display = anyVisible ? '' : 'none';
+  });
+}
+</script>
+</body>
+</html>
