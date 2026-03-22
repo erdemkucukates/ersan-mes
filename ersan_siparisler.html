@@ -426,6 +426,13 @@
   font-size: 18px;
   cursor: pointer;
 }
+/* Akis cubugu */
+.akis{display:flex;border-bottom:1px solid #e5e7eb;margin-bottom:8px}
+.as-step{flex:1;padding:7px 8px;text-align:center;font-size:10px;font-weight:500;color:#9ca3af;border-right:1px solid #f3f4f6}
+.as-step:last-child{border-right:none}
+.as-step.done{background:#f0fdf4;color:#065f46}
+.as-step.active{background:#1a2b47;color:#fff}
+.as-step .sn{font-size:9px;display:block;opacity:.7;margin-top:1px}
 /* Responsive */
 @media (max-width: 768px) {
   .sp-layout { flex-direction: column; height: auto; }
@@ -653,6 +660,13 @@ function renderMain(g) {
     '</select>'+
     '<button class="sp-btn sp-btn-sil" id="del-btn">Sil</button>'+
     '</div></div>'+
+    '<div class="akis" id="siparis-akis">'+
+    '<div class="as-step" id="as-siparis">Siparis<span class="sn"></span></div>'+
+    '<div class="as-step" id="as-pr">PR + WO<span class="sn"></span></div>'+
+    '<div class="as-step" id="as-uretim">Uretim<span class="sn"></span></div>'+
+    '<div class="as-step" id="as-sevk">Sevkiyat<span class="sn"></span></div>'+
+    '<div class="as-step" id="as-teslim">Teslim<span class="sn"></span></div>'+
+    '</div>'+
     '<div class="musteri-po-bar">'+
     '<label>Musteri PO No</label>'+
     '<input id="musteri-po-input" value="'+currentPO.replace(/"/g,'&quot;')+'" placeholder="Musterinin kendi siparis numarasi..." onchange="saveMusteriPO(\''+g.spNo+'\',this.value)">'+
@@ -704,6 +718,7 @@ function renderMain(g) {
     if (delBtn) delBtn.onclick = function() { deleteGroup(g.spNo); };
     var sevkBtn = document.getElementById('sevk-btn');
     if (sevkBtn) sevkBtn.onclick = function() { sevkiyatOlustur(g.spNo); };
+    akisGuncelle(g.durum);
   }, 0);
 }
 
@@ -911,7 +926,7 @@ async function updateAllDurum(durum) {
       g.kalemler[i].fields['Durum'] = durum;
       records.find(function(r){ return r.id===g.kalemler[i].id; }).fields['Durum'] = durum;
     }
-    g.durum = durum; filterList(); toast('Durum: '+durum);
+    g.durum = durum; filterList(); akisGuncelle(durum); toast('Durum: '+durum);
   } catch(e) { toast('Hata: '+e.message); }
 }
 
@@ -960,6 +975,7 @@ async function openSTLModal(g) {
     '<div class="sp-modal-body" id="stl-body"></div>'+
     '<div class="sp-modal-foot">'+
     '<button class="sp-btn" id="stl-cancel">Iptal</button>'+
+    '<a href="ersan_satinalma_pr.html?sp='+encodeURIComponent(g.spNo)+'" class="sp-btn sp-btn-mavi" style="text-decoration:none;">PR Sayfasina Git &rarr;</a>'+
     '<button onclick="saveSTL()" class="sp-btn sp-btn-sari">Talebi Kaydet</button>'+
     '</div></div>';
   document.body.appendChild(modal);
@@ -1199,6 +1215,7 @@ function openIEModal(g) {
     '<div class="sp-modal-body">'+kalemRows+'</div>'+
     '<div class="sp-modal-foot">'+
     '<button class="sp-btn" onclick="document.getElementById(\'ie-modal\').remove()">Iptal</button>'+
+    '<a href="ersan_isemirleri.html?sp='+encodeURIComponent(g.spNo)+'" class="sp-btn sp-btn-ie" style="text-decoration:none;">IE Sayfasina Git &rarr;</a>'+
     '<button id="ie-save-btn" class="sp-btn sp-btn-mavi">Is Emirlerini Olustur</button>'+
     '</div></div>';
   document.body.appendChild(modal);
@@ -1315,6 +1332,32 @@ function syncMusteriPoFromRecords() {
   });
   localStorage.setItem('musteriPoMap', JSON.stringify(musteriPoMap));
 }
+
+// ── AKIS CUBUGU ──
+function akisGuncelle(durum) {
+  var adimlar = ['as-siparis','as-pr','as-uretim','as-sevk','as-teslim'];
+  var aktifIdx = durum === 'Beklemede' ? 0 : (durum === 'Üretimde' || durum === 'Uretimde') ? 2 : (durum === 'Sevk Edildi' || durum === 'Kısmi Sevk' || durum === 'Kismi Sevk') ? 3 : (durum === 'Tamamlandı' || durum === 'Tamamlandi') ? 4 : 1;
+  adimlar.forEach(function(id, i) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.className = 'as-step' + (i < aktifIdx ? ' done' : i === aktifIdx ? ' active' : '');
+  });
+}
+
+// ── SEVKIYAT MODAL ──
+function sevkiyatModalAc() {
+  var spNo = window._currentGroup ? window._currentGroup.spNo : '';
+  window.location.href = 'ersan_sevkiyat.html?siparis=' + encodeURIComponent(spNo);
+}
+
+// ── URL PARAMETRELERI ──
+(function() {
+  var p = new URLSearchParams(window.location.search);
+  var teklifParam = p.get('teklif');
+  if (teklifParam) {
+    setTimeout(function() { toast('Teklif ' + teklifParam + ' → Siparis olusturuluyor'); }, 500);
+  }
+})();
 
 loadList();
 </script>

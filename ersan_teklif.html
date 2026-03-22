@@ -1401,6 +1401,17 @@ function setDurum(id, durum) {
     }
     if (q) q.fields['Durum'] = durum;
     toast('Durum: ' + durum, 'green');
+
+    // Onaylandı → Sipariş oluşturma önerisi
+    if (durum === 'Onaylandı' || durum === 'Onaylandi') {
+      var teklifNo = q ? (q.fields['Teklif No'] || id) : id;
+      var onay = confirm('Teklife bağlı sipariş oluşturulsun mu?');
+      if (onay) {
+        window.location.href = 'ersan_siparisler.html?teklif=' + encodeURIComponent(teklifNo);
+        return;
+      }
+    }
+
     return loadAll();
   }).then(function() {
     aktifId = id;
@@ -1752,6 +1763,42 @@ document.addEventListener('keydown', function(e) {
 })();
 
 loadAll();
+
+// ══════════════════════════════════════════════
+//  URL PARAMETER: ?musteri=MUS-001
+// ══════════════════════════════════════════════
+(function checkMusteriParam() {
+  var p = new URLSearchParams(window.location.search);
+  var musteriParam = p.get('musteri');
+  if (musteriParam) {
+    yeniTeklifAc();
+    setTimeout(function() {
+      var sel = document.getElementById('nt-musteri');
+      if (sel) {
+        for (var i = 0; i < sel.options.length; i++) {
+          var opt = sel.options[i];
+          if (opt.value === musteriParam || opt.textContent.indexOf(musteriParam) > -1) {
+            sel.value = opt.value;
+            if (typeof ntMusteriSec === 'function') ntMusteriSec(sel);
+            break;
+          }
+        }
+      }
+    }, 800);
+  }
+})();
+
+// ══════════════════════════════════════════════
+//  GUVENLI API WRAPPER
+// ══════════════════════════════════════════════
+function guvenliApi(method, table, body, id) {
+  return api(method, table, body, id).catch(function(e) {
+    console.error('API Hatası:', e);
+    toast('⚠ Kayıt sırasında hata oluştu.', 'red');
+    return null;
+  });
+}
+
 </script>
 
 </body>

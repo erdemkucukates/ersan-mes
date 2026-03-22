@@ -121,6 +121,23 @@ const fmtDate = d => { if(!d) return '—'; try { return new Date(d).toLocaleDat
 const todayISO = () => new Date().toISOString().slice(0,10);
 const todayLocal = () => new Date().toLocaleDateString('tr-TR');
 
+// ── KARGO TAKİP LİNKLERİ ──
+var KARGO_URL = {
+  'DHL': function(no) { return 'https://www.dhl.com/tr-tr/home/tracking/tracking.html?submit=1&tracking-id=' + no; },
+  'MNG': function(no) { return 'https://www.mngkargo.com.tr/gonderi-sorgula?trackingNumber=' + no; },
+  'MNG Kargo': function(no) { return 'https://www.mngkargo.com.tr/gonderi-sorgula?trackingNumber=' + no; },
+  'Aras': function(no) { return 'https://kargotakip.araskargo.com.tr/?sorgula=' + no; },
+  'Aras Kargo': function(no) { return 'https://kargotakip.araskargo.com.tr/?sorgula=' + no; },
+  'Yurtiçi': function(no) { return 'https://www.yurticikargo.com/tr/online-islemler/gonderi-sorgula?code=' + no; },
+  'Yurtiçi Kargo': function(no) { return 'https://www.yurticikargo.com/tr/online-islemler/gonderi-sorgula?code=' + no; }
+};
+
+function kargoLinkOlustur(firma, takipNo) {
+  if (!firma || !takipNo) return null;
+  var fn = KARGO_URL[firma];
+  return fn ? fn(takipNo) : null;
+}
+
 function toast(msg, type='ok') {
   const el = document.createElement('div');
   el.className = `toast ${type}`;
@@ -187,16 +204,22 @@ function renderList() {
     return;
   }
 
+  var bugun = todayISO();
   document.getElementById('ie-list').innerHTML = items.map(r => {
     const f = r.fields;
     const sd = sevkDurumu(f);
     const badgeCls = 'b-sevk-' + sd;
     const isActive = r.id === selectedId ? ' secili' : '';
-    return `<div class="liste-satir ie-item${isActive}" onclick="selectIE('${r.id}')">
+    var tahminTeslim = f['Tahmini Teslim'] || f['Teslim Tarihi'] || '';
+    var gecikmisMi = tahminTeslim && tahminTeslim < bugun && sd !== 'Sevk Edildi';
+    var gecikStyle = gecikmisMi ? 'border-left:3px solid var(--red);background:rgba(239,68,68,0.06);' : '';
+    var gecikBadge = gecikmisMi ? '<span style="font-size:9px;color:var(--red);font-weight:600;">GECİKMİŞ</span>' : '';
+    return `<div class="liste-satir ie-item${isActive}" style="${gecikStyle}" onclick="selectIE('${r.id}')">
       <div class="ie-no">${escHtml(f['IE No']||'—')}</div>
       <div class="ie-parca">${escHtml(f['Parça Adı']||'—')}</div>
       <div class="ie-meta">
         <span style="font-size:10px;color:var(--text3)">${f['Miktar']||0} ${f['Birim']||'Adet'}</span>
+        ${gecikBadge}
         <span class="badge ${badgeCls}">${escHtml(sd)}</span>
       </div>
     </div>`;
@@ -218,6 +241,15 @@ async function selectIE(id) {
   document.getElementById('btn-sevket').disabled = true;
 
   renderDetailSkeleton(rec);
+
+  // Pre-fill irsaliye fields and kargo link from existing data
+  if (f['İrsaliye No']) { var el = document.getElementById('irsaliye-no'); if (el) el.value = f['İrsaliye No']; }
+  if (f['İrsaliye Tarihi']) { var el2 = document.getElementById('irsaliye-tarih'); if (el2) el2.value = f['İrsaliye Tarihi']; }
+  if (f['Kargo']) { var el3 = document.getElementById('irsaliye-kargo'); if (el3) el3.value = f['Kargo']; }
+  if (f['Takip No']) { var el4 = document.getElementById('irsaliye-takip'); if (el4) el4.value = f['Takip No']; }
+  if (f['Sevkiyat Notları']) { var el5 = document.getElementById('irsaliye-notlar'); if (el5) el5.value = f['Sevkiyat Notları']; }
+  updateKargoLink(f['Kargo'] || '', f['Takip No'] || '');
+
   await runChecks(rec);
 }
 
@@ -285,18 +317,20 @@ function renderDetailSkeleton(rec) {
           </div>
           <div class="fg">
             <label class="fl">Kargo / Taşıyıcı</label>
-            <input class="fi" type="text" id="irsaliye-kargo" placeholder="ör: Yurtiçi Kargo">
+            <input class="fi" type="text" id="irsaliye-kargo" placeholder="ör: Yurtiçi Kargo" oninput="updateKargoLink(this.value, document.getElementById('irsaliye-takip').value)">
           </div>
           <div class="fg">
             <label class="fl">Takip No</label>
-            <input class="fi" type="text" id="irsaliye-takip" placeholder="ör: 123456789">
+            <input class="fi" type="text" id="irsaliye-takip" placeholder="ör: 123456789" oninput="updateKargoLink(document.getElementById('irsaliye-kargo').value, this.value)">
           </div>
         </div>
         <div class="fg" style="margin-bottom:12px;">
           <label class="fl">Notlar</label>
           <textarea class="fi" id="irsaliye-notlar" placeholder="Sevkiyat notları..."></textarea>
         </div>
-        <div style="display:flex;justify-content:flex-end;">
+        <div id="kargo-link-area" style="margin-bottom:12px;"></div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;">
+          <button class="btn" onclick="printIrsaliye()">🖨 İrsaliye Yazdır</button>
           <button class="btn primary" onclick="saveIrsaliye()">💾 Kaydet</button>
         </div>
       </div>
@@ -648,9 +682,79 @@ async function saveIrsaliye() {
     rec.fields = {...rec.fields, ...fields};
     toast('İrsaliye kaydedildi ✓', 'ok');
     await logIslem('İrsaliye Kaydedildi', 'Sevkiyat', selectedId, f['IE No']||'', null, fields);
+
+    // Kargo takip linki göster
+    updateKargoLink(kargo, takip);
   } catch(e) {
     toast('Kayıt hatası: ' + e.message, 'err');
   }
+}
+
+function updateKargoLink(firma, takipNo) {
+  var area = document.getElementById('kargo-link-area');
+  if (!area) return;
+  var link = kargoLinkOlustur(firma, takipNo);
+  if (link) {
+    area.innerHTML = '<a href="' + escHtml(link) + '" target="_blank" style="color:#1e40af;text-decoration:underline;font-size:11px;display:inline-flex;align-items:center;gap:4px;">' +
+      '📦 Kargo Takip (' + escHtml(firma) + ') →</a>';
+  } else {
+    area.innerHTML = '';
+  }
+}
+
+// ── İRSALİYE YAZDIR ──
+function printIrsaliye() {
+  if (!selectedId) return;
+  var rec = ieList.find(function(r) { return r.id === selectedId; });
+  if (!rec) return;
+  var f = rec.fields;
+
+  var irsaliyeNo = document.getElementById('irsaliye-no').value.trim() || f['İrsaliye No'] || '—';
+  var tarih = document.getElementById('irsaliye-tarih').value || todayLocal();
+  var kargo = document.getElementById('irsaliye-kargo').value.trim() || f['Kargo'] || '';
+  var takip = document.getElementById('irsaliye-takip').value.trim() || f['Takip No'] || '';
+  var notlar = document.getElementById('irsaliye-notlar').value.trim() || f['Sevkiyat Notları'] || '';
+  var musteriAdi = f['Müşteri Adı'] || f['Müşteri'] || '—';
+  var poNo = f['PO No'] || f['Müşteri PO'] || f['Sipariş Referansı'] || '—';
+
+  var w = window.open('', '_blank', 'width=800,height=600');
+  w.document.write('<html><head><title>İrsaliye - ' + escHtml(irsaliyeNo) + '</title>');
+  w.document.write('<style>');
+  w.document.write('body{font-family:Segoe UI,system-ui,sans-serif;margin:30px;color:#1a1a1a;font-size:12px;}');
+  w.document.write('.header{display:flex;justify-content:space-between;border-bottom:2px solid #0f2744;padding-bottom:12px;margin-bottom:16px;}');
+  w.document.write('.company{font-size:14px;font-weight:700;color:#0f2744;}');
+  w.document.write('.company small{display:block;font-size:10px;font-weight:400;color:#5a6170;}');
+  w.document.write('.title{font-size:18px;font-weight:700;text-align:right;color:#0f2744;}');
+  w.document.write('.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 20px;margin-bottom:16px;}');
+  w.document.write('.info-row{display:flex;gap:8px;} .info-key{font-weight:600;min-width:120px;color:#374151;}');
+  w.document.write('table{width:100%;border-collapse:collapse;margin:16px 0;} th,td{border:1px solid #d1d5db;padding:6px 8px;text-align:left;}');
+  w.document.write('th{background:#f3f4f6;font-weight:600;}');
+  w.document.write('.sig-area{display:flex;justify-content:space-between;margin-top:40px;}');
+  w.document.write('.sig-block{text-align:center;width:200px;} .sig-line{border-top:1px solid #1a1a1a;margin-top:50px;padding-top:4px;}');
+  w.document.write('@media print{body{margin:15mm;}}');
+  w.document.write('</style></head><body>');
+  w.document.write('<div class="header">');
+  w.document.write('<div><div class="company">ERSAN ENDÜSTRİYEL MAKİNA SAN. TİC. LTD. ŞTİ.<small>Başiskele Sanayi Sitesi, Kocaeli, Türkiye</small></div></div>');
+  w.document.write('<div><div class="title">İRSALİYE</div><div style="text-align:right;font-size:10px;color:#5a6170;">Delivery Note</div></div>');
+  w.document.write('</div>');
+  w.document.write('<div class="info-grid">');
+  w.document.write('<div class="info-row"><span class="info-key">İrsaliye No:</span><span>' + escHtml(irsaliyeNo) + '</span></div>');
+  w.document.write('<div class="info-row"><span class="info-key">Tarih:</span><span>' + escHtml(tarih) + '</span></div>');
+  w.document.write('<div class="info-row"><span class="info-key">Müşteri:</span><span>' + escHtml(musteriAdi) + '</span></div>');
+  w.document.write('<div class="info-row"><span class="info-key">Müşteri PO No:</span><span>' + escHtml(poNo) + '</span></div>');
+  w.document.write('<div class="info-row"><span class="info-key">Kargo:</span><span>' + escHtml(kargo) + '</span></div>');
+  w.document.write('<div class="info-row"><span class="info-key">Takip No:</span><span>' + escHtml(takip) + '</span></div>');
+  w.document.write('</div>');
+  w.document.write('<table><thead><tr><th>#</th><th>İş Emri No</th><th>Parça Adı</th><th>Parça No</th><th>Miktar</th><th>Birim</th></tr></thead>');
+  w.document.write('<tbody><tr><td>1</td><td>' + escHtml(f['IE No']||'—') + '</td><td>' + escHtml(f['Parça Adı']||'—') + '</td><td>' + escHtml(f['Parça No']||'—') + '</td><td>' + (f['Miktar']||0) + '</td><td>' + escHtml(f['Birim']||'Adet') + '</td></tr></tbody></table>');
+  if (notlar) w.document.write('<div style="margin:12px 0;"><strong>Notlar:</strong> ' + escHtml(notlar) + '</div>');
+  w.document.write('<div class="sig-area">');
+  w.document.write('<div class="sig-block"><div class="sig-line">Teslim Eden</div></div>');
+  w.document.write('<div class="sig-block"><div class="sig-line">Teslim Alan</div></div>');
+  w.document.write('</div>');
+  w.document.write('</body></html>');
+  w.document.close();
+  setTimeout(function() { w.print(); }, 300);
 }
 
 // ── SEVK ET ──
@@ -682,6 +786,22 @@ async function sevkEt() {
 
     toast(`${f['IE No']||'—'} sevk edildi!`, 'ok');
     await logIslem('Sevk Edildi', 'Sevkiyat', selectedId, f['IE No']||'', {Durum: eskiDurum}, fields);
+
+    // Bağlı siparişi Tamamlandı olarak güncelle
+    var siparisNo = f['SE No'] || f['Sipariş No'] || '';
+    if (siparisNo) {
+      try {
+        var seRes = await apiGetFn(T.se,
+          'filterByFormula=' + encodeURIComponent("{SE No}='" + siparisNo + "'") + '&maxRecords=1');
+        if (seRes.records && seRes.records.length > 0) {
+          await apiFn('PATCH', T.se, {fields: {'Durum': 'Tamamlandı'}}, seRes.records[0].id);
+          toast('Sipariş ' + siparisNo + ' tamamlandı olarak güncellendi', 'ok');
+          if (typeof logIslem === 'function') logIslem('SEVKIYAT_TESLIM', 'Sevkiyat', seRes.records[0].id, siparisNo, null, {Durum:'Tamamlandı'});
+        }
+      } catch(seErr) {
+        console.warn('Sipariş güncelleme hatası:', seErr);
+      }
+    }
   } catch(e) {
     toast('Sevk hatası: ' + e.message, 'err');
   }
@@ -699,8 +819,25 @@ async function refreshAll() {
   toast('Yenilendi', 'ok');
 }
 
+// ── URL PARAMS ──
+var urlParams = new URLSearchParams(window.location.search);
+var siparisParam = urlParams.get('siparis') || urlParams.get('sp');
+
 // ── INIT ──
-loadAll();
+loadAll().then(function() {
+  if (siparisParam) {
+    toast('Sipariş ' + siparisParam + ' için sevkiyat aranıyor...', 'inf');
+    var found = ieList.find(function(r) {
+      var f = r.fields;
+      return (f['SE No'] || '') === siparisParam || (f['Sipariş No'] || '') === siparisParam;
+    });
+    if (found) {
+      selectIE(found.id);
+    } else {
+      toast('Sipariş ' + siparisParam + ' bulunamadı', 'err');
+    }
+  }
+});
 </script>
 </body>
 </html>
