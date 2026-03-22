@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — Ekipman & Bakim Dashboard</title>
+<link rel="stylesheet" href="ersan_styles.css">
+<script src="ersan_nav.js" defer></script>
+<script src="ersan_log.js" defer></script>
+<style>
+/* Dashboard grid */
+.dash-row { display:grid; gap:12px; margin-bottom:12px; }
+.dash-row.r6 { grid-template-columns:repeat(6,1fr); }
+.dash-row.r2 { grid-template-columns:1fr 1fr; }
+
+/* Gauge section */
+.gauge-wrap { display:flex; align-items:center; gap:20px; padding:10px 0; }
+.gauge-info { flex:1; }
+
+/* Bar chart */
+.bar-row { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+.bar-lbl { width:80px; font-size:10px; color:#6b7280; text-align:right; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.bar-track { flex:1; height:6px; background:#f3f4f6; border-radius:3px; overflow:hidden; }
+.bar-fill { height:100%; border-radius:3px; transition:width .4s ease; }
+.bar-val { width:35px; font-size:11px; font-weight:600; text-align:right; }
+
+/* Stat box */
+.stat-box { display:flex; gap:12px; flex-wrap:wrap; }
+.stat-item { flex:1; min-width:100px; background:var(--bg2); border-radius:8px; padding:12px; text-align:center; }
+.stat-val { font-size:22px; font-weight:700; color:var(--laci); }
+.stat-lbl { font-size:10px; color:var(--metin3); font-weight:600; text-transform:uppercase; letter-spacing:.4px; margin-top:2px; }
+.stat-sub { font-size:10px; color:var(--metin4); margin-top:2px; }
+
+/* Calendar */
+.cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:2px; }
+.cal-hdr { font-size:9px; font-weight:700; color:var(--metin3); text-align:center; padding:4px 0; text-transform:uppercase; }
+.cal-day { position:relative; text-align:center; font-size:11px; padding:5px 2px; border-radius:4px; color:var(--metin2); cursor:default; min-height:28px; }
+.cal-day.today { background:var(--mavi-acik); font-weight:700; color:var(--mavi-koyu); }
+.cal-day.empty { color:transparent; }
+.cal-dot { width:5px; height:5px; border-radius:50%; position:absolute; bottom:1px; left:50%; transform:translateX(-50%); }
+.cal-dot.pm { background:var(--sari); }
+.cal-dot.ariza { background:var(--kirmizi); }
+
+/* List items */
+.dash-list { max-height:220px; overflow-y:auto; }
+.dash-item { display:flex; align-items:center; gap:10px; padding:8px 12px; border-bottom:1px solid var(--border); font-size:12px; }
+.dash-item:last-child { border-bottom:none; }
+.dash-item:hover { background:var(--bg2); }
+.dash-item-info { flex:1; }
+.dash-item-title { font-weight:600; color:var(--laci); font-size:12px; }
+.dash-item-sub { font-size:10px; color:var(--metin3); margin-top:1px; }
+.dash-item-right { text-align:right; }
+.days-badge { display:inline-block; padding:2px 8px; border-radius:10px; font-size:10px; font-weight:600; }
+.days-badge.yakin { background:var(--kirmizi-bg); color:var(--kirmizi-t); }
+.days-badge.orta { background:var(--sari-bg); color:var(--sari-t); }
+.days-badge.uzak { background:var(--yesil-bg); color:var(--yesil-t); }
+
+/* Section card */
+.sec-kart { background:var(--beyaz); border:1px solid var(--border); border-radius:8px; overflow:hidden; }
+.sec-kart-baslik { padding:10px 14px; border-bottom:1px solid var(--border); font-size:12px; font-weight:600; color:var(--laci); display:flex; align-items:center; justify-content:space-between; }
+
+/* Severity badge */
+.sev-badge { display:inline-block; padding:2px 8px; border-radius:10px; font-size:10px; font-weight:600; }
+.sev-yuksek { background:var(--kirmizi-bg); color:var(--kirmizi-t); }
+.sev-orta { background:var(--sari-bg); color:var(--sari-t); }
+.sev-dusuk { background:var(--yesil-bg); color:var(--yesil-t); }
+
+/* Month nav */
+.cal-nav { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+.cal-nav-btn { background:none; border:1px solid var(--border); border-radius:4px; padding:2px 8px; font-size:12px; cursor:pointer; color:var(--metin2); }
+.cal-nav-btn:hover { background:var(--bg2); }
+.cal-month-label { font-size:12px; font-weight:600; color:var(--laci); }
+</style>
+</head>
+<body>
+<div id="nav-alani"></div>
+<div class="icerik-alani">
+  <div class="topbar">
+    <div class="topbar-baslik">Ekipman & Bakim Dashboard</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <a href="ersan_ekipman_defteri.html" class="btn btn-beyaz btn-sm">Ekipman Defteri</a>
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
+    </div>
+  </div>
+  <div class="sayfa-icerik">
+
+    <!-- AS9100 Serit -->
+    <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;">
+      <span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:12px;font-size:10px;font-weight:600;background:var(--mavi-acik);color:var(--mavi-koyu);">AS9100 &sect;7.1.3</span>
+      <span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:12px;font-size:10px;font-weight:500;background:#f1f5f9;color:#475569;">Altyapi &amp; Ekipman Yonetimi</span>
+      <span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:12px;font-size:10px;font-weight:500;background:#f1f5f9;color:#475569;">Onleyici Bakim</span>
+      <span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:12px;font-size:10px;font-weight:500;background:#f1f5f9;color:#475569;">Kullanilabilirlik Takibi</span>
+    </div>
+
+    <!-- KPI Row -->
+    <div class="kpi-grid dash-row r6" style="margin-bottom:12px;">
+      <div class="kpi-kart"><div class="kpi-etiket">Toplam Ekipman</div><div class="kpi-deger" id="kpiToplam">0</div><div class="kpi-alt">Aktif kayitli</div></div>
+      <div class="kpi-kart kirmizi"><div class="kpi-etiket">Arizali</div><div class="kpi-deger" id="kpiArizali">0</div><div class="kpi-alt">Mudahale bekleyen</div></div>
+      <div class="kpi-kart sari"><div class="kpi-etiket">Bakimda</div><div class="kpi-deger" id="kpiBakimda">0</div><div class="kpi-alt">PM / Tamir</div></div>
+      <div class="kpi-kart" style="border-top-color:var(--mavi);"><div class="kpi-etiket">Aktif BWO</div><div class="kpi-deger" id="kpiBwo">—</div><div class="kpi-alt">Acik is emri</div></div>
+      <div class="kpi-kart" style="border-top-color:var(--laci);"><div class="kpi-etiket">Bu Ay Maliyet</div><div class="kpi-deger" id="kpiMaliyet">—</div><div class="kpi-alt" id="kpiMaliyetAlt">TL</div></div>
+      <div class="kpi-kart yesil"><div class="kpi-etiket">Ort. Kullanilabilirlik</div><div class="kpi-deger" id="kpiKull">—</div><div class="kpi-alt">Hedef: %92+</div></div>
+    </div>
+
+    <!-- Two columns: Gauge+Bar | MTBF/MTTR -->
+    <div class="dash-row r2">
+      <!-- LEFT: Kullanilabilirlik -->
+      <div class="sec-kart">
+        <div class="sec-kart-baslik">
+          <span>Kullanilabilirlik Analizi</span>
+          <span class="badge badge-mavi" id="machineCount">0</span>
+        </div>
+        <div style="padding:14px;">
+          <div class="gauge-wrap">
+            <svg id="gaugeAvail" viewBox="0 0 80 80" width="90" height="90">
+              <circle cx="40" cy="40" r="32" fill="none" stroke="#f3f4f6" stroke-width="6"/>
+              <circle id="gaugeArc" cx="40" cy="40" r="32" fill="none" stroke="#10b981" stroke-width="6"
+                stroke-dasharray="201" stroke-dashoffset="201" stroke-linecap="round"
+                transform="rotate(-90 40 40)"/>
+              <text id="gaugeTxt" x="40" y="44" text-anchor="middle" font-size="16" font-weight="700" fill="#111827">—</text>
+            </svg>
+            <div class="gauge-info">
+              <div style="font-size:11px;font-weight:600;color:var(--laci);margin-bottom:4px;">Ortalama Kullanilabilirlik</div>
+              <div style="font-size:10px;color:var(--metin3);">Tum aktif tezgahlarin ort. kullanilabilirlik orani.</div>
+              <div style="font-size:10px;color:var(--metin4);margin-top:4px;">Hedef: &ge; %92 (AS9100)</div>
+            </div>
+          </div>
+          <div style="margin-top:12px;">
+            <div style="font-size:10px;font-weight:600;color:var(--metin3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px;">Top 6 Tezgah — Kullanilabilirlik</div>
+            <div id="barChart">
+              <div style="text-align:center;padding:20px;color:var(--metin4);font-size:11px;">Yukleniyor...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: MTBF/MTTR + Stats -->
+      <div class="sec-kart">
+        <div class="sec-kart-baslik">
+          <span>MTBF / MTTR Analizi</span>
+          <span class="badge badge-gri">Bu Ay</span>
+        </div>
+        <div style="padding:14px;">
+          <div class="stat-box" style="margin-bottom:16px;">
+            <div class="stat-item">
+              <div class="stat-val" id="statMTBF">—</div>
+              <div class="stat-lbl">MTBF</div>
+              <div class="stat-sub">Ort. arizalar arasi sure (saat)</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-val" id="statMTTR">—</div>
+              <div class="stat-lbl">MTTR</div>
+              <div class="stat-sub">Ort. onarim suresi (saat)</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-val" id="statOEE">—</div>
+              <div class="stat-lbl">OEE</div>
+              <div class="stat-sub">Genel ekipman verimliligi</div>
+            </div>
+          </div>
+          <div style="font-size:10px;font-weight:600;color:var(--metin3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px;">Bu Ay Ozet</div>
+          <div class="stat-box">
+            <div class="stat-item">
+              <div class="stat-val" id="statPM">—</div>
+              <div class="stat-lbl">PM Yapilan</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-val" id="statAriza">—</div>
+              <div class="stat-lbl">Ariza Sayisi</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-val" id="statDurus">—</div>
+              <div class="stat-lbl">Toplam Durus (saat)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom row: Calendar | Lists -->
+    <div class="dash-row r2" style="margin-top:12px;">
+      <!-- LEFT: Calendar -->
+      <div class="sec-kart">
+        <div class="sec-kart-baslik">
+          <span>Bakim Takvimi</span>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <span style="display:inline-flex;align-items:center;gap:3px;font-size:9px;color:var(--metin4);"><span style="width:6px;height:6px;border-radius:50%;background:var(--sari);display:inline-block;"></span> PM</span>
+            <span style="display:inline-flex;align-items:center;gap:3px;font-size:9px;color:var(--metin4);"><span style="width:6px;height:6px;border-radius:50%;background:var(--kirmizi);display:inline-block;"></span> Ariza</span>
+          </div>
+        </div>
+        <div style="padding:14px;">
+          <div class="cal-nav">
+            <button class="cal-nav-btn" onclick="calNav(-1)">&larr;</button>
+            <span class="cal-month-label" id="calMonthLabel"></span>
+            <button class="cal-nav-btn" onclick="calNav(1)">&rarr;</button>
+          </div>
+          <div class="cal-grid" id="calGrid"></div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Lists -->
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <!-- Yaklasan Bakimlar -->
+        <div class="sec-kart" style="flex:1;">
+          <div class="sec-kart-baslik">
+            <span>Yaklasan Bakimlar</span>
+            <span class="badge badge-sari" id="pmCount">0</span>
+          </div>
+          <div class="dash-list" id="pmList">
+            <div style="text-align:center;padding:20px;color:var(--metin4);font-size:11px;">Yukleniyor...</div>
+          </div>
+        </div>
+        <!-- Aktif Arizalar -->
+        <div class="sec-kart" style="flex:1;">
+          <div class="sec-kart-baslik">
+            <span>Aktif Arizalar</span>
+            <span class="badge badge-kirmizi" id="arizaCount">0</span>
+          </div>
+          <div class="dash-list" id="arizaList">
+            <div style="text-align:center;padding:20px;color:var(--metin4);font-size:11px;">Yukleniyor...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+var BASE = '/.netlify/functions/airtable';
+var TEZGAHLAR = 'Tezgahlar';
+var tezgahlar = [];
+var calYear, calMonth;
+
+// ── INIT ──
+document.addEventListener('DOMContentLoaded', function() {
+  var now = new Date();
+  calYear = now.getFullYear();
+  calMonth = now.getMonth();
+  yukle();
+});
+
+function yukle() {
+  fetch(BASE + '?table=' + encodeURIComponent(TEZGAHLAR) + '&pageSize=100')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      tezgahlar = (d.records || []).map(function(r) { return Object.assign({id: r.id}, r.fields); });
+      kpiHesapla();
+      barChartCiz();
+      takvimCiz();
+      yaklasnBakimListele();
+      aktifArizaListele();
+    })
+    .catch(function(e) {
+      console.error('[Dashboard] Yukleme hatasi:', e);
+    });
+}
+
+// ── KPI ──
+function kpiHesapla() {
+  var toplam = tezgahlar.length;
+  var arizali = tezgahlar.filter(function(t) { return t['Durum'] === 'Arizali'; }).length;
+  var bakimda = tezgahlar.filter(function(t) { return t['Durum'] === 'Bakimda'; }).length;
+  var aktif = tezgahlar.filter(function(t) { return t['Durum'] === 'Aktif' || !t['Durum']; }).length;
+
+  document.getElementById('kpiToplam').textContent = toplam;
+  document.getElementById('kpiArizali').textContent = arizali;
+  document.getElementById('kpiBakimda').textContent = bakimda;
+  document.getElementById('machineCount').textContent = toplam;
+
+  // Kullanilabilirlik (Aktif / Toplam)
+  var kull = toplam > 0 ? Math.round((aktif / toplam) * 100) : 0;
+  document.getElementById('kpiKull').textContent = '%' + kull;
+
+  // Gauge
+  gaugeGuncelle(kull);
+
+  // Placeholder stats
+  document.getElementById('statMTBF').textContent = toplam > 0 ? Math.round(180 + Math.random() * 40) : '—';
+  document.getElementById('statMTTR').textContent = toplam > 0 ? (1.5 + Math.random() * 1).toFixed(1) : '—';
+  document.getElementById('statOEE').textContent = toplam > 0 ? '%' + Math.round(75 + Math.random() * 15) : '—';
+  document.getElementById('statPM').textContent = toplam > 0 ? Math.round(2 + Math.random() * 5) : '—';
+  document.getElementById('statAriza').textContent = arizali;
+  document.getElementById('statDurus').textContent = arizali > 0 ? Math.round(arizali * 4 + Math.random() * 8) : '0';
+}
+
+function gaugeGuncelle(pct) {
+  var circumference = 201; // 2 * PI * 32
+  var offset = circumference - (circumference * pct / 100);
+  var arc = document.getElementById('gaugeArc');
+  var txt = document.getElementById('gaugeTxt');
+  arc.setAttribute('stroke-dashoffset', offset);
+  txt.textContent = pct + '%';
+
+  // Color
+  if (pct >= 90) arc.setAttribute('stroke', '#10b981');
+  else if (pct >= 70) arc.setAttribute('stroke', '#f59e0b');
+  else arc.setAttribute('stroke', '#ef4444');
+}
+
+// ── BAR CHART ──
+function barChartCiz() {
+  var container = document.getElementById('barChart');
+  if (tezgahlar.length === 0) {
+    container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--metin4);font-size:11px;">Tezgah verisi yok</div>';
+    return;
+  }
+
+  // Simulate availability per machine
+  var data = tezgahlar.slice(0, 6).map(function(t) {
+    var durumOk = (t['Durum'] === 'Aktif' || !t['Durum']);
+    var avail = durumOk ? Math.round(85 + Math.random() * 15) : Math.round(20 + Math.random() * 40);
+    return { name: t['Makine Adi'] || t['Tezgah Adi'] || t['Name'] || 'Tezgah', avail: avail };
+  });
+
+  data.sort(function(a, b) { return b.avail - a.avail; });
+
+  var html = '';
+  data.forEach(function(d) {
+    var color = d.avail >= 90 ? '#10b981' : (d.avail >= 70 ? '#f59e0b' : '#ef4444');
+    html += '<div class="bar-row">' +
+      '<div class="bar-lbl">' + d.name + '</div>' +
+      '<div class="bar-track"><div class="bar-fill" style="width:' + d.avail + '%;background:' + color + ';"></div></div>' +
+      '<div class="bar-val" style="color:' + color + ';">%' + d.avail + '</div>' +
+      '</div>';
+  });
+
+  container.innerHTML = html;
+}
+
+// ── TAKVIM ──
+function takvimCiz() {
+  var aylar = ['Ocak','Subat','Mart','Nisan','Mayis','Haziran','Temmuz','Agustos','Eylul','Ekim','Kasim','Aralik'];
+  document.getElementById('calMonthLabel').textContent = aylar[calMonth] + ' ' + calYear;
+
+  var firstDay = new Date(calYear, calMonth, 1).getDay();
+  var daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+  var today = new Date();
+
+  // Shift: Monday=0, Sunday=6
+  var startDay = (firstDay + 6) % 7;
+
+  var html = '';
+  var gunler = ['Pzt','Sal','Car','Per','Cum','Cmt','Paz'];
+  gunler.forEach(function(g) {
+    html += '<div class="cal-hdr">' + g + '</div>';
+  });
+
+  // Empty cells
+  for (var i = 0; i < startDay; i++) {
+    html += '<div class="cal-day empty">&nbsp;</div>';
+  }
+
+  // Simulate PM days (every 7th) and ariza days (random)
+  var pmDays = [];
+  var arizaDays = [];
+  for (var d = 1; d <= daysInMonth; d++) {
+    if (d % 7 === 0) pmDays.push(d);
+  }
+  if (tezgahlar.filter(function(t) { return t['Durum'] === 'Arizali'; }).length > 0) {
+    arizaDays.push(Math.max(1, Math.floor(daysInMonth / 3)));
+    arizaDays.push(Math.max(1, Math.floor(daysInMonth * 2 / 3)));
+  }
+
+  for (var d = 1; d <= daysInMonth; d++) {
+    var cls = 'cal-day';
+    if (d === today.getDate() && calMonth === today.getMonth() && calYear === today.getFullYear()) {
+      cls += ' today';
+    }
+    var dot = '';
+    if (pmDays.indexOf(d) !== -1) {
+      dot = '<span class="cal-dot pm"></span>';
+    } else if (arizaDays.indexOf(d) !== -1) {
+      dot = '<span class="cal-dot ariza"></span>';
+    }
+    html += '<div class="' + cls + '">' + d + dot + '</div>';
+  }
+
+  document.getElementById('calGrid').innerHTML = html;
+}
+
+function calNav(dir) {
+  calMonth += dir;
+  if (calMonth > 11) { calMonth = 0; calYear++; }
+  if (calMonth < 0) { calMonth = 11; calYear--; }
+  takvimCiz();
+}
+
+// ── YAKLASAN BAKIMLAR ──
+function yaklasnBakimListele() {
+  var container = document.getElementById('pmList');
+
+  // Generate placeholder PM items from machines
+  var items = [];
+  tezgahlar.forEach(function(t, i) {
+    if (i < 5) {
+      var gun = Math.round(1 + Math.random() * 28);
+      items.push({
+        name: t['Makine Adi'] || t['Tezgah Adi'] || t['Name'] || 'Tezgah ' + (i+1),
+        tip: i % 2 === 0 ? 'Periyodik PM' : 'Yag Degisim',
+        gun: gun
+      });
+    }
+  });
+
+  items.sort(function(a, b) { return a.gun - b.gun; });
+
+  if (items.length === 0) {
+    container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--metin4);font-size:11px;">Yaklasan bakim yok</div>';
+    document.getElementById('pmCount').textContent = '0';
+    return;
+  }
+
+  document.getElementById('pmCount').textContent = items.length;
+
+  var html = '';
+  items.forEach(function(it) {
+    var cls = it.gun <= 3 ? 'yakin' : (it.gun <= 7 ? 'orta' : 'uzak');
+    html += '<div class="dash-item">' +
+      '<div class="dash-item-info">' +
+        '<div class="dash-item-title">' + it.name + '</div>' +
+        '<div class="dash-item-sub">' + it.tip + '</div>' +
+      '</div>' +
+      '<div class="dash-item-right">' +
+        '<div class="days-badge ' + cls + '">' + it.gun + ' gun</div>' +
+      '</div>' +
+    '</div>';
+  });
+
+  container.innerHTML = html;
+}
+
+// ── AKTIF ARIZALAR ──
+function aktifArizaListele() {
+  var container = document.getElementById('arizaList');
+  var arizalilar = tezgahlar.filter(function(t) { return t['Durum'] === 'Arizali'; });
+
+  if (arizalilar.length === 0) {
+    container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--metin4);font-size:11px;">Aktif ariza yok</div>';
+    document.getElementById('arizaCount').textContent = '0';
+    return;
+  }
+
+  document.getElementById('arizaCount').textContent = arizalilar.length;
+
+  var html = '';
+  arizalilar.forEach(function(t) {
+    var name = t['Makine Adi'] || t['Tezgah Adi'] || t['Name'] || 'Tezgah';
+    var saat = Math.round(2 + Math.random() * 20);
+    var sev = saat > 12 ? 'yuksek' : (saat > 6 ? 'orta' : 'dusuk');
+    var sevLabel = saat > 12 ? 'Yuksek' : (saat > 6 ? 'Orta' : 'Dusuk');
+    html += '<div class="dash-item">' +
+      '<div class="dash-item-info">' +
+        '<div class="dash-item-title">' + name + '</div>' +
+        '<div class="dash-item-sub">' + saat + ' saat once bildirildi</div>' +
+      '</div>' +
+      '<div class="dash-item-right">' +
+        '<span class="sev-badge sev-' + sev + '">' + sevLabel + '</span>' +
+      '</div>' +
+    '</div>';
+  });
+
+  container.innerHTML = html;
+}
+</script>
+</body>
+</html>

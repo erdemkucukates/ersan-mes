@@ -55,8 +55,11 @@ var ERSAN_NAV = [
     ]
   },
   { group: 'Ekipman & Bak\u0131m', collapsed: false, items: [
-    { label: 'Ekipmanlar',   href: 'ersan_ekipmanlar.html' },
-    { label: 'Bak\u0131m Plan\u0131',  href: 'ersan_bakim.html' },
+    { label: 'Dashboard',         href: 'ersan_ekipman_dashboard.html' },
+    { label: 'Ekipman Defteri',   href: 'ersan_ekipman_defteri.html' },
+    { label: 'Bak\u0131m Plan\u0131',  href: 'ersan_ekipman_bakim.html' },
+    { label: 'Ar\u0131za Kay\u0131t', href: 'ersan_ekipman_ariza.html' },
+    { label: 'Bak\u0131m \u0130\u015F Emirleri', href: 'ersan_ekipman_bwo.html' },
     { label: 'Ar\u0131za Kayd\u0131', href: 'ersan_ariza.html' },
   ]},
   { group: 'Finans', collapsed: true, items: [

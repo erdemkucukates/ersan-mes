@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — Ariza Kaydi</title>
+<link rel="stylesheet" href="ersan_styles.css">
+<script src="ersan_nav.js" defer></script>
+<script src="ersan_log.js" defer></script>
+<style>
+.arz-kpi-row{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.arz-kpi{flex:1;min-width:140px;background:var(--beyaz);border:1px solid var(--border);border-radius:8px;padding:10px 14px}
+.arz-kpi-label{font-size:10px;font-weight:600;color:var(--metin3);text-transform:uppercase;letter-spacing:.3px}
+.arz-kpi-num{font-size:22px;font-weight:700;color:var(--laci);margin-top:2px}
+.arz-kpi-num.kirmizi{color:var(--kirmizi)}
+.arz-kpi-num.sari{color:#d97706}
+.arz-kpi-num.yesil{color:var(--yesil)}
+
+.arz-split{display:flex;gap:12px;height:calc(100vh - 52px - 32px - 80px)}
+.arz-sol{width:280px;flex-shrink:0;background:var(--beyaz);border:1px solid var(--border);border-radius:8px;display:flex;flex-direction:column;overflow:hidden}
+.arz-sol-ust{padding:10px 12px;border-bottom:1px solid var(--border);flex-shrink:0}
+.arz-sol-ust h3{font-size:12px;font-weight:600;color:var(--laci);margin:0 0 6px 0}
+.arz-arama{width:100%;padding:5px 8px;border:1px solid var(--border);border-radius:5px;font-size:12px;color:var(--metin2);background:var(--bg2);font-family:inherit;box-sizing:border-box}
+.arz-arama:focus{outline:none;border-color:var(--mavi)}
+.arz-filtre{display:flex;gap:0;border-bottom:1px solid var(--border);flex-shrink:0}
+.arz-filtre-btn{flex:1;padding:6px 4px;font-size:10px;font-weight:500;color:var(--metin3);background:transparent;border:none;border-bottom:2px solid transparent;cursor:pointer;text-align:center;transition:all .12s;font-family:inherit}
+.arz-filtre-btn.aktif{color:var(--mavi);border-bottom-color:var(--mavi);background:var(--mavi-acik)}
+.arz-liste{flex:1;overflow-y:auto}
+.arz-satir{padding:10px 12px;border-bottom:1px solid #f8fafc;cursor:pointer;border-left:3px solid transparent;transition:background .1s}
+.arz-satir:hover{background:var(--bg2)}
+.arz-satir.secili{background:var(--mavi-acik);border-left-color:var(--mavi)}
+.arz-satir.renk-kirmizi{border-left-color:var(--kirmizi)}
+.arz-satir.renk-sari{border-left-color:#d97706}
+.arz-satir.renk-yesil{border-left-color:var(--yesil)}
+.arz-satir-ust{display:flex;align-items:center;justify-content:space-between;margin-bottom:2px}
+.arz-satir-no{font-family:'Courier New',monospace;font-size:11px;font-weight:600;color:var(--mavi-koyu)}
+.arz-satir-desc{font-size:11px;color:var(--metin2);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.arz-satir-alt{display:flex;align-items:center;justify-content:space-between;gap:4px}
+.arz-satir-tarih{font-size:10px;color:var(--metin4)}
+
+.arz-sag{flex:1;background:var(--beyaz);border:1px solid var(--border);border-radius:8px;overflow-y:auto;display:flex;flex-direction:column}
+.arz-sag-ust{padding:12px 16px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.arz-sag-icerik{padding:16px;flex:1;overflow-y:auto}
+.arz-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--metin4);gap:8px}
+.arz-empty-icon{font-size:40px;opacity:0.3}
+
+.arz-sec{margin-bottom:14px}
+.arz-sec-baslik{font-size:11px;font-weight:700;color:var(--metin3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--border)}
+
+.arz-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.arz-info-label{font-size:10px;font-weight:600;color:var(--metin4);text-transform:uppercase;margin-bottom:2px}
+.arz-info-val{font-size:12px;color:var(--metin2)}
+
+/* Severity bar */
+.siddet-bar{display:flex;gap:6px;margin-bottom:12px}
+.siddet-btn{flex:1;padding:8px 4px;border-radius:6px;border:2px solid var(--border);background:var(--beyaz);font-size:11px;font-weight:600;cursor:pointer;text-align:center;transition:all .15s;font-family:inherit;color:var(--metin2)}
+.siddet-btn:hover{background:var(--bg2)}
+.siddet-btn.s-dusuk.aktif{border-color:#94a3b8;background:#f1f5f9;color:#475569}
+.siddet-btn.s-orta.aktif{border-color:var(--sari,#eab308);background:#fefce8;color:#854d0e}
+.siddet-btn.s-yuksek.aktif{border-color:#ea580c;background:#fff7ed;color:#9a3412}
+.siddet-btn.s-kritik.aktif{border-color:var(--kirmizi,#dc2626);background:#fef2f2;color:#991b1b}
+
+/* Form */
+.f-grp{margin-bottom:10px}
+.f-lbl{font-size:10px;font-weight:600;color:var(--metin3);text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px;display:block}
+.f-inp{width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;color:var(--metin2);background:var(--beyaz);font-family:inherit;box-sizing:border-box}
+.f-inp:focus{outline:none;border-color:var(--mavi);box-shadow:0 0 0 3px rgba(55,138,221,.1)}
+.f-textarea{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;color:var(--metin2);resize:vertical;min-height:80px;box-sizing:border-box}
+.f-textarea:focus{outline:none;border-color:var(--mavi);box-shadow:0 0 0 3px rgba(55,138,221,.1)}
+
+.arz-badge{font-size:9px;padding:2px 8px;border-radius:10px;font-weight:600;display:inline-block}
+.arz-badge.b-acik{background:#fee2e2;color:#991b1b}
+.arz-badge.b-devam{background:#fef3c7;color:#92400e}
+.arz-badge.b-kapali{background:#d1fae5;color:#065f46}
+.arz-badge.b-dusuk{background:#f1f5f9;color:#475569}
+.arz-badge.b-orta{background:#fefce8;color:#854d0e}
+.arz-badge.b-yuksek{background:#fff7ed;color:#9a3412}
+.arz-badge.b-kritik{background:#fef2f2;color:#991b1b}
+
+.arz-kritik-banner{display:none;padding:10px 14px;background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;margin-bottom:12px;font-size:12px;color:#991b1b;align-items:center;gap:8px}
+.arz-kritik-banner.show{display:flex}
+
+.arz-kapat-section{margin-top:16px;padding:16px;background:var(--bg2);border-radius:8px;border:1px solid var(--border)}
+
+.arz-sag-ft{padding:12px 16px;border-top:1px solid var(--border);flex-shrink:0;display:flex;justify-content:flex-end;gap:8px}
+
+.mch-chip{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;background:#dbeafe;color:#1e40af;border-radius:16px;font-size:12px;font-weight:600;margin-bottom:8px}
+.mch-chip-x{cursor:pointer;opacity:0.6;font-size:10px}
+</style>
+</head>
+<body>
+<div id="nav-alani"></div>
+<div class="icerik-alani">
+  <div class="topbar">
+    <div class="topbar-baslik">Ariza Kaydi</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button id="btnYeniAriza" class="btn btn-primary" style="font-size:12px;padding:6px 14px;">+ Yeni Ariza</button>
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--kirmizi,#dc2626);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">AR</div>
+    </div>
+  </div>
+  <div class="sayfa-icerik">
+
+    <!-- KPI Row -->
+    <div class="arz-kpi-row">
+      <div class="arz-kpi">
+        <div class="arz-kpi-label">Acik</div>
+        <div class="arz-kpi-num kirmizi" id="kpiAcik">0</div>
+      </div>
+      <div class="arz-kpi">
+        <div class="arz-kpi-label">Devam Eden</div>
+        <div class="arz-kpi-num sari" id="kpiDevam">0</div>
+      </div>
+      <div class="arz-kpi">
+        <div class="arz-kpi-label">Kapatilan (Bu Ay)</div>
+        <div class="arz-kpi-num yesil" id="kpiKapali">0</div>
+      </div>
+      <div class="arz-kpi">
+        <div class="arz-kpi-label">Ort. MTTR (saat)</div>
+        <div class="arz-kpi-num" id="kpiMTTR">-</div>
+      </div>
+    </div>
+
+    <!-- Split -->
+    <div class="arz-split">
+      <!-- Left List -->
+      <div class="arz-sol">
+        <div class="arz-sol-ust">
+          <h3>Ariza Kayitlari</h3>
+          <input type="text" class="arz-arama" id="arzArama" placeholder="Ariza veya makine ara...">
+        </div>
+        <div class="arz-filtre">
+          <button class="arz-filtre-btn aktif" data-filtre="hepsi">Hepsi</button>
+          <button class="arz-filtre-btn" data-filtre="acik">Acik</button>
+          <button class="arz-filtre-btn" data-filtre="devam">Devam</button>
+          <button class="arz-filtre-btn" data-filtre="kapali">Kapali</button>
+        </div>
+        <div class="arz-liste" id="arzListe"></div>
+      </div>
+
+      <!-- Right Form / Detail -->
+      <div class="arz-sag" id="arzSag">
+        <div class="arz-empty">
+          <div class="arz-empty-icon">&#9888;</div>
+          <div style="font-size:13px;font-weight:500;">Ariza kaydi seciniz</div>
+          <div style="font-size:11px;">Sol listeden bir kayit secin veya yeni ariza bildirim yapin</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+var BASE = '/.netlify/functions/airtable';
+var TEZGAH_TABLE = 'Tezgahlar';
+var ARIZA_TABLE = 'Ariza%20Kayitlari';
+var IE_TABLE = '%C4%B0%C5%9F%20Emirleri';
+
+var tezgahlar = [];
+var arizalar = [];
+var seciliAriza = null;
+var aktifFiltre = 'hepsi';
+var secilenMakine = null;
+var secilenSiddet = null;
+
+// ─── Yukle ───
+document.addEventListener('DOMContentLoaded', function() {
+  yukle();
+  baglaOlaylar();
+});
+
+function yukle() {
+  Promise.all([
+    fetch(BASE + '?table=' + TEZGAH_TABLE + '&pageSize=100').then(function(r) { return r.json(); }),
+    fetch(BASE + '?table=' + ARIZA_TABLE + '&pageSize=100&sort%5B0%5D%5Bfield%5D=Olusturma%20Tarihi&sort%5B0%5D%5Bdirection%5D=desc').then(function(r) { return r.json(); })
+  ]).then(function(results) {
+    var tData = results[0];
+    var aData = results[1];
+
+    tezgahlar = (tData.records || []).map(function(rec) {
+      var f = rec.fields || {};
+      return {
+        id: rec.id,
+        kod: f['Kod'] || f['MCH Kodu'] || '',
+        ad: f['Ad'] || f['Makine Adı'] || f['Makine Adi'] || '',
+        tip: f['Tip'] || f['Kategori'] || 'Genel',
+        durum: f['Durum'] || 'Aktif'
+      };
+    });
+
+    arizalar = (aData.records || []).map(function(rec) {
+      var f = rec.fields || {};
+      return {
+        id: rec.id,
+        arzNo: f['ARZ No'] || f['Ariza No'] || '',
+        makine: f['Makine'] || f['Makine Adi'] || '',
+        makineKod: f['Makine Kodu'] || '',
+        tezgahId: Array.isArray(f['Tezgah']) ? f['Tezgah'][0] : (f['Tezgah'] || ''),
+        siddet: f['Siddet'] || f['Oncelik'] || 'Orta',
+        durum: f['Durum'] || 'Acik',
+        sebep: f['Ariza Sebebi'] || f['Sebep'] || '',
+        tanim: f['Ariza Tanimi'] || f['Aciklama'] || '',
+        bildiren: f['Bildiren'] || '',
+        bildirimYontemi: f['Bildirim Yontemi'] || '',
+        baslangic: f['Ariza Baslangic'] || f['Olusturma Tarihi'] || '',
+        bitis: f['Ariza Bitis'] || '',
+        cozum: f['Cozum'] || '',
+        iscilikSaat: f['Iscilik Saat'] || 0,
+        maliyet: f['Maliyet'] || 0
+      };
+    });
+
+    kpiGuncelle();
+    listeRenderla();
+    urlParamKontrol();
+  }).catch(function(e) {
+    console.error('Veri yuklenemedi:', e);
+  });
+}
+
+function kpiGuncelle() {
+  var acik = 0, devam = 0, kapali = 0;
+  var toplamMTTR = 0, mttrSayi = 0;
+  var buAyBaslangic = new Date();
+  buAyBaslangic.setDate(1);
+  buAyBaslangic.setHours(0, 0, 0, 0);
+
+  arizalar.forEach(function(a) {
+    if (a.durum === 'Acik') acik++;
+    else if (a.durum === 'Devam' || a.durum === 'Devam Eden' || a.durum === 'Devam Ediyor') devam++;
+    else if (a.durum === 'Kapali' || a.durum === 'Kapatildi' || a.durum === 'Kapatıldı') {
+      if (a.bitis) {
+        var bitisTarih = new Date(a.bitis);
+        if (bitisTarih >= buAyBaslangic) kapali++;
+      } else {
+        kapali++;
+      }
+      // MTTR hesapla
+      if (a.baslangic && a.bitis) {
+        var ms = new Date(a.bitis).getTime() - new Date(a.baslangic).getTime();
+        if (ms > 0) {
+          toplamMTTR += ms / (1000 * 60 * 60);
+          mttrSayi++;
+        }
+      }
+    }
+  });
+
+  document.getElementById('kpiAcik').textContent = acik;
+  document.getElementById('kpiDevam').textContent = devam;
+  document.getElementById('kpiKapali').textContent = kapali;
+  document.getElementById('kpiMTTR').textContent = mttrSayi > 0 ? (toplamMTTR / mttrSayi).toFixed(1) : '-';
+}
+
+function listeRenderla() {
+  var container = document.getElementById('arzListe');
+  var aramaText = (document.getElementById('arzArama').value || '').toLowerCase();
+
+  var filtrelenmis = arizalar.filter(function(a) {
+    if (aramaText) {
+      var haystack = (a.arzNo + ' ' + a.makine + ' ' + a.makineKod + ' ' + a.tanim).toLowerCase();
+      if (haystack.indexOf(aramaText) === -1) return false;
+    }
+    if (aktifFiltre === 'acik') return a.durum === 'Acik';
+    if (aktifFiltre === 'devam') return a.durum === 'Devam' || a.durum === 'Devam Eden' || a.durum === 'Devam Ediyor';
+    if (aktifFiltre === 'kapali') return a.durum === 'Kapali' || a.durum === 'Kapatildi' || a.durum === 'Kapatıldı';
+    return true;
+  });
+
+  if (filtrelenmis.length === 0) {
+    container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--metin4);font-size:12px;">Ariza kaydi bulunamadi</div>';
+    return;
+  }
+
+  var html = '';
+  filtrelenmis.forEach(function(a) {
+    var durumRenk = 'kirmizi';
+    if (a.durum === 'Devam' || a.durum === 'Devam Eden' || a.durum === 'Devam Ediyor') durumRenk = 'sari';
+    else if (a.durum === 'Kapali' || a.durum === 'Kapatildi' || a.durum === 'Kapatıldı') durumRenk = 'yesil';
+
+    var seciliClass = (seciliAriza && seciliAriza.id === a.id) ? ' secili' : '';
+
+    var durumLabel = a.durum;
+    var durumBadge = durumRenk === 'kirmizi' ? 'b-acik' : durumRenk === 'sari' ? 'b-devam' : 'b-kapali';
+
+    var siddetBadge = 'b-orta';
+    if (a.siddet === 'Dusuk' || a.siddet === 'Düşük') siddetBadge = 'b-dusuk';
+    else if (a.siddet === 'Yuksek' || a.siddet === 'Yüksek') siddetBadge = 'b-yuksek';
+    else if (a.siddet === 'Kritik') siddetBadge = 'b-kritik';
+
+    var tarihStr = a.baslangic ? new Date(a.baslangic).toLocaleDateString('tr-TR') : '';
+
+    // Sure hesapla
+    var sureStr = '';
+    if (a.baslangic) {
+      var bitis = a.bitis ? new Date(a.bitis) : new Date();
+      var diffH = Math.round((bitis.getTime() - new Date(a.baslangic).getTime()) / (1000 * 60 * 60));
+      if (diffH < 24) sureStr = diffH + ' saat';
+      else sureStr = Math.round(diffH / 24) + ' gun';
+    }
+
+    html += '<div class="arz-satir renk-' + durumRenk + seciliClass + '" data-id="' + a.id + '">';
+    html += '<div class="arz-satir-ust">';
+    html += '<span class="arz-satir-no">' + esc(a.arzNo) + '</span>';
+    html += '<span class="arz-badge ' + siddetBadge + '">' + esc(a.siddet) + '</span>';
+    html += '</div>';
+    html += '<div class="arz-satir-desc">' + esc(a.makine || a.makineKod) + ' — ' + esc(a.tanim) + '</div>';
+    html += '<div class="arz-satir-alt">';
+    html += '<span class="arz-satir-tarih">' + tarihStr + (sureStr ? ' · ' + sureStr : '') + '</span>';
+    html += '<span class="arz-badge ' + durumBadge + '">' + esc(durumLabel) + '</span>';
+    html += '</div>';
+    html += '</div>';
+  });
+
+  container.innerHTML = html;
+
+  container.querySelectorAll('.arz-satir').forEach(function(el) {
+    el.addEventListener('click', function() {
+      var id = el.getAttribute('data-id');
+      var ariza = arizalar.find(function(a) { return a.id === id; });
+      if (ariza) arizaSec(ariza);
+    });
+  });
+}
+
+function arizaSec(ariza) {
+  seciliAriza = ariza;
+  listeRenderla();
+  detayGoster(ariza);
+}
+
+function detayGoster(ariza) {
+  var sag = document.getElementById('arzSag');
+  var kapatildi = ariza.durum === 'Kapali' || ariza.durum === 'Kapatildi' || ariza.durum === 'Kapatıldı';
+
+  var durumBadge = 'b-acik';
+  if (ariza.durum === 'Devam' || ariza.durum === 'Devam Eden') durumBadge = 'b-devam';
+  else if (kapatildi) durumBadge = 'b-kapali';
+
+  var siddetBadge = 'b-orta';
+  if (ariza.siddet === 'Dusuk' || ariza.siddet === 'Düşük') siddetBadge = 'b-dusuk';
+  else if (ariza.siddet === 'Yuksek' || ariza.siddet === 'Yüksek') siddetBadge = 'b-yuksek';
+  else if (ariza.siddet === 'Kritik') siddetBadge = 'b-kritik';
+
+  var baslangicStr = ariza.baslangic ? new Date(ariza.baslangic).toLocaleString('tr-TR') : '-';
+  var bitisStr = ariza.bitis ? new Date(ariza.bitis).toLocaleString('tr-TR') : '-';
+
+  var html = '';
+  html += '<div class="arz-sag-ust">';
+  html += '<div>';
+  html += '<span style="font-family:\'Courier New\',monospace;font-size:14px;font-weight:700;color:var(--laci);">' + esc(ariza.arzNo) + '</span>';
+  html += '<span class="arz-badge ' + durumBadge + '" style="margin-left:8px;">' + esc(ariza.durum) + '</span>';
+  html += '<span class="arz-badge ' + siddetBadge + '" style="margin-left:4px;">' + esc(ariza.siddet) + '</span>';
+  html += '</div>';
+  html += '<div style="font-size:11px;color:var(--metin4);">' + esc(ariza.makine || ariza.makineKod) + '</div>';
+  html += '</div>';
+
+  html += '<div class="arz-sag-icerik">';
+
+  // Ariza detay
+  html += '<div class="arz-sec">';
+  html += '<div class="arz-sec-baslik">Ariza Bilgileri</div>';
+  html += '<div class="arz-info-grid">';
+  html += '<div><div class="arz-info-label">Makine</div><div class="arz-info-val">' + esc(ariza.makine || ariza.makineKod) + '</div></div>';
+  html += '<div><div class="arz-info-label">Sebep</div><div class="arz-info-val">' + esc(ariza.sebep) + '</div></div>';
+  html += '<div><div class="arz-info-label">Baslangic</div><div class="arz-info-val">' + baslangicStr + '</div></div>';
+  html += '<div><div class="arz-info-label">Bitis</div><div class="arz-info-val">' + bitisStr + '</div></div>';
+  html += '<div><div class="arz-info-label">Bildiren</div><div class="arz-info-val">' + esc(ariza.bildiren) + '</div></div>';
+  html += '<div><div class="arz-info-label">Bildirim Yontemi</div><div class="arz-info-val">' + esc(ariza.bildirimYontemi) + '</div></div>';
+  html += '</div>';
+  html += '</div>';
+
+  // Tanim
+  html += '<div class="arz-sec">';
+  html += '<div class="arz-sec-baslik">Ariza Tanimi</div>';
+  html += '<div style="font-size:12px;color:var(--metin2);line-height:1.5;white-space:pre-wrap;">' + esc(ariza.tanim) + '</div>';
+  html += '</div>';
+
+  // Cozum (if closed)
+  if (kapatildi && ariza.cozum) {
+    html += '<div class="arz-sec">';
+    html += '<div class="arz-sec-baslik">Cozum</div>';
+    html += '<div style="font-size:12px;color:var(--metin2);line-height:1.5;white-space:pre-wrap;">' + esc(ariza.cozum) + '</div>';
+    if (ariza.iscilikSaat || ariza.maliyet) {
+      html += '<div class="arz-info-grid" style="margin-top:8px;">';
+      html += '<div><div class="arz-info-label">Iscilik</div><div class="arz-info-val">' + (ariza.iscilikSaat || 0) + ' saat</div></div>';
+      html += '<div><div class="arz-info-label">Maliyet</div><div class="arz-info-val">' + (ariza.maliyet || 0).toLocaleString('tr-TR') + ' TL</div></div>';
+      html += '</div>';
+    }
+    html += '</div>';
+  }
+
+  // Kapat section (if not closed)
+  if (!kapatildi) {
+    html += '<div class="arz-kapat-section">';
+    html += '<div class="arz-sec-baslik">Ariza Kapat</div>';
+    html += '<div class="f-grp"><label class="f-lbl">Cozum Notu *</label><textarea id="kapatCozum" class="f-textarea" placeholder="Yapilan islemi aciklayiniz..."></textarea></div>';
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">';
+    html += '<div class="f-grp"><label class="f-lbl">Iscilik (saat)</label><input type="number" id="kapatIscilik" class="f-inp" min="0" step="0.5" value="0"></div>';
+    html += '<div class="f-grp"><label class="f-lbl">Maliyet (TL)</label><input type="number" id="kapatMaliyet" class="f-inp" min="0" step="1" value="0"></div>';
+    html += '</div>';
+    html += '</div>';
+  }
+
+  html += '</div>'; // arz-sag-icerik
+
+  // Footer
+  if (!kapatildi) {
+    html += '<div class="arz-sag-ft">';
+    html += '<button class="btn" id="btnDevamGecir" style="font-size:12px;padding:6px 14px;background:#fef3c7;color:#92400e;border:1px solid #fcd34d;border-radius:6px;cursor:pointer;font-family:inherit;">Devam Eden</button>';
+    html += '<button class="btn" id="btnArizaKapat" style="font-size:12px;padding:6px 14px;background:#d1fae5;color:#065f46;border:1px solid #86efac;border-radius:6px;cursor:pointer;font-weight:600;font-family:inherit;">Ariza Kapat</button>';
+    html += '</div>';
+  }
+
+  sag.innerHTML = html;
+
+  // Devam Eden butonu
+  if (!kapatildi) {
+    var btnDevam = document.getElementById('btnDevamGecir');
+    if (btnDevam) {
+      btnDevam.addEventListener('click', function() {
+        durumGuncelle(ariza, 'Devam Eden');
+      });
+    }
+    var btnKapat = document.getElementById('btnArizaKapat');
+    if (btnKapat) {
+      btnKapat.addEventListener('click', function() {
+        arizaKapat(ariza);
+      });
+    }
+  }
+}
+
+function durumGuncelle(ariza, yeniDurum) {
+  fetch(BASE, {
+    method: 'PATCH',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      table: 'Ariza Kayitlari',
+      id: ariza.id,
+      fields: { 'Durum': yeniDurum }
+    })
+  }).then(function() {
+    logIslem('Guncellendi', 'Ariza', ariza.id, ariza.arzNo, {Durum:ariza.durum}, {Durum:yeniDurum});
+    yukle();
+  }).catch(function(e) {
+    alert('Hata: ' + e.message);
+  });
+}
+
+function arizaKapat(ariza) {
+  var cozum = (document.getElementById('kapatCozum') || {}).value || '';
+  if (!cozum.trim()) {
+    alert('Cozum notu zorunludur!');
+    return;
+  }
+  var iscilik = parseFloat((document.getElementById('kapatIscilik') || {}).value) || 0;
+  var maliyet = parseFloat((document.getElementById('kapatMaliyet') || {}).value) || 0;
+
+  var fields = {
+    'Durum': 'Kapatildi',
+    'Cozum': cozum,
+    'Iscilik Saat': iscilik,
+    'Maliyet': maliyet,
+    'Ariza Bitis': new Date().toISOString()
+  };
+
+  fetch(BASE, {
+    method: 'PATCH',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      table: 'Ariza Kayitlari',
+      id: ariza.id,
+      fields: fields
+    })
+  }).then(function() {
+    // Makine durumunu restore et
+    if (ariza.tezgahId) {
+      return fetch(BASE, {
+        method: 'PATCH',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          table: TEZGAH_TABLE,
+          id: ariza.tezgahId,
+          fields: { 'Durum': 'Aktif', 'QR_Blok': false }
+        })
+      });
+    }
+  }).then(function() {
+    // Durdurulan IE'leri tekrar baslat
+    if (ariza.siddet === 'Kritik' && ariza.tezgahId) {
+      return fetch(BASE + '?table=' + IE_TABLE + '&filterByFormula=%7BDurum%7D%3D%22Durduruldu%22&pageSize=50')
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          var promises = (d.records || []).filter(function(rec) {
+            var mch = rec.fields['Tezgah'] || [];
+            return Array.isArray(mch) ? mch.indexOf(ariza.tezgahId) > -1 : false;
+          }).map(function(rec) {
+            return fetch(BASE, {
+              method: 'PATCH',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({
+                table: '%C4%B0%C5%9F Emirleri',
+                id: rec.id,
+                fields: { 'Durum': 'Devam Ediyor' }
+              })
+            });
+          });
+          return Promise.all(promises);
+        });
+    }
+  }).then(function() {
+    logIslem('Kapatildi', 'Ariza', ariza.id, ariza.arzNo, null, fields);
+    alert('Ariza kapatildi: ' + ariza.arzNo);
+    yukle();
+  }).catch(function(e) {
+    alert('Hata: ' + e.message);
+  });
+}
+
+// ─── Yeni Ariza Formu ───
+function yeniArizaFormuGoster() {
+  seciliAriza = null;
+  secilenSiddet = null;
+  listeRenderla();
+
+  var sag = document.getElementById('arzSag');
+  var params = new URLSearchParams(window.location.search);
+  var mchParam = params.get('mch');
+  var onDoluMakine = null;
+
+  if (mchParam) {
+    onDoluMakine = tezgahlar.find(function(t) { return t.kod === mchParam || t.kod.indexOf(mchParam) > -1; });
+  }
+
+  var html = '';
+  html += '<div class="arz-sag-ust">';
+  html += '<div style="font-size:14px;font-weight:700;color:var(--laci);">Yeni Ariza Bildirimi</div>';
+  html += '</div>';
+
+  html += '<div class="arz-sag-icerik">';
+
+  // Makine chip (if pre-filled)
+  if (onDoluMakine) {
+    secilenMakine = onDoluMakine;
+    html += '<div class="mch-chip" id="mchChip">' + esc(onDoluMakine.kod) + ' — ' + esc(onDoluMakine.ad) + ' <span class="mch-chip-x" onclick="secilenMakine=null;document.getElementById(\'mchChip\').remove();document.getElementById(\'fMakine\').style.display=\'block\';">&times;</span></div>';
+  }
+
+  // Siddet bar
+  html += '<div class="arz-sec">';
+  html += '<div class="arz-sec-baslik">Siddet</div>';
+  html += '<div class="siddet-bar">';
+  html += '<button class="siddet-btn s-dusuk" data-siddet="Dusuk">Dusuk</button>';
+  html += '<button class="siddet-btn s-orta" data-siddet="Orta">Orta</button>';
+  html += '<button class="siddet-btn s-yuksek" data-siddet="Yuksek">Yuksek</button>';
+  html += '<button class="siddet-btn s-kritik" data-siddet="Kritik">Kritik</button>';
+  html += '</div>';
+  html += '<div class="arz-kritik-banner" id="kritikBanner">&#9888; <strong>Kritik ariza!</strong> Aktif is emirleri durdurulacak ve makine bloke edilecektir.</div>';
+  html += '</div>';
+
+  // Makine dropdown
+  var makineDisplay = onDoluMakine ? 'none' : 'block';
+  html += '<div class="f-grp" id="fMakine" style="display:' + makineDisplay + ';">';
+  html += '<label class="f-lbl">Makine *</label>';
+  html += '<select id="inpMakine" class="f-inp">';
+  html += '<option value="">Makine seciniz...</option>';
+  tezgahlar.forEach(function(t) {
+    if (t.durum === 'Hurda' || t.durum === 'Satıldı') return;
+    var sel = (onDoluMakine && onDoluMakine.id === t.id) ? ' selected' : '';
+    html += '<option value="' + t.id + '"' + sel + '>' + esc(t.kod) + ' — ' + esc(t.ad) + '</option>';
+  });
+  html += '</select>';
+  html += '</div>';
+
+  // Ariza Baslangic
+  var simdi = new Date();
+  var simdiStr = simdi.getFullYear() + '-' + String(simdi.getMonth()+1).padStart(2,'0') + '-' + String(simdi.getDate()).padStart(2,'0') + 'T' + String(simdi.getHours()).padStart(2,'0') + ':' + String(simdi.getMinutes()).padStart(2,'0');
+  html += '<div class="f-grp"><label class="f-lbl">Ariza Baslangic</label><input type="datetime-local" id="inpBaslangic" class="f-inp" value="' + simdiStr + '"></div>';
+
+  // Sebep
+  html += '<div class="f-grp"><label class="f-lbl">Ariza Sebebi *</label>';
+  html += '<select id="inpSebep" class="f-inp">';
+  html += '<option value="">Seciniz...</option>';
+  html += '<option value="Mekanik">Mekanik</option>';
+  html += '<option value="Elektrik">Elektrik</option>';
+  html += '<option value="Operator Hatasi">Operator Hatasi</option>';
+  html += '<option value="Yazilim">Yazilim</option>';
+  html += '<option value="Bilinmiyor">Bilinmiyor</option>';
+  html += '</select></div>';
+
+  // Tanim
+  html += '<div class="f-grp"><label class="f-lbl">Ariza Tanimi *</label><textarea id="inpTanim" class="f-textarea" placeholder="Arizayi detayli olarak aciklayiniz..."></textarea></div>';
+
+  // Bildiren
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">';
+  html += '<div class="f-grp"><label class="f-lbl">Bildiren</label><input type="text" id="inpBildiren" class="f-inp" value="' + esc(window._aktifKullanici || '') + '"></div>';
+  html += '<div class="f-grp"><label class="f-lbl">Bildirim Yontemi</label>';
+  html += '<select id="inpYontem" class="f-inp">';
+  html += '<option value="Sayfa Formu">Sayfa Formu</option>';
+  html += '<option value="Makine QR">Makine QR</option>';
+  html += '<option value="Telefon">Telefon</option>';
+  html += '</select></div>';
+  html += '</div>';
+
+  html += '</div>'; // arz-sag-icerik
+
+  // Footer
+  html += '<div class="arz-sag-ft">';
+  html += '<button class="btn" id="btnFormIptal" style="font-size:12px;padding:6px 14px;background:var(--bg2);color:var(--metin3);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-family:inherit;">Iptal</button>';
+  html += '<button class="btn btn-primary" id="btnArizaBildir" style="font-size:12px;padding:6px 14px;background:var(--kirmizi,#dc2626);color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-family:inherit;">Ariza Bildir</button>';
+  html += '</div>';
+
+  sag.innerHTML = html;
+
+  // Siddet buton events
+  sag.querySelectorAll('.siddet-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      sag.querySelectorAll('.siddet-btn').forEach(function(b) { b.classList.remove('aktif'); });
+      btn.classList.add('aktif');
+      secilenSiddet = btn.getAttribute('data-siddet');
+
+      var banner = document.getElementById('kritikBanner');
+      if (banner) {
+        banner.classList.toggle('show', secilenSiddet === 'Kritik');
+      }
+    });
+  });
+
+  // Makine dropdown change
+  var inpMakine = document.getElementById('inpMakine');
+  if (inpMakine) {
+    inpMakine.addEventListener('change', function() {
+      var id = inpMakine.value;
+      secilenMakine = tezgahlar.find(function(t) { return t.id === id; }) || null;
+    });
+  }
+
+  // QR param? auto-set yontem
+  if (mchParam) {
+    var yontemSel = document.getElementById('inpYontem');
+    if (yontemSel) yontemSel.value = 'Makine QR';
+  }
+
+  // Iptal
+  document.getElementById('btnFormIptal').addEventListener('click', function() {
+    secilenMakine = null;
+    secilenSiddet = null;
+    sag.innerHTML = '<div class="arz-empty"><div class="arz-empty-icon">&#9888;</div><div style="font-size:13px;font-weight:500;">Ariza kaydi seciniz</div><div style="font-size:11px;">Sol listeden bir kayit secin veya yeni ariza bildirim yapin</div></div>';
+  });
+
+  // Bildir
+  document.getElementById('btnArizaBildir').addEventListener('click', function() {
+    arizaBildir();
+  });
+}
+
+function arizaBildir() {
+  var makineId = secilenMakine ? secilenMakine.id : (document.getElementById('inpMakine') || {}).value;
+  var makine = tezgahlar.find(function(t) { return t.id === makineId; });
+
+  if (!makine) { alert('Makine seciniz!'); return; }
+  if (!secilenSiddet) { alert('Siddet seciniz!'); return; }
+
+  var sebep = (document.getElementById('inpSebep') || {}).value;
+  if (!sebep) { alert('Ariza sebebi seciniz!'); return; }
+
+  var tanim = (document.getElementById('inpTanim') || {}).value;
+  if (!tanim.trim()) { alert('Ariza tanimi giriniz!'); return; }
+
+  var baslangic = (document.getElementById('inpBaslangic') || {}).value;
+  var bildiren = (document.getElementById('inpBildiren') || {}).value;
+  var yontem = (document.getElementById('inpYontem') || {}).value;
+
+  var btn = document.getElementById('btnArizaBildir');
+  if (btn) { btn.textContent = 'Kaydediliyor...'; btn.disabled = true; }
+
+  kodUret('ARZ').then(function(arzKod) {
+    var fields = {
+      'ARZ No': arzKod,
+      'Makine': makine.ad,
+      'Makine Kodu': makine.kod,
+      'Siddet': secilenSiddet,
+      'Durum': 'Acik',
+      'Ariza Sebebi': sebep,
+      'Ariza Tanimi': tanim,
+      'Ariza Baslangic': baslangic ? new Date(baslangic).toISOString() : new Date().toISOString(),
+      'Bildiren': bildiren || window._aktifKullanici || '',
+      'Bildirim Yontemi': yontem || 'Sayfa Formu',
+      'Olusturma Tarihi': new Date().toISOString().split('T')[0]
+    };
+
+    // Linked record
+    if (makine.id) {
+      fields['Tezgah'] = [{id: makine.id}];
+    }
+
+    return fetch(BASE, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        method: 'POST',
+        path: '/v0/app5LDgJMgocw79Ix/Ariza%20Kayitlari',
+        body: { fields: fields }
+      })
+    }).then(function(r) { return r.json(); })
+    .then(function(res) {
+      return { res: res, arzKod: arzKod, makine: makine };
+    });
+  }).then(function(ctx) {
+    var res = ctx.res;
+    var arzKod = ctx.arzKod;
+    var makine = ctx.makine;
+
+    // Makine durumunu Arizali yap, QR_Blok=true
+    var p1 = fetch(BASE, {
+      method: 'PATCH',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        table: TEZGAH_TABLE,
+        id: makine.id,
+        fields: { 'Durum': 'Arizali', 'QR_Blok': true }
+      })
+    });
+
+    var promises = [p1];
+
+    // Kritik ise aktif IE'leri durdur
+    if (secilenSiddet === 'Kritik') {
+      var p2 = fetch(BASE + '?table=' + IE_TABLE + '&filterByFormula=AND(NOT(%7BDurum%7D%3D%22Tamamlandi%22)%2CNOT(%7BDurum%7D%3D%22Iptal%22)%2CNOT(%7BDurum%7D%3D%22Durduruldu%22))&pageSize=50')
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          var aktifIE = (d.records || []).filter(function(rec) {
+            var mch = rec.fields['Tezgah'] || [];
+            return Array.isArray(mch) ? mch.indexOf(makine.id) > -1 : false;
+          });
+          return Promise.all(aktifIE.map(function(rec) {
+            return fetch(BASE, {
+              method: 'PATCH',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({
+                table: '%C4%B0%C5%9F Emirleri',
+                id: rec.id,
+                fields: { 'Durum': 'Durduruldu' }
+              })
+            });
+          }));
+        });
+      promises.push(p2);
+    }
+
+    // Auto-create BWO (CM type)
+    var p3 = kodUret('BWO').then(function(bwoKod) {
+      return fetch(BASE, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          method: 'POST',
+          path: '/v0/app5LDgJMgocw79Ix/Bakim%20Is%20Emirleri',
+          body: {
+            fields: {
+              'BWO No': bwoKod,
+              'Tip': 'CM',
+              'Durum': 'Acik',
+              'Makine': makine.ad,
+              'Makine Kodu': makine.kod,
+              'Aciklama': 'Ariza kaynakli - ' + arzKod + '\nSiddet: ' + secilenSiddet + '\nSebep: ' + (document.getElementById('inpSebep') || {}).value + '\n' + (document.getElementById('inpTanim') || {}).value,
+              'Olusturma Tarihi': new Date().toISOString().split('T')[0],
+              'Oncelik': secilenSiddet === 'Kritik' ? 'Acil' : secilenSiddet === 'Yuksek' ? 'Yuksek' : 'Normal',
+              'Tezgah': [{id: makine.id}]
+            }
+          }
+        })
+      });
+    });
+    promises.push(p3);
+
+    return Promise.all(promises).then(function() { return {res: res, arzKod: arzKod}; });
+  }).then(function(ctx) {
+    logIslem('Olusturuldu', 'Ariza', ctx.res.id || '', ctx.arzKod, null, {siddet: secilenSiddet, makine: (secilenMakine || {}).kod});
+    alert('Ariza bildirildi: ' + ctx.arzKod + '\nBWO otomatik olusturuldu.');
+    secilenMakine = null;
+    secilenSiddet = null;
+    yukle();
+  }).catch(function(e) {
+    console.error('Ariza bildirilemedi:', e);
+    alert('Hata: ' + e.message);
+    var btn = document.getElementById('btnArizaBildir');
+    if (btn) { btn.textContent = 'Ariza Bildir'; btn.disabled = false; }
+  });
+}
+
+// ─── Olaylar ───
+function baglaOlaylar() {
+  // Filtre butonlari
+  document.querySelectorAll('.arz-filtre-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.arz-filtre-btn').forEach(function(b) { b.classList.remove('aktif'); });
+      btn.classList.add('aktif');
+      aktifFiltre = btn.getAttribute('data-filtre');
+      listeRenderla();
+    });
+  });
+
+  // Arama
+  document.getElementById('arzArama').addEventListener('input', function() {
+    listeRenderla();
+  });
+
+  // Yeni ariza butonu
+  document.getElementById('btnYeniAriza').addEventListener('click', function() {
+    yeniArizaFormuGoster();
+  });
+}
+
+// URL param
+function urlParamKontrol() {
+  var params = new URLSearchParams(window.location.search);
+  var mchParam = params.get('mch');
+  var arizaParam = params.get('ariza');
+
+  if (arizaParam) {
+    var ariza = arizalar.find(function(a) { return a.arzNo === arizaParam; });
+    if (ariza) {
+      arizaSec(ariza);
+      return;
+    }
+  }
+
+  if (mchParam) {
+    secilenMakine = tezgahlar.find(function(t) { return t.kod === mchParam || t.kod.indexOf(mchParam) > -1; });
+    if (secilenMakine) {
+      yeniArizaFormuGoster();
+    }
+  }
+}
+
+// ─── Yardimci ───
+function esc(str) {
+  if (!str) return '';
+  var d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+</script>
+</body>
+</html>

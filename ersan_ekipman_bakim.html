@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — Bakım Planı (PM)</title>
+<link rel="stylesheet" href="ersan_styles.css">
+<script src="ersan_nav.js" defer></script>
+<script src="ersan_log.js" defer></script>
+<style>
+.pm-kpi-row{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.pm-kpi{flex:1;min-width:140px;background:var(--beyaz);border:1px solid var(--border);border-radius:8px;padding:10px 14px}
+.pm-kpi-label{font-size:10px;font-weight:600;color:var(--metin3);text-transform:uppercase;letter-spacing:.3px}
+.pm-kpi-num{font-size:22px;font-weight:700;color:var(--laci);margin-top:2px}
+.pm-kpi-num.kirmizi{color:var(--kirmizi)}
+.pm-kpi-num.sari{color:#d97706}
+.pm-kpi-num.yesil{color:var(--yesil)}
+
+.pm-split{display:flex;gap:12px;height:calc(100vh - 52px - 32px - 80px)}
+.pm-sol{width:280px;flex-shrink:0;background:var(--beyaz);border:1px solid var(--border);border-radius:8px;display:flex;flex-direction:column;overflow:hidden}
+.pm-sol-ust{padding:10px 12px;border-bottom:1px solid var(--border);flex-shrink:0}
+.pm-sol-ust h3{font-size:12px;font-weight:600;color:var(--laci);margin:0 0 6px 0}
+.pm-arama{width:100%;padding:5px 8px;border:1px solid var(--border);border-radius:5px;font-size:12px;color:var(--metin2);background:var(--bg2);font-family:inherit;box-sizing:border-box}
+.pm-arama:focus{outline:none;border-color:var(--mavi)}
+.pm-filtre{display:flex;gap:0;border-bottom:1px solid var(--border);flex-shrink:0}
+.pm-filtre-btn{flex:1;padding:6px 4px;font-size:10px;font-weight:500;color:var(--metin3);background:transparent;border:none;border-bottom:2px solid transparent;cursor:pointer;text-align:center;transition:all .12s;font-family:inherit}
+.pm-filtre-btn.aktif{color:var(--mavi);border-bottom-color:var(--mavi);background:var(--mavi-acik)}
+.pm-liste{flex:1;overflow-y:auto}
+.pm-satir{padding:10px 12px;border-bottom:1px solid #f8fafc;cursor:pointer;border-left:3px solid transparent;transition:background .1s}
+.pm-satir:hover{background:var(--bg2)}
+.pm-satir.secili{background:var(--mavi-acik);border-left-color:var(--mavi)}
+.pm-satir.renk-kirmizi{border-left-color:var(--kirmizi)}
+.pm-satir.renk-sari{border-left-color:#d97706}
+.pm-satir.renk-gri{border-left-color:#94a3b8}
+.pm-satir.renk-yesil{border-left-color:var(--yesil)}
+.pm-satir-ust{display:flex;align-items:center;justify-content:space-between;margin-bottom:2px}
+.pm-satir-mch{font-family:'Courier New',monospace;font-size:11px;font-weight:600;color:var(--mavi-koyu)}
+.pm-satir-tip{font-size:9px;padding:1px 6px;border-radius:8px;font-weight:600}
+.pm-satir-desc{font-size:11px;color:var(--metin2);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pm-satir-alt{display:flex;align-items:center;justify-content:space-between;gap:4px}
+.pm-satir-tarih{font-size:10px;color:var(--metin4)}
+.pm-satir-kalan{font-size:10px;font-weight:600}
+
+.pm-sag{flex:1;background:var(--beyaz);border:1px solid var(--border);border-radius:8px;overflow-y:auto;display:flex;flex-direction:column}
+.pm-sag-ust{padding:12px 16px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.pm-sag-icerik{padding:16px;flex:1;overflow-y:auto}
+.pm-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--metin4);gap:8px}
+.pm-empty-icon{font-size:40px;opacity:0.3}
+
+.pm-sec{margin-bottom:14px}
+.pm-sec-baslik{font-size:11px;font-weight:700;color:var(--metin3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--border)}
+.pm-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pm-info-label{font-size:10px;font-weight:600;color:var(--metin4);text-transform:uppercase;margin-bottom:2px}
+.pm-info-val{font-size:12px;color:var(--metin2)}
+
+.pm-check-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--border);border-radius:6px;margin-bottom:6px;background:var(--beyaz);transition:all .12s}
+.pm-check-item:hover{background:var(--bg2)}
+.pm-check-item.yapildi{background:#f0fdf4;border-color:#86efac}
+.pm-check-item input[type="checkbox"]{width:16px;height:16px;cursor:pointer;accent-color:var(--mavi)}
+.pm-check-label{flex:1;font-size:12px;color:var(--metin2)}
+.pm-check-zorunlu{font-size:9px;color:var(--kirmizi);font-weight:600;text-transform:uppercase}
+
+.pm-uyari{display:flex;align-items:center;gap:8px;padding:10px 14px;background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;margin-bottom:12px;font-size:12px;color:#92400e}
+.pm-uyari-icon{font-size:18px}
+
+.badge-gunluk{background:#dbeafe;color:#1e40af}
+.badge-haftalik{background:#e0e7ff;color:#3730a3}
+.badge-aylik{background:#fae8ff;color:#86198f}
+.badge-3aylik{background:#fef3c7;color:#92400e}
+
+.pm-sag-ft{padding:12px 16px;border-top:1px solid var(--border);flex-shrink:0;display:flex;justify-content:flex-end;gap:8px}
+</style>
+</head>
+<body>
+<div id="nav-alani"></div>
+<div class="icerik-alani">
+  <div class="topbar">
+    <div class="topbar-baslik">Bakim Plani (PM)</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button id="btnYeniPM" class="btn btn-primary" style="font-size:12px;padding:6px 14px;">+ Yeni PM</button>
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">PM</div>
+    </div>
+  </div>
+  <div class="sayfa-icerik">
+
+    <!-- KPI Row -->
+    <div class="pm-kpi-row">
+      <div class="pm-kpi">
+        <div class="pm-kpi-label">Planli PM</div>
+        <div class="pm-kpi-num" id="kpiPlanli">0</div>
+      </div>
+      <div class="pm-kpi">
+        <div class="pm-kpi-label">Gecikmis</div>
+        <div class="pm-kpi-num kirmizi" id="kpiGecikmis">0</div>
+      </div>
+      <div class="pm-kpi">
+        <div class="pm-kpi-label">Bu Hafta</div>
+        <div class="pm-kpi-num sari" id="kpiBuHafta">0</div>
+      </div>
+      <div class="pm-kpi">
+        <div class="pm-kpi-label">Tamamlanan (30g)</div>
+        <div class="pm-kpi-num yesil" id="kpiTamamlanan">0</div>
+      </div>
+    </div>
+
+    <!-- Split -->
+    <div class="pm-split">
+      <!-- Left List -->
+      <div class="pm-sol">
+        <div class="pm-sol-ust">
+          <h3>PM Planlari</h3>
+          <input type="text" class="pm-arama" id="pmArama" placeholder="Makine ara...">
+        </div>
+        <div class="pm-filtre">
+          <button class="pm-filtre-btn aktif" data-filtre="hepsi">Hepsi</button>
+          <button class="pm-filtre-btn" data-filtre="gecikmis">Gecikmis</button>
+          <button class="pm-filtre-btn" data-filtre="buHafta">Bu Hafta</button>
+          <button class="pm-filtre-btn" data-filtre="tamamlandi">Bitti</button>
+        </div>
+        <div class="pm-liste" id="pmListe"></div>
+      </div>
+
+      <!-- Right Detail -->
+      <div class="pm-sag" id="pmSag">
+        <div class="pm-empty">
+          <div class="pm-empty-icon">&#9881;</div>
+          <div style="font-size:13px;font-weight:500;">PM plani seciniz</div>
+          <div style="font-size:11px;">Sol listeden bir bakim plani secin</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+var BASE = '/.netlify/functions/airtable';
+var TEZGAH_TABLE = 'Tezgahlar';
+var IE_TABLE = '%C4%B0%C5%9F%20Emirleri';
+
+var tezgahlar = [];
+var pmListesi = [];
+var seciliPM = null;
+var aktifFiltre = 'hepsi';
+
+// PM Sablonlar
+var PM_SABLONLAR = {
+  'Torna': [
+    {madde:'Yag seviyesi kontrolu', zorunlu:true},
+    {madde:'Kayis gerginligi', zorunlu:true},
+    {madde:'Sogutma sivisi kontrolu', zorunlu:true},
+    {madde:'Talas temizligi', zorunlu:false},
+    {madde:'Genel temizlik', zorunlu:false}
+  ],
+  'Freze-CNC': [
+    {madde:'Spindle yaglama', zorunlu:true},
+    {madde:'ATC mekanizma kontrolu', zorunlu:true},
+    {madde:'Referans noktasi dogrulama', zorunlu:true},
+    {madde:'Sogutma sistemi', zorunlu:true},
+    {madde:'Genel temizlik', zorunlu:false}
+  ],
+  'Taslama': [
+    {madde:'Tas durumu kontrolu', zorunlu:true},
+    {madde:'Sogutma sistemi', zorunlu:true},
+    {madde:'Manyetik tabla kontrolu', zorunlu:true},
+    {madde:'Genel temizlik', zorunlu:false}
+  ],
+  'Testere': [
+    {madde:'Serit/disk durumu', zorunlu:true},
+    {madde:'Sogutma sivisi', zorunlu:true},
+    {madde:'Mengene kontrolu', zorunlu:false},
+    {madde:'Genel temizlik', zorunlu:false}
+  ],
+  'Genel': [
+    {madde:'Genel gorunur hasar kontrolu', zorunlu:true},
+    {madde:'Yaglama kontrolu', zorunlu:true},
+    {madde:'Sogutma sistemi', zorunlu:false},
+    {madde:'Genel temizlik', zorunlu:false}
+  ]
+};
+
+var PM_TIPLERI = [
+  {tip:'Gunluk',  gun:1,   badge:'badge-gunluk'},
+  {tip:'Haftalik',gun:7,   badge:'badge-haftalik'},
+  {tip:'Aylik',   gun:30,  badge:'badge-aylik'},
+  {tip:'3 Aylik', gun:90,  badge:'badge-3aylik'}
+];
+
+// ─── Yukle ───
+document.addEventListener('DOMContentLoaded', function() {
+  yukle();
+  baglaOlaylar();
+});
+
+function yukle() {
+  fetch(BASE + '?table=' + TEZGAH_TABLE + '&pageSize=100')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      tezgahlar = (d.records || []).map(function(rec) {
+        var f = rec.fields || {};
+        return {
+          id: rec.id,
+          kod: f['Kod'] || f['MCH Kodu'] || '',
+          ad: f['Ad'] || f['Makine Adı'] || f['Makine Adi'] || '',
+          tip: f['Tip'] || f['Kategori'] || 'Genel',
+          durum: f['Durum'] || 'Aktif',
+          sonBakim: f['Son_Bakim_Tarihi'] || f['Son Bakim'] || null,
+          pmPeriyot: f['PM_Periyot'] || f['Bakim Periyodu'] || 30,
+          lokasyon: f['Lokasyon'] || ''
+        };
+      });
+      pmListesiOlustur();
+      kpiGuncelle();
+      listeRenderla();
+      urlParamKontrol();
+    })
+    .catch(function(e) {
+      console.error('Tezgah yuklenemedi:', e);
+    });
+}
+
+function pmListesiOlustur() {
+  pmListesi = [];
+  var bugun = new Date();
+  bugun.setHours(0,0,0,0);
+
+  tezgahlar.forEach(function(t) {
+    if (t.durum === 'Hurda' || t.durum === 'Satıldı') return;
+
+    var periyot = parseInt(t.pmPeriyot) || 30;
+    var sonBakim = t.sonBakim ? new Date(t.sonBakim) : null;
+    var sonrakiTarih;
+
+    if (sonBakim) {
+      sonrakiTarih = new Date(sonBakim.getTime());
+      sonrakiTarih.setDate(sonrakiTarih.getDate() + periyot);
+    } else {
+      sonrakiTarih = new Date(bugun.getTime());
+    }
+
+    var farkMs = sonrakiTarih.getTime() - bugun.getTime();
+    var kalanGun = Math.ceil(farkMs / (1000 * 60 * 60 * 24));
+
+    var durum, renk;
+    if (kalanGun < 0) {
+      durum = 'Gecikmis'; renk = 'kirmizi';
+    } else if (kalanGun <= 1) {
+      durum = 'Bugun'; renk = 'kirmizi';
+    } else if (kalanGun <= 7) {
+      durum = 'Bu Hafta'; renk = 'sari';
+    } else {
+      durum = 'Normal'; renk = 'gri';
+    }
+
+    var tipLabel = 'Aylik';
+    if (periyot <= 1) tipLabel = 'Gunluk';
+    else if (periyot <= 7) tipLabel = 'Haftalik';
+    else if (periyot <= 30) tipLabel = 'Aylik';
+    else tipLabel = '3 Aylik';
+
+    pmListesi.push({
+      tezgahId: t.id,
+      kod: t.kod,
+      ad: t.ad,
+      tip: t.tip,
+      makTip: t.tip,
+      pmTip: tipLabel,
+      sonBakim: sonBakim,
+      sonrakiTarih: sonrakiTarih,
+      kalanGun: kalanGun,
+      durum: durum,
+      renk: renk,
+      periyot: periyot
+    });
+  });
+
+  // Sort: gecikmis first, then by kalanGun asc
+  pmListesi.sort(function(a, b) {
+    if (a.kalanGun !== b.kalanGun) return a.kalanGun - b.kalanGun;
+    return a.ad.localeCompare(b.ad);
+  });
+}
+
+function kpiGuncelle() {
+  var planli = 0, gecikmis = 0, buHafta = 0, tamamlanan = 0;
+  var bugun = new Date();
+  var otuzGunOnce = new Date(bugun.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+  pmListesi.forEach(function(pm) {
+    planli++;
+    if (pm.kalanGun < 0) gecikmis++;
+    if (pm.kalanGun >= 0 && pm.kalanGun <= 7) buHafta++;
+    if (pm.sonBakim && pm.sonBakim >= otuzGunOnce) tamamlanan++;
+  });
+
+  document.getElementById('kpiPlanli').textContent = planli;
+  document.getElementById('kpiGecikmis').textContent = gecikmis;
+  document.getElementById('kpiBuHafta').textContent = buHafta;
+  document.getElementById('kpiTamamlanan').textContent = tamamlanan;
+}
+
+function listeRenderla() {
+  var container = document.getElementById('pmListe');
+  var aramaText = (document.getElementById('pmArama').value || '').toLowerCase();
+
+  var filtrelenmis = pmListesi.filter(function(pm) {
+    // Arama filtresi
+    if (aramaText && pm.ad.toLowerCase().indexOf(aramaText) === -1 && pm.kod.toLowerCase().indexOf(aramaText) === -1) {
+      return false;
+    }
+    // Tab filtresi
+    if (aktifFiltre === 'gecikmis') return pm.kalanGun < 0;
+    if (aktifFiltre === 'buHafta') return pm.kalanGun >= 0 && pm.kalanGun <= 7;
+    if (aktifFiltre === 'tamamlandi') return pm.sonBakim && (new Date() - pm.sonBakim) < 7 * 24 * 60 * 60 * 1000;
+    return true;
+  });
+
+  if (filtrelenmis.length === 0) {
+    container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--metin4);font-size:12px;">Sonuc bulunamadi</div>';
+    return;
+  }
+
+  var html = '';
+  filtrelenmis.forEach(function(pm) {
+    var badgeClass = pm.pmTip === 'Gunluk' ? 'badge-gunluk' : pm.pmTip === 'Haftalik' ? 'badge-haftalik' : pm.pmTip === '3 Aylik' ? 'badge-3aylik' : 'badge-aylik';
+    var seciliClass = (seciliPM && seciliPM.tezgahId === pm.tezgahId) ? ' secili' : '';
+    var kalanText = pm.kalanGun < 0 ? Math.abs(pm.kalanGun) + ' gun gecikti' : pm.kalanGun === 0 ? 'Bugun' : pm.kalanGun + ' gun';
+    var kalanColor = pm.renk === 'kirmizi' ? 'var(--kirmizi)' : pm.renk === 'sari' ? '#d97706' : pm.renk === 'yesil' ? 'var(--yesil)' : 'var(--metin4)';
+    var tarihStr = pm.sonrakiTarih ? pm.sonrakiTarih.toLocaleDateString('tr-TR') : '-';
+
+    html += '<div class="pm-satir renk-' + pm.renk + seciliClass + '" data-id="' + pm.tezgahId + '">';
+    html += '<div class="pm-satir-ust">';
+    html += '<span class="pm-satir-mch">' + esc(pm.kod) + '</span>';
+    html += '<span class="pm-satir-tip ' + badgeClass + '">' + pm.pmTip + '</span>';
+    html += '</div>';
+    html += '<div class="pm-satir-desc">' + esc(pm.ad) + '</div>';
+    html += '<div class="pm-satir-alt">';
+    html += '<span class="pm-satir-tarih">' + tarihStr + '</span>';
+    html += '<span class="pm-satir-kalan" style="color:' + kalanColor + '">' + kalanText + '</span>';
+    html += '</div>';
+    html += '</div>';
+  });
+
+  container.innerHTML = html;
+
+  // Click events
+  container.querySelectorAll('.pm-satir').forEach(function(el) {
+    el.addEventListener('click', function() {
+      var id = el.getAttribute('data-id');
+      var pm = pmListesi.find(function(p) { return p.tezgahId === id; });
+      if (pm) pmSec(pm);
+    });
+  });
+}
+
+function pmSec(pm) {
+  seciliPM = pm;
+  listeRenderla();
+  detayGoster(pm);
+}
+
+function detayGoster(pm) {
+  var sag = document.getElementById('pmSag');
+
+  // Sablon bul
+  var kategori = 'Genel';
+  var tipLower = (pm.makTip || '').toLowerCase();
+  if (tipLower.indexOf('torna') > -1) kategori = 'Torna';
+  else if (tipLower.indexOf('freze') > -1 || tipLower.indexOf('cnc') > -1) kategori = 'Freze-CNC';
+  else if (tipLower.indexOf('taslama') > -1 || tipLower.indexOf('taşlama') > -1) kategori = 'Taslama';
+  else if (tipLower.indexOf('testere') > -1) kategori = 'Testere';
+
+  var sablonlar = PM_SABLONLAR[kategori] || PM_SABLONLAR['Genel'];
+  var sonBakimStr = pm.sonBakim ? pm.sonBakim.toLocaleDateString('tr-TR') : 'Hic yapilmadi';
+  var sonrakiStr = pm.sonrakiTarih ? pm.sonrakiTarih.toLocaleDateString('tr-TR') : '-';
+
+  var html = '';
+  html += '<div class="pm-sag-ust">';
+  html += '<div>';
+  html += '<span style="font-family:\'Courier New\',monospace;font-size:14px;font-weight:700;color:var(--laci);">' + esc(pm.kod) + '</span>';
+  html += '<span style="margin-left:10px;font-size:13px;color:var(--metin2);">' + esc(pm.ad) + '</span>';
+  html += '</div>';
+  html += '<div style="font-size:11px;color:var(--metin4);">Kategori: ' + esc(kategori) + '</div>';
+  html += '</div>';
+
+  html += '<div class="pm-sag-icerik">';
+
+  // Makine bilgi
+  html += '<div class="pm-sec">';
+  html += '<div class="pm-sec-baslik">PM Bilgileri</div>';
+  html += '<div class="pm-info-grid">';
+  html += '<div><div class="pm-info-label">PM Tipi</div><div class="pm-info-val">' + esc(pm.pmTip) + '</div></div>';
+  html += '<div><div class="pm-info-label">Periyot</div><div class="pm-info-val">' + pm.periyot + ' gun</div></div>';
+  html += '<div><div class="pm-info-label">Son Bakim</div><div class="pm-info-val">' + sonBakimStr + '</div></div>';
+  html += '<div><div class="pm-info-label">Sonraki PM</div><div class="pm-info-val">' + sonrakiStr + '</div></div>';
+  html += '</div>';
+  html += '</div>';
+
+  // Uretim cakisma kontrolu
+  html += '<div id="uretimUyari"></div>';
+
+  // Kontrol listesi
+  html += '<div class="pm-sec">';
+  html += '<div class="pm-sec-baslik">Kontrol Listesi (' + kategori + ')</div>';
+  html += '<div id="kontrolListesi">';
+  sablonlar.forEach(function(s, i) {
+    html += '<div class="pm-check-item" data-idx="' + i + '">';
+    html += '<input type="checkbox" id="chk_' + i + '" data-zorunlu="' + s.zorunlu + '">';
+    html += '<label class="pm-check-label" for="chk_' + i + '">' + esc(s.madde) + '</label>';
+    if (s.zorunlu) {
+      html += '<span class="pm-check-zorunlu">Zorunlu</span>';
+    }
+    html += '</div>';
+  });
+  html += '</div>';
+  html += '</div>';
+
+  // Notlar
+  html += '<div class="pm-sec">';
+  html += '<div class="pm-sec-baslik">Notlar</div>';
+  html += '<textarea id="pmNotlar" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;color:var(--metin2);resize:vertical;min-height:60px;box-sizing:border-box;" placeholder="Bakim notu ekleyin..."></textarea>';
+  html += '</div>';
+
+  html += '</div>'; // pm-sag-icerik
+
+  // Footer
+  html += '<div class="pm-sag-ft">';
+  html += '<button class="btn" id="btnIptal" style="font-size:12px;padding:6px 14px;background:var(--bg2);color:var(--metin3);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-family:inherit;">Iptal</button>';
+  html += '<button class="btn btn-primary" id="btnBwoOlustur" style="font-size:12px;padding:6px 14px;opacity:0.4;pointer-events:none;" disabled>BWO Olustur</button>';
+  html += '</div>';
+
+  sag.innerHTML = html;
+
+  // Checkbox events
+  document.querySelectorAll('#kontrolListesi input[type="checkbox"]').forEach(function(cb) {
+    cb.addEventListener('change', function() {
+      var item = cb.closest('.pm-check-item');
+      if (cb.checked) {
+        item.classList.add('yapildi');
+      } else {
+        item.classList.remove('yapildi');
+      }
+      bwoButonKontrol();
+    });
+  });
+
+  // BWO button
+  document.getElementById('btnBwoOlustur').addEventListener('click', function() {
+    bwoOlustur(pm);
+  });
+
+  document.getElementById('btnIptal').addEventListener('click', function() {
+    seciliPM = null;
+    listeRenderla();
+    sag.innerHTML = '<div class="pm-empty"><div class="pm-empty-icon">&#9881;</div><div style="font-size:13px;font-weight:500;">PM plani seciniz</div><div style="font-size:11px;">Sol listeden bir bakim plani secin</div></div>';
+  });
+
+  // Uretim cakisma kontrolu
+  uretimCakismaKontrol(pm);
+}
+
+function bwoButonKontrol() {
+  var tumZorunlu = true;
+  document.querySelectorAll('#kontrolListesi input[type="checkbox"]').forEach(function(cb) {
+    if (cb.getAttribute('data-zorunlu') === 'true' && !cb.checked) {
+      tumZorunlu = false;
+    }
+  });
+
+  var btn = document.getElementById('btnBwoOlustur');
+  if (btn) {
+    if (tumZorunlu) {
+      btn.style.opacity = '1';
+      btn.style.pointerEvents = 'auto';
+      btn.disabled = false;
+    } else {
+      btn.style.opacity = '0.4';
+      btn.style.pointerEvents = 'none';
+      btn.disabled = true;
+    }
+  }
+}
+
+function uretimCakismaKontrol(pm) {
+  var uyariDiv = document.getElementById('uretimUyari');
+  if (!uyariDiv) return;
+
+  fetch(BASE + '?table=' + IE_TABLE + '&filterByFormula=AND(NOT(%7BDurum%7D%3D%22Tamamlandi%22)%2CNOT(%7BDurum%7D%3D%22Iptal%22))&pageSize=100')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      var aktifIE = (d.records || []).filter(function(rec) {
+        var f = rec.fields || {};
+        var mch = f['Tezgah'] || f['Makine'] || '';
+        if (Array.isArray(mch)) {
+          return mch.indexOf(pm.tezgahId) > -1;
+        }
+        return mch === pm.kod || mch === pm.ad;
+      });
+
+      if (aktifIE.length > 0) {
+        var ieNolar = aktifIE.map(function(r) { return r.fields['IE No'] || r.fields['No'] || ''; }).join(', ');
+        uyariDiv.innerHTML = '<div class="pm-uyari"><span class="pm-uyari-icon">&#9888;</span><div><strong>Uretim Cakismasi!</strong> Bu makinede ' + aktifIE.length + ' aktif is emri var: ' + esc(ieNolar) + '. Bakim icin uretimi durdurmak gerekebilir.</div></div>';
+      }
+    })
+    .catch(function() {});
+}
+
+function bwoOlustur(pm) {
+  var btn = document.getElementById('btnBwoOlustur');
+  if (btn) { btn.textContent = 'Olusturuluyor...'; btn.disabled = true; }
+
+  var notlar = (document.getElementById('pmNotlar') || {}).value || '';
+
+  // Kontrol listesi ozet
+  var checkOzet = [];
+  document.querySelectorAll('#kontrolListesi input[type="checkbox"]').forEach(function(cb) {
+    var label = cb.closest('.pm-check-item').querySelector('.pm-check-label').textContent;
+    checkOzet.push((cb.checked ? '[x] ' : '[ ] ') + label);
+  });
+
+  kodUret('BWO').then(function(bwoKod) {
+    var fields = {
+      'BWO No': bwoKod,
+      'Tip': 'PM',
+      'Durum': 'Acik',
+      'Makine': pm.ad,
+      'Makine Kodu': pm.kod,
+      'Aciklama': 'Periyodik bakim - ' + pm.pmTip + '\n\nKontrol Listesi:\n' + checkOzet.join('\n') + (notlar ? '\n\nNotlar: ' + notlar : ''),
+      'Olusturma Tarihi': new Date().toISOString().split('T')[0],
+      'Oncelik': pm.kalanGun < 0 ? 'Yuksek' : 'Normal'
+    };
+
+    // Linked record olarak tezgah baglama
+    if (pm.tezgahId) {
+      fields['Tezgah'] = [{id: pm.tezgahId}];
+    }
+
+    return fetch(BASE, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        method: 'POST',
+        path: '/v0/app5LDgJMgocw79Ix/Bakim%20Is%20Emirleri',
+        body: { fields: fields }
+      })
+    });
+  }).then(function(r) { return r.json(); })
+  .then(function(res) {
+    // Son_Bakim_Tarihi guncelle
+    return fetch(BASE, {
+      method: 'PATCH',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        table: TEZGAH_TABLE,
+        id: pm.tezgahId,
+        fields: {
+          'Son_Bakim_Tarihi': new Date().toISOString().split('T')[0]
+        }
+      })
+    }).then(function() { return res; });
+  }).then(function(res) {
+    var bwoNo = (res.fields || {})['BWO No'] || 'BWO';
+    logIslem('Olusturuldu', 'Bakim', res.id || '', bwoNo, null, {tip:'PM', makine:pm.kod});
+    alert('BWO olusturuldu: ' + bwoNo);
+    yukle();
+  }).catch(function(e) {
+    console.error('BWO olusturulamadi:', e);
+    alert('Hata: BWO olusturulamadi - ' + e.message);
+    if (btn) { btn.textContent = 'BWO Olustur'; btn.disabled = false; }
+  });
+}
+
+// ─── Olaylar ───
+function baglaOlaylar() {
+  // Filtre butonlari
+  document.querySelectorAll('.pm-filtre-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.pm-filtre-btn').forEach(function(b) { b.classList.remove('aktif'); });
+      btn.classList.add('aktif');
+      aktifFiltre = btn.getAttribute('data-filtre');
+      listeRenderla();
+    });
+  });
+
+  // Arama
+  document.getElementById('pmArama').addEventListener('input', function() {
+    listeRenderla();
+  });
+
+  // Yeni PM butonu
+  document.getElementById('btnYeniPM').addEventListener('click', function() {
+    // Scroll to first gecikmis
+    var gecikmis = pmListesi.find(function(p) { return p.kalanGun < 0; });
+    if (gecikmis) {
+      pmSec(gecikmis);
+    } else if (pmListesi.length > 0) {
+      pmSec(pmListesi[0]);
+    }
+  });
+}
+
+// URL param
+function urlParamKontrol() {
+  var params = new URLSearchParams(window.location.search);
+  var mchParam = params.get('mch');
+  if (mchParam) {
+    var pm = pmListesi.find(function(p) {
+      return p.kod === mchParam || p.kod.indexOf(mchParam) > -1;
+    });
+    if (pm) pmSec(pm);
+  }
+}
+
+// ─── Yardimci ───
+function esc(str) {
+  if (!str) return '';
+  var d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+</script>
+</body>
+</html>

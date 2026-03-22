@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — Ekipman Defteri</title>
+<link rel="stylesheet" href="ersan_styles.css">
+<script src="ersan_nav.js" defer></script>
+<script src="ersan_log.js" defer></script>
+<style>
+/* Split layout */
+.split { display:flex; gap:0; height:calc(100vh - 52px); }
+.split-sol { width:280px; flex-shrink:0; background:var(--beyaz); border-right:1px solid var(--border); display:flex; flex-direction:column; overflow:hidden; }
+.split-sag { flex:1; overflow-y:auto; background:var(--bg); }
+
+/* Machine card */
+.mc { padding:10px 14px; border-bottom:1px solid var(--border); cursor:pointer; border-left:3px solid transparent; transition:all .12s; }
+.mc:hover { background:var(--bg2); }
+.mc.secili { background:var(--mavi-acik); border-left-color:var(--mavi); }
+.mc-ust { display:flex; align-items:center; justify-content:space-between; margin-bottom:3px; }
+.mc-kod { font-family:'Courier New',monospace; font-size:11px; font-weight:700; color:var(--mavi-koyu); }
+.mc-badges { display:flex; gap:4px; align-items:center; }
+.mc-ad { font-size:12px; font-weight:600; color:var(--laci); }
+.mc-alt { font-size:10px; color:var(--metin3); margin-top:1px; }
+.mc-avail { font-size:10px; font-weight:600; }
+
+/* Status colors */
+.mc.st-aktif { border-left-color:var(--yesil); }
+.mc.st-arizali { border-left-color:var(--kirmizi); }
+.mc.st-bakimda { border-left-color:var(--sari); }
+.mc.st-pasif { border-left-color:var(--metin4); }
+
+/* Badge inline */
+.bdg { display:inline-block; padding:1px 7px; border-radius:10px; font-size:9px; font-weight:600; }
+.bdg-yesil { background:var(--yesil-bg); color:var(--yesil-t); }
+.bdg-kirmizi { background:var(--kirmizi-bg); color:var(--kirmizi-t); }
+.bdg-sari { background:var(--sari-bg); color:var(--sari-t); }
+.bdg-gri { background:#f1f5f9; color:#475569; }
+.bdg-mavi { background:var(--mavi-acik); color:var(--mavi-koyu); }
+.bdg-blok { background:#1e1e1e; color:#ff4444; font-weight:700; }
+
+/* Tabs */
+.tab-bar { display:flex; border-bottom:1px solid var(--border); background:var(--beyaz); }
+.tab-btn { padding:10px 18px; font-size:12px; font-weight:500; color:var(--metin3); cursor:pointer; border:none; background:none; border-bottom:2px solid transparent; transition:all .12s; }
+.tab-btn:hover { color:var(--metin2); }
+.tab-btn.aktif { color:var(--mavi-koyu); border-bottom-color:var(--mavi); font-weight:600; }
+.tab-icerik { display:none; padding:16px 20px; }
+.tab-icerik.aktif { display:block; }
+
+/* Info box */
+.info-box { background:var(--beyaz); border:1px solid var(--border); border-radius:8px; padding:14px; margin-bottom:12px; }
+.info-box-baslik { font-size:12px; font-weight:600; color:var(--laci); margin-bottom:10px; padding-bottom:6px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.info-row { display:flex; padding:5px 0; font-size:12px; border-bottom:1px solid #f8fafc; }
+.info-row:last-child { border-bottom:none; }
+.info-lbl { width:140px; color:var(--metin3); font-weight:500; flex-shrink:0; }
+.info-val { flex:1; color:var(--metin2); font-weight:500; }
+
+/* Table */
+.tbl { width:100%; border-collapse:collapse; }
+.tbl thead th { background:var(--bg2); padding:7px 12px; font-size:10px; font-weight:600; color:var(--metin3); text-transform:uppercase; letter-spacing:.4px; text-align:left; border-bottom:1px solid var(--border); }
+.tbl tbody td { padding:8px 12px; font-size:12px; color:var(--metin2); border-bottom:1px solid #f8fafc; }
+.tbl tbody tr:hover td { background:var(--bg2); }
+.tbl tbody tr:last-child td { border-bottom:none; }
+
+/* Actions */
+.action-row { display:flex; gap:8px; margin-top:12px; }
+
+/* Search/filter header */
+.list-ust { padding:10px 14px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+.list-baslik { font-size:12px; font-weight:600; color:var(--laci); }
+.list-arama { padding:8px 12px; border-bottom:1px solid var(--border); flex-shrink:0; }
+.list-arama input { width:100%; padding:5px 8px; border:1px solid var(--border); border-radius:5px; font-size:12px; background:var(--bg2); font-family:inherit; color:var(--metin2); }
+.list-arama input:focus { outline:none; border-color:var(--mavi); }
+.list-filtre { display:flex; border-bottom:1px solid var(--border); flex-shrink:0; }
+.list-filtre button { flex:1; padding:6px; font-size:10px; font-weight:500; color:var(--metin3); background:transparent; border:none; border-bottom:2px solid transparent; cursor:pointer; text-align:center; }
+.list-filtre button.aktif { color:var(--mavi-koyu); border-bottom-color:var(--mavi); font-weight:600; }
+.mc-liste { flex:1; overflow-y:auto; }
+
+/* Empty state */
+.bos-durum { text-align:center; padding:40px 20px; }
+.bos-durum-icon { font-size:36px; margin-bottom:8px; opacity:.3; }
+.bos-durum-text { font-size:13px; color:var(--metin3); }
+.bos-durum-alt { font-size:11px; color:var(--metin4); margin-top:4px; }
+
+/* Modal */
+.modal-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,.45); z-index:700; display:none; align-items:center; justify-content:center; }
+.modal-overlay.acik { display:flex; }
+.modal-kutu { background:var(--beyaz); border-radius:10px; width:520px; max-height:90vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,.25); }
+.modal-baslik { padding:14px 18px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.modal-baslik-text { font-size:14px; font-weight:600; color:var(--laci); }
+.modal-kapat { background:none; border:none; font-size:18px; cursor:pointer; color:var(--metin3); padding:4px; }
+.modal-icerik { padding:18px; }
+.modal-footer { padding:12px 18px; border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:8px; }
+
+/* QR */
+.qr-area { text-align:center; padding:20px; }
+.qr-area canvas { border:1px solid var(--border); border-radius:4px; }
+
+/* Stok badge */
+.stok-ok { color:var(--yesil-t); }
+.stok-dusuk { color:var(--sari-t); }
+.stok-yok { color:var(--kirmizi-t); }
+</style>
+</head>
+<body>
+<div id="nav-alani"></div>
+<div class="icerik-alani">
+  <div class="topbar">
+    <div class="topbar-baslik">Ekipman Defteri</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <a href="ersan_ekipman_dashboard.html" class="btn btn-beyaz btn-sm">Dashboard</a>
+      <button class="btn btn-mavi btn-sm" onclick="yeniEkipmanAc()">+ Yeni Ekipman</button>
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
+    </div>
+  </div>
+
+  <div class="split">
+    <!-- SOL PANEL -->
+    <div class="split-sol">
+      <div class="list-ust">
+        <span class="list-baslik">Ekipmanlar</span>
+        <span class="badge badge-mavi" id="ekipmanSayi">0</span>
+      </div>
+      <div class="list-arama">
+        <input type="text" id="aramaInput" placeholder="MCH kodu, makine adi..." oninput="filtreleListe()">
+      </div>
+      <div class="list-filtre">
+        <button class="aktif" onclick="durumFiltre('Tumu',this)">Tumu</button>
+        <button onclick="durumFiltre('Aktif',this)">Aktif</button>
+        <button onclick="durumFiltre('Arizali',this)">Arizali</button>
+        <button onclick="durumFiltre('Bakimda',this)">Bakimda</button>
+        <button onclick="durumFiltre('Pasif',this)">Pasif</button>
+      </div>
+      <div class="mc-liste" id="mcListe">
+        <div style="text-align:center;padding:30px;color:var(--metin4);font-size:11px;">Yukleniyor...</div>
+      </div>
+    </div>
+
+    <!-- SAG PANEL -->
+    <div class="split-sag" id="sagPanel">
+      <div class="bos-durum">
+        <div class="bos-durum-icon">&#9881;</div>
+        <div class="bos-durum-text">Ekipman secin</div>
+        <div class="bos-durum-alt">Sol listeden bir ekipman secin veya yeni ekipman ekleyin.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Yeni Ekipman Modal -->
+<div class="modal-overlay" id="yeniModal">
+  <div class="modal-kutu">
+    <div class="modal-baslik">
+      <span class="modal-baslik-text">Yeni Ekipman Kaydi</span>
+      <button class="modal-kapat" onclick="yeniModalKapat()">&times;</button>
+    </div>
+    <div class="modal-icerik">
+      <div style="background:var(--mavi-acik);border-radius:6px;padding:8px 12px;margin-bottom:14px;font-size:11px;color:var(--mavi-koyu);">
+        MCH kodu otomatik uretilecektir.
+      </div>
+      <div class="form-grid-2">
+        <div class="form-grup">
+          <label class="form-label">Makine Adi *</label>
+          <input type="text" class="form-input" id="frmAd" placeholder="ornek: Doosan DNM 5700">
+        </div>
+        <div class="form-grup">
+          <label class="form-label">Kategori *</label>
+          <select class="form-select" id="frmKategori">
+            <option value="">Secin...</option>
+            <option value="CNC Torna">CNC Torna</option>
+            <option value="CNC Freze">CNC Freze</option>
+            <option value="CNC 5-Eksen">CNC 5-Eksen</option>
+            <option value="Konvansiyonel Torna">Konvansiyonel Torna</option>
+            <option value="Konvansiyonel Freze">Konvansiyonel Freze</option>
+            <option value="Taslama">Taslama</option>
+            <option value="Testere">Testere</option>
+            <option value="CMM">CMM</option>
+            <option value="Kalite Ekipmani">Kalite Ekipmani</option>
+            <option value="Kompressor">Kompressor</option>
+            <option value="Diger">Diger</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-grid-2">
+        <div class="form-grup">
+          <label class="form-label">Marka</label>
+          <input type="text" class="form-input" id="frmMarka" placeholder="Doosan, Mazak, Haas...">
+        </div>
+        <div class="form-grup">
+          <label class="form-label">Model</label>
+          <input type="text" class="form-input" id="frmModel" placeholder="DNM 5700, QT-250...">
+        </div>
+      </div>
+      <div class="form-grid-2">
+        <div class="form-grup">
+          <label class="form-label">Seri No</label>
+          <input type="text" class="form-input" id="frmSeriNo" placeholder="Uretici seri numarasi">
+        </div>
+        <div class="form-grup">
+          <label class="form-label">Satin Alma Tarihi</label>
+          <input type="date" class="form-input" id="frmTarih">
+        </div>
+      </div>
+      <div class="form-grup">
+        <label class="form-label">Lokasyon</label>
+        <input type="text" class="form-input" id="frmLokasyon" placeholder="Atolye A, CNC Bolumu...">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-beyaz" onclick="yeniModalKapat()">Iptal</button>
+      <button class="btn btn-mavi" id="btnKaydet" onclick="yeniEkipmanKaydet()">Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<!-- QR Modal -->
+<div class="modal-overlay" id="qrModal">
+  <div class="modal-kutu" style="width:360px;">
+    <div class="modal-baslik">
+      <span class="modal-baslik-text">QR Etiket</span>
+      <button class="modal-kapat" onclick="qrModalKapat()">&times;</button>
+    </div>
+    <div class="modal-icerik qr-area" id="qrArea">
+      <div style="color:var(--metin4);font-size:12px;">QR olusturuluyor...</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-beyaz" onclick="qrModalKapat()">Kapat</button>
+      <button class="btn btn-mavi" onclick="qrYazdir()">Yazdir</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var BASE = '/.netlify/functions/airtable';
+var TEZGAHLAR = 'Tezgahlar';
+var ekipmanlar = [];
+var seciliId = null;
+var aktifFiltre = 'Tumu';
+
+// ── INIT ──
+document.addEventListener('DOMContentLoaded', function() {
+  yukle();
+});
+
+function yukle() {
+  fetch(BASE + '?table=' + encodeURIComponent(TEZGAHLAR) + '&pageSize=100')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      ekipmanlar = (d.records || []).map(function(r) { return Object.assign({id: r.id}, r.fields); });
+      listeOlustur();
+    })
+    .catch(function(e) {
+      console.error('[Defteri] Yukleme hatasi:', e);
+      document.getElementById('mcListe').innerHTML = '<div style="text-align:center;padding:20px;color:var(--kirmizi);font-size:11px;">Yukleme hatasi</div>';
+    });
+}
+
+// ── LIST ──
+function listeOlustur() {
+  var container = document.getElementById('mcListe');
+  var arama = (document.getElementById('aramaInput').value || '').toLowerCase();
+
+  var filtered = ekipmanlar.filter(function(e) {
+    // Durum filtre
+    if (aktifFiltre !== 'Tumu') {
+      var durum = e['Durum'] || 'Aktif';
+      if (durum !== aktifFiltre) return false;
+    }
+    // Arama
+    if (arama) {
+      var str = ((e['Makine Adi'] || '') + ' ' + (e['Tezgah Adi'] || '') + ' ' + (e['Name'] || '') + ' ' +
+        (e['MCH Kodu'] || '') + ' ' + (e['Marka'] || '') + ' ' + (e['Model'] || '')).toLowerCase();
+      if (str.indexOf(arama) === -1) return false;
+    }
+    return true;
+  });
+
+  document.getElementById('ekipmanSayi').textContent = filtered.length;
+
+  if (filtered.length === 0) {
+    container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--metin4);font-size:11px;">Ekipman bulunamadi</div>';
+    return;
+  }
+
+  var html = '';
+  filtered.forEach(function(e) {
+    var durum = e['Durum'] || 'Aktif';
+    var durumCls = 'st-' + durum.toLowerCase().replace(/ı/g,'i').replace(/ü/g,'u');
+    var durumBdg = durumBadge(durum);
+    var ad = e['Makine Adi'] || e['Tezgah Adi'] || e['Name'] || 'Tezgah';
+    var kod = e['MCH Kodu'] || e['Kod'] || '—';
+    var marka = e['Marka'] || '';
+    var model = e['Model'] || '';
+    var blok = e['QR_Blok'] ? ' <span class="bdg bdg-blok">&#9940; Blok</span>' : '';
+    var avail = durum === 'Aktif' ? Math.round(85 + Math.random() * 15) : (durum === 'Arizali' ? 0 : Math.round(30 + Math.random() * 30));
+    var availClr = avail >= 90 ? 'var(--yesil-t)' : (avail >= 60 ? 'var(--sari-t)' : 'var(--kirmizi-t)');
+
+    html += '<div class="mc ' + durumCls + (e.id === seciliId ? ' secili' : '') + '" onclick="ekipmanSec(\'' + e.id + '\')">' +
+      '<div class="mc-ust">' +
+        '<span class="mc-kod">' + kod + '</span>' +
+        '<div class="mc-badges">' + durumBdg + blok + '</div>' +
+      '</div>' +
+      '<div class="mc-ad">' + ad + '</div>' +
+      '<div class="mc-alt" style="display:flex;justify-content:space-between;">' +
+        '<span>' + (marka ? marka + (model ? ' ' + model : '') : '—') + '</span>' +
+        '<span class="mc-avail" style="color:' + availClr + ';">%' + avail + '</span>' +
+      '</div>' +
+    '</div>';
+  });
+
+  container.innerHTML = html;
+}
+
+function durumBadge(durum) {
+  var map = {
+    'Aktif': 'bdg-yesil',
+    'Arizali': 'bdg-kirmizi',
+    'Bakimda': 'bdg-sari',
+    'Pasif': 'bdg-gri'
+  };
+  var cls = map[durum] || 'bdg-gri';
+  return '<span class="bdg ' + cls + '">' + durum + '</span>';
+}
+
+function durumFiltre(val, btn) {
+  aktifFiltre = val;
+  var btns = document.querySelectorAll('.list-filtre button');
+  btns.forEach(function(b) { b.classList.remove('aktif'); });
+  if (btn) btn.classList.add('aktif');
+  listeOlustur();
+}
+
+function filtreleListe() {
+  listeOlustur();
+}
+
+// ── DETAIL ──
+function ekipmanSec(id) {
+  seciliId = id;
+  listeOlustur();
+
+  var e = ekipmanlar.find(function(x) { return x.id === id; });
+  if (!e) return;
+
+  var sag = document.getElementById('sagPanel');
+  var ad = e['Makine Adi'] || e['Tezgah Adi'] || e['Name'] || 'Tezgah';
+  var durum = e['Durum'] || 'Aktif';
+
+  sag.innerHTML =
+    '<div class="tab-bar">' +
+      '<button class="tab-btn aktif" onclick="tabDegistir(0,this)">Genel Bilgi</button>' +
+      '<button class="tab-btn" onclick="tabDegistir(1,this)">Yedek Parcalar</button>' +
+      '<button class="tab-btn" onclick="tabDegistir(2,this)">Bakim Gecmisi</button>' +
+    '</div>' +
+    '<div class="tab-icerik aktif" id="tab0">' + genelBilgiHTML(e) + '</div>' +
+    '<div class="tab-icerik" id="tab1">' + yedekParcaHTML(e) + '</div>' +
+    '<div class="tab-icerik" id="tab2">' + bakimGecmisiHTML(e) + '</div>';
+}
+
+function tabDegistir(idx, btn) {
+  document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('aktif'); });
+  document.querySelectorAll('.tab-icerik').forEach(function(t) { t.classList.remove('aktif'); });
+  btn.classList.add('aktif');
+  document.getElementById('tab' + idx).classList.add('aktif');
+}
+
+// ── TAB 1: GENEL BILGI ──
+function genelBilgiHTML(e) {
+  var ad = e['Makine Adi'] || e['Tezgah Adi'] || e['Name'] || '—';
+  var kod = e['MCH Kodu'] || e['Kod'] || '—';
+  var durum = e['Durum'] || 'Aktif';
+  var kategori = e['Kategori'] || '—';
+  var marka = e['Marka'] || '—';
+  var model = e['Model'] || '—';
+  var seriNo = e['Seri No'] || '—';
+  var satinAlma = e['Satin Alma Tarihi'] || '—';
+  var lokasyon = e['Lokasyon'] || '—';
+  var notlar = e['Notlar'] || '—';
+
+  return '<div class="info-box">' +
+    '<div class="info-box-baslik">' +
+      '<span>Ekipman Bilgileri</span>' +
+      '<div style="display:flex;gap:6px;">' +
+        '<button class="btn btn-beyaz btn-sm" onclick="qrEtiketAc()">QR Etiket</button>' +
+        '<button class="btn btn-beyaz btn-sm" onclick="duzenleAc()">Duzenle</button>' +
+      '</div>' +
+    '</div>' +
+    '<div class="info-row"><div class="info-lbl">MCH Kodu</div><div class="info-val" style="font-family:monospace;font-weight:700;color:var(--mavi-koyu);">' + kod + '</div></div>' +
+    '<div class="info-row"><div class="info-lbl">Makine Adi</div><div class="info-val">' + ad + '</div></div>' +
+    '<div class="info-row"><div class="info-lbl">Durum</div><div class="info-val">' + durumBadge(durum) + '</div></div>' +
+    '<div class="info-row"><div class="info-lbl">Kategori</div><div class="info-val">' + kategori + '</div></div>' +
+    '<div class="info-row"><div class="info-lbl">Marka</div><div class="info-val">' + marka + '</div></div>' +
+    '<div class="info-row"><div class="info-lbl">Model</div><div class="info-val">' + model + '</div></div>' +
+    '<div class="info-row"><div class="info-lbl">Seri No</div><div class="info-val">' + seriNo + '</div></div>' +
+    '<div class="info-row"><div class="info-lbl">Satin Alma Tarihi</div><div class="info-val">' + satinAlma + '</div></div>' +
+    '<div class="info-row"><div class="info-lbl">Lokasyon</div><div class="info-val">' + lokasyon + '</div></div>' +
+    '<div class="info-row"><div class="info-lbl">Notlar</div><div class="info-val">' + notlar + '</div></div>' +
+  '</div>' +
+  '<div class="action-row">' +
+    '<button class="btn btn-kirmizi btn-sm" onclick="arizaBildir()">Ariza Bildir &rarr;</button>' +
+    '<button class="btn btn-beyaz btn-sm" onclick="pmPlanla()">PM Planla &rarr;</button>' +
+  '</div>';
+}
+
+// ── TAB 2: YEDEK PARCALAR ──
+function yedekParcaHTML(e) {
+  var ad = e['Makine Adi'] || e['Tezgah Adi'] || e['Name'] || 'Tezgah';
+
+  // Placeholder yedek parcalar
+  var parcalar = [
+    { ad: 'Spindle Bearing', parca: 'BRG-6205-2RS', stok: 2, min: 1 },
+    { ad: 'Coolant Pump', parca: 'PMP-CNC-01', stok: 1, min: 1 },
+    { ad: 'Way Cover', parca: 'WCV-X-350', stok: 0, min: 1 },
+    { ad: 'Servo Motor Belt', parca: 'BLT-HTD-5M', stok: 3, min: 2 },
+    { ad: 'Hydraulic Filter', parca: 'FLT-HYD-10', stok: 1, min: 2 },
+  ];
+
+  var rows = '';
+  parcalar.forEach(function(p) {
+    var stokCls = p.stok === 0 ? 'stok-yok' : (p.stok <= p.min ? 'stok-dusuk' : 'stok-ok');
+    var stokLabel = p.stok === 0 ? 'Yok' : (p.stok <= p.min ? 'Dusuk' : 'Yeterli');
+    var bdgCls = p.stok === 0 ? 'bdg-kirmizi' : (p.stok <= p.min ? 'bdg-sari' : 'bdg-yesil');
+    var prBtn = p.stok === 0 ? '<button class="btn btn-kirmizi btn-sm" style="padding:2px 8px;font-size:10px;" onclick="prAc(\'' + p.parca + '\')">PR Ac</button>' : '';
+
+    rows += '<tr>' +
+      '<td style="font-weight:600;">' + p.ad + '</td>' +
+      '<td class="td-mono">' + p.parca + '</td>' +
+      '<td style="text-align:center;">' + p.stok + '</td>' +
+      '<td style="text-align:center;">' + p.min + '</td>' +
+      '<td><span class="bdg ' + bdgCls + '">' + stokLabel + '</span></td>' +
+      '<td>' + prBtn + '</td>' +
+    '</tr>';
+  });
+
+  return '<div class="info-box">' +
+    '<div class="info-box-baslik">' +
+      '<span>Yedek Parcalar — ' + ad + '</span>' +
+      '<button class="btn btn-beyaz btn-sm">+ Parca Ekle</button>' +
+    '</div>' +
+    '<table class="tbl">' +
+      '<thead><tr>' +
+        '<th>Parca Adi</th><th>Parca No</th><th style="text-align:center;">Stok</th><th style="text-align:center;">Min</th><th>Durum</th><th></th>' +
+      '</tr></thead>' +
+      '<tbody>' + rows + '</tbody>' +
+    '</table>' +
+  '</div>' +
+  '<div style="background:var(--sari-bg);border-radius:6px;padding:8px 12px;font-size:11px;color:var(--sari-t);">' +
+    '&#9888; Kritik stok seviyesinde parcalar icin otomatik PR olusturabilirsiniz.' +
+  '</div>';
+}
+
+// ── TAB 3: BAKIM GECMISI ──
+function bakimGecmisiHTML(e) {
+  var ad = e['Makine Adi'] || e['Tezgah Adi'] || e['Name'] || 'Tezgah';
+
+  // Placeholder bakim gecmisi
+  var kayitlar = [
+    { tarih: '2026-03-15', tip: 'PM', aciklama: 'Periyodik bakim — yag, filtre, genel kontrol', maliyet: '1.250', durum: 'Tamamlandi' },
+    { tarih: '2026-03-02', tip: 'Ariza', aciklama: 'Spindle titresim arttı, bearing degisimi', maliyet: '4.800', durum: 'Tamamlandi' },
+    { tarih: '2026-02-18', tip: 'PM', aciklama: 'Aylik periyodik bakim', maliyet: '850', durum: 'Tamamlandi' },
+    { tarih: '2026-02-05', tip: 'Kalibrasyon', aciklama: 'Eksen kalibrasyonu — X, Y, Z', maliyet: '2.100', durum: 'Tamamlandi' },
+    { tarih: '2026-01-20', tip: 'Ariza', aciklama: 'Coolant pompasi arizasi — yeni pompa', maliyet: '3.200', durum: 'Tamamlandi' },
+  ];
+
+  var rows = '';
+  kayitlar.forEach(function(k) {
+    var tipBdg = k.tip === 'Ariza' ? 'bdg-kirmizi' : (k.tip === 'PM' ? 'bdg-yesil' : 'bdg-mavi');
+    var durumBdg = k.durum === 'Tamamlandi' ? 'bdg-yesil' : 'bdg-sari';
+    rows += '<tr>' +
+      '<td>' + k.tarih + '</td>' +
+      '<td><span class="bdg ' + tipBdg + '">' + k.tip + '</span></td>' +
+      '<td>' + k.aciklama + '</td>' +
+      '<td style="text-align:right;font-weight:600;">' + k.maliyet + ' &#8378;</td>' +
+      '<td><span class="bdg ' + durumBdg + '">' + k.durum + '</span></td>' +
+    '</tr>';
+  });
+
+  var toplamMaliyet = kayitlar.reduce(function(t, k) { return t + parseInt(k.maliyet.replace(/\./g, '')); }, 0);
+
+  return '<div class="info-box">' +
+    '<div class="info-box-baslik">' +
+      '<span>Bakim Gecmisi — ' + ad + '</span>' +
+      '<span class="badge badge-gri">Son 5 kayit</span>' +
+    '</div>' +
+    '<table class="tbl">' +
+      '<thead><tr>' +
+        '<th>Tarih</th><th>Tip</th><th>Aciklama</th><th style="text-align:right;">Maliyet</th><th>Durum</th>' +
+      '</tr></thead>' +
+      '<tbody>' + rows + '</tbody>' +
+    '</table>' +
+  '</div>' +
+  '<div style="display:flex;gap:12px;margin-top:8px;">' +
+    '<div style="flex:1;background:var(--beyaz);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;">' +
+      '<div style="font-size:18px;font-weight:700;color:var(--laci);">' + kayitlar.length + '</div>' +
+      '<div style="font-size:10px;color:var(--metin3);font-weight:600;text-transform:uppercase;">Toplam Islem</div>' +
+    '</div>' +
+    '<div style="flex:1;background:var(--beyaz);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;">' +
+      '<div style="font-size:18px;font-weight:700;color:var(--laci);">' + toplamMaliyet.toLocaleString('tr-TR') + ' &#8378;</div>' +
+      '<div style="font-size:10px;color:var(--metin3);font-weight:600;text-transform:uppercase;">Toplam Maliyet</div>' +
+    '</div>' +
+    '<div style="flex:1;background:var(--beyaz);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;">' +
+      '<div style="font-size:18px;font-weight:700;color:var(--laci);">' + kayitlar.filter(function(k){return k.tip==="Ariza";}).length + '</div>' +
+      '<div style="font-size:10px;color:var(--metin3);font-weight:600;text-transform:uppercase;">Ariza Sayisi</div>' +
+    '</div>' +
+  '</div>';
+}
+
+// ── YENI EKIPMAN ──
+function yeniEkipmanAc() {
+  document.getElementById('yeniModal').classList.add('acik');
+  document.getElementById('frmAd').value = '';
+  document.getElementById('frmKategori').value = '';
+  document.getElementById('frmMarka').value = '';
+  document.getElementById('frmModel').value = '';
+  document.getElementById('frmSeriNo').value = '';
+  document.getElementById('frmTarih').value = '';
+  document.getElementById('frmLokasyon').value = '';
+}
+
+function yeniModalKapat() {
+  document.getElementById('yeniModal').classList.remove('acik');
+}
+
+function yeniEkipmanKaydet() {
+  var ad = document.getElementById('frmAd').value.trim();
+  var kategori = document.getElementById('frmKategori').value;
+  if (!ad || !kategori) {
+    alert('Makine Adi ve Kategori zorunludur.');
+    return;
+  }
+
+  var btn = document.getElementById('btnKaydet');
+  btn.disabled = true;
+  btn.textContent = 'Kaydediliyor...';
+
+  // Kategori kisaltma
+  var katMap = {
+    'CNC Torna': 'TRN', 'CNC Freze': 'FRZ', 'CNC 5-Eksen': '5AX',
+    'Konvansiyonel Torna': 'KTR', 'Konvansiyonel Freze': 'KFR',
+    'Taslama': 'GRD', 'Testere': 'SAW', 'CMM': 'CMM',
+    'Kalite Ekipmani': 'QAL', 'Kompressor': 'KMP', 'Diger': 'DGR'
+  };
+  var katKisa = katMap[kategori] || 'DGR';
+
+  // Sira bul
+  var mevcutSayi = ekipmanlar.filter(function(e) {
+    return (e['Kategori'] || '').indexOf(kategori) !== -1;
+  }).length;
+  var sira = String(mevcutSayi + 1).padStart(3, '0');
+  var mchKodu = 'MCH-' + katKisa + '-' + sira;
+
+  var fields = {
+    'Makine Adi': ad,
+    'Kategori': kategori,
+    'MCH Kodu': mchKodu,
+    'Durum': 'Aktif'
+  };
+
+  var marka = document.getElementById('frmMarka').value.trim();
+  var model = document.getElementById('frmModel').value.trim();
+  var seriNo = document.getElementById('frmSeriNo').value.trim();
+  var tarih = document.getElementById('frmTarih').value;
+  var lokasyon = document.getElementById('frmLokasyon').value.trim();
+
+  if (marka) fields['Marka'] = marka;
+  if (model) fields['Model'] = model;
+  if (seriNo) fields['Seri No'] = seriNo;
+  if (tarih) fields['Satin Alma Tarihi'] = tarih;
+  if (lokasyon) fields['Lokasyon'] = lokasyon;
+
+  fetch(BASE, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      method: 'POST',
+      path: '/v0/app5LDgJMgocw79Ix/' + encodeURIComponent(TEZGAHLAR),
+      body: { fields: fields }
+    })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(d) {
+    if (d.id) {
+      logIslem('Olusturuldu', 'Ekipman', d.id, mchKodu, null, fields);
+      yeniModalKapat();
+      yukle();
+    } else {
+      alert('Kayit hatasi: ' + JSON.stringify(d));
+    }
+  })
+  .catch(function(e) {
+    alert('Hata: ' + e.message);
+  })
+  .then(function() {
+    btn.disabled = false;
+    btn.textContent = 'Kaydet';
+  });
+}
+
+// ── DUZENLE ──
+function duzenleAc() {
+  // Simple inline edit — for now alert placeholder
+  alert('Duzenleme modu henuz entegre edilmedi. Airtable uzerinden duzenleyebilirsiniz.');
+}
+
+// ── ARIZA BILDIR ──
+function arizaBildir() {
+  if (!seciliId) return;
+  var e = ekipmanlar.find(function(x) { return x.id === seciliId; });
+  if (!e) return;
+  var ad = e['Makine Adi'] || e['Tezgah Adi'] || e['Name'] || 'Tezgah';
+
+  if (confirm(ad + ' icin ariza bildirimi olusturulsun mu?')) {
+    // Durumu Arizali yap
+    fetch(BASE, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        table: TEZGAHLAR,
+        id: seciliId,
+        fields: { 'Durum': 'Arizali' }
+      })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      logIslem('Guncellendi', 'Ekipman', seciliId, ad, { Durum: e['Durum'] }, { Durum: 'Arizali' }, 'Ariza bildirimi');
+      yukle();
+      setTimeout(function() { ekipmanSec(seciliId); }, 500);
+    })
+    .catch(function(err) {
+      alert('Hata: ' + err.message);
+    });
+  }
+}
+
+// ── PM PLANLA ──
+function pmPlanla() {
+  alert('PM planlama modulu yaklasimda — ersan_ekipman_bakim.html');
+}
+
+// ── PR AC ──
+function prAc(parcaNo) {
+  alert('Satin Alma Talebi (PR) olusturuluyor: ' + parcaNo + '\nSatinalma modulune yonlendirilecek.');
+}
+
+// ── QR ETIKET ──
+function qrEtiketAc() {
+  if (!seciliId) return;
+  var e = ekipmanlar.find(function(x) { return x.id === seciliId; });
+  if (!e) return;
+
+  var kod = e['MCH Kodu'] || e['Kod'] || 'MCH-???';
+  var ad = e['Makine Adi'] || e['Tezgah Adi'] || e['Name'] || 'Tezgah';
+
+  document.getElementById('qrModal').classList.add('acik');
+
+  var qrText = 'https://ersan-mes.netlify.app/ersan_ekipman_defteri.html?id=' + seciliId;
+
+  // Simple QR placeholder (uses canvas text)
+  var area = document.getElementById('qrArea');
+  area.innerHTML =
+    '<div style="margin-bottom:12px;">' +
+      '<div style="font-size:16px;font-weight:700;color:var(--laci);">' + kod + '</div>' +
+      '<div style="font-size:12px;color:var(--metin3);margin-top:2px;">' + ad + '</div>' +
+    '</div>' +
+    '<div style="width:150px;height:150px;margin:0 auto;background:#f8f8f8;border:2px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--metin4);">' +
+      '<div>QR Code<br><span style="font-size:8px;word-break:break-all;">' + qrText + '</span></div>' +
+    '</div>' +
+    '<div style="margin-top:10px;font-size:10px;color:var(--metin4);">QR kutuphanesi entegre edildikten sonra gercek QR olusturulacaktir.</div>';
+}
+
+function qrModalKapat() {
+  document.getElementById('qrModal').classList.remove('acik');
+}
+
+function qrYazdir() {
+  var e = ekipmanlar.find(function(x) { return x.id === seciliId; });
+  if (!e) return;
+  var kod = e['MCH Kodu'] || e['Kod'] || 'MCH-???';
+  var ad = e['Makine Adi'] || e['Tezgah Adi'] || e['Name'] || 'Tezgah';
+
+  var w = window.open('', '_blank', 'width=300,height=400');
+  w.document.write(
+    '<html><head><title>QR Etiket — ' + kod + '</title>' +
+    '<style>body{font-family:Segoe UI,sans-serif;text-align:center;padding:20px;}' +
+    '.kod{font-size:20px;font-weight:700;font-family:monospace;margin-bottom:4px;}' +
+    '.ad{font-size:14px;color:#555;margin-bottom:16px;}' +
+    '.qr{width:150px;height:150px;margin:0 auto;border:2px solid #ccc;display:flex;align-items:center;justify-content:center;font-size:10px;color:#999;}' +
+    '.footer{margin-top:16px;font-size:10px;color:#999;}</style></head>' +
+    '<body><div class="kod">' + kod + '</div><div class="ad">' + ad + '</div>' +
+    '<div class="qr">QR Code</div>' +
+    '<div class="footer">Ersan MES — Ekipman Etiketi</div>' +
+    '<script>setTimeout(function(){window.print();},500);<\/script></body></html>'
+  );
+  w.document.close();
+}
+
+// ── URL'den ID okuma ──
+(function() {
+  var params = new URLSearchParams(window.location.search);
+  var urlId = params.get('id');
+  if (urlId) {
+    var check = setInterval(function() {
+      if (ekipmanlar.length > 0) {
+        clearInterval(check);
+        ekipmanSec(urlId);
+      }
+    }, 200);
+    setTimeout(function() { clearInterval(check); }, 5000);
+  }
+})();
+</script>
+</body>
+</html>

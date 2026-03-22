@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — Bakim Is Emirleri (BWO)</title>
+<link rel="stylesheet" href="ersan_styles.css">
+<script src="ersan_nav.js" defer></script>
+<script src="ersan_log.js" defer></script>
+<style>
+.bwo-layout{display:flex;gap:12px;height:calc(100vh - 52px - 80px)}
+.bwo-sol{width:280px;flex-shrink:0;background:var(--beyaz);border:1px solid var(--border);border-radius:8px;display:flex;flex-direction:column;overflow:hidden}
+.bwo-sag{flex:1;background:var(--beyaz);border:1px solid var(--border);border-radius:8px;overflow-y:auto;padding:0}
+.bwo-search{padding:10px;border-bottom:1px solid var(--border)}
+.bwo-search input{width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;outline:none}
+.bwo-search input:focus{border-color:var(--mavi)}
+.bwo-liste{flex:1;overflow-y:auto}
+.bwo-kart{padding:10px 12px;border-bottom:1px solid var(--bg2);cursor:pointer;border-left:3px solid transparent;transition:background .12s}
+.bwo-kart:hover{background:var(--bg2)}
+.bwo-kart.secili{background:#f0fdf4;border-left-color:var(--mavi)}
+.bwo-kart.brd-bekliyor{border-left-color:#f59e0b}
+.bwo-kart.brd-aktif{border-left-color:#3b82f6}
+.bwo-kart.brd-tamamlandi{border-left-color:#10b981}
+.bwo-kart-ust{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.bwo-no{font-size:12px;font-weight:700;font-family:'Consolas','Courier New',monospace;color:var(--laci)}
+.bwo-makine{font-size:11px;color:var(--metin3);margin-bottom:3px}
+.bwo-kart-alt{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.bdg{font-size:10px;padding:2px 8px;border-radius:12px;display:inline-block;font-weight:600}
+.bdg-pm{background:#dbeafe;color:#1e40af}
+.bdg-cm{background:#fee2e2;color:#991b1b}
+.bdg-kal{background:#ede9fe;color:#5b21b6}
+.bdg-normal{background:#f3f4f6;color:#6b7280}
+.bdg-yuksek{background:#fef3c7;color:#92400e}
+.bdg-kritik{background:#fee2e2;color:#991b1b}
+.bdg-bekliyor{background:#fef3c7;color:#92400e}
+.bdg-aktif{background:#dbeafe;color:#1e40af}
+.bdg-tamamlandi{background:#d1fae5;color:#065f46}
+.bwo-detail-header{background:var(--laci);color:#fff;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;border-radius:8px 8px 0 0}
+.bwo-detail-header .bwo-h-left{display:flex;align-items:center;gap:10px}
+.bwo-detail-header .bwo-h-no{font-size:18px;font-weight:700;font-family:'Consolas','Courier New',monospace}
+.bwo-detail-header .bwo-h-mch{font-size:12px;opacity:.7}
+.bwo-detail-header .bdg{font-size:11px}
+.bwo-h-btns{display:flex;gap:8px}
+.bwo-h-btns .btn{font-size:12px;padding:7px 16px;border-radius:6px;border:none;cursor:pointer;font-weight:600;font-family:inherit}
+.btn-baslat{background:#10b981;color:#fff}
+.btn-baslat:hover{background:#059669}
+.btn-kapat{background:#ef4444;color:#fff}
+.btn-kapat:hover{background:#dc2626}
+.bwo-body{padding:20px}
+.bwo-section{margin-bottom:20px}
+.bwo-section-title{font-size:13px;font-weight:700;color:var(--laci);text-transform:uppercase;letter-spacing:.04em;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.info-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.info-box{background:var(--bg2);border-radius:6px;padding:8px 12px}
+.info-box label{font-size:10px;font-weight:600;color:var(--metin3);text-transform:uppercase;letter-spacing:.03em;display:block;margin-bottom:2px}
+.info-box span{font-size:13px;font-weight:500;color:var(--metin2)}
+.sure-bar{height:8px;background:var(--bg2);border-radius:4px;overflow:hidden;margin-top:6px}
+.sure-fill{height:100%;border-radius:4px;transition:width .3s}
+.sure-fill.green{background:#10b981}
+.sure-fill.amber{background:#f59e0b}
+.sure-fill.red{background:#ef4444}
+.sure-row{display:flex;align-items:center;gap:16px;margin-bottom:6px}
+.sure-item{font-size:12px;color:var(--metin3)}
+.sure-item b{color:var(--metin2)}
+.checklist-item{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--bg2)}
+.checklist-item input[type=checkbox]{width:16px;height:16px;accent-color:var(--mavi)}
+.checklist-item span{font-size:12px;color:var(--metin2)}
+.checklist-item.done span{text-decoration:line-through;color:var(--metin3)}
+.mlz-tbl{width:100%;border-collapse:collapse}
+.mlz-tbl th{background:var(--bg2);padding:6px 10px;font-size:10px;font-weight:600;color:var(--metin3);text-transform:uppercase;text-align:left;border-bottom:1px solid var(--border)}
+.mlz-tbl td{padding:5px 10px;border-bottom:1px solid var(--bg2);font-size:12px}
+.mlz-tbl input{width:100%;padding:4px 6px;border:1px solid var(--border);border-radius:4px;font-size:11px;font-family:inherit}
+.mlz-footer{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+.maliyet-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.maliyet-box{background:var(--bg2);border-radius:6px;padding:10px 14px;text-align:center}
+.maliyet-box label{font-size:10px;color:var(--metin3);display:block;margin-bottom:2px}
+.maliyet-box span{font-size:18px;font-weight:700;color:var(--laci)}
+.kapat-form{background:#fafafa;border:1px solid var(--border);border-radius:8px;padding:16px}
+.kapat-form .f-grp{margin-bottom:10px}
+.kapat-form .f-lbl{font-size:10px;font-weight:600;color:var(--metin3);text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px;display:block}
+.kapat-form input,.kapat-form textarea{width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;resize:vertical}
+.kapat-form textarea{min-height:60px}
+.bwo-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--metin3);text-align:center;padding:40px}
+.bwo-empty-icon{font-size:48px;opacity:.3;margin-bottom:12px}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}
+.kpi-kart{background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px}
+.kpi-etiket{font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:#6b7280;font-weight:500}
+.kpi-deger{font-size:22px;font-weight:700;color:#111827}
+.modal-ov{position:fixed;inset:0;background:rgba(15,39,68,.5);z-index:500;display:flex;align-items:center;justify-content:center}
+.modal-bx{background:var(--beyaz);border-radius:10px;width:92%;max-width:600px;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.modal-hd{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border)}
+.modal-bd{padding:18px}
+.modal-ft{display:flex;justify-content:flex-end;gap:8px;padding:12px 18px;border-top:1px solid var(--border)}
+.f-grp{margin-bottom:10px}
+.f-lbl{font-size:10px;font-weight:600;color:var(--metin3);text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px;display:block}
+.f-inp{width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;color:var(--metin2);background:var(--beyaz);font-family:inherit}
+.f-inp:focus{outline:none;border-color:var(--mavi);box-shadow:0 0 0 3px rgba(55,138,221,.1)}
+.list-footer{padding:8px 12px;border-top:1px solid var(--border);background:var(--bg2);font-size:11px;color:var(--metin3);text-align:center}
+</style>
+</head>
+<body>
+<div id="nav-alani"></div>
+<div class="icerik-alani">
+  <div class="topbar">
+    <div class="topbar-baslik">Bakim Is Emirleri (BWO)</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button class="btn btn-mavi" onclick="yeniBwoModal()">+ Yeni BWO</button>
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
+    </div>
+  </div>
+  <div class="sayfa-icerik">
+    <!-- KPI -->
+    <div class="kpi-grid">
+      <div class="kpi-kart" style="border-top:3px solid #f59e0b"><div class="kpi-etiket">Bekliyor</div><div class="kpi-deger" id="kpi-bekliyor">-</div></div>
+      <div class="kpi-kart" style="border-top:3px solid #3b82f6"><div class="kpi-etiket">Aktif</div><div class="kpi-deger" id="kpi-aktif">-</div></div>
+      <div class="kpi-kart" style="border-top:3px solid #10b981"><div class="kpi-etiket">Tamamlanan (Bu Ay)</div><div class="kpi-deger" id="kpi-tamam">-</div></div>
+      <div class="kpi-kart" style="border-top:3px solid #8b5cf6"><div class="kpi-etiket">Toplam Maliyet</div><div class="kpi-deger" id="kpi-maliyet">-</div></div>
+    </div>
+    <!-- Split Layout -->
+    <div class="bwo-layout">
+      <!-- Left List -->
+      <div class="bwo-sol">
+        <div class="bwo-search"><input type="text" id="bwo-ara" placeholder="BWO No, makine ara..." oninput="listeFiltrele()"></div>
+        <div class="bwo-liste" id="bwo-liste"></div>
+        <div class="list-footer" id="bwo-footer">0 kayit</div>
+      </div>
+      <!-- Right Detail -->
+      <div class="bwo-sag" id="bwo-sag">
+        <div class="bwo-empty">
+          <div class="bwo-empty-icon">&#128736;</div>
+          <div style="font-size:14px;font-weight:600;color:var(--laci);margin-bottom:6px;">Bakim Is Emri Secin</div>
+          <div style="font-size:12px;">Soldan bir BWO secin veya yeni olusturun.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Yeni BWO Modal -->
+<div class="modal-ov" id="modal-yeni" style="display:none" onclick="if(event.target===this)modalKapat()">
+  <div class="modal-bx">
+    <div class="modal-hd">
+      <span style="font-weight:700;font-size:15px;color:var(--laci);">Yeni Bakim Is Emri</span>
+      <span style="cursor:pointer;font-size:18px;color:var(--metin3);" onclick="modalKapat()">&times;</span>
+    </div>
+    <div class="modal-bd">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="f-grp">
+          <label class="f-lbl">Tip</label>
+          <select class="f-inp" id="m-tip">
+            <option value="PM">Periyodik Bakim (PM)</option>
+            <option value="CM">Ariza Bakim (CM)</option>
+            <option value="Kalibrasyon">Kalibrasyon</option>
+          </select>
+        </div>
+        <div class="f-grp">
+          <label class="f-lbl">Oncelik</label>
+          <select class="f-inp" id="m-oncelik">
+            <option value="Normal">Normal</option>
+            <option value="Yuksek">Yuksek</option>
+            <option value="Kritik">Kritik</option>
+          </select>
+        </div>
+        <div class="f-grp" style="grid-column:span 2">
+          <label class="f-lbl">Makine</label>
+          <select class="f-inp" id="m-makine"><option value="">Yukleniyor...</option></select>
+        </div>
+        <div class="f-grp" style="grid-column:span 2">
+          <label class="f-lbl">Teknisyen</label>
+          <select class="f-inp" id="m-teknisyen"><option value="">Yukleniyor...</option></select>
+        </div>
+        <div class="f-grp">
+          <label class="f-lbl">Hedef Kapanıs Tarihi</label>
+          <input type="date" class="f-inp" id="m-hedef">
+        </div>
+        <div class="f-grp">
+          <label class="f-lbl">Kaynak</label>
+          <select class="f-inp" id="m-kaynak">
+            <option value="PM">Periyodik Plan</option>
+            <option value="ARZ">Ariza Bildirimi</option>
+            <option value="Manuel">Manuel</option>
+          </select>
+        </div>
+        <div class="f-grp" style="grid-column:span 2">
+          <label class="f-lbl">Aciklama</label>
+          <textarea class="f-inp" id="m-aciklama" rows="3" placeholder="Bakim aciklamasi..."></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn" style="background:#e5e7eb;color:#374151;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;font-family:inherit" onclick="modalKapat()">Iptal</button>
+      <button class="btn btn-mavi" onclick="bwoOlustur()" id="btn-olustur">Olustur</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var API = '/.netlify/functions/airtable';
+var BASE = 'app5LDgJMgocw79Ix';
+var TBL_BWO = 'Bakim_Is_Emirleri';
+var TBL_TEZGAH = 'tblsBXDsWACBAFEJ5';
+var TBL_PERSONEL = 'tblwG9GqnLC9oFZzb';
+
+var bwoList = [];
+var tezgahMap = {};
+var personelMap = {};
+var seciliBwo = null;
+var malzemeRows = [];
+var checklistItems = [];
+var sureInterval = null;
+
+// ── INIT ──
+document.addEventListener('DOMContentLoaded', function() {
+  Promise.all([
+    tezgahYukle(),
+    personelYukle()
+  ]).then(function() {
+    bwoYukle();
+  });
+  // URL param
+  var params = new URLSearchParams(window.location.search);
+  if (params.get('bwo')) {
+    window._hedefBwo = params.get('bwo');
+  }
+});
+
+// ── DATA LOAD ──
+function tezgahYukle() {
+  return fetch(API + '?table=' + TBL_TEZGAH + '&pageSize=100')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var recs = data.records || [];
+      var sel = document.getElementById('m-makine');
+      sel.innerHTML = '<option value="">-- Makine Secin --</option>';
+      recs.forEach(function(rec) {
+        var f = rec.fields;
+        var ad = f['Tezgah Adi'] || f['Ad'] || f['Name'] || 'Tezgah';
+        var kod = f['Tezgah Kodu'] || f['Kod'] || '';
+        tezgahMap[rec.id] = { ad: ad, kod: kod };
+        var opt = document.createElement('option');
+        opt.value = rec.id;
+        opt.textContent = kod ? (kod + ' — ' + ad) : ad;
+        sel.appendChild(opt);
+      });
+    });
+}
+
+function personelYukle() {
+  return fetch(API + '?table=' + TBL_PERSONEL + '&pageSize=100')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var recs = data.records || [];
+      var sel = document.getElementById('m-teknisyen');
+      sel.innerHTML = '<option value="">-- Teknisyen Secin --</option>';
+      recs.forEach(function(rec) {
+        var f = rec.fields;
+        var ad = f['Ad Soyad'] || f['Ad'] || f['Name'] || '';
+        personelMap[rec.id] = ad;
+        var opt = document.createElement('option');
+        opt.value = rec.id;
+        opt.textContent = ad;
+        sel.appendChild(opt);
+      });
+    });
+}
+
+function bwoYukle() {
+  fetch(API + '?table=' + TBL_BWO + '&pageSize=200&sort%5B0%5D%5Bfield%5D=Olusturma_Tarihi&sort%5B0%5D%5Bdirection%5D=desc')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      bwoList = (data.records || []).map(function(rec) {
+        return Object.assign({ id: rec.id }, rec.fields);
+      });
+      // Sort: Aktif first, Bekliyor second, Tamamlandi last
+      var order = { 'Aktif': 0, 'Bekliyor': 1, 'Tamamlandi': 2 };
+      bwoList.sort(function(a, b) {
+        var oa = order[a.Durum] !== undefined ? order[a.Durum] : 1;
+        var ob = order[b.Durum] !== undefined ? order[b.Durum] : 1;
+        return oa - ob;
+      });
+      listeRender();
+      kpiGuncelle();
+      // Open from URL param
+      if (window._hedefBwo) {
+        var hedef = bwoList.find(function(b) { return b.BWO_No === window._hedefBwo; });
+        if (hedef) bwoSec(hedef.id);
+        window._hedefBwo = null;
+      }
+    })
+    .catch(function(err) {
+      console.error('BWO yuklenemedi:', err);
+    });
+}
+
+// ── KPI ──
+function kpiGuncelle() {
+  var bekliyor = 0, aktif = 0, tamam = 0, maliyet = 0;
+  var buAy = new Date().toISOString().slice(0, 7);
+  bwoList.forEach(function(b) {
+    if (b.Durum === 'Bekliyor') bekliyor++;
+    else if (b.Durum === 'Aktif') aktif++;
+    else if (b.Durum === 'Tamamlandi') {
+      if ((b.Kapanma_Tarihi || '').slice(0, 7) === buAy) tamam++;
+    }
+    maliyet += (parseFloat(b.Toplam_Maliyet) || 0);
+  });
+  document.getElementById('kpi-bekliyor').textContent = bekliyor;
+  document.getElementById('kpi-aktif').textContent = aktif;
+  document.getElementById('kpi-tamam').textContent = tamam;
+  document.getElementById('kpi-maliyet').textContent = formatPara(maliyet);
+}
+
+function formatPara(n) {
+  return n.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ' TL';
+}
+
+// ── LEFT LIST ──
+function listeRender() {
+  var container = document.getElementById('bwo-liste');
+  var q = (document.getElementById('bwo-ara').value || '').toLowerCase();
+  var filtered = bwoList.filter(function(b) {
+    if (!q) return true;
+    var no = (b.BWO_No || '').toLowerCase();
+    var mch = getMakineAd(b.Makine);
+    return no.indexOf(q) > -1 || mch.toLowerCase().indexOf(q) > -1;
+  });
+  var html = '';
+  filtered.forEach(function(b) {
+    var durum = b.Durum || 'Bekliyor';
+    var tip = b.Tip || 'PM';
+    var oncelik = b.Oncelik || 'Normal';
+    var brdClass = 'brd-' + durum.toLowerCase().replace('ı', 'i');
+    var selClass = (seciliBwo && seciliBwo.id === b.id) ? ' secili' : '';
+    html += '<div class="bwo-kart ' + brdClass + selClass + '" onclick="bwoSec(\'' + b.id + '\')">';
+    html += '<div class="bwo-kart-ust">';
+    html += '<span class="bwo-no">' + (b.BWO_No || '—') + '</span>';
+    html += '<span class="bdg bdg-' + tipClass(tip) + '">' + tip + '</span>';
+    html += '</div>';
+    html += '<div class="bwo-makine">' + getMakineAd(b.Makine) + '</div>';
+    html += '<div class="bwo-kart-alt">';
+    html += '<span class="bdg bdg-' + oncelikClass(oncelik) + '">' + oncelik + '</span>';
+    html += '<span class="bdg bdg-' + durumClass(durum) + '">' + durum + '</span>';
+    html += '</div>';
+    html += '</div>';
+  });
+  container.innerHTML = html || '<div style="padding:20px;text-align:center;color:var(--metin3);font-size:12px;">Kayit bulunamadi</div>';
+  document.getElementById('bwo-footer').textContent = filtered.length + ' kayit';
+}
+
+function listeFiltrele() { listeRender(); }
+
+function tipClass(t) {
+  if (t === 'PM') return 'pm';
+  if (t === 'CM') return 'cm';
+  if (t === 'Kalibrasyon') return 'kal';
+  return 'pm';
+}
+function oncelikClass(o) {
+  if (o === 'Yuksek') return 'yuksek';
+  if (o === 'Kritik') return 'kritik';
+  return 'normal';
+}
+function durumClass(d) {
+  if (d === 'Aktif') return 'aktif';
+  if (d === 'Tamamlandi') return 'tamamlandi';
+  return 'bekliyor';
+}
+
+function getMakineAd(ref) {
+  if (!ref) return '—';
+  var id = Array.isArray(ref) ? ref[0] : ref;
+  var m = tezgahMap[id];
+  return m ? (m.kod ? m.kod + ' — ' + m.ad : m.ad) : '—';
+}
+function getMakineKod(ref) {
+  if (!ref) return '';
+  var id = Array.isArray(ref) ? ref[0] : ref;
+  var m = tezgahMap[id];
+  return m ? (m.kod || '') : '';
+}
+function getPersonelAd(ref) {
+  if (!ref) return '—';
+  var id = Array.isArray(ref) ? ref[0] : ref;
+  return personelMap[id] || '—';
+}
+
+// ── BWO SELECT ──
+function bwoSec(id) {
+  var bwo = bwoList.find(function(b) { return b.id === id; });
+  if (!bwo) return;
+  seciliBwo = bwo;
+  listeRender();
+  detayRender(bwo);
+}
+
+// ── DETAIL RENDER ──
+function detayRender(b) {
+  if (sureInterval) { clearInterval(sureInterval); sureInterval = null; }
+  var durum = b.Durum || 'Bekliyor';
+  var tip = b.Tip || 'PM';
+  var oncelik = b.Oncelik || 'Normal';
+  var mchKod = getMakineKod(b.Makine);
+  var teknisyen = getPersonelAd(b.Teknisyen);
+  var kaynak = b.Kaynak || '—';
+
+  // Header buttons
+  var btns = '';
+  if (durum === 'Bekliyor') {
+    btns = '<button class="btn btn-baslat" onclick="bwoBaslat()">&#9654; Baslat</button>';
+  } else if (durum === 'Aktif') {
+    btns = '<button class="btn btn-kapat" onclick="scrollKapat()">&#9724; Kapat</button>';
+  }
+
+  var html = '';
+  // Header
+  html += '<div class="bwo-detail-header">';
+  html += '<div class="bwo-h-left">';
+  html += '<span class="bwo-h-no">' + (b.BWO_No || '—') + '</span>';
+  html += '<span class="bwo-h-mch">' + mchKod + '</span>';
+  html += '<span class="bdg bdg-' + tipClass(tip) + '">' + tip + '</span>';
+  html += '</div>';
+  html += '<div class="bwo-h-btns">' + btns + '</div>';
+  html += '</div>';
+
+  html += '<div class="bwo-body">';
+
+  // Sure Takibi
+  html += '<div class="bwo-section">';
+  html += '<div class="bwo-section-title">Sure Takibi</div>';
+  html += sureHtml(b);
+  html += '</div>';
+
+  // BWO Bilgileri
+  html += '<div class="bwo-section">';
+  html += '<div class="bwo-section-title">BWO Bilgileri</div>';
+  html += '<div class="info-grid">';
+  html += infoBox('BWO No', b.BWO_No || '—');
+  html += infoBox('Tip', tip);
+  html += infoBox('Oncelik', oncelik);
+  html += infoBox('Makine', getMakineAd(b.Makine));
+  html += infoBox('Kaynak', kaynak);
+  html += infoBox('Teknisyen', teknisyen);
+  html += infoBox('Durum', durum);
+  html += infoBox('Olusturma', formatTarih(b.Olusturma_Tarihi));
+  html += infoBox('Hedef Kapanis', formatTarih(b.Hedef_Kapanma));
+  html += '</div>';
+  html += '</div>';
+
+  // Kontrol Listesi / Ariza Bilgileri
+  html += '<div class="bwo-section">';
+  if (tip === 'PM' || tip === 'Kalibrasyon') {
+    html += '<div class="bwo-section-title">Kontrol Listesi</div>';
+    html += checklistHtml(b);
+  } else {
+    html += '<div class="bwo-section-title">Ariza Bilgileri</div>';
+    html += arizaHtml(b);
+  }
+  html += '</div>';
+
+  // Malzeme Kullanimi
+  html += '<div class="bwo-section">';
+  html += '<div class="bwo-section-title">Malzeme Kullanimi</div>';
+  html += malzemeHtml(b);
+  html += '</div>';
+
+  // Maliyet Ozeti
+  html += '<div class="bwo-section">';
+  html += '<div class="bwo-section-title">Maliyet Ozeti</div>';
+  html += maliyetHtml(b);
+  html += '</div>';
+
+  // BWO Kapat
+  if (durum === 'Aktif') {
+    html += '<div class="bwo-section" id="bwo-kapat-section">';
+    html += '<div class="bwo-section-title">BWO Kapat</div>';
+    html += kapatFormHtml();
+    html += '</div>';
+  }
+
+  html += '</div>'; // bwo-body
+
+  document.getElementById('bwo-sag').innerHTML = html;
+
+  // Start elapsed timer
+  if (durum === 'Aktif') {
+    sureInterval = setInterval(function() { sureGuncelle(b); }, 60000);
+  }
+}
+
+function infoBox(label, value) {
+  return '<div class="info-box"><label>' + label + '</label><span>' + value + '</span></div>';
+}
+
+function formatTarih(t) {
+  if (!t) return '—';
+  var d = new Date(t);
+  return d.toLocaleDateString('tr-TR');
+}
+
+// ── SURE TAKIBI ──
+function sureHtml(b) {
+  var acilis = b.Olusturma_Tarihi ? new Date(b.Olusturma_Tarihi) : null;
+  var hedef = b.Hedef_Kapanma ? new Date(b.Hedef_Kapanma) : null;
+  var now = new Date();
+
+  if (!acilis || !hedef) {
+    return '<div style="font-size:12px;color:var(--metin3);">Tarih bilgisi eksik</div>';
+  }
+
+  var toplam = hedef.getTime() - acilis.getTime();
+  var gecen = now.getTime() - acilis.getTime();
+  var pct = toplam > 0 ? Math.min(Math.round((gecen / toplam) * 100), 100) : 0;
+
+  var color = 'green';
+  if (pct >= 90) color = 'red';
+  else if (pct >= 70) color = 'amber';
+
+  var gecenSaat = Math.floor(gecen / 3600000);
+  var gecenGun = Math.floor(gecenSaat / 24);
+
+  var html = '<div class="sure-row">';
+  html += '<div class="sure-item">Acilis: <b>' + formatTarih(b.Olusturma_Tarihi) + '</b></div>';
+  html += '<div class="sure-item">Hedef: <b>' + formatTarih(b.Hedef_Kapanma) + '</b></div>';
+  html += '<div class="sure-item" id="elapsed-time">Gecen: <b>' + gecenGun + ' gun ' + (gecenSaat % 24) + ' saat</b></div>';
+  html += '<div class="sure-item">Ilerleme: <b>' + pct + '%</b></div>';
+  html += '</div>';
+  html += '<div class="sure-bar"><div class="sure-fill ' + color + '" style="width:' + pct + '%"></div></div>';
+  return html;
+}
+
+function sureGuncelle(b) {
+  var el = document.getElementById('elapsed-time');
+  if (!el || !b.Olusturma_Tarihi) return;
+  var acilis = new Date(b.Olusturma_Tarihi);
+  var gecen = Date.now() - acilis.getTime();
+  var gecenSaat = Math.floor(gecen / 3600000);
+  var gecenGun = Math.floor(gecenSaat / 24);
+  el.innerHTML = 'Gecen: <b>' + gecenGun + ' gun ' + (gecenSaat % 24) + ' saat</b>';
+}
+
+// ── CHECKLIST ──
+function checklistHtml(b) {
+  var items = [];
+  try { items = JSON.parse(b.Checklist || '[]'); } catch(e) { items = []; }
+  checklistItems = items;
+  if (!items.length) {
+    return '<div style="font-size:12px;color:var(--metin3);">Kontrol listesi tanimlanmamis.</div>';
+  }
+  var html = '';
+  items.forEach(function(item, i) {
+    var done = item.done ? ' done' : '';
+    var checked = item.done ? ' checked' : '';
+    html += '<div class="checklist-item' + done + '">';
+    html += '<input type="checkbox"' + checked + ' onchange="checklistToggle(' + i + ')">';
+    html += '<span>' + (item.text || item) + '</span>';
+    html += '</div>';
+  });
+  return html;
+}
+
+function checklistToggle(idx) {
+  if (!seciliBwo) return;
+  checklistItems[idx].done = !checklistItems[idx].done;
+  var body = { table: TBL_BWO, id: seciliBwo.id, fields: { Checklist: JSON.stringify(checklistItems) } };
+  fetch(API, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+    .then(function() {
+      seciliBwo.Checklist = JSON.stringify(checklistItems);
+    });
+}
+
+// ── ARIZA BILGILERI ──
+function arizaHtml(b) {
+  var html = '';
+  html += '<div class="info-grid" style="grid-template-columns:1fr 1fr;margin-bottom:12px">';
+  html += infoBox('Ariza Turu', b.Ariza_Turu || '—');
+  html += infoBox('Ariza Tarihi', formatTarih(b.Ariza_Tarihi));
+  html += '</div>';
+  html += '<div style="margin-bottom:8px;font-size:12px;color:var(--metin2);"><b>Ariza Aciklamasi:</b><br>' + (b.Ariza_Aciklama || '—') + '</div>';
+  html += '<div class="f-grp"><label class="f-lbl">Cozum Notu</label>';
+  html += '<textarea class="f-inp" id="cozum-notu" rows="3" placeholder="Cozum notlarini girin...">' + (b.Cozum_Notu || '') + '</textarea></div>';
+  html += '<button class="btn btn-mavi" style="font-size:11px;padding:5px 12px;" onclick="cozumKaydet()">Notu Kaydet</button>';
+  return html;
+}
+
+function cozumKaydet() {
+  if (!seciliBwo) return;
+  var notu = document.getElementById('cozum-notu').value;
+  var body = { table: TBL_BWO, id: seciliBwo.id, fields: { Cozum_Notu: notu } };
+  fetch(API, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+    .then(function() {
+      seciliBwo.Cozum_Notu = notu;
+      alert('Cozum notu kaydedildi.');
+    });
+}
+
+// ── MALZEME ──
+function malzemeHtml(b) {
+  malzemeRows = [];
+  try { malzemeRows = JSON.parse(b.Malzemeler || '[]'); } catch(e) { malzemeRows = []; }
+  var html = '<table class="mlz-tbl">';
+  html += '<thead><tr><th>Parca Adi</th><th>Stok Kodu</th><th>Miktar</th><th>Birim Fiyat (TL)</th><th>Toplam</th><th></th></tr></thead>';
+  html += '<tbody id="mlz-tbody">';
+  var topMlz = 0;
+  malzemeRows.forEach(function(m, i) {
+    var toplam = (parseFloat(m.miktar) || 0) * (parseFloat(m.fiyat) || 0);
+    topMlz += toplam;
+    html += '<tr>';
+    html += '<td>' + (m.ad || '') + '</td>';
+    html += '<td>' + (m.stokKodu || '') + '</td>';
+    html += '<td style="text-align:right">' + (m.miktar || 0) + '</td>';
+    html += '<td style="text-align:right">' + (parseFloat(m.fiyat) || 0).toFixed(2) + '</td>';
+    html += '<td style="text-align:right;font-weight:600">' + toplam.toFixed(2) + '</td>';
+    html += '<td><span style="cursor:pointer;color:#ef4444;font-size:14px;" onclick="malzemeSil(' + i + ')">&times;</span></td>';
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  html += '<div class="mlz-footer">';
+  html += '<button class="btn btn-mavi" style="font-size:11px;padding:5px 12px;" onclick="malzemeEklePrompt()">+ Malzeme Ekle</button>';
+  html += '<span style="font-size:13px;font-weight:700;color:var(--laci);">Toplam: ' + topMlz.toFixed(2) + ' TL</span>';
+  html += '</div>';
+  return html;
+}
+
+function malzemeEklePrompt() {
+  var ad = prompt('Parca Adi:');
+  if (!ad) return;
+  var stokKodu = prompt('Stok Kodu:') || '';
+  var miktar = parseFloat(prompt('Miktar:') || '0');
+  var fiyat = parseFloat(prompt('Birim Fiyat (TL):') || '0');
+  malzemeRows.push({ ad: ad, stokKodu: stokKodu, miktar: miktar, fiyat: fiyat });
+  malzemeKaydet();
+}
+
+function malzemeSil(idx) {
+  malzemeRows.splice(idx, 1);
+  malzemeKaydet();
+}
+
+function malzemeKaydet() {
+  if (!seciliBwo) return;
+  var body = { table: TBL_BWO, id: seciliBwo.id, fields: { Malzemeler: JSON.stringify(malzemeRows) } };
+  fetch(API, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+    .then(function() {
+      seciliBwo.Malzemeler = JSON.stringify(malzemeRows);
+      detayRender(seciliBwo);
+    });
+}
+
+// ── MALIYET ──
+function maliyetHtml(b) {
+  var iscilikSaat = parseFloat(b.Iscilik_Saat) || 0;
+  var iscilikMaliyet = iscilikSaat * 150;
+  var mlzMaliyet = 0;
+  try {
+    var mlz = JSON.parse(b.Malzemeler || '[]');
+    mlz.forEach(function(m) { mlzMaliyet += (parseFloat(m.miktar) || 0) * (parseFloat(m.fiyat) || 0); });
+  } catch(e) {}
+  var toplam = iscilikMaliyet + mlzMaliyet;
+
+  var html = '<div class="maliyet-grid">';
+  html += '<div class="maliyet-box"><label>Iscilik (' + iscilikSaat + ' saat x 150 TL)</label><span>' + formatPara(iscilikMaliyet) + '</span></div>';
+  html += '<div class="maliyet-box"><label>Malzeme</label><span>' + formatPara(mlzMaliyet) + '</span></div>';
+  html += '<div class="maliyet-box" style="background:#dbeafe;"><label>Toplam Maliyet</label><span>' + formatPara(toplam) + '</span></div>';
+  html += '</div>';
+  return html;
+}
+
+// ── BWO KAPAT ──
+function kapatFormHtml() {
+  var html = '<div class="kapat-form">';
+  html += '<div class="f-grp"><label class="f-lbl">Iscilik Saat</label><input type="number" class="f-inp" id="kapat-saat" step="0.5" min="0" value="0"></div>';
+  html += '<div class="f-grp"><label class="f-lbl">Teknisyen Notu</label><textarea class="f-inp" id="kapat-not" rows="3" placeholder="Yapilan islemlerin ozeti..."></textarea></div>';
+  html += '<button class="btn btn-kapat" style="width:100%;padding:10px;font-size:14px;" onclick="bwoKapat()">BWO Kapat</button>';
+  html += '</div>';
+  return html;
+}
+
+function scrollKapat() {
+  var el = document.getElementById('bwo-kapat-section');
+  if (el) el.scrollIntoView({ behavior: 'smooth' });
+}
+
+function bwoKapat() {
+  if (!seciliBwo) return;
+  var saat = parseFloat(document.getElementById('kapat-saat').value) || 0;
+  var not = document.getElementById('kapat-not').value || '';
+
+  // Calculate total cost
+  var mlzMaliyet = 0;
+  try {
+    var mlz = JSON.parse(seciliBwo.Malzemeler || '[]');
+    mlz.forEach(function(m) { mlzMaliyet += (parseFloat(m.miktar) || 0) * (parseFloat(m.fiyat) || 0); });
+  } catch(e) {}
+  var toplamMaliyet = (saat * 150) + mlzMaliyet;
+
+  var fields = {
+    Durum: 'Tamamlandi',
+    Iscilik_Saat: saat,
+    Teknisyen_Notu: not,
+    Kapanma_Tarihi: new Date().toISOString().slice(0, 10),
+    Toplam_Maliyet: toplamMaliyet
+  };
+
+  var body = { table: TBL_BWO, id: seciliBwo.id, fields: fields };
+  fetch(API, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+    .then(function(r) { return r.json(); })
+    .then(function() {
+      // Update machine Son_Bakim_Tarihi
+      var makineId = Array.isArray(seciliBwo.Makine) ? seciliBwo.Makine[0] : seciliBwo.Makine;
+      if (makineId) {
+        var mchFields = { Son_Bakim_Tarihi: new Date().toISOString().slice(0, 10) };
+        // If CM, restore machine to Aktif
+        if (seciliBwo.Tip === 'CM') {
+          mchFields.Durum = 'Aktif';
+        }
+        fetch(API, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ table: TBL_TEZGAH, id: makineId, fields: mchFields })
+        });
+      }
+      // Log
+      logIslem('Kapatildi', 'BWO', seciliBwo.id, seciliBwo.BWO_No, null, fields);
+      // Refresh
+      bwoYukle();
+      alert('BWO kapatildi: ' + seciliBwo.BWO_No);
+    })
+    .catch(function(err) {
+      alert('Hata: ' + err.message);
+    });
+}
+
+// ── BWO BASLAT ──
+function bwoBaslat() {
+  if (!seciliBwo) return;
+  var body = { table: TBL_BWO, id: seciliBwo.id, fields: { Durum: 'Aktif', Baslama_Tarihi: new Date().toISOString().slice(0, 10) } };
+  fetch(API, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+    .then(function() {
+      logIslem('Baslatildi', 'BWO', seciliBwo.id, seciliBwo.BWO_No, null, { Durum: 'Aktif' });
+      bwoYukle();
+    })
+    .catch(function(err) {
+      alert('Hata: ' + err.message);
+    });
+}
+
+// ── YENI BWO MODAL ──
+function yeniBwoModal() {
+  document.getElementById('modal-yeni').style.display = 'flex';
+  // Set default date 7 days from now
+  var d = new Date();
+  d.setDate(d.getDate() + 7);
+  document.getElementById('m-hedef').value = d.toISOString().slice(0, 10);
+}
+
+function modalKapat() {
+  document.getElementById('modal-yeni').style.display = 'none';
+}
+
+function bwoOlustur() {
+  var btn = document.getElementById('btn-olustur');
+  btn.disabled = true;
+  btn.textContent = 'Olusturuluyor...';
+
+  var tip = document.getElementById('m-tip').value;
+  var oncelik = document.getElementById('m-oncelik').value;
+  var makine = document.getElementById('m-makine').value;
+  var teknisyen = document.getElementById('m-teknisyen').value;
+  var hedef = document.getElementById('m-hedef').value;
+  var kaynak = document.getElementById('m-kaynak').value;
+  var aciklama = document.getElementById('m-aciklama').value;
+
+  if (!makine) {
+    alert('Lutfen makine secin.');
+    btn.disabled = false;
+    btn.textContent = 'Olustur';
+    return;
+  }
+
+  kodUret('BWO').then(function(bwoNo) {
+    var fields = {
+      BWO_No: bwoNo,
+      Tip: tip,
+      Oncelik: oncelik,
+      Makine: [makine],
+      Durum: 'Bekliyor',
+      Kaynak: kaynak,
+      Aciklama: aciklama,
+      Olusturma_Tarihi: new Date().toISOString().slice(0, 10),
+      Hedef_Kapanma: hedef
+    };
+    if (teknisyen) fields.Teknisyen = [teknisyen];
+
+    return fetch(API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ method: 'POST', path: '/v0/' + BASE + '/' + TBL_BWO, body: { fields: fields } })
+    }).then(function(r) { return r.json(); })
+    .then(function(data) {
+      logIslem('Olusturuldu', 'BWO', data.id, bwoNo, null, fields);
+      modalKapat();
+      bwoYukle();
+      // If CM, set machine to Arizali
+      if (tip === 'CM' && makine) {
+        fetch(API, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ table: TBL_TEZGAH, id: makine, fields: { Durum: 'Arizali' } })
+        });
+      }
+    });
+  })
+  .catch(function(err) {
+    alert('Hata: ' + err.message);
+  })
+  .then(function() {
+    btn.disabled = false;
+    btn.textContent = 'Olustur';
+  });
+}
+</script>
+</body>
+</html>
