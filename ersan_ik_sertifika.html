@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — Sertifika Takibi</title>
+<link rel="stylesheet" href="ersan_styles.css">
+<script src="ersan_nav.js" defer></script>
+<script src="ersan_log.js" defer></script>
+<style>
+/* KPI Row */
+.kpi-row { display:flex; gap:12px; margin-bottom:16px; }
+.kpi { flex:1; background:var(--beyaz); border:1px solid var(--border); border-radius:10px; padding:14px 16px; }
+.kpi-ust { font-size:11px; color:var(--metin3); text-transform:uppercase; letter-spacing:.3px; margin-bottom:4px; }
+.kpi-deger { font-size:26px; font-weight:700; color:var(--metin); }
+.kpi.s1 { border-left:3px solid var(--mavi); }
+.kpi.s2 { border-left:3px solid var(--yesil); }
+.kpi.s3 { border-left:3px solid var(--sari); }
+.kpi.s4 { border-left:3px solid var(--kirmizi); }
+
+/* AS9100 strip */
+.as-serit { display:flex; align-items:center; gap:8px; padding:8px 14px; background:var(--bg2); border:1px solid var(--border); border-radius:8px; margin-bottom:14px; font-size:11px; color:var(--metin3); flex-wrap:wrap; }
+.as-chip { font-size:10px; font-weight:600; padding:2px 8px; border-radius:4px; }
+.as-chip.grn { background:var(--yesil-bg); color:var(--yesil-t); }
+.as-chip.amr { background:var(--sari-bg); color:var(--sari-t); }
+.as-chip.red { background:var(--kirmizi-bg); color:var(--kirmizi-t); }
+.as-chip.blue { background:var(--mavi-acik); color:var(--mavi-koyu); }
+
+/* Filter Bar */
+.filtre-bar { display:flex; gap:8px; align-items:center; margin-bottom:16px; flex-wrap:wrap; }
+.filtre-bar input[type="text"] { flex:1; min-width:200px; padding:7px 12px; border:1px solid var(--border); border-radius:6px; font-size:13px; font-family:inherit; background:var(--beyaz); color:var(--metin2); }
+.filtre-bar select { padding:7px 12px; border:1px solid var(--border); border-radius:6px; font-size:13px; font-family:inherit; background:var(--beyaz); color:var(--metin2); cursor:pointer; }
+
+/* Card Grid */
+.srt-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:14px; padding-bottom:20px; }
+@media(max-width:1200px) { .srt-grid { grid-template-columns:repeat(2, 1fr); } }
+@media(max-width:768px)  { .srt-grid { grid-template-columns:1fr; } }
+
+/* Sertifika Card */
+.srt-kart { background:var(--beyaz); border:1px solid var(--border); border-radius:10px; overflow:hidden; transition:box-shadow .2s, border-color .2s; position:relative; }
+.srt-kart:hover { box-shadow:0 4px 16px rgba(15,39,68,.1); }
+.srt-kart.gecerli { border-left:4px solid var(--yesil); }
+.srt-kart.yaklasan { border-left:4px solid var(--sari); background:linear-gradient(135deg, #fffbeb 0%, var(--beyaz) 30%); }
+.srt-kart.dolmus { border-left:4px solid var(--kirmizi); background:linear-gradient(135deg, #fef2f2 0%, var(--beyaz) 30%); }
+
+.srtk-head { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:var(--bg2); border-bottom:1px solid var(--border); }
+.srtk-icon { width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:18px; }
+.srtk-icon.teknik { background:#dbeafe; }
+.srtk-icon.as9100 { background:#fef3c7; }
+.srtk-icon.isg { background:#fee2e2; }
+.srtk-icon.egitim { background:#e0e7ff; }
+.srtk-icon.genel { background:#f1f5f9; }
+.srtk-baslik { flex:1; margin-left:10px; }
+.srtk-ad { font-size:14px; font-weight:700; color:var(--metin); }
+.srtk-personel { font-size:11px; color:var(--metin3); }
+
+.srtk-body { padding:12px 16px 14px; }
+.srtk-row { display:flex; justify-content:space-between; padding:3px 0; font-size:12px; }
+.srtk-k { color:var(--metin3); }
+.srtk-v { color:var(--metin); font-weight:500; }
+
+/* Kalan gun sayaci */
+.kalan-bar { height:6px; background:var(--border); border-radius:3px; margin:8px 0 4px; overflow:hidden; }
+.kalan-fill { height:100%; border-radius:3px; transition:width .5s; }
+.kalan-metin { font-size:11px; font-weight:600; text-align:right; }
+.kalan-grn { color:var(--yesil-t); }
+.kalan-amr { color:var(--sari-t); }
+.kalan-red { color:var(--kirmizi-t); }
+
+/* Blok badge */
+.blok-badge { position:absolute; top:10px; right:10px; font-size:11px; font-weight:700; background:var(--kirmizi); color:#fff; padding:3px 10px; border-radius:4px; }
+
+/* Badges */
+.bdg { display:inline-block; font-size:10px; font-weight:600; padding:2px 8px; border-radius:4px; }
+.b-grn { background:var(--yesil-bg); color:var(--yesil-t); }
+.b-amr { background:var(--sari-bg); color:var(--sari-t); }
+.b-red { background:var(--kirmizi-bg); color:var(--kirmizi-t); }
+.b-gray { background:#f1f5f9; color:var(--metin3); }
+
+/* Buttons */
+.btn { display:inline-flex; align-items:center; gap:4px; padding:7px 14px; border:none; border-radius:6px; font-size:13px; font-weight:600; font-family:inherit; cursor:pointer; transition:background .15s; }
+.btn-p { background:var(--mavi); color:#fff; }
+.btn-p:hover { background:var(--mavi-koyu); }
+.btn-sm { padding:5px 10px; font-size:11px; }
+.btn-g { background:var(--border); color:var(--metin2); }
+.btn-g:hover { background:var(--border2); }
+.btn-red { background:var(--kirmizi); color:#fff; }
+.btn-red:hover { background:#b91c1c; }
+.kart-alt { display:flex; gap:6px; padding:10px 16px; border-top:1px solid var(--border); }
+
+/* Modal */
+.modal-bg { position:fixed; inset:0; background:rgba(15,39,68,.45); z-index:700; display:none; align-items:center; justify-content:center; }
+.modal-bg.acik { display:flex; }
+.modal-kutu { background:var(--beyaz); border-radius:12px; width:560px; max-width:95vw; max-height:90vh; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 16px 48px rgba(15,39,68,.2); }
+.modal-ust { display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--border); }
+.modal-ust h3 { font-size:16px; color:var(--metin); }
+.modal-kapat { width:28px; height:28px; border:none; background:var(--bg); border-radius:6px; cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center; color:var(--metin3); }
+.modal-kapat:hover { background:var(--border); }
+.modal-govde { flex:1; overflow-y:auto; padding:20px; }
+.modal-alt { display:flex; justify-content:flex-end; gap:8px; padding:14px 20px; border-top:1px solid var(--border); }
+.form-grup { margin-bottom:12px; }
+.form-grup label { display:block; font-size:11px; font-weight:600; color:var(--metin3); margin-bottom:4px; text-transform:uppercase; }
+.form-grup input, .form-grup select, .form-grup textarea { width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:6px; font-size:13px; font-family:inherit; background:var(--beyaz); color:var(--metin2); }
+.form-iki { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+
+/* Checkbox group */
+.chk-grup { display:flex; flex-wrap:wrap; gap:6px; }
+.chk-item { display:flex; align-items:center; gap:4px; font-size:12px; color:var(--metin2); }
+.chk-item input { width:14px; height:14px; }
+
+/* Empty */
+.bos-grid { text-align:center; padding:60px 20px; color:var(--metin4); font-size:14px; grid-column:1/-1; }
+</style>
+</head>
+<body>
+<div id="nav-alani"></div>
+<div class="icerik-alani">
+  <div class="topbar">
+    <div class="topbar-baslik">Sertifika Takibi</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button class="btn btn-p" onclick="yeniSertifikaModal()">+ Yeni Sertifika</button>
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
+    </div>
+  </div>
+  <div class="sayfa-icerik">
+
+    <!-- AS9100 strip -->
+    <div class="as-serit">
+      <span class="as-chip blue">AS9100 &sect;7.2</span>
+      <span>Yetkinlik — Sertifika ve Yetki Belgeleri Yonetimi</span>
+      <span style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap;">
+        <span class="as-chip grn" id="chipGecerli"></span>
+        <span class="as-chip amr" id="chipYaklasan"></span>
+        <span class="as-chip red" id="chipDolmus"></span>
+      </span>
+    </div>
+
+    <!-- KPI Row -->
+    <div class="kpi-row">
+      <div class="kpi s1"><div class="kpi-ust">Toplam Sertifika</div><div class="kpi-deger" id="kpi-toplam">0</div></div>
+      <div class="kpi s2"><div class="kpi-ust">Gecerli</div><div class="kpi-deger" id="kpi-gecerli">0</div></div>
+      <div class="kpi s3"><div class="kpi-ust">Yaklasan (&le;90 gun)</div><div class="kpi-deger" id="kpi-yaklasan">0</div></div>
+      <div class="kpi s4"><div class="kpi-ust">Dolmus</div><div class="kpi-deger" id="kpi-dolmus">0</div></div>
+    </div>
+
+    <!-- Filter bar -->
+    <div class="filtre-bar">
+      <input type="text" id="aramaInput" placeholder="Sertifika veya personel ara..." oninput="kartlariGoster()">
+      <select id="durumFiltre" onchange="kartlariGoster()">
+        <option value="">Tum Durumlar</option>
+        <option value="gecerli">Gecerli</option>
+        <option value="yaklasan">Yaklasan</option>
+        <option value="dolmus">Dolmus</option>
+      </select>
+      <select id="turFiltre" onchange="kartlariGoster()">
+        <option value="">Tum Turler</option>
+        <option value="Teknik">Teknik</option>
+        <option value="AS9100">AS9100</option>
+        <option value="ISG">ISG</option>
+        <option value="Egitim">Egitim</option>
+        <option value="Genel">Genel</option>
+      </select>
+    </div>
+
+    <!-- Card grid -->
+    <div class="srt-grid" id="srtGrid"></div>
+
+  </div>
+</div>
+
+<!-- Yeni Sertifika Modal -->
+<div class="modal-bg" id="modalSertifika">
+  <div class="modal-kutu">
+    <div class="modal-ust">
+      <h3 id="modalBaslik">Yeni Sertifika</h3>
+      <button class="modal-kapat" onclick="modalKapat()">&times;</button>
+    </div>
+    <div class="modal-govde">
+      <div class="form-iki">
+        <div class="form-grup"><label>Personel</label>
+          <select id="fPersonel"></select>
+        </div>
+        <div class="form-grup"><label>Sertifika Adi</label><input type="text" id="fAd"></div>
+      </div>
+      <div class="form-iki">
+        <div class="form-grup"><label>Veren Kurum</label><input type="text" id="fKurum"></div>
+        <div class="form-grup"><label>Belge No</label><input type="text" id="fBelgeNo"></div>
+      </div>
+      <div class="form-iki">
+        <div class="form-grup"><label>Tur</label>
+          <select id="fTur"><option value="Teknik">Teknik</option><option value="AS9100">AS9100</option><option value="ISG">ISG</option><option value="Egitim">Egitim</option><option value="Genel">Genel</option></select>
+        </div>
+        <div class="form-grup"><label>Verilme Tarihi</label><input type="date" id="fVerilme"></div>
+      </div>
+      <div class="form-grup"><label>Bitis Tarihi</label><input type="date" id="fBitis"></div>
+      <div class="form-grup"><label>Blok Operasyonlar (suresi dolunca bloklananlar)</label>
+        <div class="chk-grup" id="blokOpSecim"></div>
+      </div>
+    </div>
+    <div class="modal-alt">
+      <button class="btn btn-g" onclick="modalKapat()">Iptal</button>
+      <button class="btn btn-p" onclick="sertifikaKaydet()">Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var PERSONEL_LISTESI = [
+  'Erdem Kucukates','Ali Yilmaz','Mehmet Demir','Hasan Kaya','Ahmet Celik',
+  'Fatih Ozturk','Murat Sahin','Emre Arslan','Burak Yildiz','Kemal Dogan',
+  'Osman Aydin','Serkan Koc','Ufuk Cetin','Tolga Er','Onur Aksoy',
+  'Volkan Tas','Caner Polat','Baris Kurt','Sinan Ozer','Deniz Aslan'
+];
+
+var OPERASYONLAR = [
+  'CNC Torna','CNC Freze','5 Eksen CNC','Taslamaci','Erezyon',
+  'Kalite Kontrol','Olcum','Kaynak','Montaj','Boya'
+];
+
+var IKON_MAP = { Teknik:'&#128295;', AS9100:'&#128203;', ISG:'&#9888;&#65039;', Egitim:'&#127891;', Genel:'&#128196;' };
+
+var sertifikalar = [];
+
+function veriYukle() {
+  var raw = localStorage.getItem('ersan_sertifikalar');
+  if (raw) {
+    sertifikalar = JSON.parse(raw);
+  } else {
+    ornekVeriOlustur();
+  }
+  kalanGunHesapla();
+  kartlariGoster();
+}
+
+function ornekVeriOlustur() {
+  var bugun = new Date();
+  var ornekler = [
+    { personel:'Ali Yilmaz', ad:'CNC Torna Operatorlugu', kurum:'MEKSA', belgeNo:'MK-2024-1123', tur:'Teknik', verilme:'2024-06-15', bitis:'2026-06-15', blokOp:['CNC Torna'] },
+    { personel:'Mehmet Demir', ad:'CNC Freze Operatorlugu', kurum:'MEKSA', belgeNo:'MK-2024-1124', tur:'Teknik', verilme:'2024-08-10', bitis:'2026-08-10', blokOp:['CNC Freze'] },
+    { personel:'Hasan Kaya', ad:'5 Eksen CNC Programlama', kurum:'Siemens', belgeNo:'SIE-2025-0087', tur:'Teknik', verilme:'2025-01-20', bitis:'2027-01-20', blokOp:['5 Eksen CNC'] },
+    { personel:'Erdem Kucukates', ad:'AS9100 Rev.D Ic Denetci', kurum:'BSI', belgeNo:'BSI-2025-TR-445', tur:'AS9100', verilme:'2025-03-01', bitis:'2028-03-01', blokOp:[] },
+    { personel:'Fatih Ozturk', ad:'Kaynak Operatorlugu', kurum:'TSE', belgeNo:'TSE-KAY-2024-88', tur:'Teknik', verilme:'2024-04-10', bitis:gecmisTarih(-15), blokOp:['Kaynak'] },
+    { personel:'Kemal Dogan', ad:'Olcum Aletleri Kalibrasyon', kurum:'TUBITAK', belgeNo:'TUB-2025-0034', tur:'Teknik', verilme:'2025-05-01', bitis:gecmisTarih(45), blokOp:['Olcum','Kalite Kontrol'] },
+    { personel:'Emre Arslan', ad:'IS Guvenligi Uzmanligi', kurum:'OSGB Merkez', belgeNo:'ISG-2025-221', tur:'ISG', verilme:'2025-01-15', bitis:'2027-01-15', blokOp:[] },
+    { personel:'Murat Sahin', ad:'Taslamaci Yetkinlik Belgesi', kurum:'Ersan Ic', belgeNo:'ERS-TAS-001', tur:'Teknik', verilme:'2025-06-01', bitis:gecmisTarih(80), blokOp:['Taslamaci'] },
+    { personel:'Burak Yildiz', ad:'FOD Farkindalik Sertifikasi', kurum:'Ersan Ic', belgeNo:'ERS-FOD-012', tur:'AS9100', verilme:'2025-11-01', bitis:gecmisTarih(-45), blokOp:[] },
+    { personel:'Osman Aydin', ad:'Vinc Kullanma Belgesi', kurum:'ISG Akademi', belgeNo:'ISG-VIN-2025-03', tur:'ISG', verilme:'2025-02-01', bitis:'2027-02-01', blokOp:[] }
+  ];
+
+  sertifikalar = ornekler.map(function(o, i) {
+    o.id = 'SRT-' + String(i+1).padStart(3,'0');
+    o.kalanGun = 0;
+    return o;
+  });
+  kaydet();
+}
+
+function gecmisTarih(gun) {
+  var d = new Date();
+  d.setDate(d.getDate() + gun);
+  return d.toISOString().split('T')[0];
+}
+
+function kaydet() {
+  localStorage.setItem('ersan_sertifikalar', JSON.stringify(sertifikalar));
+}
+
+function kalanGunHesapla() {
+  var bugun = new Date(); bugun.setHours(0,0,0,0);
+  sertifikalar.forEach(function(s) {
+    var bitis = new Date(s.bitis);
+    s.kalanGun = Math.ceil((bitis - bugun) / 86400000);
+  });
+  kaydet();
+}
+
+function durumBelirle(kalanGun) {
+  if (kalanGun < 0) return 'dolmus';
+  if (kalanGun <= 90) return 'yaklasan';
+  return 'gecerli';
+}
+
+function kartlariGoster() {
+  var arama = (document.getElementById('aramaInput').value || '').toLowerCase();
+  var durumF = document.getElementById('durumFiltre').value;
+  var turF = document.getElementById('turFiltre').value;
+
+  var filtreli = sertifikalar.filter(function(s) {
+    var durum = durumBelirle(s.kalanGun);
+    if (durumF && durum !== durumF) return false;
+    if (turF && s.tur !== turF) return false;
+    if (arama) {
+      var metin = (s.ad + ' ' + s.personel + ' ' + s.kurum + ' ' + s.belgeNo).toLowerCase();
+      if (metin.indexOf(arama) === -1) return false;
+    }
+    return true;
+  });
+
+  // Sort: expired first, then approaching, then valid
+  filtreli.sort(function(a, b) { return a.kalanGun - b.kalanGun; });
+
+  var html = '';
+  if (filtreli.length === 0) {
+    html = '<div class="bos-grid">Sertifika bulunamadi</div>';
+  }
+
+  filtreli.forEach(function(s) {
+    var durum = durumBelirle(s.kalanGun);
+    var turLower = s.tur.toLowerCase();
+    html += '<div class="srt-kart ' + durum + '">';
+    if (durum === 'dolmus') html += '<div class="blok-badge">BLOKLU</div>';
+    html += '<div class="srtk-head">';
+    html += '<div class="srtk-icon ' + turLower + '">' + (IKON_MAP[s.tur] || '&#128196;') + '</div>';
+    html += '<div class="srtk-baslik"><div class="srtk-ad">' + s.ad + '</div><div class="srtk-personel">' + s.personel + '</div></div>';
+    html += '</div>';
+
+    html += '<div class="srtk-body">';
+    html += '<div class="srtk-row"><span class="srtk-k">Veren Kurum</span><span class="srtk-v">' + s.kurum + '</span></div>';
+    html += '<div class="srtk-row"><span class="srtk-k">Belge No</span><span class="srtk-v">' + s.belgeNo + '</span></div>';
+    html += '<div class="srtk-row"><span class="srtk-k">Verilme</span><span class="srtk-v">' + s.verilme + '</span></div>';
+    html += '<div class="srtk-row"><span class="srtk-k">Bitis</span><span class="srtk-v">' + s.bitis + '</span></div>';
+
+    // Kalan gun bar
+    var toplam = Math.ceil((new Date(s.bitis) - new Date(s.verilme)) / 86400000);
+    var oran = toplam > 0 ? Math.max(0, Math.min(100, (s.kalanGun / toplam) * 100)) : 0;
+    var barRenk = durum === 'gecerli' ? 'var(--yesil)' : (durum === 'yaklasan' ? 'var(--sari)' : 'var(--kirmizi)');
+    var metinCls = durum === 'gecerli' ? 'kalan-grn' : (durum === 'yaklasan' ? 'kalan-amr' : 'kalan-red');
+
+    html += '<div class="kalan-bar"><div class="kalan-fill" style="width:' + oran + '%;background:' + barRenk + ';"></div></div>';
+    if (s.kalanGun >= 0) {
+      html += '<div class="kalan-metin ' + metinCls + '">' + s.kalanGun + ' gun kaldi</div>';
+    } else {
+      html += '<div class="kalan-metin kalan-red">' + Math.abs(s.kalanGun) + ' gundur suresi dolmus</div>';
+    }
+
+    if (s.blokOp && s.blokOp.length > 0) {
+      html += '<div style="margin-top:6px;font-size:11px;color:var(--metin3);">Blok Op: ' + s.blokOp.map(function(o) { return '<span class="bdg b-gray">' + o + '</span>'; }).join(' ') + '</div>';
+    }
+    html += '</div>';
+
+    // Action buttons
+    html += '<div class="kart-alt">';
+    if (durum === 'dolmus' || durum === 'yaklasan') {
+      html += '<button class="btn btn-p btn-sm" onclick="yenileModal(\'' + s.id + '\')">Yenile</button>';
+    }
+    html += '<button class="btn btn-g btn-sm" onclick="sertifikaSil(\'' + s.id + '\')">Sil</button>';
+    html += '</div>';
+
+    html += '</div>';
+  });
+
+  document.getElementById('srtGrid').innerHTML = html;
+
+  // KPI update
+  var toplam = sertifikalar.length;
+  var gecerli = 0, yaklasan = 0, dolmus = 0;
+  sertifikalar.forEach(function(s) {
+    var d = durumBelirle(s.kalanGun);
+    if (d === 'gecerli') gecerli++;
+    else if (d === 'yaklasan') yaklasan++;
+    else dolmus++;
+  });
+  document.getElementById('kpi-toplam').textContent = toplam;
+  document.getElementById('kpi-gecerli').textContent = gecerli;
+  document.getElementById('kpi-yaklasan').textContent = yaklasan;
+  document.getElementById('kpi-dolmus').textContent = dolmus;
+
+  // AS9100 chips
+  document.getElementById('chipGecerli').textContent = gecerli + ' Gecerli';
+  document.getElementById('chipYaklasan').textContent = yaklasan + ' Yaklasan';
+  document.getElementById('chipDolmus').textContent = dolmus + ' Dolmus';
+}
+
+function yeniSertifikaModal() {
+  document.getElementById('modalBaslik').textContent = 'Yeni Sertifika';
+  document.getElementById('fAd').value = '';
+  document.getElementById('fKurum').value = '';
+  document.getElementById('fBelgeNo').value = '';
+  document.getElementById('fTur').value = 'Teknik';
+  document.getElementById('fVerilme').value = new Date().toISOString().split('T')[0];
+  document.getElementById('fBitis').value = '';
+
+  // Personel dropdown
+  var pHtml = '';
+  PERSONEL_LISTESI.forEach(function(p) {
+    pHtml += '<option value="' + p + '">' + p + '</option>';
+  });
+  document.getElementById('fPersonel').innerHTML = pHtml;
+
+  // Blok operasyonlar
+  var opHtml = '';
+  OPERASYONLAR.forEach(function(op) {
+    opHtml += '<label class="chk-item"><input type="checkbox" value="' + op + '"> ' + op + '</label>';
+  });
+  document.getElementById('blokOpSecim').innerHTML = opHtml;
+
+  document.getElementById('modalSertifika').dataset.editId = '';
+  document.getElementById('modalSertifika').classList.add('acik');
+}
+
+function yenileModal(id) {
+  var s = sertifikalar.find(function(x) { return x.id === id; });
+  if (!s) return;
+  yeniSertifikaModal();
+  document.getElementById('modalBaslik').textContent = 'Sertifika Yenile';
+  document.getElementById('fPersonel').value = s.personel;
+  document.getElementById('fAd').value = s.ad;
+  document.getElementById('fKurum').value = s.kurum;
+  document.getElementById('fBelgeNo').value = '';
+  document.getElementById('fTur').value = s.tur;
+  document.getElementById('fVerilme').value = new Date().toISOString().split('T')[0];
+  document.getElementById('fBitis').value = '';
+
+  // Pre-check blok ops
+  if (s.blokOp) {
+    s.blokOp.forEach(function(op) {
+      var cb = document.querySelector('#blokOpSecim input[value="' + op + '"]');
+      if (cb) cb.checked = true;
+    });
+  }
+
+  document.getElementById('modalSertifika').dataset.editId = id;
+}
+
+function modalKapat() {
+  document.getElementById('modalSertifika').classList.remove('acik');
+}
+
+function sertifikaKaydet() {
+  var ad = document.getElementById('fAd').value.trim();
+  if (!ad) { alert('Sertifika adi zorunludur'); return; }
+  var bitis = document.getElementById('fBitis').value;
+  if (!bitis) { alert('Bitis tarihi zorunludur'); return; }
+
+  var blokOp = [];
+  document.querySelectorAll('#blokOpSecim input:checked').forEach(function(cb) {
+    blokOp.push(cb.value);
+  });
+
+  var editId = document.getElementById('modalSertifika').dataset.editId;
+
+  if (editId) {
+    // Renewing — mark old as archived, create new
+    var eski = sertifikalar.find(function(x) { return x.id === editId; });
+    if (eski) eski.durum = 'Arsiv';
+  }
+
+  var yeniId = 'SRT-' + String(sertifikalar.length + 1).padStart(3,'0');
+  var yeni = {
+    id: yeniId,
+    personel: document.getElementById('fPersonel').value,
+    ad: ad,
+    kurum: document.getElementById('fKurum').value.trim() || '-',
+    belgeNo: document.getElementById('fBelgeNo').value.trim() || '-',
+    tur: document.getElementById('fTur').value,
+    verilme: document.getElementById('fVerilme').value,
+    bitis: bitis,
+    blokOp: blokOp,
+    kalanGun: 0
+  };
+
+  sertifikalar.push(yeni);
+  kalanGunHesapla();
+  kaydet();
+  modalKapat();
+  kartlariGoster();
+}
+
+function sertifikaSil(id) {
+  if (!confirm('Bu sertifikayi silmek istediginize emin misiniz?')) return;
+  sertifikalar = sertifikalar.filter(function(s) { return s.id !== id; });
+  kaydet();
+  kartlariGoster();
+}
+
+document.addEventListener('DOMContentLoaded', veriYukle);
+</script>
+</body>
+</html>

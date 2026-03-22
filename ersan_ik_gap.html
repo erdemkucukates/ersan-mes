@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — Gap Analizi</title>
+<link rel="stylesheet" href="ersan_styles.css">
+<script src="ersan_nav.js" defer></script>
+<script src="ersan_log.js" defer></script>
+<style>
+/* KPI Row */
+.kpi-row { display:flex; gap:12px; margin-bottom:16px; }
+.kpi { flex:1; background:var(--beyaz); border:1px solid var(--border); border-radius:10px; padding:14px 16px; }
+.kpi-ust { font-size:11px; color:var(--metin3); text-transform:uppercase; letter-spacing:.3px; margin-bottom:4px; }
+.kpi-deger { font-size:26px; font-weight:700; color:var(--metin); }
+.kpi.s1 { border-left:3px solid var(--kirmizi); }
+.kpi.s2 { border-left:3px solid var(--sari); }
+.kpi.s3 { border-left:3px solid var(--yesil); }
+
+/* Split */
+.gap-split { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px; }
+@media(max-width:900px) { .gap-split { grid-template-columns:1fr; } }
+
+/* Panel */
+.gap-panel { background:var(--beyaz); border:1px solid var(--border); border-radius:10px; overflow:hidden; }
+.gap-panel-baslik { padding:12px 16px; font-size:14px; font-weight:700; color:var(--metin); border-bottom:1px solid var(--border); background:var(--bg2); display:flex; align-items:center; justify-content:space-between; }
+
+/* Kapsama barlari */
+.kaps-liste { padding:12px 16px; max-height:420px; overflow-y:auto; }
+.kaps-item { margin-bottom:14px; }
+.kaps-ust { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; }
+.kaps-op { font-size:13px; font-weight:600; color:var(--metin); }
+.kaps-oran { font-size:12px; font-weight:700; }
+.kaps-oran.red { color:var(--kirmizi-t); }
+.kaps-oran.amr { color:var(--sari-t); }
+.kaps-oran.grn { color:var(--yesil-t); }
+.kaps-bar { height:10px; background:var(--border); border-radius:5px; overflow:hidden; }
+.kaps-fill { height:100%; border-radius:5px; transition:width .6s ease; }
+.kaps-fill.red { background:var(--kirmizi); }
+.kaps-fill.amr { background:var(--sari); }
+.kaps-fill.grn { background:var(--yesil); }
+.kaps-detay { font-size:11px; color:var(--metin3); margin-top:2px; }
+
+/* Kritik bosluk kartlari */
+.kb-liste { padding:12px 16px; max-height:420px; overflow-y:auto; }
+.kb-kart { background:var(--beyaz); border:1px solid var(--border); border-radius:8px; padding:12px 14px; margin-bottom:10px; transition:box-shadow .2s; }
+.kb-kart:hover { box-shadow:0 2px 8px rgba(15,39,68,.08); }
+.kb-kart.kritik { border-left:4px solid var(--kirmizi); background:linear-gradient(135deg, #fef2f2 0%, var(--beyaz) 30%); }
+.kb-kart.uyari { border-left:4px solid var(--sari); background:linear-gradient(135deg, #fffbeb 0%, var(--beyaz) 30%); }
+.kb-ust { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+.kb-op { font-size:14px; font-weight:700; color:var(--metin); }
+.kb-sayi { font-size:12px; font-weight:600; }
+.kb-sayi.red { color:var(--kirmizi-t); }
+.kb-sayi.amr { color:var(--sari-t); }
+.kb-kisi-liste { font-size:11px; color:var(--metin3); margin-bottom:8px; }
+.kb-kisi-liste strong { color:var(--metin2); }
+
+/* Badges */
+.bdg { display:inline-block; font-size:10px; font-weight:600; padding:2px 8px; border-radius:4px; }
+.b-grn { background:var(--yesil-bg); color:var(--yesil-t); }
+.b-amr { background:var(--sari-bg); color:var(--sari-t); }
+.b-red { background:var(--kirmizi-bg); color:var(--kirmizi-t); }
+.b-gray { background:#f1f5f9; color:var(--metin3); }
+.b-blue { background:var(--mavi-acik); color:var(--mavi-koyu); }
+
+/* Buttons */
+.btn { display:inline-flex; align-items:center; gap:4px; padding:7px 14px; border:none; border-radius:6px; font-size:13px; font-weight:600; font-family:inherit; cursor:pointer; transition:background .15s; }
+.btn-p { background:var(--mavi); color:#fff; }
+.btn-p:hover { background:var(--mavi-koyu); }
+.btn-sm { padding:5px 10px; font-size:11px; }
+.btn-g { background:var(--border); color:var(--metin2); }
+.btn-g:hover { background:var(--border2); }
+.btn-grn { background:var(--yesil); color:#fff; }
+.btn-grn:hover { background:#15803d; }
+
+/* Onerilen egitimler tablo */
+.plan-panel { background:var(--beyaz); border:1px solid var(--border); border-radius:10px; overflow:hidden; }
+.plan-baslik { padding:12px 16px; font-size:14px; font-weight:700; color:var(--metin); border-bottom:1px solid var(--border); background:var(--bg2); display:flex; align-items:center; justify-content:space-between; }
+.plan-tablo { width:100%; font-size:12px; border-collapse:collapse; }
+.plan-tablo th { text-align:left; padding:8px 12px; background:var(--bg); color:var(--metin3); font-weight:600; font-size:10px; text-transform:uppercase; border-bottom:1px solid var(--border); }
+.plan-tablo td { padding:8px 12px; border-bottom:1px solid var(--border); color:var(--metin2); }
+.plan-tablo tr:hover { background:var(--bg); }
+
+/* Empty */
+.bos { text-align:center; padding:40px 20px; color:var(--metin4); font-size:14px; }
+</style>
+</head>
+<body>
+<div id="nav-alani"></div>
+<div class="icerik-alani">
+  <div class="topbar">
+    <div class="topbar-baslik">Gap Analizi</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button class="btn btn-g" onclick="raporIndir()">Rapor</button>
+      <button class="btn btn-p" onclick="hepsiniPlanla()">Hepsini Planla</button>
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
+    </div>
+  </div>
+  <div class="sayfa-icerik">
+
+    <!-- KPI Row -->
+    <div class="kpi-row">
+      <div class="kpi s1"><div class="kpi-ust">Kritik Bosluk</div><div class="kpi-deger" id="kpi-kritik">0</div></div>
+      <div class="kpi s2"><div class="kpi-ust">Tek Nokta Riski</div><div class="kpi-deger" id="kpi-tek">0</div></div>
+      <div class="kpi s3"><div class="kpi-ust">Kapsama Orani</div><div class="kpi-deger" id="kpi-kapsama">0%</div></div>
+    </div>
+
+    <!-- Split: bars + cards -->
+    <div class="gap-split">
+      <!-- Left: Kapsama barlari -->
+      <div class="gap-panel">
+        <div class="gap-panel-baslik">
+          <span>Operasyon Kapsama Barlari</span>
+          <span class="bdg b-gray" id="opSayac">0 operasyon</span>
+        </div>
+        <div class="kaps-liste" id="kapsamaListe"></div>
+      </div>
+
+      <!-- Right: Kritik bosluk kartlari -->
+      <div class="gap-panel">
+        <div class="gap-panel-baslik">
+          <span>Kritik Bosluk Kartlari</span>
+          <span class="bdg b-red" id="kritikSayac">0 kritik</span>
+        </div>
+        <div class="kb-liste" id="kritikListe"></div>
+      </div>
+    </div>
+
+    <!-- Onerilen egitimler -->
+    <div class="plan-panel">
+      <div class="plan-baslik">
+        <span>Onerilen Egitim Plani</span>
+        <span class="bdg b-blue" id="oneriSayac">0 oneri</span>
+      </div>
+      <table class="plan-tablo" id="planTablo">
+        <thead>
+          <tr><th>Oncelik</th><th>Operasyon</th><th>Egitim Adi</th><th>Hedef Katilimci</th><th>Tahmini Sure</th><th>Islem</th></tr>
+        </thead>
+        <tbody id="planBody"></tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<script>
+var OPERASYONLAR = [
+  { ad:'CNC Torna', gerekli:5, kritik:true },
+  { ad:'CNC Freze', gerekli:4, kritik:true },
+  { ad:'5 Eksen CNC', gerekli:2, kritik:true },
+  { ad:'Taslamaci', gerekli:3, kritik:false },
+  { ad:'Erezyon', gerekli:2, kritik:false },
+  { ad:'Kalite Kontrol', gerekli:4, kritik:true },
+  { ad:'Olcum', gerekli:3, kritik:true },
+  { ad:'Kaynak', gerekli:2, kritik:false },
+  { ad:'Montaj', gerekli:3, kritik:false },
+  { ad:'Boya', gerekli:2, kritik:false }
+];
+
+var PERSONEL_LISTESI = [
+  'Erdem Kucukates','Ali Yilmaz','Mehmet Demir','Hasan Kaya','Ahmet Celik',
+  'Fatih Ozturk','Murat Sahin','Emre Arslan','Burak Yildiz','Kemal Dogan',
+  'Osman Aydin','Serkan Koc','Ufuk Cetin','Tolga Er','Onur Aksoy',
+  'Volkan Tas','Caner Polat','Baris Kurt','Sinan Ozer','Deniz Aslan'
+];
+
+var matris = {};
+
+function veriYukle() {
+  var raw = localStorage.getItem('ersan_yetkinlik_matris');
+  if (raw) {
+    matris = JSON.parse(raw);
+  } else {
+    ornekMatrisOlustur();
+  }
+  analizYap();
+}
+
+function ornekMatrisOlustur() {
+  // Her personele rastgele yetkinlikler ata
+  var atamalar = {
+    'Ali Yilmaz': ['CNC Torna','Olcum'],
+    'Mehmet Demir': ['CNC Freze','CNC Torna','Montaj'],
+    'Hasan Kaya': ['5 Eksen CNC','CNC Freze','CNC Torna'],
+    'Ahmet Celik': ['Montaj','Boya'],
+    'Fatih Ozturk': ['Kaynak','Montaj'],
+    'Murat Sahin': ['Taslamaci','CNC Torna'],
+    'Emre Arslan': ['Kalite Kontrol','Olcum'],
+    'Burak Yildiz': ['5 Eksen CNC','CNC Freze'],
+    'Kemal Dogan': ['Kalite Kontrol','Olcum','Erezyon'],
+    'Osman Aydin': ['Boya','Montaj'],
+    'Serkan Koc': ['CNC Torna','Taslamaci'],
+    'Ufuk Cetin': ['Erezyon'],
+    'Tolga Er': ['Kaynak'],
+    'Onur Aksoy': ['Kalite Kontrol'],
+    'Volkan Tas': ['CNC Freze'],
+    'Caner Polat': [],
+    'Baris Kurt': [],
+    'Sinan Ozer': ['Boya'],
+    'Deniz Aslan': [],
+    'Erdem Kucukates': ['Kalite Kontrol','Olcum','CNC Torna']
+  };
+
+  // Egitimde olan personel
+  var egitimde = {
+    'Caner Polat': ['CNC Torna'],
+    'Baris Kurt': ['Montaj'],
+    'Deniz Aslan': ['Boya','Taslamaci']
+  };
+
+  matris = { yetkin: atamalar, egitimde: egitimde };
+  localStorage.setItem('ersan_yetkinlik_matris', JSON.stringify(matris));
+}
+
+function analizYap() {
+  var yetkin = matris.yetkin || {};
+  var egitimde = matris.egitimde || {};
+
+  // Her operasyon icin yetkin sayisi hesapla
+  var sonuclar = OPERASYONLAR.map(function(op) {
+    var yetkinKisiler = [];
+    var egitimdeKisiler = [];
+    var yetkinligiOlmayan = [];
+
+    PERSONEL_LISTESI.forEach(function(p) {
+      var kisininYetkinlikleri = yetkin[p] || [];
+      var kisininEgitimleri = egitimde[p] || [];
+      if (kisininYetkinlikleri.indexOf(op.ad) !== -1) {
+        yetkinKisiler.push(p);
+      } else if (kisininEgitimleri.indexOf(op.ad) !== -1) {
+        egitimdeKisiler.push(p);
+      } else {
+        yetkinligiOlmayan.push(p);
+      }
+    });
+
+    var oran = op.gerekli > 0 ? Math.round((yetkinKisiler.length / op.gerekli) * 100) : 100;
+    return {
+      ad: op.ad,
+      gerekli: op.gerekli,
+      yetkin: yetkinKisiler,
+      egitimde: egitimdeKisiler,
+      yetkinligiOlmayan: yetkinligiOlmayan,
+      oran: Math.min(oran, 100),
+      kritik: op.kritik,
+      tekNoktaRiski: yetkinKisiler.length <= 1
+    };
+  });
+
+  // Sort by coverage (lowest first)
+  sonuclar.sort(function(a, b) { return a.oran - b.oran; });
+
+  kapsamaBarlariGoster(sonuclar);
+  kritikKartlariGoster(sonuclar);
+  oneriTablosuGoster(sonuclar);
+  kpiGuncelle(sonuclar);
+}
+
+function kapsamaBarlariGoster(sonuclar) {
+  var html = '';
+  sonuclar.forEach(function(s) {
+    var renk = s.oran < 50 ? 'red' : (s.oran < 75 ? 'amr' : 'grn');
+    html += '<div class="kaps-item">';
+    html += '<div class="kaps-ust"><span class="kaps-op">' + s.ad + '</span><span class="kaps-oran ' + renk + '">' + s.yetkin.length + '/' + s.gerekli + ' (%' + s.oran + ')</span></div>';
+    html += '<div class="kaps-bar"><div class="kaps-fill ' + renk + '" style="width:' + s.oran + '%;"></div></div>';
+    html += '<div class="kaps-detay">Yetkin: ' + (s.yetkin.length > 0 ? s.yetkin.join(', ') : 'Yok') + '</div>';
+    html += '</div>';
+  });
+  document.getElementById('kapsamaListe').innerHTML = html;
+  document.getElementById('opSayac').textContent = sonuclar.length + ' operasyon';
+}
+
+function kritikKartlariGoster(sonuclar) {
+  var kritikler = sonuclar.filter(function(s) { return s.tekNoktaRiski || s.oran < 50; });
+  kritikler.sort(function(a, b) { return a.yetkin.length - b.yetkin.length; });
+
+  var html = '';
+  if (kritikler.length === 0) {
+    html = '<div class="bos">Kritik bosluk bulunmuyor</div>';
+  }
+
+  kritikler.forEach(function(s) {
+    var cls = s.yetkin.length === 0 ? 'kritik' : 'uyari';
+    var sayiCls = s.yetkin.length <= 1 ? 'red' : 'amr';
+    html += '<div class="kb-kart ' + cls + '">';
+    html += '<div class="kb-ust"><span class="kb-op">' + s.ad + '</span><span class="kb-sayi ' + sayiCls + '">' + s.yetkin.length + '/' + s.gerekli + ' yetkin</span></div>';
+
+    if (s.yetkin.length > 0) {
+      html += '<div class="kb-kisi-liste"><strong>Yetkin:</strong> ' + s.yetkin.join(', ') + '</div>';
+    }
+    if (s.egitimde.length > 0) {
+      html += '<div class="kb-kisi-liste"><strong>Egitimde:</strong> ' + s.egitimde.map(function(k) { return '<span class="bdg b-blue">' + k + '</span>'; }).join(' ') + '</div>';
+    }
+    if (s.yetkinligiOlmayan.length > 0) {
+      var gosterilecek = s.yetkinligiOlmayan.slice(0, 5);
+      var kalan = s.yetkinligiOlmayan.length - gosterilecek.length;
+      html += '<div class="kb-kisi-liste"><strong>Becerisi yok:</strong> ' + gosterilecek.join(', ') + (kalan > 0 ? ' +' + kalan + ' kisi' : '') + '</div>';
+    }
+
+    html += '<button class="btn btn-p btn-sm" onclick="tekPlanla(\'' + s.ad + '\')">Planla</button>';
+    html += '</div>';
+  });
+
+  document.getElementById('kritikListe').innerHTML = html;
+  document.getElementById('kritikSayac').textContent = kritikler.length + ' kritik';
+}
+
+function oneriTablosuGoster(sonuclar) {
+  var oneriler = [];
+  var oncelik = 1;
+
+  sonuclar.forEach(function(s) {
+    if (s.oran >= 100) return;
+    var eksik = Math.max(0, s.gerekli - s.yetkin.length);
+    if (eksik <= 0) return;
+
+    var hedefKisiler = s.egitimde.concat(s.yetkinligiOlmayan.slice(0, eksik - s.egitimde.length));
+    var tahminiSure = s.kritik ? 16 : 8;
+
+    oneriler.push({
+      oncelik: oncelik++,
+      op: s.ad,
+      egitimAd: s.ad + ' Yetkinlik Egitimi',
+      hedef: hedefKisiler.slice(0, eksik),
+      sure: tahminiSure,
+      eksik: eksik
+    });
+  });
+
+  var html = '';
+  if (oneriler.length === 0) {
+    html = '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--metin4);">Tum operasyonlar yeterli kapsamada</td></tr>';
+  }
+
+  oneriler.forEach(function(o) {
+    var oncelikBdg = o.oncelik <= 3 ? '<span class="bdg b-red">P' + o.oncelik + '</span>' : '<span class="bdg b-amr">P' + o.oncelik + '</span>';
+    html += '<tr>';
+    html += '<td>' + oncelikBdg + '</td>';
+    html += '<td style="font-weight:600;">' + o.op + '</td>';
+    html += '<td>' + o.egitimAd + '</td>';
+    html += '<td>' + o.hedef.slice(0, 3).join(', ') + (o.hedef.length > 3 ? ' +' + (o.hedef.length - 3) : '') + '</td>';
+    html += '<td>' + o.sure + ' saat</td>';
+    html += '<td><button class="btn btn-p btn-sm" onclick="tekPlanla(\'' + o.op + '\')">Planla</button></td>';
+    html += '</tr>';
+  });
+
+  document.getElementById('planBody').innerHTML = html;
+  document.getElementById('oneriSayac').textContent = oneriler.length + ' oneri';
+  window._oneriler = oneriler;
+}
+
+function kpiGuncelle(sonuclar) {
+  var kritik = sonuclar.filter(function(s) { return s.oran < 50; }).length;
+  var tek = sonuclar.filter(function(s) { return s.tekNoktaRiski; }).length;
+  var toplamOran = 0;
+  sonuclar.forEach(function(s) { toplamOran += s.oran; });
+  var ortOran = sonuclar.length > 0 ? Math.round(toplamOran / sonuclar.length) : 0;
+
+  document.getElementById('kpi-kritik').textContent = kritik;
+  document.getElementById('kpi-tek').textContent = tek;
+  document.getElementById('kpi-kapsama').textContent = '%' + ortOran;
+}
+
+function tekPlanla(opAd) {
+  // Redirect to egitim page with gap param
+  window.location.href = 'ersan_ik_egitim.html?gap=' + encodeURIComponent(opAd);
+}
+
+function hepsiniPlanla() {
+  var oneriler = window._oneriler || [];
+  if (oneriler.length === 0) { alert('Planlanacak oneri bulunmuyor'); return; }
+
+  var egitimler = JSON.parse(localStorage.getItem('ersan_egitimler') || '[]');
+  var sayac = egitimler.length;
+  var bugun = new Date();
+
+  oneriler.forEach(function(o, i) {
+    sayac++;
+    var tarih = new Date(bugun);
+    tarih.setDate(tarih.getDate() + (7 * (i + 1))); // Her hafta bir egitim
+
+    var katilimcilar = o.hedef.map(function(isim) {
+      return { isim: isim, katildi: false, puan: null, sertifika: false };
+    });
+
+    egitimler.push({
+      id: 'EGT-' + String(sayac).padStart(3, '0'),
+      ad: o.egitimAd,
+      tur: 'Teknik',
+      tarih: tarih.toISOString().split('T')[0],
+      sure: o.sure,
+      egitmen: '-',
+      lokasyon: 'Atolye',
+      aciklama: 'Gap analizinden otomatik olusturuldu. Operasyon: ' + o.op,
+      durum: 'Planlandi',
+      katilimcilar: katilimcilar
+    });
+  });
+
+  localStorage.setItem('ersan_egitimler', JSON.stringify(egitimler));
+  alert(oneriler.length + ' egitim plani olusturuldu. Egitim Plani sayfasina yonlendiriliyorsunuz.');
+  window.location.href = 'ersan_ik_egitim.html';
+}
+
+function raporIndir() {
+  var yetkin = matris.yetkin || {};
+  var satirlar = ['Operasyon,Gerekli,Yetkin,Kapsama %,Durum'];
+
+  OPERASYONLAR.forEach(function(op) {
+    var sayi = 0;
+    PERSONEL_LISTESI.forEach(function(p) {
+      if ((yetkin[p] || []).indexOf(op.ad) !== -1) sayi++;
+    });
+    var oran = op.gerekli > 0 ? Math.round((sayi / op.gerekli) * 100) : 100;
+    var durum = oran < 50 ? 'Kritik' : (oran < 75 ? 'Uyari' : 'Yeterli');
+    satirlar.push(op.ad + ',' + op.gerekli + ',' + sayi + ',' + Math.min(oran, 100) + ',' + durum);
+  });
+
+  var csv = satirlar.join('\n');
+  var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'gap_analizi_' + new Date().toISOString().split('T')[0] + '.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+document.addEventListener('DOMContentLoaded', veriYukle);
+</script>
+</body>
+</html>

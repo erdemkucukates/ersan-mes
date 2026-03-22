@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — Yetkinlik Matriksi</title>
+<link rel="stylesheet" href="ersan_styles.css">
+<script src="ersan_nav.js" defer></script>
+<script src="ersan_log.js" defer></script>
+<style>
+/* Main content */
+.main { margin-left:220px; min-height:100vh; background:var(--bg); }
+
+/* KPI row */
+.kpi-row { display:flex; gap:10px; padding:14px 20px; background:var(--beyaz); border-bottom:1px solid var(--border); }
+.kpi-card { flex:1; background:var(--bg); border-radius:8px; padding:10px 14px; text-align:center; border:1px solid var(--border); }
+.kpi-deger { font-size:22px; font-weight:700; color:var(--laci); }
+.kpi-etiket { font-size:9px; color:var(--metin3); text-transform:uppercase; letter-spacing:.4px; margin-top:2px; }
+.kpi-card.kpi-yesil .kpi-deger { color:var(--yesil); }
+.kpi-card.kpi-kirmizi .kpi-deger { color:var(--kirmizi); }
+.kpi-card.kpi-mavi .kpi-deger { color:var(--mavi); }
+
+/* Topbar */
+.topbar { height:52px; background:var(--beyaz); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; padding:0 20px; }
+.topbar-baslik { font-size:15px; font-weight:700; color:var(--laci); }
+.topbar-sag { display:flex; gap:8px; align-items:center; }
+.topbar-sag button { padding:6px 14px; border-radius:6px; font-size:11px; font-weight:600; cursor:pointer; border:1px solid var(--border); background:var(--beyaz); color:var(--metin2); }
+.topbar-sag button.primary { background:var(--mavi); color:#fff; border-color:var(--mavi); }
+.topbar-sag button.primary:hover { background:var(--mavi-koyu); }
+
+/* Matrix container */
+.matris-wrap { padding:16px 20px; overflow-x:auto; }
+
+/* Matrix table */
+.matris { width:100%; border-collapse:collapse; background:var(--beyaz); border:1px solid var(--border); border-radius:8px; overflow:hidden; }
+.matris thead th { padding:10px 12px; font-size:10px; font-weight:700; color:var(--metin3); text-transform:uppercase; letter-spacing:.4px; text-align:center; background:var(--bg2); border-bottom:1px solid var(--border); border-right:1px solid var(--border); position:sticky; top:0; z-index:2; }
+.matris thead th:first-child { text-align:left; min-width:200px; position:sticky; left:0; z-index:3; background:var(--bg2); }
+.matris tbody td { padding:8px 12px; text-align:center; border-bottom:1px solid var(--border); border-right:1px solid var(--border); cursor:pointer; transition:all .12s; vertical-align:middle; }
+.matris tbody td:hover:not(:first-child) { background:var(--mavi-acik); }
+.matris tbody td:first-child { text-align:left; font-size:12px; font-weight:500; color:var(--laci); position:sticky; left:0; background:var(--beyaz); z-index:1; border-right:2px solid var(--border); }
+.matris tbody tr:hover td:first-child { background:var(--bg2); }
+
+/* Cell icons */
+.cell-icon { font-size:18px; font-weight:700; line-height:1; user-select:none; }
+
+/* Skor column */
+.skor-col { font-size:12px; font-weight:700; min-width:60px; }
+
+/* Personnel info in first col */
+.m-personel { display:flex; align-items:center; gap:8px; }
+.m-avatar { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; color:#fff; flex-shrink:0; }
+.m-ad { font-size:12px; font-weight:600; color:var(--laci); }
+.m-dept { font-size:9px; color:var(--metin3); }
+
+/* Legend */
+.legend-bar { display:flex; gap:16px; align-items:center; padding:12px 20px; background:var(--beyaz); border-top:1px solid var(--border); margin-top:auto; }
+.legend-item { display:flex; align-items:center; gap:5px; font-size:11px; color:var(--metin2); }
+.legend-icon { font-size:16px; font-weight:700; }
+
+/* Badge */
+.bdg { display:inline-block; padding:1px 7px; border-radius:10px; font-size:9px; font-weight:600; }
+.bdg-yesil { background:var(--yesil-bg); color:var(--yesil-t); }
+.bdg-kirmizi { background:var(--kirmizi-bg); color:var(--kirmizi-t); }
+.bdg-sari { background:var(--sari-bg); color:var(--sari-t); }
+.bdg-mavi { background:var(--mavi-acik); color:var(--mavi-koyu); }
+
+/* Modal */
+.modal-bg { display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:500; align-items:center; justify-content:center; }
+.modal-bg.acik { display:flex; }
+.modal { background:var(--beyaz); border-radius:10px; width:420px; max-width:90vw; max-height:85vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,.18); }
+.modal-header { padding:16px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.modal-header h3 { font-size:14px; font-weight:700; color:var(--laci); }
+.modal-header .kapat { cursor:pointer; font-size:18px; color:var(--metin4); background:none; border:none; }
+.modal-body { padding:16px 20px; }
+.modal-body label { display:block; font-size:11px; font-weight:600; color:var(--metin3); margin-bottom:4px; margin-top:10px; }
+.modal-body input { width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:6px; font-size:12px; }
+.modal-footer { padding:12px 20px; border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:8px; }
+.modal-footer button { padding:8px 20px; border-radius:6px; font-size:12px; font-weight:600; cursor:pointer; border:none; }
+.modal-footer .iptal { background:var(--bg); color:var(--metin3); border:1px solid var(--border); }
+.modal-footer .kaydet { background:var(--mavi); color:#fff; }
+
+/* Tooltip */
+.cell-tip { position:absolute; background:var(--laci); color:#fff; padding:4px 10px; border-radius:5px; font-size:10px; font-weight:600; white-space:nowrap; z-index:50; pointer-events:none; transform:translate(-50%,-120%); }
+</style>
+</head>
+<body>
+
+<div id="nav-alani"></div>
+
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-baslik">Yetkinlik Matriksi</div>
+    <div class="topbar-sag">
+      <button onclick="excelIndir()">&#8595; Excel</button>
+      <button class="primary" onclick="opEkleAc()">+ Operasyon Ekle</button>
+    </div>
+  </div>
+
+  <div class="kpi-row">
+    <div class="kpi-card"><div class="kpi-deger" id="kpi-toplam">0</div><div class="kpi-etiket">Toplam Personel</div></div>
+    <div class="kpi-card kpi-yesil"><div class="kpi-deger" id="kpi-ort">0%</div><div class="kpi-etiket">Ort. Yetkinlik</div></div>
+    <div class="kpi-card kpi-kirmizi"><div class="kpi-deger" id="kpi-kritik">0</div><div class="kpi-etiket">Kritik Boşluk</div></div>
+  </div>
+
+  <div class="matris-wrap" id="matris-wrap">
+    <div style="text-align:center;padding:60px;color:var(--metin4);">Yükleniyor...</div>
+  </div>
+
+  <div class="legend-bar">
+    <span style="font-size:10px;font-weight:700;color:var(--metin3);margin-right:4px;">SEVİYE:</span>
+    <div class="legend-item"><span class="legend-icon" style="color:#94a3b8;">&#9679;</span> Yok (0)</div>
+    <div class="legend-item"><span class="legend-icon" style="color:#BA7517;">&#9684;</span> Eğitimde (1)</div>
+    <div class="legend-item"><span class="legend-icon" style="color:#378ADD;">&#9685;</span> Denetim (2)</div>
+    <div class="legend-item"><span class="legend-icon" style="color:#1D9E75;">&#9670;</span> Bağımsız (3)</div>
+    <div class="legend-item"><span class="legend-icon" style="color:#7C3AED;">&#9733;</span> Eğitmen (4)</div>
+  </div>
+</div>
+
+<!-- OPERASYON EKLE MODAL -->
+<div class="modal-bg" id="modal-op">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Yeni Operasyon Ekle</h3>
+      <button class="kapat" onclick="modalKapat('modal-op')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <label>Operasyon Adı</label>
+      <input type="text" id="op-ad" placeholder="Örn: Montaj, Boyama...">
+    </div>
+    <div class="modal-footer">
+      <button class="iptal" onclick="modalKapat('modal-op')">İptal</button>
+      <button class="kaydet" onclick="opEkleKaydet()">Ekle</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var PERSONEL_TABLO = 'Personel';
+var VARSAYILAN_OPS = ['CNC Torna','CNC Freze','Taşlama','Isıl İşlem','Kaynak','Kalite Kontrol','Bakım PM','Depo'];
+var SEVIYE_ICON = ['●','◐','◑','◆','★'];
+var SEVIYE_RENK = ['#94a3b8','#BA7517','#378ADD','#1D9E75','#7C3AED'];
+var SEVIYE_LABEL = ['Yok','Eğitimde','Denetim Altında','Bağımsız','Eğitmen'];
+var RENK_PALET = ['#378ADD','#1D9E75','#BA7517','#E24B4A','#7C3AED','#0891B2','#D946EF','#EA580C'];
+
+var personelListesi = [];
+var operasyonlar = [];
+
+function operasyonlariYukle() {
+  var kayitli = localStorage.getItem('ersan_matris_operasyonlar');
+  if (kayitli) {
+    operasyonlar = JSON.parse(kayitli);
+  } else {
+    operasyonlar = VARSAYILAN_OPS.slice();
+    localStorage.setItem('ersan_matris_operasyonlar', JSON.stringify(operasyonlar));
+  }
+}
+
+function yukle() {
+  operasyonlariYukle();
+
+  fetch('/.netlify/functions/airtable?table=' + encodeURIComponent(PERSONEL_TABLO) + '&pageSize=100')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      personelListesi = (d.records || []).map(function(r) {
+        return {
+          id: r.id,
+          ad: r.fields['Ad Soyad'] || r.fields['İsim'] || r.fields['Name'] || '',
+          kod: r.fields['PRS Kodu'] || r.fields['Personel No'] || '',
+          departman: r.fields['Departman'] || '',
+          durum: r.fields['Durum'] || 'Aktif'
+        };
+      });
+      ornekMatrisOlustur();
+      tabloOlustur();
+      kpiGuncelle();
+    })
+    .catch(function(e) {
+      console.error('Personel yükleme hatası:', e);
+      document.getElementById('matris-wrap').innerHTML = '<div style="text-align:center;padding:60px;color:var(--kirmizi);">Yükleme hatası: ' + e.message + '</div>';
+    });
+}
+
+function ornekMatrisOlustur() {
+  var matris = JSON.parse(localStorage.getItem('ersan_yetkinlik_matris') || '{}');
+  if (Object.keys(matris).length > 0) return;
+
+  var ornekSeviyeler = [
+    [4,3,2,0,1,3,1,0],
+    [3,4,1,0,0,2,0,0],
+    [2,1,3,0,0,1,0,0],
+    [0,0,0,3,0,0,0,0],
+    [1,0,0,0,4,0,0,0],
+    [3,2,2,1,1,4,1,1],
+    [1,1,0,0,0,1,4,0],
+    [0,0,0,0,0,0,0,4]
+  ];
+
+  personelListesi.forEach(function(p, idx) {
+    if (idx < 8) {
+      matris[p.id] = {};
+      operasyonlar.forEach(function(op, oi) {
+        matris[p.id][op] = (ornekSeviyeler[idx] && ornekSeviyeler[idx][oi] !== undefined) ? ornekSeviyeler[idx][oi] : 0;
+      });
+    }
+  });
+  localStorage.setItem('ersan_yetkinlik_matris', JSON.stringify(matris));
+}
+
+function avatarRenk(ad) {
+  var hash = 0;
+  for (var i = 0; i < ad.length; i++) hash = ad.charCodeAt(i) + ((hash << 5) - hash);
+  return RENK_PALET[Math.abs(hash) % RENK_PALET.length];
+}
+
+function avatarHarf(ad) {
+  var parca = (ad || '?').split(' ');
+  if (parca.length >= 2) return (parca[0][0] + parca[parca.length - 1][0]).toUpperCase();
+  return (ad || '?').substring(0, 2).toUpperCase();
+}
+
+function personelSkor(id) {
+  var matris = JSON.parse(localStorage.getItem('ersan_yetkinlik_matris') || '{}');
+  var skills = matris[id];
+  if (!skills) return 0;
+  var toplam = 0;
+  var max = 0;
+  operasyonlar.forEach(function(op) {
+    toplam += (skills[op] || 0);
+    max += 4;
+  });
+  return max > 0 ? Math.round((toplam / max) * 100) : 0;
+}
+
+function kpiGuncelle() {
+  var matris = JSON.parse(localStorage.getItem('ersan_yetkinlik_matris') || '{}');
+  var toplamSkor = 0;
+  var kritik = 0;
+  var sayilan = 0;
+
+  personelListesi.forEach(function(p) {
+    var skor = personelSkor(p.id);
+    toplamSkor += skor;
+    sayilan++;
+    // Kritik bosluk: personel hic yetkin degil (tum operasyonlarda 0 veya 1)
+    var skills = matris[p.id] || {};
+    var maxSeviye = 0;
+    operasyonlar.forEach(function(op) {
+      var s = skills[op] || 0;
+      if (s > maxSeviye) maxSeviye = s;
+    });
+    if (maxSeviye <= 1 && Object.keys(skills).length > 0) kritik++;
+    // Ayrica operasyon bazli bosluk: operasyonda hic bagimsiz/egitmen yok
+  });
+
+  // Operasyon bazli kritik bosluk
+  operasyonlar.forEach(function(op) {
+    var hasBagimsiz = false;
+    personelListesi.forEach(function(p) {
+      var skills = matris[p.id] || {};
+      if ((skills[op] || 0) >= 3) hasBagimsiz = true;
+    });
+    if (!hasBagimsiz) kritik++;
+  });
+
+  var ort = sayilan > 0 ? Math.round(toplamSkor / sayilan) : 0;
+  document.getElementById('kpi-toplam').textContent = personelListesi.length;
+  document.getElementById('kpi-ort').textContent = ort + '%';
+  document.getElementById('kpi-kritik').textContent = kritik;
+}
+
+function tabloOlustur() {
+  var matris = JSON.parse(localStorage.getItem('ersan_yetkinlik_matris') || '{}');
+  var html = '<table class="matris"><thead><tr>';
+  html += '<th>Personel</th>';
+  operasyonlar.forEach(function(op) {
+    html += '<th>' + op + '</th>';
+  });
+  html += '<th>Skor</th>';
+  html += '</tr></thead><tbody>';
+
+  personelListesi.forEach(function(p) {
+    var skills = matris[p.id] || {};
+    var skor = personelSkor(p.id);
+    var skorRenk = skor >= 80 ? 'var(--yesil)' : skor >= 60 ? 'var(--sari)' : 'var(--kirmizi)';
+
+    html += '<tr>';
+    html += '<td>';
+    html += '<div class="m-personel">';
+    html += '<div class="m-avatar" style="background:' + avatarRenk(p.ad) + '">' + avatarHarf(p.ad) + '</div>';
+    html += '<div><div class="m-ad">' + p.ad + '</div><div class="m-dept">' + (p.kod || '-') + ' &middot; ' + (p.departman || '-') + '</div></div>';
+    html += '</div></td>';
+
+    operasyonlar.forEach(function(op) {
+      var seviye = skills[op] || 0;
+      html += '<td onclick="hucreClick(\'' + p.id + '\',\'' + op + '\')" title="' + SEVIYE_LABEL[seviye] + ' (' + seviye + ') — Tıkla: seviye değiştir">';
+      html += '<span class="cell-icon" style="color:' + SEVIYE_RENK[seviye] + '">' + SEVIYE_ICON[seviye] + '</span>';
+      html += '</td>';
+    });
+
+    html += '<td class="skor-col" style="color:' + skorRenk + '">' + skor + '%</td>';
+    html += '</tr>';
+  });
+
+  if (personelListesi.length === 0) {
+    html += '<tr><td colspan="' + (operasyonlar.length + 2) + '" style="text-align:center;padding:40px;color:var(--metin4);">Personel bulunamadı</td></tr>';
+  }
+
+  html += '</tbody></table>';
+  document.getElementById('matris-wrap').innerHTML = html;
+}
+
+function hucreClick(personelId, op) {
+  var matris = JSON.parse(localStorage.getItem('ersan_yetkinlik_matris') || '{}');
+  if (!matris[personelId]) matris[personelId] = {};
+  var mevcut = matris[personelId][op] || 0;
+  var yeni = (mevcut + 1) % 5;
+  matris[personelId][op] = yeni;
+  localStorage.setItem('ersan_yetkinlik_matris', JSON.stringify(matris));
+  tabloOlustur();
+  kpiGuncelle();
+}
+
+// === EXCEL EXPORT ===
+function excelIndir() {
+  var matris = JSON.parse(localStorage.getItem('ersan_yetkinlik_matris') || '{}');
+  var satirlar = [];
+
+  // Header
+  var header = ['Personel','PRS Kodu','Departman'];
+  operasyonlar.forEach(function(op) { header.push(op); });
+  header.push('Skor %');
+  satirlar.push(header.join(';'));
+
+  // Data rows
+  personelListesi.forEach(function(p) {
+    var skills = matris[p.id] || {};
+    var satir = ['"' + p.ad + '"', p.kod || '-', p.departman || '-'];
+    operasyonlar.forEach(function(op) {
+      var s = skills[op] || 0;
+      satir.push(s + '-' + SEVIYE_LABEL[s]);
+    });
+    satir.push(personelSkor(p.id) + '%');
+    satirlar.push(satir.join(';'));
+  });
+
+  var csv = '\uFEFF' + satirlar.join('\n');
+  var blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'Yetkinlik_Matriksi_' + new Date().toISOString().split('T')[0] + '.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// === OPERASYON EKLE ===
+function opEkleAc() {
+  document.getElementById('op-ad').value = '';
+  document.getElementById('modal-op').classList.add('acik');
+}
+
+function opEkleKaydet() {
+  var ad = document.getElementById('op-ad').value.trim();
+  if (!ad) { alert('Operasyon adı zorunludur!'); return; }
+  if (operasyonlar.indexOf(ad) !== -1) { alert('Bu operasyon zaten mevcut!'); return; }
+  operasyonlar.push(ad);
+  localStorage.setItem('ersan_matris_operasyonlar', JSON.stringify(operasyonlar));
+  modalKapat('modal-op');
+  tabloOlustur();
+  kpiGuncelle();
+}
+
+function modalKapat(id) {
+  document.getElementById(id).classList.remove('acik');
+}
+
+// === INIT ===
+document.addEventListener('DOMContentLoaded', function() {
+  yukle();
+});
+</script>
+</body>
+</html>

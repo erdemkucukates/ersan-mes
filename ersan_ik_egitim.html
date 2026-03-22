@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — Eğitim Planı</title>
+<link rel="stylesheet" href="ersan_styles.css">
+<script src="ersan_nav.js" defer></script>
+<script src="ersan_log.js" defer></script>
+<style>
+/* KPI Row */
+.kpi-row { display:flex; gap:12px; margin-bottom:16px; }
+.kpi { flex:1; background:var(--beyaz); border:1px solid var(--border); border-radius:10px; padding:14px 16px; }
+.kpi-ust { font-size:11px; color:var(--metin3); text-transform:uppercase; letter-spacing:.3px; margin-bottom:4px; }
+.kpi-deger { font-size:26px; font-weight:700; color:var(--metin); }
+.kpi.s1 { border-left:3px solid var(--mavi); }
+.kpi.s2 { border-left:3px solid var(--sari); }
+.kpi.s3 { border-left:3px solid var(--yesil); }
+.kpi.s4 { border-left:3px solid #7c3aed; }
+
+/* Split Layout */
+.split { display:grid; grid-template-columns:380px 1fr; gap:16px; min-height:calc(100vh - 220px); }
+@media(max-width:900px) { .split { grid-template-columns:1fr; } }
+
+/* Left list */
+.sol-panel { background:var(--beyaz); border:1px solid var(--border); border-radius:10px; overflow-y:auto; max-height:calc(100vh - 230px); }
+.ay-baslik { position:sticky; top:0; z-index:2; padding:8px 14px; font-size:11px; font-weight:700; color:var(--metin3); text-transform:uppercase; letter-spacing:.4px; background:var(--bg2); border-bottom:1px solid var(--border); }
+.egt-kart { display:flex; align-items:flex-start; gap:10px; padding:10px 14px; border-bottom:1px solid var(--border); cursor:pointer; transition:background .15s; }
+.egt-kart:hover { background:var(--bg); }
+.egt-kart.secili { background:var(--mavi-acik); border-left:3px solid var(--mavi); }
+
+/* Date badge */
+.tarih-rozet { min-width:44px; text-align:center; border-radius:8px; padding:6px 4px; font-size:10px; font-weight:700; line-height:1.2; }
+.tarih-rozet .gun { display:block; font-size:16px; font-weight:800; }
+.tr-kirmizi { background:var(--kirmizi-bg); color:var(--kirmizi-t); }
+.tr-sari { background:var(--sari-bg); color:var(--sari-t); }
+.tr-mavi { background:var(--mavi-acik); color:var(--mavi-koyu); }
+.tr-yesil { background:var(--yesil-bg); color:var(--yesil-t); }
+
+.egt-bilgi { flex:1; min-width:0; }
+.egt-ad { font-size:13px; font-weight:600; color:var(--metin); margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.egt-meta { display:flex; gap:8px; font-size:11px; color:var(--metin3); flex-wrap:wrap; }
+.egt-tur { font-size:10px; font-weight:600; padding:2px 7px; border-radius:4px; }
+.tur-teknik { background:#dbeafe; color:#1e40af; }
+.tur-as9100 { background:#fef3c7; color:#92400e; }
+.tur-isg { background:#fee2e2; color:#991b1b; }
+.tur-genel { background:#f1f5f9; color:var(--metin3); }
+
+/* Right detail */
+.sag-panel { background:var(--beyaz); border:1px solid var(--border); border-radius:10px; overflow-y:auto; max-height:calc(100vh - 230px); }
+.detay-bos { display:flex; align-items:center; justify-content:center; height:100%; color:var(--metin4); font-size:14px; }
+.detay-ust { padding:16px 20px; border-bottom:1px solid var(--border); }
+.detay-baslik { font-size:18px; font-weight:700; color:var(--metin); margin-bottom:4px; }
+.detay-alt-baslik { font-size:12px; color:var(--metin3); }
+.bilgi-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; padding:16px 20px; }
+.bilgi-kutu { }
+.bilgi-etiket { font-size:10px; color:var(--metin3); text-transform:uppercase; font-weight:600; margin-bottom:2px; }
+.bilgi-deger { font-size:14px; font-weight:600; color:var(--metin); }
+
+/* Katilimci tablosu */
+.kat-alan { padding:0 20px 20px; }
+.kat-baslik { font-size:13px; font-weight:700; color:var(--metin); margin-bottom:8px; padding-top:8px; border-top:1px solid var(--border); }
+.kat-tablo { width:100%; font-size:12px; border-collapse:collapse; }
+.kat-tablo th { text-align:left; padding:6px 8px; background:var(--bg); color:var(--metin3); font-weight:600; font-size:10px; text-transform:uppercase; border-bottom:1px solid var(--border); }
+.kat-tablo td { padding:6px 8px; border-bottom:1px solid var(--border); color:var(--metin2); }
+.kat-tablo input[type="checkbox"] { width:16px; height:16px; cursor:pointer; }
+.kat-tablo input[type="number"] { width:60px; padding:4px 6px; border:1px solid var(--border); border-radius:4px; font-size:12px; font-family:inherit; text-align:center; }
+
+/* Badges */
+.bdg { display:inline-block; font-size:10px; font-weight:600; padding:2px 8px; border-radius:4px; }
+.b-grn { background:var(--yesil-bg); color:var(--yesil-t); }
+.b-amr { background:var(--sari-bg); color:var(--sari-t); }
+.b-red { background:var(--kirmizi-bg); color:var(--kirmizi-t); }
+.b-gray { background:#f1f5f9; color:var(--metin3); }
+
+/* Buttons */
+.btn { display:inline-flex; align-items:center; gap:4px; padding:7px 14px; border:none; border-radius:6px; font-size:13px; font-weight:600; font-family:inherit; cursor:pointer; transition:background .15s; }
+.btn-p { background:var(--mavi); color:#fff; }
+.btn-p:hover { background:var(--mavi-koyu); }
+.btn-sm { padding:5px 10px; font-size:11px; }
+.btn-g { background:var(--border); color:var(--metin2); }
+.btn-g:hover { background:var(--border2); }
+.btn-grn { background:var(--yesil); color:#fff; }
+.btn-grn:hover { background:#15803d; }
+
+/* Filter bar */
+.filtre-bar { display:flex; gap:8px; align-items:center; margin-bottom:16px; flex-wrap:wrap; }
+.filtre-bar input[type="text"] { flex:1; min-width:200px; padding:7px 12px; border:1px solid var(--border); border-radius:6px; font-size:13px; font-family:inherit; background:var(--beyaz); color:var(--metin2); }
+.filtre-bar select { padding:7px 12px; border:1px solid var(--border); border-radius:6px; font-size:13px; font-family:inherit; background:var(--beyaz); color:var(--metin2); cursor:pointer; }
+
+/* Modal */
+.modal-bg { position:fixed; inset:0; background:rgba(15,39,68,.45); z-index:700; display:none; align-items:center; justify-content:center; }
+.modal-bg.acik { display:flex; }
+.modal-kutu { background:var(--beyaz); border-radius:12px; width:560px; max-width:95vw; max-height:90vh; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 16px 48px rgba(15,39,68,.2); }
+.modal-ust { display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--border); }
+.modal-ust h3 { font-size:16px; color:var(--metin); }
+.modal-kapat { width:28px; height:28px; border:none; background:var(--bg); border-radius:6px; cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center; color:var(--metin3); }
+.modal-kapat:hover { background:var(--border); }
+.modal-govde { flex:1; overflow-y:auto; padding:20px; }
+.modal-alt { display:flex; justify-content:flex-end; gap:8px; padding:14px 20px; border-top:1px solid var(--border); }
+.form-grup { margin-bottom:12px; }
+.form-grup label { display:block; font-size:11px; font-weight:600; color:var(--metin3); margin-bottom:4px; text-transform:uppercase; }
+.form-grup input, .form-grup select, .form-grup textarea { width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:6px; font-size:13px; font-family:inherit; background:var(--beyaz); color:var(--metin2); }
+.form-iki { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+
+/* Checkbox group */
+.chk-grup { display:flex; flex-wrap:wrap; gap:6px; }
+.chk-item { display:flex; align-items:center; gap:4px; font-size:12px; color:var(--metin2); }
+.chk-item input { width:14px; height:14px; }
+</style>
+</head>
+<body>
+<div id="nav-alani"></div>
+<div class="icerik-alani">
+  <div class="topbar">
+    <div class="topbar-baslik">Egitim Plani</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <select id="yilFiltre" class="filtre-bar select" style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;" onchange="listeYenile()">
+        <option value="2026">2026</option>
+        <option value="2025">2025</option>
+        <option value="">Tum Yillar</option>
+      </select>
+      <button class="btn btn-p" onclick="yeniEgitimModal()">+ Yeni Egitim</button>
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
+    </div>
+  </div>
+  <div class="sayfa-icerik">
+
+    <!-- KPI Row -->
+    <div class="kpi-row">
+      <div class="kpi s1"><div class="kpi-ust">Planlanan</div><div class="kpi-deger" id="kpi-plan">0</div></div>
+      <div class="kpi s2"><div class="kpi-ust">Devam Eden</div><div class="kpi-deger" id="kpi-devam">0</div></div>
+      <div class="kpi s3"><div class="kpi-ust">Tamamlanan</div><div class="kpi-deger" id="kpi-tamam">0</div></div>
+      <div class="kpi s4"><div class="kpi-ust">Bu Yil Toplam Saat</div><div class="kpi-deger" id="kpi-saat">0</div></div>
+    </div>
+
+    <!-- Split layout -->
+    <div class="split">
+      <div class="sol-panel" id="solListe"></div>
+      <div class="sag-panel" id="sagDetay">
+        <div class="detay-bos">Listeden bir egitim secin</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Yeni Egitim Modal -->
+<div class="modal-bg" id="modalEgitim">
+  <div class="modal-kutu">
+    <div class="modal-ust">
+      <h3 id="modalBaslik">Yeni Egitim</h3>
+      <button class="modal-kapat" onclick="modalKapat()">&times;</button>
+    </div>
+    <div class="modal-govde">
+      <div class="form-iki">
+        <div class="form-grup"><label>Egitim Adi</label><input type="text" id="fAd"></div>
+        <div class="form-grup"><label>Tur</label>
+          <select id="fTur"><option value="Teknik">Teknik</option><option value="AS9100">AS9100</option><option value="ISG">ISG</option><option value="Genel">Genel</option></select>
+        </div>
+      </div>
+      <div class="form-iki">
+        <div class="form-grup"><label>Tarih</label><input type="date" id="fTarih"></div>
+        <div class="form-grup"><label>Sure (saat)</label><input type="number" id="fSure" min="0.5" step="0.5" value="2"></div>
+      </div>
+      <div class="form-iki">
+        <div class="form-grup"><label>Egitmen</label><input type="text" id="fEgitmen"></div>
+        <div class="form-grup"><label>Lokasyon</label><input type="text" id="fLokasyon" value="Toplanti Odasi"></div>
+      </div>
+      <div class="form-grup"><label>Aciklama</label><textarea id="fAciklama" rows="2"></textarea></div>
+      <div class="form-grup"><label>Katilimcilar</label>
+        <div class="chk-grup" id="katilimciSecim"></div>
+      </div>
+    </div>
+    <div class="modal-alt">
+      <button class="btn btn-g" onclick="modalKapat()">Iptal</button>
+      <button class="btn btn-p" onclick="egitimKaydet()">Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var PERSONEL_LISTESI = [
+  'Erdem Kucukates','Ali Yilmaz','Mehmet Demir','Hasan Kaya','Ahmet Celik',
+  'Fatih Ozturk','Murat Sahin','Emre Arslan','Burak Yildiz','Kemal Dogan',
+  'Osman Aydin','Serkan Koc','Ufuk Cetin','Tolga Er','Onur Aksoy',
+  'Volkan Tas','Caner Polat','Baris Kurt','Sinan Ozer','Deniz Aslan'
+];
+
+var AYLAR = ['Ocak','Subat','Mart','Nisan','Mayis','Haziran','Temmuz','Agustos','Eylul','Ekim','Kasim','Aralik'];
+var egitimler = [];
+var seciliId = null;
+
+function veriYukle() {
+  var raw = localStorage.getItem('ersan_egitimler');
+  if (raw) {
+    egitimler = JSON.parse(raw);
+  } else {
+    ornekVeriOlustur();
+  }
+  urlParamKontrol();
+  listeYenile();
+}
+
+function ornekVeriOlustur() {
+  var bugun = new Date();
+  var yil = bugun.getFullYear();
+  var ornekler = [
+    { ad:'CNC Torna Temel Egitimi', tur:'Teknik', tarih:tarihStr(yil,0,15), sure:4, egitmen:'Ali Yilmaz', lokasyon:'Atolye', durum:'Tamamlandi', katilimcilar: katListeOlustur(['Mehmet Demir','Hasan Kaya','Fatih Ozturk','Emre Arslan'], true) },
+    { ad:'AS9100 Rev.D Farkindaliik', tur:'AS9100', tarih:tarihStr(yil,1,10), sure:8, egitmen:'Erdem Kucukates', lokasyon:'Toplanti Odasi', durum:'Tamamlandi', katilimcilar: katListeOlustur(['Ali Yilmaz','Mehmet Demir','Hasan Kaya','Ahmet Celik','Fatih Ozturk','Murat Sahin','Emre Arslan','Burak Yildiz'], true) },
+    { ad:'FOD Onleme Egitimi', tur:'AS9100', tarih:tarihStr(yil,2,5), sure:2, egitmen:'Erdem Kucukates', lokasyon:'Atolye', durum:'Tamamlandi', katilimcilar: katListeOlustur(['Ali Yilmaz','Mehmet Demir','Kemal Dogan','Osman Aydin'], true) },
+    { ad:'Is Guvenligi Genel', tur:'ISG', tarih:tarihStr(yil,2,20), sure:4, egitmen:'Dis Egitmen', lokasyon:'Toplanti Odasi', durum:'Devam', katilimcilar: katListeOlustur(PERSONEL_LISTESI.slice(0,10), false) },
+    { ad:'5 Eksen CNC Programlama', tur:'Teknik', tarih:tarihStr(yil,3,8), sure:16, egitmen:'Burak Yildiz', lokasyon:'Atolye', durum:'Planlandi', katilimcilar: katListeOlustur(['Mehmet Demir','Hasan Kaya','Fatih Ozturk'], false) },
+    { ad:'Sahte Parca Farkindalik', tur:'AS9100', tarih:tarihStr(yil,3,22), sure:2, egitmen:'Erdem Kucukates', lokasyon:'Toplanti Odasi', durum:'Planlandi', katilimcilar: katListeOlustur(PERSONEL_LISTESI.slice(0,15), false) },
+    { ad:'Olcum Aletleri Kullanimi', tur:'Teknik', tarih:gecmisTarih(-5), sure:3, egitmen:'Kemal Dogan', lokasyon:'Kalite Lab', durum:'Planlandi', katilimcilar: katListeOlustur(['Ali Yilmaz','Murat Sahin','Emre Arslan','Serkan Koc'], false) },
+    { ad:'Yangin Tatbikati', tur:'ISG', tarih:tarihStr(yil,5,15), sure:2, egitmen:'Itfaiye', lokasyon:'Dis Mekan', durum:'Planlandi', katilimcilar: katListeOlustur(PERSONEL_LISTESI, false) }
+  ];
+  egitimler = ornekler.map(function(o, i) {
+    o.id = 'EGT-' + String(i+1).padStart(3,'0');
+    o.aciklama = o.ad + ' detayli egitim programi';
+    return o;
+  });
+  kaydet();
+}
+
+function katListeOlustur(isimler, tamamlandi) {
+  return isimler.map(function(isim) {
+    return {
+      isim: isim,
+      katildi: tamamlandi,
+      puan: tamamlandi ? (70 + Math.floor(Math.random() * 30)) : null,
+      sertifika: false
+    };
+  });
+}
+
+function tarihStr(y, m, d) {
+  return y + '-' + String(m+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+}
+
+function gecmisTarih(gun) {
+  var d = new Date();
+  d.setDate(d.getDate() + gun);
+  return d.toISOString().split('T')[0];
+}
+
+function kaydet() {
+  localStorage.setItem('ersan_egitimler', JSON.stringify(egitimler));
+}
+
+function urlParamKontrol() {
+  var params = new URLSearchParams(window.location.search);
+  var prs = params.get('prs');
+  var gap = params.get('gap');
+  if (gap) {
+    setTimeout(function() {
+      yeniEgitimModal();
+      document.getElementById('fAd').value = gap + ' Egitimi';
+      document.getElementById('fTur').value = 'Teknik';
+    }, 300);
+  }
+  if (prs) {
+    window._filtrePersonel = prs;
+  }
+}
+
+function listeYenile() {
+  var yilF = document.getElementById('yilFiltre').value;
+  var liste = egitimler.filter(function(e) {
+    if (yilF && !e.tarih.startsWith(yilF)) return false;
+    if (window._filtrePersonel) {
+      var found = false;
+      e.katilimcilar.forEach(function(k) { if (k.isim === window._filtrePersonel) found = true; });
+      if (!found) return false;
+    }
+    return true;
+  });
+
+  liste.sort(function(a, b) { return a.tarih.localeCompare(b.tarih); });
+
+  // Group by month
+  var gruplar = {};
+  liste.forEach(function(e) {
+    var p = e.tarih.split('-');
+    var key = p[0] + '-' + p[1];
+    if (!gruplar[key]) gruplar[key] = [];
+    gruplar[key].push(e);
+  });
+
+  var html = '';
+  Object.keys(gruplar).sort().forEach(function(key) {
+    var p = key.split('-');
+    var ayIdx = parseInt(p[1]) - 1;
+    html += '<div class="ay-baslik">' + AYLAR[ayIdx] + ' ' + p[0] + '</div>';
+    gruplar[key].forEach(function(e) {
+      var renk = tarihRenk(e);
+      var katSayi = e.katilimcilar ? e.katilimcilar.length : 0;
+      var turClass = 'tur-' + e.tur.toLowerCase().replace('as9100','as9100').replace('isg','isg').replace('teknik','teknik').replace('genel','genel');
+      html += '<div class="egt-kart' + (seciliId === e.id ? ' secili' : '') + '" onclick="egitimSec(\'' + e.id + '\')">';
+      html += '<div class="tarih-rozet ' + renk + '"><span class="gun">' + parseInt(e.tarih.split('-')[2]) + '</span>' + AYLAR[ayIdx].substring(0,3) + '</div>';
+      html += '<div class="egt-bilgi"><div class="egt-ad">' + e.ad + '</div>';
+      html += '<div class="egt-meta"><span>' + katSayi + ' kisi</span><span>' + e.sure + ' saat</span><span class="egt-tur ' + turClass + '">' + e.tur + '</span></div></div>';
+      html += durumBadge(e.durum);
+      html += '</div>';
+    });
+  });
+
+  if (!html) html = '<div style="padding:40px;text-align:center;color:var(--metin4);">Egitim bulunamadi</div>';
+  document.getElementById('solListe').innerHTML = html;
+
+  // KPI
+  var plan = 0, devam = 0, tamam = 0, saat = 0;
+  var buYil = new Date().getFullYear().toString();
+  egitimler.forEach(function(e) {
+    if (e.tarih.startsWith(buYil)) {
+      if (e.durum === 'Planlandi') plan++;
+      else if (e.durum === 'Devam') devam++;
+      else if (e.durum === 'Tamamlandi') { tamam++; saat += e.sure; }
+    }
+  });
+  document.getElementById('kpi-plan').textContent = plan;
+  document.getElementById('kpi-devam').textContent = devam;
+  document.getElementById('kpi-tamam').textContent = tamam;
+  document.getElementById('kpi-saat').textContent = saat;
+}
+
+function tarihRenk(e) {
+  if (e.durum === 'Tamamlandi') return 'tr-yesil';
+  var bugun = new Date(); bugun.setHours(0,0,0,0);
+  var t = new Date(e.tarih);
+  var fark = (t - bugun) / 86400000;
+  if (fark < 0) return 'tr-kirmizi';
+  if (fark <= 7) return 'tr-sari';
+  return 'tr-mavi';
+}
+
+function durumBadge(d) {
+  if (d === 'Tamamlandi') return '<span class="bdg b-grn">Tamam</span>';
+  if (d === 'Devam') return '<span class="bdg b-amr">Devam</span>';
+  return '<span class="bdg b-gray">Plan</span>';
+}
+
+function egitimSec(id) {
+  seciliId = id;
+  var e = egitimler.find(function(x) { return x.id === id; });
+  if (!e) return;
+  listeYenile();
+
+  var html = '';
+  html += '<div class="detay-ust"><div class="detay-baslik">' + e.ad + '</div>';
+  html += '<div class="detay-alt-baslik">' + e.id + ' &middot; ' + durumBadge(e.durum) + '</div></div>';
+
+  html += '<div class="bilgi-grid">';
+  html += '<div class="bilgi-kutu"><div class="bilgi-etiket">Tarih</div><div class="bilgi-deger">' + tarihFormat(e.tarih) + '</div></div>';
+  html += '<div class="bilgi-kutu"><div class="bilgi-etiket">Sure</div><div class="bilgi-deger">' + e.sure + ' saat</div></div>';
+  html += '<div class="bilgi-kutu"><div class="bilgi-etiket">Tur</div><div class="bilgi-deger">' + e.tur + '</div></div>';
+  html += '<div class="bilgi-kutu"><div class="bilgi-etiket">Egitmen</div><div class="bilgi-deger">' + e.egitmen + '</div></div>';
+  html += '<div class="bilgi-kutu"><div class="bilgi-etiket">Lokasyon</div><div class="bilgi-deger">' + e.lokasyon + '</div></div>';
+  html += '<div class="bilgi-kutu"><div class="bilgi-etiket">Katilimci</div><div class="bilgi-deger">' + (e.katilimcilar ? e.katilimcilar.length : 0) + ' kisi</div></div>';
+  html += '</div>';
+
+  if (e.aciklama) {
+    html += '<div style="padding:0 20px 12px;font-size:12px;color:var(--metin3);">' + e.aciklama + '</div>';
+  }
+
+  // Katilimci tablosu
+  html += '<div class="kat-alan"><div class="kat-baslik">Katilimcilar</div>';
+  html += '<table class="kat-tablo"><thead><tr><th>Personel</th><th style="width:60px;">Katildi</th><th style="width:80px;">Sinav Puani</th><th style="width:80px;">Sonuc</th></tr></thead><tbody>';
+  (e.katilimcilar || []).forEach(function(k, idx) {
+    var sonuc = '';
+    if (k.puan !== null && k.puan !== undefined) {
+      sonuc = k.puan >= 70 ? '<span class="bdg b-grn">Basarili</span>' : '<span class="bdg b-red">Basarisiz</span>';
+    }
+    html += '<tr>';
+    html += '<td>' + k.isim + '</td>';
+    html += '<td><input type="checkbox" ' + (k.katildi ? 'checked' : '') + ' onchange="katilimGuncelle(\'' + e.id + '\',' + idx + ',\'katildi\',this.checked)"></td>';
+    html += '<td><input type="number" min="0" max="100" value="' + (k.puan !== null && k.puan !== undefined ? k.puan : '') + '" onchange="katilimGuncelle(\'' + e.id + '\',' + idx + ',\'puan\',this.value)"></td>';
+    html += '<td>' + sonuc + '</td>';
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+
+  // Action buttons
+  if (e.durum !== 'Tamamlandi') {
+    html += '<div style="padding:12px 20px;display:flex;gap:8px;">';
+    html += '<button class="btn btn-grn" onclick="egitimiTamamla(\'' + e.id + '\')">Egitimi Tamamla</button>';
+    html += '<button class="btn btn-g btn-sm" onclick="egitimSil(\'' + e.id + '\')">Sil</button>';
+    html += '</div>';
+  }
+
+  document.getElementById('sagDetay').innerHTML = html;
+}
+
+function tarihFormat(t) {
+  var p = t.split('-');
+  return parseInt(p[2]) + ' ' + AYLAR[parseInt(p[1])-1] + ' ' + p[0];
+}
+
+function katilimGuncelle(egitimId, katIdx, alan, deger) {
+  var e = egitimler.find(function(x) { return x.id === egitimId; });
+  if (!e || !e.katilimcilar[katIdx]) return;
+  if (alan === 'katildi') {
+    e.katilimcilar[katIdx].katildi = deger;
+  } else if (alan === 'puan') {
+    e.katilimcilar[katIdx].puan = deger ? parseInt(deger) : null;
+  }
+  kaydet();
+  egitimSec(egitimId);
+}
+
+function egitimiTamamla(id) {
+  var e = egitimler.find(function(x) { return x.id === id; });
+  if (!e) return;
+  e.durum = 'Tamamlandi';
+
+  // Generate certificates for passing participants
+  var sertifikalar = JSON.parse(localStorage.getItem('ersan_sertifikalar') || '[]');
+  var sayac = sertifikalar.length;
+  e.katilimcilar.forEach(function(k) {
+    if (k.katildi && k.puan !== null && k.puan >= 70) {
+      k.sertifika = true;
+      sayac++;
+      sertifikalar.push({
+        id: 'SRT-' + String(sayac).padStart(3,'0'),
+        personel: k.isim,
+        ad: e.ad + ' Sertifikasi',
+        kurum: 'Ersan Endustriyel',
+        belgeNo: 'EGT-CERT-' + e.id + '-' + String(sayac).padStart(2,'0'),
+        tur: 'Egitim',
+        verilme: new Date().toISOString().split('T')[0],
+        bitis: tarihEkle(new Date(), 365),
+        blokOp: [],
+        kalanGun: 365
+      });
+    }
+  });
+  localStorage.setItem('ersan_sertifikalar', JSON.stringify(sertifikalar));
+
+  kaydet();
+  listeYenile();
+  egitimSec(id);
+}
+
+function tarihEkle(d, gun) {
+  var yeni = new Date(d);
+  yeni.setDate(yeni.getDate() + gun);
+  return yeni.toISOString().split('T')[0];
+}
+
+function egitimSil(id) {
+  if (!confirm('Bu egitimi silmek istediginize emin misiniz?')) return;
+  egitimler = egitimler.filter(function(e) { return e.id !== id; });
+  kaydet();
+  seciliId = null;
+  document.getElementById('sagDetay').innerHTML = '<div class="detay-bos">Listeden bir egitim secin</div>';
+  listeYenile();
+}
+
+function yeniEgitimModal() {
+  document.getElementById('fAd').value = '';
+  document.getElementById('fTur').value = 'Teknik';
+  document.getElementById('fTarih').value = new Date().toISOString().split('T')[0];
+  document.getElementById('fSure').value = '2';
+  document.getElementById('fEgitmen').value = '';
+  document.getElementById('fLokasyon').value = 'Toplanti Odasi';
+  document.getElementById('fAciklama').value = '';
+
+  var html = '';
+  PERSONEL_LISTESI.forEach(function(p) {
+    html += '<label class="chk-item"><input type="checkbox" value="' + p + '"> ' + p + '</label>';
+  });
+  document.getElementById('katilimciSecim').innerHTML = html;
+  document.getElementById('modalBaslik').textContent = 'Yeni Egitim';
+  document.getElementById('modalEgitim').classList.add('acik');
+}
+
+function modalKapat() {
+  document.getElementById('modalEgitim').classList.remove('acik');
+}
+
+function egitimKaydet() {
+  var ad = document.getElementById('fAd').value.trim();
+  if (!ad) { alert('Egitim adi zorunludur'); return; }
+  var tarih = document.getElementById('fTarih').value;
+  if (!tarih) { alert('Tarih zorunludur'); return; }
+
+  var secilen = [];
+  document.querySelectorAll('#katilimciSecim input:checked').forEach(function(cb) {
+    secilen.push({ isim: cb.value, katildi: false, puan: null, sertifika: false });
+  });
+  if (secilen.length === 0) { alert('En az bir katilimci secin'); return; }
+
+  var yeniId = 'EGT-' + String(egitimler.length + 1).padStart(3,'0');
+  var yeni = {
+    id: yeniId,
+    ad: ad,
+    tur: document.getElementById('fTur').value,
+    tarih: tarih,
+    sure: parseFloat(document.getElementById('fSure').value) || 2,
+    egitmen: document.getElementById('fEgitmen').value.trim() || '-',
+    lokasyon: document.getElementById('fLokasyon').value.trim() || '-',
+    aciklama: document.getElementById('fAciklama').value.trim(),
+    durum: 'Planlandi',
+    katilimcilar: secilen
+  };
+
+  egitimler.push(yeni);
+  kaydet();
+  modalKapat();
+  listeYenile();
+  egitimSec(yeniId);
+}
+
+document.addEventListener('DOMContentLoaded', veriYukle);
+</script>
+</body>
+</html>

@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — Personel Defteri</title>
+<link rel="stylesheet" href="ersan_styles.css">
+<script src="ersan_nav.js" defer></script>
+<script src="ersan_log.js" defer></script>
+<style>
+/* Split layout */
+.split { display:flex; gap:0; height:calc(100vh - 52px); }
+.split-sol { width:280px; flex-shrink:0; background:var(--beyaz); border-right:1px solid var(--border); display:flex; flex-direction:column; overflow:hidden; }
+.split-sag { flex:1; overflow-y:auto; background:var(--bg); }
+
+/* KPI row */
+.kpi-row { display:flex; gap:10px; padding:14px 20px; background:var(--beyaz); border-bottom:1px solid var(--border); }
+.kpi-card { flex:1; background:var(--bg); border-radius:8px; padding:10px 14px; text-align:center; border:1px solid var(--border); }
+.kpi-deger { font-size:22px; font-weight:700; color:var(--laci); }
+.kpi-etiket { font-size:9px; color:var(--metin3); text-transform:uppercase; letter-spacing:.4px; margin-top:2px; }
+.kpi-card.kpi-yesil .kpi-deger { color:var(--yesil); }
+.kpi-card.kpi-kirmizi .kpi-deger { color:var(--kirmizi); }
+.kpi-card.kpi-sari .kpi-deger { color:var(--sari); }
+.kpi-card.kpi-mavi .kpi-deger { color:var(--mavi); }
+
+/* AS9100 serit */
+.as-serit { background:#fff8e6; border-bottom:1px solid #f0d78c; padding:5px 20px; font-size:10px; color:#92610f; display:flex; align-items:center; gap:6px; }
+.as-serit b { color:#6b4400; }
+
+/* Personnel card */
+.pc { padding:10px 14px; border-bottom:1px solid var(--border); cursor:pointer; border-left:3px solid transparent; transition:all .12s; }
+.pc:hover { background:var(--bg2); }
+.pc.secili { background:var(--mavi-acik); border-left-color:var(--mavi); }
+.pc-ust { display:flex; align-items:center; gap:10px; margin-bottom:4px; }
+.pc-avatar { width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#fff; flex-shrink:0; }
+.pc-bilgi { flex:1; min-width:0; }
+.pc-ad { font-size:12px; font-weight:600; color:var(--laci); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.pc-kod { font-family:'Courier New',monospace; font-size:10px; color:var(--metin3); }
+.pc-alt { display:flex; align-items:center; gap:6px; margin-top:4px; }
+.pc-bar-bg { flex:1; height:4px; background:var(--border); border-radius:2px; overflow:hidden; }
+.pc-bar { height:100%; border-radius:2px; transition:width .3s; }
+.pc-skor { font-size:9px; font-weight:700; min-width:26px; text-align:right; }
+
+/* Badges */
+.bdg { display:inline-block; padding:1px 7px; border-radius:10px; font-size:9px; font-weight:600; }
+.bdg-yesil { background:var(--yesil-bg); color:var(--yesil-t); }
+.bdg-kirmizi { background:var(--kirmizi-bg); color:var(--kirmizi-t); }
+.bdg-sari { background:var(--sari-bg); color:var(--sari-t); }
+.bdg-gri { background:#f1f5f9; color:#475569; }
+.bdg-mavi { background:var(--mavi-acik); color:var(--mavi-koyu); }
+.bdg-blok { background:#fee2e2; color:#dc2626; font-weight:700; font-size:8px; margin-left:4px; }
+
+/* Search & filter */
+.sol-ust { padding:10px; border-bottom:1px solid var(--border); }
+.sol-ust input { width:100%; padding:7px 10px; border:1px solid var(--border); border-radius:6px; font-size:12px; outline:none; }
+.sol-ust input:focus { border-color:var(--mavi); }
+.sol-ust select { width:100%; padding:5px 8px; border:1px solid var(--border); border-radius:6px; font-size:11px; margin-top:6px; color:var(--metin2); }
+.sol-liste { flex:1; overflow-y:auto; }
+
+/* Tabs */
+.tab-bar { display:flex; border-bottom:1px solid var(--border); background:var(--beyaz); }
+.tab-btn { padding:10px 16px; font-size:12px; font-weight:500; color:var(--metin3); cursor:pointer; border:none; background:none; border-bottom:2px solid transparent; transition:all .12s; }
+.tab-btn:hover { color:var(--metin2); }
+.tab-btn.aktif { color:var(--mavi-koyu); border-bottom-color:var(--mavi); font-weight:600; }
+.tab-icerik { display:none; padding:16px 20px; }
+.tab-icerik.aktif { display:block; }
+
+/* Info box */
+.info-box { background:var(--beyaz); border:1px solid var(--border); border-radius:8px; padding:14px; margin-bottom:12px; }
+.info-box-baslik { font-size:12px; font-weight:600; color:var(--laci); margin-bottom:10px; padding-bottom:6px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.info-row { display:flex; padding:5px 0; font-size:12px; border-bottom:1px solid #f8fafc; }
+.info-row:last-child { border-bottom:none; }
+.info-lbl { width:140px; color:var(--metin3); font-weight:500; flex-shrink:0; }
+.info-val { flex:1; color:var(--metin2); font-weight:500; }
+
+/* Avatar large */
+.avatar-lg { width:64px; height:64px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:700; color:#fff; margin:0 auto 8px; }
+.skor-lg { text-align:center; font-size:28px; font-weight:700; }
+.skor-label { text-align:center; font-size:10px; color:var(--metin3); margin-top:2px; }
+
+/* Chips */
+.chip-row { display:flex; flex-wrap:wrap; gap:5px; margin-top:6px; }
+.chip { display:inline-flex; align-items:center; gap:3px; padding:3px 10px; border-radius:12px; font-size:10px; font-weight:600; }
+.chip-yesil { background:var(--yesil-bg); color:var(--yesil-t); }
+.chip-gri { background:#f1f5f9; color:#94a3b8; }
+.chip-mavi { background:var(--mavi-acik); color:var(--mavi-koyu); }
+
+/* Skill bar */
+.skill-row { display:flex; align-items:center; padding:6px 0; border-bottom:1px solid #f8fafc; }
+.skill-row:last-child { border-bottom:none; }
+.skill-ad { width:140px; font-size:11px; color:var(--metin2); font-weight:500; }
+.skill-bar-bg { flex:1; height:6px; background:var(--border); border-radius:3px; overflow:hidden; margin:0 10px; }
+.skill-bar { height:100%; border-radius:3px; }
+.skill-seviye { font-size:10px; font-weight:700; min-width:80px; text-align:right; }
+
+/* Sertifika card */
+.sert-card { background:var(--beyaz); border:1px solid var(--border); border-radius:8px; padding:12px; margin-bottom:8px; display:flex; align-items:center; gap:12px; }
+.sert-gun { width:48px; height:48px; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:16px; font-weight:700; }
+.sert-gun small { font-size:8px; font-weight:500; }
+.sert-bilgi { flex:1; }
+.sert-ad { font-size:12px; font-weight:600; color:var(--laci); }
+.sert-tarih { font-size:10px; color:var(--metin3); }
+
+/* Table */
+.tbl { width:100%; border-collapse:collapse; }
+.tbl thead th { background:var(--bg2); padding:7px 12px; font-size:10px; font-weight:600; color:var(--metin3); text-transform:uppercase; letter-spacing:.4px; text-align:left; border-bottom:1px solid var(--border); }
+.tbl tbody td { padding:7px 12px; font-size:12px; border-bottom:1px solid var(--border); }
+
+/* Detail header */
+.detay-header { display:flex; align-items:center; gap:16px; padding:16px 20px; background:var(--beyaz); border-bottom:1px solid var(--border); }
+.detay-header-bilgi { flex:1; }
+.detay-header-ad { font-size:16px; font-weight:700; color:var(--laci); }
+.detay-header-alt { font-size:11px; color:var(--metin3); margin-top:2px; }
+.detay-header-btn { display:flex; gap:8px; }
+.detay-header-btn button { padding:6px 14px; border-radius:6px; font-size:11px; font-weight:600; cursor:pointer; border:1px solid var(--border); background:var(--beyaz); color:var(--metin2); transition:all .12s; }
+.detay-header-btn button:hover { border-color:var(--mavi); color:var(--mavi); }
+.detay-header-btn button.primary { background:var(--mavi); color:#fff; border-color:var(--mavi); }
+.detay-header-btn button.primary:hover { background:var(--mavi-koyu); }
+
+/* Bos panel */
+.bos-panel { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color:var(--metin4); }
+.bos-panel-icon { font-size:48px; margin-bottom:12px; }
+.bos-panel-text { font-size:13px; }
+
+/* Topbar */
+.topbar { height:52px; background:var(--beyaz); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; padding:0 20px; margin-left:220px; }
+.topbar-baslik { font-size:15px; font-weight:700; color:var(--laci); }
+.topbar-sag { display:flex; gap:8px; align-items:center; }
+.topbar-sag button { padding:6px 14px; border-radius:6px; font-size:11px; font-weight:600; cursor:pointer; border:1px solid var(--border); background:var(--beyaz); color:var(--metin2); }
+.topbar-sag button.primary { background:var(--mavi); color:#fff; border-color:var(--mavi); }
+.topbar-sag button.primary:hover { background:var(--mavi-koyu); }
+
+/* Modal */
+.modal-bg { display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:500; align-items:center; justify-content:center; }
+.modal-bg.acik { display:flex; }
+.modal { background:var(--beyaz); border-radius:10px; width:460px; max-width:90vw; max-height:85vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,.18); }
+.modal-header { padding:16px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.modal-header h3 { font-size:14px; font-weight:700; color:var(--laci); }
+.modal-header .kapat { cursor:pointer; font-size:18px; color:var(--metin4); background:none; border:none; }
+.modal-body { padding:16px 20px; }
+.modal-body label { display:block; font-size:11px; font-weight:600; color:var(--metin3); margin-bottom:4px; margin-top:10px; }
+.modal-body input, .modal-body select { width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:6px; font-size:12px; }
+.modal-footer { padding:12px 20px; border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:8px; }
+.modal-footer button { padding:8px 20px; border-radius:6px; font-size:12px; font-weight:600; cursor:pointer; border:none; }
+.modal-footer .iptal { background:var(--bg); color:var(--metin3); border:1px solid var(--border); }
+.modal-footer .kaydet { background:var(--mavi); color:#fff; }
+</style>
+</head>
+<body>
+
+<div id="nav-alani"></div>
+
+<div class="topbar">
+  <div class="topbar-baslik">Personel Defteri</div>
+  <div class="topbar-sag">
+    <button class="primary" onclick="yeniPersonelAc()">+ Yeni Personel</button>
+  </div>
+</div>
+
+<div class="as-serit" style="margin-left:220px;">
+  <b>AS9100 &sect;7.2</b> — Yetkinlik: Kuruluş, gerekli yetkinliği belirlenmeli, kişilerin uygun eğitim/deneyime sahip olmasını sağlamalıdır.
+</div>
+
+<div class="kpi-row" style="margin-left:220px;">
+  <div class="kpi-card"><div class="kpi-deger" id="kpi-toplam">0</div><div class="kpi-etiket">Toplam Personel</div></div>
+  <div class="kpi-card kpi-yesil"><div class="kpi-deger" id="kpi-yetkin">0</div><div class="kpi-etiket">Yetkin (&ge;80%)</div></div>
+  <div class="kpi-card kpi-sari"><div class="kpi-deger" id="kpi-egitim">0</div><div class="kpi-etiket">Eğitim Bekleyen</div></div>
+  <div class="kpi-card kpi-kirmizi"><div class="kpi-deger" id="kpi-sertifika">0</div><div class="kpi-etiket">Sertifika Dolacak</div></div>
+  <div class="kpi-card kpi-mavi"><div class="kpi-deger" id="kpi-egitmen">0</div><div class="kpi-etiket">Eğitmen</div></div>
+</div>
+
+<div class="split" style="margin-left:220px;">
+  <!-- SOL LİSTE -->
+  <div class="split-sol">
+    <div class="sol-ust">
+      <input type="text" id="ara" placeholder="Personel ara..." oninput="filtrele()">
+      <select id="filtre-dept" onchange="filtrele()">
+        <option value="">Tüm Departmanlar</option>
+        <option value="Üretim">Üretim</option>
+        <option value="Kalite">Kalite</option>
+        <option value="Bakım">Bakım</option>
+        <option value="Depo">Depo</option>
+        <option value="Yönetim">Yönetim</option>
+        <option value="Satınalma">Satınalma</option>
+      </select>
+    </div>
+    <div class="sol-liste" id="sol-liste"></div>
+  </div>
+
+  <!-- SAĞ DETAY -->
+  <div class="split-sag" id="sag-panel">
+    <div class="bos-panel">
+      <div class="bos-panel-icon">👤</div>
+      <div class="bos-panel-text">Sol listeden bir personel seçin</div>
+    </div>
+  </div>
+</div>
+
+<!-- YENİ PERSONEL MODAL -->
+<div class="modal-bg" id="modal-yeni">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Yeni Personel Ekle</h3>
+      <button class="kapat" onclick="modalKapat('modal-yeni')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <label>PRS Kodu</label>
+      <input type="text" id="yeni-kod" readonly style="background:#f8fafc;">
+      <label>Ad Soyad *</label>
+      <input type="text" id="yeni-ad" placeholder="Ad Soyad">
+      <label>Unvan</label>
+      <input type="text" id="yeni-unvan" placeholder="CNC Operatörü">
+      <label>Departman</label>
+      <select id="yeni-dept">
+        <option value="Üretim">Üretim</option>
+        <option value="Kalite">Kalite</option>
+        <option value="Bakım">Bakım</option>
+        <option value="Depo">Depo</option>
+        <option value="Yönetim">Yönetim</option>
+        <option value="Satınalma">Satınalma</option>
+      </select>
+      <label>Eğitim Düzeyi</label>
+      <select id="yeni-egitim">
+        <option value="İlkokul">İlkokul</option>
+        <option value="Ortaokul">Ortaokul</option>
+        <option value="Lise">Lise</option>
+        <option value="Meslek Lisesi" selected>Meslek Lisesi</option>
+        <option value="Ön Lisans">Ön Lisans</option>
+        <option value="Lisans">Lisans</option>
+        <option value="Yüksek Lisans">Yüksek Lisans</option>
+      </select>
+      <label>İşe Giriş Tarihi</label>
+      <input type="date" id="yeni-tarih">
+    </div>
+    <div class="modal-footer">
+      <button class="iptal" onclick="modalKapat('modal-yeni')">İptal</button>
+      <button class="kaydet" onclick="yeniPersonelKaydet()">Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<!-- DEĞERLENDİRME MODAL -->
+<div class="modal-bg" id="modal-deger">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Yetkinlik Değerlendirmesi</h3>
+      <button class="kapat" onclick="modalKapat('modal-deger')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <label>Operasyon</label>
+      <select id="deger-op">
+        <option value="CNC Torna">CNC Torna</option>
+        <option value="CNC Freze">CNC Freze</option>
+        <option value="Taşlama">Taşlama</option>
+        <option value="Isıl İşlem">Isıl İşlem</option>
+        <option value="Kaynak">Kaynak</option>
+        <option value="Kalite Kontrol">Kalite Kontrol</option>
+        <option value="Bakım PM">Bakım PM</option>
+        <option value="Depo">Depo</option>
+      </select>
+      <label>Seviye</label>
+      <select id="deger-seviye">
+        <option value="0">0 — Yok</option>
+        <option value="1">1 — Eğitimde</option>
+        <option value="2">2 — Denetim Altında</option>
+        <option value="3">3 — Bağımsız</option>
+        <option value="4">4 — Eğitmen</option>
+      </select>
+      <label>Değerlendiren</label>
+      <input type="text" id="deger-kim" value="Erdem Küçükateş">
+      <label>Not</label>
+      <input type="text" id="deger-not" placeholder="İsteğe bağlı not">
+    </div>
+    <div class="modal-footer">
+      <button class="iptal" onclick="modalKapat('modal-deger')">İptal</button>
+      <button class="kaydet" onclick="degerKaydet()">Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var PERSONEL_TABLO = 'Personel';
+var OPERASYONLAR = ['CNC Torna','CNC Freze','Taşlama','Isıl İşlem','Kaynak','Kalite Kontrol','Bakım PM','Depo'];
+var MAKINE_LISTESI = ['MAZAK QT-250','MAZAK VCN-530','DOOSAN DNM-500','OKUMA LB-3000','HAAS VF-2','TOS Taşlama','Kaynak İstasyonu'];
+var RENK_PALET = ['#378ADD','#1D9E75','#BA7517','#E24B4A','#7C3AED','#0891B2','#D946EF','#EA580C'];
+var SEVIYE_LABEL = ['Yok ●','Eğitimde ◐','Denetim ◑','Bağımsız ◆','Eğitmen ★'];
+var SEVIYE_RENK = ['#94a3b8','#BA7517','#378ADD','#1D9E75','#7C3AED'];
+
+var personelListesi = [];
+var seciliId = null;
+
+// === SAMPLE DATA ===
+var SAMPLE_YETKINLIK = {};
+var SAMPLE_SERTIFIKA = [];
+var SAMPLE_EGITIM = [];
+
+function ornekVeriOlustur(records) {
+  var matris = JSON.parse(localStorage.getItem('ersan_yetkinlik_matris') || '{}');
+  var sertifikalar = JSON.parse(localStorage.getItem('ersan_sertifikalar') || '[]');
+  var egitimler = JSON.parse(localStorage.getItem('ersan_egitimler') || '[]');
+
+  var ornekYetkinlik = {
+    'CNC Torna': [4,3,0,0,0,2,1,0],
+    'CNC Freze': [3,4,0,0,1,2,0,0],
+    'Taşlama': [2,1,3,0,0,1,0,0],
+    'Isıl İşlem': [0,0,0,3,0,0,0,0],
+    'Kaynak': [1,0,0,0,4,0,0,0],
+    'Kalite Kontrol': [3,2,2,1,1,4,1,1],
+    'Bakım PM': [1,1,0,0,0,1,4,0],
+    'Depo': [0,0,0,0,0,0,0,4]
+  };
+
+  if (Object.keys(matris).length === 0 && records.length > 0) {
+    records.forEach(function(r, idx) {
+      if (idx < 8) {
+        var id = r.id;
+        matris[id] = {};
+        OPERASYONLAR.forEach(function(op) {
+          matris[id][op] = ornekYetkinlik[op][idx] || 0;
+        });
+      }
+    });
+    localStorage.setItem('ersan_yetkinlik_matris', JSON.stringify(matris));
+  }
+
+  if (sertifikalar.length === 0 && records.length > 0) {
+    var bugun = new Date();
+    var ornekSert = [
+      {personelId: records[0] ? records[0].id : '', ad: 'ISO 9001:2015 İç Denetçi', kurum: 'TSE', bitis: yeniTarih(bugun, 45)},
+      {personelId: records[0] ? records[0].id : '', ad: 'CNC Programlama Sertifikası', kurum: 'KOSGEB', bitis: yeniTarih(bugun, 180)},
+      {personelId: records[1] ? records[1].id : '', ad: 'Forklift Operatörü', kurum: 'İSGÜM', bitis: yeniTarih(bugun, 15)},
+      {personelId: records[2] ? records[2].id : '', ad: 'Kaynak Operatörü EN 287', kurum: 'Loyds', bitis: yeniTarih(bugun, 90)},
+      {personelId: records[4] ? records[4].id : '', ad: 'Kaynak Operatörü EN 287', kurum: 'Loyds', bitis: yeniTarih(bugun, -10)},
+      {personelId: records[5] ? records[5].id : '', ad: 'TS EN ISO 17025 Kalibrasyon', kurum: 'TÜRKAK', bitis: yeniTarih(bugun, 250)},
+    ];
+    localStorage.setItem('ersan_sertifikalar', JSON.stringify(ornekSert));
+    sertifikalar = ornekSert;
+  }
+
+  if (egitimler.length === 0 && records.length > 0) {
+    var ornekEgitim = [
+      {personelId: records[0] ? records[0].id : '', tarih:'2026-01-15', ad:'CNC Torna İleri Seviye', saat:16, egitmen:'Dış Eğitmen', sonuc:'Başarılı'},
+      {personelId: records[0] ? records[0].id : '', tarih:'2025-11-20', ad:'AS9100 Rev.D Farkındalık', saat:8, egitmen:'Erdem Küçükateş', sonuc:'Başarılı'},
+      {personelId: records[1] ? records[1].id : '', tarih:'2026-02-10', ad:'CNC Freze 5-Eksen', saat:24, egitmen:'Dış Eğitmen', sonuc:'Başarılı'},
+      {personelId: records[2] ? records[2].id : '', tarih:'2025-12-05', ad:'Taşlama Teknikleri', saat:8, egitmen:'Ahmet Usta', sonuc:'Başarılı'},
+      {personelId: records[3] ? records[3].id : '', tarih:'2026-03-01', ad:'Isıl İşlem Prosedürleri', saat:4, egitmen:'Erdem Küçükateş', sonuc:'Devam'},
+      {personelId: records[5] ? records[5].id : '', tarih:'2026-01-22', ad:'Kalibrasyon Eğitimi', saat:12, egitmen:'TÜRKAK', sonuc:'Başarılı'},
+      {personelId: records[5] ? records[5].id : '', tarih:'2025-09-10', ad:'TS EN ISO 17025', saat:16, egitmen:'Dış Eğitmen', sonuc:'Başarılı'},
+    ];
+    localStorage.setItem('ersan_egitimler', JSON.stringify(ornekEgitim));
+  }
+
+  return {matris: matris, sertifikalar: sertifikalar};
+}
+
+function yeniTarih(base, gunFark) {
+  var d = new Date(base);
+  d.setDate(d.getDate() + gunFark);
+  return d.toISOString().split('T')[0];
+}
+
+// === LOAD ===
+function yukle() {
+  fetch('/.netlify/functions/airtable?table=' + encodeURIComponent(PERSONEL_TABLO) + '&pageSize=100')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      personelListesi = (d.records || []).map(function(r) {
+        return {id: r.id, ad: r.fields['Ad Soyad'] || r.fields['İsim'] || r.fields['Name'] || '', kod: r.fields['PRS Kodu'] || r.fields['Personel No'] || '', unvan: r.fields['Unvan'] || r.fields['Görev'] || '', departman: r.fields['Departman'] || '', durum: r.fields['Durum'] || 'Aktif', egitimDuzeyi: r.fields['Eğitim Düzeyi'] || '', giris: r.fields['İşe Giriş'] || r.fields['Giriş Tarihi'] || '', telefon: r.fields['Telefon'] || '', email: r.fields['E-posta'] || r.fields['Email'] || '', qrBlok: r.fields['QR_Blok'] || false};
+      });
+      ornekVeriOlustur(d.records || []);
+      listeOlustur();
+      kpiGuncelle();
+    })
+    .catch(function(e) {
+      console.error('Personel yükleme hatası:', e);
+    });
+}
+
+function personelSkor(id) {
+  var matris = JSON.parse(localStorage.getItem('ersan_yetkinlik_matris') || '{}');
+  var skills = matris[id];
+  if (!skills) return 0;
+  var toplam = 0;
+  var max = 0;
+  OPERASYONLAR.forEach(function(op) {
+    toplam += (skills[op] || 0);
+    max += 4;
+  });
+  return max > 0 ? Math.round((toplam / max) * 100) : 0;
+}
+
+function kpiGuncelle() {
+  var matris = JSON.parse(localStorage.getItem('ersan_yetkinlik_matris') || '{}');
+  var sertifikalar = JSON.parse(localStorage.getItem('ersan_sertifikalar') || '[]');
+  var bugun = new Date();
+  var yetkin = 0;
+  var egitimBekleyen = 0;
+  var egitmen = 0;
+  var sertDolacak = 0;
+
+  personelListesi.forEach(function(p) {
+    var skor = personelSkor(p.id);
+    if (skor >= 80) yetkin++;
+    if (skor < 60 && skor > 0) egitimBekleyen++;
+    if (skor === 0) egitimBekleyen++;
+    var skills = matris[p.id] || {};
+    OPERASYONLAR.forEach(function(op) {
+      if ((skills[op] || 0) === 4) egitmen++;
+    });
+  });
+
+  sertifikalar.forEach(function(s) {
+    var bitis = new Date(s.bitis);
+    var fark = Math.ceil((bitis - bugun) / (1000 * 60 * 60 * 24));
+    if (fark <= 60) sertDolacak++;
+  });
+
+  document.getElementById('kpi-toplam').textContent = personelListesi.length;
+  document.getElementById('kpi-yetkin').textContent = yetkin;
+  document.getElementById('kpi-egitim').textContent = egitimBekleyen;
+  document.getElementById('kpi-sertifika').textContent = sertDolacak;
+  document.getElementById('kpi-egitmen').textContent = egitmen;
+}
+
+function avatarRenk(ad) {
+  var hash = 0;
+  for (var i = 0; i < ad.length; i++) hash = ad.charCodeAt(i) + ((hash << 5) - hash);
+  return RENK_PALET[Math.abs(hash) % RENK_PALET.length];
+}
+
+function avatarHarf(ad) {
+  var parca = (ad || '?').split(' ');
+  if (parca.length >= 2) return (parca[0][0] + parca[parca.length - 1][0]).toUpperCase();
+  return (ad || '?').substring(0, 2).toUpperCase();
+}
+
+function listeOlustur() {
+  var ara = document.getElementById('ara').value.toLowerCase();
+  var dept = document.getElementById('filtre-dept').value;
+  var liste = document.getElementById('sol-liste');
+  var html = '';
+
+  var filtrelenmis = personelListesi.filter(function(p) {
+    if (ara && p.ad.toLowerCase().indexOf(ara) === -1 && (p.kod || '').toLowerCase().indexOf(ara) === -1) return false;
+    if (dept && p.departman !== dept) return false;
+    return true;
+  });
+
+  filtrelenmis.forEach(function(p) {
+    var skor = personelSkor(p.id);
+    var renk = skor >= 80 ? 'var(--yesil)' : skor >= 60 ? 'var(--sari)' : 'var(--kirmizi)';
+    var skorRenk = skor >= 80 ? 'color:var(--yesil)' : skor >= 60 ? 'color:var(--sari)' : 'color:var(--kirmizi)';
+    var sertDolacak = sertifikaDolacakMi(p.id);
+    var seciliCls = p.id === seciliId ? ' secili' : '';
+
+    html += '<div class="pc' + seciliCls + '" onclick="personelSec(\'' + p.id + '\')">';
+    html += '<div class="pc-ust">';
+    html += '<div class="pc-avatar" style="background:' + avatarRenk(p.ad) + '">' + avatarHarf(p.ad) + '</div>';
+    html += '<div class="pc-bilgi">';
+    html += '<div class="pc-ad">' + p.ad;
+    if (p.durum === 'Pasif') html += ' <span class="bdg bdg-gri">Pasif</span>';
+    if (sertDolacak) html += ' <span class="bdg bdg-blok">Sertifika Doluyor!</span>';
+    html += '</div>';
+    html += '<div class="pc-kod">' + (p.kod || '-') + ' &middot; ' + (p.departman || '-') + '</div>';
+    html += '</div></div>';
+    html += '<div class="pc-alt">';
+    html += '<div class="pc-bar-bg"><div class="pc-bar" style="width:' + skor + '%;background:' + renk + '"></div></div>';
+    html += '<div class="pc-skor" style="' + skorRenk + '">' + skor + '%</div>';
+    html += '</div></div>';
+  });
+
+  if (filtrelenmis.length === 0) {
+    html = '<div style="padding:40px 20px;text-align:center;color:var(--metin4);font-size:12px;">Personel bulunamadı</div>';
+  }
+  liste.innerHTML = html;
+}
+
+function sertifikaDolacakMi(personelId) {
+  var sertifikalar = JSON.parse(localStorage.getItem('ersan_sertifikalar') || '[]');
+  var bugun = new Date();
+  var sonuc = false;
+  sertifikalar.forEach(function(s) {
+    if (s.personelId === personelId) {
+      var fark = Math.ceil((new Date(s.bitis) - bugun) / (1000 * 60 * 60 * 24));
+      if (fark <= 30) sonuc = true;
+    }
+  });
+  return sonuc;
+}
+
+function filtrele() {
+  listeOlustur();
+}
+
+// === DETAY ===
+function personelSec(id) {
+  seciliId = id;
+  listeOlustur();
+  detayGoster();
+}
+
+function detayGoster() {
+  var p = personelListesi.find(function(x) { return x.id === seciliId; });
+  if (!p) return;
+
+  var skor = personelSkor(p.id);
+  var skorRenk = skor >= 80 ? 'var(--yesil)' : skor >= 60 ? 'var(--sari)' : 'var(--kirmizi)';
+  var matris = JSON.parse(localStorage.getItem('ersan_yetkinlik_matris') || '{}');
+  var skills = matris[p.id] || {};
+  var sertifikalar = JSON.parse(localStorage.getItem('ersan_sertifikalar') || '[]');
+  var egitimler = JSON.parse(localStorage.getItem('ersan_egitimler') || '[]');
+
+  var html = '';
+
+  // Header
+  html += '<div class="detay-header">';
+  html += '<div class="pc-avatar" style="background:' + avatarRenk(p.ad) + ';width:48px;height:48px;font-size:18px;">' + avatarHarf(p.ad) + '</div>';
+  html += '<div class="detay-header-bilgi">';
+  html += '<div class="detay-header-ad">' + p.ad + '</div>';
+  html += '<div class="detay-header-alt">' + (p.kod || '-') + ' &middot; ' + (p.unvan || '-') + ' &middot; ' + (p.departman || '-') + '</div>';
+  html += '</div>';
+  html += '<div class="detay-header-btn">';
+  html += '<button onclick="alert(\'QR Etiket hazırlanıyor...\')">QR Etiket</button>';
+  html += '<button class="primary" onclick="window.location.href=\'ersan_ik_matris.html\'">Eğitim Planla &rarr;</button>';
+  html += '</div></div>';
+
+  // Tab bar
+  html += '<div class="tab-bar">';
+  html += '<button class="tab-btn aktif" onclick="tabSec(this,0)">Genel Bilgi</button>';
+  html += '<button class="tab-btn" onclick="tabSec(this,1)">Yetkinlikler</button>';
+  html += '<button class="tab-btn" onclick="tabSec(this,2)">Eğitim Geçmişi</button>';
+  html += '<button class="tab-btn" onclick="tabSec(this,3)">Sertifikalar</button>';
+  html += '<button class="tab-btn" onclick="tabSec(this,4)">Yetki & Görev</button>';
+  html += '</div>';
+
+  // TAB 0: Genel Bilgi
+  html += '<div class="tab-icerik aktif">';
+  html += '<div style="display:flex;gap:16px;">';
+  html += '<div style="width:200px;text-align:center;">';
+  html += '<div class="avatar-lg" style="background:' + avatarRenk(p.ad) + '">' + avatarHarf(p.ad) + '</div>';
+  html += '<div class="skor-lg" style="color:' + skorRenk + '">' + skor + '%</div>';
+  html += '<div class="skor-label">Yetkinlik Skoru</div>';
+  html += '</div>';
+  html += '<div style="flex:1;">';
+  html += '<div class="info-box">';
+  html += '<div class="info-box-baslik">Kişisel Bilgiler</div>';
+  html += infoRow('Ad Soyad', p.ad);
+  html += infoRow('PRS Kodu', p.kod || '-');
+  html += infoRow('Unvan', p.unvan || '-');
+  html += infoRow('Departman', p.departman || '-');
+  html += infoRow('Durum', '<span class="bdg ' + (p.durum === 'Aktif' ? 'bdg-yesil' : 'bdg-gri') + '">' + (p.durum || 'Aktif') + '</span>');
+  html += infoRow('Eğitim Düzeyi', p.egitimDuzeyi || '-');
+  html += infoRow('İşe Giriş', p.giris || '-');
+  html += infoRow('Telefon', p.telefon || '-');
+  html += infoRow('E-posta', p.email || '-');
+  html += '</div>';
+  html += '</div></div>';
+
+  // Yetkili operasyonlar
+  html += '<div class="info-box">';
+  html += '<div class="info-box-baslik">Yetkili Operasyonlar</div>';
+  html += '<div class="chip-row">';
+  OPERASYONLAR.forEach(function(op) {
+    var seviye = skills[op] || 0;
+    if (seviye >= 3) {
+      html += '<span class="chip chip-yesil">' + op + ' ' + SEVIYE_LABEL[seviye].split(' ')[1] + '</span>';
+    }
+  });
+  html += '</div></div>';
+
+  // Yetkili makineler
+  html += '<div class="info-box">';
+  html += '<div class="info-box-baslik">Yetkili Makineler</div>';
+  html += '<div class="chip-row">';
+  var hasTorna = (skills['CNC Torna'] || 0) >= 3;
+  var hasFreze = (skills['CNC Freze'] || 0) >= 3;
+  MAKINE_LISTESI.forEach(function(m, i) {
+    var yetkili = false;
+    if (i <= 1 && hasTorna) yetkili = true;
+    if (i >= 2 && i <= 4 && hasFreze) yetkili = true;
+    if (i === 5 && (skills['Taşlama'] || 0) >= 3) yetkili = true;
+    if (i === 6 && (skills['Kaynak'] || 0) >= 3) yetkili = true;
+    html += '<span class="chip ' + (yetkili ? 'chip-mavi' : 'chip-gri') + '">' + m + '</span>';
+  });
+  html += '</div></div>';
+  html += '</div>';
+
+  // TAB 1: Yetkinlikler
+  html += '<div class="tab-icerik">';
+  html += '<div class="info-box">';
+  html += '<div class="info-box-baslik">Operasyon Bazlı Yetkinlik <button style="padding:4px 12px;border-radius:5px;border:1px solid var(--mavi);background:var(--beyaz);color:var(--mavi);font-size:10px;font-weight:600;cursor:pointer;" onclick="degerAc()">+ Değerlendirme Ekle</button></div>';
+  OPERASYONLAR.forEach(function(op) {
+    var seviye = skills[op] || 0;
+    var yuzde = (seviye / 4) * 100;
+    html += '<div class="skill-row">';
+    html += '<div class="skill-ad">' + op + '</div>';
+    html += '<div class="skill-bar-bg"><div class="skill-bar" style="width:' + yuzde + '%;background:' + SEVIYE_RENK[seviye] + '"></div></div>';
+    html += '<div class="skill-seviye" style="color:' + SEVIYE_RENK[seviye] + '">' + SEVIYE_LABEL[seviye] + '</div>';
+    html += '</div>';
+  });
+  html += '</div>';
+  html += '<div style="margin-top:10px;padding:8px 12px;background:#f8fafc;border-radius:6px;font-size:10px;color:var(--metin3);">';
+  html += '<b>Seviye Açıklamaları:</b> ● Yok (0) &nbsp;|&nbsp; ◐ Eğitimde (1) &nbsp;|&nbsp; ◑ Denetim Altında (2) &nbsp;|&nbsp; ◆ Bağımsız (3) &nbsp;|&nbsp; ★ Eğitmen (4)';
+  html += '</div></div>';
+
+  // TAB 2: Eğitim Geçmişi
+  html += '<div class="tab-icerik">';
+  var kisininEgitimleri = egitimler.filter(function(e) { return e.personelId === seciliId; });
+  var toplamSaat = 0;
+  kisininEgitimleri.forEach(function(e) { toplamSaat += (e.saat || 0); });
+  html += '<div style="margin-bottom:10px;font-size:11px;color:var(--metin3);">Toplam Eğitim Saati: <b style="color:var(--mavi);font-size:14px;">' + toplamSaat + ' saat</b></div>';
+  html += '<div class="info-box">';
+  html += '<table class="tbl"><thead><tr><th>Tarih</th><th>Eğitim Adı</th><th>Süre</th><th>Eğitmen</th><th>Sonuç</th></tr></thead><tbody>';
+  if (kisininEgitimleri.length === 0) {
+    html += '<tr><td colspan="5" style="text-align:center;color:var(--metin4);padding:20px;">Eğitim kaydı yok</td></tr>';
+  }
+  kisininEgitimleri.forEach(function(e) {
+    var sonucBdg = e.sonuc === 'Başarılı' ? 'bdg-yesil' : e.sonuc === 'Devam' ? 'bdg-sari' : 'bdg-kirmizi';
+    html += '<tr>';
+    html += '<td>' + (e.tarih || '-') + '</td>';
+    html += '<td style="font-weight:500;">' + (e.ad || '-') + '</td>';
+    html += '<td>' + (e.saat || 0) + ' saat</td>';
+    html += '<td>' + (e.egitmen || '-') + '</td>';
+    html += '<td><span class="bdg ' + sonucBdg + '">' + (e.sonuc || '-') + '</span></td>';
+    html += '</tr>';
+  });
+  html += '</tbody></table></div></div>';
+
+  // TAB 3: Sertifikalar
+  html += '<div class="tab-icerik">';
+  var kisininSertifikalari = sertifikalar.filter(function(s) { return s.personelId === seciliId; });
+  if (kisininSertifikalari.length === 0) {
+    html += '<div style="text-align:center;color:var(--metin4);padding:40px;font-size:12px;">Kayıtlı sertifika yok</div>';
+  }
+  var bugun = new Date();
+  kisininSertifikalari.forEach(function(s) {
+    var bitis = new Date(s.bitis);
+    var fark = Math.ceil((bitis - bugun) / (1000 * 60 * 60 * 24));
+    var gunRenk = fark <= 0 ? 'background:var(--kirmizi-bg);color:var(--kirmizi)' : fark <= 30 ? 'background:var(--sari-bg);color:var(--sari)' : fark <= 90 ? 'background:var(--mavi-acik);color:var(--mavi)' : 'background:var(--yesil-bg);color:var(--yesil)';
+    html += '<div class="sert-card">';
+    html += '<div class="sert-gun" style="' + gunRenk + '">' + (fark <= 0 ? 'Süresi<br>Doldu' : fark + '<small>gün</small>') + '</div>';
+    html += '<div class="sert-bilgi">';
+    html += '<div class="sert-ad">' + s.ad + '</div>';
+    html += '<div class="sert-tarih">' + s.kurum + ' &middot; Bitiş: ' + s.bitis + '</div>';
+    html += '</div>';
+    if (fark <= 60) {
+      html += '<button style="padding:5px 12px;border-radius:5px;border:1px solid var(--kirmizi);background:var(--kirmizi-bg);color:var(--kirmizi);font-size:10px;font-weight:600;cursor:pointer;" onclick="alert(\'Sertifika yenileme süreci başlatılıyor...\')">Yenile</button>';
+    }
+    html += '</div>';
+  });
+  html += '</div>';
+
+  // TAB 4: Yetki & Görev
+  html += '<div class="tab-icerik">';
+  html += '<div class="info-box">';
+  html += '<div class="info-box-baslik">Yetkili Olduğu Operasyonlar</div>';
+  html += '<div class="chip-row">';
+  OPERASYONLAR.forEach(function(op) {
+    var seviye = skills[op] || 0;
+    if (seviye >= 3) {
+      html += '<span class="chip chip-yesil">' + op + '</span>';
+    } else {
+      html += '<span class="chip chip-gri">' + op + '</span>';
+    }
+  });
+  html += '</div></div>';
+
+  html += '<div class="info-box" style="margin-top:12px;">';
+  html += '<div class="info-box-baslik">Görev Tanımı</div>';
+  html += '<div style="font-size:12px;color:var(--metin2);line-height:1.6;">';
+  html += p.unvan ? (p.ad + ', ' + (p.departman || '') + ' departmanında ' + (p.unvan || '') + ' olarak görev yapmaktadır. ') : '';
+  html += 'AS9100 Rev.D kapsamında tanımlanan görev, yetki ve sorumlulukları uygulanır.';
+  html += '</div></div>';
+
+  html += '<div class="info-box" style="margin-top:12px;">';
+  html += '<div class="info-box-baslik">Doküman Yönetim Sistemi</div>';
+  html += '<div style="font-size:11px;color:var(--metin3);">';
+  html += '<a href="ersan_dms_master.html" style="color:var(--mavi);text-decoration:none;font-weight:600;">DMS Master Liste &rarr;</a> &mdash; Görev tanımı ve prosedürlere erişim';
+  html += '</div></div>';
+  html += '</div>';
+
+  document.getElementById('sag-panel').innerHTML = html;
+}
+
+function infoRow(lbl, val) {
+  return '<div class="info-row"><div class="info-lbl">' + lbl + '</div><div class="info-val">' + val + '</div></div>';
+}
+
+function tabSec(btn, idx) {
+  var panel = document.getElementById('sag-panel');
+  var butonlar = panel.querySelectorAll('.tab-btn');
+  var icerikler = panel.querySelectorAll('.tab-icerik');
+  butonlar.forEach(function(b) { b.classList.remove('aktif'); });
+  icerikler.forEach(function(ic) { ic.classList.remove('aktif'); });
+  btn.classList.add('aktif');
+  if (icerikler[idx]) icerikler[idx].classList.add('aktif');
+}
+
+// === MODALS ===
+function yeniPersonelAc() {
+  var kod = 'PRS-' + String(personelListesi.length + 1).padStart(3, '0');
+  document.getElementById('yeni-kod').value = kod;
+  document.getElementById('yeni-ad').value = '';
+  document.getElementById('yeni-unvan').value = '';
+  document.getElementById('yeni-tarih').value = new Date().toISOString().split('T')[0];
+  document.getElementById('modal-yeni').classList.add('acik');
+}
+
+function yeniPersonelKaydet() {
+  var ad = document.getElementById('yeni-ad').value.trim();
+  if (!ad) { alert('Ad Soyad zorunludur!'); return; }
+
+  var fields = {
+    'Ad Soyad': ad,
+    'Unvan': document.getElementById('yeni-unvan').value.trim(),
+    'Departman': document.getElementById('yeni-dept').value,
+    'Eğitim Düzeyi': document.getElementById('yeni-egitim').value,
+    'İşe Giriş': document.getElementById('yeni-tarih').value,
+    'Durum': 'Aktif',
+    'PRS Kodu': document.getElementById('yeni-kod').value
+  };
+
+  fetch('/.netlify/functions/airtable', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({method: 'POST', path: '/v0/app5LDgJMgocw79Ix/' + encodeURIComponent(PERSONEL_TABLO), body: {fields: fields}})
+  })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.id) {
+        modalKapat('modal-yeni');
+        yukle();
+        logIslem('Oluşturuldu', 'Personel', d.id, ad);
+      } else {
+        alert('Kaydetme hatası: ' + JSON.stringify(d));
+      }
+    })
+    .catch(function(e) { alert('Hata: ' + e.message); });
+}
+
+function degerAc() {
+  document.getElementById('modal-deger').classList.add('acik');
+}
+
+function degerKaydet() {
+  if (!seciliId) return;
+  var op = document.getElementById('deger-op').value;
+  var seviye = parseInt(document.getElementById('deger-seviye').value);
+  var matris = JSON.parse(localStorage.getItem('ersan_yetkinlik_matris') || '{}');
+  if (!matris[seciliId]) matris[seciliId] = {};
+  matris[seciliId][op] = seviye;
+  localStorage.setItem('ersan_yetkinlik_matris', JSON.stringify(matris));
+  modalKapat('modal-deger');
+  detayGoster();
+  kpiGuncelle();
+  listeOlustur();
+}
+
+function modalKapat(id) {
+  document.getElementById(id).classList.remove('acik');
+}
+
+// === INIT ===
+document.addEventListener('DOMContentLoaded', function() {
+  yukle();
+});
+</script>
+</body>
+</html>
