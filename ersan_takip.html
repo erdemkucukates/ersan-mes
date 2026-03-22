@@ -7,6 +7,33 @@
 <link rel="stylesheet" href="ersan_styles.css">
 <script src="ersan_nav.js" defer></script>
 <script src="ersan_log.js" defer></script>
+<style>
+.takip-split { display:flex; gap:12px; height:calc(100vh - 52px - 120px - 16px); }
+.takip-sol { flex:1; min-width:0; display:flex; flex-direction:column; }
+.takip-sag { width:320px; flex-shrink:0; display:flex; flex-direction:column; }
+.filtre-bar { display:flex; align-items:center; gap:8px; margin-bottom:12px; flex-wrap:wrap; }
+.filtre-bar input[type="text"] { padding:6px 10px; border:1px solid var(--border); border-radius:6px; font-size:12px; width:200px; font-family:inherit; }
+.filtre-bar select { padding:6px 10px; border:1px solid var(--border); border-radius:6px; font-size:12px; font-family:inherit; background:#fff; cursor:pointer; }
+.gorev-tablo-wrap { flex:1; overflow-y:auto; }
+.gorev-row-gecikmiş td { background:#fef2f2 !important; }
+.gorev-row-bugun td .tarih-bugun { color:var(--sari); font-weight:600; }
+.aktivite-liste { flex:1; overflow-y:auto; padding:8px 0; }
+.aktivite-item { display:flex; gap:10px; padding:10px 14px; border-bottom:1px solid var(--border); cursor:pointer; transition:background .12s; }
+.aktivite-item:hover { background:var(--bg2); }
+.aktivite-icon { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0; }
+.aktivite-icerik { flex:1; min-width:0; }
+.aktivite-firma { font-size:12px; font-weight:600; color:var(--laci); }
+.aktivite-aciklama { font-size:11px; color:var(--metin3); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.aktivite-meta { font-size:10px; color:var(--metin4); margin-top:3px; }
+.tamamlandi-toggle { display:flex; align-items:center; gap:6px; padding:8px 14px; font-size:11px; color:var(--metin3); cursor:pointer; border-top:1px solid var(--border); }
+.tamamlandi-toggle input { cursor:pointer; }
+.gorev-check { width:16px; height:16px; cursor:pointer; accent-color:var(--yesil); }
+.gorev-tamam-btn { background:none; border:1px solid var(--border); border-radius:4px; width:26px; height:26px; cursor:pointer; font-size:13px; display:flex; align-items:center; justify-content:center; transition:all .12s; color:var(--yesil); }
+.gorev-tamam-btn:hover { background:var(--yesil-bg); border-color:var(--yesil); }
+.oncelik-yuksek { color:var(--kirmizi); font-weight:600; }
+.oncelik-orta { color:var(--sari); font-weight:600; }
+.oncelik-dusuk { color:var(--metin4); }
+</style>
 </head>
 <body>
 <div id="nav-alani"></div>
@@ -14,16 +41,390 @@
   <div class="topbar">
     <div class="topbar-baslik">Takip Listesi</div>
     <div style="display:flex;align-items:center;gap:8px;">
+      <button class="btn btn-beyaz btn-sm" onclick="modalAc('aktivite')">+ Aktivite Ekle</button>
+      <button class="btn btn-mavi btn-sm" onclick="modalAc('gorev')">+ Görev Ekle</button>
       <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
     </div>
   </div>
   <div class="sayfa-icerik">
-    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:60vh;color:var(--metin3);">
-      <div style="font-size:48px;margin-bottom:16px;opacity:0.3;">&#9881;</div>
-      <div style="font-size:16px;font-weight:600;color:var(--laci);margin-bottom:8px;">Takip Listesi</div>
-      <div style="font-size:13px;">Bu modul yapim asamasindadir.</div>
+    <!-- KPI -->
+    <div class="kpi-grid" id="kpiGrid"></div>
+
+    <!-- Filtreler -->
+    <div class="filtre-bar">
+      <input type="text" id="aramaInput" placeholder="🔍 Firma veya görev ara..." oninput="listeleGuncelle()">
+      <select id="tipFiltre" onchange="listeleGuncelle()">
+        <option value="">Tüm Tipler</option>
+        <option value="Arama">📞 Arama</option>
+        <option value="E-posta">📧 E-posta</option>
+        <option value="Toplantı">🤝 Toplantı</option>
+        <option value="Ziyaret">🏭 Ziyaret</option>
+        <option value="Not">📝 Not</option>
+        <option value="Teklif">📄 Teklif</option>
+        <option value="Demo">💻 Demo</option>
+      </select>
+      <select id="oncelikFiltre" onchange="listeleGuncelle()">
+        <option value="">Tüm Öncelikler</option>
+        <option value="Yüksek">Yüksek</option>
+        <option value="Orta">Orta</option>
+        <option value="Düşük">Düşük</option>
+      </select>
+    </div>
+
+    <!-- Split -->
+    <div class="takip-split">
+      <!-- SOL: Görev Tablosu -->
+      <div class="takip-sol">
+        <div class="tablo-wrap gorev-tablo-wrap">
+          <table class="tablo" id="gorevTablo">
+            <thead>
+              <tr>
+                <th style="width:30px;"><input type="checkbox" id="hepsiSec" onclick="hepsiniSec(this)" class="gorev-check"></th>
+                <th>Firma / Kişi</th>
+                <th>Görev</th>
+                <th>Tip</th>
+                <th>Öncelik</th>
+                <th>Son Tarih</th>
+                <th>Sorumlu</th>
+                <th>Durum</th>
+                <th style="width:36px;"></th>
+              </tr>
+            </thead>
+            <tbody id="gorevBody"></tbody>
+          </table>
+        </div>
+        <label class="tamamlandi-toggle">
+          <input type="checkbox" id="tamamGoster" onchange="listeleGuncelle()"> Tamamlananları Göster
+        </label>
+      </div>
+
+      <!-- SAĞ: Son Aktiviteler -->
+      <div class="takip-sag">
+        <div class="tablo-wrap" style="flex:1;display:flex;flex-direction:column;">
+          <div class="tablo-baslik">
+            <div class="tablo-baslik-text">Son Aktiviteler</div>
+            <div class="tablo-baslik-sayi" id="aktiviteSayi">0</div>
+          </div>
+          <div class="aktivite-liste" id="aktiviteListe"></div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
+
+<!-- MODAL -->
+<div id="modalBg" class="modal-bg" style="display:none;" onclick="if(event.target===this)modalKapat()">
+  <div class="modal-box" style="max-width:500px;">
+    <div class="modal-head">
+      <div class="modal-title" id="modalBaslik">Yeni Görev</div>
+      <button onclick="modalKapat()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--metin3);">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid-2" style="margin-bottom:12px;">
+        <div class="form-alan">
+          <label class="form-etiket">Tip</label>
+          <select id="mTip" class="form-input">
+            <option value="Arama">📞 Arama</option>
+            <option value="E-posta">📧 E-posta</option>
+            <option value="Toplantı">🤝 Toplantı</option>
+            <option value="Ziyaret">🏭 Ziyaret</option>
+            <option value="Not">📝 Not</option>
+            <option value="Teklif">📄 Teklif</option>
+            <option value="Demo">💻 Demo</option>
+          </select>
+        </div>
+        <div class="form-alan">
+          <label class="form-etiket">Öncelik</label>
+          <select id="mOncelik" class="form-input">
+            <option value="Orta">Orta</option>
+            <option value="Yüksek">Yüksek</option>
+            <option value="Düşük">Düşük</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-alan" style="margin-bottom:12px;">
+        <label class="form-etiket">Firma / Kişi</label>
+        <input type="text" id="mFirma" class="form-input" placeholder="Firma adı">
+      </div>
+      <div class="form-alan" style="margin-bottom:12px;">
+        <label class="form-etiket">Açıklama</label>
+        <textarea id="mAciklama" class="form-input" rows="3" placeholder="Görev veya aktivite açıklaması"></textarea>
+      </div>
+      <div class="form-grid-2">
+        <div class="form-alan">
+          <label class="form-etiket">Son Tarih</label>
+          <input type="date" id="mSonTarih" class="form-input">
+        </div>
+        <div class="form-alan">
+          <label class="form-etiket">Sorumlu</label>
+          <input type="text" id="mSorumlu" class="form-input" value="Erdem Küçükateş">
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-beyaz" onclick="modalKapat()">İptal</button>
+      <button class="btn btn-mavi" id="modalKaydetBtn" onclick="modalKaydet()">Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var STORAGE_GOREV = 'ersan_gorevler';
+var STORAGE_AKTIVITE = 'ersan_aktiviteler';
+var modalMod = 'gorev'; // 'gorev' veya 'aktivite'
+
+var TIP_IKONLARI = {
+  'Arama': {icon:'📞', bg:'#eff6ff'},
+  'E-posta': {icon:'📧', bg:'#f0fdf4'},
+  'Toplantı': {icon:'🤝', bg:'#fefce8'},
+  'Ziyaret': {icon:'🏭', bg:'#fdf2f8'},
+  'Not': {icon:'📝', bg:'#f5f3ff'},
+  'Teklif': {icon:'📄', bg:'#ecfdf5'},
+  'Demo': {icon:'💻', bg:'#fff7ed'}
+};
+
+function bugunStr() { return new Date().toISOString().slice(0,10); }
+
+function ornekVeriYukle() {
+  var bugun = bugunStr();
+  var dun = new Date(Date.now() - 86400000).toISOString().slice(0,10);
+  var yarin = new Date(Date.now() + 86400000).toISOString().slice(0,10);
+  var gecen = new Date(Date.now() - 3*86400000).toISOString().slice(0,10);
+  var haftaya = new Date(Date.now() + 5*86400000).toISOString().slice(0,10);
+
+  var gorevler = [
+    {id:'g1', Gorev_No:'GRV-001', Firma_Adi:'TAI', Gorev_Aciklama:'Teklif revizyonu gönder', Aktivite_Tipi:'Teklif', Oncelik:'Yüksek', Son_Tarih:gecen, Sorumlu:'Erdem Küçükateş', Tamamlandi:false},
+    {id:'g2', Gorev_No:'GRV-002', Firma_Adi:'TEI', Gorev_Aciklama:'CNC parça numune teslimi takibi', Aktivite_Tipi:'Arama', Oncelik:'Yüksek', Son_Tarih:bugun, Sorumlu:'Erdem Küçükateş', Tamamlandi:false},
+    {id:'g3', Gorev_No:'GRV-003', Firma_Adi:'ASELSAN', Gorev_Aciklama:'Kalite dokümanları hazırla', Aktivite_Tipi:'Not', Oncelik:'Orta', Son_Tarih:yarin, Sorumlu:'Erdem Küçükateş', Tamamlandi:false},
+    {id:'g4', Gorev_No:'GRV-004', Firma_Adi:'ROKETSAN', Gorev_Aciklama:'Fabrika ziyareti planla', Aktivite_Tipi:'Ziyaret', Oncelik:'Orta', Son_Tarih:haftaya, Sorumlu:'Erdem Küçükateş', Tamamlandi:false},
+    {id:'g5', Gorev_No:'GRV-005', Firma_Adi:'HAVELSAN', Gorev_Aciklama:'Demo sunumu hazırla', Aktivite_Tipi:'Demo', Oncelik:'Düşük', Son_Tarih:haftaya, Sorumlu:'Erdem Küçükateş', Tamamlandi:false},
+    {id:'g6', Gorev_No:'GRV-006', Firma_Adi:'BMC', Gorev_Aciklama:'Fiyat listesi güncelle', Aktivite_Tipi:'E-posta', Oncelik:'Orta', Son_Tarih:dun, Sorumlu:'Erdem Küçükateş', Tamamlandi:true}
+  ];
+
+  var aktiviteler = [
+    {id:'a1', Aktivite_No:'AKT-001', Tip:'Arama', Firma_Adi:'TAI', Aciklama:'Teklif durumu görüşüldü, revizyon istendi', Tarih:dun, Sorumlu:'Erdem Küçükateş', Tamamlandi:true},
+    {id:'a2', Aktivite_No:'AKT-002', Tip:'E-posta', Firma_Adi:'TEI', Aciklama:'Teknik resimler mail ile gönderildi', Tarih:dun, Sorumlu:'Erdem Küçükateş', Tamamlandi:true},
+    {id:'a3', Aktivite_No:'AKT-003', Tip:'Toplantı', Firma_Adi:'ASELSAN', Aciklama:'AS9100 gereksinim toplantısı yapıldı', Tarih:gecen, Sorumlu:'Erdem Küçükateş', Tamamlandi:true},
+    {id:'a4', Aktivite_No:'AKT-004', Tip:'Ziyaret', Firma_Adi:'ROKETSAN', Aciklama:'Ön görüşme ve tesis tanıtımı', Tarih:gecen, Sorumlu:'Erdem Küçükateş', Tamamlandi:true},
+    {id:'a5', Aktivite_No:'AKT-005', Tip:'Teklif', Firma_Adi:'BMC', Aciklama:'CNC işleme teklifi gönderildi — 45.000₺', Tarih:new Date(Date.now() - 5*86400000).toISOString().slice(0,10), Sorumlu:'Erdem Küçükateş', Tamamlandi:true}
+  ];
+
+  localStorage.setItem(STORAGE_GOREV, JSON.stringify(gorevler));
+  localStorage.setItem(STORAGE_AKTIVITE, JSON.stringify(aktiviteler));
+  return { gorevler: gorevler, aktiviteler: aktiviteler };
+}
+
+function veriYukle() {
+  var gStr = localStorage.getItem(STORAGE_GOREV);
+  var aStr = localStorage.getItem(STORAGE_AKTIVITE);
+  if (!gStr || !aStr) return ornekVeriYukle();
+  return { gorevler: JSON.parse(gStr), aktiviteler: JSON.parse(aStr) };
+}
+
+function veriKaydet(data) {
+  localStorage.setItem(STORAGE_GOREV, JSON.stringify(data.gorevler));
+  localStorage.setItem(STORAGE_AKTIVITE, JSON.stringify(data.aktiviteler));
+}
+
+function kpiGuncelle(data) {
+  var bugun = bugunStr();
+  var haftaSonu = new Date();
+  haftaSonu.setDate(haftaSonu.getDate() + (7 - haftaSonu.getDay()));
+  var haftaSonuStr = haftaSonu.toISOString().slice(0,10);
+
+  var bugunSayi = 0, haftaSayi = 0, tamamSayi = 0, acikSayi = 0;
+  data.gorevler.forEach(function(g) {
+    if (g.Tamamlandi) { tamamSayi++; return; }
+    acikSayi++;
+    if (g.Son_Tarih <= bugun) bugunSayi++;
+    if (g.Son_Tarih <= haftaSonuStr) haftaSayi++;
+  });
+
+  var html = '';
+  html += '<div class="kpi-kart kirmizi"><div class="kpi-etiket">BUGÜN YAPILACAK</div><div class="kpi-deger">' + bugunSayi + '</div><div class="kpi-alt">gecikmiş dahil</div></div>';
+  html += '<div class="kpi-kart sari"><div class="kpi-etiket">BU HAFTA</div><div class="kpi-deger">' + haftaSayi + '</div><div class="kpi-alt">son tarih bu hafta</div></div>';
+  html += '<div class="kpi-kart yesil"><div class="kpi-etiket">TAMAMLANAN</div><div class="kpi-deger">' + tamamSayi + '</div><div class="kpi-alt">toplam</div></div>';
+  html += '<div class="kpi-kart"><div class="kpi-etiket">AÇIK GÖREV</div><div class="kpi-deger">' + acikSayi + '</div><div class="kpi-alt">bekliyor</div></div>';
+  document.getElementById('kpiGrid').innerHTML = html;
+}
+
+function gorevSirala(gorevler) {
+  var bugun = bugunStr();
+  return gorevler.slice().sort(function(a,b) {
+    if (a.Tamamlandi !== b.Tamamlandi) return a.Tamamlandi ? 1 : -1;
+    var aGecik = a.Son_Tarih < bugun ? 0 : 1;
+    var bGecik = b.Son_Tarih < bugun ? 0 : 1;
+    if (aGecik !== bGecik) return aGecik - bGecik;
+    return a.Son_Tarih < b.Son_Tarih ? -1 : 1;
+  });
+}
+
+function tarihFormat(str) {
+  if (!str) return '-';
+  var p = str.split('-');
+  return p[2] + '.' + p[1] + '.' + p[0];
+}
+
+function listeleGuncelle() {
+  var data = veriYukle();
+  kpiGuncelle(data);
+
+  var arama = (document.getElementById('aramaInput').value || '').toLowerCase();
+  var tipF = document.getElementById('tipFiltre').value;
+  var oncF = document.getElementById('oncelikFiltre').value;
+  var tamamGoster = document.getElementById('tamamGoster').checked;
+  var bugun = bugunStr();
+
+  // Görevler
+  var filtrelenmis = data.gorevler.filter(function(g) {
+    if (!tamamGoster && g.Tamamlandi) return false;
+    if (arama && (g.Firma_Adi || '').toLowerCase().indexOf(arama) === -1 && (g.Gorev_Aciklama || '').toLowerCase().indexOf(arama) === -1) return false;
+    if (tipF && g.Aktivite_Tipi !== tipF) return false;
+    if (oncF && g.Oncelik !== oncF) return false;
+    return true;
+  });
+
+  var sirali = gorevSirala(filtrelenmis);
+  var tbody = document.getElementById('gorevBody');
+  var rows = '';
+  sirali.forEach(function(g) {
+    var gecik = !g.Tamamlandi && g.Son_Tarih < bugun;
+    var bugunMu = g.Son_Tarih === bugun;
+    var rowClass = gecik ? ' class="gorev-row-gecikmiş"' : '';
+    var tarihClass = bugunMu ? ' tarih-bugun' : '';
+
+    var oncCls = g.Oncelik === 'Yüksek' ? 'oncelik-yuksek' : (g.Oncelik === 'Orta' ? 'oncelik-orta' : 'oncelik-dusuk');
+    var tipInfo = TIP_IKONLARI[g.Aktivite_Tipi] || {icon:'📋', bg:'#f1f5f9'};
+    var durumBadge = g.Tamamlandi
+      ? '<span class="badge badge-yesil">Tamam</span>'
+      : (gecik ? '<span class="badge badge-kirmizi">Gecikmiş</span>' : '<span class="badge badge-mavi">Açık</span>');
+
+    rows += '<tr' + rowClass + '>';
+    rows += '<td><input type="checkbox" class="gorev-check" data-id="' + g.id + '"></td>';
+    rows += '<td style="font-weight:600;color:var(--laci);">' + g.Firma_Adi + '</td>';
+    rows += '<td>' + g.Gorev_Aciklama + '</td>';
+    rows += '<td>' + tipInfo.icon + ' ' + g.Aktivite_Tipi + '</td>';
+    rows += '<td><span class="' + oncCls + '">' + g.Oncelik + '</span></td>';
+    rows += '<td><span class="' + tarihClass + '">' + tarihFormat(g.Son_Tarih) + '</span></td>';
+    rows += '<td style="font-size:11px;">' + g.Sorumlu + '</td>';
+    rows += '<td>' + durumBadge + '</td>';
+    rows += '<td>' + (g.Tamamlandi ? '' : '<button class="gorev-tamam-btn" onclick="gorevTamamla(\'' + g.id + '\')" title="Tamamla">✓</button>') + '</td>';
+    rows += '</tr>';
+  });
+  tbody.innerHTML = rows || '<tr><td colspan="9" style="text-align:center;padding:30px;color:var(--metin4);">Görev bulunamadı</td></tr>';
+
+  // Aktiviteler
+  var aktList = data.aktiviteler.slice().sort(function(a,b) { return b.Tarih < a.Tarih ? -1 : 1; });
+  document.getElementById('aktiviteSayi').textContent = aktList.length;
+  var aktHtml = '';
+  aktList.forEach(function(a) {
+    var tipInfo = TIP_IKONLARI[a.Tip] || {icon:'📋', bg:'#f1f5f9'};
+    aktHtml += '<div class="aktivite-item">';
+    aktHtml += '<div class="aktivite-icon" style="background:' + tipInfo.bg + ';">' + tipInfo.icon + '</div>';
+    aktHtml += '<div class="aktivite-icerik">';
+    aktHtml += '<div class="aktivite-firma">' + a.Firma_Adi + '</div>';
+    aktHtml += '<div class="aktivite-aciklama">' + a.Aciklama + '</div>';
+    aktHtml += '<div class="aktivite-meta">' + tarihFormat(a.Tarih) + ' · ' + a.Sorumlu + '</div>';
+    aktHtml += '</div></div>';
+  });
+  document.getElementById('aktiviteListe').innerHTML = aktHtml || '<div style="padding:30px;text-align:center;color:var(--metin4);">Aktivite yok</div>';
+}
+
+function gorevTamamla(id) {
+  var data = veriYukle();
+  var g = null;
+  data.gorevler.forEach(function(item) { if (item.id === id) { item.Tamamlandi = true; g = item; } });
+  if (g) {
+    // Aktivite olarak ekle
+    var yeniAkt = {
+      id: 'a' + Date.now(),
+      Aktivite_No: 'AKT-' + String(data.aktiviteler.length + 1).padStart(3,'0'),
+      Tip: g.Aktivite_Tipi,
+      Firma_Adi: g.Firma_Adi,
+      Aciklama: 'Görev tamamlandı: ' + g.Gorev_Aciklama,
+      Tarih: bugunStr(),
+      Sorumlu: g.Sorumlu,
+      Tamamlandi: true
+    };
+    data.aktiviteler.push(yeniAkt);
+    veriKaydet(data);
+    logIslem('Tamamlandı', 'CRM Takip', g.id, g.Gorev_No, null, {Gorev: g.Gorev_Aciklama, Firma: g.Firma_Adi});
+  }
+  listeleGuncelle();
+}
+
+function hepsiniSec(master) {
+  var checkboxes = document.querySelectorAll('#gorevBody .gorev-check');
+  checkboxes.forEach(function(cb) { cb.checked = master.checked; });
+}
+
+// MODAL
+function modalAc(mod) {
+  modalMod = mod;
+  document.getElementById('modalBaslik').textContent = mod === 'gorev' ? 'Yeni Görev' : 'Yeni Aktivite';
+  document.getElementById('mTip').value = 'Arama';
+  document.getElementById('mOncelik').value = 'Orta';
+  document.getElementById('mFirma').value = '';
+  document.getElementById('mAciklama').value = '';
+  document.getElementById('mSonTarih').value = bugunStr();
+  document.getElementById('mSorumlu').value = 'Erdem Küçükateş';
+  document.getElementById('modalBg').style.display = 'flex';
+}
+
+function modalKapat() {
+  document.getElementById('modalBg').style.display = 'none';
+}
+
+function modalKaydet() {
+  var firma = document.getElementById('mFirma').value.trim();
+  var aciklama = document.getElementById('mAciklama').value.trim();
+  if (!firma) { alert('Firma adı zorunludur.'); return; }
+  if (!aciklama) { alert('Açıklama zorunludur.'); return; }
+
+  var data = veriYukle();
+  var tip = document.getElementById('mTip').value;
+  var oncelik = document.getElementById('mOncelik').value;
+  var sonTarih = document.getElementById('mSonTarih').value;
+  var sorumlu = document.getElementById('mSorumlu').value.trim() || 'Erdem Küçükateş';
+
+  if (modalMod === 'gorev') {
+    var yeniGorev = {
+      id: 'g' + Date.now(),
+      Gorev_No: 'GRV-' + String(data.gorevler.length + 1).padStart(3,'0'),
+      Firma_Adi: firma,
+      Gorev_Aciklama: aciklama,
+      Aktivite_Tipi: tip,
+      Oncelik: oncelik,
+      Son_Tarih: sonTarih,
+      Sorumlu: sorumlu,
+      Tamamlandi: false
+    };
+    data.gorevler.push(yeniGorev);
+    logIslem('Oluşturuldu', 'CRM Takip', yeniGorev.id, yeniGorev.Gorev_No, null, {Gorev: aciklama, Firma: firma});
+  } else {
+    var yeniAkt = {
+      id: 'a' + Date.now(),
+      Aktivite_No: 'AKT-' + String(data.aktiviteler.length + 1).padStart(3,'0'),
+      Tip: tip,
+      Firma_Adi: firma,
+      Aciklama: aciklama,
+      Tarih: sonTarih,
+      Sorumlu: sorumlu,
+      Tamamlandi: true
+    };
+    data.aktiviteler.push(yeniAkt);
+    logIslem('Oluşturuldu', 'CRM Aktivite', yeniAkt.id, yeniAkt.Aktivite_No, null, {Tip: tip, Firma: firma});
+  }
+
+  veriKaydet(data);
+  modalKapat();
+  listeleGuncelle();
+}
+
+// SAYFA YÜKLEME
+document.addEventListener('DOMContentLoaded', function() {
+  listeleGuncelle();
+});
+</script>
 </body>
 </html>

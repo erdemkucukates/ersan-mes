@@ -7,6 +7,158 @@
 <link rel="stylesheet" href="ersan_styles.css">
 <script src="ersan_nav.js" defer></script>
 <script src="ersan_log.js" defer></script>
+<style>
+/* KPI Row */
+.kpi-row { display:flex; gap:10px; padding:16px 20px 0; flex-wrap:wrap; }
+.kpi-kart {
+  flex:1; min-width:160px; background:#fff; border:1px solid var(--border);
+  border-radius:8px; padding:14px 16px; display:flex; flex-direction:column; gap:2px;
+}
+.kpi-kart .kpi-baslik { font-size:11px; color:var(--metin3); font-weight:600; text-transform:uppercase; letter-spacing:0.5px; }
+.kpi-kart .kpi-deger { font-size:22px; font-weight:700; color:var(--laci); }
+.kpi-kart .kpi-alt { font-size:11px; color:var(--metin4); }
+
+/* Pipeline Ozet Bar */
+.ozet-bar { display:flex; gap:2px; padding:12px 20px; }
+.ozet-adim {
+  flex:1; text-align:center; padding:8px 4px; border-radius:6px; cursor:pointer;
+  transition:all .15s; position:relative;
+}
+.ozet-adim:hover { filter:brightness(0.95); }
+.ozet-adim .ozet-label { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.3px; }
+.ozet-adim .ozet-sayi { font-size:18px; font-weight:700; }
+.ozet-adim .ozet-tutar { font-size:10px; opacity:0.8; }
+
+/* Kanban */
+.kanban-wrap {
+  display:flex; gap:10px; overflow-x:auto; padding:0 20px 20px;
+  min-height:400px; flex:1;
+}
+.kanban-col {
+  min-width:230px; max-width:230px; background:#f9fafb;
+  border-radius:8px; display:flex; flex-direction:column; border:1px solid #e5e7eb;
+}
+.kanban-head {
+  padding:10px 12px; border-bottom:1px solid #e5e7eb;
+  display:flex; align-items:center; gap:6px; border-radius:8px 8px 0 0;
+}
+.kanban-head .kh-icon { font-size:14px; }
+.kanban-head .kh-label { font-size:12px; font-weight:600; flex:1; }
+.kanban-head .kh-count {
+  font-size:10px; font-weight:700; background:rgba(0,0,0,0.08);
+  border-radius:10px; padding:1px 7px; min-width:20px; text-align:center;
+}
+.kanban-body { flex:1; padding:8px; overflow-y:auto; display:flex; flex-direction:column; gap:6px; }
+
+/* Kart */
+.kart {
+  background:#fff; border:1px solid #e5e7eb; border-radius:6px;
+  padding:10px; cursor:pointer; transition:all .12s;
+}
+.kart:hover { border-color:#93c5fd; box-shadow:0 2px 6px rgba(0,0,0,.06); }
+.kart-firma { font-size:12px; font-weight:700; color:var(--laci); margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.kart-konu { font-size:11px; color:var(--metin3); margin-bottom:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.kart-alt { display:flex; align-items:center; justify-content:space-between; gap:4px; }
+.kart-tutar { font-size:12px; font-weight:700; color:var(--mavi-koyu); }
+.kart-tarih { font-size:10px; color:var(--metin4); }
+.kart-sicaklik {
+  font-size:9px; font-weight:700; border-radius:4px; padding:1px 5px;
+  text-transform:uppercase; letter-spacing:0.3px;
+}
+.sicak-sicak { background:#fee2e2; color:#991b1b; }
+.sicak-ilik { background:#fef3c7; color:#92400e; }
+.sicak-soguk { background:#dbeafe; color:#1e40af; }
+.kart-progress { height:3px; background:#e5e7eb; border-radius:2px; margin-top:6px; }
+.kart-progress-bar { height:100%; border-radius:2px; transition:width .3s; }
+.kart-footer { display:flex; align-items:center; justify-content:space-between; margin-top:6px; }
+.kart-avatar {
+  width:22px; height:22px; border-radius:50%; background:var(--laci);
+  color:#fff; font-size:8px; font-weight:700; display:flex; align-items:center;
+  justify-content:center; flex-shrink:0;
+}
+
+/* Filtre */
+.filtre-select {
+  padding:5px 10px; border:1px solid var(--border); border-radius:6px;
+  font-size:12px; background:#fff; cursor:pointer; color:var(--metin2);
+}
+
+/* Modal */
+.modal-bg {
+  display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45);
+  z-index:600; align-items:center; justify-content:center;
+}
+.modal-bg.aktif { display:flex; }
+.modal-kutu {
+  background:#fff; border-radius:10px; width:580px; max-width:95vw;
+  max-height:90vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.2);
+}
+.modal-head {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:16px 20px; border-bottom:1px solid var(--border);
+}
+.modal-head h3 { font-size:15px; font-weight:700; color:var(--laci); margin:0; }
+.modal-kapat {
+  width:28px; height:28px; border:none; background:var(--bg);
+  border-radius:6px; cursor:pointer; font-size:16px; color:var(--metin3);
+  display:flex; align-items:center; justify-content:center;
+}
+.modal-kapat:hover { background:var(--kirmizi-bg); color:var(--kirmizi); }
+.modal-body { padding:20px; }
+.modal-footer {
+  padding:14px 20px; border-top:1px solid var(--border);
+  display:flex; justify-content:flex-end; gap:8px;
+}
+
+/* Form */
+.form-grup { margin-bottom:14px; }
+.form-grup label { display:block; font-size:11px; font-weight:600; color:var(--metin3); margin-bottom:4px; text-transform:uppercase; letter-spacing:0.3px; }
+.form-grup input, .form-grup select, .form-grup textarea {
+  width:100%; padding:8px 10px; border:1px solid var(--border);
+  border-radius:6px; font-size:13px; color:var(--metin); font-family:inherit;
+}
+.form-grup textarea { resize:vertical; min-height:60px; }
+.form-grup input:focus, .form-grup select:focus, .form-grup textarea:focus {
+  outline:none; border-color:var(--mavi); box-shadow:0 0 0 2px rgba(55,138,221,0.15);
+}
+.form-row { display:flex; gap:12px; }
+.form-row .form-grup { flex:1; }
+
+/* Buttons */
+.btn {
+  padding:7px 16px; border:none; border-radius:6px; font-size:12px;
+  font-weight:600; cursor:pointer; transition:all .12s; font-family:inherit;
+}
+.btn-birincil { background:var(--mavi); color:#fff; }
+.btn-birincil:hover { background:var(--mavi-koyu); }
+.btn-ikincil { background:var(--bg); color:var(--metin2); border:1px solid var(--border); }
+.btn-ikincil:hover { background:var(--border); }
+.btn-yesil { background:var(--yesil); color:#fff; }
+.btn-yesil:hover { background:#167a5b; }
+.btn-kirmizi { background:var(--kirmizi); color:#fff; }
+.btn-kirmizi:hover { background:#c42020; }
+.btn-sari { background:#f59e0b; color:#fff; }
+.btn-sari:hover { background:#d97706; }
+
+/* Detay modal */
+.detay-field { margin-bottom:10px; }
+.detay-field .df-label { font-size:10px; font-weight:600; color:var(--metin4); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:2px; }
+.detay-field .df-value { font-size:13px; color:var(--metin); }
+.detay-row { display:flex; gap:16px; }
+.detay-row .detay-field { flex:1; }
+
+.aktivite-log { margin-top:12px; border-top:1px solid var(--border); padding-top:12px; }
+.aktivite-log h4 { font-size:11px; color:var(--metin3); margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px; }
+.log-item { display:flex; gap:8px; padding:6px 0; border-bottom:1px solid #f1f5f9; font-size:12px; }
+.log-item .log-tarih { color:var(--metin4); min-width:70px; font-size:11px; }
+.log-item .log-metin { color:var(--metin2); }
+
+/* Asama badge */
+.asama-badge {
+  display:inline-block; font-size:10px; font-weight:600; padding:2px 8px;
+  border-radius:4px; text-transform:uppercase; letter-spacing:0.3px;
+}
+</style>
 </head>
 <body>
 <div id="nav-alani"></div>
@@ -14,16 +166,657 @@
   <div class="topbar">
     <div class="topbar-baslik">Pipeline</div>
     <div style="display:flex;align-items:center;gap:8px;">
+      <select id="filtSorumlu" class="filtre-select" onchange="filtreUygula()">
+        <option value="">Sorumlu: Hepsi</option>
+      </select>
+      <button class="btn btn-ikincil" onclick="ozetModalAc()" title="Ozet">&#128202; Ozet</button>
+      <button class="btn btn-birincil" onclick="yeniFirsatAc()">+ Yeni Firsat</button>
       <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
     </div>
   </div>
-  <div class="sayfa-icerik">
-    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:60vh;color:var(--metin3);">
-      <div style="font-size:48px;margin-bottom:16px;opacity:0.3;">&#9881;</div>
-      <div style="font-size:16px;font-weight:600;color:var(--laci);margin-bottom:8px;">Pipeline</div>
-      <div style="font-size:13px;">Bu modul yapim asamasindadir.</div>
+  <div class="sayfa-icerik" style="display:flex;flex-direction:column;height:calc(100vh - 52px);overflow:hidden;">
+    <!-- KPI Row -->
+    <div class="kpi-row">
+      <div class="kpi-kart"><div class="kpi-baslik">Toplam Firsat</div><div class="kpi-deger" id="kpiToplam">0</div><div class="kpi-alt">Aktif firsatlar</div></div>
+      <div class="kpi-kart"><div class="kpi-baslik">Pipeline Deger</div><div class="kpi-deger" id="kpiDeger">0 &#8378;</div><div class="kpi-alt">Tahmini toplam</div></div>
+      <div class="kpi-kart"><div class="kpi-baslik">Kazanilan</div><div class="kpi-deger" id="kpiKazan" style="color:var(--yesil);">0</div><div class="kpi-alt" id="kpiKazanTutar">0 &#8378;</div></div>
+      <div class="kpi-kart"><div class="kpi-baslik">Kayip</div><div class="kpi-deger" id="kpiKayip" style="color:var(--kirmizi);">0</div><div class="kpi-alt" id="kpiKayipTutar">0 &#8378;</div></div>
+      <div class="kpi-kart"><div class="kpi-baslik">Kazanma Orani</div><div class="kpi-deger" id="kpiOran">0%</div><div class="kpi-alt">Kazanilan / Toplam</div></div>
+    </div>
+    <!-- Ozet Bar -->
+    <div class="ozet-bar" id="ozetBar"></div>
+    <!-- Kanban -->
+    <div class="kanban-wrap" id="kanbanWrap"></div>
+  </div>
+</div>
+
+<!-- Yeni Firsat Modal -->
+<div class="modal-bg" id="modalYeni">
+  <div class="modal-kutu">
+    <div class="modal-head">
+      <h3 id="modalYeniBaslik">Yeni Firsat</h3>
+      <button class="modal-kapat" onclick="modalKapat('modalYeni')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-grup">
+          <label>Firma Adi *</label>
+          <input type="text" id="frmFirma" placeholder="Firma adi girin">
+        </div>
+        <div class="form-grup">
+          <label>Ilgili Kisi</label>
+          <input type="text" id="frmKisi" placeholder="Ad Soyad">
+        </div>
+      </div>
+      <div class="form-grup">
+        <label>Konu *</label>
+        <input type="text" id="frmKonu" placeholder="Firsat konusu">
+      </div>
+      <div class="form-row">
+        <div class="form-grup">
+          <label>Tahmini Deger (TL)</label>
+          <input type="number" id="frmDeger" placeholder="0" min="0">
+        </div>
+        <div class="form-grup">
+          <label>Asama</label>
+          <select id="frmAsama">
+            <option value="Temas">Temas</option>
+            <option value="Nitelendirme">Nitelendirme</option>
+            <option value="Teklif">Teklif</option>
+            <option value="Muzakere">Muzakere</option>
+            <option value="Kazanildi">Kazanildi</option>
+            <option value="Kayip">Kayip</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-grup">
+          <label>Sicaklik</label>
+          <select id="frmSicaklik">
+            <option value="Ilik">Ilik</option>
+            <option value="Sicak">Sicak</option>
+            <option value="Soguk">Soguk</option>
+          </select>
+        </div>
+        <div class="form-grup">
+          <label>Sorumlu</label>
+          <input type="text" id="frmSorumlu" value="Erdem Kucukates">
+        </div>
+      </div>
+      <div class="form-grup">
+        <label>Notlar</label>
+        <textarea id="frmNotlar" placeholder="Ek bilgi..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ikincil" onclick="modalKapat('modalYeni')">Iptal</button>
+      <button class="btn btn-birincil" onclick="firsatKaydet()">Kaydet</button>
     </div>
   </div>
 </div>
+
+<!-- Detay Modal -->
+<div class="modal-bg" id="modalDetay">
+  <div class="modal-kutu" style="width:620px;">
+    <div class="modal-head">
+      <h3 id="detayBaslik">Firsat Detayi</h3>
+      <button class="modal-kapat" onclick="modalKapat('modalDetay')">&times;</button>
+    </div>
+    <div class="modal-body" id="detayBody"></div>
+    <div class="modal-footer" id="detayFooter"></div>
+  </div>
+</div>
+
+<!-- Ozet Modal -->
+<div class="modal-bg" id="modalOzet">
+  <div class="modal-kutu" style="width:500px;">
+    <div class="modal-head">
+      <h3>Pipeline Ozeti</h3>
+      <button class="modal-kapat" onclick="modalKapat('modalOzet')">&times;</button>
+    </div>
+    <div class="modal-body" id="ozetBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ikincil" onclick="modalKapat('modalOzet')">Kapat</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── Sabitler ── */
+var STORAGE_KEY = 'ersan_firsatlar';
+var ASAMALAR = [
+  { key: 'Temas',        icon: '&#128100;', renk: '#6b7280', bg: '#f3f4f6',   border: '#d1d5db' },
+  { key: 'Nitelendirme', icon: '&#128269;', renk: '#2563eb', bg: '#eff6ff',   border: '#93c5fd' },
+  { key: 'Teklif',       icon: '&#128196;', renk: '#d97706', bg: '#fffbeb',   border: '#fcd34d' },
+  { key: 'Muzakere',     icon: '&#129309;', renk: '#059669', bg: '#ecfdf5',   border: '#6ee7b7' },
+  { key: 'Kazanildi',    icon: '&#9989;',   renk: '#166534', bg: '#dcfce7',   border: '#86efac' },
+  { key: 'Kayip',        icon: '&#10060;',  renk: '#dc2626', bg: '#fef2f2',   border: '#fca5a5' }
+];
+var OLASILIK = { 'Temas': 10, 'Nitelendirme': 25, 'Teklif': 50, 'Muzakere': 75, 'Kazanildi': 100, 'Kayip': 0 };
+var firsatlar = [];
+var duzenleId = null;
+var aktifFiltreSorumlu = '';
+
+/* ── Veri Yukle ── */
+function veriYukle() {
+  var raw = localStorage.getItem(STORAGE_KEY);
+  if (raw) {
+    try { firsatlar = JSON.parse(raw); } catch(e) { firsatlar = []; }
+  }
+  if (!firsatlar || firsatlar.length === 0) {
+    firsatlar = ornekVeri();
+    veriKaydet();
+  }
+}
+
+function veriKaydet() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(firsatlar));
+}
+
+function ornekVeri() {
+  var bugun = new Date().toISOString().slice(0,10);
+  return [
+    {
+      id: 'F-001', Firsat_No: 'FIRSAT-2026-001', Firma_Adi: 'Tusas Havacilik',
+      Ilgili_Kisi: 'Mehmet Yilmaz', Konu: 'CNC islenecek 50 adet braket',
+      Tahmini_Deger: 185000, Asama: 'Muzakere', Sicaklik: 'Sicak', Olasilik_Pct: 75,
+      Sorumlu: 'Erdem Kucukates', Son_Temas: bugun, Durum: 'Aktif',
+      Notlar: 'Teknik resimler inceleniyor, 2 hafta icinde karar.', Aktiviteler: [
+        { tarih: bugun, metin: 'Firsat olusturuldu' },
+        { tarih: bugun, metin: 'Teklif gonderildi, muzakere asamasina gecildi' }
+      ]
+    },
+    {
+      id: 'F-002', Firsat_No: 'FIRSAT-2026-002', Firma_Adi: 'BMC Otomotiv',
+      Ilgili_Kisi: 'Ayse Demir', Konu: 'Aluminyum govde parcalari (120 adet)',
+      Tahmini_Deger: 340000, Asama: 'Teklif', Sicaklik: 'Ilik', Olasilik_Pct: 50,
+      Sorumlu: 'Erdem Kucukates', Son_Temas: bugun, Durum: 'Aktif',
+      Notlar: 'Numune istenecek.', Aktiviteler: [
+        { tarih: bugun, metin: 'Firsat olusturuldu' }
+      ]
+    },
+    {
+      id: 'F-003', Firsat_No: 'FIRSAT-2026-003', Firma_Adi: 'Roketsan',
+      Ilgili_Kisi: 'Ali Kara', Konu: 'Titanyum flansh 25 adet',
+      Tahmini_Deger: 92000, Asama: 'Nitelendirme', Sicaklik: 'Soguk', Olasilik_Pct: 25,
+      Sorumlu: 'Erdem Kucukates', Son_Temas: bugun, Durum: 'Aktif',
+      Notlar: 'Malzeme tedarikcisi belirsiz.', Aktiviteler: [
+        { tarih: bugun, metin: 'Firsat olusturuldu' }
+      ]
+    },
+    {
+      id: 'F-004', Firsat_No: 'FIRSAT-2026-004', Firma_Adi: 'ASELSAN',
+      Ilgili_Kisi: 'Fatma Ozturk', Konu: 'Elektronik kutu CNC isleme',
+      Tahmini_Deger: 75000, Asama: 'Temas', Sicaklik: 'Ilik', Olasilik_Pct: 10,
+      Sorumlu: 'Erdem Kucukates', Son_Temas: bugun, Durum: 'Aktif',
+      Notlar: 'Ilk gorusme yapildi.', Aktiviteler: [
+        { tarih: bugun, metin: 'Firsat olusturuldu' }
+      ]
+    },
+    {
+      id: 'F-005', Firsat_No: 'FIRSAT-2026-005', Firma_Adi: 'TEI (Tusas Motor)',
+      Ilgili_Kisi: 'Hasan Celik', Konu: 'Inconel turbin parcalari',
+      Tahmini_Deger: 520000, Asama: 'Kazanildi', Sicaklik: 'Sicak', Olasilik_Pct: 100,
+      Sorumlu: 'Erdem Kucukates', Son_Temas: bugun, Durum: 'Kazanildi',
+      Notlar: 'Siparis alindi, uretim planlamaya gonderildi.', Aktiviteler: [
+        { tarih: bugun, metin: 'Firsat olusturuldu' },
+        { tarih: bugun, metin: 'Kazanildi olarak isaretlendi' }
+      ]
+    }
+  ];
+}
+
+/* ── Format Yardimcilari ── */
+function paraBirligi(n) {
+  if (!n && n !== 0) return '0 TL';
+  return Number(n).toLocaleString('tr-TR') + ' TL';
+}
+
+function kisalt(str, max) {
+  if (!str) return '';
+  return str.length > max ? str.substring(0, max) + '...' : str;
+}
+
+function avatarHarfler(ad) {
+  if (!ad) return '?';
+  var parcalar = ad.split(' ');
+  if (parcalar.length >= 2) return (parcalar[0][0] + parcalar[parcalar.length - 1][0]).toUpperCase();
+  return ad.substring(0, 2).toUpperCase();
+}
+
+function asamaRenkBul(key) {
+  for (var i = 0; i < ASAMALAR.length; i++) {
+    if (ASAMALAR[i].key === key) return ASAMALAR[i];
+  }
+  return ASAMALAR[0];
+}
+
+function sicaklikClass(s) {
+  if (s === 'Sicak') return 'sicak-sicak';
+  if (s === 'Soguk') return 'sicak-soguk';
+  return 'sicak-ilik';
+}
+
+function progressRenk(asama) {
+  var a = asamaRenkBul(asama);
+  return a.renk;
+}
+
+function yeniId() {
+  var max = 0;
+  firsatlar.forEach(function(f) {
+    var n = parseInt(f.id.replace('F-', ''), 10);
+    if (n > max) max = n;
+  });
+  return 'F-' + String(max + 1).padStart(3, '0');
+}
+
+function yeniFirsatNo() {
+  var max = 0;
+  firsatlar.forEach(function(f) {
+    if (!f.Firsat_No) return;
+    var m = f.Firsat_No.match(/FIRSAT-\d{4}-(\d+)/);
+    if (m) { var n = parseInt(m[1], 10); if (n > max) max = n; }
+  });
+  return 'FIRSAT-2026-' + String(max + 1).padStart(3, '0');
+}
+
+/* ── Filtreli Veri ── */
+function filtreliFirsatlar() {
+  return firsatlar.filter(function(f) {
+    if (aktifFiltreSorumlu && f.Sorumlu !== aktifFiltreSorumlu) return false;
+    return true;
+  });
+}
+
+/* ── KPI Hesapla ── */
+function kpiHesapla() {
+  var liste = filtreliFirsatlar();
+  var toplam = liste.length;
+  var pipelineDeger = 0;
+  var kazanSayi = 0; var kazanTutar = 0;
+  var kayipSayi = 0; var kayipTutar = 0;
+
+  liste.forEach(function(f) {
+    if (f.Asama === 'Kazanildi') {
+      kazanSayi++;
+      kazanTutar += (f.Tahmini_Deger || 0);
+    } else if (f.Asama === 'Kayip') {
+      kayipSayi++;
+      kayipTutar += (f.Tahmini_Deger || 0);
+    } else {
+      pipelineDeger += (f.Tahmini_Deger || 0);
+    }
+  });
+
+  var kapanan = kazanSayi + kayipSayi;
+  var oran = kapanan > 0 ? Math.round((kazanSayi / kapanan) * 100) : 0;
+
+  document.getElementById('kpiToplam').textContent = toplam;
+  document.getElementById('kpiDeger').innerHTML = paraBirligi(pipelineDeger);
+  document.getElementById('kpiKazan').textContent = kazanSayi;
+  document.getElementById('kpiKazanTutar').innerHTML = paraBirligi(kazanTutar);
+  document.getElementById('kpiKayip').textContent = kayipSayi;
+  document.getElementById('kpiKayipTutar').innerHTML = paraBirligi(kayipTutar);
+  document.getElementById('kpiOran').textContent = oran + '%';
+}
+
+/* ── Ozet Bar ── */
+function ozetBarGuncelle() {
+  var liste = filtreliFirsatlar();
+  var bar = document.getElementById('ozetBar');
+  var html = '';
+
+  ASAMALAR.forEach(function(a) {
+    var sayi = 0; var tutar = 0;
+    liste.forEach(function(f) {
+      if (f.Asama === a.key) { sayi++; tutar += (f.Tahmini_Deger || 0); }
+    });
+    html += '<div class="ozet-adim" style="background:' + a.bg + ';border:1px solid ' + a.border + ';" onclick="ozetTikla(\'' + a.key + '\')">';
+    html += '<div class="ozet-label" style="color:' + a.renk + ';">' + a.icon + ' ' + a.key + '</div>';
+    html += '<div class="ozet-sayi" style="color:' + a.renk + ';">' + sayi + '</div>';
+    html += '<div class="ozet-tutar" style="color:' + a.renk + ';">' + paraBirligi(tutar) + '</div>';
+    html += '</div>';
+  });
+
+  bar.innerHTML = html;
+}
+
+function ozetTikla(asama) {
+  var el = document.getElementById('col-' + asama);
+  if (el) el.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+}
+
+/* ── Kanban Render ── */
+function kanbanRender() {
+  var liste = filtreliFirsatlar();
+  var wrap = document.getElementById('kanbanWrap');
+  var html = '';
+
+  ASAMALAR.forEach(function(a) {
+    var kartlar = liste.filter(function(f) { return f.Asama === a.key; });
+    html += '<div class="kanban-col" id="col-' + a.key + '">';
+    html += '<div class="kanban-head" style="background:' + a.bg + ';">';
+    html += '<span class="kh-icon">' + a.icon + '</span>';
+    html += '<span class="kh-label" style="color:' + a.renk + ';">' + a.key + '</span>';
+    html += '<span class="kh-count" style="color:' + a.renk + ';">' + kartlar.length + '</span>';
+    html += '</div>';
+    html += '<div class="kanban-body">';
+    kartlar.forEach(function(f) {
+      html += kartOlustur(f);
+    });
+    if (kartlar.length === 0) {
+      html += '<div style="text-align:center;padding:20px 8px;color:var(--metin4);font-size:11px;">Firsat yok</div>';
+    }
+    html += '</div></div>';
+  });
+
+  wrap.innerHTML = html;
+}
+
+function kartOlustur(f) {
+  var olasilik = OLASILIK[f.Asama] || 0;
+  var pRenk = progressRenk(f.Asama);
+  var html = '<div class="kart" onclick="firsatDetayAc(\'' + f.id + '\')">';
+  html += '<div class="kart-firma">' + (f.Firma_Adi || '') + '</div>';
+  html += '<div class="kart-konu">' + kisalt(f.Konu, 40) + '</div>';
+  html += '<div class="kart-alt">';
+  html += '<span class="kart-tutar">' + paraBirligi(f.Tahmini_Deger) + '</span>';
+  html += '<span class="kart-sicaklik ' + sicaklikClass(f.Sicaklik) + '">' + (f.Sicaklik || 'Ilik') + '</span>';
+  html += '</div>';
+  html += '<div class="kart-progress"><div class="kart-progress-bar" style="width:' + olasilik + '%;background:' + pRenk + ';"></div></div>';
+  html += '<div class="kart-footer">';
+  html += '<span class="kart-tarih">' + (f.Son_Temas || '') + '</span>';
+  html += '<span class="kart-avatar" title="' + (f.Sorumlu || '') + '">' + avatarHarfler(f.Sorumlu) + '</span>';
+  html += '</div>';
+  html += '</div>';
+  return html;
+}
+
+/* ── Firsat Detay Modal ── */
+function firsatDetayAc(id) {
+  var f = firsatlar.find(function(x) { return x.id === id; });
+  if (!f) return;
+
+  var a = asamaRenkBul(f.Asama);
+
+  var html = '';
+  html += '<div class="detay-row">';
+  html += '<div class="detay-field"><div class="df-label">Firsat No</div><div class="df-value">' + (f.Firsat_No || '-') + '</div></div>';
+  html += '<div class="detay-field"><div class="df-label">Asama</div><div class="df-value"><span class="asama-badge" style="background:' + a.bg + ';color:' + a.renk + ';border:1px solid ' + a.border + ';">' + a.icon + ' ' + f.Asama + '</span></div></div>';
+  html += '</div>';
+
+  html += '<div class="detay-row">';
+  html += '<div class="detay-field"><div class="df-label">Firma</div><div class="df-value" style="font-weight:700;">' + (f.Firma_Adi || '-') + '</div></div>';
+  html += '<div class="detay-field"><div class="df-label">Ilgili Kisi</div><div class="df-value">' + (f.Ilgili_Kisi || '-') + '</div></div>';
+  html += '</div>';
+
+  html += '<div class="detay-field"><div class="df-label">Konu</div><div class="df-value">' + (f.Konu || '-') + '</div></div>';
+
+  html += '<div class="detay-row">';
+  html += '<div class="detay-field"><div class="df-label">Tahmini Deger</div><div class="df-value" style="font-weight:700;color:var(--mavi-koyu);">' + paraBirligi(f.Tahmini_Deger) + '</div></div>';
+  html += '<div class="detay-field"><div class="df-label">Sicaklik</div><div class="df-value"><span class="kart-sicaklik ' + sicaklikClass(f.Sicaklik) + '" style="font-size:11px;">' + (f.Sicaklik || '-') + '</span></div></div>';
+  html += '</div>';
+
+  html += '<div class="detay-row">';
+  html += '<div class="detay-field"><div class="df-label">Olasilik</div><div class="df-value">' + (OLASILIK[f.Asama] || 0) + '%</div></div>';
+  html += '<div class="detay-field"><div class="df-label">Sorumlu</div><div class="df-value">' + (f.Sorumlu || '-') + '</div></div>';
+  html += '</div>';
+
+  html += '<div class="detay-row">';
+  html += '<div class="detay-field"><div class="df-label">Son Temas</div><div class="df-value">' + (f.Son_Temas || '-') + '</div></div>';
+  html += '<div class="detay-field"><div class="df-label">Durum</div><div class="df-value">' + (f.Durum || 'Aktif') + '</div></div>';
+  html += '</div>';
+
+  if (f.Notlar) {
+    html += '<div class="detay-field"><div class="df-label">Notlar</div><div class="df-value" style="font-size:12px;color:var(--metin3);">' + f.Notlar + '</div></div>';
+  }
+
+  // Aktivite log
+  if (f.Aktiviteler && f.Aktiviteler.length > 0) {
+    html += '<div class="aktivite-log"><h4>Aktivite Gecmisi</h4>';
+    f.Aktiviteler.slice().reverse().forEach(function(ak) {
+      html += '<div class="log-item"><span class="log-tarih">' + ak.tarih + '</span><span class="log-metin">' + ak.metin + '</span></div>';
+    });
+    html += '</div>';
+  }
+
+  document.getElementById('detayBody').innerHTML = html;
+  document.getElementById('detayBaslik').textContent = (f.Firma_Adi || 'Firsat') + ' — Detay';
+
+  // Footer butonlari
+  var footer = '';
+  if (f.Asama !== 'Kazanildi' && f.Asama !== 'Kayip') {
+    footer += '<button class="btn btn-yesil" onclick="firsatSonrakiAsama(\'' + f.id + '\')">Sonraki Asama &#8594;</button>';
+    footer += '<button class="btn btn-kirmizi" onclick="firsatKaybet(\'' + f.id + '\')">Kayip Isaretle</button>';
+    if (f.Asama === 'Teklif' || f.Asama === 'Muzakere') {
+      footer += '<button class="btn btn-sari" onclick="teklifOlusturYonlendir(\'' + f.id + '\')">Teklif Olustur</button>';
+    }
+  }
+  footer += '<button class="btn btn-ikincil" onclick="firsatDuzenleAc(\'' + f.id + '\')">Duzenle</button>';
+  footer += '<button class="btn btn-ikincil" onclick="modalKapat(\'modalDetay\')">Kapat</button>';
+  document.getElementById('detayFooter').innerHTML = footer;
+
+  document.getElementById('modalDetay').classList.add('aktif');
+}
+
+/* ── Sonraki Asama ── */
+function firsatSonrakiAsama(id) {
+  var f = firsatlar.find(function(x) { return x.id === id; });
+  if (!f) return;
+
+  var sira = ASAMALAR.map(function(a) { return a.key; });
+  var idx = sira.indexOf(f.Asama);
+  if (idx < 0 || idx >= sira.length - 2) return; // Kazanildi/Kayip'a gecme
+
+  var eskiAsama = f.Asama;
+  f.Asama = sira[idx + 1];
+  f.Olasilik_Pct = OLASILIK[f.Asama];
+  f.Son_Temas = new Date().toISOString().slice(0, 10);
+  if (!f.Aktiviteler) f.Aktiviteler = [];
+  f.Aktiviteler.push({ tarih: f.Son_Temas, metin: eskiAsama + ' → ' + f.Asama + ' asamasina gecildi' });
+
+  if (f.Asama === 'Kazanildi') f.Durum = 'Kazanildi';
+  veriKaydet();
+  sayfaYenile();
+  modalKapat('modalDetay');
+  logIslem('Guncellendi', 'Pipeline', f.id, f.Firsat_No, eskiAsama, f.Asama, 'Asama degisikligi');
+}
+
+/* ── Kayip Isaretle ── */
+function firsatKaybet(id) {
+  var f = firsatlar.find(function(x) { return x.id === id; });
+  if (!f) return;
+  if (!confirm(f.Firma_Adi + ' firsati kayip olarak isaretlensin mi?')) return;
+
+  var eskiAsama = f.Asama;
+  f.Asama = 'Kayip';
+  f.Olasilik_Pct = 0;
+  f.Durum = 'Kayip';
+  f.Son_Temas = new Date().toISOString().slice(0, 10);
+  if (!f.Aktiviteler) f.Aktiviteler = [];
+  f.Aktiviteler.push({ tarih: f.Son_Temas, metin: 'Kayip olarak isaretlendi (onceki: ' + eskiAsama + ')' });
+
+  veriKaydet();
+  sayfaYenile();
+  modalKapat('modalDetay');
+  logIslem('Guncellendi', 'Pipeline', f.id, f.Firsat_No, eskiAsama, 'Kayip', 'Firsat kaybedildi');
+}
+
+/* ── Teklif Olustur Yonlendir ── */
+function teklifOlusturYonlendir(id) {
+  var f = firsatlar.find(function(x) { return x.id === id; });
+  if (!f) return;
+  // Teklif sayfasina yonlendir, firma bilgisi ile
+  window.location.href = 'ersan_teklif.html?firma=' + encodeURIComponent(f.Firma_Adi || '');
+}
+
+/* ── Yeni Firsat Modal ── */
+function yeniFirsatAc() {
+  duzenleId = null;
+  document.getElementById('modalYeniBaslik').textContent = 'Yeni Firsat';
+  document.getElementById('frmFirma').value = '';
+  document.getElementById('frmKisi').value = '';
+  document.getElementById('frmKonu').value = '';
+  document.getElementById('frmDeger').value = '';
+  document.getElementById('frmAsama').value = 'Temas';
+  document.getElementById('frmSicaklik').value = 'Ilik';
+  document.getElementById('frmSorumlu').value = 'Erdem Kucukates';
+  document.getElementById('frmNotlar').value = '';
+  document.getElementById('modalYeni').classList.add('aktif');
+}
+
+/* ── Duzenle ── */
+function firsatDuzenleAc(id) {
+  var f = firsatlar.find(function(x) { return x.id === id; });
+  if (!f) return;
+  modalKapat('modalDetay');
+  duzenleId = id;
+  document.getElementById('modalYeniBaslik').textContent = 'Firsati Duzenle';
+  document.getElementById('frmFirma').value = f.Firma_Adi || '';
+  document.getElementById('frmKisi').value = f.Ilgili_Kisi || '';
+  document.getElementById('frmKonu').value = f.Konu || '';
+  document.getElementById('frmDeger').value = f.Tahmini_Deger || '';
+  document.getElementById('frmAsama').value = f.Asama || 'Temas';
+  document.getElementById('frmSicaklik').value = f.Sicaklik || 'Ilik';
+  document.getElementById('frmSorumlu').value = f.Sorumlu || '';
+  document.getElementById('frmNotlar').value = f.Notlar || '';
+  document.getElementById('modalYeni').classList.add('aktif');
+}
+
+/* ── Kaydet (Yeni/Duzenle) ── */
+function firsatKaydet() {
+  var firma = document.getElementById('frmFirma').value.trim();
+  var konu = document.getElementById('frmKonu').value.trim();
+  if (!firma) { alert('Firma adi zorunlu!'); return; }
+  if (!konu) { alert('Konu zorunlu!'); return; }
+
+  var bugun = new Date().toISOString().slice(0, 10);
+
+  if (duzenleId) {
+    // Guncelle
+    var f = firsatlar.find(function(x) { return x.id === duzenleId; });
+    if (!f) return;
+    f.Firma_Adi = firma;
+    f.Ilgili_Kisi = document.getElementById('frmKisi').value.trim();
+    f.Konu = konu;
+    f.Tahmini_Deger = parseFloat(document.getElementById('frmDeger').value) || 0;
+    f.Asama = document.getElementById('frmAsama').value;
+    f.Sicaklik = document.getElementById('frmSicaklik').value;
+    f.Olasilik_Pct = OLASILIK[f.Asama] || 0;
+    f.Sorumlu = document.getElementById('frmSorumlu').value.trim();
+    f.Notlar = document.getElementById('frmNotlar').value.trim();
+    f.Son_Temas = bugun;
+    if (!f.Aktiviteler) f.Aktiviteler = [];
+    f.Aktiviteler.push({ tarih: bugun, metin: 'Firsat duzenlendi' });
+    logIslem('Guncellendi', 'Pipeline', f.id, f.Firsat_No, null, f, 'Firsat duzenlendi');
+  } else {
+    // Yeni
+    var yeni = {
+      id: yeniId(),
+      Firsat_No: yeniFirsatNo(),
+      Firma_Adi: firma,
+      Ilgili_Kisi: document.getElementById('frmKisi').value.trim(),
+      Konu: konu,
+      Tahmini_Deger: parseFloat(document.getElementById('frmDeger').value) || 0,
+      Asama: document.getElementById('frmAsama').value,
+      Sicaklik: document.getElementById('frmSicaklik').value,
+      Olasilik_Pct: OLASILIK[document.getElementById('frmAsama').value] || 0,
+      Sorumlu: document.getElementById('frmSorumlu').value.trim(),
+      Son_Temas: bugun,
+      Durum: 'Aktif',
+      Notlar: document.getElementById('frmNotlar').value.trim(),
+      Aktiviteler: [{ tarih: bugun, metin: 'Firsat olusturuldu' }]
+    };
+    firsatlar.push(yeni);
+    logIslem('Olusturuldu', 'Pipeline', yeni.id, yeni.Firsat_No, null, yeni, 'Yeni firsat');
+  }
+
+  veriKaydet();
+  modalKapat('modalYeni');
+  duzenleId = null;
+  sayfaYenile();
+}
+
+/* ── Filtre ── */
+function filtreUygula() {
+  aktifFiltreSorumlu = document.getElementById('filtSorumlu').value;
+  sayfaYenile();
+}
+
+function sorumlulariYukle() {
+  var set = {};
+  firsatlar.forEach(function(f) { if (f.Sorumlu) set[f.Sorumlu] = true; });
+  var select = document.getElementById('filtSorumlu');
+  var mevcut = select.value;
+  select.innerHTML = '<option value="">Sorumlu: Hepsi</option>';
+  Object.keys(set).sort().forEach(function(s) {
+    select.innerHTML += '<option value="' + s + '">' + s + '</option>';
+  });
+  select.value = mevcut;
+}
+
+/* ── Ozet Modal ── */
+function ozetModalAc() {
+  var liste = filtreliFirsatlar();
+  var html = '<table style="width:100%;border-collapse:collapse;font-size:13px;">';
+  html += '<tr style="border-bottom:2px solid var(--border);"><th style="text-align:left;padding:6px;">Asama</th><th style="text-align:center;padding:6px;">Sayi</th><th style="text-align:right;padding:6px;">Tutar</th><th style="text-align:right;padding:6px;">Agirlikli</th></tr>';
+
+  var toplamAgirlikli = 0;
+  ASAMALAR.forEach(function(a) {
+    var sayi = 0; var tutar = 0;
+    liste.forEach(function(f) {
+      if (f.Asama === a.key) { sayi++; tutar += (f.Tahmini_Deger || 0); }
+    });
+    var agirlikli = tutar * (OLASILIK[a.key] / 100);
+    toplamAgirlikli += agirlikli;
+    html += '<tr style="border-bottom:1px solid #f1f5f9;">';
+    html += '<td style="padding:6px;"><span style="color:' + a.renk + ';font-weight:600;">' + a.icon + ' ' + a.key + '</span></td>';
+    html += '<td style="padding:6px;text-align:center;">' + sayi + '</td>';
+    html += '<td style="padding:6px;text-align:right;">' + paraBirligi(tutar) + '</td>';
+    html += '<td style="padding:6px;text-align:right;">' + paraBirligi(Math.round(agirlikli)) + '</td>';
+    html += '</tr>';
+  });
+
+  html += '<tr style="border-top:2px solid var(--border);font-weight:700;">';
+  html += '<td style="padding:8px 6px;" colspan="3">Agirlikli Pipeline Degeri</td>';
+  html += '<td style="padding:8px 6px;text-align:right;color:var(--mavi-koyu);">' + paraBirligi(Math.round(toplamAgirlikli)) + '</td>';
+  html += '</tr></table>';
+
+  document.getElementById('ozetBody').innerHTML = html;
+  document.getElementById('modalOzet').classList.add('aktif');
+}
+
+/* ── Modal Kapat ── */
+function modalKapat(id) {
+  document.getElementById(id).classList.remove('aktif');
+}
+
+/* ── Sayfa Yenile ── */
+function sayfaYenile() {
+  sorumlulariYukle();
+  kpiHesapla();
+  ozetBarGuncelle();
+  kanbanRender();
+}
+
+/* ── Baslat ── */
+document.addEventListener('DOMContentLoaded', function() {
+  veriYukle();
+  sayfaYenile();
+});
+
+/* ── Klavye Kisayollari ── */
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    if (document.getElementById('modalDetay').classList.contains('aktif')) modalKapat('modalDetay');
+    else if (document.getElementById('modalYeni').classList.contains('aktif')) modalKapat('modalYeni');
+    else if (document.getElementById('modalOzet').classList.contains('aktif')) modalKapat('modalOzet');
+  }
+  if (e.key === 'n' && !e.ctrlKey && !e.metaKey && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA' && document.activeElement.tagName !== 'SELECT') {
+    yeniFirsatAc();
+  }
+});
+</script>
 </body>
 </html>

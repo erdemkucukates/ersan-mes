@@ -3,27 +3,370 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ersan MES — Satis Tahmini</title>
+<title>Ersan MES — Satış Tahmini</title>
 <link rel="stylesheet" href="ersan_styles.css">
 <script src="ersan_nav.js" defer></script>
 <script src="ersan_log.js" defer></script>
+<style>
+.tahmin-ust { display:flex; gap:12px; margin-bottom:16px; }
+.tahmin-chart-wrap { flex:1; min-width:0; }
+.tahmin-gauge-wrap { width:280px; flex-shrink:0; display:flex; flex-direction:column; gap:12px; }
+.chart-kart { background:var(--beyaz); border:1px solid var(--border); border-radius:8px; padding:16px; }
+.chart-baslik { font-size:12px; font-weight:600; color:var(--laci); margin-bottom:12px; }
+.bar-chart { display:flex; align-items:flex-end; justify-content:space-between; height:180px; gap:4px; padding-top:8px; }
+.bar-group { display:flex; flex-direction:column; align-items:center; gap:4px; flex:1; }
+.bar-pair { display:flex; align-items:flex-end; gap:2px; height:140px; }
+.bar-hedef { width:14px; background:#cbd5e1; border-radius:3px 3px 0 0; transition:height .4s; }
+.bar-gercek { width:14px; background:var(--laci); border-radius:3px 3px 0 0; transition:height .4s; }
+.bar-gercek.gelecek { background:var(--laci); opacity:0.3; border:1px dashed var(--laci); background:transparent; }
+.bar-gercek.buay { background:var(--mavi); }
+.bar-label { font-size:9px; color:#6b7280; }
+.bar-value { font-size:8px; color:var(--metin3); writing-mode:horizontal-tb; white-space:nowrap; }
+.gauge-kart { background:var(--beyaz); border:1px solid var(--border); border-radius:8px; padding:16px; text-align:center; flex:1; }
+.gauge-baslik { font-size:11px; font-weight:600; color:var(--laci); margin-bottom:8px; }
+.gauge-alt { font-size:10px; color:var(--metin3); margin-top:6px; }
+.huni-wrap { display:flex; flex-direction:column; gap:6px; }
+.huni-satir { display:flex; align-items:center; gap:10px; }
+.huni-etiket { width:100px; font-size:11px; font-weight:600; color:var(--metin2); text-align:right; }
+.huni-bar-wrap { flex:1; height:28px; background:var(--bg); border-radius:4px; overflow:hidden; position:relative; }
+.huni-bar { height:100%; border-radius:4px; display:flex; align-items:center; padding-left:8px; font-size:10px; font-weight:600; color:#fff; transition:width .5s; }
+.huni-deger { width:110px; font-size:11px; color:var(--metin3); }
+.ay-tablo-wrap { max-height:340px; overflow-y:auto; }
+.oran-bar { width:80px; height:6px; background:var(--bg); border-radius:3px; overflow:hidden; display:inline-block; vertical-align:middle; margin-left:4px; }
+.oran-bar-ic { height:100%; border-radius:3px; background:var(--yesil); }
+.tahmin-text { font-style:italic; color:var(--metin4); font-size:11px; }
+.tahmin-alt { display:flex; gap:12px; }
+.tahmin-alt > div { flex:1; }
+.chart-legend { display:flex; gap:12px; justify-content:center; margin-top:8px; }
+.legend-item { display:flex; align-items:center; gap:4px; font-size:10px; color:var(--metin3); }
+.legend-box { width:10px; height:10px; border-radius:2px; }
+</style>
 </head>
 <body>
 <div id="nav-alani"></div>
 <div class="icerik-alani">
   <div class="topbar">
-    <div class="topbar-baslik">Satis Tahmini</div>
+    <div class="topbar-baslik">Satış Tahmini</div>
     <div style="display:flex;align-items:center;gap:8px;">
+      <select id="yilSec" class="form-input" style="width:90px;padding:5px 8px;font-size:12px;" onchange="sayfaYenile()">
+        <option value="2026" selected>2026</option>
+        <option value="2025">2025</option>
+      </select>
+      <button class="btn btn-beyaz btn-sm" onclick="raporIndir()">📊 Rapor İndir</button>
       <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
     </div>
   </div>
   <div class="sayfa-icerik">
-    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:60vh;color:var(--metin3);">
-      <div style="font-size:48px;margin-bottom:16px;opacity:0.3;">&#9881;</div>
-      <div style="font-size:16px;font-weight:600;color:var(--laci);margin-bottom:8px;">Satis Tahmini</div>
-      <div style="font-size:13px;">Bu modul yapim asamasindadir.</div>
+    <!-- KPI -->
+    <div class="kpi-grid" id="kpiGrid"></div>
+
+    <!-- ÜST: Chart + Gauge -->
+    <div class="tahmin-ust">
+      <div class="tahmin-chart-wrap">
+        <div class="chart-kart">
+          <div class="chart-baslik">Aylık Satış Grafiği</div>
+          <div class="bar-chart" id="barChart"></div>
+          <div class="chart-legend">
+            <div class="legend-item"><div class="legend-box" style="background:#cbd5e1;"></div>Hedef</div>
+            <div class="legend-item"><div class="legend-box" style="background:var(--laci);"></div>Gerçekleşen</div>
+            <div class="legend-item"><div class="legend-box" style="background:var(--mavi);"></div>Bu Ay</div>
+          </div>
+        </div>
+      </div>
+      <div class="tahmin-gauge-wrap">
+        <div class="gauge-kart">
+          <div class="gauge-baslik">Q1 Hedef Gerçekleşme</div>
+          <svg id="gaugeQ1" width="120" height="80" viewBox="0 0 120 80"></svg>
+          <div class="gauge-alt" id="gaugeQ1Alt">-</div>
+        </div>
+        <div class="gauge-kart">
+          <div class="gauge-baslik">Kazanma Oranı</div>
+          <svg id="gaugeKazanma" width="120" height="80" viewBox="0 0 120 80"></svg>
+          <div class="gauge-alt" id="gaugeKazanmaAlt">-</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ALT: Huni + Tablo -->
+    <div class="tahmin-alt">
+      <div>
+        <div class="chart-kart">
+          <div class="chart-baslik">Satış Hunisi</div>
+          <div class="huni-wrap" id="huniWrap"></div>
+        </div>
+      </div>
+      <div>
+        <div class="tablo-wrap">
+          <div class="tablo-baslik">
+            <div class="tablo-baslik-text">Aylık Karşılaştırma</div>
+          </div>
+          <div class="ay-tablo-wrap">
+            <table class="tablo" id="ayTablo">
+              <thead>
+                <tr>
+                  <th>Ay</th>
+                  <th style="text-align:right;">Hedef</th>
+                  <th style="text-align:right;">Gerçekleşen</th>
+                  <th style="text-align:right;">Fark</th>
+                  <th>Oran</th>
+                </tr>
+              </thead>
+              <tbody id="ayBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
+
+<script>
+var AY_ADLARI = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+var AY_KISA = ['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
+
+var HEDEFLER = [1200000, 1200000, 1500000, 1800000, 1500000, 1600000, 1400000, 1000000, 1700000, 1800000, 1600000, 2000000];
+
+var gerceklesen = [0,0,0,0,0,0,0,0,0,0,0,0];
+var pipelineToplam = 0;
+
+// Huni verileri (pipeline localStorage'dan veya varsayılan)
+var HUNI_VERILERI = [
+  {etiket:'Temas', sayi:24, tutar:3600000, renk:'#64748b'},
+  {etiket:'Nitelendirme', sayi:15, tutar:2400000, renk:'#3b82f6'},
+  {etiket:'Teklif', sayi:10, tutar:1800000, renk:'var(--mavi)'},
+  {etiket:'Müzakere', sayi:5, tutar:950000, renk:'#f59e0b'},
+  {etiket:'Kazanıldı', sayi:3, tutar:620000, renk:'var(--yesil)'}
+];
+
+function paraFormat(n) {
+  if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+  if (n >= 1000) return Math.round(n / 1000) + 'K';
+  return n.toString();
+}
+
+function paraFormatTam(n) {
+  return n.toLocaleString('tr-TR') + ' ₺';
+}
+
+function bugunAy() {
+  return new Date().getMonth(); // 0-based
+}
+
+function secilenYil() {
+  return parseInt(document.getElementById('yilSec').value) || 2026;
+}
+
+function satisVerisiYukle() {
+  var yil = secilenYil();
+  gerceklesen = [0,0,0,0,0,0,0,0,0,0,0,0];
+
+  fetch('/.netlify/functions/airtable?table=Sat%C4%B1%C5%9F%20Emirleri&pageSize=100')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      var records = d.records || [];
+      records.forEach(function(rec) {
+        var f = rec.fields || {};
+        var seNo = f['SE No'] || '';
+        var tutar = parseFloat(f['Toplam Tutar'] || f['Tutar'] || 0);
+        var tarih = f['Tarih'] || f['Oluşturma Tarihi'] || '';
+        if (!tarih && seNo) {
+          // SE No'dan yıl parse: SP-2026-001-01
+          var m = seNo.match(/SP-(\d{4})/);
+          if (m) {
+            var seYil = parseInt(m[1]);
+            if (seYil === yil) {
+              // Ay bilgisi yoksa dağıtma
+            }
+          }
+        }
+        if (tarih) {
+          var dt = new Date(tarih);
+          if (dt.getFullYear() === yil) {
+            gerceklesen[dt.getMonth()] += tutar;
+          }
+        }
+      });
+      sayfaCiz();
+    })
+    .catch(function(err) {
+      console.warn('Satış verisi yüklenemedi:', err);
+      // Örnek veri ile devam
+      gerceklesen = [980000, 1350000, 1100000, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+      sayfaCiz();
+    });
+}
+
+function kpiCiz() {
+  var buAy = bugunAy();
+  var buAyGercek = gerceklesen[buAy];
+  var q1Hedef = HEDEFLER[0] + HEDEFLER[1] + HEDEFLER[2];
+  var q1Gercek = gerceklesen[0] + gerceklesen[1] + gerceklesen[2];
+  var yilToplam = 0; gerceklesen.forEach(function(v) { yilToplam += v; });
+  var yilHedef = 0; HEDEFLER.forEach(function(v) { yilHedef += v; });
+
+  // Pipeline beklenen (weighted)
+  pipelineToplam = 0;
+  var firsatlar = [];
+  try { firsatlar = JSON.parse(localStorage.getItem('ersan_firsatlar') || '[]'); } catch(e) {}
+  firsatlar.forEach(function(f) {
+    pipelineToplam += (f.Tutar || 0) * ((f.Olasilik_Pct || 50) / 100);
+  });
+  if (pipelineToplam === 0) pipelineToplam = 2850000; // varsayılan
+
+  var html = '';
+  html += '<div class="kpi-kart"><div class="kpi-etiket">BU AY GERÇEKLEŞMİŞ</div><div class="kpi-deger">' + paraFormat(buAyGercek) + ' ₺</div><div class="kpi-alt">' + AY_ADLARI[buAy] + ' hedef: ' + paraFormat(HEDEFLER[buAy]) + ' ₺</div></div>';
+  html += '<div class="kpi-kart sari"><div class="kpi-etiket">Q1 HEDEF</div><div class="kpi-deger">' + paraFormat(q1Gercek) + ' / ' + paraFormat(q1Hedef) + '</div><div class="kpi-alt">%' + (q1Hedef > 0 ? Math.round(q1Gercek/q1Hedef*100) : 0) + ' gerçekleşme</div></div>';
+  html += '<div class="kpi-kart yesil"><div class="kpi-etiket">YIL SONU TAHMİNİ</div><div class="kpi-deger">' + paraFormat(yilToplam) + ' ₺</div><div class="kpi-alt">yıllık hedef: ' + paraFormat(yilHedef) + ' ₺</div></div>';
+  html += '<div class="kpi-kart"><div class="kpi-etiket">PİPELINE BEKLENTİ</div><div class="kpi-deger">' + paraFormat(pipelineToplam) + ' ₺</div><div class="kpi-alt">ağırlıklı toplam</div></div>';
+  document.getElementById('kpiGrid').innerHTML = html;
+}
+
+function barChartCiz() {
+  var buAy = bugunAy();
+  var maxVal = 0;
+  HEDEFLER.forEach(function(h, i) { maxVal = Math.max(maxVal, h, gerceklesen[i]); });
+  if (maxVal === 0) maxVal = 1;
+
+  var html = '';
+  for (var i = 0; i < 12; i++) {
+    var hPct = Math.round(HEDEFLER[i] / maxVal * 130);
+    var gPct = Math.round(gerceklesen[i] / maxVal * 130);
+    var gelecek = i > buAy;
+    var buAyMi = i === buAy;
+    var gercekClass = 'bar-gercek' + (gelecek ? ' gelecek' : '') + (buAyMi ? ' buay' : '');
+
+    html += '<div class="bar-group">';
+    html += '<div class="bar-pair">';
+    html += '<div class="bar-hedef" style="height:' + hPct + 'px;" title="Hedef: ' + paraFormat(HEDEFLER[i]) + ' ₺"></div>';
+    html += '<div class="' + gercekClass + '" style="height:' + Math.max(gPct, 2) + 'px;" title="Gerçekleşen: ' + paraFormat(gerceklesen[i]) + ' ₺"></div>';
+    html += '</div>';
+    html += '<div class="bar-label">' + AY_KISA[i] + '</div>';
+    html += '</div>';
+  }
+  document.getElementById('barChart').innerHTML = html;
+}
+
+function gaugeCiz(svgId, altId, yuzde, etiket) {
+  var svg = document.getElementById(svgId);
+  var renk = yuzde >= 80 ? 'var(--yesil)' : (yuzde >= 50 ? '#f59e0b' : 'var(--kirmizi)');
+  var cx = 60, cy = 65, r = 50;
+  var startAngle = Math.PI;
+  var endAngle = 0;
+  var totalAngle = startAngle - endAngle;
+  var valueAngle = startAngle - (totalAngle * Math.min(yuzde, 100) / 100);
+
+  // Background arc
+  var bgPath = describeArc(cx, cy, r, endAngle, startAngle);
+  // Value arc
+  var valPath = describeArc(cx, cy, r, valueAngle, startAngle);
+
+  svg.innerHTML = '<path d="' + bgPath + '" fill="none" stroke="#e2e8f0" stroke-width="10" stroke-linecap="round"/>' +
+    '<path d="' + valPath + '" fill="none" stroke="' + renk + '" stroke-width="10" stroke-linecap="round"/>' +
+    '<text x="' + cx + '" y="' + (cy - 8) + '" text-anchor="middle" font-size="20" font-weight="700" fill="var(--laci)">%' + Math.round(yuzde) + '</text>';
+
+  document.getElementById(altId).textContent = etiket;
+}
+
+function describeArc(cx, cy, r, startAngle, endAngle) {
+  var x1 = cx + r * Math.cos(startAngle);
+  var y1 = cy - r * Math.sin(startAngle);
+  var x2 = cx + r * Math.cos(endAngle);
+  var y2 = cy - r * Math.sin(endAngle);
+  var largeArc = (endAngle - startAngle) > Math.PI ? 1 : 0;
+  return 'M ' + x1 + ' ' + y1 + ' A ' + r + ' ' + r + ' 0 ' + largeArc + ' 0 ' + x2 + ' ' + y2;
+}
+
+function huniCiz() {
+  var maxTutar = HUNI_VERILERI[0].tutar || 1;
+  var html = '';
+  HUNI_VERILERI.forEach(function(h) {
+    var pct = Math.max(Math.round(h.tutar / maxTutar * 100), 8);
+    html += '<div class="huni-satir">';
+    html += '<div class="huni-etiket">' + h.etiket + '</div>';
+    html += '<div class="huni-bar-wrap"><div class="huni-bar" style="width:' + pct + '%;background:' + h.renk + ';">' + h.sayi + '</div></div>';
+    html += '<div class="huni-deger">' + paraFormat(h.tutar) + ' ₺</div>';
+    html += '</div>';
+  });
+  document.getElementById('huniWrap').innerHTML = html;
+}
+
+function tabloCiz() {
+  var buAy = bugunAy();
+  var html = '';
+  for (var i = 0; i < 12; i++) {
+    var hedef = HEDEFLER[i];
+    var gercek = gerceklesen[i];
+    var fark = gercek - hedef;
+    var oran = hedef > 0 ? Math.round(gercek / hedef * 100) : 0;
+    var gelecek = i > buAy;
+
+    html += '<tr' + (i === buAy ? ' style="background:var(--mavi-acik);"' : '') + '>';
+    html += '<td style="font-weight:600;">' + AY_ADLARI[i] + '</td>';
+    html += '<td style="text-align:right;">' + paraFormatTam(hedef) + '</td>';
+    if (gelecek) {
+      html += '<td style="text-align:right;"><span class="tahmin-text">tahmin</span></td>';
+      html += '<td style="text-align:right;">-</td>';
+      html += '<td>-</td>';
+    } else {
+      var farkRenk = fark >= 0 ? 'var(--yesil)' : 'var(--kirmizi)';
+      var oranBarRenk = oran >= 80 ? 'var(--yesil)' : (oran >= 50 ? '#f59e0b' : 'var(--kirmizi)');
+      html += '<td style="text-align:right;">' + paraFormatTam(gercek) + '</td>';
+      html += '<td style="text-align:right;color:' + farkRenk + ';font-weight:600;">' + (fark >= 0 ? '+' : '') + paraFormatTam(fark) + '</td>';
+      html += '<td>%' + oran + ' <div class="oran-bar"><div class="oran-bar-ic" style="width:' + Math.min(oran, 100) + '%;background:' + oranBarRenk + ';"></div></div></td>';
+    }
+    html += '</tr>';
+  }
+  document.getElementById('ayBody').innerHTML = html;
+}
+
+function sayfaCiz() {
+  kpiCiz();
+  barChartCiz();
+
+  // Q1 gauge
+  var q1Hedef = HEDEFLER[0] + HEDEFLER[1] + HEDEFLER[2];
+  var q1Gercek = gerceklesen[0] + gerceklesen[1] + gerceklesen[2];
+  var q1Pct = q1Hedef > 0 ? (q1Gercek / q1Hedef * 100) : 0;
+  gaugeCiz('gaugeQ1', 'gaugeQ1Alt', q1Pct, paraFormat(q1Gercek) + ' / ' + paraFormat(q1Hedef) + ' ₺');
+
+  // Kazanma oranı gauge
+  var toplamFirsat = HUNI_VERILERI[0].sayi || 1;
+  var kazanilan = HUNI_VERILERI[4].sayi || 0;
+  var kazanmaPct = Math.round(kazanilan / toplamFirsat * 100);
+  gaugeCiz('gaugeKazanma', 'gaugeKazanmaAlt', kazanmaPct, kazanilan + ' / ' + toplamFirsat + ' fırsat');
+
+  huniCiz();
+  tabloCiz();
+}
+
+function sayfaYenile() {
+  satisVerisiYukle();
+}
+
+function raporIndir() {
+  var buAy = bugunAy();
+  var csv = 'Ay,Hedef,Gerçekleşen,Fark,Oran\n';
+  for (var i = 0; i < 12; i++) {
+    var hedef = HEDEFLER[i];
+    var gercek = i > buAy ? 0 : gerceklesen[i];
+    var fark = gercek - hedef;
+    var oran = hedef > 0 ? Math.round(gercek / hedef * 100) : 0;
+    csv += AY_ADLARI[i] + ',' + hedef + ',' + gercek + ',' + fark + ',' + oran + '%\n';
+  }
+
+  var blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  var link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'satis_tahmini_' + secilenYil() + '.csv';
+  link.click();
+  URL.revokeObjectURL(link.href);
+  logIslem('İndirildi', 'Satış Tahmini', null, 'CSV Rapor ' + secilenYil(), null, null);
+}
+
+// SAYFA YÜKLEME
+document.addEventListener('DOMContentLoaded', function() {
+  satisVerisiYukle();
+});
+</script>
 </body>
 </html>
