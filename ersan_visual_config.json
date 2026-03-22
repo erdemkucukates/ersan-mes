@@ -133,6 +133,24 @@
       "canliUrl": "/ersan_palet.html",
       "viewport": { "width": 1280, "height": 900 },
       "bekle": ".trv-grid"
+    },
+    {
+      "id": "is_emirleri",
+      "canliUrl": "/ersan_isemirleri.html",
+      "viewport": { "width": 1280, "height": 900 },
+      "bekle": "#detail-content"
+    },
+    {
+      "id": "uretim_planlama",
+      "canliUrl": "/ersan_planlama.html",
+      "viewport": { "width": 1280, "height": 900 },
+      "bekle": "#se-list"
+    },
+    {
+      "id": "atolye",
+      "canliUrl": "/ersan_atolye.html",
+      "viewport": { "width": 1280, "height": 900 },
+      "bekle": ".kpi-row"
     }
   ]
 }

@@ -7,17 +7,109 @@
 <link rel="stylesheet" href="ersan_styles.css">
 <script src="ersan_nav.js" defer></script>
 <script src="ersan_log.js" defer></script>
+<style>
+/* ── KPI ROW ── */
+.kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:12px}
+.kpi{background:#fff;border:1px solid #e5e7eb;border-radius:7px;padding:10px 14px;border-top:3px solid;transition:box-shadow .15s}
+.kpi:hover{box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.kpi-val{font-size:22px;font-weight:700;margin:2px 0}
+.kpi-lbl{font-size:11px;color:#6b7280;font-weight:500}
+
+/* ── AS9100 STRIP ── */
+.as-strip{display:flex;gap:16px;align-items:center;background:#fff;border:1px solid #e5e7eb;border-radius:7px;padding:8px 14px;margin-bottom:12px;font-size:12px;font-weight:500}
+.as-ok{color:#059669}.as-warn{color:#ef4444}.as-info{color:#8b5cf6}
+
+/* ── GANTT ── */
+.gantt{background:#fff;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;margin-bottom:12px}
+.gantt-toolbar{display:flex;align-items:center;justify-content:space-between;padding:8px 14px;border-bottom:1px solid #e5e7eb;background:#f9fafb}
+.gantt-toolbar-title{font-size:13px;font-weight:600;color:#1f2937}
+.gantt-head{display:grid;grid-template-columns:180px 1fr;border-bottom:1px solid #e5e7eb;background:#f9fafb;font-size:10px;font-weight:600;color:#6b7280}
+.gantt-head-label{padding:6px 10px;border-right:1px solid #e5e7eb}
+.gantt-head-dates{display:flex;position:relative}
+.gantt-head-dates span{flex:1;text-align:center;padding:6px 0;border-right:1px solid #f3f4f6}
+.gantt-scroll{max-height:260px;overflow-y:auto}
+.gantt-row{display:grid;grid-template-columns:180px 1fr;border-bottom:1px solid #f3f4f6;min-height:28px;align-items:center}
+.gantt-row:hover{background:#f9fafb}
+.gantt-label{padding:4px 10px;font-size:11px;font-weight:500;color:#374151;border-right:1px solid #e5e7eb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:default}
+.gantt-bar-area{position:relative;height:20px}
+.gantt-bar{position:absolute;height:14px;top:3px;border-radius:3px;min-width:4px;font-size:9px;color:#fff;line-height:14px;padding:0 4px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.gb-done{background:#10b981}
+.gb-active{background:#1a2b47;animation:pulse-bar 2s ease-in-out infinite}
+.gb-plan{background:#d1d5db;color:#374151}
+.gb-late{background:#ef4444}
+.gb-fason{background:#8b5cf6}
+.gantt-today{position:absolute;top:0;bottom:0;width:0;border-left:2px dashed #ef4444;z-index:2;pointer-events:none}
+@keyframes pulse-bar{0%,100%{opacity:1}50%{opacity:.7}}
+
+/* ── KAPASITE ── */
+.kapasite-section{background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin-bottom:12px}
+.kapasite-section-title{font-size:13px;font-weight:600;color:#1f2937;margin-bottom:10px}
+.kapasite-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.kap-item{background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;padding:8px 12px}
+.kap-name{font-size:11px;font-weight:600;color:#374151;display:flex;justify-content:space-between;align-items:center}
+.kap-pct{font-size:11px;font-weight:700}
+.kap-bar{height:6px;background:#f3f4f6;border-radius:3px;overflow:hidden;margin-top:4px}
+.kap-fill{height:100%;border-radius:3px;transition:width .4s ease}
+
+/* ── VIEW TOGGLE ── */
+.view-toggle{display:flex;background:#f3f4f6;border-radius:6px;overflow:hidden;border:1px solid #e5e7eb}
+.vt-btn{padding:4px 12px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:transparent;color:#6b7280;font-family:inherit;transition:all .15s}
+.vt-btn.active{background:#fff;color:#1f2937;box-shadow:0 1px 2px rgba(0,0,0,.06)}
+</style>
 </head>
 <body>
 <div id="nav-alani"></div>
 <div class="icerik-alani">
   <div class="topbar">
     <div class="topbar-baslik">Planlama</div>
-    <div style="display:flex;align-items:center;gap:8px;">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div class="view-toggle">
+        <button class="vt-btn active" onclick="setGanttView('week',this)">Haftalık</button>
+        <button class="vt-btn" onclick="setGanttView('month',this)">Aylık</button>
+      </div>
       <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
     </div>
   </div>
   <div class="sayfa-icerik">
+
+<!-- ── KPI ROW ── -->
+<div class="kpi-row" id="kpi-row">
+  <div class="kpi" style="border-top-color:#3b82f6"><div class="kpi-lbl">Aktif İş Emri</div><div class="kpi-val" id="kpi-aktif">—</div></div>
+  <div class="kpi" style="border-top-color:#f59e0b"><div class="kpi-lbl">Bu Hafta Termin</div><div class="kpi-val" id="kpi-hafta">—</div></div>
+  <div class="kpi" style="border-top-color:#ef4444"><div class="kpi-lbl">Gecikmiş</div><div class="kpi-val" id="kpi-geciken">—</div></div>
+  <div class="kpi" style="border-top-color:#8b5cf6"><div class="kpi-lbl">Fason Bekleyen</div><div class="kpi-val" id="kpi-fason">—</div></div>
+  <div class="kpi" style="border-top-color:#10b981"><div class="kpi-lbl">Kapasite %</div><div class="kpi-val" id="kpi-kapasite">—</div></div>
+</div>
+
+<!-- ── AS9100 STRIP ── -->
+<div class="as-strip" id="as-strip">
+  <span id="as-plan">—</span>
+  <span id="as-gecikme">—</span>
+  <span id="as-fason">—</span>
+</div>
+
+<!-- ── GANTT TIMELINE ── -->
+<div class="gantt" id="gantt-container">
+  <div class="gantt-toolbar">
+    <div class="gantt-toolbar-title">Üretim Zaman Çizelgesi</div>
+    <div style="font-size:11px;color:#6b7280;" id="gantt-range-label">—</div>
+  </div>
+  <div class="gantt-head" id="gantt-head">
+    <div class="gantt-head-label">İş Emri</div>
+    <div class="gantt-head-dates" id="gantt-dates"></div>
+  </div>
+  <div class="gantt-scroll" id="gantt-body">
+    <div style="padding:20px;text-align:center;color:#9ca3af;font-size:12px;">Yükleniyor...</div>
+  </div>
+</div>
+
+<!-- ── TEZGAH KAPASİTE ── -->
+<div class="kapasite-section" id="kapasite-section">
+  <div class="kapasite-section-title">Tezgah Kapasite Durumu</div>
+  <div class="kapasite-grid" id="kapasite-grid">
+    <div style="padding:12px;text-align:center;color:#9ca3af;font-size:12px;grid-column:span 3;">Yükleniyor...</div>
+  </div>
+</div>
 
 <div class="layout">
 
@@ -67,6 +159,7 @@ const T = {
   tedarikci:'tblEI6683Im5AXj36',
   isEmirleri:'tbl58qL39I2tv8hK4',
   stl:      'tblHmfCvNZq0qNtb1',
+  tezgahlar:'tblsBXDsWACBAFEJ5',
   rfq:      'RFQ_TABLE_PLACEHOLDER', // Satınalma Teklifleri tablosu
 };
 
@@ -893,8 +986,240 @@ async function createIE(seId) {
   }
 }
 
+// ── PLANLAMA DASHBOARD ──
+var ieList = [];
+var tezgahList = [];
+var ganttViewMode = 'week'; // 'week' | 'month'
+
+function setGanttView(mode, btn) {
+  ganttViewMode = mode;
+  document.querySelectorAll('.vt-btn').forEach(function(b){ b.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  renderGantt();
+}
+
+async function loadDashboardData() {
+  try {
+    // Load İş Emirleri
+    var allIE = [], offset = '';
+    do {
+      var d = await apiGet(T.isEmirleri, 'sort[0][field]=Termin%20Tarihi&sort[0][direction]=asc' + (offset ? '&offset=' + offset : ''));
+      allIE = allIE.concat(d.records || []);
+      offset = d.offset || '';
+    } while (offset);
+    ieList = allIE;
+
+    // Load Tezgahlar
+    var td = await apiGet(T.tezgahlar, '');
+    tezgahList = td.records || [];
+
+    renderKPIs();
+    renderAS9100();
+    renderGantt();
+    renderKapasite();
+  } catch(e) {
+    console.warn('Dashboard load error:', e);
+  }
+}
+
+function getWeekEnd(d) {
+  var end = new Date(d);
+  end.setDate(end.getDate() + (7 - end.getDay()));
+  return end;
+}
+
+function renderKPIs() {
+  var now = new Date();
+  var weekEnd = getWeekEnd(now);
+  var weekStart = new Date(now);
+  weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1);
+
+  var aktif = 0, hafta = 0, geciken = 0, fason = 0;
+  ieList.forEach(function(r) {
+    var f = r.fields;
+    var durum = f['Durum'] || 'Beklemede';
+    if (durum !== 'Tamamlandı' && durum !== 'İptal') aktif++;
+    if (durum !== 'Tamamlandı' && durum !== 'İptal' && f['Termin Tarihi']) {
+      var termin = new Date(f['Termin Tarihi']);
+      if (termin <= weekEnd && termin >= weekStart) hafta++;
+      if (termin < now && durum !== 'Tamamlandı') geciken++;
+    }
+    if ((durum === 'Beklemede' || durum === 'Fason Bekliyor') && (f['Fason'] || durum === 'Fason Bekliyor')) fason++;
+  });
+
+  var kapYuzde = tezgahList.length > 0 ? Math.min(Math.round((aktif / (tezgahList.length * 1.5)) * 100), 100) : 0;
+
+  document.getElementById('kpi-aktif').textContent = aktif;
+  document.getElementById('kpi-hafta').textContent = hafta;
+  document.getElementById('kpi-geciken').textContent = geciken;
+  document.getElementById('kpi-geciken').style.color = geciken > 0 ? '#ef4444' : '';
+  document.getElementById('kpi-fason').textContent = fason;
+  document.getElementById('kpi-kapasite').textContent = kapYuzde + '%';
+  document.getElementById('kpi-kapasite').style.color = kapYuzde > 95 ? '#ef4444' : kapYuzde > 80 ? '#f59e0b' : '#10b981';
+}
+
+function renderAS9100() {
+  var now = new Date();
+  var planlanmamis = 0, geciken = 0, fasonBekleyen = 0;
+  ieList.forEach(function(r) {
+    var f = r.fields;
+    var durum = f['Durum'] || 'Beklemede';
+    if (durum === 'Tamamlandı' || durum === 'İptal') return;
+    if (!f['Baslangic_Tarihi'] && !f['Termin Tarihi']) planlanmamis++;
+    if (f['Termin Tarihi'] && new Date(f['Termin Tarihi']) < now && durum !== 'Tamamlandı') geciken++;
+    if ((f['Fason'] || durum === 'Fason Bekliyor')) fasonBekleyen++;
+  });
+
+  document.getElementById('as-plan').className = planlanmamis === 0 ? 'as-ok' : 'as-warn';
+  document.getElementById('as-plan').innerHTML = planlanmamis === 0
+    ? '&#10003; Tüm WO\'lar Planlandı'
+    : '&#9888; ' + planlanmamis + ' WO Planlanmamış';
+
+  document.getElementById('as-gecikme').className = geciken > 0 ? 'as-warn' : 'as-ok';
+  document.getElementById('as-gecikme').textContent = 'Gecikme: ' + geciken + ' WO';
+
+  document.getElementById('as-fason').className = 'as-info';
+  document.getElementById('as-fason').textContent = 'Fason: ' + fasonBekleyen + ' bekliyor';
+}
+
+function renderGantt() {
+  var now = new Date();
+  now.setHours(0, 0, 0, 0);
+  var days = ganttViewMode === 'week' ? 7 : 30;
+
+  var rangeStart = new Date(now);
+  rangeStart.setDate(rangeStart.getDate() - Math.floor(days * 0.2));
+  var rangeEnd = new Date(rangeStart);
+  rangeEnd.setDate(rangeEnd.getDate() + days);
+
+  var totalMs = rangeEnd.getTime() - rangeStart.getTime();
+
+  // Header dates
+  var datesEl = document.getElementById('gantt-dates');
+  var dateLabels = '';
+  var step = ganttViewMode === 'week' ? 1 : 5;
+  for (var i = 0; i < days; i += step) {
+    var dd = new Date(rangeStart);
+    dd.setDate(dd.getDate() + i);
+    var label = dd.getDate() + '/' + (dd.getMonth() + 1);
+    dateLabels += '<span>' + label + '</span>';
+  }
+  datesEl.innerHTML = dateLabels;
+
+  // Range label
+  var fmt1 = rangeStart.toLocaleDateString('tr-TR', {day:'numeric',month:'short'});
+  var fmt2 = rangeEnd.toLocaleDateString('tr-TR', {day:'numeric',month:'short',year:'numeric'});
+  document.getElementById('gantt-range-label').textContent = fmt1 + ' — ' + fmt2;
+
+  // Filter WOs that overlap with range
+  var activeIE = ieList.filter(function(r) {
+    var f = r.fields;
+    var durum = f['Durum'] || 'Beklemede';
+    if (durum === 'İptal') return false;
+    return true;
+  });
+
+  // Limit to 25 for readability
+  var shown = activeIE.slice(0, 25);
+
+  var bodyEl = document.getElementById('gantt-body');
+  if (!shown.length) {
+    bodyEl.innerHTML = '<div style="padding:20px;text-align:center;color:#9ca3af;font-size:12px;">İş emri bulunamadı</div>';
+    return;
+  }
+
+  var rowsHtml = '';
+  shown.forEach(function(r) {
+    var f = r.fields;
+    var ieNo = f['IE No'] || '—';
+    var parca = f['Parça Adı'] || '';
+    var durum = f['Durum'] || 'Beklemede';
+    var label = ieNo + (parca ? ' · ' + parca.substring(0, 18) : '');
+
+    var start = f['Baslangic_Tarihi'] ? new Date(f['Baslangic_Tarihi']) : null;
+    var end = f['Termin Tarihi'] ? new Date(f['Termin Tarihi']) : null;
+
+    // Default: if no start, use 3 days before termin; if no termin, use 7 days from now
+    if (!end) end = new Date(now.getTime() + 7 * 86400000);
+    if (!start) {
+      start = new Date(end);
+      start.setDate(start.getDate() - 5);
+    }
+
+    var barClass = 'gb-plan';
+    if (durum === 'Tamamlandı') barClass = 'gb-done';
+    else if (durum === 'Üretimde') barClass = 'gb-active';
+    else if (durum === 'Fason Bekliyor') barClass = 'gb-fason';
+    else if (end < now && durum !== 'Tamamlandı') barClass = 'gb-late';
+
+    // Calculate position
+    var leftPct = Math.max(0, ((start.getTime() - rangeStart.getTime()) / totalMs) * 100);
+    var widthPct = Math.max(1, ((end.getTime() - start.getTime()) / totalMs) * 100);
+    if (leftPct + widthPct > 100) widthPct = 100 - leftPct;
+    if (leftPct > 100) { leftPct = 98; widthPct = 2; }
+
+    // Today line position
+    var todayPct = ((now.getTime() - rangeStart.getTime()) / totalMs) * 100;
+
+    rowsHtml += '<div class="gantt-row">' +
+      '<div class="gantt-label" title="' + label + '">' + label + '</div>' +
+      '<div class="gantt-bar-area">' +
+        '<div class="gantt-bar ' + barClass + '" style="left:' + leftPct.toFixed(1) + '%;width:' + widthPct.toFixed(1) + '%;">' + ieNo + '</div>' +
+        (todayPct >= 0 && todayPct <= 100 ? '<div class="gantt-today" style="left:' + todayPct.toFixed(1) + '%;"></div>' : '') +
+      '</div>' +
+    '</div>';
+  });
+
+  bodyEl.innerHTML = rowsHtml;
+}
+
+function renderKapasite() {
+  var gridEl = document.getElementById('kapasite-grid');
+  if (!tezgahList.length) {
+    gridEl.innerHTML = '<div style="padding:12px;text-align:center;color:#9ca3af;font-size:12px;grid-column:span 3;">Tezgah verisi bulunamadı</div>';
+    return;
+  }
+
+  var now = new Date();
+  // Count active WOs per machine
+  var tezgahMap = {};
+  tezgahList.forEach(function(t) {
+    var name = t.fields['Tezgah Adı'] || t.fields['Ad'] || '—';
+    tezgahMap[t.id] = { name: name, count: 0 };
+  });
+
+  ieList.forEach(function(r) {
+    var f = r.fields;
+    var durum = f['Durum'] || 'Beklemede';
+    if (durum === 'Tamamlandı' || durum === 'İptal') return;
+    var tezgahIds = f['Tezgah'] || f['Tezgahlar'] || [];
+    if (typeof tezgahIds === 'string') tezgahIds = [tezgahIds];
+    tezgahIds.forEach(function(tid) {
+      if (tezgahMap[tid]) tezgahMap[tid].count++;
+    });
+  });
+
+  var html = '';
+  Object.keys(tezgahMap).forEach(function(tid) {
+    var t = tezgahMap[tid];
+    // Estimate capacity: 3 WO per machine = 100%
+    var pct = Math.min(Math.round((t.count / 3) * 100), 100);
+    var color = pct > 95 ? '#ef4444' : pct > 80 ? '#f59e0b' : '#10b981';
+    var warn = pct > 95 ? ' ⚠' : '';
+
+    html += '<div class="kap-item">' +
+      '<div class="kap-name"><span>' + t.name + '</span><span class="kap-pct" style="color:' + color + '">' + pct + '%' + warn + '</span></div>' +
+      '<div class="kap-bar"><div class="kap-fill" style="width:' + pct + '%;background:' + color + ';"></div></div>' +
+      '<div style="font-size:10px;color:#9ca3af;margin-top:2px;">' + t.count + ' aktif iş emri</div>' +
+    '</div>';
+  });
+
+  gridEl.innerHTML = html || '<div style="padding:12px;text-align:center;color:#9ca3af;font-size:12px;grid-column:span 3;">Tezgah verisi bulunamadı</div>';
+}
+
 // ── INIT ──
 loadAll();
+loadDashboardData();
 </script>
 </body>
 </html>

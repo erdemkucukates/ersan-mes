@@ -10,6 +10,34 @@
 <link rel="stylesheet" href="ersan_styles.css">
 <script src="ersan_nav.js" defer></script>
 <script src="ersan_log.js" defer></script>
+<style>
+/* AS9100 Serit */
+.as-serit{display:flex;align-items:center;gap:8px;padding:8px 16px;background:#f8fafc;border-bottom:1px solid var(--border);flex-wrap:wrap;}
+.as-chip{font-size:11px;padding:3px 10px;border-radius:12px;font-weight:600;white-space:nowrap;}
+.as-chip.ok{background:#d1fae5;color:#065f46;}
+.as-chip.warn{background:#fef3c7;color:#92400e;}
+/* Zincir */
+.zincir{display:flex;align-items:center;gap:6px;padding:8px 16px;background:#f0fdf4;border-bottom:1px solid #6ee7b7;flex-wrap:wrap;}
+.zi{font-size:11px;padding:3px 10px;border-radius:4px;border:1px solid;font-family:monospace;font-weight:600;cursor:pointer;}
+.zi.aktif{background:#1a2b47;color:#fff;border-color:#1a2b47;}
+.zi.grn{background:#d1fae5;color:#065f46;border-color:#6ee7b7;}
+.zi.gray{background:#f9fafb;color:#9ca3af;border-color:#e5e7eb;}
+.zi-ok{color:#9ca3af;font-size:12px;user-select:none;}
+/* Fason vurgu */
+.op-fason-row{border-left:3px solid #8b5cf6 !important;}
+.fason-etiket{font-size:9px;background:#ede9fe;color:#6d28d9;padding:1px 6px;border-radius:4px;font-weight:600;margin-left:6px;}
+/* IPQC */
+.ipqc-table{width:100%;border-collapse:collapse;font-size:12px;}
+.ipqc-table th{background:var(--bg2);padding:6px 8px;text-align:left;font-size:11px;font-weight:600;border-bottom:1px solid var(--border);}
+.ipqc-table td{padding:5px 8px;border-bottom:1px solid var(--border);}
+.ipqc-table input{border:1px solid var(--border);border-radius:4px;padding:4px 6px;width:80px;font-size:12px;font-family:var(--mono);}
+.ipqc-ok{background:#d1fae5;color:#065f46;}
+.ipqc-nok{background:#fee2e2;color:#991b1b;}
+/* Timer */
+.wo-timer{font-size:10px;font-family:var(--mono);color:var(--blue);font-weight:600;margin-top:2px;}
+/* Ops footer */
+.ops-footer{display:flex;justify-content:space-between;align-items:center;padding:6px 12px;background:var(--bg2);border-top:1px solid var(--border);font-size:11px;color:var(--text2);font-weight:600;}
+</style>
 </head>
 <body>
 <div id="nav-alani"></div>
@@ -19,6 +47,13 @@
     <div style="display:flex;align-items:center;gap:8px;">
       <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
     </div>
+  </div>
+  <!-- AS9100 Serit -->
+  <div class="as-serit" id="as-serit" style="display:none;">
+    <span class="as-chip warn" id="as-rota">⚠ Rota Eksik</span>
+    <span class="as-chip warn" id="as-siparis">⚠ Sipariş Yok</span>
+    <span class="as-chip warn" id="as-fai">⚠ FAI Eksik</span>
+    <span class="as-chip warn" id="as-resim">⚠ Resim Eksik</span>
   </div>
   <div class="sayfa-icerik">
 
@@ -265,6 +300,7 @@ function renderList() {
         <span class="wo-meta">${f['Parça No']||''} ${f['Revizyon']?'Rev.'+f['Revizyon']:''}</span>
         <span class="wo-meta">${f['Miktar']||0} ${f['Birim']||'Adet'}</span>
       </div>
+      ${durum==='Üretimde' && f['Baslangic_Tarihi'] ? '<div class="wo-timer" data-start="'+f['Baslangic_Tarihi']+'" id="timer-'+wo.id+'"></div>' : ''}
     </div>`;
   }).join('');
 }
@@ -299,12 +335,14 @@ async function loadDetail(id) {
         <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M3 4V2h7v2M3 9H1V5h11v4h-2M3 7h7v4H3V7z" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
         Traveler PDF
       </button>
-      <button class="toolbar-btn" onclick="setWODurum('${id}','Üretimde')" style="background:var(--blue-light);color:var(--blue);border-color:var(--blue);">▶ Üretime Al</button>
-      <button class="toolbar-btn success" onclick="setWODurum('${id}','Tamamlandı')">✓ Tamamla</button>
+      <button class="toolbar-btn" onclick="uretimeAl('${id}')" style="background:var(--blue-light);color:var(--blue);border-color:var(--blue);">▶ Üretime Al</button>
+      <button class="toolbar-btn success" onclick="tamamla('${id}')">✓ Tamamla</button>
       <button class="toolbar-btn" onclick="prAc('${f['IE No']||id}')" style="border-color:var(--sari);color:var(--sari);">📋 PR Ac</button>
       <button class="toolbar-btn primary" onclick="saveWO('${id}')">💾 Kaydet</button>
       <button class="toolbar-btn" style="border-color:var(--red);color:var(--red);" onclick="deleteWO('${id}')">🗑 Sil</button>
     </div>
+    <!-- Baglanti Zinciri -->
+    <div class="zincir" id="wo-zincir"></div>
     <div class="detail-scroll" id="wo-detail-scroll">
       <!-- Bilgiler -->
       <div class="card">
@@ -420,6 +458,40 @@ async function loadDetail(id) {
           <div class="card-body" id="ie-teknik-resim" style="min-height:1000px;"></div>
         </div>
       </div>
+
+      <!-- IPQC Kontrol Plani -->
+      <div class="card" id="ipqc-card">
+        <div class="card-header">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Kontrol Planı (IPQC)
+          <span style="margin-left:auto;font-size:10px;font-weight:400;color:var(--text3);" id="ipqc-count"></span>
+        </div>
+        <div class="card-body" style="padding:0;">
+          <table class="ipqc-table">
+            <thead>
+              <tr>
+                <th>Kontrol Noktası</th>
+                <th>Nominal</th>
+                <th>Tolerans (+/-)</th>
+                <th>Ölçülen</th>
+                <th>Sonuç</th>
+              </tr>
+            </thead>
+            <tbody id="ipqc-tbody">
+              <tr><td colspan="5" style="text-align:center;padding:16px;color:var(--text3);font-size:12px;">Kontrol noktası eklemek için aşağıdaki butonu kullanın</td></tr>
+            </tbody>
+          </table>
+          <div style="padding:8px 12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <button class="btn-add-op" onclick="addIpqcRow()">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 2v8M2 6h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+              Kontrol Noktası Ekle
+            </button>
+            <span style="flex:1;"></span>
+            <button class="toolbar-btn success" onclick="ipqcKabulEt()" style="font-size:11px;padding:4px 12px;">✓ Kabul Et</button>
+            <button class="toolbar-btn" onclick="ipqcRedNcr('${id}')" style="border-color:var(--red);color:var(--red);font-size:11px;padding:4px 12px;">✗ Red → NCR</button>
+          </div>
+        </div>
+      </div>
     </div>`;
 
   // Load Teknik Resim
@@ -427,6 +499,12 @@ async function loadDetail(id) {
 
   // Load operations
   await loadOps(id);
+
+  // Zincir render
+  renderZincir(f);
+
+  // AS9100 serit guncelle
+  updateAS9100Serit(f);
 }
 
 // ── TEKNİK RESİM ──
@@ -554,11 +632,14 @@ function renderOps() {
     return;
   }
 
+  var totalSetup = 0, totalCycle = 0;
+  currentOps.forEach(function(o){ totalSetup += (o.setup||0); totalCycle += (o.sure||0); });
+
   tbody.innerHTML = currentOps.map((op, i) => {
     const isFason = FASON_OPS.includes(op.tip) || op.fason;
     const durumColor = op.durum === 'Tamamlandı' ? 'var(--green)' : op.durum === 'Devam' ? 'var(--blue)' : op.durum === 'Reddedildi' ? 'var(--red)' : 'var(--text3)';
 
-    return `<tr draggable="true" data-idx="${i}"
+    return `<tr draggable="true" data-idx="${i}" class="${isFason?'op-fason-row':''}"
       ondragstart="dragStart(event,${i})" ondragover="dragOver(event,${i})"
       ondrop="dragDrop(event,${i})" ondragend="dragEnd()"
       style="cursor:default;">
@@ -570,7 +651,7 @@ function renderOps() {
           onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='transparent'">
           ${OP_TYPES.map(t => `<option ${op.tip===t?'selected':''}>${t}</option>`).join('')}
         </select>
-        ${isFason ? '<span class="fason-tag">SUBCON</span>' : ''}
+        ${isFason ? '<span class="fason-tag">SUBCON</span><span class="fason-etiket">Dış Fason</span>' : ''}
       </td>
       <td>
         <input style="border:1px solid transparent;border-radius:5px;padding:5px 7px;font-size:13px;font-family:var(--sans);width:100%;outline:none;"
@@ -619,6 +700,23 @@ function renderOps() {
       <td><button class="btn-del-op" onclick="removeOp(${i})">×</button></td>
     </tr>`;
   }).join('');
+
+  // Ops footer — toplam sureler
+  var opsFooter = document.getElementById('ops-footer');
+  if (!opsFooter) {
+    var tableParent = tbody.closest('.card-body');
+    if (tableParent) {
+      var footDiv = document.createElement('div');
+      footDiv.className = 'ops-footer';
+      footDiv.id = 'ops-footer';
+      var addBtn = tableParent.querySelector('.btn-add-op');
+      if (addBtn && addBtn.parentNode) addBtn.parentNode.parentNode.insertBefore(footDiv, addBtn.parentNode);
+    }
+    opsFooter = document.getElementById('ops-footer');
+  }
+  if (opsFooter) {
+    opsFooter.innerHTML = 'Setup: ' + totalSetup + ' dk | Cycle: ' + totalCycle + ' dk | Toplam: ' + (totalSetup + totalCycle) + ' dk';
+  }
 }
 
 function updateOp(i, key, val) { currentOps[i][key] = val; }
@@ -1012,9 +1110,253 @@ async function deleteWO(id) {
   } catch(e) { toast('Hata: ' + e.message); }
 }
 
+// ── AS9100 SERİT ──
+function updateAS9100Serit(f) {
+  var serit = document.getElementById('as-serit');
+  if (!serit) return;
+  serit.style.display = 'flex';
+
+  var hasRota = currentOps.length > 0;
+  var hasSiparis = !!(f['SE No'] && f['SE No'].length > 0) || !!(f['Satış Emirleri'] && f['Satış Emirleri'].length > 0);
+  var hasFAI = currentOps.some(function(op){ return op.tip === 'FAI' || op.tip === 'Final Inspection'; });
+  var hasResim = !!(f['Teknik Resim'] && f['Teknik Resim'].length > 0);
+
+  var elRota = document.getElementById('as-rota');
+  var elSiparis = document.getElementById('as-siparis');
+  var elFai = document.getElementById('as-fai');
+  var elResim = document.getElementById('as-resim');
+
+  elRota.className = 'as-chip ' + (hasRota ? 'ok' : 'warn');
+  elRota.textContent = hasRota ? '✓ Operasyon Rotası Tamam' : '⚠ Rota Eksik';
+  elSiparis.className = 'as-chip ' + (hasSiparis ? 'ok' : 'warn');
+  elSiparis.textContent = hasSiparis ? '✓ Sipariş Bağlı' : '⚠ Sipariş Yok';
+  elFai.className = 'as-chip ' + (hasFAI ? 'ok' : 'warn');
+  elFai.textContent = hasFAI ? '✓ FAI Tanımlandı' : '⚠ FAI Eksik';
+  elResim.className = 'as-chip ' + (hasResim ? 'ok' : 'warn');
+  elResim.textContent = hasResim ? '✓ Teknik Resim Bağlı' : '⚠ Resim Eksik';
+}
+
+// ── ZİNCİR ──
+function renderZincir(f) {
+  var el = document.getElementById('wo-zincir');
+  if (!el) return;
+
+  var seIds = f['SE No'] || f['Satış Emirleri'] || [];
+  var seNo = '—';
+  var seId = '';
+  if (seIds.length > 0) {
+    seId = typeof seIds[0] === 'string' ? seIds[0] : seIds[0];
+    var seRec = satisEmirleri.find(function(r){ return r.id === seId; });
+    if (seRec) {
+      var sn = seRec.fields['SE No'] || '';
+      seNo = sn ? sn.replace(/-[0-9]{2}$/, '') : '—';
+    }
+  }
+
+  var ieNo = f['IE No'] || '—';
+  var lotNo = f['Lot No'] || '—';
+  var hasFAI = currentOps.some(function(op){ return op.tip === 'FAI' || op.tip === 'Final Inspection'; });
+
+  el.innerHTML =
+    '<span class="zi ' + (seNo !== '—' ? 'grn' : 'gray') + '" onclick="' + (seNo !== '—' ? "window.location.href='ersan_siparisler.html?sp=" + encodeURIComponent(seNo) + "'" : '') + '">' + seNo + '</span>' +
+    '<span class="zi-ok">→</span>' +
+    '<span class="zi aktif">' + ieNo + '</span>' +
+    '<span class="zi-ok">→</span>' +
+    '<span class="zi ' + (lotNo !== '—' ? 'grn' : 'gray') + '">' + lotNo + '</span>' +
+    '<span class="zi-ok">→</span>' +
+    '<span class="zi ' + (hasFAI ? 'grn' : 'gray') + '">FAI</span>';
+}
+
+// ── ÜRETİME AL (validasyonlu) ──
+async function uretimeAl(id) {
+  var wo = workOrders.find(function(r){ return r.id === id; });
+  var f = wo ? wo.fields : {};
+
+  // Operasyon rotasi kontrolu
+  if (currentOps.length === 0) {
+    toast('Operasyon rotası eksik — önce rota tanımlayın', 'error');
+    return;
+  }
+
+  // Teknik resim uyarisi
+  var hasResim = !!(f['Teknik Resim'] && f['Teknik Resim'].length > 0);
+  if (!hasResim) {
+    if (!confirm('Teknik resim bağlı değil. Yine de üretime almak istiyor musunuz?')) return;
+  }
+
+  try {
+    var now = new Date().toISOString().split('T')[0];
+    await apiFn('PATCH', TABLES.isEmirleri, {fields: {'Durum': 'Üretimde', 'Baslangic_Tarihi': now}}, id);
+    if (wo) {
+      wo.fields['Durum'] = 'Üretimde';
+      wo.fields['Baslangic_Tarihi'] = now;
+    }
+    await loadAll();
+    await loadDetail(id);
+    toast('İş emri üretime alındı ✓');
+    if (typeof logIslem === 'function') logIslem('WO_URETIMDE', 'İş Emri', id, f['IE No'] || '', null, 'Üretimde');
+  } catch(e) {
+    toast('Hata: ' + e.message, 'error');
+  }
+}
+
+// ── TAMAMLA (FAI kontrollu) ──
+async function tamamla(id) {
+  var wo = workOrders.find(function(r){ return r.id === id; });
+  var f = wo ? wo.fields : {};
+
+  // FAI kontrolu
+  var hasFAI = currentOps.some(function(op){ return op.tip === 'FAI' || op.tip === 'Final Inspection'; });
+  var faiGerekli = f['FAI_Gerekli'] || false;
+  if (faiGerekli && !hasFAI) {
+    toast('FAI gerekli ama FAI operasyonu tanımlı değil — önce FAI ekleyin', 'error');
+    return;
+  }
+
+  // Tamamlanmamis operasyon kontrolu
+  var bitmemis = currentOps.filter(function(op){ return op.durum !== 'Tamamlandı' && op.durum !== 'Atlandı'; });
+  if (bitmemis.length > 0) {
+    if (!confirm(bitmemis.length + ' operasyon henüz tamamlanmadı. Yine de iş emrini tamamlamak istiyor musunuz?')) return;
+  }
+
+  try {
+    var now = new Date().toISOString().split('T')[0];
+    await apiFn('PATCH', TABLES.isEmirleri, {fields: {'Durum': 'Tamamlandı', 'Bitis_Tarihi': now}}, id);
+    if (wo) {
+      wo.fields['Durum'] = 'Tamamlandı';
+      wo.fields['Bitis_Tarihi'] = now;
+    }
+    await loadAll();
+    await loadDetail(id);
+    toast('İş emri tamamlandı ✓');
+    if (typeof logIslem === 'function') logIslem('WO_TAMAMLANDI', 'İş Emri', id, f['IE No'] || '', 'Üretimde', 'Tamamlandı');
+  } catch(e) {
+    toast('Hata: ' + e.message, 'error');
+  }
+}
+
+// ── IPQC KONTROL ──
+var ipqcRows = [];
+
+function addIpqcRow() {
+  ipqcRows.push({nokta:'',nominal:'',tolerans:'',olculen:'',sonuc:''});
+  renderIpqc();
+}
+
+function renderIpqc() {
+  var tbody = document.getElementById('ipqc-tbody');
+  if (!tbody) return;
+  var countEl = document.getElementById('ipqc-count');
+  if (countEl) countEl.textContent = ipqcRows.length + ' kontrol noktası';
+
+  if (!ipqcRows.length) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--text3);font-size:12px;">Kontrol noktası eklemek için aşağıdaki butonu kullanın</td></tr>';
+    return;
+  }
+  tbody.innerHTML = ipqcRows.map(function(r, i) {
+    return '<tr>' +
+      '<td><input value="' + (r.nokta||'').replace(/"/g,'&quot;') + '" oninput="ipqcUpdate(' + i + ',\'nokta\',this.value)" placeholder="ör: Çap D1" style="width:120px;"></td>' +
+      '<td><input value="' + (r.nominal||'') + '" oninput="ipqcUpdate(' + i + ',\'nominal\',this.value)" placeholder="25.00" style="width:70px;text-align:right;"></td>' +
+      '<td><input value="' + (r.tolerans||'') + '" oninput="ipqcUpdate(' + i + ',\'tolerans\',this.value)" placeholder="0.02" style="width:70px;text-align:right;"></td>' +
+      '<td><input value="' + (r.olculen||'') + '" oninput="ipqcOlcumGir(' + i + ',this.value)" placeholder="—" style="width:80px;text-align:right;"></td>' +
+      '<td class="' + (r.sonuc === 'OK' ? 'ipqc-ok' : r.sonuc === 'NOK' ? 'ipqc-nok' : '') + '" style="font-weight:600;font-size:12px;">' + (r.sonuc || '—') + '</td>' +
+      '</tr>';
+  }).join('');
+}
+
+function ipqcUpdate(i, key, val) {
+  ipqcRows[i][key] = val;
+}
+
+function ipqcOlcumGir(i, val) {
+  var r = ipqcRows[i];
+  r.olculen = val;
+  var nom = parseFloat(r.nominal);
+  var tol = parseFloat(r.tolerans);
+  var olc = parseFloat(val);
+  if (!isNaN(nom) && !isNaN(tol) && !isNaN(olc)) {
+    r.sonuc = (olc >= nom - tol && olc <= nom + tol) ? 'OK' : 'NOK';
+  } else {
+    r.sonuc = '';
+  }
+  renderIpqc();
+}
+
+function ipqcKabulEt() {
+  var nokCount = ipqcRows.filter(function(r){ return r.sonuc === 'NOK'; }).length;
+  if (nokCount > 0) {
+    toast(nokCount + ' kontrol noktası tolerans dışı — kabul edilemez', 'error');
+    return;
+  }
+  toast('IPQC kontrol kabul edildi ✓');
+}
+
+function ipqcRedNcr(woId) {
+  var wo = workOrders.find(function(r){ return r.id === woId; });
+  var ieNo = wo ? wo.fields['IE No'] || '' : '';
+  window.location.href = 'ersan_ncr.html?wo=' + encodeURIComponent(ieNo) + '&kaynak=IPQC';
+}
+
+// ── TIMER (aktif is emirleri icin) ──
+var timerInterval = null;
+function startTimers() {
+  if (timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(function() {
+    var timerEls = document.querySelectorAll('.wo-timer[data-start]');
+    var now = Date.now();
+    timerEls.forEach(function(el) {
+      var start = new Date(el.dataset.start).getTime();
+      if (isNaN(start)) return;
+      var diff = Math.floor((now - start) / 1000);
+      var days = Math.floor(diff / 86400);
+      var hrs = Math.floor((diff % 86400) / 3600);
+      var mins = Math.floor((diff % 3600) / 60);
+      var secs = diff % 60;
+      var txt = '';
+      if (days > 0) txt += days + 'g ';
+      txt += String(hrs).padStart(2,'0') + ':' + String(mins).padStart(2,'0') + ':' + String(secs).padStart(2,'0');
+      el.textContent = '⏱ ' + txt;
+    });
+  }, 1000);
+}
+
+// ── URL PARAMETRELERI ──
+function handleUrlParams() {
+  var p = new URLSearchParams(window.location.search);
+  var spParam = p.get('sp');
+  var woParam = p.get('wo');
+
+  if (woParam) {
+    // Direkt WO id veya IE No ile ac
+    var found = workOrders.find(function(r) {
+      return r.id === woParam || (r.fields['IE No'] || '') === woParam;
+    });
+    if (found) loadDetail(found.id);
+  } else if (spParam) {
+    // SP'ye bagli ilk WO'yu bul
+    var found2 = workOrders.find(function(r) {
+      var seIds = r.fields['SE No'] || r.fields['Satış Emirleri'] || [];
+      if (!seIds.length) return false;
+      var seRec = satisEmirleri.find(function(s){ return s.id === seIds[0]; });
+      if (!seRec) return false;
+      var sn = seRec.fields['SE No'] || '';
+      return sn.indexOf(spParam) >= 0;
+    });
+    if (found2) loadDetail(found2.id);
+  }
+}
+
 // ── INIT ──
 // QR modal açık değilse showQR'yi çağırmadan önce container oluştur
 document.body.insertAdjacentHTML('beforeend', '<div id="qr-container-hidden" style="display:none;"></div>');
+
+// loadAll sonrasi URL param kontrolu ve timer baslat
+var originalLoadAll = loadAll;
+loadAll = async function() {
+  await originalLoadAll();
+  handleUrlParams();
+  startTimers();
+};
 loadAll();
 </script>
 </body>
