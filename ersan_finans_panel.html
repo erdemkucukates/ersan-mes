@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — Finans Paneli</title>
+<link rel="stylesheet" href="ersan_styles.css">
+<script src="ersan_nav.js" defer></script>
+<script src="ersan_log.js" defer></script>
+<style>
+/* ── KPI ROW ── */
+.kpi-row { display:flex; gap:12px; margin-bottom:16px; }
+.kpi { flex:1; padding:16px 18px; border-radius:10px; background:var(--beyaz); border:1px solid var(--border); cursor:pointer; transition:box-shadow .15s; }
+.kpi:hover { box-shadow:0 2px 8px rgba(0,0,0,0.06); }
+.kpi .kpi-val { font-size:26px; font-weight:700; color:var(--metin); margin-bottom:2px; }
+.kpi .kpi-lbl { font-size:12px; color:var(--metin3); }
+.kpi .kpi-sub { font-size:10px; color:var(--metin4); margin-top:2px; }
+.kpi.s-blue  { border-left:4px solid var(--mavi); }
+.kpi.s-red   { border-left:4px solid var(--kirmizi); }
+.kpi.s-green { border-left:4px solid var(--yesil); }
+.kpi.s-amber { border-left:4px solid var(--sari); }
+
+/* ── TWO COLUMN LAYOUT ── */
+.iki-kolon { display:flex; gap:16px; margin-bottom:16px; }
+.iki-kolon .kolon { flex:1; display:flex; flex-direction:column; gap:16px; }
+
+/* ── CARD ── */
+.card { background:var(--beyaz); border:1px solid var(--border); border-radius:10px; overflow:hidden; }
+.card-head { padding:12px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.card-title { font-size:13px; font-weight:700; color:var(--metin); }
+.card-body { padding:16px; }
+
+/* ── YASLANDIRMA BARS ── */
+.yas-bar-wrap { margin-bottom:14px; cursor:pointer; }
+.yas-bar-wrap:hover .yas-bar { opacity:0.85; }
+.yas-label-row { display:flex; justify-content:space-between; margin-bottom:4px; }
+.yas-label { font-size:12px; font-weight:600; color:var(--metin2); }
+.yas-tutar { font-size:12px; font-weight:700; color:var(--metin); }
+.yas-bar-bg { height:20px; background:var(--bg); border-radius:4px; overflow:hidden; }
+.yas-bar { height:100%; border-radius:4px; transition:width .5s ease; min-width:2px; }
+.yas-bar.bar-green { background:var(--yesil); }
+.yas-bar.bar-amber { background:var(--sari); }
+.yas-bar.bar-red   { background:var(--kirmizi); }
+
+/* ── MINI NAKIT CHART ── */
+.chart-wrap { display:flex; align-items:flex-end; gap:6px; height:120px; padding-top:8px; }
+.chart-month { flex:1; display:flex; flex-direction:column; align-items:center; gap:2px; }
+.chart-bars { display:flex; gap:2px; align-items:flex-end; height:90px; }
+.chart-bar { width:14px; border-radius:3px 3px 0 0; cursor:pointer; transition:opacity .15s; min-height:2px; }
+.chart-bar:hover { opacity:0.8; }
+.chart-bar.cb-green { background:var(--yesil); }
+.chart-bar.cb-red   { background:var(--kirmizi); }
+.chart-lbl { font-size:9px; color:var(--metin4); font-weight:600; }
+
+/* ── VADE TABLE ── */
+.vade-tablo { width:100%; border-collapse:collapse; font-size:12px; }
+.vade-tablo th { text-align:left; font-size:10px; font-weight:600; color:var(--metin3); text-transform:uppercase; letter-spacing:.3px; padding:6px 8px; border-bottom:1px solid var(--border); }
+.vade-tablo td { padding:8px 8px; border-bottom:1px solid var(--border); color:var(--metin2); }
+.vade-tablo tr:last-child td { border-bottom:none; }
+.vade-tablo tr:hover td { background:var(--bg2); }
+
+/* ── BADGES ── */
+.bdg { display:inline-block; padding:2px 8px; border-radius:20px; font-size:10px; font-weight:600; white-space:nowrap; }
+.b-grn { background:var(--yesil-bg); color:var(--yesil-t); }
+.b-red { background:var(--kirmizi-bg); color:var(--kirmizi-t); }
+.b-amr { background:var(--sari-bg); color:var(--sari-t); }
+.b-blu { background:var(--mavi-acik); color:var(--mavi-koyu); }
+
+/* ── HAREKET TABLE ── */
+.hrk-tablo { width:100%; border-collapse:collapse; font-size:12px; }
+.hrk-tablo th { text-align:left; font-size:10px; font-weight:600; color:var(--metin3); text-transform:uppercase; letter-spacing:.3px; padding:6px 8px; border-bottom:1px solid var(--border); }
+.hrk-tablo td { padding:8px 8px; border-bottom:1px solid var(--border); color:var(--metin2); }
+.hrk-tablo tr:last-child td { border-bottom:none; }
+.hrk-tablo tr:hover td { background:var(--bg2); cursor:pointer; }
+.mono { font-family:'Cascadia Code','Fira Code',monospace; font-size:11px; }
+
+/* ── AY SECICI ── */
+.ay-sec { padding:5px 10px; border:1px solid var(--border); border-radius:6px; font-size:12px; color:var(--metin2); background:var(--beyaz); font-family:inherit; cursor:pointer; }
+.ay-sec:focus { outline:none; border-color:var(--mavi); }
+
+/* ── BOS ── */
+.bos-durum { text-align:center; padding:40px 20px; color:var(--metin4); font-size:13px; }
+</style>
+</head>
+<body>
+<div id="nav-alani"></div>
+<div class="icerik-alani">
+  <div class="topbar">
+    <div class="topbar-baslik">Finans Paneli</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <select class="ay-sec" id="ay-filtre" onchange="ayDegisti()">
+        <option value="">Tum Zamanlar</option>
+      </select>
+      <button class="btn btn-mavi" onclick="raporOlustur()">Rapor</button>
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
+    </div>
+  </div>
+  <div class="sayfa-icerik">
+
+    <!-- KPI ROW -->
+    <div class="kpi-row">
+      <div class="kpi s-blue" onclick="location.href='ersan_musteri_fatura.html'">
+        <div class="kpi-val" id="kpi-alacak">0</div>
+        <div class="kpi-lbl">Toplam Alacak</div>
+        <div class="kpi-sub" id="kpi-alacak-sub">0 acik fatura</div>
+      </div>
+      <div class="kpi s-red">
+        <div class="kpi-val" id="kpi-borc">0</div>
+        <div class="kpi-lbl">Toplam Borc</div>
+        <div class="kpi-sub" id="kpi-borc-sub">0 acik fatura</div>
+      </div>
+      <div class="kpi" id="kpi-net-wrap">
+        <div class="kpi-val" id="kpi-net">0</div>
+        <div class="kpi-lbl">Net Pozisyon</div>
+        <div class="kpi-sub" id="kpi-net-sub"></div>
+      </div>
+      <div class="kpi s-green">
+        <div class="kpi-val" id="kpi-tahsilat">0</div>
+        <div class="kpi-lbl">Bu Ay Tahsilat</div>
+        <div class="kpi-sub" id="kpi-tahsilat-sub">0 islem</div>
+      </div>
+      <div class="kpi s-amber" onclick="location.href='ersan_musteri_fatura.html?yas=60+'">
+        <div class="kpi-val" id="kpi-geciken">0</div>
+        <div class="kpi-lbl">Gecikmis Alacak</div>
+        <div class="kpi-sub" id="kpi-geciken-sub">0 fatura</div>
+      </div>
+    </div>
+
+    <!-- TWO COLUMN -->
+    <div class="iki-kolon">
+      <!-- LEFT COLUMN -->
+      <div class="kolon">
+        <!-- Yaslandirma -->
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Alacak Yaslandirma</div>
+          </div>
+          <div class="card-body" id="yas-alani">
+            <div class="yas-bar-wrap" onclick="location.href='ersan_musteri_fatura.html?yas=0-30'">
+              <div class="yas-label-row"><span class="yas-label">0 — 30 Gun</span><span class="yas-tutar" id="yas-0-30">0 TL</span></div>
+              <div class="yas-bar-bg"><div class="yas-bar bar-green" id="yas-bar-0-30" style="width:0%"></div></div>
+            </div>
+            <div class="yas-bar-wrap" onclick="location.href='ersan_musteri_fatura.html?yas=31-60'">
+              <div class="yas-label-row"><span class="yas-label">31 — 60 Gun</span><span class="yas-tutar" id="yas-31-60">0 TL</span></div>
+              <div class="yas-bar-bg"><div class="yas-bar bar-amber" id="yas-bar-31-60" style="width:0%"></div></div>
+            </div>
+            <div class="yas-bar-wrap" onclick="location.href='ersan_musteri_fatura.html?yas=60+'">
+              <div class="yas-label-row"><span class="yas-label">60+ Gun</span><span class="yas-tutar" id="yas-60">0 TL</span></div>
+              <div class="yas-bar-bg"><div class="yas-bar bar-red" id="yas-bar-60" style="width:0%"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mini Nakit Chart -->
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Nakit Akisi (6 Ay)</div>
+            <span style="font-size:10px;color:var(--metin4);">Giris / Cikis</span>
+          </div>
+          <div class="card-body">
+            <div class="chart-wrap" id="nakit-chart"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT COLUMN -->
+      <div class="kolon">
+        <!-- Yaklasan Vadeler -->
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Yaklasan Vadeler (7 Gun)</div>
+            <span class="bdg b-blu" id="vade-sayi">0</span>
+          </div>
+          <div class="card-body" style="padding:0;">
+            <table class="vade-tablo">
+              <thead><tr><th>Vade</th><th>Fatura</th><th>Firma</th><th style="text-align:right">Tutar</th><th>Tip</th></tr></thead>
+              <tbody id="vade-body"></tbody>
+            </table>
+            <div class="bos-durum" id="vade-bos" style="display:none;">Yaklasan vade yok</div>
+          </div>
+        </div>
+
+        <!-- Son Hareketler -->
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Son Hareketler</div>
+            <span style="font-size:10px;color:var(--metin4);">Son 10</span>
+          </div>
+          <div class="card-body" style="padding:0;">
+            <table class="hrk-tablo">
+              <thead><tr><th>Tarih</th><th>Fatura No</th><th>Firma</th><th style="text-align:right">Tutar</th><th>Durum</th></tr></thead>
+              <tbody id="hrk-body"></tbody>
+            </table>
+            <div class="bos-durum" id="hrk-bos" style="display:none;">Hareket yok</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════
+   Ersan MES — Finans Paneli
+   localStorage based finance data
+   ═══════════════════════════════════════════════════ */
+
+var AYLAR = ['Oca','Sub','Mar','Nis','May','Haz','Tem','Agu','Eyl','Eki','Kas','Ara'];
+
+// ── SAMPLE DATA SEED ──
+function ornekVeriYukle() {
+  if (localStorage.getItem('ersan_finans_seeded')) return;
+
+  var bugun = new Date();
+  var yil = bugun.getFullYear();
+  var ay = bugun.getMonth();
+
+  var mFaturalar = [
+    { id:'MFS-26-00001', musteri:'Tusas', musteriId:'rec001', siparisNo:'SP-2026-001-01', musteriPO:'PO-TU-4420', tarih:tarihStr(-45), vade:tarihStr(-15), toplam:128500, odenen:0, durum:'Acik' },
+    { id:'MFS-26-00002', musteri:'TEI', musteriId:'rec002', siparisNo:'SP-2026-002-01', musteriPO:'PO-TEI-881', tarih:tarihStr(-30), vade:tarihStr(-1), toplam:67200, odenen:67200, durum:'Odendi' },
+    { id:'MFS-26-00003', musteri:'Kale Avia', musteriId:'rec003', siparisNo:'SP-2026-003-01', musteriPO:'PO-KA-1190', tarih:tarihStr(-20), vade:tarihStr(5), toplam:94300, odenen:0, durum:'Acik' },
+    { id:'MFS-26-00004', musteri:'Tusas', musteriId:'rec001', siparisNo:'SP-2026-004-01', musteriPO:'PO-TU-4421', tarih:tarihStr(-15), vade:tarihStr(10), toplam:53800, odenen:0, durum:'Acik' },
+    { id:'MFS-26-00005', musteri:'ASELSAN', musteriId:'rec004', siparisNo:'SP-2026-005-01', musteriPO:'PO-AS-2200', tarih:tarihStr(-10), vade:tarihStr(20), toplam:172000, odenen:50000, durum:'Kismi' },
+    { id:'MFS-26-00006', musteri:'Roketsan', musteriId:'rec005', siparisNo:'SP-2026-006-01', musteriPO:'PO-RK-310', tarih:tarihStr(-5), vade:tarihStr(25), toplam:41500, odenen:0, durum:'Acik' },
+    { id:'MFS-26-00007', musteri:'TEI', musteriId:'rec002', siparisNo:'SP-2026-007-01', musteriPO:'PO-TEI-882', tarih:tarihStr(-60), vade:tarihStr(-35), toplam:89000, odenen:0, durum:'Acik' },
+    { id:'MFS-26-00008', musteri:'Kale Avia', musteriId:'rec003', siparisNo:'SP-2026-008-01', musteriPO:'PO-KA-1191', tarih:tarihStr(-3), vade:tarihStr(28), toplam:36700, odenen:0, durum:'Acik' }
+  ];
+
+  var tFaturalar = [
+    { id:'TFS-26-00001', tedarikci:'Bohler', tedarikciId:'rec101', poNo:'PO-2026-001', tarih:tarihStr(-25), vade:tarihStr(5), toplam:45600, odenen:0, durum:'Acik' },
+    { id:'TFS-26-00002', tedarikci:'Iscar', tedarikciId:'rec102', poNo:'PO-2026-002', tarih:tarihStr(-18), vade:tarihStr(12), toplam:23400, odenen:23400, durum:'Odendi' },
+    { id:'TFS-26-00003', tedarikci:'Sandvik', tedarikciId:'rec103', poNo:'PO-2026-003', tarih:tarihStr(-10), vade:tarihStr(3), toplam:67800, odenen:0, durum:'Acik' },
+    { id:'TFS-26-00004', tedarikci:'MMK Metalurji', tedarikciId:'rec104', poNo:'PO-2026-004', tarih:tarihStr(-5), vade:tarihStr(25), toplam:31200, odenen:0, durum:'Acik' },
+    { id:'TFS-26-00005', tedarikci:'Bohler', tedarikciId:'rec101', poNo:'PO-2026-005', tarih:tarihStr(-40), vade:tarihStr(-10), toplam:52100, odenen:0, durum:'Acik' }
+  ];
+
+  var tahsilatlar = [
+    { id:'TH-001', faturaId:'MFS-26-00002', tutar:67200, tarih:tarihStr(-8), yontem:'Havale', banka:'Ziraat', referans:'HAV-44201' },
+    { id:'TH-002', faturaId:'MFS-26-00005', tutar:50000, tarih:tarihStr(-4), yontem:'EFT', banka:'Is Bankasi', referans:'EFT-88120' }
+  ];
+
+  var odemeler = [
+    { id:'OD-001', faturaId:'TFS-26-00002', tutar:23400, tarih:tarihStr(-12), yontem:'Havale', banka:'Ziraat', referans:'HAV-55010' }
+  ];
+
+  localStorage.setItem('ersan_musteri_faturalar', JSON.stringify(mFaturalar));
+  localStorage.setItem('ersan_tedarikci_faturalar', JSON.stringify(tFaturalar));
+  localStorage.setItem('ersan_tahsilatlar', JSON.stringify(tahsilatlar));
+  localStorage.setItem('ersan_odemeler', JSON.stringify(odemeler));
+  localStorage.setItem('ersan_finans_seeded', '1');
+}
+
+function tarihStr(gunFark) {
+  var d = new Date();
+  d.setDate(d.getDate() + gunFark);
+  return d.toISOString().split('T')[0];
+}
+
+function paraFormat(n) {
+  if (n == null) return '0 TL';
+  return Number(n).toLocaleString('tr-TR', { minimumFractionDigits:0, maximumFractionDigits:0 }) + ' TL';
+}
+
+function gunFarki(vadeTarih) {
+  var bugun = new Date(); bugun.setHours(0,0,0,0);
+  var vade = new Date(vadeTarih); vade.setHours(0,0,0,0);
+  return Math.round((vade - bugun) / (1000*60*60*24));
+}
+
+// ── DATA LOADERS ──
+function mFaturalarYukle() {
+  try { return JSON.parse(localStorage.getItem('ersan_musteri_faturalar')) || []; }
+  catch(e) { return []; }
+}
+function tFaturalarYukle() {
+  try { return JSON.parse(localStorage.getItem('ersan_tedarikci_faturalar')) || []; }
+  catch(e) { return []; }
+}
+function tahsilatlarYukle() {
+  try { return JSON.parse(localStorage.getItem('ersan_tahsilatlar')) || []; }
+  catch(e) { return []; }
+}
+function odemelerYukle() {
+  try { return JSON.parse(localStorage.getItem('ersan_odemeler')) || []; }
+  catch(e) { return []; }
+}
+
+// ── AY FILTRE DOLDUR ──
+function ayFiltreDoldur() {
+  var sel = document.getElementById('ay-filtre');
+  var bugun = new Date();
+  for (var i = 0; i < 12; i++) {
+    var d = new Date(bugun.getFullYear(), bugun.getMonth() - i, 1);
+    var opt = document.createElement('option');
+    opt.value = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+    opt.textContent = AYLAR[d.getMonth()] + ' ' + d.getFullYear();
+    sel.appendChild(opt);
+  }
+}
+
+function ayDegisti() {
+  panelGuncelle();
+}
+
+// ── MAIN UPDATE ──
+function panelGuncelle() {
+  var mf = mFaturalarYukle();
+  var tf = tFaturalarYukle();
+  var th = tahsilatlarYukle();
+  var od = odemelerYukle();
+
+  // KPI hesapla
+  var acikMF = mf.filter(function(f) { return f.durum !== 'Odendi'; });
+  var acikTF = tf.filter(function(f) { return f.durum !== 'Odendi'; });
+
+  var toplamAlacak = acikMF.reduce(function(s,f) { return s + (f.toplam - (f.odenen||0)); }, 0);
+  var toplamBorc = acikTF.reduce(function(s,f) { return s + (f.toplam - (f.odenen||0)); }, 0);
+  var net = toplamAlacak - toplamBorc;
+
+  // Bu ay tahsilat
+  var buAy = new Date();
+  var ayBaslangic = new Date(buAy.getFullYear(), buAy.getMonth(), 1).toISOString().split('T')[0];
+  var buAyTahsilat = th.filter(function(t) { return t.tarih >= ayBaslangic; });
+  var buAyToplam = buAyTahsilat.reduce(function(s,t) { return s + t.tutar; }, 0);
+
+  // Gecikmis alacak
+  var bugun = new Date().toISOString().split('T')[0];
+  var gecikmis = acikMF.filter(function(f) { return f.vade < bugun; });
+  var gecikmisToplam = gecikmis.reduce(function(s,f) { return s + (f.toplam - (f.odenen||0)); }, 0);
+
+  // KPI guncelle
+  document.getElementById('kpi-alacak').textContent = paraFormat(toplamAlacak);
+  document.getElementById('kpi-alacak-sub').textContent = acikMF.length + ' acik fatura';
+  document.getElementById('kpi-borc').textContent = paraFormat(toplamBorc);
+  document.getElementById('kpi-borc-sub').textContent = acikTF.length + ' acik fatura';
+  document.getElementById('kpi-net').textContent = paraFormat(Math.abs(net));
+  var netWrap = document.getElementById('kpi-net-wrap');
+  netWrap.style.borderLeft = '4px solid ' + (net >= 0 ? 'var(--yesil)' : 'var(--kirmizi)');
+  document.getElementById('kpi-net-sub').textContent = net >= 0 ? 'Pozitif' : 'Negatif';
+  document.getElementById('kpi-tahsilat').textContent = paraFormat(buAyToplam);
+  document.getElementById('kpi-tahsilat-sub').textContent = buAyTahsilat.length + ' islem';
+  document.getElementById('kpi-geciken').textContent = paraFormat(gecikmisToplam);
+  document.getElementById('kpi-geciken-sub').textContent = gecikmis.length + ' fatura';
+
+  // Yaslandirma
+  yaslandirmaGuncelle(acikMF);
+
+  // Nakit chart
+  nakitChartGuncelle(th, od);
+
+  // Yaklasan vadeler
+  vadeGuncelle(mf, tf);
+
+  // Son hareketler
+  hareketGuncelle(mf, tf);
+}
+
+// ── YASLANDIRMA ──
+function yaslandirmaGuncelle(acikMF) {
+  var bugun = new Date().toISOString().split('T')[0];
+  var g030 = 0, g3160 = 0, g60 = 0;
+
+  acikMF.forEach(function(f) {
+    var kalan = f.toplam - (f.odenen || 0);
+    var gun = -gunFarki(f.vade); // pozitif = gecmis gun
+    if (f.vade >= bugun) {
+      // henuz vadesi gelmemis — 0-30 grubuna koy
+      g030 += kalan;
+    } else if (gun <= 30) {
+      g030 += kalan;
+    } else if (gun <= 60) {
+      g3160 += kalan;
+    } else {
+      g60 += kalan;
+    }
+  });
+
+  var max = Math.max(g030, g3160, g60, 1);
+  document.getElementById('yas-0-30').textContent = paraFormat(g030);
+  document.getElementById('yas-31-60').textContent = paraFormat(g3160);
+  document.getElementById('yas-60').textContent = paraFormat(g60);
+  document.getElementById('yas-bar-0-30').style.width = Math.round(g030/max*100) + '%';
+  document.getElementById('yas-bar-31-60').style.width = Math.round(g3160/max*100) + '%';
+  document.getElementById('yas-bar-60').style.width = Math.round(g60/max*100) + '%';
+}
+
+// ── NAKIT CHART ──
+function nakitChartGuncelle(tahsilatlar, odemeler) {
+  var wrap = document.getElementById('nakit-chart');
+  wrap.innerHTML = '';
+
+  var bugun = new Date();
+  var aylar = [];
+  for (var i = 5; i >= 0; i--) {
+    var d = new Date(bugun.getFullYear(), bugun.getMonth() - i, 1);
+    aylar.push({ yil:d.getFullYear(), ay:d.getMonth(), label:AYLAR[d.getMonth()] });
+  }
+
+  // Aylara gore topla
+  var girisler = [], cikislar = [];
+  aylar.forEach(function(a) {
+    var ayStr = a.yil + '-' + String(a.ay+1).padStart(2,'0');
+    var giris = tahsilatlar.filter(function(t) { return t.tarih && t.tarih.substring(0,7) === ayStr; })
+      .reduce(function(s,t) { return s + t.tutar; }, 0);
+    var cikis = odemeler.filter(function(o) { return o.tarih && o.tarih.substring(0,7) === ayStr; })
+      .reduce(function(s,o) { return s + o.tutar; }, 0);
+    girisler.push(giris);
+    cikislar.push(cikis);
+  });
+
+  var maxVal = Math.max.apply(null, girisler.concat(cikislar).concat([1]));
+
+  aylar.forEach(function(a, idx) {
+    var gH = Math.max(Math.round(girisler[idx] / maxVal * 80), 2);
+    var cH = Math.max(Math.round(cikislar[idx] / maxVal * 80), 2);
+
+    var col = document.createElement('div');
+    col.className = 'chart-month';
+    col.innerHTML = '<div class="chart-bars">' +
+      '<div class="chart-bar cb-green" style="height:' + gH + 'px" title="Giris: ' + paraFormat(girisler[idx]) + '"></div>' +
+      '<div class="chart-bar cb-red" style="height:' + cH + 'px" title="Cikis: ' + paraFormat(cikislar[idx]) + '"></div>' +
+      '</div><div class="chart-lbl">' + a.label + '</div>';
+    col.style.cursor = 'pointer';
+    col.onclick = (function(ayStr) {
+      return function() { location.href = 'ersan_nakit_akis.html?ay=' + ayStr; };
+    })(a.yil + '-' + String(a.ay+1).padStart(2,'0'));
+    wrap.appendChild(col);
+  });
+}
+
+// ── YAKLASAN VADELER ──
+function vadeGuncelle(mf, tf) {
+  var tbody = document.getElementById('vade-body');
+  var bosEl = document.getElementById('vade-bos');
+  tbody.innerHTML = '';
+
+  var bugun = new Date().toISOString().split('T')[0];
+  var yediGun = new Date();
+  yediGun.setDate(yediGun.getDate() + 7);
+  var yediGunStr = yediGun.toISOString().split('T')[0];
+
+  var satirlar = [];
+
+  mf.filter(function(f) { return f.durum !== 'Odendi'; }).forEach(function(f) {
+    if (f.vade <= yediGunStr) {
+      satirlar.push({ vade:f.vade, faturaNo:f.id, firma:f.musteri, tutar:f.toplam - (f.odenen||0), tip:'Tahsilat', gecikmi:f.vade < bugun });
+    }
+  });
+
+  tf.filter(function(f) { return f.durum !== 'Odendi'; }).forEach(function(f) {
+    if (f.vade <= yediGunStr) {
+      satirlar.push({ vade:f.vade, faturaNo:f.id, firma:f.tedarikci, tutar:f.toplam - (f.odenen||0), tip:'Odeme', gecikmi:f.vade < bugun });
+    }
+  });
+
+  satirlar.sort(function(a,b) { return a.vade < b.vade ? -1 : 1; });
+
+  document.getElementById('vade-sayi').textContent = satirlar.length;
+
+  if (satirlar.length === 0) {
+    bosEl.style.display = 'block';
+    return;
+  }
+  bosEl.style.display = 'none';
+
+  satirlar.forEach(function(s) {
+    var tr = document.createElement('tr');
+    var bgStyle = s.gecikmi ? 'background:var(--kirmizi-bg);' : '';
+    var tipBdg = s.tip === 'Tahsilat' ? '<span class="bdg b-grn">Tahsilat</span>' : '<span class="bdg b-red">Odeme</span>';
+    tr.innerHTML = '<td style="' + bgStyle + '">' + s.vade + '</td>' +
+      '<td style="' + bgStyle + '" class="mono">' + s.faturaNo + '</td>' +
+      '<td style="' + bgStyle + '">' + s.firma + '</td>' +
+      '<td style="text-align:right;' + bgStyle + '">' + paraFormat(s.tutar) + '</td>' +
+      '<td style="' + bgStyle + '">' + tipBdg + '</td>';
+    tbody.appendChild(tr);
+  });
+}
+
+// ── SON HAREKETLER ──
+function hareketGuncelle(mf, tf) {
+  var tbody = document.getElementById('hrk-body');
+  var bosEl = document.getElementById('hrk-bos');
+  tbody.innerHTML = '';
+
+  var tumFaturalar = [];
+  mf.forEach(function(f) {
+    tumFaturalar.push({ tarih:f.tarih, faturaNo:f.id, firma:f.musteri, tutar:f.toplam, durum:f.durum, tip:'musteri' });
+  });
+  tf.forEach(function(f) {
+    tumFaturalar.push({ tarih:f.tarih, faturaNo:f.id, firma:f.tedarikci, tutar:f.toplam, durum:f.durum, tip:'tedarikci' });
+  });
+
+  tumFaturalar.sort(function(a,b) { return a.tarih > b.tarih ? -1 : 1; });
+  var son10 = tumFaturalar.slice(0, 10);
+
+  if (son10.length === 0) {
+    bosEl.style.display = 'block';
+    return;
+  }
+  bosEl.style.display = 'none';
+
+  son10.forEach(function(f) {
+    var tr = document.createElement('tr');
+    var durumBdg = '';
+    if (f.durum === 'Odendi') durumBdg = '<span class="bdg b-grn">Odendi</span>';
+    else if (f.durum === 'Kismi') durumBdg = '<span class="bdg b-amr">Kismi</span>';
+    else durumBdg = '<span class="bdg b-blu">Acik</span>';
+
+    var tutarColor = f.tip === 'musteri' ? 'var(--yesil-t)' : 'var(--kirmizi-t)';
+    var tutarPrefix = f.tip === 'musteri' ? '+' : '-';
+
+    tr.innerHTML = '<td>' + f.tarih + '</td>' +
+      '<td class="mono">' + f.faturaNo + '</td>' +
+      '<td>' + f.firma + '</td>' +
+      '<td style="text-align:right;color:' + tutarColor + ';font-weight:600;">' + tutarPrefix + paraFormat(f.tutar) + '</td>' +
+      '<td>' + durumBdg + '</td>';
+
+    tr.style.cursor = 'pointer';
+    tr.onclick = function() {
+      if (f.tip === 'musteri') location.href = 'ersan_musteri_fatura.html?fatura=' + f.faturaNo;
+    };
+    tbody.appendChild(tr);
+  });
+}
+
+// ── RAPOR ──
+function raporOlustur() {
+  alert('Finans raporu hazirlaniyor...\n\nBu ozellik yaklasimda.');
+}
+
+// ── INIT ──
+document.addEventListener('DOMContentLoaded', function() {
+  ornekVeriYukle();
+  ayFiltreDoldur();
+  panelGuncelle();
+});
+</script>
+</body>
+</html>

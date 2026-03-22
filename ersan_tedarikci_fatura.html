@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — Tedarikçi Faturaları</title>
+<link rel="stylesheet" href="ersan_styles.css">
+<script src="ersan_nav.js" defer></script>
+<script src="ersan_log.js" defer></script>
+<style>
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.kpi{background:#fff;border-radius:8px;padding:14px 16px;border:1px solid var(--border);border-top:3px solid var(--border)}
+.kpi .kv{font-size:22px;font-weight:700;color:var(--laci)}
+.kpi .kl{font-size:11px;color:var(--metin3);margin-top:2px}
+.kpi.s1{border-top-color:var(--kirmizi)}
+.kpi.s2{border-top-color:#f59e0b}
+.kpi.s3{border-top-color:var(--mavi)}
+.kpi.s4{border-top-color:var(--yesil)}
+
+.match-band{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.match-chip{padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid transparent;transition:all .15s;display:flex;align-items:center;gap:6px}
+.match-chip:hover{opacity:.85}
+.match-chip.aktif{box-shadow:0 0 0 2px rgba(55,138,221,.4)}
+.mc-green{background:#d1fae5;color:#065f46;border-color:#6ee7b7}
+.mc-amber{background:#fef3c7;color:#854f0b;border-color:#fcd34d}
+.mc-red{background:#fee2e2;color:#991b1b;border-color:#fca5a5}
+.mc-count{font-size:11px;font-weight:700;background:rgba(0,0,0,.08);border-radius:10px;padding:1px 7px;min-width:20px;text-align:center}
+
+.filter-bar{display:flex;gap:8px;margin-bottom:14px;align-items:center;flex-wrap:wrap}
+.filter-bar input,.filter-bar select{padding:7px 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;background:#fff;font-family:inherit;color:var(--metin2)}
+.filter-bar input:focus,.filter-bar select:focus{outline:none;border-color:var(--mavi)}
+.filter-bar input{flex:1;min-width:200px}
+
+.tablo-wrap{background:#fff;border:1px solid var(--border);border-radius:8px;overflow:hidden;flex:1}
+.tablo-wrap table{width:100%;border-collapse:collapse;font-size:12px}
+.tablo-wrap th{background:var(--bg2);padding:9px 10px;text-align:left;font-weight:600;font-size:11px;color:var(--metin3);text-transform:uppercase;letter-spacing:.3px;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:2}
+.tablo-wrap td{padding:8px 10px;border-bottom:1px solid var(--bg2);vertical-align:middle}
+.tablo-wrap tr:hover{background:var(--bg2)}
+.tablo-wrap .mono{font-family:'Courier New',monospace;font-weight:600;font-size:11px}
+
+.durum-badge{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600;white-space:nowrap}
+.db-onay{background:#FAEEDA;color:#854F0B}
+.db-odendi{background:#EAF3DE;color:#085041}
+.db-eslesti{background:#E6F1FB;color:#185FA5}
+.db-uyumsuz{background:#FCEBEB;color:#791F1F}
+.db-bekliyor{background:#f3f4f6;color:#6b7280}
+
+.fark-ok{color:var(--yesil);font-weight:600}
+.fark-kotu{color:var(--kirmizi);font-weight:600}
+
+.btn{padding:7px 14px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:opacity .15s}
+.btn:hover{opacity:.85}
+.btn-b{background:var(--mavi);color:#fff}
+.btn-g{background:var(--yesil);color:#fff}
+.btn-p{background:var(--laci);color:#fff}
+.btn-w{background:#fff;color:var(--laci);border:1px solid var(--border)}
+.btn-red{background:var(--kirmizi);color:#fff}
+.btn-warn{background:#f59e0b;color:#fff}
+.btn-sm{padding:4px 10px;font-size:11px}
+
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px}
+.topbar h1{font-size:18px;font-weight:700;color:var(--laci)}
+.topbar-btns{display:flex;gap:6px}
+
+/* Modal */
+.modal-mask{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:700;align-items:center;justify-content:center}
+.modal-mask.show{display:flex}
+.modal{background:#fff;border-radius:10px;width:560px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.modal-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.modal-head h2{font-size:15px;font-weight:700;color:var(--laci)}
+.modal-head .kapat{cursor:pointer;font-size:18px;color:var(--metin4);background:none;border:none}
+.modal-body{padding:20px}
+.modal-foot{padding:14px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
+
+.form-grup{margin-bottom:14px}
+.form-grup label{display:block;font-size:11px;font-weight:600;color:var(--metin3);margin-bottom:4px;text-transform:uppercase;letter-spacing:.3px}
+.form-grup input,.form-grup select,.form-grup textarea{width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;color:var(--metin2);background:#fff}
+.form-grup input:focus,.form-grup select:focus{outline:none;border-color:var(--mavi)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+.match-live{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.ml-chip{font-size:11px;padding:4px 10px;border-radius:6px;font-weight:600;display:flex;align-items:center;gap:4px}
+.ml-ok{background:#d1fae5;color:#065f46}
+.ml-warn{background:#fef3c7;color:#854f0b}
+.ml-fail{background:#fee2e2;color:#991b1b}
+
+.bos-mesaj{text-align:center;padding:60px 20px;color:var(--metin4);font-size:13px}
+.scroll-y{overflow-y:auto;max-height:calc(100vh - 300px)}
+
+.odeme-info{background:var(--bg2);border-radius:8px;padding:12px 16px;margin-bottom:14px;font-size:12px}
+.odeme-info .oi-row{display:flex;justify-content:space-between;margin-bottom:4px}
+.odeme-info .oi-label{color:var(--metin3);font-weight:500}
+.odeme-info .oi-val{color:var(--laci);font-weight:600}
+</style>
+</head>
+<body>
+<div id="nav-alani"></div>
+<div class="main-area" style="margin-left:220px;padding:18px 24px;">
+
+<!-- Topbar -->
+<div class="topbar">
+  <h1>Tedarikçi Faturaları</h1>
+  <div class="topbar-btns">
+    <button class="btn btn-b" onclick="faturaModalAc()">+ Fatura Gir</button>
+    <button class="btn btn-w" onclick="excelIndir()">↓ Excel</button>
+  </div>
+</div>
+
+<!-- 3-Way Match Band -->
+<div class="match-band" id="matchBand">
+  <div class="match-chip mc-green" data-filtre="eslesti" onclick="matchFiltre(this)">
+    ✓ PO Eşleşti <span class="mc-count" id="mcEslesti">0</span>
+  </div>
+  <div class="match-chip mc-amber" data-filtre="grn-beklyor" onclick="matchFiltre(this)">
+    ⏳ GRN Bekliyor <span class="mc-count" id="mcGrn">0</span>
+  </div>
+  <div class="match-chip mc-red" data-filtre="fiyat-uyumsuz" onclick="matchFiltre(this)">
+    ✗ Fiyat Uyuşmazlığı <span class="mc-count" id="mcUyumsuz">0</span>
+  </div>
+  <div class="match-chip mc-amber" data-filtre="onay-bekliyor" onclick="matchFiltre(this)">
+    ◎ Onay Bekliyor <span class="mc-count" id="mcOnay">0</span>
+  </div>
+</div>
+
+<!-- KPI Row -->
+<div class="kpi-row">
+  <div class="kpi s1"><div class="kv" id="kpiToplamBorc">₺0</div><div class="kl">Toplam Borç</div></div>
+  <div class="kpi s2"><div class="kv" id="kpiVadesiGecmis">₺0</div><div class="kl">Vadesi Geçmiş</div></div>
+  <div class="kpi s3"><div class="kv" id="kpiOnayBekliyor">0</div><div class="kl">Onay Bekliyor</div></div>
+  <div class="kpi s4"><div class="kv" id="kpiOdenen">₺0</div><div class="kl">Bu Ay Ödenen</div></div>
+</div>
+
+<!-- Filter Bar -->
+<div class="filter-bar">
+  <input type="text" id="araInput" placeholder="🔍 Fatura no, tedarikçi ara..." oninput="tabloFiltrele()">
+  <select id="durumFiltre" onchange="tabloFiltrele()">
+    <option value="">Tüm Durumlar</option>
+    <option value="Onay Bekliyor">Onay Bekliyor</option>
+    <option value="Onaylandı">Onaylandı</option>
+    <option value="Ödendi">Ödendi</option>
+    <option value="Fiyat Uyuşmazlığı">Fiyat Uyuşmazlığı</option>
+  </select>
+  <select id="tedarikciFiltre" onchange="tabloFiltrele()">
+    <option value="">Tüm Tedarikçiler</option>
+  </select>
+</div>
+
+<!-- Fatura Tablosu -->
+<div class="tablo-wrap">
+  <div class="scroll-y" id="tabloScroll">
+    <table>
+      <thead>
+        <tr>
+          <th>Fatura No</th>
+          <th>Tedarikçi</th>
+          <th>Ted. Fatura No</th>
+          <th>PO No</th>
+          <th>GRN</th>
+          <th>Tarih</th>
+          <th>Vade</th>
+          <th style="text-align:right">PO Tutar</th>
+          <th style="text-align:right">Fatura Tutar</th>
+          <th style="text-align:right">Fark</th>
+          <th>Durum</th>
+          <th>İşlem</th>
+        </tr>
+      </thead>
+      <tbody id="faturaBody"></tbody>
+    </table>
+    <div class="bos-mesaj" id="bosMesaj" style="display:none">Fatura kaydı bulunamadı</div>
+  </div>
+</div>
+
+</div><!-- main-area -->
+
+<!-- Yeni Fatura Modal -->
+<div class="modal-mask" id="faturaModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>Yeni Alış Faturası</h2>
+      <button class="kapat" onclick="modalKapat('faturaModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grup">
+        <label>PO Seçin</label>
+        <select id="fmPoSec" onchange="poSecildi()">
+          <option value="">— PO seçin —</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <div class="form-grup">
+          <label>Tedarikçi</label>
+          <input type="text" id="fmTedarikci" readonly style="background:var(--bg2)">
+        </div>
+        <div class="form-grup">
+          <label>PO Tutarı</label>
+          <input type="text" id="fmPoTutar" readonly style="background:var(--bg2)">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-grup">
+          <label>Tedarikçi Fatura No</label>
+          <input type="text" id="fmTedFaturaNo" placeholder="Tedarikçi fatura numarası">
+        </div>
+        <div class="form-grup">
+          <label>Fatura Tutarı (₺)</label>
+          <input type="number" id="fmFaturaTutar" step="0.01" placeholder="0.00" oninput="fiyatKontrol()">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-grup">
+          <label>Fatura Tarihi</label>
+          <input type="date" id="fmTarih">
+        </div>
+        <div class="form-grup">
+          <label>Vade Tarihi</label>
+          <input type="date" id="fmVade">
+        </div>
+      </div>
+      <div class="form-grup">
+        <label>Not</label>
+        <textarea id="fmNot" rows="2" placeholder="Opsiyonel not"></textarea>
+      </div>
+      <!-- Live match chips -->
+      <div class="match-live" id="matchLive">
+        <div class="ml-chip ml-warn" id="mlPo">PO —</div>
+        <div class="ml-chip ml-warn" id="mlGrn">GRN —</div>
+        <div class="ml-chip ml-warn" id="mlFiyat">Fiyat —</div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-w" onclick="modalKapat('faturaModal')">İptal</button>
+      <button class="btn btn-b" onclick="faturaKaydet()">Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<!-- Ödeme Modal -->
+<div class="modal-mask" id="odemeModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>Ödeme Yap</h2>
+      <button class="kapat" onclick="modalKapat('odemeModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="odeme-info" id="odemeInfo"></div>
+      <div class="form-row">
+        <div class="form-grup">
+          <label>Ödeme Tutarı (₺)</label>
+          <input type="number" id="omTutar" step="0.01">
+        </div>
+        <div class="form-grup">
+          <label>Ödeme Tarihi</label>
+          <input type="date" id="omTarih">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-grup">
+          <label>Banka Hesabı</label>
+          <select id="omBanka">
+            <option value="Ziraat TL">Ziraat TL</option>
+            <option value="İş Bankası TL">İş Bankası TL</option>
+            <option value="Garanti EUR">Garanti EUR</option>
+          </select>
+        </div>
+        <div class="form-grup">
+          <label>Referans / Dekont No</label>
+          <input type="text" id="omRef" placeholder="Dekont numarası">
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-w" onclick="modalKapat('odemeModal')">İptal</button>
+      <button class="btn btn-g" onclick="odemeKaydet()">Ödemeyi Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── State ── */
+var faturalar = [];
+var poListesi = [];
+var tedarikciMap = {};
+var aktifMatchFiltre = '';
+var secilenOdemeIdx = -1;
+
+var LS_KEY = 'ersan_tedarikci_faturalar';
+var LS_BANKA = 'ersan_banka_hesaplari';
+
+/* ── Init ── */
+document.addEventListener('DOMContentLoaded', function() {
+  bugunTarih();
+  verileriYukle();
+  bankalarInit();
+});
+
+function bugunTarih() {
+  var d = new Date().toISOString().split('T')[0];
+  document.getElementById('fmTarih').value = d;
+  document.getElementById('omTarih').value = d;
+  var vade = new Date();
+  vade.setDate(vade.getDate() + 30);
+  document.getElementById('fmVade').value = vade.toISOString().split('T')[0];
+}
+
+function bankalarInit() {
+  var bankalar = JSON.parse(localStorage.getItem(LS_BANKA) || 'null');
+  if (!bankalar) {
+    bankalar = [
+      { ad: 'Ziraat TL', bakiye: 245000, doviz: 'TRY' },
+      { ad: 'İş Bankası TL', bakiye: 178000, doviz: 'TRY' },
+      { ad: 'Garanti EUR', bakiye: 32000, doviz: 'EUR' }
+    ];
+    localStorage.setItem(LS_BANKA, JSON.stringify(bankalar));
+  }
+}
+
+/* ── Veri Yükle ── */
+function verileriYukle() {
+  var saved = JSON.parse(localStorage.getItem(LS_KEY) || 'null');
+  if (saved && saved.length > 0) {
+    faturalar = saved;
+  } else {
+    ornekVeriOlustur();
+  }
+
+  // Tedarikçileri Airtable'dan çek
+  fetch('/.netlify/functions/airtable?table=Tedarik%C3%A7iler%20(OTL)&pageSize=100')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      var sel = document.getElementById('tedarikciFiltre');
+      (d.records || []).forEach(function(rec) {
+        var ad = (rec.fields || {})['Firma Adı'] || (rec.fields || {})['Name'] || '';
+        if (ad) {
+          tedarikciMap[rec.id] = ad;
+          var opt = document.createElement('option');
+          opt.value = ad;
+          opt.textContent = ad;
+          sel.appendChild(opt);
+        }
+      });
+    })
+    .catch(function() {});
+
+  // PO listesi (örnek — normalde Airtable'dan)
+  poListesi = [
+    { no: 'PO-2026-001', tedarikci: 'Teknik Metal San.', tutar: 24500, grn: true },
+    { no: 'PO-2026-002', tedarikci: 'Çelik Depo A.Ş.', tutar: 18750, grn: true },
+    { no: 'PO-2026-003', tedarikci: 'Endüstriyel Takım Ltd.', tutar: 9200, grn: false },
+    { no: 'PO-2026-004', tedarikci: 'CNC Kesici Merkezi', tutar: 35000, grn: true },
+    { no: 'PO-2026-005', tedarikci: 'Alüminyum Profil A.Ş.', tutar: 12400, grn: false },
+  ];
+
+  poDropdownDoldur();
+  tabloGuncelle();
+}
+
+function ornekVeriOlustur() {
+  var bugun = new Date();
+  faturalar = [
+    { id: 'TDF-2026-001', tedarikci: 'Teknik Metal San.', tedFaturaNo: 'TMF-4521', poNo: 'PO-2026-001', grn: true, tarih: '2026-03-10', vade: '2026-04-10', poTutar: 24500, faturaTutar: 24500, durum: 'Onaylandı', not: '' },
+    { id: 'TDF-2026-002', tedarikci: 'Çelik Depo A.Ş.', tedFaturaNo: 'CD-890', poNo: 'PO-2026-002', grn: true, tarih: '2026-03-12', vade: '2026-04-12', poTutar: 18750, faturaTutar: 19100, durum: 'Fiyat Uyuşmazlığı', not: 'Nakliye farkı' },
+    { id: 'TDF-2026-003', tedarikci: 'Endüstriyel Takım Ltd.', tedFaturaNo: 'ET-2026-77', poNo: 'PO-2026-003', grn: false, tarih: '2026-03-15', vade: '2026-04-15', poTutar: 9200, faturaTutar: 9200, durum: 'Onay Bekliyor', not: '' },
+    { id: 'TDF-2026-004', tedarikci: 'CNC Kesici Merkezi', tedFaturaNo: 'CKM-112', poNo: 'PO-2026-004', grn: true, tarih: '2026-03-05', vade: '2026-03-20', poTutar: 35000, faturaTutar: 35000, durum: 'Ödendi', odeme: { tutar: 35000, tarih: '2026-03-18', banka: 'Ziraat TL', ref: 'DK-998877' } },
+    { id: 'TDF-2026-005', tedarikci: 'Alüminyum Profil A.Ş.', tedFaturaNo: 'AP-5543', poNo: 'PO-2026-005', grn: false, tarih: '2026-03-18', vade: '2026-04-18', poTutar: 12400, faturaTutar: 12400, durum: 'Onay Bekliyor', not: '' },
+    { id: 'TDF-2026-006', tedarikci: 'Teknik Metal San.', tedFaturaNo: 'TMF-4555', poNo: 'PO-2026-001', grn: true, tarih: '2026-02-20', vade: '2026-03-20', poTutar: 15800, faturaTutar: 15800, durum: 'Onaylandı', not: '' }
+  ];
+  localStorage.setItem(LS_KEY, JSON.stringify(faturalar));
+}
+
+/* ── PO Dropdown ── */
+function poDropdownDoldur() {
+  var sel = document.getElementById('fmPoSec');
+  sel.innerHTML = '<option value="">— PO seçin —</option>';
+  var faturalanmisPO = {};
+  faturalar.forEach(function(f) { faturalanmisPO[f.poNo] = true; });
+
+  poListesi.forEach(function(po) {
+    if (!faturalanmisPO[po.no]) {
+      var opt = document.createElement('option');
+      opt.value = po.no;
+      opt.textContent = po.no + ' — ' + po.tedarikci + ' — ₺' + po.tutar.toLocaleString('tr-TR');
+      sel.appendChild(opt);
+    }
+  });
+}
+
+/* ── PO Seçildi ── */
+function poSecildi() {
+  var poNo = document.getElementById('fmPoSec').value;
+  var po = poListesi.find(function(p) { return p.no === poNo; });
+  if (!po) {
+    document.getElementById('fmTedarikci').value = '';
+    document.getElementById('fmPoTutar').value = '';
+    matchLiveGuncelle(false, false, false);
+    return;
+  }
+  document.getElementById('fmTedarikci').value = po.tedarikci;
+  document.getElementById('fmPoTutar').value = '₺' + po.tutar.toLocaleString('tr-TR');
+
+  // Update live match
+  var mlPo = document.getElementById('mlPo');
+  mlPo.textContent = 'PO ✓';
+  mlPo.className = 'ml-chip ml-ok';
+
+  var mlGrn = document.getElementById('mlGrn');
+  if (po.grn) {
+    mlGrn.textContent = 'GRN ✓';
+    mlGrn.className = 'ml-chip ml-ok';
+  } else {
+    mlGrn.textContent = 'GRN ⚠ Bekliyor';
+    mlGrn.className = 'ml-chip ml-warn';
+  }
+
+  fiyatKontrol();
+}
+
+function fiyatKontrol() {
+  var poNo = document.getElementById('fmPoSec').value;
+  var po = poListesi.find(function(p) { return p.no === poNo; });
+  var mlFiyat = document.getElementById('mlFiyat');
+  var fTutar = parseFloat(document.getElementById('fmFaturaTutar').value) || 0;
+
+  if (!po || fTutar === 0) {
+    mlFiyat.textContent = 'Fiyat —';
+    mlFiyat.className = 'ml-chip ml-warn';
+    return;
+  }
+
+  var fark = Math.abs(fTutar - po.tutar);
+  var oran = (fark / po.tutar) * 100;
+
+  if (oran <= 1) {
+    mlFiyat.textContent = 'Fiyat ✓';
+    mlFiyat.className = 'ml-chip ml-ok';
+  } else {
+    mlFiyat.textContent = 'Fiyat ✗ %' + oran.toFixed(1) + ' fark';
+    mlFiyat.className = 'ml-chip ml-fail';
+  }
+}
+
+function matchLiveGuncelle(po, grn, fiyat) {
+  document.getElementById('mlPo').className = 'ml-chip ml-warn';
+  document.getElementById('mlPo').textContent = 'PO —';
+  document.getElementById('mlGrn').className = 'ml-chip ml-warn';
+  document.getElementById('mlGrn').textContent = 'GRN —';
+  document.getElementById('mlFiyat').className = 'ml-chip ml-warn';
+  document.getElementById('mlFiyat').textContent = 'Fiyat —';
+}
+
+/* ── Tablo ── */
+function tabloGuncelle() {
+  kpiHesapla();
+  matchBandHesapla();
+  tabloFiltrele();
+}
+
+function kpiHesapla() {
+  var toplamBorc = 0;
+  var vadesiGecmis = 0;
+  var onayBekliyor = 0;
+  var buAyOdenen = 0;
+  var bugun = new Date();
+  var ayBaslangic = new Date(bugun.getFullYear(), bugun.getMonth(), 1).toISOString().split('T')[0];
+
+  faturalar.forEach(function(f) {
+    if (f.durum !== 'Ödendi') {
+      toplamBorc += f.faturaTutar;
+      if (f.vade < bugun.toISOString().split('T')[0]) {
+        vadesiGecmis += f.faturaTutar;
+      }
+    }
+    if (f.durum === 'Onay Bekliyor') onayBekliyor++;
+    if (f.durum === 'Ödendi' && f.odeme && f.odeme.tarih >= ayBaslangic) {
+      buAyOdenen += f.odeme.tutar;
+    }
+  });
+
+  document.getElementById('kpiToplamBorc').textContent = '₺' + toplamBorc.toLocaleString('tr-TR');
+  document.getElementById('kpiVadesiGecmis').textContent = '₺' + vadesiGecmis.toLocaleString('tr-TR');
+  document.getElementById('kpiOnayBekliyor').textContent = onayBekliyor;
+  document.getElementById('kpiOdenen').textContent = '₺' + buAyOdenen.toLocaleString('tr-TR');
+}
+
+function matchBandHesapla() {
+  var eslesti = 0, grnBekliyor = 0, uyumsuz = 0, onayBekliyor = 0;
+  faturalar.forEach(function(f) {
+    if (f.durum === 'Fiyat Uyuşmazlığı') { uyumsuz++; return; }
+    if (f.durum === 'Onay Bekliyor') { onayBekliyor++; }
+    if (!f.grn) { grnBekliyor++; return; }
+    if (f.grn && Math.abs(f.faturaTutar - f.poTutar) / f.poTutar <= 0.01) eslesti++;
+  });
+  document.getElementById('mcEslesti').textContent = eslesti;
+  document.getElementById('mcGrn').textContent = grnBekliyor;
+  document.getElementById('mcUyumsuz').textContent = uyumsuz;
+  document.getElementById('mcOnay').textContent = onayBekliyor;
+}
+
+function matchFiltre(el) {
+  var filtre = el.getAttribute('data-filtre');
+  if (aktifMatchFiltre === filtre) {
+    aktifMatchFiltre = '';
+    el.classList.remove('aktif');
+  } else {
+    document.querySelectorAll('.match-chip').forEach(function(c) { c.classList.remove('aktif'); });
+    aktifMatchFiltre = filtre;
+    el.classList.add('aktif');
+  }
+  tabloFiltrele();
+}
+
+function tabloFiltrele() {
+  var ara = (document.getElementById('araInput').value || '').toLowerCase();
+  var durum = document.getElementById('durumFiltre').value;
+  var ted = document.getElementById('tedarikciFiltre').value;
+
+  var filtreli = faturalar.filter(function(f) {
+    // Text search
+    if (ara) {
+      var metin = (f.id + ' ' + f.tedarikci + ' ' + f.tedFaturaNo + ' ' + f.poNo).toLowerCase();
+      if (metin.indexOf(ara) === -1) return false;
+    }
+    // Durum filter
+    if (durum && f.durum !== durum) return false;
+    // Tedarikçi filter
+    if (ted && f.tedarikci !== ted) return false;
+    // Match band filter
+    if (aktifMatchFiltre === 'eslesti') {
+      return f.grn && Math.abs(f.faturaTutar - f.poTutar) / f.poTutar <= 0.01 && f.durum !== 'Fiyat Uyuşmazlığı';
+    }
+    if (aktifMatchFiltre === 'grn-beklyor') return !f.grn;
+    if (aktifMatchFiltre === 'fiyat-uyumsuz') return f.durum === 'Fiyat Uyuşmazlığı';
+    if (aktifMatchFiltre === 'onay-bekliyor') return f.durum === 'Onay Bekliyor';
+    return true;
+  });
+
+  var tbody = document.getElementById('faturaBody');
+  var bos = document.getElementById('bosMesaj');
+
+  if (filtreli.length === 0) {
+    tbody.innerHTML = '';
+    bos.style.display = 'block';
+    return;
+  }
+  bos.style.display = 'none';
+
+  var html = '';
+  filtreli.forEach(function(f, idx) {
+    var fark = f.faturaTutar - f.poTutar;
+    var farkClass = fark === 0 ? 'fark-ok' : 'fark-kotu';
+    var farkStr = fark === 0 ? '₺0' : (fark > 0 ? '+' : '') + '₺' + fark.toLocaleString('tr-TR');
+
+    var durumClass = 'db-bekliyor';
+    if (f.durum === 'Onaylandı') durumClass = 'db-eslesti';
+    if (f.durum === 'Ödendi') durumClass = 'db-odendi';
+    if (f.durum === 'Fiyat Uyuşmazlığı') durumClass = 'db-uyumsuz';
+    if (f.durum === 'Onay Bekliyor') durumClass = 'db-onay';
+
+    var grnIcon = f.grn ? '<span style="color:var(--yesil)">✓</span>' : '<span style="color:#f59e0b">⚠</span>';
+
+    // İşlem butonları
+    var islem = '';
+    if (f.durum === 'Onay Bekliyor') {
+      islem = '<button class="btn btn-g btn-sm" onclick="faturaOnayla(' + idx + ')">Onayla</button>';
+    } else if (f.durum === 'Onaylandı') {
+      islem = '<button class="btn btn-b btn-sm" onclick="odemeModalAc(' + idx + ')">Öde</button>';
+    } else if (f.durum === 'Fiyat Uyuşmazlığı') {
+      islem = '<button class="btn btn-warn btn-sm" onclick="faturaIncele(' + idx + ')">İncele</button>';
+    } else if (f.durum === 'Ödendi') {
+      islem = '<span style="color:var(--yesil);font-size:11px">✓ Tamamlandı</span>';
+    }
+
+    // Vade geçmiş kontrolü
+    var bugun = new Date().toISOString().split('T')[0];
+    var vadeStyle = '';
+    if (f.vade < bugun && f.durum !== 'Ödendi') {
+      vadeStyle = 'color:var(--kirmizi);font-weight:600';
+    }
+
+    var gercekIdx = faturalar.indexOf(f);
+
+    html += '<tr>' +
+      '<td class="mono">' + f.id + '</td>' +
+      '<td>' + f.tedarikci + '</td>' +
+      '<td style="font-size:11px;color:var(--metin3)">' + f.tedFaturaNo + '</td>' +
+      '<td class="mono" style="font-size:11px">' + f.poNo + '</td>' +
+      '<td style="text-align:center">' + grnIcon + '</td>' +
+      '<td style="font-size:11px">' + tarihFormat(f.tarih) + '</td>' +
+      '<td style="font-size:11px;' + vadeStyle + '">' + tarihFormat(f.vade) + '</td>' +
+      '<td style="text-align:right;font-size:11px">₺' + f.poTutar.toLocaleString('tr-TR') + '</td>' +
+      '<td style="text-align:right;font-weight:600">₺' + f.faturaTutar.toLocaleString('tr-TR') + '</td>' +
+      '<td style="text-align:right" class="' + farkClass + '">' + farkStr + '</td>' +
+      '<td><span class="durum-badge ' + durumClass + '">' + f.durum + '</span></td>' +
+      '<td>' + islem.replace(/\((\d+)\)/g, '(' + gercekIdx + ')') + '</td>' +
+    '</tr>';
+  });
+
+  tbody.innerHTML = html;
+}
+
+/* ── Fatura İşlemleri ── */
+function faturaOnayla(idx) {
+  faturalar[idx].durum = 'Onaylandı';
+  kaydet();
+  tabloGuncelle();
+  logIslem('Güncellendi', 'Tedarikçi Fatura', faturalar[idx].id, faturalar[idx].id, null, { durum: 'Onaylandı' });
+}
+
+function faturaIncele(idx) {
+  var f = faturalar[idx];
+  var fark = f.faturaTutar - f.poTutar;
+  var mesaj = 'Fatura: ' + f.id + '\n' +
+    'Tedarikçi: ' + f.tedarikci + '\n' +
+    'PO Tutar: ₺' + f.poTutar.toLocaleString('tr-TR') + '\n' +
+    'Fatura Tutar: ₺' + f.faturaTutar.toLocaleString('tr-TR') + '\n' +
+    'Fark: ₺' + fark.toLocaleString('tr-TR') + ' (%' + ((Math.abs(fark) / f.poTutar) * 100).toFixed(1) + ')\n\n' +
+    'Faturayı onaylamak ister misiniz?';
+  if (confirm(mesaj)) {
+    faturalar[idx].durum = 'Onaylandı';
+    kaydet();
+    tabloGuncelle();
+  }
+}
+
+/* ── Modal ── */
+function faturaModalAc() {
+  document.getElementById('faturaModal').classList.add('show');
+  document.getElementById('fmPoSec').selectedIndex = 0;
+  document.getElementById('fmTedarikci').value = '';
+  document.getElementById('fmPoTutar').value = '';
+  document.getElementById('fmFaturaTutar').value = '';
+  document.getElementById('fmTedFaturaNo').value = '';
+  document.getElementById('fmNot').value = '';
+  matchLiveGuncelle();
+  bugunTarih();
+}
+
+function faturaKaydet() {
+  var poNo = document.getElementById('fmPoSec').value;
+  var po = poListesi.find(function(p) { return p.no === poNo; });
+  if (!po) { alert('Lütfen PO seçin'); return; }
+
+  var fTutar = parseFloat(document.getElementById('fmFaturaTutar').value);
+  if (!fTutar || fTutar <= 0) { alert('Fatura tutarı girin'); return; }
+
+  var tedFaturaNo = document.getElementById('fmTedFaturaNo').value.trim();
+  if (!tedFaturaNo) { alert('Tedarikçi fatura numarası girin'); return; }
+
+  var fark = Math.abs(fTutar - po.tutar);
+  var oran = (fark / po.tutar) * 100;
+
+  var durum = 'Onay Bekliyor';
+  if (oran > 1) durum = 'Fiyat Uyuşmazlığı';
+
+  var yeniId = 'TDF-2026-' + String(faturalar.length + 1).padStart(3, '0');
+
+  var yeniFatura = {
+    id: yeniId,
+    tedarikci: po.tedarikci,
+    tedFaturaNo: tedFaturaNo,
+    poNo: poNo,
+    grn: po.grn,
+    tarih: document.getElementById('fmTarih').value,
+    vade: document.getElementById('fmVade').value,
+    poTutar: po.tutar,
+    faturaTutar: fTutar,
+    durum: durum,
+    not: document.getElementById('fmNot').value.trim()
+  };
+
+  faturalar.unshift(yeniFatura);
+  kaydet();
+  poDropdownDoldur();
+  tabloGuncelle();
+  modalKapat('faturaModal');
+  logIslem('Oluşturuldu', 'Tedarikçi Fatura', yeniId, yeniId, null, yeniFatura);
+}
+
+/* ── Ödeme Modal ── */
+function odemeModalAc(idx) {
+  secilenOdemeIdx = idx;
+  var f = faturalar[idx];
+
+  document.getElementById('odemeInfo').innerHTML =
+    '<div class="oi-row"><span class="oi-label">Fatura No</span><span class="oi-val">' + f.id + '</span></div>' +
+    '<div class="oi-row"><span class="oi-label">Tedarikçi</span><span class="oi-val">' + f.tedarikci + '</span></div>' +
+    '<div class="oi-row"><span class="oi-label">Tutar</span><span class="oi-val">₺' + f.faturaTutar.toLocaleString('tr-TR') + '</span></div>' +
+    '<div class="oi-row"><span class="oi-label">Vade</span><span class="oi-val">' + tarihFormat(f.vade) + '</span></div>';
+
+  document.getElementById('omTutar').value = f.faturaTutar;
+  document.getElementById('omTarih').value = new Date().toISOString().split('T')[0];
+  document.getElementById('omRef').value = '';
+  document.getElementById('odemeModal').classList.add('show');
+}
+
+function odemeKaydet() {
+  if (secilenOdemeIdx < 0) return;
+  var tutar = parseFloat(document.getElementById('omTutar').value);
+  if (!tutar || tutar <= 0) { alert('Ödeme tutarı girin'); return; }
+
+  var banka = document.getElementById('omBanka').value;
+  var ref = document.getElementById('omRef').value.trim();
+  var tarih = document.getElementById('omTarih').value;
+
+  faturalar[secilenOdemeIdx].durum = 'Ödendi';
+  faturalar[secilenOdemeIdx].odeme = {
+    tutar: tutar,
+    tarih: tarih,
+    banka: banka,
+    ref: ref
+  };
+
+  // Banka bakiyesini düş
+  var bankalar = JSON.parse(localStorage.getItem(LS_BANKA) || '[]');
+  bankalar.forEach(function(b) {
+    if (b.ad === banka) b.bakiye -= tutar;
+  });
+  localStorage.setItem(LS_BANKA, JSON.stringify(bankalar));
+
+  kaydet();
+  tabloGuncelle();
+  modalKapat('odemeModal');
+  logIslem('Güncellendi', 'Tedarikçi Fatura', faturalar[secilenOdemeIdx].id, faturalar[secilenOdemeIdx].id, null, { durum: 'Ödendi', odeme: faturalar[secilenOdemeIdx].odeme });
+}
+
+/* ── Yardımcılar ── */
+function modalKapat(id) {
+  document.getElementById(id).classList.remove('show');
+}
+
+function kaydet() {
+  localStorage.setItem(LS_KEY, JSON.stringify(faturalar));
+}
+
+function tarihFormat(d) {
+  if (!d) return '-';
+  var p = d.split('-');
+  return p[2] + '.' + p[1] + '.' + p[0];
+}
+
+/* ── Excel İndir ── */
+function excelIndir() {
+  var satirlar = ['Fatura No\tTedarikçi\tTed. Fatura No\tPO No\tGRN\tTarih\tVade\tPO Tutar\tFatura Tutar\tFark\tDurum'];
+  faturalar.forEach(function(f) {
+    var fark = f.faturaTutar - f.poTutar;
+    satirlar.push([
+      f.id, f.tedarikci, f.tedFaturaNo, f.poNo,
+      f.grn ? 'Evet' : 'Hayır',
+      f.tarih, f.vade, f.poTutar, f.faturaTutar, fark, f.durum
+    ].join('\t'));
+  });
+  var blob = new Blob(['\uFEFF' + satirlar.join('\n')], { type: 'text/tab-separated-values;charset=utf-8' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'tedarikci_faturalari_' + new Date().toISOString().split('T')[0] + '.xls';
+  a.click();
+}
+</script>
+</body>
+</html>

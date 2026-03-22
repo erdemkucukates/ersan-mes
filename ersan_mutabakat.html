@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — Mutabakat</title>
+<link rel="stylesheet" href="ersan_styles.css">
+<script src="ersan_nav.js" defer></script>
+<script src="ersan_log.js" defer></script>
+<style>
+.kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px;}
+.kpi-row .kpi{background:#fff;border:1px solid var(--border);border-radius:8px;padding:14px 16px;border-top:3px solid var(--mavi);}
+.kpi-row .kpi .kpi-val{font-size:26px;font-weight:700;color:var(--laci);}
+.kpi-row .kpi .kpi-lbl{font-size:11px;color:var(--metin4);margin-top:2px;}
+.kpi-row .kpi.s1{border-top-color:var(--yesil);}
+.kpi-row .kpi.s2{border-top-color:var(--kirmizi);}
+.kpi-row .kpi.s3{border-top-color:#f59e0b;}
+.tbl-wrap{background:#fff;border:1px solid var(--border);border-radius:8px;overflow:auto;max-height:calc(100vh - 320px);}
+.tbl{width:100%;border-collapse:collapse;font-size:12px;}
+.tbl th{background:var(--bg2);font-weight:600;color:var(--metin3);padding:8px 10px;text-align:left;border-bottom:2px solid var(--border);white-space:nowrap;position:sticky;top:0;z-index:1;}
+.tbl td{padding:7px 10px;border-bottom:1px solid var(--border);color:var(--metin2);vertical-align:middle;}
+.tbl tr:hover{background:#f8fafc;}
+.bdg{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;white-space:nowrap;}
+.b-grn{background:#ecfdf5;color:#065f46;}
+.b-amr{background:#fffbeb;color:#92400e;}
+.b-red{background:#fef2f2;color:#991b1b;}
+.b-blu{background:#eff6ff;color:#1e40af;}
+.mono{font-family:'Cascadia Code','Fira Code',monospace;font-size:11px;}
+.btn-row{display:flex;gap:4px;flex-wrap:nowrap;}
+/* Modal */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:700;display:none;align-items:center;justify-content:center;}
+.modal-bg.goster{display:flex;}
+.modal{background:#fff;border-radius:10px;width:560px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,0.2);}
+.modal-lg{width:780px;}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);}
+.modal-head h3{font-size:15px;font-weight:700;color:var(--laci);margin:0;}
+.modal-kapat{background:none;border:none;font-size:18px;cursor:pointer;color:var(--metin3);padding:4px;}
+.modal-body{padding:16px 20px;}
+.modal-footer{display:flex;justify-content:flex-end;gap:8px;padding:12px 20px;border-top:1px solid var(--border);}
+.form-group{margin-bottom:12px;}
+.form-group label{display:block;font-size:11px;font-weight:600;color:var(--metin3);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.3px;}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;background:#fff;color:var(--metin2);}
+.form-group select{cursor:pointer;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+/* Uyusmazlik compare */
+.compare-wrap{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+.compare-box{background:var(--bg2);border-radius:8px;padding:14px;border:1px solid var(--border);}
+.compare-box h4{font-size:12px;font-weight:700;color:var(--laci);margin-bottom:10px;}
+.compare-item{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;}
+.compare-item:last-child{border-bottom:none;}
+.fark-box{background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:14px;margin-bottom:14px;}
+.fark-box h4{font-size:12px;font-weight:700;color:#991b1b;margin-bottom:8px;}
+.radio-group{display:flex;gap:12px;margin-top:8px;}
+.radio-group label{display:flex;align-items:center;gap:4px;font-size:12px;font-weight:500;color:var(--metin2);cursor:pointer;}
+@media(max-width:900px){.kpi-row{grid-template-columns:repeat(2,1fr);}.compare-wrap{grid-template-columns:1fr;}}
+@media(max-width:600px){.kpi-row{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div id="nav-alani"></div>
+<div class="icerik-alani">
+  <div class="topbar">
+    <div class="topbar-baslik">Mutabakat</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button class="btn btn-mavi btn-sm" onclick="yeniMutabakatAc()">+ Yeni Mutabakat</button>
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
+    </div>
+  </div>
+  <div class="sayfa-icerik">
+
+    <!-- KPI ROW -->
+    <div class="kpi-row">
+      <div class="kpi s1"><div class="kpi-val" id="kpi-mutabik">0</div><div class="kpi-lbl">Mutabik</div></div>
+      <div class="kpi s2"><div class="kpi-val" id="kpi-uyusmazlik">0</div><div class="kpi-lbl">Uyusmazlik</div></div>
+      <div class="kpi s3"><div class="kpi-val" id="kpi-bekleyen">0</div><div class="kpi-lbl">Bekleyen</div></div>
+    </div>
+
+    <!-- TABLO -->
+    <div class="tbl-wrap">
+      <table class="tbl" id="mutabakat-tbl">
+        <thead>
+          <tr>
+            <th>Firma</th>
+            <th>Tip</th>
+            <th style="text-align:right">Bizim Kayit</th>
+            <th style="text-align:right">Karsi Kayit</th>
+            <th style="text-align:right">Fark</th>
+            <th>Son Mutabakat</th>
+            <th>Durum</th>
+            <th>Islem</th>
+          </tr>
+        </thead>
+        <tbody id="mutabakat-body"></tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<!-- YENI MUTABAKAT MODAL -->
+<div class="modal-bg" id="modal-yeni">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Yeni Mutabakat</h3>
+      <button class="modal-kapat" onclick="modalKapat('modal-yeni')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Firma Tipi</label>
+        <select id="yeni-tip" onchange="firmalariYukle()">
+          <option value="">Seciniz</option>
+          <option value="Musteri">Musteri</option>
+          <option value="Tedarikci">Tedarikci</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Firma</label>
+        <select id="yeni-firma"><option value="">Once tip seciniz</option></select>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Donem Baslangic</label>
+          <input type="date" id="yeni-baslangic">
+        </div>
+        <div class="form-group">
+          <label>Donem Bitis</label>
+          <input type="date" id="yeni-bitis">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Bizim Bakiye (TL)</label>
+          <input type="number" id="yeni-bizim" step="0.01" placeholder="0.00">
+        </div>
+        <div class="form-group">
+          <label>Karsi Taraf Bakiye (TL)</label>
+          <input type="number" id="yeni-karsi" step="0.01" placeholder="0.00">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Not</label>
+        <textarea id="yeni-not" rows="2" placeholder="Opsiyonel"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-beyaz btn-sm" onclick="modalKapat('modal-yeni')">Iptal</button>
+      <button class="btn btn-mavi btn-sm" onclick="mutabakatKaydet()">Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<!-- MEKTUP MODAL -->
+<div class="modal-bg" id="modal-mektup">
+  <div class="modal modal-lg">
+    <div class="modal-head">
+      <h3>Mutabakat Mektubu</h3>
+      <button class="modal-kapat" onclick="modalKapat('modal-mektup')">&times;</button>
+    </div>
+    <div class="modal-body" id="mektup-icerik"></div>
+    <div class="modal-footer">
+      <button class="btn btn-beyaz btn-sm" onclick="modalKapat('modal-mektup')">Kapat</button>
+      <button class="btn btn-mavi btn-sm" onclick="mektupYazdir()">Yazdir</button>
+    </div>
+  </div>
+</div>
+
+<!-- UYUSMAZLIK INCELE MODAL -->
+<div class="modal-bg" id="modal-incele">
+  <div class="modal modal-lg">
+    <div class="modal-head">
+      <h3>Uyusmazlik Inceleme</h3>
+      <button class="modal-kapat" onclick="modalKapat('modal-incele')">&times;</button>
+    </div>
+    <div class="modal-body" id="incele-icerik"></div>
+    <div class="modal-footer">
+      <button class="btn btn-beyaz btn-sm" onclick="modalKapat('modal-incele')">Kapat</button>
+      <button class="btn btn-mavi btn-sm" onclick="uyusmazlikCoz()">Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── STATE ── */
+var mutabakatlar = [];
+var musteriler = [];
+var tedarikciler = [];
+var seciliIdx = -1;
+var seciliCozum = '';
+
+var LS_KEY = 'ersan_mutabakat';
+
+/* ── INIT ── */
+document.addEventListener('DOMContentLoaded', function() {
+  verileriYukle();
+  firmaVerileriniCek();
+});
+
+/* ── FIRMA VERILERI ── */
+function firmaVerileriniCek() {
+  fetch('/.netlify/functions/airtable?table=M%C3%BC%C5%9Fteriler&pageSize=100')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      musteriler = (d.records || []).map(function(r) {
+        return { id: r.id, ad: (r.fields || {})['Firma Adı'] || (r.fields || {})['Name'] || r.id };
+      });
+    })
+    .catch(function() { musteriler = []; });
+
+  fetch('/.netlify/functions/airtable?table=Tedarik%C3%A7iler%20(OTL)&pageSize=100')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      tedarikciler = (d.records || []).map(function(r) {
+        return { id: r.id, ad: (r.fields || {})['Firma Adı'] || (r.fields || {})['Name'] || r.id };
+      });
+    })
+    .catch(function() { tedarikciler = []; });
+}
+
+/* ── LOCAL STORAGE ── */
+function verileriYukle() {
+  var raw = localStorage.getItem(LS_KEY);
+  if (raw) {
+    try { mutabakatlar = JSON.parse(raw); } catch(e) { mutabakatlar = []; }
+  }
+  if (mutabakatlar.length === 0) {
+    mutabakatlar = ornekVeriOlustur();
+    verileriKaydet();
+  }
+  tabloGuncelle();
+}
+
+function verileriKaydet() {
+  localStorage.setItem(LS_KEY, JSON.stringify(mutabakatlar));
+}
+
+function ornekVeriOlustur() {
+  return [
+    { id: 'M001', firma: 'TAI (TUSAS)', tip: 'Musteri', bizim: 245800.00, karsi: 245800.00, donemBas: '2026-01-01', donemBit: '2026-03-31', sonTarih: '2026-03-15', durum: 'Mutabik', not: '' },
+    { id: 'M002', firma: 'ASELSAN A.S.', tip: 'Musteri', bizim: 189500.00, karsi: 186200.00, donemBas: '2026-01-01', donemBit: '2026-03-31', sonTarih: '2026-03-10', durum: 'Uyusmazlik', not: 'Fatura #F-2026-047 karsi tarafta eksik' },
+    { id: 'M003', firma: 'ROKETSAN', tip: 'Musteri', bizim: 312000.00, karsi: 0, donemBas: '2026-01-01', donemBit: '2026-03-31', sonTarih: '', durum: 'Bekleyen', not: 'Mutabakat mektubu gonderildi, yanit bekleniyor' },
+    { id: 'M004', firma: 'TEI (Tusas Motor)', tip: 'Musteri', bizim: 97650.00, karsi: 97650.00, donemBas: '2026-01-01', donemBit: '2026-03-31', sonTarih: '2026-03-18', durum: 'Mutabik', not: '' },
+    { id: 'T001', firma: 'Birlik Celik', tip: 'Tedarikci', bizim: 78400.00, karsi: 78400.00, donemBas: '2026-01-01', donemBit: '2026-03-31', sonTarih: '2026-03-12', durum: 'Mutabik', not: '' },
+    { id: 'T002', firma: 'Takimsan Kesici', tip: 'Tedarikci', bizim: 34200.00, karsi: 35800.00, donemBas: '2026-01-01', donemBit: '2026-03-31', sonTarih: '2026-03-08', durum: 'Uyusmazlik', not: 'Iade edilen takim bedeli dusulmemis' },
+    { id: 'T003', firma: 'Guleryuz Isil Islem', tip: 'Tedarikci', bizim: 22100.00, karsi: 0, donemBas: '2026-01-01', donemBit: '2026-03-31', sonTarih: '', durum: 'Bekleyen', not: '' },
+    { id: 'M005', firma: 'HAVELSAN', tip: 'Musteri', bizim: 156300.00, karsi: 156300.00, donemBas: '2026-01-01', donemBit: '2026-03-31', sonTarih: '2026-03-20', durum: 'Mutabik', not: '' }
+  ];
+}
+
+/* ── TABLO ── */
+function tabloGuncelle() {
+  var tbody = document.getElementById('mutabakat-body');
+  var mutabik = 0, uyusmazlik = 0, bekleyen = 0;
+
+  var html = '';
+  mutabakatlar.forEach(function(m, idx) {
+    var fark = m.bizim - m.karsi;
+    var farkStr = fark === 0 ? '0.00' : (fark > 0 ? '+' : '') + fark.toFixed(2);
+    var durumBdg = '';
+    if (m.durum === 'Mutabik') { durumBdg = '<span class="bdg b-grn">Mutabik</span>'; mutabik++; }
+    else if (m.durum === 'Uyusmazlik') { durumBdg = '<span class="bdg b-red">Uyusmazlik</span>'; uyusmazlik++; }
+    else { durumBdg = '<span class="bdg b-amr">Bekleyen</span>'; bekleyen++; }
+
+    var tipBdg = m.tip === 'Musteri' ? '<span class="bdg b-blu">Musteri</span>' : '<span class="bdg b-grn">Tedarikci</span>';
+
+    html += '<tr>';
+    html += '<td style="font-weight:600;color:var(--laci)">' + m.firma + '</td>';
+    html += '<td>' + tipBdg + '</td>';
+    html += '<td class="mono" style="text-align:right">' + formatPara(m.bizim) + '</td>';
+    html += '<td class="mono" style="text-align:right">' + (m.karsi > 0 ? formatPara(m.karsi) : '<span style="color:var(--metin4)">—</span>') + '</td>';
+    html += '<td class="mono" style="text-align:right;color:' + (fark === 0 ? 'var(--yesil)' : (m.durum === 'Bekleyen' ? 'var(--metin4)' : 'var(--kirmizi)')) + '">' + (m.durum === 'Bekleyen' ? '—' : farkStr) + '</td>';
+    html += '<td>' + (m.sonTarih ? formatTarih(m.sonTarih) : '<span style="color:var(--metin4)">—</span>') + '</td>';
+    html += '<td>' + durumBdg + '</td>';
+    html += '<td><div class="btn-row">';
+    html += '<button class="btn btn-beyaz btn-sm" onclick="mektupAc(' + idx + ')">Mektup</button>';
+    if (m.durum === 'Uyusmazlik') {
+      html += '<button class="btn btn-beyaz btn-sm" style="color:var(--kirmizi)" onclick="inceleAc(' + idx + ')">Incele</button>';
+    }
+    if (m.durum === 'Bekleyen') {
+      html += '<button class="btn btn-mavi btn-sm" onclick="talepGonder(' + idx + ')">Talep Gonder</button>';
+    }
+    html += '</div></td>';
+    html += '</tr>';
+  });
+
+  tbody.innerHTML = html;
+  document.getElementById('kpi-mutabik').textContent = mutabik;
+  document.getElementById('kpi-uyusmazlik').textContent = uyusmazlik;
+  document.getElementById('kpi-bekleyen').textContent = bekleyen;
+}
+
+/* ── YENI MUTABAKAT ── */
+function yeniMutabakatAc() {
+  document.getElementById('yeni-tip').value = '';
+  document.getElementById('yeni-firma').innerHTML = '<option value="">Once tip seciniz</option>';
+  document.getElementById('yeni-baslangic').value = '';
+  document.getElementById('yeni-bitis').value = '';
+  document.getElementById('yeni-bizim').value = '';
+  document.getElementById('yeni-karsi').value = '';
+  document.getElementById('yeni-not').value = '';
+  modalAc('modal-yeni');
+}
+
+function firmalariYukle() {
+  var tip = document.getElementById('yeni-tip').value;
+  var sel = document.getElementById('yeni-firma');
+  sel.innerHTML = '<option value="">Seciniz</option>';
+  var liste = tip === 'Musteri' ? musteriler : (tip === 'Tedarikci' ? tedarikciler : []);
+  liste.forEach(function(f) {
+    var opt = document.createElement('option');
+    opt.value = f.ad;
+    opt.textContent = f.ad;
+    sel.appendChild(opt);
+  });
+}
+
+function mutabakatKaydet() {
+  var tip = document.getElementById('yeni-tip').value;
+  var firma = document.getElementById('yeni-firma').value;
+  var baslangic = document.getElementById('yeni-baslangic').value;
+  var bitis = document.getElementById('yeni-bitis').value;
+  var bizim = parseFloat(document.getElementById('yeni-bizim').value) || 0;
+  var karsi = parseFloat(document.getElementById('yeni-karsi').value) || 0;
+  var not_ = document.getElementById('yeni-not').value;
+
+  if (!tip || !firma) { alert('Firma tipi ve firma seciniz'); return; }
+  if (!baslangic || !bitis) { alert('Donem tarihlerini giriniz'); return; }
+
+  var fark = bizim - karsi;
+  var durum = 'Bekleyen';
+  if (karsi > 0 && fark === 0) durum = 'Mutabik';
+  else if (karsi > 0 && fark !== 0) durum = 'Uyusmazlik';
+
+  var yeniKayit = {
+    id: tip.charAt(0).toUpperCase() + String(Date.now()).slice(-4),
+    firma: firma,
+    tip: tip,
+    bizim: bizim,
+    karsi: karsi,
+    donemBas: baslangic,
+    donemBit: bitis,
+    sonTarih: karsi > 0 ? new Date().toISOString().slice(0, 10) : '',
+    durum: durum,
+    not: not_
+  };
+
+  mutabakatlar.push(yeniKayit);
+  verileriKaydet();
+  tabloGuncelle();
+  modalKapat('modal-yeni');
+}
+
+/* ── MEKTUP ── */
+function mektupAc(idx) {
+  var m = mutabakatlar[idx];
+  var bugun = new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+
+  var html = '';
+  html += '<div id="mektup-print" style="font-family:serif;color:#1a1a1a;line-height:1.8;">';
+  html += '<div style="text-align:center;margin-bottom:24px;">';
+  html += '<h2 style="font-size:18px;margin-bottom:4px;">ERSAN ENDUSTRIYEL MAKINE SAN. TIC. LTD. STI.</h2>';
+  html += '<p style="font-size:11px;color:#666;">Basiskele Sanayi Sitesi 12.Blok No:2, Kocaeli | Tel: (262) 343 43 43</p>';
+  html += '</div>';
+  html += '<hr style="border:none;border-top:2px solid #0f2744;margin-bottom:20px;">';
+  html += '<div style="display:flex;justify-content:space-between;margin-bottom:20px;">';
+  html += '<div><strong>Sayin:</strong> ' + m.firma + '</div>';
+  html += '<div><strong>Tarih:</strong> ' + bugun + '</div>';
+  html += '</div>';
+  html += '<p style="margin-bottom:16px;">Sirketimiz kayitlarina gore, <strong>' + formatTarih(m.donemBas) + '</strong> — <strong>' + formatTarih(m.donemBit) + '</strong> donemi itibariyle asagidaki bakiye bilgileri yer almaktadir. Kayitlarinizla mutabakatinin saglanmasi amaciyla bilgilerinize sunariz.</p>';
+  html += '<table style="width:100%;border-collapse:collapse;margin-bottom:20px;font-size:13px;">';
+  html += '<tr style="background:#f0f4f8;"><th style="padding:8px 12px;text-align:left;border:1px solid #ccc;">Aciklama</th><th style="padding:8px 12px;text-align:right;border:1px solid #ccc;">Tutar (TL)</th></tr>';
+  html += '<tr><td style="padding:8px 12px;border:1px solid #ccc;">Bizim Kayitlarimiz</td><td style="padding:8px 12px;text-align:right;border:1px solid #ccc;font-weight:700;">' + formatPara(m.bizim) + '</td></tr>';
+  if (m.karsi > 0) {
+    html += '<tr><td style="padding:8px 12px;border:1px solid #ccc;">Karsi Taraf Kaydi</td><td style="padding:8px 12px;text-align:right;border:1px solid #ccc;">' + formatPara(m.karsi) + '</td></tr>';
+    var fark = m.bizim - m.karsi;
+    html += '<tr style="background:#fef2f2;"><td style="padding:8px 12px;border:1px solid #ccc;font-weight:700;">Fark</td><td style="padding:8px 12px;text-align:right;border:1px solid #ccc;font-weight:700;color:' + (fark === 0 ? '#065f46' : '#991b1b') + '">' + formatPara(Math.abs(fark)) + '</td></tr>';
+  }
+  html += '</table>';
+  html += '<p style="margin-bottom:30px;">Yukaridaki bilgilerin kayitlarinizla uyumlu olmasi halinde asagidaki onay bolumlunu imzalayarak tarafimiza iletmenizi rica ederiz. Uyusmazlik olmasi durumunda detaylarin yazili olarak bildirilmesini talep ederiz.</p>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:40px;">';
+  html += '<div style="border-top:1px solid #333;padding-top:8px;text-align:center;"><p><strong>Ersan Endustriyel</strong></p><p style="font-size:11px;color:#666;margin-top:4px;">Imza / Kase</p></div>';
+  html += '<div style="border-top:1px solid #333;padding-top:8px;text-align:center;"><p><strong>' + m.firma + '</strong></p><p style="font-size:11px;color:#666;margin-top:4px;">Imza / Kase</p></div>';
+  html += '</div>';
+  html += '</div>';
+
+  document.getElementById('mektup-icerik').innerHTML = html;
+  modalAc('modal-mektup');
+}
+
+function mektupYazdir() {
+  var icerik = document.getElementById('mektup-print').innerHTML;
+  var win = window.open('', '_blank', 'width=800,height=1000');
+  win.document.write('<html><head><title>Mutabakat Mektubu</title>');
+  win.document.write('<style>body{font-family:serif;padding:40px;color:#1a1a1a;line-height:1.8;}</style>');
+  win.document.write('</head><body>');
+  win.document.write(icerik);
+  win.document.write('</body></html>');
+  win.document.close();
+  win.print();
+}
+
+/* ── UYUSMAZLIK INCELE ── */
+function inceleAc(idx) {
+  seciliIdx = idx;
+  seciliCozum = '';
+  var m = mutabakatlar[idx];
+  var fark = m.bizim - m.karsi;
+
+  var html = '';
+  html += '<div class="compare-wrap">';
+  html += '<div class="compare-box">';
+  html += '<h4>Bizim Kayitlarimiz</h4>';
+  html += '<div class="compare-item"><span>Toplam Bakiye</span><span class="mono" style="font-weight:700">' + formatPara(m.bizim) + '</span></div>';
+  html += '<div class="compare-item"><span>Donem</span><span>' + formatTarih(m.donemBas) + ' — ' + formatTarih(m.donemBit) + '</span></div>';
+  html += '</div>';
+  html += '<div class="compare-box">';
+  html += '<h4>Karsi Taraf Kaydi</h4>';
+  html += '<div class="compare-item"><span>Toplam Bakiye</span><span class="mono" style="font-weight:700">' + formatPara(m.karsi) + '</span></div>';
+  html += '<div class="compare-item"><span>Donem</span><span>' + formatTarih(m.donemBas) + ' — ' + formatTarih(m.donemBit) + '</span></div>';
+  html += '</div>';
+  html += '</div>';
+
+  html += '<div class="fark-box">';
+  html += '<h4>Fark: ' + formatPara(Math.abs(fark)) + ' TL</h4>';
+  if (m.not) html += '<p style="font-size:12px;color:#991b1b;margin-bottom:8px;">' + m.not + '</p>';
+  html += '<div class="radio-group">';
+  html += '<label><input type="radio" name="cozum" value="bizim" onchange="seciliCozum=this.value"> Bizim kaydi kabul et</label>';
+  html += '<label><input type="radio" name="cozum" value="karsi" onchange="seciliCozum=this.value"> Karsi kaydi kabul et</label>';
+  html += '<label><input type="radio" name="cozum" value="uzlasma" onchange="seciliCozum=this.value"> Uzlasma</label>';
+  html += '</div>';
+  html += '<div id="uzlasma-alan" style="margin-top:10px;display:none;">';
+  html += '<div class="form-group"><label>Uzlasma Tutari (TL)</label><input type="number" id="uzlasma-tutar" step="0.01" placeholder="0.00"></div>';
+  html += '</div>';
+  html += '</div>';
+
+  document.getElementById('incele-icerik').innerHTML = html;
+
+  // uzlasma radio dinle
+  var radios = document.querySelectorAll('input[name="cozum"]');
+  radios.forEach(function(r) {
+    r.addEventListener('change', function() {
+      document.getElementById('uzlasma-alan').style.display = r.value === 'uzlasma' ? 'block' : 'none';
+    });
+  });
+
+  modalAc('modal-incele');
+}
+
+function uyusmazlikCoz() {
+  if (seciliIdx < 0 || !seciliCozum) { alert('Bir cozum secin'); return; }
+  var m = mutabakatlar[seciliIdx];
+
+  if (seciliCozum === 'bizim') {
+    m.karsi = m.bizim;
+  } else if (seciliCozum === 'karsi') {
+    m.bizim = m.karsi;
+  } else if (seciliCozum === 'uzlasma') {
+    var tutar = parseFloat(document.getElementById('uzlasma-tutar').value) || 0;
+    if (tutar <= 0) { alert('Uzlasma tutarini giriniz'); return; }
+    m.bizim = tutar;
+    m.karsi = tutar;
+  }
+
+  m.durum = 'Mutabik';
+  m.sonTarih = new Date().toISOString().slice(0, 10);
+  m.not = 'Uyusmazlik cozuldu (' + seciliCozum + ')';
+
+  verileriKaydet();
+  tabloGuncelle();
+  modalKapat('modal-incele');
+  seciliIdx = -1;
+  seciliCozum = '';
+}
+
+/* ── TALEP GONDER ── */
+function talepGonder(idx) {
+  var m = mutabakatlar[idx];
+  alert('Mutabakat talebi gonderildi: ' + m.firma + '\n(Gercek entegrasyon icin mail sistemi gerekli)');
+}
+
+/* ── MODAL HELPERS ── */
+function modalAc(id) {
+  document.getElementById(id).classList.add('goster');
+}
+
+function modalKapat(id) {
+  document.getElementById(id).classList.remove('goster');
+}
+
+/* ── FORMAT HELPERS ── */
+function formatPara(n) {
+  return new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
+}
+
+function formatTarih(str) {
+  if (!str) return '—';
+  var d = new Date(str + 'T00:00:00');
+  return d.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+
+/* ── BACKDROP CLICK CLOSE ── */
+document.addEventListener('click', function(e) {
+  if (e.target.classList.contains('modal-bg') && e.target.classList.contains('goster')) {
+    e.target.classList.remove('goster');
+  }
+});
+</script>
+</body>
+</html>

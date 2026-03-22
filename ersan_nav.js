@@ -62,13 +62,12 @@ var ERSAN_NAV = [
     { label: 'Bak\u0131m \u0130\u015F Emirleri', href: 'ersan_ekipman_bwo.html' },
     { label: 'Ar\u0131za Kayd\u0131', href: 'ersan_ariza.html' },
   ]},
-  { group: 'Finans', collapsed: true, items: [
-    { label: 'Genel Bak\u0131\u015F',      href: 'ersan_finans.html' },
-    { label: 'Alacaklar',        href: 'ersan_alacaklar.html' },
-    { label: 'Bor\u00E7lar',          href: 'ersan_borclar.html' },
-    { label: 'Sipari\u015F Maliyeti', href: 'ersan_maliyet.html' },
-    { label: 'Kar Analizi',      href: 'ersan_kar.html' },
-    { label: 'Nakit Ak\u0131\u015F\u0131',      href: 'ersan_nakit.html' },
+  { group: 'Finans', collapsed: false, items: [
+    { label: 'Finans Paneli',          href: 'ersan_finans_panel.html' },
+    { label: 'M\u00FC\u015Fteri Faturalar\u0131', href: 'ersan_musteri_fatura.html' },
+    { label: 'Tedarik\u00E7i Faturalar\u0131', href: 'ersan_tedarikci_fatura.html' },
+    { label: 'Nakit Ak\u0131\u015F\u0131',      href: 'ersan_nakit_akis.html' },
+    { label: 'Mutabakat',              href: 'ersan_mutabakat.html' },
   ]},
   { group: 'Destek', collapsed: true, items: [
     { label: 'Dok\u00FCman Y\u00F6netimi',    href: 'ersan_dokuman.html' },

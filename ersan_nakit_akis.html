@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — Nakit Akışı</title>
+<link rel="stylesheet" href="ersan_styles.css">
+<script src="ersan_nav.js" defer></script>
+<script src="ersan_log.js" defer></script>
+<style>
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.kpi{background:#fff;border-radius:8px;padding:14px 16px;border:1px solid var(--border);border-top:3px solid var(--border)}
+.kpi .kv{font-size:22px;font-weight:700;color:var(--laci)}
+.kpi .kl{font-size:11px;color:var(--metin3);margin-top:2px}
+.kpi.s1{border-top-color:var(--yesil)}
+.kpi.s2{border-top-color:var(--kirmizi)}
+.kpi.s3{border-top-color:var(--mavi)}
+.kpi.s4{border-top-color:#8b5cf6}
+.kpi .kv.pozitif{color:var(--yesil)}
+.kpi .kv.negatif{color:var(--kirmizi)}
+
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px}
+.topbar h1{font-size:18px;font-weight:700;color:var(--laci)}
+.topbar-btns{display:flex;gap:6px;align-items:center}
+
+.btn{padding:7px 14px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:opacity .15s}
+.btn:hover{opacity:.85}
+.btn-b{background:var(--mavi);color:#fff}
+.btn-p{background:var(--laci);color:#fff}
+.btn-w{background:#fff;color:var(--laci);border:1px solid var(--border)}
+.btn-sm{padding:4px 10px;font-size:11px}
+
+.donem-sec{display:flex;gap:4px;background:var(--bg2);border-radius:6px;padding:3px}
+.donem-sec button{padding:5px 12px;border:none;border-radius:4px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;background:transparent;color:var(--metin3);transition:all .12s}
+.donem-sec button.aktif{background:#fff;color:var(--laci);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+
+/* Projeksiyon Tablosu */
+.tablo-wrap{background:#fff;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:14px}
+.tablo-wrap table{width:100%;border-collapse:collapse;font-size:12px}
+.tablo-wrap th{background:var(--bg2);padding:9px 10px;text-align:left;font-weight:600;font-size:11px;color:var(--metin3);text-transform:uppercase;letter-spacing:.3px;border-bottom:1px solid var(--border)}
+.tablo-wrap td{padding:8px 10px;border-bottom:1px solid var(--bg2);vertical-align:middle}
+.tablo-wrap tr:hover{background:var(--bg2)}
+.tablo-wrap .mono{font-family:'Courier New',monospace;font-weight:600;font-size:11px}
+.past-row{font-weight:600}
+.future-row{font-style:italic;color:var(--metin3)}
+.net-pozitif{color:var(--yesil);font-weight:600}
+.net-negatif{color:var(--kirmizi);font-weight:600}
+.kumulatif-pozitif{color:var(--yesil)}
+.kumulatif-negatif{color:var(--kirmizi);font-weight:700}
+
+.section-title{font-size:14px;font-weight:700;color:var(--laci);margin:18px 0 10px;display:flex;align-items:center;gap:8px}
+.section-title .st-badge{font-size:10px;background:var(--bg2);color:var(--metin3);padding:2px 8px;border-radius:10px;font-weight:600}
+
+/* Timeline */
+.timeline-wrap{background:#fff;border:1px solid var(--border);border-radius:8px;padding:16px 20px;margin-bottom:14px;max-height:400px;overflow-y:auto}
+.tl-item{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid var(--bg2);cursor:pointer;transition:background .12s}
+.tl-item:last-child{border-bottom:none}
+.tl-item:hover{background:var(--bg2);margin:0 -8px;padding-left:8px;padding-right:8px;border-radius:6px}
+.tl-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;margin-top:3px}
+.tl-dot.giris{background:var(--yesil)}
+.tl-dot.cikis{background:var(--kirmizi)}
+.tl-dot.gecikms{background:var(--kirmizi);box-shadow:0 0 0 3px rgba(226,75,74,.2)}
+.tl-body{flex:1;min-width:0}
+.tl-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:2px}
+.tl-title{font-size:12px;font-weight:600;color:var(--laci)}
+.tl-tutar{font-size:13px;font-weight:700}
+.tl-tutar.giris{color:var(--yesil)}
+.tl-tutar.cikis{color:var(--kirmizi)}
+.tl-mid{font-size:11px;color:var(--metin3)}
+.tl-date{font-size:10px;color:var(--metin4);margin-top:2px}
+.tl-gecikms{font-size:10px;color:var(--kirmizi);font-weight:600;margin-top:2px}
+
+/* Banka Hesapları */
+.banka-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;margin-bottom:14px}
+.banka-card{background:#fff;border:1px solid var(--border);border-radius:8px;padding:16px;border-left:4px solid var(--mavi)}
+.banka-card .bc-ad{font-size:13px;font-weight:600;color:var(--laci);margin-bottom:2px}
+.banka-card .bc-doviz{font-size:10px;color:var(--metin4);margin-bottom:8px}
+.banka-card .bc-bakiye{font-size:20px;font-weight:700;color:var(--laci);margin-bottom:8px}
+.banka-card .bc-bar{height:6px;background:var(--bg2);border-radius:3px;overflow:hidden}
+.banka-card .bc-bar-fill{height:100%;border-radius:3px;background:var(--mavi);transition:width .3s}
+.banka-card.tl{border-left-color:var(--yesil)}
+.banka-card.eur{border-left-color:#8b5cf6}
+.banka-card.usd{border-left-color:#f59e0b}
+
+.toplam-nakit{background:linear-gradient(135deg,var(--laci) 0%,var(--laci2) 100%);border-radius:8px;padding:16px 20px;color:#fff;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
+.toplam-nakit .tn-label{font-size:12px;opacity:.7}
+.toplam-nakit .tn-val{font-size:24px;font-weight:700}
+
+.iki-kolon{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:900px){.iki-kolon{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="nav-alani"></div>
+<div class="main-area" style="margin-left:220px;padding:18px 24px;">
+
+<!-- Topbar -->
+<div class="topbar">
+  <h1>Nakit Akışı</h1>
+  <div class="topbar-btns">
+    <div class="donem-sec" id="donemSec">
+      <button class="aktif" data-gun="30" onclick="donemDegistir(this)">30 Gün</button>
+      <button data-gun="60" onclick="donemDegistir(this)">60 Gün</button>
+      <button data-gun="90" onclick="donemDegistir(this)">90 Gün</button>
+    </div>
+    <button class="btn btn-w" onclick="raporIndir()">📊 Rapor</button>
+  </div>
+</div>
+
+<!-- KPI Row -->
+<div class="kpi-row">
+  <div class="kpi s1"><div class="kv" id="kpiGiris">₺0</div><div class="kl">Bu Ay Giriş (Tahsilat)</div></div>
+  <div class="kpi s2"><div class="kv" id="kpiCikis">₺0</div><div class="kl">Bu Ay Çıkış (Ödeme)</div></div>
+  <div class="kpi s3"><div class="kv" id="kpiNet">₺0</div><div class="kl">Net Akış</div></div>
+  <div class="kpi s4"><div class="kv" id="kpiProjeksiyon">₺0</div><div class="kl">30 Gün Projeksiyon</div></div>
+</div>
+
+<!-- Banka Hesapları -->
+<div class="section-title">Banka Hesapları</div>
+<div class="toplam-nakit">
+  <div><div class="tn-label">Toplam Nakit</div><div class="tn-val" id="toplamNakit">₺0</div></div>
+  <div style="font-size:11px;opacity:.5">Son güncelleme: bugün</div>
+</div>
+<div class="banka-grid" id="bankaGrid"></div>
+
+<!-- Projeksiyon Tablosu -->
+<div class="section-title">Haftalık Projeksiyon <span class="st-badge" id="projBadge">30 Gün</span></div>
+<div class="tablo-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Hafta</th>
+        <th style="text-align:right">Tahsilat (Giriş)</th>
+        <th style="text-align:right">Ödeme (Çıkış)</th>
+        <th style="text-align:right">Net</th>
+        <th style="text-align:right">Kümülatif</th>
+        <th>Kaynaklar</th>
+      </tr>
+    </thead>
+    <tbody id="projBody"></tbody>
+  </table>
+</div>
+
+<!-- İki Kolon: Timeline + Özet -->
+<div class="iki-kolon">
+  <div>
+    <div class="section-title">Ödeme Takvimi <span class="st-badge" id="tlCount">0</span></div>
+    <div class="timeline-wrap" id="timelineWrap">
+      <div style="text-align:center;color:var(--metin4);padding:20px;font-size:13px">Yükleniyor...</div>
+    </div>
+  </div>
+  <div>
+    <div class="section-title">Vade Dağılımı</div>
+    <div class="timeline-wrap" id="vadeDagilimi"></div>
+  </div>
+</div>
+
+</div><!-- main-area -->
+
+<script>
+/* ── State ── */
+var aktifDonem = 30;
+var LS_BANKA = 'ersan_banka_hesaplari';
+var LS_FATURA_TED = 'ersan_tedarikci_faturalar';
+var LS_FATURA_MUS = 'ersan_musteri_faturalar';
+var LS_NAKIT = 'ersan_nakit_hareketler';
+
+var bankalar = [];
+var tedFaturalar = [];
+var musFaturalar = [];
+var nakitHareketler = [];
+
+/* ── Init ── */
+document.addEventListener('DOMContentLoaded', function() {
+  verileriYukle();
+});
+
+function verileriYukle() {
+  bankalar = JSON.parse(localStorage.getItem(LS_BANKA) || 'null');
+  if (!bankalar) {
+    bankalar = [
+      { ad: 'Ziraat TL', bakiye: 245000, doviz: 'TRY' },
+      { ad: 'İş Bankası TL', bakiye: 178000, doviz: 'TRY' },
+      { ad: 'Garanti EUR', bakiye: 32000, doviz: 'EUR' }
+    ];
+    localStorage.setItem(LS_BANKA, JSON.stringify(bankalar));
+  }
+
+  tedFaturalar = JSON.parse(localStorage.getItem(LS_FATURA_TED) || '[]');
+  musFaturalar = JSON.parse(localStorage.getItem(LS_FATURA_MUS) || 'null');
+  if (!musFaturalar) {
+    musFaturalar = ornekMusteriFatura();
+    localStorage.setItem(LS_FATURA_MUS, JSON.stringify(musFaturalar));
+  }
+
+  nakitHareketler = JSON.parse(localStorage.getItem(LS_NAKIT) || 'null');
+  if (!nakitHareketler) {
+    nakitHareketler = ornekNakitHareketler();
+    localStorage.setItem(LS_NAKIT, JSON.stringify(nakitHareketler));
+  }
+
+  sayfayiCiz();
+}
+
+function ornekMusteriFatura() {
+  return [
+    { id: 'MF-2026-001', musteri: 'Aselsan A.Ş.', tutar: 85000, tarih: '2026-03-05', vade: '2026-04-05', durum: 'Bekliyor' },
+    { id: 'MF-2026-002', musteri: 'TAI', tutar: 42000, tarih: '2026-03-10', vade: '2026-04-10', durum: 'Bekliyor' },
+    { id: 'MF-2026-003', musteri: 'Roketsan', tutar: 67500, tarih: '2026-02-28', vade: '2026-03-28', durum: 'Bekliyor' },
+    { id: 'MF-2026-004', musteri: 'TUSAŞ Motor', tutar: 31000, tarih: '2026-03-15', vade: '2026-04-30', durum: 'Bekliyor' },
+    { id: 'MF-2026-005', musteri: 'Aselsan A.Ş.', tutar: 55000, tarih: '2026-02-15', vade: '2026-03-15', durum: 'Tahsil Edildi', tahsilatTarih: '2026-03-14' },
+    { id: 'MF-2026-006', musteri: 'BMC Savunma', tutar: 28000, tarih: '2026-03-18', vade: '2026-05-18', durum: 'Bekliyor' }
+  ];
+}
+
+function ornekNakitHareketler() {
+  return [
+    { tarih: '2026-03-02', tip: 'giris', tutar: 55000, aciklama: 'Aselsan tahsilat', kaynak: 'MF-2026-005' },
+    { tarih: '2026-03-05', tip: 'cikis', tutar: 12000, aciklama: 'Maaş ödemesi', kaynak: 'Bordro' },
+    { tarih: '2026-03-10', tip: 'cikis', tutar: 8500, aciklama: 'Kira + faturalar', kaynak: 'Sabit Gider' },
+    { tarih: '2026-03-15', tip: 'giris', tutar: 18000, aciklama: 'TAI kısmi tahsilat', kaynak: 'MF-2026-002' },
+    { tarih: '2026-03-18', tip: 'cikis', tutar: 35000, aciklama: 'CNC Kesici Merkezi ödeme', kaynak: 'TDF-2026-004' },
+    { tarih: '2026-03-20', tip: 'cikis', tutar: 4200, aciklama: 'Vergi ödemesi', kaynak: 'Vergi' }
+  ];
+}
+
+/* ── Sayfa Çiz ── */
+function sayfayiCiz() {
+  bankalariCiz();
+  kpiHesapla();
+  projeksiyonCiz();
+  timelineCiz();
+  vadeDagilimCiz();
+}
+
+/* ── Banka ── */
+function bankalariCiz() {
+  var grid = document.getElementById('bankaGrid');
+  var toplamTL = 0;
+  var maxBakiye = 0;
+  bankalar.forEach(function(b) {
+    var tlDeger = b.doviz === 'EUR' ? b.bakiye * 36.5 : (b.doviz === 'USD' ? b.bakiye * 33.8 : b.bakiye);
+    toplamTL += tlDeger;
+    if (b.bakiye > maxBakiye) maxBakiye = b.bakiye;
+  });
+
+  document.getElementById('toplamNakit').textContent = '₺' + Math.round(toplamTL).toLocaleString('tr-TR');
+
+  var html = '';
+  bankalar.forEach(function(b) {
+    var cls = b.doviz === 'EUR' ? 'eur' : (b.doviz === 'USD' ? 'usd' : 'tl');
+    var symbol = b.doviz === 'EUR' ? '€' : (b.doviz === 'USD' ? '$' : '₺');
+    var pct = maxBakiye > 0 ? Math.round((b.bakiye / maxBakiye) * 100) : 0;
+    html += '<div class="banka-card ' + cls + '">' +
+      '<div class="bc-ad">' + b.ad + '</div>' +
+      '<div class="bc-doviz">' + b.doviz + '</div>' +
+      '<div class="bc-bakiye">' + symbol + b.bakiye.toLocaleString('tr-TR') + '</div>' +
+      '<div class="bc-bar"><div class="bc-bar-fill" style="width:' + pct + '%"></div></div>' +
+    '</div>';
+  });
+  grid.innerHTML = html;
+}
+
+/* ── KPI ── */
+function kpiHesapla() {
+  var bugun = new Date();
+  var ayBaslangic = new Date(bugun.getFullYear(), bugun.getMonth(), 1).toISOString().split('T')[0];
+  var aySon = new Date(bugun.getFullYear(), bugun.getMonth() + 1, 0).toISOString().split('T')[0];
+
+  var giris = 0, cikis = 0;
+  nakitHareketler.forEach(function(h) {
+    if (h.tarih >= ayBaslangic && h.tarih <= aySon) {
+      if (h.tip === 'giris') giris += h.tutar;
+      else cikis += h.tutar;
+    }
+  });
+
+  var net = giris - cikis;
+
+  // 30 gün projeksiyon: beklenen tahsilat - beklenen ödeme
+  var proj30Tarih = new Date(bugun);
+  proj30Tarih.setDate(proj30Tarih.getDate() + 30);
+  var projStr = proj30Tarih.toISOString().split('T')[0];
+  var bugunStr = bugun.toISOString().split('T')[0];
+
+  var projGiris = 0, projCikis = 0;
+  musFaturalar.forEach(function(f) {
+    if (f.durum === 'Bekliyor' && f.vade >= bugunStr && f.vade <= projStr) projGiris += f.tutar;
+  });
+  tedFaturalar.forEach(function(f) {
+    if (f.durum !== 'Ödendi' && f.vade >= bugunStr && f.vade <= projStr) projCikis += f.faturaTutar;
+  });
+  var projNet = projGiris - projCikis;
+
+  var kpiGiris = document.getElementById('kpiGiris');
+  var kpiCikis = document.getElementById('kpiCikis');
+  var kpiNet = document.getElementById('kpiNet');
+  var kpiProj = document.getElementById('kpiProjeksiyon');
+
+  kpiGiris.textContent = '₺' + giris.toLocaleString('tr-TR');
+  kpiCikis.textContent = '₺' + cikis.toLocaleString('tr-TR');
+
+  kpiNet.textContent = (net >= 0 ? '+' : '') + '₺' + net.toLocaleString('tr-TR');
+  kpiNet.className = 'kv ' + (net >= 0 ? 'pozitif' : 'negatif');
+
+  kpiProj.textContent = (projNet >= 0 ? '+' : '') + '₺' + projNet.toLocaleString('tr-TR');
+  kpiProj.className = 'kv ' + (projNet >= 0 ? 'pozitif' : 'negatif');
+}
+
+/* ── Projeksiyon Tablosu ── */
+function projeksiyonCiz() {
+  var bugun = new Date();
+  var haftalar = Math.ceil(aktifDonem / 7);
+  var satirlar = [];
+
+  // Mevcut nakit
+  var toplamTL = 0;
+  bankalar.forEach(function(b) {
+    var tlDeger = b.doviz === 'EUR' ? b.bakiye * 36.5 : (b.doviz === 'USD' ? b.bakiye * 33.8 : b.bakiye);
+    toplamTL += tlDeger;
+  });
+  var kumulatif = toplamTL;
+
+  // 2 geçmiş hafta + gelecek haftalar
+  for (var i = -2; i < haftalar; i++) {
+    var haftaBaslangic = new Date(bugun);
+    haftaBaslangic.setDate(haftaBaslangic.getDate() + (i * 7));
+    var haftaBitis = new Date(haftaBaslangic);
+    haftaBitis.setDate(haftaBitis.getDate() + 6);
+
+    var hBasStr = haftaBaslangic.toISOString().split('T')[0];
+    var hBitStr = haftaBitis.toISOString().split('T')[0];
+    var bugunStr = bugun.toISOString().split('T')[0];
+    var gecmis = hBitStr < bugunStr;
+
+    var giris = 0, cikis = 0;
+    var kaynaklar = [];
+
+    if (gecmis) {
+      // Gerçek veriler
+      nakitHareketler.forEach(function(h) {
+        if (h.tarih >= hBasStr && h.tarih <= hBitStr) {
+          if (h.tip === 'giris') { giris += h.tutar; }
+          else { cikis += h.tutar; }
+          kaynaklar.push(h.aciklama);
+        }
+      });
+    } else {
+      // Projeksiyonlar
+      musFaturalar.forEach(function(f) {
+        if (f.durum === 'Bekliyor' && f.vade >= hBasStr && f.vade <= hBitStr) {
+          giris += f.tutar;
+          kaynaklar.push(f.musteri);
+        }
+      });
+      tedFaturalar.forEach(function(f) {
+        if (f.durum !== 'Ödendi' && f.vade >= hBasStr && f.vade <= hBitStr) {
+          cikis += f.faturaTutar;
+          kaynaklar.push(f.tedarikci);
+        }
+      });
+      // Sabit gider tahmini (haftalık ~5000)
+      cikis += 5000;
+    }
+
+    var net = giris - cikis;
+    if (i >= 0) kumulatif += net;
+
+    var haftaLabel = tarihKisa(hBasStr) + ' — ' + tarihKisa(hBitStr);
+
+    satirlar.push({
+      hafta: haftaLabel,
+      giris: giris,
+      cikis: cikis,
+      net: net,
+      kumulatif: Math.round(kumulatif),
+      kaynaklar: kaynaklar.slice(0, 3).join(', '),
+      gecmis: gecmis
+    });
+  }
+
+  var tbody = document.getElementById('projBody');
+  var html = '';
+  satirlar.forEach(function(s) {
+    var rowClass = s.gecmis ? 'past-row' : 'future-row';
+    var netClass = s.net >= 0 ? 'net-pozitif' : 'net-negatif';
+    var kumClass = s.kumulatif >= 0 ? 'kumulatif-pozitif' : 'kumulatif-negatif';
+    var prefix = s.gecmis ? '' : '~';
+
+    html += '<tr class="' + rowClass + '">' +
+      '<td style="font-size:11px;white-space:nowrap">' + s.hafta + (s.gecmis ? ' <span style="font-size:9px;color:var(--yesil)">●</span>' : '') + '</td>' +
+      '<td style="text-align:right;color:var(--yesil)">' + prefix + '₺' + s.giris.toLocaleString('tr-TR') + '</td>' +
+      '<td style="text-align:right;color:var(--kirmizi)">' + prefix + '₺' + s.cikis.toLocaleString('tr-TR') + '</td>' +
+      '<td style="text-align:right" class="' + netClass + '">' + (s.net >= 0 ? '+' : '') + '₺' + s.net.toLocaleString('tr-TR') + '</td>' +
+      '<td style="text-align:right" class="' + kumClass + '">₺' + s.kumulatif.toLocaleString('tr-TR') + '</td>' +
+      '<td style="font-size:11px;color:var(--metin4);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + (s.kaynaklar || '—') + '</td>' +
+    '</tr>';
+  });
+  tbody.innerHTML = html;
+  document.getElementById('projBadge').textContent = aktifDonem + ' Gün';
+}
+
+/* ── Timeline ── */
+function timelineCiz() {
+  var bugun = new Date();
+  var bugunStr = bugun.toISOString().split('T')[0];
+  var bitisDate = new Date(bugun);
+  bitisDate.setDate(bitisDate.getDate() + aktifDonem);
+  var bitisStr = bitisDate.toISOString().split('T')[0];
+
+  var items = [];
+
+  // Bekleyen müşteri tahsilatları
+  musFaturalar.forEach(function(f) {
+    if (f.durum === 'Bekliyor') {
+      var gecikms = f.vade < bugunStr;
+      items.push({
+        tarih: f.vade,
+        tip: 'giris',
+        baslik: f.musteri,
+        aciklama: f.id,
+        tutar: f.tutar,
+        gecikms: gecikms
+      });
+    }
+  });
+
+  // Bekleyen tedarikçi ödemeleri
+  tedFaturalar.forEach(function(f) {
+    if (f.durum !== 'Ödendi') {
+      var gecikms = f.vade < bugunStr;
+      items.push({
+        tarih: f.vade,
+        tip: 'cikis',
+        baslik: f.tedarikci,
+        aciklama: f.id + (f.tedFaturaNo ? ' (' + f.tedFaturaNo + ')' : ''),
+        tutar: f.faturaTutar || f.tutar || 0,
+        gecikms: gecikms
+      });
+    }
+  });
+
+  // Sırala
+  items.sort(function(a, b) {
+    if (a.gecikms && !b.gecikms) return -1;
+    if (!a.gecikms && b.gecikms) return 1;
+    return a.tarih < b.tarih ? -1 : 1;
+  });
+
+  document.getElementById('tlCount').textContent = items.length;
+
+  var wrap = document.getElementById('timelineWrap');
+  if (items.length === 0) {
+    wrap.innerHTML = '<div style="text-align:center;color:var(--metin4);padding:20px;font-size:13px">Bekleyen ödeme/tahsilat yok</div>';
+    return;
+  }
+
+  var html = '';
+  items.forEach(function(it) {
+    var dotClass = it.tip + (it.gecikms ? ' gecikms' : '');
+    var tutarClass = it.tip;
+    var sign = it.tip === 'giris' ? '+' : '-';
+
+    html += '<div class="tl-item">' +
+      '<div class="tl-dot ' + dotClass + '"></div>' +
+      '<div class="tl-body">' +
+        '<div class="tl-top">' +
+          '<div class="tl-title">' + it.baslik + '</div>' +
+          '<div class="tl-tutar ' + tutarClass + '">' + sign + '₺' + it.tutar.toLocaleString('tr-TR') + '</div>' +
+        '</div>' +
+        '<div class="tl-mid">' + it.aciklama + '</div>' +
+        '<div class="tl-date">' + tarihFormat(it.tarih) + '</div>' +
+        (it.gecikms ? '<div class="tl-gecikms">⚠ Vadesi geçmiş</div>' : '') +
+      '</div>' +
+    '</div>';
+  });
+  wrap.innerHTML = html;
+}
+
+/* ── Vade Dağılımı ── */
+function vadeDagilimCiz() {
+  var bugun = new Date();
+  var bugunStr = bugun.toISOString().split('T')[0];
+  var gruplar = [
+    { label: 'Vadesi Geçmiş', min: -9999, max: -1, giris: 0, cikis: 0, renk: 'var(--kirmizi)' },
+    { label: '0–7 Gün', min: 0, max: 7, giris: 0, cikis: 0, renk: '#f59e0b' },
+    { label: '8–30 Gün', min: 8, max: 30, giris: 0, cikis: 0, renk: 'var(--mavi)' },
+    { label: '31–60 Gün', min: 31, max: 60, giris: 0, cikis: 0, renk: '#8b5cf6' },
+    { label: '60+ Gün', min: 61, max: 9999, giris: 0, cikis: 0, renk: 'var(--metin4)' }
+  ];
+
+  function gunFarki(vadeTarih) {
+    var vade = new Date(vadeTarih);
+    var diff = Math.floor((vade - bugun) / (1000 * 60 * 60 * 24));
+    return diff;
+  }
+
+  musFaturalar.forEach(function(f) {
+    if (f.durum !== 'Bekliyor') return;
+    var gun = gunFarki(f.vade);
+    gruplar.forEach(function(g) {
+      if (gun >= g.min && gun <= g.max) g.giris += f.tutar;
+    });
+  });
+
+  tedFaturalar.forEach(function(f) {
+    if (f.durum === 'Ödendi') return;
+    var gun = gunFarki(f.vade);
+    gruplar.forEach(function(g) {
+      if (gun >= g.min && gun <= g.max) g.cikis += (f.faturaTutar || 0);
+    });
+  });
+
+  var maxVal = 1;
+  gruplar.forEach(function(g) {
+    if (g.giris > maxVal) maxVal = g.giris;
+    if (g.cikis > maxVal) maxVal = g.cikis;
+  });
+
+  var wrap = document.getElementById('vadeDagilimi');
+  var html = '';
+  gruplar.forEach(function(g) {
+    var girisPct = Math.round((g.giris / maxVal) * 100);
+    var cikisPct = Math.round((g.cikis / maxVal) * 100);
+    html += '<div style="margin-bottom:14px">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">' +
+        '<span style="font-size:12px;font-weight:600;color:var(--laci)">' + g.label + '</span>' +
+      '</div>' +
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">' +
+        '<span style="font-size:10px;color:var(--yesil);width:50px;text-align:right">Giriş</span>' +
+        '<div style="flex:1;height:8px;background:var(--bg2);border-radius:4px;overflow:hidden">' +
+          '<div style="width:' + girisPct + '%;height:100%;background:var(--yesil);border-radius:4px"></div>' +
+        '</div>' +
+        '<span style="font-size:10px;font-weight:600;color:var(--yesil);width:80px">₺' + g.giris.toLocaleString('tr-TR') + '</span>' +
+      '</div>' +
+      '<div style="display:flex;align-items:center;gap:8px">' +
+        '<span style="font-size:10px;color:var(--kirmizi);width:50px;text-align:right">Çıkış</span>' +
+        '<div style="flex:1;height:8px;background:var(--bg2);border-radius:4px;overflow:hidden">' +
+          '<div style="width:' + cikisPct + '%;height:100%;background:var(--kirmizi);border-radius:4px"></div>' +
+        '</div>' +
+        '<span style="font-size:10px;font-weight:600;color:var(--kirmizi);width:80px">₺' + g.cikis.toLocaleString('tr-TR') + '</span>' +
+      '</div>' +
+    '</div>';
+  });
+  wrap.innerHTML = html;
+}
+
+/* ── Dönem Değiştir ── */
+function donemDegistir(el) {
+  document.querySelectorAll('.donem-sec button').forEach(function(b) { b.classList.remove('aktif'); });
+  el.classList.add('aktif');
+  aktifDonem = parseInt(el.getAttribute('data-gun'));
+  projeksiyonCiz();
+  timelineCiz();
+
+  // KPI projeksiyon güncelle
+  var bugun = new Date();
+  var projDate = new Date(bugun);
+  projDate.setDate(projDate.getDate() + aktifDonem);
+  var projStr = projDate.toISOString().split('T')[0];
+  var bugunStr = bugun.toISOString().split('T')[0];
+  var projGiris = 0, projCikis = 0;
+  musFaturalar.forEach(function(f) {
+    if (f.durum === 'Bekliyor' && f.vade >= bugunStr && f.vade <= projStr) projGiris += f.tutar;
+  });
+  tedFaturalar.forEach(function(f) {
+    if (f.durum !== 'Ödendi' && f.vade >= bugunStr && f.vade <= projStr) projCikis += (f.faturaTutar || 0);
+  });
+  var projNet = projGiris - projCikis;
+  var el2 = document.getElementById('kpiProjeksiyon');
+  el2.textContent = (projNet >= 0 ? '+' : '') + '₺' + projNet.toLocaleString('tr-TR');
+  el2.className = 'kv ' + (projNet >= 0 ? 'pozitif' : 'negatif');
+
+  document.querySelector('.kpi.s4 .kl').textContent = aktifDonem + ' Gün Projeksiyon';
+}
+
+/* ── Rapor İndir ── */
+function raporIndir() {
+  var satirlar = ['Hafta\tTahsilat\tÖdeme\tNet\tKümülatif'];
+  var rows = document.querySelectorAll('#projBody tr');
+  rows.forEach(function(tr) {
+    var cells = tr.querySelectorAll('td');
+    var vals = [];
+    cells.forEach(function(td) { vals.push(td.textContent.trim()); });
+    satirlar.push(vals.join('\t'));
+  });
+
+  satirlar.push('');
+  satirlar.push('Banka Hesapları');
+  satirlar.push('Hesap\tBakiye\tDöviz');
+  bankalar.forEach(function(b) {
+    satirlar.push(b.ad + '\t' + b.bakiye + '\t' + b.doviz);
+  });
+
+  var blob = new Blob(['\uFEFF' + satirlar.join('\n')], { type: 'text/tab-separated-values;charset=utf-8' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'nakit_akisi_' + new Date().toISOString().split('T')[0] + '.xls';
+  a.click();
+}
+
+/* ── Yardımcılar ── */
+function tarihFormat(d) {
+  if (!d) return '-';
+  var p = d.split('-');
+  return p[2] + '.' + p[1] + '.' + p[0];
+}
+
+function tarihKisa(d) {
+  if (!d) return '-';
+  var p = d.split('-');
+  return p[2] + '.' + p[1];
+}
+</script>
+</body>
+</html>

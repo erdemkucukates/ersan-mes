@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — Musteri Faturalari</title>
+<link rel="stylesheet" href="ersan_styles.css">
+<script src="ersan_nav.js" defer></script>
+<script src="ersan_log.js" defer></script>
+<style>
+/* ── KPI ROW ── */
+.kpi-row { display:flex; gap:12px; margin-bottom:16px; }
+.kpi { flex:1; padding:16px 18px; border-radius:10px; background:var(--beyaz); border:1px solid var(--border); }
+.kpi .kpi-val { font-size:26px; font-weight:700; color:var(--metin); margin-bottom:2px; }
+.kpi .kpi-lbl { font-size:12px; color:var(--metin3); }
+.kpi .kpi-sub { font-size:10px; color:var(--metin4); margin-top:2px; }
+.kpi.s-blue  { border-left:4px solid var(--mavi); }
+.kpi.s-red   { border-left:4px solid var(--kirmizi); }
+.kpi.s-green { border-left:4px solid var(--yesil); }
+.kpi.s-amber { border-left:4px solid var(--sari); }
+
+/* ── FILTER BAR ── */
+.filtre-bar { display:flex; gap:8px; margin-bottom:16px; align-items:center; flex-wrap:wrap; }
+.filtre-bar input[type=text] { flex:1; min-width:180px; padding:7px 12px 7px 32px; border:1px solid var(--border); border-radius:7px; font-size:13px; color:var(--metin2); background:var(--beyaz) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E") 10px center no-repeat; font-family:inherit; }
+.filtre-bar input[type=text]:focus { outline:none; border-color:var(--mavi); box-shadow:0 0 0 3px rgba(55,138,221,0.1); }
+.filtre-bar select { padding:7px 10px; border:1px solid var(--border); border-radius:7px; font-size:12px; color:var(--metin2); background:var(--beyaz); font-family:inherit; cursor:pointer; }
+.filtre-bar select:focus { outline:none; border-color:var(--mavi); }
+
+/* ── BULK BAR ── */
+.bulk-bar { display:none; align-items:center; gap:12px; padding:10px 16px; background:var(--mavi-acik); border:1px solid var(--mavi); border-radius:8px; margin-bottom:12px; font-size:13px; color:var(--mavi-koyu); font-weight:600; }
+.bulk-bar.aktif { display:flex; }
+
+/* ── FATURA TABLE ── */
+.tbl { background:var(--beyaz); border:1px solid var(--border); border-radius:10px; overflow:hidden; }
+.tbl table { width:100%; border-collapse:collapse; font-size:13px; }
+.tbl th { background:var(--bg); padding:10px 12px; text-align:left; font-weight:600; color:var(--metin3); font-size:11px; text-transform:uppercase; letter-spacing:.3px; border-bottom:1px solid var(--border); white-space:nowrap; }
+.tbl td { padding:10px 12px; border-bottom:1px solid var(--border); color:var(--metin2); }
+.tbl tr:last-child td { border-bottom:none; }
+.tbl tr.ftr-row { cursor:pointer; transition:background .15s; }
+.tbl tr.ftr-row:hover { background:var(--bg2); }
+.tbl tr.ftr-row.secili { background:var(--mavi-acik); }
+.tbl tr.ftr-row.vurgulu { background:var(--sari-bg); }
+.mono { font-family:'Cascadia Code','Fira Code',monospace; font-size:11px; }
+
+/* ── BADGES ── */
+.bdg { display:inline-block; padding:2px 8px; border-radius:20px; font-size:10px; font-weight:600; white-space:nowrap; }
+.b-grn { background:var(--yesil-bg); color:var(--yesil-t); }
+.b-red { background:var(--kirmizi-bg); color:var(--kirmizi-t); }
+.b-amr { background:var(--sari-bg); color:var(--sari-t); }
+.b-blu { background:var(--mavi-acik); color:var(--mavi-koyu); }
+.b-gray { background:#f1f5f9; color:var(--metin3); }
+
+/* ── VADE CHIP ── */
+.vade-chip { display:inline-block; padding:2px 8px; border-radius:20px; font-size:10px; font-weight:600; }
+.vc-ok  { background:var(--yesil-bg); color:var(--yesil-t); }
+.vc-yakn { background:var(--sari-bg); color:var(--sari-t); }
+.vc-gec { background:var(--kirmizi-bg); color:var(--kirmizi-t); }
+
+/* ── ACTION BTN ── */
+.act-btn { padding:4px 10px; border-radius:5px; font-size:11px; font-weight:600; border:none; cursor:pointer; font-family:inherit; transition:all .12s; }
+.act-grn { background:var(--yesil); color:#fff; }
+.act-grn:hover { background:#178a67; }
+.act-gray { background:var(--bg); color:var(--metin3); border:1px solid var(--border); }
+.act-gray:hover { background:var(--bg2); }
+
+/* ── MODAL ── */
+.modal-bg { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:500; align-items:center; justify-content:center; }
+.modal-bg.aktif { display:flex; }
+.modal { background:var(--beyaz); border-radius:12px; width:580px; max-height:90vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.2); }
+.modal-head { padding:16px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.modal-title { font-size:15px; font-weight:700; color:var(--metin); }
+.modal-close { background:none; border:none; font-size:20px; color:var(--metin3); cursor:pointer; }
+.modal-close:hover { color:var(--kirmizi); }
+.modal-body { padding:20px; }
+.modal-footer { padding:14px 20px; border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:8px; }
+
+/* ── FORM ── */
+.form-grup { margin-bottom:14px; }
+.form-label { display:block; font-size:11px; font-weight:600; color:var(--metin3); margin-bottom:4px; text-transform:uppercase; letter-spacing:.3px; }
+.form-input, .form-select { width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:6px; font-size:13px; color:var(--metin2); background:var(--beyaz); font-family:inherit; }
+.form-input:focus, .form-select:focus { outline:none; border-color:var(--mavi); box-shadow:0 0 0 3px rgba(55,138,221,0.1); }
+.form-input[readonly] { background:var(--bg); color:var(--metin3); }
+.form-grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.form-grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; }
+
+/* ── KALEM TABLE (modal) ── */
+.kalem-tbl { width:100%; border-collapse:collapse; font-size:12px; margin-top:8px; }
+.kalem-tbl th { text-align:left; padding:6px 8px; font-size:10px; font-weight:600; color:var(--metin3); border-bottom:1px solid var(--border); text-transform:uppercase; }
+.kalem-tbl td { padding:6px 8px; border-bottom:1px solid var(--border); }
+
+/* ── INFO ROW (tahsilat modal) ── */
+.info-row { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--border); font-size:13px; }
+.info-lbl { color:var(--metin3); }
+.info-val { font-weight:600; color:var(--metin); }
+
+/* ── BUTTONS ── */
+.btn { display:inline-flex; align-items:center; gap:5px; padding:7px 14px; border-radius:7px; font-size:13px; font-weight:600; border:none; cursor:pointer; transition:all .15s; font-family:inherit; }
+.btn-mavi { background:var(--mavi); color:#fff; }
+.btn-mavi:hover { background:#2b72bf; }
+.btn-yesil { background:var(--yesil); color:#fff; }
+.btn-yesil:hover { background:#178a67; }
+.btn-beyaz { background:var(--beyaz); color:var(--metin2); border:1px solid var(--border); }
+.btn-beyaz:hover { background:var(--bg2); }
+
+/* ── EMPTY ── */
+.bos-durum { text-align:center; padding:60px 20px; color:var(--metin4); font-size:14px; }
+
+/* ── PAGINATION ── */
+.sayfalama { display:flex; align-items:center; justify-content:space-between; padding:10px 16px; border-top:1px solid var(--border); font-size:12px; color:var(--metin3); }
+</style>
+</head>
+<body>
+<div id="nav-alani"></div>
+<div class="icerik-alani">
+  <div class="topbar">
+    <div class="topbar-baslik">Musteri Faturalari</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button class="btn btn-mavi" onclick="yeniFaturaAc()">+ Fatura Kes</button>
+      <button class="btn btn-beyaz" onclick="excelIndir()">Excel</button>
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
+    </div>
+  </div>
+  <div class="sayfa-icerik">
+
+    <!-- KPI ROW -->
+    <div class="kpi-row">
+      <div class="kpi s-blue"><div class="kpi-val" id="kpi-alacak">0</div><div class="kpi-lbl">Toplam Alacak</div><div class="kpi-sub" id="kpi-alacak-sub">0 fatura</div></div>
+      <div class="kpi s-red"><div class="kpi-val" id="kpi-vadesi">0</div><div class="kpi-lbl">Vadesi Gecmis</div><div class="kpi-sub" id="kpi-vadesi-sub">0 fatura</div></div>
+      <div class="kpi s-green"><div class="kpi-val" id="kpi-tahsilat">0</div><div class="kpi-lbl">Bu Ay Tahsilat</div><div class="kpi-sub" id="kpi-tahsilat-sub">0 islem</div></div>
+      <div class="kpi s-amber"><div class="kpi-val" id="kpi-ort">0</div><div class="kpi-lbl">Ort. Tahsilat Suresi</div><div class="kpi-sub">gun</div></div>
+    </div>
+
+    <!-- FILTER BAR -->
+    <div class="filtre-bar">
+      <input type="text" id="ara-input" placeholder="Fatura no, musteri, siparis ara..." oninput="filtreUygula()">
+      <select id="filtre-durum" onchange="filtreUygula()">
+        <option value="">Tum Durumlar</option>
+        <option value="Acik">Acik</option>
+        <option value="Kismi">Kismi Odenmis</option>
+        <option value="Odendi">Odenmis</option>
+      </select>
+      <select id="filtre-musteri" onchange="filtreUygula()">
+        <option value="">Tum Musteriler</option>
+      </select>
+      <select id="filtre-tarih" onchange="filtreUygula()">
+        <option value="">Tum Tarihler</option>
+        <option value="7">Son 7 Gun</option>
+        <option value="30">Son 30 Gun</option>
+        <option value="90">Son 90 Gun</option>
+      </select>
+    </div>
+
+    <!-- BULK BAR -->
+    <div class="bulk-bar" id="bulk-bar">
+      <span id="bulk-sayi">0 secili</span>
+      <button class="btn btn-yesil" onclick="topluTahsilat()" style="padding:5px 10px;font-size:12px;">Toplu Tahsilat</button>
+      <button class="btn btn-beyaz" onclick="topluPDF()" style="padding:5px 10px;font-size:12px;">Toplu PDF</button>
+      <button class="btn btn-beyaz" onclick="secimTemizle()" style="padding:5px 10px;font-size:12px;">Temizle</button>
+    </div>
+
+    <!-- FATURA TABLE -->
+    <div class="tbl">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:32px;"><input type="checkbox" id="hepsi-sec" onchange="hepsiSecToggle()"></th>
+            <th>Fatura No</th>
+            <th>Musteri</th>
+            <th>Siparis No</th>
+            <th>Musteri PO</th>
+            <th>Tarih</th>
+            <th>Vade</th>
+            <th style="text-align:right">Toplam</th>
+            <th style="text-align:right">Odenen</th>
+            <th style="text-align:right">Kalan</th>
+            <th>Durum</th>
+            <th>Islem</th>
+          </tr>
+        </thead>
+        <tbody id="fatura-body"></tbody>
+      </table>
+      <div class="bos-durum" id="bos-durum" style="display:none;">Fatura bulunamadi</div>
+      <div class="sayfalama" id="sayfalama">
+        <span id="sayfa-bilgi">0 fatura</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- YENI FATURA MODAL -->
+<div class="modal-bg" id="fatura-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">Yeni Fatura Kes</div>
+      <button class="modal-close" onclick="modalKapat('fatura-modal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid-2">
+        <div class="form-grup">
+          <label class="form-label">Musteri</label>
+          <select class="form-select" id="fm-musteri" onchange="fmMusteriDegisti()">
+            <option value="">Musteri Sec...</option>
+          </select>
+        </div>
+        <div class="form-grup">
+          <label class="form-label">Siparis</label>
+          <select class="form-select" id="fm-siparis" onchange="fmSiparisDegisti()">
+            <option value="">Siparis Sec...</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-grid-2">
+        <div class="form-grup">
+          <label class="form-label">Musteri PO</label>
+          <input class="form-input" id="fm-po" readonly placeholder="Siparisten otomatik gelir">
+        </div>
+        <div class="form-grup">
+          <label class="form-label">Fatura No</label>
+          <input class="form-input" id="fm-no" readonly placeholder="Otomatik uretilecek">
+        </div>
+      </div>
+      <div class="form-grid-2">
+        <div class="form-grup">
+          <label class="form-label">Fatura Tarihi</label>
+          <input class="form-input" type="date" id="fm-tarih">
+        </div>
+        <div class="form-grup">
+          <label class="form-label">Vade Tarihi</label>
+          <input class="form-input" type="date" id="fm-vade">
+        </div>
+      </div>
+
+      <!-- Kalem Tablosu -->
+      <div class="form-grup">
+        <label class="form-label">Fatura Kalemleri</label>
+        <table class="kalem-tbl">
+          <thead><tr><th>Kalem</th><th>Parca No</th><th>Adet</th><th style="text-align:right">Birim Fiyat</th><th style="text-align:right">Toplam</th></tr></thead>
+          <tbody id="fm-kalemler"></tbody>
+          <tfoot>
+            <tr style="font-weight:700;border-top:2px solid var(--border);">
+              <td colspan="4" style="text-align:right;padding:8px;">GENEL TOPLAM</td>
+              <td style="text-align:right;padding:8px;" id="fm-genel-toplam">0 TL</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <div class="form-grup">
+        <label class="form-label">Notlar</label>
+        <input class="form-input" id="fm-notlar" placeholder="Opsiyonel not...">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-beyaz" onclick="modalKapat('fatura-modal')">Iptal</button>
+      <button class="btn btn-yesil" onclick="faturaKaydet()">Fatura Kes</button>
+    </div>
+  </div>
+</div>
+
+<!-- TAHSILAT MODAL -->
+<div class="modal-bg" id="tahsilat-modal">
+  <div class="modal" style="width:480px;">
+    <div class="modal-head">
+      <div class="modal-title">Tahsilat Kaydi</div>
+      <button class="modal-close" onclick="modalKapat('tahsilat-modal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <!-- Fatura Bilgi -->
+      <div style="margin-bottom:16px;">
+        <div class="info-row"><span class="info-lbl">Fatura No</span><span class="info-val mono" id="th-fatura-no">-</span></div>
+        <div class="info-row"><span class="info-lbl">Musteri</span><span class="info-val" id="th-musteri">-</span></div>
+        <div class="info-row"><span class="info-lbl">Fatura Toplam</span><span class="info-val" id="th-toplam">-</span></div>
+        <div class="info-row"><span class="info-lbl">Odenen</span><span class="info-val" id="th-odenen">-</span></div>
+        <div class="info-row" style="border-bottom:2px solid var(--mavi);"><span class="info-lbl" style="font-weight:700;">Kalan</span><span class="info-val" id="th-kalan" style="color:var(--mavi);font-size:16px;">-</span></div>
+      </div>
+
+      <div class="form-grid-2">
+        <div class="form-grup">
+          <label class="form-label">Tahsilat Tutari</label>
+          <input class="form-input" type="number" id="th-tutar" step="0.01" min="0">
+        </div>
+        <div class="form-grup">
+          <label class="form-label">Tarih</label>
+          <input class="form-input" type="date" id="th-tarih">
+        </div>
+      </div>
+      <div class="form-grid-3">
+        <div class="form-grup">
+          <label class="form-label">Odeme Yontemi</label>
+          <select class="form-select" id="th-yontem">
+            <option value="Havale">Havale</option>
+            <option value="EFT">EFT</option>
+            <option value="Cek">Cek</option>
+            <option value="Nakit">Nakit</option>
+            <option value="Kredi Karti">Kredi Karti</option>
+          </select>
+        </div>
+        <div class="form-grup">
+          <label class="form-label">Banka Hesap</label>
+          <select class="form-select" id="th-banka">
+            <option value="Ziraat">Ziraat</option>
+            <option value="Is Bankasi">Is Bankasi</option>
+            <option value="Garanti">Garanti</option>
+            <option value="Yapi Kredi">Yapi Kredi</option>
+            <option value="Diger">Diger</option>
+          </select>
+        </div>
+        <div class="form-grup">
+          <label class="form-label">Referans No</label>
+          <input class="form-input" id="th-referans" placeholder="HAV-12345">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-beyaz" onclick="modalKapat('tahsilat-modal')">Iptal</button>
+      <button class="btn btn-yesil" onclick="tahsilatKaydet()">Tahsilat Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════
+   Ersan MES — Musteri Faturalari
+   localStorage based, with URL param support
+   ═══════════════════════════════════════════════════ */
+
+var tumFaturalar = [];
+var filtreliFaturalar = [];
+var seciliFaturalar = {};
+var aktifTahsilatFatura = null;
+
+// ── HELPERS ──
+function paraFormat(n) {
+  if (n == null) return '0 TL';
+  return Number(n).toLocaleString('tr-TR', { minimumFractionDigits:0, maximumFractionDigits:0 }) + ' TL';
+}
+
+function gunFarki(vadeTarih) {
+  var bugun = new Date(); bugun.setHours(0,0,0,0);
+  var vade = new Date(vadeTarih); vade.setHours(0,0,0,0);
+  return Math.round((vade - bugun) / (1000*60*60*24));
+}
+
+function bugunStr() {
+  return new Date().toISOString().split('T')[0];
+}
+
+function vadeStr(gun) {
+  var d = new Date();
+  d.setDate(d.getDate() + gun);
+  return d.toISOString().split('T')[0];
+}
+
+// ── DATA ──
+function faturalarYukle() {
+  try { return JSON.parse(localStorage.getItem('ersan_musteri_faturalar')) || []; }
+  catch(e) { return []; }
+}
+
+function faturalarKaydet(data) {
+  localStorage.setItem('ersan_musteri_faturalar', JSON.stringify(data));
+}
+
+function tahsilatlarYukle() {
+  try { return JSON.parse(localStorage.getItem('ersan_tahsilatlar')) || []; }
+  catch(e) { return []; }
+}
+
+function tahsilatlarKaydet(data) {
+  localStorage.setItem('ersan_tahsilatlar', JSON.stringify(data));
+}
+
+// ── SAMPLE DATA SEED ──
+function ornekVeriKontrol() {
+  if (localStorage.getItem('ersan_finans_seeded')) return;
+  // Finans paneli seed eder, buraya gelmeden once acilmis olmali
+  // Ama yine de bos ise basit seed yapalim
+  var mf = faturalarYukle();
+  if (mf.length > 0) return;
+
+  var ornekler = [
+    { id:'MFS-26-00001', musteri:'Tusas', musteriId:'rec001', siparisNo:'SP-2026-001-01', musteriPO:'PO-TU-4420', tarih:vadeStr(-45), vade:vadeStr(-15), toplam:128500, odenen:0, durum:'Acik', kalemler:[{kalem:1,parcaNo:'P-1001',adet:10,birimFiyat:12850}] },
+    { id:'MFS-26-00002', musteri:'TEI', musteriId:'rec002', siparisNo:'SP-2026-002-01', musteriPO:'PO-TEI-881', tarih:vadeStr(-30), vade:vadeStr(-1), toplam:67200, odenen:67200, durum:'Odendi', kalemler:[{kalem:1,parcaNo:'P-2010',adet:4,birimFiyat:16800}] },
+    { id:'MFS-26-00003', musteri:'Kale Avia', musteriId:'rec003', siparisNo:'SP-2026-003-01', musteriPO:'PO-KA-1190', tarih:vadeStr(-20), vade:vadeStr(5), toplam:94300, odenen:0, durum:'Acik', kalemler:[{kalem:1,parcaNo:'P-3020',adet:2,birimFiyat:47150}] },
+    { id:'MFS-26-00004', musteri:'Tusas', musteriId:'rec001', siparisNo:'SP-2026-004-01', musteriPO:'PO-TU-4421', tarih:vadeStr(-15), vade:vadeStr(10), toplam:53800, odenen:0, durum:'Acik', kalemler:[{kalem:1,parcaNo:'P-1002',adet:5,birimFiyat:10760}] },
+    { id:'MFS-26-00005', musteri:'ASELSAN', musteriId:'rec004', siparisNo:'SP-2026-005-01', musteriPO:'PO-AS-2200', tarih:vadeStr(-10), vade:vadeStr(20), toplam:172000, odenen:50000, durum:'Kismi', kalemler:[{kalem:1,parcaNo:'P-5001',adet:8,birimFiyat:21500}] },
+    { id:'MFS-26-00006', musteri:'Roketsan', musteriId:'rec005', siparisNo:'SP-2026-006-01', musteriPO:'PO-RK-310', tarih:vadeStr(-5), vade:vadeStr(25), toplam:41500, odenen:0, durum:'Acik', kalemler:[{kalem:1,parcaNo:'P-6010',adet:20,birimFiyat:2075}] },
+    { id:'MFS-26-00007', musteri:'TEI', musteriId:'rec002', siparisNo:'SP-2026-007-01', musteriPO:'PO-TEI-882', tarih:vadeStr(-60), vade:vadeStr(-35), toplam:89000, odenen:0, durum:'Acik', kalemler:[{kalem:1,parcaNo:'P-2011',adet:10,birimFiyat:8900}] },
+    { id:'MFS-26-00008', musteri:'Kale Avia', musteriId:'rec003', siparisNo:'SP-2026-008-01', musteriPO:'PO-KA-1191', tarih:vadeStr(-3), vade:vadeStr(28), toplam:36700, odenen:0, durum:'Acik', kalemler:[{kalem:1,parcaNo:'P-3021',adet:1,birimFiyat:36700}] }
+  ];
+  faturalarKaydet(ornekler);
+  localStorage.setItem('ersan_finans_seeded', '1');
+}
+
+// ── KPI ──
+function kpiGuncelle() {
+  var acik = tumFaturalar.filter(function(f) { return f.durum !== 'Odendi'; });
+  var toplamAlacak = acik.reduce(function(s,f) { return s + (f.toplam - (f.odenen||0)); }, 0);
+
+  var bugun = bugunStr();
+  var vadesi = acik.filter(function(f) { return f.vade < bugun; });
+  var vadesiToplam = vadesi.reduce(function(s,f) { return s + (f.toplam - (f.odenen||0)); }, 0);
+
+  var ayBaslangic = new Date();
+  ayBaslangic = new Date(ayBaslangic.getFullYear(), ayBaslangic.getMonth(), 1).toISOString().split('T')[0];
+  var th = tahsilatlarYukle();
+  var buAyTh = th.filter(function(t) { return t.tarih >= ayBaslangic; });
+  var buAyToplam = buAyTh.reduce(function(s,t) { return s + t.tutar; }, 0);
+
+  // Ort sure: odenmis faturalarda (vade - tarih) ortalamasi
+  var odenmisFaturalar = tumFaturalar.filter(function(f) { return f.durum === 'Odendi'; });
+  var ortSure = 0;
+  if (odenmisFaturalar.length > 0) {
+    var toplamGun = odenmisFaturalar.reduce(function(s,f) {
+      var fTarih = new Date(f.tarih);
+      var fVade = new Date(f.vade);
+      return s + Math.abs(Math.round((fVade - fTarih) / (1000*60*60*24)));
+    }, 0);
+    ortSure = Math.round(toplamGun / odenmisFaturalar.length);
+  }
+
+  document.getElementById('kpi-alacak').textContent = paraFormat(toplamAlacak);
+  document.getElementById('kpi-alacak-sub').textContent = acik.length + ' fatura';
+  document.getElementById('kpi-vadesi').textContent = paraFormat(vadesiToplam);
+  document.getElementById('kpi-vadesi-sub').textContent = vadesi.length + ' fatura';
+  document.getElementById('kpi-tahsilat').textContent = paraFormat(buAyToplam);
+  document.getElementById('kpi-tahsilat-sub').textContent = buAyTh.length + ' islem';
+  document.getElementById('kpi-ort').textContent = ortSure;
+}
+
+// ── MUSTERI FILTRE DOLDUR ──
+function musteriFiltreGuncelle() {
+  var sel = document.getElementById('filtre-musteri');
+  var mevcut = sel.value;
+  // Musterileri bul
+  var musteriler = {};
+  tumFaturalar.forEach(function(f) { musteriler[f.musteri] = true; });
+  // Temizle (ilk option haric)
+  while (sel.options.length > 1) sel.remove(1);
+  Object.keys(musteriler).sort().forEach(function(m) {
+    var opt = document.createElement('option');
+    opt.value = m; opt.textContent = m;
+    sel.appendChild(opt);
+  });
+  sel.value = mevcut;
+}
+
+// ── FILTRE ──
+function filtreUygula() {
+  var ara = (document.getElementById('ara-input').value || '').toLowerCase();
+  var durum = document.getElementById('filtre-durum').value;
+  var musteri = document.getElementById('filtre-musteri').value;
+  var tarih = document.getElementById('filtre-tarih').value;
+
+  // URL param: yas filtresi
+  var yasFiltre = new URLSearchParams(window.location.search).get('yas');
+
+  var bugun = bugunStr();
+
+  filtreliFaturalar = tumFaturalar.filter(function(f) {
+    // Text arama
+    if (ara) {
+      var txt = (f.id + ' ' + f.musteri + ' ' + f.siparisNo + ' ' + (f.musteriPO||'')).toLowerCase();
+      if (txt.indexOf(ara) === -1) return false;
+    }
+    // Durum
+    if (durum && f.durum !== durum) return false;
+    // Musteri
+    if (musteri && f.musteri !== musteri) return false;
+    // Tarih
+    if (tarih) {
+      var gunOnce = new Date();
+      gunOnce.setDate(gunOnce.getDate() - parseInt(tarih));
+      var gunOnceStr = gunOnce.toISOString().split('T')[0];
+      if (f.tarih < gunOnceStr) return false;
+    }
+    // Yas filtresi
+    if (yasFiltre) {
+      var gun = -gunFarki(f.vade);
+      if (f.durum === 'Odendi') return false;
+      if (yasFiltre === '0-30' && (gun > 30 || f.vade >= bugun)) { /* vadesi gelmemis veya 0-30 */ }
+      else if (yasFiltre === '0-30' && gun >= 0 && gun <= 30) { /* ok */ }
+      else if (yasFiltre === '0-30' && f.vade >= bugun) { /* vadesi gelmemis ok */ }
+      else if (yasFiltre === '31-60' && (gun < 31 || gun > 60)) return false;
+      else if (yasFiltre === '60+' && gun < 60) return false;
+    }
+    return true;
+  });
+
+  tabloGuncelle();
+}
+
+// ── TABLO ──
+function tabloGuncelle() {
+  var tbody = document.getElementById('fatura-body');
+  var bosEl = document.getElementById('bos-durum');
+  tbody.innerHTML = '';
+
+  var vurguFatura = new URLSearchParams(window.location.search).get('fatura');
+  var bugun = bugunStr();
+
+  if (filtreliFaturalar.length === 0) {
+    bosEl.style.display = 'block';
+    document.getElementById('sayfa-bilgi').textContent = '0 fatura';
+    return;
+  }
+  bosEl.style.display = 'none';
+  document.getElementById('sayfa-bilgi').textContent = filtreliFaturalar.length + ' fatura';
+
+  filtreliFaturalar.forEach(function(f) {
+    var tr = document.createElement('tr');
+    tr.className = 'ftr-row';
+    if (vurguFatura && f.id === vurguFatura) tr.className += ' vurgulu';
+
+    var kalan = f.toplam - (f.odenen || 0);
+    var gf = gunFarki(f.vade);
+
+    // Vade chip
+    var vadeChip = '';
+    if (f.durum === 'Odendi') {
+      vadeChip = '<span class="vade-chip vc-ok">Odendi</span>';
+    } else if (gf < 0) {
+      vadeChip = '<span class="vade-chip vc-gec">' + Math.abs(gf) + ' gun gecti</span>';
+    } else if (gf <= 3) {
+      vadeChip = '<span class="vade-chip vc-yakn">' + gf + ' gun</span>';
+    } else {
+      vadeChip = '<span class="vade-chip vc-ok">' + gf + ' gun</span>';
+    }
+
+    // Durum badge
+    var durumBdg = '';
+    if (f.durum === 'Odendi') durumBdg = '<span class="bdg b-grn">Odendi</span>';
+    else if (f.durum === 'Kismi') durumBdg = '<span class="bdg b-amr">Kismi</span>';
+    else if (gf < 0) durumBdg = '<span class="bdg b-red">Gecikmis</span>';
+    else durumBdg = '<span class="bdg b-blu">Acik</span>';
+
+    // Islem butonlari
+    var islem = '';
+    if (f.durum !== 'Odendi') {
+      islem = '<button class="act-btn act-grn" onclick="event.stopPropagation();tahsilatAc(\'' + f.id + '\')">Tahsilat</button> ';
+    }
+    islem += '<button class="act-btn act-gray" onclick="event.stopPropagation();faturaPDF(\'' + f.id + '\')">PDF</button>';
+
+    var secili = seciliFaturalar[f.id] ? ' checked' : '';
+
+    tr.innerHTML = '<td><input type="checkbox" data-id="' + f.id + '" onchange="secimDegisti(this)"' + secili + '></td>' +
+      '<td class="mono">' + f.id + '</td>' +
+      '<td>' + f.musteri + '</td>' +
+      '<td><a href="ersan_siparisler.html?sp=' + encodeURIComponent(f.siparisNo) + '" style="color:var(--mavi);text-decoration:none;">' + f.siparisNo + '</a></td>' +
+      '<td style="font-size:11px;color:var(--metin3);">' + (f.musteriPO||'-') + '</td>' +
+      '<td>' + f.tarih + '</td>' +
+      '<td>' + f.vade + ' ' + vadeChip + '</td>' +
+      '<td style="text-align:right;font-weight:600;">' + paraFormat(f.toplam) + '</td>' +
+      '<td style="text-align:right;color:var(--yesil-t);">' + paraFormat(f.odenen||0) + '</td>' +
+      '<td style="text-align:right;font-weight:700;color:' + (kalan > 0 ? 'var(--kirmizi)' : 'var(--yesil-t)') + ';">' + paraFormat(kalan) + '</td>' +
+      '<td>' + durumBdg + '</td>' +
+      '<td style="white-space:nowrap;">' + islem + '</td>';
+
+    tbody.appendChild(tr);
+  });
+
+  // Vurgulanan faturaya scroll
+  if (vurguFatura) {
+    var vurguEl = document.querySelector('.vurgulu');
+    if (vurguEl) vurguEl.scrollIntoView({ behavior:'smooth', block:'center' });
+  }
+}
+
+// ── CHECKBOX / SECIM ──
+function secimDegisti(cb) {
+  var fId = cb.getAttribute('data-id');
+  if (cb.checked) { seciliFaturalar[fId] = true; }
+  else { delete seciliFaturalar[fId]; }
+  bulkBarGuncelle();
+}
+
+function hepsiSecToggle() {
+  var checked = document.getElementById('hepsi-sec').checked;
+  seciliFaturalar = {};
+  if (checked) {
+    filtreliFaturalar.forEach(function(f) { seciliFaturalar[f.id] = true; });
+  }
+  var cbs = document.querySelectorAll('#fatura-body input[type=checkbox]');
+  cbs.forEach(function(cb) { cb.checked = checked; });
+  bulkBarGuncelle();
+}
+
+function secimTemizle() {
+  seciliFaturalar = {};
+  document.getElementById('hepsi-sec').checked = false;
+  var cbs = document.querySelectorAll('#fatura-body input[type=checkbox]');
+  cbs.forEach(function(cb) { cb.checked = false; });
+  bulkBarGuncelle();
+}
+
+function bulkBarGuncelle() {
+  var sayi = Object.keys(seciliFaturalar).length;
+  var bar = document.getElementById('bulk-bar');
+  if (sayi > 0) {
+    bar.classList.add('aktif');
+    document.getElementById('bulk-sayi').textContent = sayi + ' secili';
+  } else {
+    bar.classList.remove('aktif');
+  }
+}
+
+function topluTahsilat() { alert('Toplu tahsilat: ' + Object.keys(seciliFaturalar).length + ' fatura secili.\n\nBu ozellik yaklasimda.'); }
+function topluPDF() { alert('Toplu PDF: ' + Object.keys(seciliFaturalar).length + ' fatura secili.\n\nBu ozellik yaklasimda.'); }
+
+// ── MODAL HELPERS ──
+function modalAc(id) { document.getElementById(id).classList.add('aktif'); }
+function modalKapat(id) { document.getElementById(id).classList.remove('aktif'); }
+
+// ── YENI FATURA ──
+function yeniFaturaAc() {
+  // Tarih defaults
+  document.getElementById('fm-tarih').value = bugunStr();
+  document.getElementById('fm-vade').value = vadeStr(30);
+  document.getElementById('fm-notlar').value = '';
+  document.getElementById('fm-kalemler').innerHTML = '';
+  document.getElementById('fm-genel-toplam').textContent = '0 TL';
+  document.getElementById('fm-po').value = '';
+
+  // Fatura no uret
+  var mf = faturalarYukle();
+  var maxNo = 0;
+  mf.forEach(function(f) {
+    var m = f.id.match(/MFS-\d+-(\d+)/);
+    if (m) { var n = parseInt(m[1]); if (n > maxNo) maxNo = n; }
+  });
+  var yil = new Date().getFullYear().toString().substring(2);
+  document.getElementById('fm-no').value = 'MFS-' + yil + '-' + String(maxNo+1).padStart(5,'0');
+
+  // Musteri dropdown
+  musteriDropdownDoldur();
+
+  // URL param: siparis
+  var spParam = new URLSearchParams(window.location.search).get('siparis');
+  if (spParam) {
+    // siparis parametresi varsa otomatik doldur
+    setTimeout(function() {
+      // Siparisten musteri bul
+      var fatura = mf.find(function(f) { return f.siparisNo === spParam; });
+      if (fatura) {
+        document.getElementById('fm-musteri').value = fatura.musteri;
+        fmMusteriDegisti();
+        setTimeout(function() {
+          document.getElementById('fm-siparis').value = spParam;
+          fmSiparisDegisti();
+        }, 100);
+      }
+    }, 200);
+  }
+
+  modalAc('fatura-modal');
+}
+
+function musteriDropdownDoldur() {
+  var sel = document.getElementById('fm-musteri');
+  while (sel.options.length > 1) sel.remove(1);
+
+  // localStorage'den musteriler veya Airtable
+  var musteriler = {};
+  tumFaturalar.forEach(function(f) { musteriler[f.musteri] = f.musteriId; });
+
+  // Ek ornek musteriler
+  var ekMusteriler = { 'Tusas':'rec001', 'TEI':'rec002', 'Kale Avia':'rec003', 'ASELSAN':'rec004', 'Roketsan':'rec005', 'FNSS':'rec006', 'BMC':'rec007' };
+  Object.keys(ekMusteriler).forEach(function(m) {
+    if (!musteriler[m]) musteriler[m] = ekMusteriler[m];
+  });
+
+  Object.keys(musteriler).sort().forEach(function(m) {
+    var opt = document.createElement('option');
+    opt.value = m;
+    opt.textContent = m;
+    opt.setAttribute('data-id', musteriler[m]);
+    sel.appendChild(opt);
+  });
+}
+
+function fmMusteriDegisti() {
+  var musteri = document.getElementById('fm-musteri').value;
+  var sel = document.getElementById('fm-siparis');
+  while (sel.options.length > 1) sel.remove(1);
+  document.getElementById('fm-po').value = '';
+  document.getElementById('fm-kalemler').innerHTML = '';
+  document.getElementById('fm-genel-toplam').textContent = '0 TL';
+
+  if (!musteri) return;
+
+  // Ornek siparisler (localStorage-based)
+  var ornekSiparisler = [
+    { no:'SP-2026-034-01', musteri:'Tusas', po:'PO-TU-4422', kalemler:[{kalem:1,parcaNo:'P-1050',adet:6,birimFiyat:14200}] },
+    { no:'SP-2026-035-01', musteri:'TEI', po:'PO-TEI-900', kalemler:[{kalem:1,parcaNo:'P-2050',adet:3,birimFiyat:22000}] },
+    { no:'SP-2026-036-01', musteri:'ASELSAN', po:'PO-AS-2210', kalemler:[{kalem:1,parcaNo:'P-5010',adet:12,birimFiyat:8500}] },
+    { no:'SP-2026-037-01', musteri:'Kale Avia', po:'PO-KA-1200', kalemler:[{kalem:1,parcaNo:'P-3030',adet:4,birimFiyat:31000}] },
+    { no:'SP-2026-038-01', musteri:'Roketsan', po:'PO-RK-320', kalemler:[{kalem:1,parcaNo:'P-6020',adet:15,birimFiyat:3800}] }
+  ];
+
+  var mSiparisler = ornekSiparisler.filter(function(s) { return s.musteri === musteri; });
+  mSiparisler.forEach(function(s) {
+    var opt = document.createElement('option');
+    opt.value = s.no;
+    opt.textContent = s.no;
+    opt.setAttribute('data-po', s.po);
+    opt.setAttribute('data-kalemler', JSON.stringify(s.kalemler));
+    sel.appendChild(opt);
+  });
+}
+
+function fmSiparisDegisti() {
+  var sel = document.getElementById('fm-siparis');
+  var opt = sel.options[sel.selectedIndex];
+  if (!opt || !opt.value) {
+    document.getElementById('fm-po').value = '';
+    document.getElementById('fm-kalemler').innerHTML = '';
+    document.getElementById('fm-genel-toplam').textContent = '0 TL';
+    return;
+  }
+
+  document.getElementById('fm-po').value = opt.getAttribute('data-po') || '';
+
+  var kalemler = [];
+  try { kalemler = JSON.parse(opt.getAttribute('data-kalemler') || '[]'); } catch(e) {}
+
+  var tbody = document.getElementById('fm-kalemler');
+  tbody.innerHTML = '';
+  var toplam = 0;
+  kalemler.forEach(function(k) {
+    var satToplam = k.adet * k.birimFiyat;
+    toplam += satToplam;
+    var tr = document.createElement('tr');
+    tr.innerHTML = '<td>' + k.kalem + '</td><td class="mono">' + k.parcaNo + '</td><td>' + k.adet + '</td>' +
+      '<td style="text-align:right">' + paraFormat(k.birimFiyat) + '</td>' +
+      '<td style="text-align:right;font-weight:600;">' + paraFormat(satToplam) + '</td>';
+    tbody.appendChild(tr);
+  });
+  document.getElementById('fm-genel-toplam').textContent = paraFormat(toplam);
+}
+
+function faturaKaydet() {
+  var musteri = document.getElementById('fm-musteri').value;
+  var siparis = document.getElementById('fm-siparis').value;
+  var faturaNo = document.getElementById('fm-no').value;
+  var tarih = document.getElementById('fm-tarih').value;
+  var vade = document.getElementById('fm-vade').value;
+  var po = document.getElementById('fm-po').value;
+
+  if (!musteri) { alert('Musteri secin!'); return; }
+  if (!tarih || !vade) { alert('Tarih ve vade doldurun!'); return; }
+
+  // Toplam hesapla
+  var kalemler = [];
+  var toplam = 0;
+  var rows = document.getElementById('fm-kalemler').querySelectorAll('tr');
+  rows.forEach(function(row) {
+    var cells = row.querySelectorAll('td');
+    if (cells.length >= 5) {
+      var k = { kalem:parseInt(cells[0].textContent), parcaNo:cells[1].textContent, adet:parseInt(cells[2].textContent) };
+      var birim = parseInt(cells[3].textContent.replace(/[^\d]/g,''));
+      k.birimFiyat = birim;
+      toplam += k.adet * k.birimFiyat;
+      kalemler.push(k);
+    }
+  });
+
+  if (toplam === 0) {
+    toplam = parseFloat(prompt('Fatura toplami girin (TL):') || '0');
+    if (!toplam || toplam <= 0) { alert('Gecerli tutar girin!'); return; }
+  }
+
+  var musteriOpt = document.getElementById('fm-musteri').options[document.getElementById('fm-musteri').selectedIndex];
+  var musteriId = musteriOpt ? musteriOpt.getAttribute('data-id') : '';
+
+  var yeniFatura = {
+    id: faturaNo,
+    musteri: musteri,
+    musteriId: musteriId || '',
+    siparisNo: siparis || '',
+    musteriPO: po || '',
+    tarih: tarih,
+    vade: vade,
+    toplam: toplam,
+    odenen: 0,
+    durum: 'Acik',
+    kalemler: kalemler,
+    notlar: document.getElementById('fm-notlar').value || ''
+  };
+
+  var mf = faturalarYukle();
+  mf.push(yeniFatura);
+  faturalarKaydet(mf);
+
+  logIslem('Olusturuldu', 'Musteri Fatura', faturaNo, faturaNo + ' - ' + musteri, null, yeniFatura);
+
+  modalKapat('fatura-modal');
+  sayfaYenile();
+}
+
+// ── TAHSILAT ──
+function tahsilatAc(faturaId) {
+  var f = tumFaturalar.find(function(x) { return x.id === faturaId; });
+  if (!f) return;
+
+  aktifTahsilatFatura = f;
+  var kalan = f.toplam - (f.odenen || 0);
+
+  document.getElementById('th-fatura-no').textContent = f.id;
+  document.getElementById('th-musteri').textContent = f.musteri;
+  document.getElementById('th-toplam').textContent = paraFormat(f.toplam);
+  document.getElementById('th-odenen').textContent = paraFormat(f.odenen || 0);
+  document.getElementById('th-kalan').textContent = paraFormat(kalan);
+  document.getElementById('th-tutar').value = kalan;
+  document.getElementById('th-tutar').max = kalan;
+  document.getElementById('th-tarih').value = bugunStr();
+  document.getElementById('th-referans').value = '';
+
+  modalAc('tahsilat-modal');
+}
+
+function tahsilatKaydet() {
+  if (!aktifTahsilatFatura) return;
+
+  var tutar = parseFloat(document.getElementById('th-tutar').value);
+  var tarih = document.getElementById('th-tarih').value;
+  var yontem = document.getElementById('th-yontem').value;
+  var banka = document.getElementById('th-banka').value;
+  var referans = document.getElementById('th-referans').value;
+
+  if (!tutar || tutar <= 0) { alert('Gecerli tutar girin!'); return; }
+  if (!tarih) { alert('Tarih secin!'); return; }
+
+  var kalan = aktifTahsilatFatura.toplam - (aktifTahsilatFatura.odenen || 0);
+  if (tutar > kalan) { alert('Tutar kalandan fazla olamaz! Kalan: ' + paraFormat(kalan)); return; }
+
+  // Tahsilat kaydet
+  var th = tahsilatlarYukle();
+  var thId = 'TH-' + String(th.length + 1).padStart(3, '0');
+  th.push({
+    id: thId,
+    faturaId: aktifTahsilatFatura.id,
+    tutar: tutar,
+    tarih: tarih,
+    yontem: yontem,
+    banka: banka,
+    referans: referans
+  });
+  tahsilatlarKaydet(th);
+
+  // Fatura guncelle
+  var mf = faturalarYukle();
+  var idx = mf.findIndex(function(f) { return f.id === aktifTahsilatFatura.id; });
+  if (idx >= 0) {
+    mf[idx].odenen = (mf[idx].odenen || 0) + tutar;
+    var yeniKalan = mf[idx].toplam - mf[idx].odenen;
+    if (yeniKalan <= 0) {
+      mf[idx].durum = 'Odendi';
+    } else {
+      mf[idx].durum = 'Kismi';
+    }
+    faturalarKaydet(mf);
+  }
+
+  logIslem('Tahsilat', 'Musteri Fatura', aktifTahsilatFatura.id, aktifTahsilatFatura.id + ' - ' + paraFormat(tutar), null, { tutar:tutar, yontem:yontem, banka:banka, referans:referans });
+
+  modalKapat('tahsilat-modal');
+  aktifTahsilatFatura = null;
+  sayfaYenile();
+}
+
+// ── PDF ──
+function faturaPDF(faturaId) {
+  alert('Fatura PDF hazirlaniyor: ' + faturaId + '\n\nBu ozellik yaklasimda.');
+}
+
+// ── EXCEL ──
+function excelIndir() {
+  var csv = 'Fatura No,Musteri,Siparis No,Musteri PO,Tarih,Vade,Toplam,Odenen,Kalan,Durum\n';
+  filtreliFaturalar.forEach(function(f) {
+    var kalan = f.toplam - (f.odenen || 0);
+    csv += [f.id, f.musteri, f.siparisNo, f.musteriPO||'', f.tarih, f.vade, f.toplam, f.odenen||0, kalan, f.durum].join(',') + '\n';
+  });
+
+  var blob = new Blob(['\uFEFF' + csv], { type:'text/csv;charset=utf-8;' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'musteri_faturalari_' + bugunStr() + '.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ── REFRESH ──
+function sayfaYenile() {
+  tumFaturalar = faturalarYukle();
+  kpiGuncelle();
+  musteriFiltreGuncelle();
+  filtreUygula();
+}
+
+// ── INIT ──
+document.addEventListener('DOMContentLoaded', function() {
+  ornekVeriKontrol();
+  sayfaYenile();
+
+  // URL param: auto-open new fatura
+  var spParam = new URLSearchParams(window.location.search).get('siparis');
+  if (spParam) {
+    setTimeout(function() { yeniFaturaAc(); }, 500);
+  }
+});
+</script>
+</body>
+</html>
