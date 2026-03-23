@@ -48,6 +48,7 @@
 
   <div class="hata" id="hata"></div>
 
+  <form onsubmit="event.preventDefault();sifreDegistir();">
   <label>Yeni Şifre</label>
   <input type="password" id="yeni" placeholder="En az 8 karakter" oninput="kurallariGuncelle(this.value)">
 
@@ -58,9 +59,10 @@
   </div>
 
   <label>Şifreyi Tekrar Girin</label>
-  <input type="password" id="tekrar" placeholder="Aynı şifreyi tekrar girin" onkeydown="if(event.key==='Enter')sifreDegistir()">
+  <input type="password" id="tekrar" placeholder="Aynı şifreyi tekrar girin">
 
-  <button class="btn" id="kaydet-btn" onclick="sifreDegistir()">Şifremi Belirle &#8594;</button>
+  <button class="btn" id="kaydet-btn" type="submit">Şifremi Belirle &#8594;</button>
+  </form>
 </div>
 
 <script src="utils/airtable.js"></script>

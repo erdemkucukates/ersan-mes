@@ -149,21 +149,14 @@ async function giris(){
   try {
     var prefix = girilen.includes('@') ? girilen.split('@')[0] : girilen;
 
-    console.log('[GIRIS] prefix:', prefix);
     var res = await airtable('list', 'Kullanicilar', {
       filterByFormula: "AND({Mail_Prefix}='" + prefix + "', {Aktif}=1)"
     });
-    console.log('[GIRIS] Airtable yanit:', JSON.stringify(res));
 
     var kayitlar = res.records || [];
 
-    if (kayitlar.length === 0) {
-      console.log('[GIRIS] Kullanici bulunamadi');
-      throw new Error('Kullanici bulunamadi');
-    }
-    if (kayitlar[0].fields.Sifre_Hash !== sifre) {
-      console.log('[GIRIS] Sifre eslesmiyor. Beklenen:', kayitlar[0].fields.Sifre_Hash, 'Girilen:', sifre);
-      throw new Error('Sifre hatali');
+    if (kayitlar.length === 0 || kayitlar[0].fields.Sifre_Hash !== sifre) {
+      throw new Error('Hatalı giriş');
     }
 
     var k = kayitlar[0].fields;
