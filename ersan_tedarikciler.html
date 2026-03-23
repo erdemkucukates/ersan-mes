@@ -197,16 +197,16 @@
 
     <!-- Alt Sekme Bar -->
     <div class="alt-tab-bar">
-      <button class="tab-btn aktif" onclick="altSekmeAc('otl',this)">OTL Yonetimi</button>
-      <button class="tab-btn" onclick="altSekmeAc('degerlendirme',this)">Donemsel Degerlendirme</button>
-      <button class="tab-btn" onclick="altSekmeAc('skorkart',this)">Skor Karti</button>
+      <button class="tab-btn aktif" onclick="altSekmeAc('otl',this)">OTL Yönetimi</button>
+      <button class="tab-btn" onclick="altSekmeAc('degerlendirme',this)">Dönemsel Değerlendirme</button>
+      <button class="tab-btn" onclick="altSekmeAc('skorkart',this)">Skor Kartı</button>
     </div>
 
     <!-- ALT PANEL: OTL Yönetimi -->
     <div class="alt-panel aktif" id="alt-otl">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-        <h4 style="font-size:14px;color:var(--metin);margin:0;">Onayli Tedarikci Listesi (OTL)</h4>
-        <button class="btn btn-p" onclick="modalAc('otl-ekle-modal')">+ Tedarikci Onayla</button>
+        <h4 style="font-size:14px;color:var(--metin);margin:0;">Onaylı Tedarikçi Listesi (OTL)</h4>
+        <button class="btn btn-p" onclick="modalAc('otl-ekle-modal')">+ Tedarikçi Onayla</button>
       </div>
       <table class="otl-tablo">
         <thead><tr><th>Tedarikci</th><th>Kategori</th><th>Onay Tarihi</th><th>Gecerlilik</th><th>Skor</th><th>Seviye</th><th>Durum</th></tr></thead>
@@ -220,7 +220,7 @@
         <h4 style="font-size:14px;color:var(--metin);margin:0;">Tedarikci Degerlendirme</h4>
         <div style="display:flex;gap:8px;align-items:center;">
           <select id="dg-ted-sec" style="padding:7px 12px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;">
-            <option value="">Tedarikci Seciniz</option>
+            <option value="">Tedarikçi Seçiniz</option>
           </select>
           <button class="btn btn-p" onclick="dgSeciliAc()">Degerlendir</button>
         </div>
@@ -231,9 +231,9 @@
     <!-- ALT PANEL: Skor Kartı -->
     <div class="alt-panel" id="alt-skorkart">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-        <h4 style="font-size:14px;color:var(--metin);margin:0;">Skor Karti</h4>
+        <h4 style="font-size:14px;color:var(--metin);margin:0;">Skor Kartı</h4>
         <select id="sk-ted-sec" onchange="skorKartiGoster()" style="padding:7px 12px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;">
-          <option value="">Tedarikci Seciniz</option>
+          <option value="">Tedarikçi Seçiniz</option>
         </select>
       </div>
       <div id="sk-icerik" style="background:var(--beyaz);border:1px solid var(--border);border-radius:10px;padding:20px;">
@@ -372,7 +372,7 @@
 <div class="modal-bg" id="otl-ekle-modal">
   <div class="modal-kutu" style="width:480px;">
     <div class="modal-ust">
-      <h3>Tedarikci Onayla (OTL)</h3>
+      <h3>Tedarikçi Onayla (OTL)</h3>
       <button class="modal-kapat" onclick="modalKapat('otl-ekle-modal')">&times;</button>
     </div>
     <div class="modal-govde">
@@ -394,7 +394,7 @@
       <div class="form-grup"><label>Notlar</label><textarea id="otl-not" placeholder="Onay notlari..."></textarea></div>
     </div>
     <div class="modal-alt">
-      <button class="btn btn-g" onclick="modalKapat('otl-ekle-modal')">Iptal</button>
+      <button class="btn btn-g" onclick="modalKapat('otl-ekle-modal')">İptal</button>
       <button class="btn btn-p" onclick="tedarikci_onayla()">Onayla</button>
     </div>
   </div>
@@ -455,7 +455,7 @@
       <div class="form-grup" style="margin-top:14px;"><label>Notlar</label><textarea id="dg-not" placeholder="Degerlendirme notlari..."></textarea></div>
     </div>
     <div class="modal-alt">
-      <button class="btn btn-g" onclick="modalKapat('dg-modal')">Iptal</button>
+      <button class="btn btn-g" onclick="modalKapat('dg-modal')">İptal</button>
       <button class="btn btn-p" onclick="degerlendirme_kaydet()">Kaydet</button>
     </div>
   </div>
