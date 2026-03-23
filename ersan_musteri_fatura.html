@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ersan MES — Musteri Faturalari</title>
+<title>Ersan MES — Müşteri Faturaları</title>
 <link rel="stylesheet" href="utils/sidebar.css">
 <link rel="stylesheet" href="ersan_styles.css">
 <script src="utils/sidebar.js" defer></script>
@@ -120,7 +120,7 @@
 <div id="sb-mount"></div>
 <div class="icerik-alani main">
   <div class="topbar">
-    <div class="topbar-baslik">Musteri Faturalari</div>
+    <div class="topbar-baslik">Müşteri Faturaları</div>
     <div style="display:flex;align-items:center;gap:8px;">
       <button class="btn btn-mavi" onclick="yeniFaturaAc()">+ Fatura Kes</button>
       <button class="btn btn-beyaz" onclick="excelIndir()">Excel</button>
@@ -132,28 +132,28 @@
     <!-- KPI ROW -->
     <div class="kpi-row">
       <div class="kpi s-blue"><div class="kpi-val" id="kpi-alacak">0</div><div class="kpi-lbl">Toplam Alacak</div><div class="kpi-sub" id="kpi-alacak-sub">0 fatura</div></div>
-      <div class="kpi s-red"><div class="kpi-val" id="kpi-vadesi">0</div><div class="kpi-lbl">Vadesi Gecmis</div><div class="kpi-sub" id="kpi-vadesi-sub">0 fatura</div></div>
-      <div class="kpi s-green"><div class="kpi-val" id="kpi-tahsilat">0</div><div class="kpi-lbl">Bu Ay Tahsilat</div><div class="kpi-sub" id="kpi-tahsilat-sub">0 islem</div></div>
-      <div class="kpi s-amber"><div class="kpi-val" id="kpi-ort">0</div><div class="kpi-lbl">Ort. Tahsilat Suresi</div><div class="kpi-sub">gun</div></div>
+      <div class="kpi s-red"><div class="kpi-val" id="kpi-vadesi">0</div><div class="kpi-lbl">Vadesi Geçmiş</div><div class="kpi-sub" id="kpi-vadesi-sub">0 fatura</div></div>
+      <div class="kpi s-green"><div class="kpi-val" id="kpi-tahsilat">0</div><div class="kpi-lbl">Bu Ay Tahsilat</div><div class="kpi-sub" id="kpi-tahsilat-sub">0 işlem</div></div>
+      <div class="kpi s-amber"><div class="kpi-val" id="kpi-ort">0</div><div class="kpi-lbl">Ort. Tahsilat Süresi</div><div class="kpi-sub">gün</div></div>
     </div>
 
     <!-- FILTER BAR -->
     <div class="filtre-bar">
-      <input type="text" id="ara-input" placeholder="Fatura no, musteri, siparis ara..." oninput="filtreUygula()">
+      <input type="text" id="ara-input" placeholder="Fatura no, müşteri, sipariş ara..." oninput="filtreUygula()">
       <select id="filtre-durum" onchange="filtreUygula()">
-        <option value="">Tum Durumlar</option>
-        <option value="Acik">Acik</option>
-        <option value="Kismi">Kismi Odenmis</option>
-        <option value="Odendi">Odenmis</option>
+        <option value="">Tüm Durumlar</option>
+        <option value="Acik">Açık</option>
+        <option value="Kismi">Kısmi Ödenmiş</option>
+        <option value="Odendi">Ödenmiş</option>
       </select>
       <select id="filtre-musteri" onchange="filtreUygula()">
-        <option value="">Tum Musteriler</option>
+        <option value="">Tüm Müşteriler</option>
       </select>
       <select id="filtre-tarih" onchange="filtreUygula()">
-        <option value="">Tum Tarihler</option>
-        <option value="7">Son 7 Gun</option>
-        <option value="30">Son 30 Gun</option>
-        <option value="90">Son 90 Gun</option>
+        <option value="">Tüm Tarihler</option>
+        <option value="7">Son 7 Gün</option>
+        <option value="30">Son 30 Gün</option>
+        <option value="90">Son 90 Gün</option>
       </select>
     </div>
 

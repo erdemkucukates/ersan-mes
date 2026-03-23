@@ -181,7 +181,7 @@
     <!-- Sayfa Tab Bar -->
     <div class="sayfa-tab-bar">
       <button class="tab-btn aktif" onclick="sekmeAc('musteriler',this)">Müşteriler</button>
-      <button class="tab-btn" onclick="sekmeAc('sikayetler',this)">Sikayetler <span id="sky-badge" class="bdg b-red" style="display:none"></span></button>
+      <button class="tab-btn" onclick="sekmeAc('sikayetler',this)">Şikayetler <span id="sky-badge" class="bdg b-red" style="display:none"></span></button>
     </div>
 
     <!-- PANEL: Müşteriler -->
@@ -242,12 +242,12 @@
       <!-- Filtre + Yeni Buton -->
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
         <div class="sky-filtre">
-          <button class="sky-filtre-btn aktif" onclick="skyFiltreUygula('Tümü',this)">Tumu</button>
-          <button class="sky-filtre-btn" onclick="skyFiltreUygula('Açık',this)">Acik</button>
-          <button class="sky-filtre-btn" onclick="skyFiltreUygula('İncelemede',this)">Incelemede</button>
-          <button class="sky-filtre-btn" onclick="skyFiltreUygula('Kapatıldı',this)">Kapatildi</button>
+          <button class="sky-filtre-btn aktif" onclick="skyFiltreUygula('Tümü',this)">Tümü</button>
+          <button class="sky-filtre-btn" onclick="skyFiltreUygula('Açık',this)">Açık</button>
+          <button class="sky-filtre-btn" onclick="skyFiltreUygula('İncelemede',this)">İncelemede</button>
+          <button class="sky-filtre-btn" onclick="skyFiltreUygula('Kapatıldı',this)">Kapatıldı</button>
         </div>
-        <button class="btn btn-p" onclick="modalAc('sky-yeni-modal')">+ Yeni Sikayet</button>
+        <button class="btn btn-p" onclick="modalAc('sky-yeni-modal')">+ Yeni Şikayet</button>
       </div>
 
       <!-- Şikayet Tablosu -->
@@ -431,8 +431,8 @@
           </select>
         </div>
       </div>
-      <div class="form-grup"><label>Konu *</label><input type="text" id="sky-konu" placeholder="Sikayet konusu..."></div>
-      <div class="form-grup"><label>Aciklama</label><textarea id="sky-aciklama" placeholder="Detayli aciklama..."></textarea></div>
+      <div class="form-grup"><label>Konu *</label><input type="text" id="sky-konu" placeholder="Şikayet konusu..."></div>
+      <div class="form-grup"><label>Açıklama</label><textarea id="sky-aciklama" placeholder="Detaylı açıklama..."></textarea></div>
       <div class="form-iki">
         <div class="form-grup"><label>Kategori</label>
           <select id="sky-kategori">
