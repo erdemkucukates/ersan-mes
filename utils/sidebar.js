@@ -110,7 +110,7 @@
         {lbl:'M\u00FC\u015Fteri Y\u00F6netimi', items:[
           {f:'ersan_crm.html',             l:'M\u00FC\u015Fteri Defteri',  i:'\uD83C\uDFE2'},
           {f:'ersan_musteri.html',          l:'Ki\u015Fi Rehberi',         i:'\uD83D\uDC64'},
-          {f:'ersan_musteri_portal.html',   l:'S\u00F6zle\u015Fmeler',    i:'\uD83D\uDCDC'}
+          {f:'ersan_sozlesmeler.html',      l:'S\u00F6zle\u015Fmeler',    i:'\uD83D\uDCDC'}
         ]},
         {lbl:'F\u0131rsat & Takip', items:[
           {f:'ersan_pipeline.html',         l:'F\u0131rsat Pipeline',      i:'\uD83C\uDFAF'},
