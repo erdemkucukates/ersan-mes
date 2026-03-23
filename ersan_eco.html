@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ersan MES — Muhendislik Degisiklik Emirleri</title>
+<title>Ersan MES — Mühendislik Değişiklik Emirleri (ECO)</title>
 <link rel="stylesheet" href="utils/sidebar.css">
 <link rel="stylesheet" href="ersan_styles.css">
 <script src="utils/sidebar.js" defer></script>
@@ -13,41 +13,336 @@
   <link rel="stylesheet" href="utils/sidebar.css">
   <style>html,body{height:100%;margin:0;padding:0;overflow:hidden}.app{display:flex!important;flex-direction:row!important;height:100vh!important;width:100vw!important;overflow:hidden!important;gap:0!important;padding:0!important;margin:0!important}#sb-mount,.sb{width:210px!important;min-width:210px!important;max-width:210px!important;flex:0 0 210px!important;height:100vh!important;overflow-y:scroll!important;overflow-x:hidden!important;margin:0!important;border-right:none!important}.main,.icerik-alani{flex:1 1 0!important;min-width:0!important;height:100vh!important;overflow:hidden!important;display:flex!important;flex-direction:column!important}.main>.tb,.main>.topbar,.main>[class*="topbar"]{flex-shrink:0!important}</style>
   <!-- /LAYOUT FIX -->
+
+<style>
+/* ── SAYFA ÖZEL STİLLER ── */
+:root{
+  --lacivert:#1a2b47;--blue:#2563eb;--blue-l:#dbeafe;
+  --green:#059669;--green-l:#d1fae5;
+  --red:#dc2626;--red-l:#fee2e2;
+  --amber:#d97706;--amber-l:#fef3c7;
+  --purple:#7c3aed;--purple-l:#ede9fe;
+  --teal:#0d9488;--teal-l:#ccfbf1;
+  --g50:#f9fafb;--g100:#f3f4f6;--g200:#e5e7eb;
+  --g300:#d1d5db;--g400:#9ca3af;--g500:#6b7280;--g700:#374151;--g900:#111827;
+  --r:7px;--sh:0 1px 3px rgba(0,0,0,.08);
+}
+
+/* KPI */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}
+.kc{background:#fff;border:1px solid var(--g200);border-radius:var(--r);padding:11px 13px;box-shadow:var(--sh);position:relative;overflow:hidden;cursor:pointer;transition:.15s}
+.kc:hover{border-color:#93c5fd}
+.kc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.kc.r::before{background:var(--red)}.kc.a::before{background:var(--amber)}
+.kc.g::before{background:var(--green)}.kc.b::before{background:var(--blue)}.kc.p::before{background:var(--purple)}
+.kl{font-size:9.5px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--g400)}
+.kv{font-size:22px;font-weight:700;color:var(--g900);margin:3px 0 1px;line-height:1}
+.ks{font-size:10px;color:var(--g400)}
+
+/* İKİ KOLON LAYOUT */
+.two{display:grid;grid-template-columns:310px 1fr;gap:11px;flex:1;min-height:0}
+.pnl{background:#fff;border:1px solid var(--g200);border-radius:var(--r);box-shadow:var(--sh);display:flex;flex-direction:column;overflow:hidden}
+.ph{padding:8px 13px;border-bottom:1px solid var(--g200);background:var(--g50);display:flex;align-items:center;gap:8px;flex-shrink:0}
+.pht{font-size:11.5px;font-weight:700;color:var(--lacivert)}
+.pb{flex:1;overflow-y:auto}
+.pad{padding:14px 18px}.pad0{padding:0 18px 14px}
+
+/* ECO LİSTE */
+.si{padding:10px 12px;border-bottom:1px solid #f3f4f6;cursor:pointer;display:flex;flex-direction:column;gap:3px;border-left:3px solid transparent;transition:.12s}
+.si:hover{background:#f9fafb}
+.si.sel{background:#eff6ff;border-left-color:var(--lacivert)}
+.si.taslak{border-left-color:var(--g400)}.si.incelemede{border-left-color:var(--amber)}
+.si.musteri-onay{border-left-color:var(--purple)}.si.onaylandi{border-left-color:var(--green)}.si.reddedildi{border-left-color:var(--red)}
+.si-no{font-family:monospace;font-size:10px;font-weight:700;color:var(--lacivert)}
+.si-baslik{font-size:12px;font-weight:700;color:var(--g900);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.si-alt{font-size:10px;color:var(--g500);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+
+/* TABS */
+.tabs{display:flex;border-bottom:1px solid var(--g200);background:#fff;padding:0 11px;gap:2px;flex-shrink:0}
+.tab{padding:8px 10px;font-size:11px;font-weight:500;color:var(--g400);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.tab:hover{color:var(--g700)}.tab.active{color:var(--lacivert);border-bottom-color:var(--lacivert);font-weight:700}
+.tc{display:none}.tc.on{display:block}
+
+/* DETAY PANELİ */
+.sec{padding:11px 13px;border-bottom:1px solid #f3f4f6}
+.sec:last-child{border-bottom:none}
+.st{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--g400);margin-bottom:7px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px}
+.fl{font-size:9.5px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--g400);margin-bottom:2px}
+.fv{font-size:12px;color:var(--g900);font-weight:500}
+.mono{font-family:monospace;color:var(--lacivert);font-weight:700}
+.row{display:flex;align-items:center;gap:8px}
+.mla{margin-left:auto}
+
+/* BADGE */
+.bx{display:inline-flex;align-items:center;padding:2px 7px;border-radius:12px;font-size:9.5px;font-weight:600}
+.bg{background:var(--green-l);color:#065f46}.br{background:var(--red-l);color:#991b1b}
+.ba{background:var(--amber-l);color:#92400e}.bb{background:var(--blue-l);color:#1e40af}
+.bz{background:var(--g100);color:var(--g500)}.bp{background:var(--purple-l);color:#4c1d95}
+
+/* BADGE LARGE */
+.bx-lg{padding:5px 14px;border-radius:16px;font-size:12px;font-weight:700}
+
+/* CHIP LIST */
+.chip-list{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px}
+.chip{display:inline-flex;align-items:center;padding:3px 8px;border-radius:4px;font-size:10px;font-weight:600}
+.c-ok{background:var(--green-l);color:#065f46}.c-w{background:var(--amber-l);color:#92400e}
+.c-e{background:var(--red-l);color:#991b1b}.c-b{background:var(--blue-l);color:#1e40af}
+.c-p{background:var(--purple-l);color:#4c1d95}
+
+/* REV COMPARISON */
+.rev-compare{display:flex;align-items:center;gap:12px;margin-top:8px}
+.rev-box{padding:10px 16px;background:var(--g50);border:1px solid var(--g200);border-radius:var(--r);text-align:center;min-width:80px}
+.rev-box-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--g400);margin-bottom:4px}
+.rev-box-val{font-size:18px;font-weight:800;font-family:monospace;color:var(--lacivert)}
+.rev-arrow{font-size:22px;color:var(--green);font-weight:700}
+
+/* ONAY AKIŞI STEPS */
+.steps{display:flex;align-items:center;gap:0;margin:12px 0}
+.step{flex:1;text-align:center;padding:10px 6px;border-radius:var(--r);font-size:10.5px;font-weight:700;background:var(--g100);color:var(--g400);position:relative;transition:.2s}
+.step.done{background:var(--green-l);color:#065f46}
+.step.active{background:var(--lacivert);color:#fff}
+.step.rejected{background:var(--red-l);color:#991b1b}
+.step-conn{width:24px;height:2px;background:var(--g200);flex-shrink:0}
+.step-conn.done{background:var(--green)}
+
+/* ZAMAN ÇİZELGESİ */
+.zc-item{display:flex;gap:10px;padding:8px 13px;border-bottom:1px solid #f3f4f6;align-items:flex-start}
+.zc-item:last-child{border-bottom:none}
+.zc-ic{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;margin-top:1px}
+.zc-icerik{flex:1}
+.zc-baslik{font-size:11.5px;font-weight:600;color:var(--g900)}
+.zc-alt{font-size:10px;color:var(--g400);margin-top:2px}
+
+/* BUTONLAR */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:5px;font-size:11.5px;font-weight:600;cursor:pointer;border:none;transition:.15s;white-space:nowrap}
+.btn-p{background:var(--lacivert);color:#fff}.btn-p:hover{background:#243555}
+.btn-o{background:#fff;border:1px solid var(--g300);color:var(--g700)}.btn-o:hover{background:var(--g50)}
+.btn-g{background:var(--green);color:#fff}.btn-r{background:var(--red);color:#fff}
+.btn-sm{padding:4px 9px;font-size:10.5px}
+
+/* FORM */
+.sk-input,.sk-select,.sk-textarea{font-family:inherit;border:1px solid var(--g300);border-radius:5px;padding:5px 8px;outline:none;color:var(--g900);background:#fff;font-size:11.5px;width:100%;box-sizing:border-box}
+.sk-input:focus,.sk-select:focus,.sk-textarea:focus{border-color:var(--lacivert)}
+.sk-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--g500);display:block;margin-bottom:3px}
+.form-row{margin-bottom:9px}
+
+/* MODAL */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;align-items:center;justify-content:center}
+.modal-bg.ac{display:flex}
+.modal{background:#fff;border-radius:10px;width:620px;max-height:88vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.2)}
+.mh{padding:14px 18px;border-bottom:1px solid var(--g200);display:flex;align-items:center;gap:8px}
+.mht{font-size:14px;font-weight:700;color:var(--lacivert)}
+.mb{padding:16px 18px}
+.mf{padding:12px 18px;border-top:1px solid var(--g200);display:flex;gap:8px;justify-content:flex-end}
+
+/* TOAST */
+.toast{position:fixed;top:16px;right:16px;z-index:9999;padding:9px 16px;background:var(--lacivert);color:#fff;border-radius:6px;font-size:12px;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.2);display:none}
+
+/* SEARCH */
+.srch{border:1px solid var(--g300);border-radius:5px;padding:6px 10px 6px 28px;outline:none;font-size:11.5px;width:100%;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E") no-repeat 8px center}
+.srch:focus{border-color:var(--lacivert)}
+
+/* LISTE FİLTRE */
+.lf{padding:8px 10px;display:flex;gap:6px;border-bottom:1px solid var(--g200);flex-shrink:0}
+.lf-btn{padding:3px 8px;border-radius:4px;font-size:10px;font-weight:600;cursor:pointer;border:none;background:var(--g100);color:var(--g500);transition:.12s}
+.lf-btn.on{background:var(--lacivert);color:#fff}
+
+/* NCR REF */
+.ncr-ref{display:inline-flex;align-items:center;gap:5px;background:var(--red-l);border:1px solid #fca5a5;border-radius:5px;padding:3px 8px;font-size:10px;font-weight:700;color:var(--red);cursor:pointer}
+.ncr-ref:hover{background:#fee2e2}
+</style>
 </head>
-<body>
+<body data-page="eco">
 <div class="app">
 <div id="sb-mount"></div>
 <div class="icerik-alani main">
-  <div class="topbar">
-    <div class="topbar-baslik">Muhendislik Degisiklik Emirleri (ECO)</div>
-    <div style="display:flex;align-items:center;gap:8px">
-      <span style="font-size:11px;color:var(--metin3)">AS9100 §8.5.6</span>
-      <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
+
+<!-- TOP BAR -->
+<div class="topbar" style="display:flex;align-items:center;gap:10px;padding:0 18px;height:48px">
+  <div style="font-size:14px;font-weight:700;color:var(--lacivert)">Mühendislik Değişiklik Emirleri (ECO)</div>
+  <span class="chip c-b" style="margin-left:6px;font-size:9.5px">AS9100 §8.5.6</span>
+  <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+    <input class="srch" id="arama" placeholder="ECO no, başlık, sorumlu ara..." style="width:220px" oninput="filtrele()">
+    <select class="sk-select" id="filtre-durum" onchange="filtrele()" style="width:auto">
+      <option value="">Tüm Durumlar</option>
+      <option value="Taslak">Taslak</option>
+      <option value="İncelemede">İncelemede</option>
+      <option value="Müşteri Onayı Bekleniyor">Müşteri Onayı</option>
+      <option value="Onaylandı">Onaylandı</option>
+      <option value="Reddedildi">Reddedildi</option>
+    </select>
+    <button class="btn btn-p" onclick="modal_ac('modal-yeni')">+ Yeni ECO</button>
+  </div>
+</div>
+
+<div class="sayfa-icerik" style="flex:1;overflow-y:auto;padding:14px 18px;display:flex;flex-direction:column;min-height:0">
+
+<!-- KPI -->
+<div class="kpi-row">
+  <div class="kc" style="cursor:pointer" onclick="durum_filtre('Taslak')">
+    <div class="kl">Taslak</div>
+    <div class="kv" id="kpi-taslak">—</div>
+    <div class="ks">Hazırlanıyor</div>
+    <div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--g400)"></div>
+  </div>
+  <div class="kc a" onclick="durum_filtre('İncelemede')">
+    <div class="kl">İncelemede</div>
+    <div class="kv" id="kpi-incelemede">—</div>
+    <div class="ks">Değerlendirme</div>
+  </div>
+  <div class="kc p" onclick="durum_filtre('Müşteri Onayı Bekleniyor')">
+    <div class="kl">Müşteri Onayı</div>
+    <div class="kv" id="kpi-musteri">—</div>
+    <div class="ks">Onay bekleniyor</div>
+  </div>
+  <div class="kc g" onclick="durum_filtre('Onaylandı')">
+    <div class="kl">Onaylandı</div>
+    <div class="kv" id="kpi-onaylandi">—</div>
+    <div class="ks">Uygulanabilir</div>
+  </div>
+</div>
+
+<!-- ANA İKİ KOLON -->
+<div class="two" style="flex:1;min-height:0">
+
+  <!-- SOL: ECO Listesi -->
+  <div class="pnl">
+    <div class="ph">
+      <span class="pht">ECO Listesi</span>
+      <span id="liste-sayac" style="margin-left:auto;font-size:10px;color:var(--g400)">— kayıt</span>
+    </div>
+    <div class="lf">
+      <button class="lf-btn on" onclick="tab_filtre('Hepsi',this)">Hepsi</button>
+      <button class="lf-btn" onclick="tab_filtre('Taslak',this)">Taslak</button>
+      <button class="lf-btn" onclick="tab_filtre('İncelemede',this)">İncelemede</button>
+      <button class="lf-btn" onclick="tab_filtre('Onaylandı',this)">Onaylandı</button>
+    </div>
+    <div class="pb" id="eco-liste">
+      <div style="padding:30px;text-align:center;color:var(--g400)">
+        <div style="font-size:24px;margin-bottom:8px">📋</div>
+        <div style="font-size:12px">Yükleniyor...</div>
+      </div>
     </div>
   </div>
-  <div class="sayfa-icerik">
-    <div class="iki-panel">
 
-      <!-- SOL PANEL -->
-      <div class="sol-panel">
-        <div class="sol-panel-ust">
-          <div class="sol-panel-baslik">ECO Listesi</div>
-          <button class="btn-new" onclick="yeniEco()">+ Yeni</button>
+  <!-- SAĞ: ECO Detayı -->
+  <div class="pnl" id="detay-pnl" style="display:flex;flex-direction:column">
+
+    <!-- Boş durum -->
+    <div id="bos-durum" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--g400)">
+      <div style="font-size:40px;margin-bottom:12px">📐</div>
+      <div style="font-size:13px;font-weight:600;color:var(--g500)">Listeden bir ECO seçin</div>
+      <div style="font-size:11px;color:var(--g400);margin-top:4px">veya yeni ECO oluşturun</div>
+      <button class="btn btn-p" style="margin-top:16px" onclick="modal_ac('modal-yeni')">+ Yeni ECO</button>
+    </div>
+
+    <!-- Detay içeriği -->
+    <div id="detay-icerik" style="display:none;flex:1;flex-direction:column;overflow:hidden">
+
+      <!-- Başlık -->
+      <div id="detay-baslik" style="padding:12px 14px;border-bottom:1px solid var(--g200);background:var(--g50);flex-shrink:0">
+        <div class="row" style="margin-bottom:5px">
+          <span id="d-no" class="mono" style="font-size:12px">—</span>
+          <span id="d-durum-badge" class="bx bz">Taslak</span>
+          <span id="d-musteri-icon" style="display:none;font-size:14px" title="Müşteri onayı gerekli">&#128272;</span>
+          <div class="mla" style="display:flex;gap:6px">
+            <button class="btn btn-o btn-sm" onclick="modal_ac('modal-guncelle')">&#9998; Güncelle</button>
+          </div>
         </div>
-        <div class="sol-arama"><input type="text" placeholder="Ara..." oninput="araFiltre(this.value)"></div>
-        <div class="sol-liste" id="eco-liste">
-          <div class="yukleniyor"><div class="spinner"></div> Yukleniyor...</div>
+        <div id="d-baslik" style="font-size:14px;font-weight:800;color:var(--g900)">—</div>
+        <div id="d-kategori-chip" style="margin-top:4px"></div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs">
+        <div class="tab active" onclick="st(this,'t-detay')">Detay</div>
+        <div class="tab" onclick="st(this,'t-etki')">Etki Analizi</div>
+        <div class="tab" onclick="st(this,'t-onay')">Onay Akışı</div>
+      </div>
+
+      <!-- Tab: Detay -->
+      <div class="tc on pb" id="t-detay">
+        <div class="sec">
+          <div class="g3">
+            <div><div class="fl">ECO No</div><div class="fv mono" id="d-eco-no">—</div></div>
+            <div><div class="fl">Kategori</div><div class="fv" id="d-kategori">—</div></div>
+            <div><div class="fl">Etki Alanı</div><div class="fv" id="d-etki-alani">—</div></div>
+            <div><div class="fl">Sorumlu</div><div class="fv" id="d-sorumlu">—</div></div>
+            <div><div class="fl">Hedef Tarih</div><div class="fv" id="d-hedef-tarih">—</div></div>
+            <div><div class="fl">Uygulama Tarihi</div><div class="fv" id="d-uygulama-tarih">—</div></div>
+          </div>
+        </div>
+        <div class="sec">
+          <div class="st">Açıklama</div>
+          <div id="d-aciklama" style="font-size:12px;color:var(--g700);line-height:1.7;white-space:pre-wrap">—</div>
+        </div>
+        <div class="sec">
+          <div class="st">Değişiklik Nedeni</div>
+          <div id="d-neden" style="font-size:12px;color:var(--g700);line-height:1.7;white-space:pre-wrap">—</div>
+        </div>
+        <div class="sec" style="text-align:center">
+          <div class="st">Onay Durumu</div>
+          <span id="d-durum-lg" class="bx bx-lg bz">Taslak</span>
         </div>
       </div>
 
-      <!-- SAG PANEL -->
-      <div class="sag-panel">
-        <div class="sag-panel-ust">
-          <div style="font-size:13px;font-weight:600;color:var(--laci)" id="sag-baslik">ECO Detay</div>
-          <div id="sag-badge"></div>
+      <!-- Tab: Etki Analizi -->
+      <div class="tc pb" id="t-etki">
+        <div class="sec">
+          <div class="st">Etki Analizi</div>
+          <div id="d-etki-analizi" style="font-size:12px;color:var(--g700);line-height:1.7;white-space:pre-wrap">—</div>
         </div>
-        <div class="sag-panel-icerik" id="sag-icerik">
-          <div class="bos-durum">Listeden bir ECO secin veya yeni olusturun.</div>
+        <div class="sec">
+          <div class="g3">
+            <div>
+              <div class="st">Etkilenen İş Emirleri</div>
+              <div id="d-etkilenen-wo" class="chip-list"><span style="font-size:11px;color:var(--g400)">—</span></div>
+            </div>
+            <div>
+              <div class="st">Etkilenen Çizimler</div>
+              <div id="d-etkilenen-dwg" class="chip-list"><span style="font-size:11px;color:var(--g400)">—</span></div>
+            </div>
+            <div>
+              <div class="st">Etkilenen Dokümanlar</div>
+              <div id="d-etkilenen-dok" class="chip-list"><span style="font-size:11px;color:var(--g400)">—</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="sec">
+          <div class="st">Revizyon Değişikliği</div>
+          <div class="rev-compare">
+            <div class="rev-box">
+              <div class="rev-box-label">Önceki Rev</div>
+              <div class="rev-box-val" id="d-onceki-rev">—</div>
+            </div>
+            <div class="rev-arrow">&#10132;</div>
+            <div class="rev-box" style="border-color:var(--green);background:var(--green-l)">
+              <div class="rev-box-label">Yeni Rev</div>
+              <div class="rev-box-val" id="d-yeni-rev" style="color:var(--green)">—</div>
+            </div>
+          </div>
+        </div>
+        <div class="sec" id="sec-ncr-ref" style="display:none">
+          <div class="st">NCR Referansı</div>
+          <span id="d-ncr-ref" class="ncr-ref">—</span>
+        </div>
+      </div>
+
+      <!-- Tab: Onay Akışı -->
+      <div class="tc pb" id="t-onay">
+        <div class="sec">
+          <div class="st">Onay Adımları</div>
+          <div id="d-steps" class="steps"></div>
+        </div>
+        <div class="sec">
+          <div class="st">Zaman Çizelgesi</div>
+          <div id="zaman-cizelgesi"></div>
+        </div>
+        <div class="sec" style="display:flex;gap:8px;justify-content:center;padding:14px">
+          <button class="btn btn-p" id="btn-ilerlet" onclick="onay_ilerlet()">İlerlet &#8594;</button>
+          <button class="btn btn-r" id="btn-reddet" onclick="eco_reddet()">Reddet</button>
         </div>
       </div>
 
@@ -55,275 +350,824 @@
   </div>
 </div>
 
+</div><!-- /sayfa-icerik -->
+</div><!-- /main -->
+
+<!-- ══ MODAL: YENİ ECO ══ -->
+<div class="modal-bg" id="modal-yeni">
+  <div class="modal">
+    <div class="mh">
+      <span style="font-size:18px">📐</span>
+      <span class="mht">Yeni ECO Oluştur</span>
+      <button class="btn btn-o btn-sm mla" onclick="modal_kapat('modal-yeni')">&#10005;</button>
+    </div>
+    <div class="mb">
+      <div class="form-row">
+        <label class="sk-label">Başlık *</label>
+        <input class="sk-input" type="text" id="f-baslik" placeholder="Değişiklik başlığı">
+      </div>
+      <div class="g2" style="gap:12px">
+        <div class="form-row">
+          <label class="sk-label">Kategori *</label>
+          <select class="sk-select" id="f-kategori">
+            <option value="">Seçin...</option>
+            <option>Tasarım</option>
+            <option>Proses</option>
+            <option>Malzeme</option>
+            <option>Yazılım</option>
+            <option>Dokümantasyon</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label class="sk-label">Etki Alanı</label>
+          <select class="sk-select" id="f-etki-alani">
+            <option value="">Seçin...</option>
+            <option>Tek Parça</option>
+            <option>Ürün Ailesi</option>
+            <option>Tüm Ürünler</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label class="sk-label">Sorumlu *</label>
+          <select class="sk-select" id="f-sorumlu">
+            <option value="">Seçin...</option>
+            <option>Kalite Müdürü</option>
+            <option>Üretim Müdürü</option>
+            <option>Mühendislik Şefi</option>
+            <option>Genel Müdür</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label class="sk-label">Hedef Tarih</label>
+          <input class="sk-input" type="date" id="f-hedef-tarih">
+        </div>
+      </div>
+      <div class="form-row">
+        <label class="sk-label">Açıklama *</label>
+        <textarea class="sk-textarea" id="f-aciklama" rows="3" placeholder="Değişiklik detayı..."></textarea>
+      </div>
+      <div class="form-row">
+        <label class="sk-label">Değişiklik Nedeni *</label>
+        <textarea class="sk-textarea" id="f-neden" rows="3" placeholder="Neden bu değişiklik gerekli?"></textarea>
+      </div>
+      <div class="form-row">
+        <label class="sk-label">Etki Analizi</label>
+        <textarea class="sk-textarea" id="f-etki-analizi" rows="2" placeholder="Etki analizi..."></textarea>
+      </div>
+      <div class="g2" style="gap:12px">
+        <div class="form-row">
+          <label class="sk-label">Önceki Revizyon</label>
+          <input class="sk-input" type="text" id="f-onceki-rev" placeholder="Rev A">
+        </div>
+        <div class="form-row">
+          <label class="sk-label">Yeni Revizyon</label>
+          <input class="sk-input" type="text" id="f-yeni-rev" placeholder="Rev B">
+        </div>
+      </div>
+      <div class="g2" style="gap:12px">
+        <div class="form-row">
+          <label class="sk-label">Etkilenen İş Emirleri</label>
+          <input class="sk-input" type="text" id="f-etkilenen-wo" placeholder="IE-2026-00001, IE-2026-00002">
+        </div>
+        <div class="form-row">
+          <label class="sk-label">Etkilenen Çizimler</label>
+          <input class="sk-input" type="text" id="f-etkilenen-dwg" placeholder="DWG-001, DWG-002">
+        </div>
+      </div>
+      <div class="g2" style="gap:12px">
+        <div class="form-row">
+          <label class="sk-label">Etkilenen Dokümanlar</label>
+          <input class="sk-input" type="text" id="f-etkilenen-dok" placeholder="QP-01, WI-05">
+        </div>
+        <div class="form-row">
+          <label class="sk-label">NCR Referansı</label>
+          <input class="sk-input" type="text" id="f-ncr-ref" placeholder="NCR-26-XXX">
+        </div>
+      </div>
+      <div class="form-row" style="margin-top:6px">
+        <label style="display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--g700);cursor:pointer">
+          <input type="checkbox" id="f-musteri-onay"> Müşteri onayı gerekli
+        </label>
+      </div>
+    </div>
+    <div class="mf">
+      <button class="btn btn-o" onclick="modal_kapat('modal-yeni')">İptal</button>
+      <button class="btn btn-p" onclick="eco_kaydet()">Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: GÜNCELLE ══ -->
+<div class="modal-bg" id="modal-guncelle">
+  <div class="modal">
+    <div class="mh">
+      <span style="font-size:18px">&#9998;</span>
+      <span class="mht">ECO Güncelle</span>
+      <button class="btn btn-o btn-sm mla" onclick="modal_kapat('modal-guncelle')">&#10005;</button>
+    </div>
+    <div class="mb">
+      <div class="form-row">
+        <label class="sk-label">Başlık</label>
+        <input class="sk-input" type="text" id="gu-baslik">
+      </div>
+      <div class="g2" style="gap:12px">
+        <div class="form-row">
+          <label class="sk-label">Kategori</label>
+          <select class="sk-select" id="gu-kategori">
+            <option value="">Seçin...</option>
+            <option>Tasarım</option>
+            <option>Proses</option>
+            <option>Malzeme</option>
+            <option>Yazılım</option>
+            <option>Dokümantasyon</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label class="sk-label">Etki Alanı</label>
+          <select class="sk-select" id="gu-etki-alani">
+            <option value="">Seçin...</option>
+            <option>Tek Parça</option>
+            <option>Ürün Ailesi</option>
+            <option>Tüm Ürünler</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label class="sk-label">Sorumlu</label>
+          <select class="sk-select" id="gu-sorumlu">
+            <option value="">Seçin...</option>
+            <option>Kalite Müdürü</option>
+            <option>Üretim Müdürü</option>
+            <option>Mühendislik Şefi</option>
+            <option>Genel Müdür</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label class="sk-label">Hedef Tarih</label>
+          <input class="sk-input" type="date" id="gu-hedef-tarih">
+        </div>
+      </div>
+      <div class="form-row">
+        <label class="sk-label">Açıklama</label>
+        <textarea class="sk-textarea" id="gu-aciklama" rows="3"></textarea>
+      </div>
+      <div class="form-row">
+        <label class="sk-label">Neden</label>
+        <textarea class="sk-textarea" id="gu-neden" rows="3"></textarea>
+      </div>
+      <div class="form-row">
+        <label class="sk-label">Etki Analizi</label>
+        <textarea class="sk-textarea" id="gu-etki-analizi" rows="2"></textarea>
+      </div>
+      <div class="g2" style="gap:12px">
+        <div class="form-row">
+          <label class="sk-label">Önceki Rev</label>
+          <input class="sk-input" type="text" id="gu-onceki-rev">
+        </div>
+        <div class="form-row">
+          <label class="sk-label">Yeni Rev</label>
+          <input class="sk-input" type="text" id="gu-yeni-rev">
+        </div>
+      </div>
+      <div class="g2" style="gap:12px">
+        <div class="form-row">
+          <label class="sk-label">Etkilenen WO</label>
+          <input class="sk-input" type="text" id="gu-etkilenen-wo">
+        </div>
+        <div class="form-row">
+          <label class="sk-label">Etkilenen DWG</label>
+          <input class="sk-input" type="text" id="gu-etkilenen-dwg">
+        </div>
+      </div>
+      <div class="g2" style="gap:12px">
+        <div class="form-row">
+          <label class="sk-label">Etkilenen Dokümanlar</label>
+          <input class="sk-input" type="text" id="gu-etkilenen-dok">
+        </div>
+        <div class="form-row">
+          <label class="sk-label">NCR Ref</label>
+          <input class="sk-input" type="text" id="gu-ncr-ref">
+        </div>
+      </div>
+      <div class="form-row" style="margin-top:6px">
+        <label style="display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--g700);cursor:pointer">
+          <input type="checkbox" id="gu-musteri-onay"> Müşteri onayı gerekli
+        </label>
+      </div>
+      <div class="form-row">
+        <label class="sk-label">Uygulama Tarihi</label>
+        <input class="sk-input" type="date" id="gu-uygulama-tarih">
+      </div>
+    </div>
+    <div class="mf">
+      <button class="btn btn-o" onclick="modal_kapat('modal-guncelle')">İptal</button>
+      <button class="btn btn-p" onclick="guncelle_kaydet()">Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
 <div class="toast" id="toast"></div>
 
 <script>
-var ecoListesi = [];
-var isEmirleri = [];
-var seciliId = null;
+/* ══════════════════════════════════════════════════════
+   ERSAN MES — ECO (Engineering Change Order) Module
+   AS9100 Rev.D §8.5.6
+   ══════════════════════════════════════════════════════ */
 
-async function apiGet(tablo, query) {
+var BASE = 'app5LDgJMgocw79Ix';
+var eco_listesi = [];
+var secili_id = null;
+var aktif_tab_filtre = 'Hepsi';
+
+// ── API Helpers ─────────────────────────────────────
+function apiGet(tablo, params) {
   var url = '/.netlify/functions/airtable?table=' + encodeURIComponent(tablo);
-  if (query) url += '&' + query;
-  var r = await fetch(url);
-  return r.json();
+  if (params) url += '&' + params;
+  return fetch(url).then(function(r) { return r.json(); });
 }
-async function apiPost(tablo, fields) {
-  var r = await fetch('/.netlify/functions/airtable', {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({method:'POST', path:'/v0/app5LDgJMgocw79Ix/' + encodeURIComponent(tablo), body:{fields:fields}})
-  });
-  return r.json();
+
+function apiGetAll(tablo, params) {
+  var all = [];
+  function sayfa(offset) {
+    var url = '/.netlify/functions/airtable?table=' + encodeURIComponent(tablo) + '&pageSize=100';
+    if (params) url += '&' + params;
+    if (offset) url += '&offset=' + encodeURIComponent(offset);
+    return fetch(url).then(function(r) { return r.json(); }).then(function(data) {
+      all = all.concat(data.records || []);
+      if (data.offset) return sayfa(data.offset);
+      return all;
+    });
+  }
+  return sayfa(null);
 }
-async function apiPatch(tablo, id, fields) {
-  var r = await fetch('/.netlify/functions/airtable', {
-    method:'PATCH', headers:{'Content-Type':'application/json'},
+
+function apiPost(tablo, fields) {
+  return fetch('/.netlify/functions/airtable', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({method:'POST', path:'/v0/' + BASE + '/' + encodeURIComponent(tablo), body:{fields:fields}})
+  }).then(function(r) { return r.json(); });
+}
+
+function apiPatch(tablo, id, fields) {
+  return fetch('/.netlify/functions/airtable', {
+    method: 'PATCH', headers: {'Content-Type':'application/json'},
     body: JSON.stringify({table:tablo, id:id, fields:fields})
-  });
-  return r.json();
+  }).then(function(r) { return r.json(); });
 }
 
-function toast(mesaj, tip) {
-  var t = document.getElementById('toast');
-  t.textContent = mesaj;
-  t.className = 'toast toast-' + (tip || 'basari') + ' goster';
-  setTimeout(function(){ t.className = 'toast'; }, 3000);
+function generateCode(prefix) {
+  return fetch('/.netlify/functions/airtable', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({action:'generateCode', prefix:prefix})
+  }).then(function(r) { return r.json(); }).then(function(d) { return d.code || d.no || (prefix + '-' + Date.now()); });
 }
 
-async function yukle() {
+function escHtml(s) {
+  return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function fmtTarih(iso) {
+  if (!iso) return '—';
+  var d = new Date(iso);
+  return String(d.getDate()).padStart(2,'0') + '.' + String(d.getMonth()+1).padStart(2,'0') + '.' + d.getFullYear();
+}
+
+function toast(msg, tip) {
+  var el = document.getElementById('toast');
+  el.textContent = msg;
+  el.style.display = 'block';
+  el.style.background = tip === 'red' ? 'var(--red)' : tip === 'amber' ? 'var(--amber)' : 'var(--lacivert)';
+  clearTimeout(el._t);
+  el._t = setTimeout(function() { el.style.display = 'none'; }, 3000);
+}
+
+// ── Durum helpers ───────────────────────────────────
+var DURUMLAR = ['Taslak','İncelemede','Müşteri Onayı Bekleniyor','Onaylandı'];
+
+function durum_badge_cls(durum) {
+  var m = {
+    'Taslak':'bx bz','İncelemede':'bx ba','Müşteri Onayı Bekleniyor':'bx bp',
+    'Onaylandı':'bx bg','Reddedildi':'bx br'
+  };
+  return m[durum] || 'bx bz';
+}
+
+function durum_si_cls(durum) {
+  var m = {
+    'Taslak':'taslak','İncelemede':'incelemede','Müşteri Onayı Bekleniyor':'musteri-onay',
+    'Onaylandı':'onaylandi','Reddedildi':'reddedildi'
+  };
+  return m[durum] || 'taslak';
+}
+
+function kategori_chip(kat) {
+  var m = {'Tasarım':'c-b','Proses':'c-w','Malzeme':'c-p','Yazılım':'c-ok','Dokümantasyon':'c-e'};
+  return '<span class="chip ' + (m[kat]||'c-b') + '">' + escHtml(kat||'—') + '</span>';
+}
+
+function render_chip_list(val) {
+  if (!val || !val.trim()) return '<span style="font-size:11px;color:var(--g400)">—</span>';
+  return val.split(',').map(function(v) {
+    v = v.trim();
+    if (!v) return '';
+    return '<span class="chip c-b">' + escHtml(v) + '</span>';
+  }).join('');
+}
+
+// ── ECO Listesi Yükle ───────────────────────────────
+async function eco_listesi_yukle() {
   try {
-    var s1 = await apiGet('ECO Kayitlari', 'pageSize=100');
-    ecoListesi = s1.records || [];
-  } catch(e) { ecoListesi = []; }
-  try {
-    var s2 = await apiGet('Is Emirleri', 'pageSize=100');
-    isEmirleri = s2.records || [];
-  } catch(e) { isEmirleri = []; }
-  listeGuncelle();
-}
-
-function araFiltre(val) {
-  var arama = val.toLowerCase();
-  var satirlar = document.querySelectorAll('#eco-liste .liste-satir');
-  for (var i = 0; i < satirlar.length; i++) {
-    satirlar[i].style.display = satirlar[i].textContent.toLowerCase().indexOf(arama) >= 0 ? '' : 'none';
+    eco_listesi = await apiGetAll('ECO_Kayitlari');
+    eco_listesi.sort(function(a,b) {
+      return (b.fields.Olusturma_Tarihi || '').localeCompare(a.fields.Olusturma_Tarihi || '');
+    });
+  } catch(e) {
+    eco_listesi = [];
+    console.error('ECO yükleme hatası:', e);
   }
+  kpi_hesapla();
+  liste_render();
 }
 
-function listeGuncelle() {
-  var liste = document.getElementById('eco-liste');
-  if (ecoListesi.length === 0) {
-    liste.innerHTML = '<div class="bos-durum">Tablo yapilandirilmamis veya kayit yok.</div>';
+// ── Liste Render ────────────────────────────────────
+function liste_render() {
+  var arama = (document.getElementById('arama').value || '').toLowerCase();
+  var durumFiltre = document.getElementById('filtre-durum').value;
+
+  var filtered = eco_listesi.filter(function(r) {
+    var f = r.fields;
+    var durum = f.Onay_Durumu || 'Taslak';
+
+    // Tab filtre
+    if (aktif_tab_filtre !== 'Hepsi' && durum !== aktif_tab_filtre) return false;
+
+    // Dropdown filtre
+    if (durumFiltre && durum !== durumFiltre) return false;
+
+    // Arama
+    if (arama) {
+      var metin = ((f.ECO_No||'') + ' ' + (f.Baslik||'') + ' ' + (f.Sorumlu||'') + ' ' + (f.Kategori||'')).toLowerCase();
+      if (metin.indexOf(arama) < 0) return false;
+    }
+    return true;
+  });
+
+  document.getElementById('liste-sayac').textContent = filtered.length + ' kayıt';
+
+  var el = document.getElementById('eco-liste');
+  if (filtered.length === 0) {
+    el.innerHTML = '<div style="padding:30px;text-align:center;color:var(--g400)"><div style="font-size:24px;margin-bottom:8px">📐</div><div style="font-size:12px">Kayıt bulunamadı</div></div>';
     return;
   }
-  var html = '';
-  ecoListesi.forEach(function(r) {
+
+  el.innerHTML = filtered.map(function(r) {
     var f = r.fields;
-    var durum = f['Durum'] || 'Taslak';
-    var badgeCls = durum === 'Onaylandi' ? 'badge-yesil' : durum === 'Reddedildi' ? 'badge-kirmizi' : durum === 'Incelemede' ? 'badge-mavi' : 'badge-gri';
-    var secili = r.id === seciliId ? ' secili' : '';
-    var faiIcon = f['FAI Gerekli'] === true || f['FAI Gerekli'] === 'true' ? ' <span title="FAI Gerekli" style="color:var(--sari)">&#9888;</span>' : '';
-    html += '<div class="liste-satir' + secili + '" onclick="ecoSec(\'' + r.id + '\')">'
-      + '<div class="liste-satir-no">' + (f['ECO No'] || r.id.substring(0,8)) + faiIcon + '</div>'
-      + '<div class="liste-satir-ad">' + (f['Konu'] || '-') + '</div>'
-      + '<div class="liste-satir-alt"><span class="badge ' + badgeCls + '">' + durum + '</span>'
-      + '<span style="font-size:10px;color:var(--metin4)">' + (f['Parca No'] || '') + '</span></div>'
-      + '</div>';
-  });
-  liste.innerHTML = html;
+    var durum = f.Onay_Durumu || 'Taslak';
+    var sel = r.id === secili_id ? ' sel' : '';
+    var musteriIcon = (f.Musteri_Onay_Gerekli === 'true' || f.Musteri_Onay_Gerekli === true) ? ' &#128272;' : '';
+    return '<div class="si ' + durum_si_cls(durum) + sel + '" onclick="eco_sec(\'' + r.id + '\')">' +
+      '<div class="row"><span class="si-no">' + escHtml(f.ECO_No || '—') + musteriIcon + '</span><span class="mla ' + durum_badge_cls(durum) + '" style="font-size:8.5px">' + escHtml(durum) + '</span></div>' +
+      '<div class="si-baslik">' + escHtml(f.Baslik || '—') + '</div>' +
+      '<div class="si-alt">' + kategori_chip(f.Kategori) + '<span>' + escHtml(f.Sorumlu || '') + '</span><span>' + fmtTarih(f.Hedef_Tarih) + '</span></div>' +
+    '</div>';
+  }).join('');
 }
 
-function ecoSec(id) {
-  seciliId = id;
-  listeGuncelle();
-  var kayit = ecoListesi.find(function(r){ return r.id === id; });
-  if (kayit) detayGoster(kayit);
-}
+// ── ECO Seç ─────────────────────────────────────────
+function eco_sec(id) {
+  secili_id = id;
+  liste_render();
+  var kayit = eco_listesi.find(function(r) { return r.id === id; });
+  if (!kayit) return;
 
-function detayGoster(kayit) {
+  document.getElementById('bos-durum').style.display = 'none';
+  var detayEl = document.getElementById('detay-icerik');
+  detayEl.style.display = 'flex';
+
   var f = kayit.fields;
-  var durum = f['Durum'] || 'Taslak';
-  var badgeCls = durum === 'Onaylandi' ? 'badge-yesil' : durum === 'Reddedildi' ? 'badge-kirmizi' : durum === 'Incelemede' ? 'badge-mavi' : 'badge-gri';
+  var durum = f.Onay_Durumu || 'Taslak';
 
-  document.getElementById('sag-baslik').textContent = f['ECO No'] || 'ECO Detay';
-  document.getElementById('sag-badge').innerHTML = '<span class="badge ' + badgeCls + '">' + durum + '</span>';
+  // Header
+  document.getElementById('d-no').textContent = f.ECO_No || '—';
+  document.getElementById('d-durum-badge').className = durum_badge_cls(durum);
+  document.getElementById('d-durum-badge').textContent = durum;
+  document.getElementById('d-baslik').textContent = f.Baslik || '—';
+  document.getElementById('d-kategori-chip').innerHTML = kategori_chip(f.Kategori);
+
+  var musteriIcon = document.getElementById('d-musteri-icon');
+  musteriIcon.style.display = (f.Musteri_Onay_Gerekli === 'true' || f.Musteri_Onay_Gerekli === true) ? 'inline' : 'none';
+
+  // Tab 1: Detay
+  document.getElementById('d-eco-no').textContent = f.ECO_No || '—';
+  document.getElementById('d-kategori').textContent = f.Kategori || '—';
+  document.getElementById('d-etki-alani').textContent = f.Etki_Alani || '—';
+  document.getElementById('d-sorumlu').textContent = f.Sorumlu || '—';
+  document.getElementById('d-hedef-tarih').textContent = fmtTarih(f.Hedef_Tarih);
+  document.getElementById('d-uygulama-tarih').textContent = fmtTarih(f.Uygulama_Tarihi);
+  document.getElementById('d-aciklama').textContent = f.Aciklama || '—';
+  document.getElementById('d-neden').textContent = f.Neden || '—';
+
+  var durumLg = document.getElementById('d-durum-lg');
+  durumLg.className = durum_badge_cls(durum) + ' bx-lg';
+  durumLg.textContent = durum;
+
+  // Tab 2: Etki Analizi
+  document.getElementById('d-etki-analizi').textContent = f.Etki_Analizi || '—';
+  document.getElementById('d-etkilenen-wo').innerHTML = render_chip_list(f.Etkilenen_WO);
+  document.getElementById('d-etkilenen-dwg').innerHTML = render_chip_list(f.Etkilenen_DWG);
+  document.getElementById('d-etkilenen-dok').innerHTML = render_chip_list(f.Etkilenen_Dokuman);
+  document.getElementById('d-onceki-rev').textContent = f.Onceki_Revizyon || '—';
+  document.getElementById('d-yeni-rev').textContent = f.Yeni_Revizyon || '—';
+
+  var ncrSec = document.getElementById('sec-ncr-ref');
+  if (f.NCR_Ref) {
+    ncrSec.style.display = '';
+    document.getElementById('d-ncr-ref').innerHTML = '<span class="ncr-ref" onclick="window.open(\'ersan_ncr.html?no=' + encodeURIComponent(f.NCR_Ref) + '\',\'_blank\')">&#9940; ' + escHtml(f.NCR_Ref) + '</span>';
+  } else {
+    ncrSec.style.display = 'none';
+  }
+
+  // Tab 3: Onay Akışı
+  render_steps(durum);
+  zaman_render(f);
+
+  // İlerlet/Reddet butonları görünürlük
+  var ilerletBtn = document.getElementById('btn-ilerlet');
+  var reddetBtn = document.getElementById('btn-reddet');
+  if (durum === 'Onaylandı' || durum === 'Reddedildi') {
+    ilerletBtn.style.display = 'none';
+    reddetBtn.style.display = 'none';
+  } else {
+    ilerletBtn.style.display = '';
+    reddetBtn.style.display = '';
+  }
+}
+
+// ── Onay adımları render ────────────────────────────
+function render_steps(durum) {
+  var adimlar = ['Taslak','İncelemede','Müşteri Onayı Bekleniyor','Onaylandı'];
+  var aktifIdx = adimlar.indexOf(durum);
+  var reddedildi = durum === 'Reddedildi';
 
   var html = '';
+  for (var i = 0; i < adimlar.length; i++) {
+    var cls = 'step';
+    if (reddedildi) {
+      cls += ' rejected';
+    } else if (i < aktifIdx) {
+      cls += ' done';
+    } else if (i === aktifIdx) {
+      cls += ' active';
+    }
 
-  // Kart 1: ECO Formu
-  html += '<div class="kart"><div class="kart-baslik">ECO Bilgileri</div>'
-    + '<div class="form-grup"><label class="form-label">Konu</label><input class="form-input" id="eco-konu" value="' + (f['Konu'] || '') + '"></div>'
-    + '<div class="form-grid-2">'
-    + '<div class="form-grup"><label class="form-label">Parca No</label><input class="form-input" id="eco-parca" value="' + (f['Parca No'] || '') + '" oninput="etkilenenIEleriAra()"></div>'
-    + '<div class="form-grup"><label class="form-label">Tarih</label><input type="date" class="form-input" id="eco-tarih" value="' + (f['Tarih'] || '') + '"></div>'
-    + '</div>'
-    + '<div class="form-grid-2">'
-    + '<div class="form-grup"><label class="form-label">Eski Revizyon</label><input class="form-input" id="eco-eskiRev" value="' + (f['Eski Rev'] || '') + '"></div>'
-    + '<div class="form-grup"><label class="form-label">Yeni Revizyon</label><input class="form-input" id="eco-yeniRev" value="' + (f['Yeni Rev'] || '') + '"></div>'
-    + '</div>'
-    + '<div class="form-grup"><label class="form-label">Degisiklik Nedeni</label><textarea class="form-textarea" id="eco-neden" rows="3">' + (f['Neden'] || '') + '</textarea></div>'
-    + '<div style="padding:6px 0"><label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--metin2);cursor:pointer">'
-    + '<input type="checkbox" id="eco-fai"' + (f['FAI Gerekli'] ? ' checked' : '') + '> FAI Gerekli (onay sonrasi otomatik FAI kaydi olusturulacak)</label></div>'
-    + '</div>';
+    var label = adimlar[i];
+    if (label === 'Müşteri Onayı Bekleniyor') label = 'Müşteri Onayı';
 
-  // Kart 2: Etkilenen Is Emirleri
-  html += '<div class="kart"><div class="kart-baslik">Etkilenen Is Emirleri</div>'
-    + '<div id="etkilenen-ie-liste"><div class="bos-durum" style="padding:16px">Parca No girilerek otomatik aranir</div></div>'
-    + '</div>';
+    html += '<div class="' + cls + '">' + escHtml(label) + '</div>';
+    if (i < adimlar.length - 1) {
+      html += '<div class="step-conn' + (i < aktifIdx ? ' done' : '') + '"></div>';
+    }
+  }
 
-  // Kart 3: Etkilenen Dokumanlar
-  var dokumanlar = f['Dokumanlar'] || '';
-  html += '<div class="kart"><div class="kart-baslik">Etkilenen Dokumanlar</div>'
-    + '<div class="form-grup"><label class="form-label">Dokuman Listesi</label><textarea class="form-textarea" id="eco-dokumanlar" rows="3" placeholder="Her satira bir dokuman...">' + dokumanlar + '</textarea></div>'
-    + '</div>';
+  if (reddedildi) {
+    html = '<div class="step rejected" style="flex:none;padding:10px 20px">Reddedildi</div>';
+  }
 
-  // Kart 4: Onay Akisi
-  html += '<div class="kart"><div class="kart-baslik">Onay Akisi</div>'
-    + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">';
-
-  var durumlar = ['Taslak', 'Incelemede', 'Onaylandi', 'Reddedildi'];
-  durumlar.forEach(function(d) {
-    var aktif = d === durum;
-    var renk = d === 'Onaylandi' ? 'var(--yesil)' : d === 'Reddedildi' ? 'var(--kirmizi)' : d === 'Incelemede' ? 'var(--mavi)' : 'var(--metin4)';
-    html += '<div style="flex:1;text-align:center;padding:8px;border-radius:6px;font-size:11px;font-weight:600;'
-      + (aktif ? 'background:' + renk + ';color:#fff' : 'background:var(--bg);color:var(--metin3)') + '">' + d + '</div>';
-    if (d !== 'Reddedildi') html += '<div style="color:var(--metin4);font-size:16px">&#8594;</div>';
-  });
-
-  html += '</div>'
-    + '<div style="display:flex;gap:8px">'
-    + '<button class="btn btn-beyaz" onclick="ecoDurumGuncelle(\'Taslak\')" style="flex:1">Taslak</button>'
-    + '<button class="btn btn-mavi" onclick="ecoDurumGuncelle(\'Incelemede\')" style="flex:1">Incelemeye Al</button>'
-    + '<button class="btn btn-yesil" onclick="ecoDurumGuncelle(\'Onaylandi\')" style="flex:1">Onayla</button>'
-    + '<button class="btn btn-kirmizi" onclick="ecoDurumGuncelle(\'Reddedildi\')" style="flex:1">Reddet</button>'
-    + '</div>'
-    + '</div>';
-
-  document.getElementById('sag-icerik').innerHTML = html;
-
-  // Etkilenen IE'leri ara
-  if (f['Parca No']) etkilenenIEleriAra();
+  document.getElementById('d-steps').innerHTML = html;
 }
 
-function etkilenenIEleriAra() {
-  var parcaNo = document.getElementById('eco-parca').value;
-  var div = document.getElementById('etkilenen-ie-liste');
-  if (!parcaNo) {
-    div.innerHTML = '<div class="bos-durum" style="padding:16px">Parca No girilerek otomatik aranir</div>';
+// ── Zaman çizelgesi render ──────────────────────────
+function zaman_render(f) {
+  var gecmis;
+  try { gecmis = JSON.parse(f.Gecmis || '[]'); } catch(e) { gecmis = []; }
+
+  var el = document.getElementById('zaman-cizelgesi');
+  if (gecmis.length === 0) {
+    el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--g400);font-size:11px">Henüz geçmiş yok</div>';
     return;
   }
-  var eslesen = isEmirleri.filter(function(r) {
-    return (r.fields['Parca No'] || '').indexOf(parcaNo) >= 0;
+
+  var ikonlar = {'olusturuldu':'&#128204;','ilerletildi':'&#9654;','reddedildi':'&#10060;','guncellendi':'&#9998;'};
+  el.innerHTML = gecmis.map(function(g) {
+    var bgColor = g.tip === 'reddedildi' ? 'var(--red-l)' : g.tip === 'ilerletildi' ? 'var(--green-l)' : 'var(--g100)';
+    return '<div class="zc-item">' +
+      '<div class="zc-ic" style="background:' + bgColor + '">' + (ikonlar[g.tip] || '&#128204;') + '</div>' +
+      '<div class="zc-icerik">' +
+        '<div class="zc-baslik">' + escHtml(g.baslik) + '</div>' +
+        '<div class="zc-alt">' + escHtml(g.kullanici || '—') + ' &middot; ' + fmtTarih(g.tarih) + '</div>' +
+        (g.not ? '<div style="font-size:10.5px;color:var(--g700);margin-top:4px;padding:5px 8px;background:var(--g50);border-radius:4px">' + escHtml(g.not) + '</div>' : '') +
+      '</div></div>';
+  }).join('');
+}
+
+// ── KPI Hesapla ─────────────────────────────────────
+function kpi_hesapla() {
+  var taslak = 0, incelemede = 0, musteri = 0, onaylandi = 0;
+  eco_listesi.forEach(function(r) {
+    var d = r.fields.Onay_Durumu || 'Taslak';
+    if (d === 'Taslak') taslak++;
+    else if (d === 'İncelemede') incelemede++;
+    else if (d === 'Müşteri Onayı Bekleniyor') musteri++;
+    else if (d === 'Onaylandı') onaylandi++;
   });
-  if (eslesen.length === 0) {
-    div.innerHTML = '<div style="padding:12px;font-size:12px;color:var(--metin3)">Eslesen is emri bulunamadi.</div>';
+  document.getElementById('kpi-taslak').textContent = taslak;
+  document.getElementById('kpi-incelemede').textContent = incelemede;
+  document.getElementById('kpi-musteri').textContent = musteri;
+  document.getElementById('kpi-onaylandi').textContent = onaylandi;
+}
+
+// ── Filtreler ───────────────────────────────────────
+function filtrele() { liste_render(); }
+
+function tab_filtre(durum, btn) {
+  aktif_tab_filtre = durum;
+  document.querySelectorAll('.lf-btn').forEach(function(b) { b.classList.remove('on'); });
+  btn.classList.add('on');
+  liste_render();
+}
+
+function durum_filtre(durum) {
+  document.getElementById('filtre-durum').value = durum;
+  liste_render();
+}
+
+// ── Tab geçiş ───────────────────────────────────────
+function st(el, tabId) {
+  var bar = el.closest('.tabs');
+  bar.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+  el.classList.add('active');
+  var pnl = document.getElementById('detay-icerik');
+  pnl.querySelectorAll('.tc').forEach(function(t) { t.classList.remove('on'); });
+  document.getElementById(tabId).classList.add('on');
+}
+
+// ── Modal yönetimi ──────────────────────────────────
+function modal_ac(id) {
+  document.getElementById(id).classList.add('ac');
+  if (id === 'modal-guncelle' && secili_id) {
+    var r = eco_listesi.find(function(x) { return x.id === secili_id; });
+    if (r) {
+      var f = r.fields;
+      document.getElementById('gu-baslik').value = f.Baslik || '';
+      document.getElementById('gu-kategori').value = f.Kategori || '';
+      document.getElementById('gu-etki-alani').value = f.Etki_Alani || '';
+      document.getElementById('gu-sorumlu').value = f.Sorumlu || '';
+      document.getElementById('gu-hedef-tarih').value = f.Hedef_Tarih || '';
+      document.getElementById('gu-aciklama').value = f.Aciklama || '';
+      document.getElementById('gu-neden').value = f.Neden || '';
+      document.getElementById('gu-etki-analizi').value = f.Etki_Analizi || '';
+      document.getElementById('gu-onceki-rev').value = f.Onceki_Revizyon || '';
+      document.getElementById('gu-yeni-rev').value = f.Yeni_Revizyon || '';
+      document.getElementById('gu-etkilenen-wo').value = f.Etkilenen_WO || '';
+      document.getElementById('gu-etkilenen-dwg').value = f.Etkilenen_DWG || '';
+      document.getElementById('gu-etkilenen-dok').value = f.Etkilenen_Dokuman || '';
+      document.getElementById('gu-ncr-ref').value = f.NCR_Ref || '';
+      document.getElementById('gu-musteri-onay').checked = (f.Musteri_Onay_Gerekli === 'true' || f.Musteri_Onay_Gerekli === true);
+      document.getElementById('gu-uygulama-tarih').value = f.Uygulama_Tarihi || '';
+    }
+  }
+}
+function modal_kapat(id) { document.getElementById(id).classList.remove('ac'); }
+document.querySelectorAll('.modal-bg').forEach(function(m) {
+  m.addEventListener('click', function(e) { if (e.target === m) m.classList.remove('ac'); });
+});
+
+// ── ECO Kaydet (yeni) ───────────────────────────────
+async function eco_kaydet() {
+  var baslik   = document.getElementById('f-baslik').value.trim();
+  var kategori = document.getElementById('f-kategori').value;
+  var aciklama = document.getElementById('f-aciklama').value.trim();
+  var neden    = document.getElementById('f-neden').value.trim();
+  var sorumlu  = document.getElementById('f-sorumlu').value;
+
+  if (!baslik || !kategori || !aciklama || !neden || !sorumlu) {
+    toast('Zorunlu alanları doldurun', 'amber');
     return;
   }
-  var html = '<table class="tablo"><thead><tr><th>IE No</th><th>Parca No</th><th>Durum</th><th>Revizyon</th></tr></thead><tbody>';
-  eslesen.forEach(function(r) {
-    var f = r.fields;
-    html += '<tr><td class="td-mono">' + (f['IE No'] || '-') + '</td><td>' + (f['Parca No'] || '-') + '</td>'
-      + '<td><span class="badge badge-mavi">' + (f['Durum'] || '-') + '</span></td>'
-      + '<td>' + (f['Revizyon'] || '-') + '</td></tr>';
+
+  try {
+    var ecoNo = await generateCode('ECO');
+
+    var gecmis = [{
+      tip: 'olusturuldu', baslik: 'ECO oluşturuldu: ' + ecoNo,
+      kullanici: sessionStorage.getItem('kullanici') || 'Sistem',
+      tarih: new Date().toISOString()
+    }];
+
+    var fields = {
+      ECO_No:               ecoNo,
+      Baslik:               baslik,
+      Kategori:             kategori,
+      Etki_Alani:           document.getElementById('f-etki-alani').value,
+      Aciklama:             aciklama,
+      Neden:                neden,
+      Etki_Analizi:         document.getElementById('f-etki-analizi').value.trim(),
+      Onay_Durumu:          'Taslak',
+      Musteri_Onay_Gerekli: document.getElementById('f-musteri-onay').checked ? 'true' : 'false',
+      Sorumlu:              sorumlu,
+      Hedef_Tarih:          document.getElementById('f-hedef-tarih').value || null,
+      Etkilenen_WO:         document.getElementById('f-etkilenen-wo').value.trim(),
+      Etkilenen_DWG:        document.getElementById('f-etkilenen-dwg').value.trim(),
+      Etkilenen_Dokuman:    document.getElementById('f-etkilenen-dok').value.trim(),
+      Onceki_Revizyon:      document.getElementById('f-onceki-rev').value.trim(),
+      Yeni_Revizyon:        document.getElementById('f-yeni-rev').value.trim(),
+      NCR_Ref:              document.getElementById('f-ncr-ref').value.trim(),
+      Olusturan:            sessionStorage.getItem('kullanici') || 'Sistem',
+      Olusturma_Tarihi:     new Date().toISOString().split('T')[0],
+      Gecmis:               JSON.stringify(gecmis)
+    };
+
+    // null tarih alanlarını kaldır
+    if (!fields.Hedef_Tarih) delete fields.Hedef_Tarih;
+
+    var sonuc = await apiPost('ECO_Kayitlari', fields);
+    if (typeof logIslem === 'function') {
+      await logIslem('Olusturuldu', 'ECO', sonuc.id, ecoNo + ' — ' + baslik, null, fields);
+    }
+
+    toast('ECO oluşturuldu: ' + ecoNo);
+    modal_kapat('modal-yeni');
+    form_temizle_yeni();
+    await eco_listesi_yukle();
+    eco_sec(sonuc.id);
+  } catch(e) {
+    toast('Hata: ' + e.message, 'red');
+    console.error(e);
+  }
+}
+
+// ── Güncelle Kaydet ─────────────────────────────────
+async function guncelle_kaydet() {
+  if (!secili_id) return;
+  var r = eco_listesi.find(function(x) { return x.id === secili_id; });
+  if (!r) return;
+
+  var gecmis;
+  try { gecmis = JSON.parse(r.fields.Gecmis || '[]'); } catch(e) { gecmis = []; }
+  gecmis.unshift({
+    tip: 'guncellendi', baslik: 'ECO güncellendi',
+    kullanici: sessionStorage.getItem('kullanici') || 'Sistem',
+    tarih: new Date().toISOString()
   });
-  html += '</tbody></table>';
-  div.innerHTML = html;
-}
 
-function yeniEco() {
-  seciliId = null;
-  document.getElementById('sag-baslik').textContent = 'Yeni ECO';
-  document.getElementById('sag-badge').innerHTML = '<span class="badge badge-gri">Yeni</span>';
-  detayGoster({fields:{}});
-}
-
-async function ecoKaydet() {
   var fields = {
-    'Konu': document.getElementById('eco-konu').value,
-    'Parca No': document.getElementById('eco-parca').value,
-    'Tarih': document.getElementById('eco-tarih').value,
-    'Eski Rev': document.getElementById('eco-eskiRev').value,
-    'Yeni Rev': document.getElementById('eco-yeniRev').value,
-    'Neden': document.getElementById('eco-neden').value,
-    'FAI Gerekli': document.getElementById('eco-fai').checked,
-    'Dokumanlar': document.getElementById('eco-dokumanlar').value
+    Baslik:               document.getElementById('gu-baslik').value.trim(),
+    Kategori:             document.getElementById('gu-kategori').value,
+    Etki_Alani:           document.getElementById('gu-etki-alani').value,
+    Sorumlu:              document.getElementById('gu-sorumlu').value,
+    Hedef_Tarih:          document.getElementById('gu-hedef-tarih').value || null,
+    Aciklama:             document.getElementById('gu-aciklama').value.trim(),
+    Neden:                document.getElementById('gu-neden').value.trim(),
+    Etki_Analizi:         document.getElementById('gu-etki-analizi').value.trim(),
+    Onceki_Revizyon:      document.getElementById('gu-onceki-rev').value.trim(),
+    Yeni_Revizyon:        document.getElementById('gu-yeni-rev').value.trim(),
+    Etkilenen_WO:         document.getElementById('gu-etkilenen-wo').value.trim(),
+    Etkilenen_DWG:        document.getElementById('gu-etkilenen-dwg').value.trim(),
+    Etkilenen_Dokuman:    document.getElementById('gu-etkilenen-dok').value.trim(),
+    NCR_Ref:              document.getElementById('gu-ncr-ref').value.trim(),
+    Musteri_Onay_Gerekli: document.getElementById('gu-musteri-onay').checked ? 'true' : 'false',
+    Uygulama_Tarihi:      document.getElementById('gu-uygulama-tarih').value || null,
+    Gecmis:               JSON.stringify(gecmis)
   };
+
+  if (!fields.Hedef_Tarih) delete fields.Hedef_Tarih;
+  if (!fields.Uygulama_Tarihi) delete fields.Uygulama_Tarihi;
+
   try {
-    if (seciliId) {
-      await apiPatch('ECO Kayitlari', seciliId, fields);
-      await logIslem('Guncellendi', 'ECO', seciliId, fields['Konu'], null, fields);
-      toast('ECO guncellendi');
-    } else {
-      fields['Durum'] = 'Taslak';
-      var s = await apiPost('ECO Kayitlari', fields);
-      seciliId = s.id;
-      await logIslem('Olusturuldu', 'ECO', s.id, fields['Konu'], null, fields);
-      toast('ECO olusturuldu');
+    await apiPatch('ECO_Kayitlari', secili_id, fields);
+    if (typeof logIslem === 'function') {
+      await logIslem('Guncellendi', 'ECO', secili_id, (r.fields.ECO_No || '') + ' güncellendi', null, fields);
     }
-    await yukle();
-    if (seciliId) ecoSec(seciliId);
+    toast('ECO güncellendi');
+    modal_kapat('modal-guncelle');
+    await eco_listesi_yukle();
+    eco_sec(secili_id);
   } catch(e) {
-    toast('Hata: ' + e.message, 'hata');
+    toast('Hata: ' + e.message, 'red');
+    console.error(e);
   }
 }
 
-async function ecoDurumGuncelle(yeniDurum) {
-  // Once kaydet
-  var fields = {
-    'Konu': document.getElementById('eco-konu').value,
-    'Parca No': document.getElementById('eco-parca').value,
-    'Tarih': document.getElementById('eco-tarih').value,
-    'Eski Rev': document.getElementById('eco-eskiRev').value,
-    'Yeni Rev': document.getElementById('eco-yeniRev').value,
-    'Neden': document.getElementById('eco-neden').value,
-    'FAI Gerekli': document.getElementById('eco-fai').checked,
-    'Dokumanlar': document.getElementById('eco-dokumanlar').value,
-    'Durum': yeniDurum
+// ── Onay İlerlet ────────────────────────────────────
+async function onay_ilerlet() {
+  if (!secili_id) return;
+  var r = eco_listesi.find(function(x) { return x.id === secili_id; });
+  if (!r) return;
+
+  var f = r.fields;
+  var mevcut = f.Onay_Durumu || 'Taslak';
+
+  // Sonraki adım
+  var sonraki;
+  if (mevcut === 'Taslak') {
+    sonraki = 'İncelemede';
+  } else if (mevcut === 'İncelemede') {
+    // Müşteri onayı gerekli mi?
+    if (f.Musteri_Onay_Gerekli === 'true' || f.Musteri_Onay_Gerekli === true) {
+      sonraki = 'Müşteri Onayı Bekleniyor';
+    } else {
+      sonraki = 'Onaylandı';
+    }
+  } else if (mevcut === 'Müşteri Onayı Bekleniyor') {
+    sonraki = 'Onaylandı';
+  } else {
+    toast('Bu ECO zaten son durumda', 'amber');
+    return;
+  }
+
+  var gecmis;
+  try { gecmis = JSON.parse(f.Gecmis || '[]'); } catch(e) { gecmis = []; }
+  gecmis.unshift({
+    tip: 'ilerletildi', baslik: mevcut + ' → ' + sonraki,
+    kullanici: sessionStorage.getItem('kullanici') || 'Sistem',
+    tarih: new Date().toISOString()
+  });
+
+  var guncelleme = {
+    Onay_Durumu: sonraki,
+    Gecmis: JSON.stringify(gecmis)
   };
 
+  if (sonraki === 'Onaylandı') {
+    guncelleme.Uygulama_Tarihi = new Date().toISOString().split('T')[0];
+  }
+
   try {
-    if (seciliId) {
-      await apiPatch('ECO Kayitlari', seciliId, fields);
-      await logIslem('Guncellendi', 'ECO', seciliId, fields['Konu'] + ' → ' + yeniDurum, null, fields);
-    } else {
-      var s = await apiPost('ECO Kayitlari', fields);
-      seciliId = s.id;
-      await logIslem('Olusturuldu', 'ECO', s.id, fields['Konu'] + ' → ' + yeniDurum, null, fields);
+    await apiPatch('ECO_Kayitlari', secili_id, guncelleme);
+    if (typeof logIslem === 'function') {
+      await logIslem('Guncellendi', 'ECO', secili_id, (f.ECO_No || '') + ' → ' + sonraki, null, guncelleme);
     }
-
-    // Onaylandi ve FAI gerekli ise FAI kaydi olustur
-    if (yeniDurum === 'Onaylandi' && document.getElementById('eco-fai').checked) {
-      try {
-        var faiFields = {
-          'Parca No': fields['Parca No'],
-          'Revizyon': fields['Yeni Rev'],
-          'FAI Tipi': 'Kismi',
-          'Tetikleyici': 'Tasarim Degisikligi',
-          'Tarih': new Date().toISOString().split('T')[0],
-          'Durum': 'Bekliyor'
-        };
-        var faiSonuc = await apiPost('FAI Kayitlari', faiFields);
-        await logIslem('Olusturuldu', 'FAI', faiSonuc.id, 'ECO\'dan otomatik: ' + fields['Parca No'], null, faiFields);
-        toast('ECO onaylandi + FAI kaydi olusturuldu');
-      } catch(e) {
-        toast('ECO onaylandi ancak FAI olusturulamadi: ' + e.message, 'hata');
-      }
-    } else {
-      toast('ECO durumu guncellendi: ' + yeniDurum);
-    }
-
-    await yukle();
-    if (seciliId) ecoSec(seciliId);
+    toast('ECO ilerletildi: ' + sonraki);
+    await eco_listesi_yukle();
+    eco_sec(secili_id);
   } catch(e) {
-    toast('Hata: ' + e.message, 'hata');
+    toast('Hata: ' + e.message, 'red');
+    console.error(e);
   }
 }
 
+// ── ECO Reddet ──────────────────────────────────────
+async function eco_reddet() {
+  if (!secili_id) return;
+  var r = eco_listesi.find(function(x) { return x.id === secili_id; });
+  if (!r) return;
+
+  var sebep = prompt('Red sebebini yazın:');
+  if (!sebep) return;
+
+  var f = r.fields;
+  var gecmis;
+  try { gecmis = JSON.parse(f.Gecmis || '[]'); } catch(e) { gecmis = []; }
+  gecmis.unshift({
+    tip: 'reddedildi', baslik: 'ECO reddedildi',
+    kullanici: sessionStorage.getItem('kullanici') || 'Sistem',
+    tarih: new Date().toISOString(),
+    not: sebep
+  });
+
+  try {
+    await apiPatch('ECO_Kayitlari', secili_id, {
+      Onay_Durumu: 'Reddedildi',
+      Gecmis: JSON.stringify(gecmis)
+    });
+    if (typeof logIslem === 'function') {
+      await logIslem('Guncellendi', 'ECO', secili_id, (f.ECO_No || '') + ' reddedildi: ' + sebep, null, {Onay_Durumu:'Reddedildi'});
+    }
+    toast('ECO reddedildi');
+    await eco_listesi_yukle();
+    eco_sec(secili_id);
+  } catch(e) {
+    toast('Hata: ' + e.message, 'red');
+    console.error(e);
+  }
+}
+
+// ── Form temizle ────────────────────────────────────
+function form_temizle_yeni() {
+  ['f-baslik','f-kategori','f-etki-alani','f-sorumlu','f-hedef-tarih','f-aciklama','f-neden',
+   'f-etki-analizi','f-onceki-rev','f-yeni-rev','f-etkilenen-wo','f-etkilenen-dwg','f-etkilenen-dok','f-ncr-ref'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('f-musteri-onay').checked = false;
+}
+
+// ── URL params ──────────────────────────────────────
+function url_params_oku() {
+  var params = new URLSearchParams(window.location.search);
+  var ncr = params.get('ncr');
+  if (ncr) {
+    document.getElementById('f-ncr-ref').value = ncr;
+    modal_ac('modal-yeni');
+  }
+}
+
+// ── Init ────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function() {
-  yukle();
+  eco_listesi_yukle();
+  url_params_oku();
 });
 </script>
-
 <!-- LAYOUT JS -->
 <script>
 (function(){var sb=document.getElementById("sb-mount")||document.querySelector(".sb");var app=sb?sb.parentElement:document.querySelector(".app");var main=app?(app.querySelector(".main")||app.querySelector(".icerik-alani")):null;if(app){app.style.cssText="display:flex!important;flex-direction:row!important;height:100vh!important;width:100vw!important;overflow:hidden!important;gap:0!important;padding:0!important;margin:0!important;";}if(sb){sb.style.cssText="flex:0 0 210px!important;width:210px!important;min-width:210px!important;max-width:210px!important;height:100vh!important;overflow-y:scroll!important;overflow-x:hidden!important;margin:0!important;border-right:none!important;";}if(main){main.style.cssText="flex:1 1 0!important;min-width:0!important;height:100vh!important;overflow:hidden!important;display:flex!important;flex-direction:column!important;margin:0!important;padding:0!important;";var k=Array.from(main.children).filter(function(c){return c.tagName!=="SCRIPT"&&c.tagName!=="STYLE";});if(k.length>0){k[0].style.flexShrink="0";for(var i=1;i<k.length;i++){k[i].style.flex="1 1 0";k[i].style.minHeight="0";k[i].style.overflowY="auto";}}}})();

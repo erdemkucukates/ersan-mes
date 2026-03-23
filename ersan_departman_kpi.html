@@ -102,19 +102,22 @@ function donemDegisti() {
 }
 
 function yukle() {
+  var grid = document.getElementById('deptGrid');
+  grid.innerHTML = '<div class="yukleniyor"><div class="spinner"></div> Yukleniyor...</div>';
+
   var p1 = fetch('/.netlify/functions/airtable?table=Personel&pageSize=100')
     .then(function(r) { return r.json(); })
     .then(function(d) {
       personelListesi = (d.records || []).map(function(r) { return { id: r.id, f: r.fields || {} }; });
     })
-    .catch(function() { personelListesi = []; });
+    .catch(function(e) { console.warn('Personel yuklenemedi:', e); personelListesi = []; });
 
   var p2 = fetch('/.netlify/functions/airtable?table=KPI%20Kayitlari&pageSize=100')
     .then(function(r) { return r.json(); })
     .then(function(d) {
       kpiKayitlari = (d.records || []).map(function(r) { return { id: r.id, f: r.fields || {} }; });
     })
-    .catch(function() { kpiKayitlari = []; });
+    .catch(function(e) { console.warn('KPI Kayitlari yuklenemedi:', e); kpiKayitlari = []; });
 
   // Config
   var p3 = fetch('ersan_config.json')
@@ -122,7 +125,25 @@ function yukle() {
     .then(function(d) { kpiHedefleri = d.kpiHedefleri || {}; })
     .catch(function() { kpiHedefleri = {}; });
 
-  Promise.all([p1, p2, p3]).then(function() { render(); });
+  Promise.all([p1, p2, p3]).then(function() {
+    try {
+      render();
+    } catch(e) {
+      console.error('KPI render hatasi:', e);
+      grid.innerHTML = '<div style="padding:40px;text-align:center;color:var(--metin3);">'
+        + '<div style="font-size:24px;margin-bottom:8px;">⚠</div>'
+        + '<div style="font-size:13px;font-weight:600;">Render hatasi</div>'
+        + '<div style="font-size:11px;margin-top:4px;">' + e.message + '</div>'
+        + '</div>';
+    }
+  }).catch(function(e) {
+    console.error('KPI veri yukleme hatasi:', e);
+    grid.innerHTML = '<div style="padding:40px;text-align:center;color:var(--metin3);">'
+      + '<div style="font-size:24px;margin-bottom:8px;">⚠</div>'
+      + '<div style="font-size:13px;font-weight:600;">Veri yuklenemedi</div>'
+      + '<div style="font-size:11px;margin-top:4px;">' + (e.message || 'Baglanti hatasi') + '</div>'
+      + '</div>';
+  });
 }
 
 function render() {
@@ -198,7 +219,16 @@ function render() {
       + '</div>';
   });
 
-  grid.innerHTML = html || '<div class="bos-durum">Veri bulunamadi</div>';
+  if (!html) {
+    grid.innerHTML = '<div style="padding:40px;text-align:center;color:var(--metin3);">'
+      + '<div style="font-size:24px;margin-bottom:8px;">📊</div>'
+      + '<div style="font-size:13px;font-weight:600;">' + aktifDonem + ' donemi icin KPI verisi bulunamadi</div>'
+      + '<div style="font-size:11px;margin-top:4px;color:var(--metin4);">'
+      + 'Personel: ' + personelListesi.length + ' kayit · KPI: ' + kpiKayitlari.length + ' kayit'
+      + '</div></div>';
+  } else {
+    grid.innerHTML = html;
+  }
 
   // Ozet kartlar
   document.getElementById('genelOrt').textContent = genelSayi > 0 ? (genelToplam / genelSayi).toFixed(0) : '-';
