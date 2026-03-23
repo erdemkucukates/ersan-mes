@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — Müşteri Şikayeti</title>
+<style>
+:root{
+  --lacivert:#1a2b47;--blue:#2563eb;--blue-l:#dbeafe;
+  --green:#059669;--green-l:#d1fae5;
+  --red:#dc2626;--red-l:#fee2e2;
+  --amber:#d97706;--amber-l:#fef3c7;
+  --purple:#7c3aed;--purple-l:#ede9fe;
+  --teal:#0d9488;--teal-l:#ccfbf1;
+  --g50:#f9fafb;--g100:#f3f4f6;--g200:#e5e7eb;
+  --g300:#d1d5db;--g400:#9ca3af;--g500:#6b7280;--g700:#374151;--g900:#111827;
+  --r:7px;--sh:0 1px 3px rgba(0,0,0,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#f0f2f5;color:var(--g700);font-size:13px}
+.app{display:flex;height:100vh;overflow:hidden}
+.main{flex:1;overflow:hidden;display:flex;flex-direction:column;min-width:0}
+
+/* TOP BAR */
+.tb{background:#fff;border-bottom:1px solid var(--g200);padding:0 18px;display:flex;align-items:center;gap:10px;height:48px;flex-shrink:0}
+.tb-t{font-size:14px;font-weight:700;color:var(--lacivert)}
+.tb-r{margin-left:auto;display:flex;gap:8px;align-items:center}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:5px;font-size:11.5px;font-weight:600;cursor:pointer;border:none;transition:.15s;white-space:nowrap}
+.btn-p{background:var(--lacivert);color:#fff}.btn-p:hover{background:#243555}
+.btn-o{background:#fff;border:1px solid var(--g300);color:var(--g700)}.btn-o:hover{background:var(--g50)}
+.btn-g{background:var(--green);color:#fff}.btn-r{background:var(--red);color:#fff}
+.btn-a{background:var(--amber);color:#fff}
+.btn-sm{padding:4px 9px;font-size:10.5px}
+
+/* CONTENT */
+.pad{padding:14px 18px}
+.pad0{padding:0 18px 14px}
+
+/* KPI */
+.kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:12px}
+.kc{background:#fff;border:1px solid var(--g200);border-radius:var(--r);padding:11px 13px;box-shadow:var(--sh);position:relative;overflow:hidden;cursor:pointer;transition:.15s}
+.kc:hover{border-color:#93c5fd}
+.kc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.kc.r::before{background:var(--red)}.kc.a::before{background:var(--amber)}
+.kc.g::before{background:var(--green)}.kc.b::before{background:var(--blue)}.kc.p::before{background:var(--purple)}
+.kl{font-size:9.5px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--g400)}
+.kv{font-size:22px;font-weight:700;color:var(--g900);margin:3px 0 1px;line-height:1}
+.ks{font-size:10px;color:var(--g400)}
+
+/* AS9100 ŞERİDİ */
+.asbar{background:#fff;border:1px solid var(--g200);border-radius:var(--r);padding:7px 13px;margin-bottom:11px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;box-shadow:var(--sh)}
+.asl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--g400);margin-right:2px}
+.chip{display:inline-flex;align-items:center;padding:3px 8px;border-radius:4px;font-size:10px;font-weight:600}
+.c-ok{background:var(--green-l);color:#065f46}.c-w{background:var(--amber-l);color:#92400e}
+.c-e{background:var(--red-l);color:#991b1b}.c-b{background:var(--blue-l);color:#1e40af}
+
+/* İKİ KOLON LAYOUT */
+.two{display:grid;grid-template-columns:310px 1fr;gap:11px;flex:1;min-height:0}
+.pnl{background:#fff;border:1px solid var(--g200);border-radius:var(--r);box-shadow:var(--sh);display:flex;flex-direction:column;overflow:hidden}
+.ph{padding:8px 13px;border-bottom:1px solid var(--g200);background:var(--g50);display:flex;align-items:center;gap:8px;flex-shrink:0}
+.pht{font-size:11.5px;font-weight:700;color:var(--lacivert)}
+.pb{flex:1;overflow-y:auto}
+
+/* ŞİKAYET LİSTE */
+.si{padding:10px 12px;border-bottom:1px solid #f3f4f6;cursor:pointer;display:flex;flex-direction:column;gap:3px;border-left:3px solid transparent;transition:.12s}
+.si:hover{background:#f9fafb}
+.si.sel{background:#eff6ff;border-left-color:var(--lacivert)}
+.si.acik{border-left-color:var(--red)}.si.islemde{border-left-color:var(--amber)}.si.kapandi{border-left-color:var(--green)}
+.si-no{font-family:monospace;font-size:10px;font-weight:700;color:var(--lacivert)}
+.si-mus{font-size:12px;font-weight:700;color:var(--g900)}
+.si-konu{font-size:10.5px;color:var(--g500);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* TABS */
+.tabs{display:flex;border-bottom:1px solid var(--g200);background:#fff;padding:0 11px;gap:2px;flex-shrink:0}
+.tab{padding:8px 10px;font-size:11px;font-weight:500;color:var(--g400);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.tab:hover{color:var(--g700)}.tab.active{color:var(--lacivert);border-bottom-color:var(--lacivert);font-weight:700}
+.tc{display:none}.tc.on{display:block}
+
+/* DETAY PANELİ */
+.sec{padding:11px 13px;border-bottom:1px solid #f3f4f6}
+.sec:last-child{border-bottom:none}
+.st{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--g400);margin-bottom:7px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px}
+.fl{font-size:9.5px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--g400);margin-bottom:2px}
+.fv{font-size:12px;color:var(--g900);font-weight:500}
+.mono{font-family:monospace;color:var(--lacivert);font-weight:700}
+.row{display:flex;align-items:center;gap:8px}
+.mla{margin-left:auto}
+
+/* BADGE */
+.bx{display:inline-flex;align-items:center;padding:2px 7px;border-radius:12px;font-size:9.5px;font-weight:600}
+.bg{background:var(--green-l);color:#065f46}.br{background:var(--red-l);color:#991b1b}
+.ba{background:var(--amber-l);color:#92400e}.bb{background:var(--blue-l);color:#1e40af}
+.bz{background:var(--g100);color:var(--g500)}.bp{background:var(--purple-l);color:#4c1d95}
+
+/* ŞİDDET BAR */
+.siddet{display:flex;gap:3px;margin-top:4px}
+.sd{height:8px;border-radius:2px;width:18px;background:var(--g200)}
+.sd.aktif-d{background:var(--green)}.sd.aktif-o{background:var(--amber)}.sd.aktif-y{background:var(--red)}.sd.aktif-k{background:#7f1d1d}
+
+/* 8D ADIMLAR */
+.sekiz-d{counter-reset:ad;}
+.ad{display:flex;gap:10px;padding:9px 13px;border-bottom:1px solid #f3f4f6;align-items:flex-start}
+.ad:last-child{border-bottom:none}
+.ad-no{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0}
+.ad-baslik{font-size:11.5px;font-weight:700;color:var(--g900);margin-bottom:2px}
+.ad-icerik{font-size:10.5px;color:var(--g500);line-height:1.5}
+.ad.tamam .ad-no{background:var(--green)}
+.ad.devam .ad-no{background:var(--amber)}
+.ad.bekle .ad-no{background:var(--g300)}
+.ad.aktif-s .ad-no{background:var(--lacivert)}
+
+/* FORM */
+input[type=text],input[type=date],select,textarea{
+  font-family:inherit;border:1px solid var(--g300);border-radius:5px;
+  padding:5px 8px;outline:none;color:var(--g900);background:#fff;font-size:11.5px;width:100%
+}
+input:focus,select:focus,textarea:focus{border-color:var(--lacivert)}
+label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--g500);display:block;margin-bottom:3px}
+.form-row{margin-bottom:9px}
+
+/* ZAMAN ÇİZELGESİ */
+.zc-item{display:flex;gap:10px;padding:8px 13px;border-bottom:1px solid #f3f4f6;align-items:flex-start}
+.zc-item:last-child{border-bottom:none}
+.zc-ic{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;margin-top:1px}
+.zc-icerik{flex:1}
+.zc-baslik{font-size:11.5px;font-weight:600;color:var(--g900)}
+.zc-alt{font-size:10px;color:var(--g400);margin-top:2px}
+
+/* MODAL */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;align-items:center;justify-content:center}
+.modal-bg.ac{display:flex}
+.modal{background:#fff;border-radius:10px;width:560px;max-height:88vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.2)}
+.mh{padding:14px 18px;border-bottom:1px solid var(--g200);display:flex;align-items:center;gap:8px}
+.mht{font-size:14px;font-weight:700;color:var(--lacivert)}
+.mb{padding:16px 18px}
+.mf{padding:12px 18px;border-top:1px solid var(--g200);display:flex;gap:8px;justify-content:flex-end}
+
+/* TOAST */
+.toast{position:fixed;top:16px;right:16px;z-index:9999;padding:9px 16px;background:var(--lacivert);color:#fff;border-radius:6px;font-size:12px;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.2);display:none}
+
+/* SEARCH */
+.srch{border:1px solid var(--g300);border-radius:5px;padding:6px 10px 6px 28px;outline:none;font-size:11.5px;width:100%;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E") no-repeat 8px center}
+.srch:focus{border-color:var(--lacivert)}
+
+/* LISTE FİLTRE */
+.lf{padding:8px 10px;display:flex;gap:6px;border-bottom:1px solid var(--g200);flex-shrink:0}
+.lf-btn{padding:3px 8px;border-radius:4px;font-size:10px;font-weight:600;cursor:pointer;border:none;background:var(--g100);color:var(--g500);transition:.12s}
+.lf-btn.on{background:var(--lacivert);color:#fff}
+
+/* NCR BADGE */
+.ncr-badge{display:inline-flex;align-items:center;gap:5px;background:var(--red-l);border:1px solid #fca5a5;border-radius:5px;padding:3px 8px;font-size:10px;font-weight:700;color:var(--red);cursor:pointer}
+.ncr-badge:hover{background:#fee2e2}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ── SİDEBAR MOUNT ── -->
+<div id="sb-mount"></div>
+
+<div class="main">
+
+<!-- TOP BAR -->
+<div class="tb">
+  <div class="tb-t">Müşteri Şikayet Yönetimi</div>
+  <div class="tb-r">
+    <input class="srch" id="arama" placeholder="Şikayet no, müşteri, konu ara..." style="width:220px" oninput="filtrele()">
+    <select id="filtre-durum" onchange="filtrele()" style="font-size:11.5px;padding:5px 8px;border-radius:5px;border:1px solid var(--g300)">
+      <option value="">Tüm Durumlar</option>
+      <option value="Açık">Açık</option>
+      <option value="İşlemde">İşlemde</option>
+      <option value="NCR Açıldı">NCR Açıldı</option>
+      <option value="Kapandı">Kapandı</option>
+    </select>
+    <button class="btn btn-p" onclick="modal_ac('modal-yeni')">+ Yeni Şikayet</button>
+  </div>
+</div>
+
+<div class="pad" style="padding-bottom:6px">
+  <!-- KPI -->
+  <div class="kpi-row">
+    <div class="kc r" onclick="durum_filtre('Açık')">
+      <div class="kl">Açık Şikayetler</div>
+      <div class="kv" id="kpi-acik">—</div>
+      <div class="ks">Yanıt bekliyor</div>
+    </div>
+    <div class="kc a" onclick="durum_filtre('İşlemde')">
+      <div class="kl">İşlemde</div>
+      <div class="kv" id="kpi-islemde">—</div>
+      <div class="ks">8D devam ediyor</div>
+    </div>
+    <div class="kc b" onclick="durum_filtre('NCR Açıldı')">
+      <div class="kl">NCR Açıldı</div>
+      <div class="kv" id="kpi-ncr">—</div>
+      <div class="ks">Kalite ile bağlı</div>
+    </div>
+    <div class="kc g" onclick="durum_filtre('Kapandı')">
+      <div class="kl">Kapandı</div>
+      <div class="kv" id="kpi-kapandi">—</div>
+      <div class="ks">Çözümlendi</div>
+    </div>
+    <div class="kc p">
+      <div class="kl">Ort. Kapanış Süresi</div>
+      <div class="kv" id="kpi-sure">—</div>
+      <div class="ks">gün</div>
+    </div>
+  </div>
+
+  <!-- AS9100 ŞERİDİ -->
+  <div class="asbar">
+    <span class="asl">AS9100 §9.1.2</span>
+    <span class="chip c-b" id="as-toplam">ℹ Yükleniyor...</span>
+    <span class="chip c-ok" id="as-ort">—</span>
+    <span class="chip c-w" id="as-acik-chip" style="display:none">—</span>
+  </div>
+</div>
+
+<!-- ANA İKİ KOLON -->
+<div class="pad0" style="flex:1;display:flex;flex-direction:column;min-height:0">
+  <div class="two" style="flex:1;min-height:0">
+
+    <!-- SOL: Şikayet Listesi -->
+    <div class="pnl">
+      <div class="ph">
+        <span class="pht">Şikayetler</span>
+        <span id="liste-sayac" style="margin-left:auto;font-size:10px;color:var(--g400)">— kayıt</span>
+      </div>
+      <div class="lf">
+        <button class="lf-btn on" onclick="tab_filtre('Hepsi',this)">Hepsi</button>
+        <button class="lf-btn" onclick="tab_filtre('Açık',this)">Açık</button>
+        <button class="lf-btn" onclick="tab_filtre('İşlemde',this)">İşlemde</button>
+        <button class="lf-btn" onclick="tab_filtre('Kapandı',this)">Kapandı</button>
+      </div>
+      <div class="pb" id="sikayet-liste">
+        <div style="padding:30px;text-align:center;color:var(--g400)">
+          <div style="font-size:24px;margin-bottom:8px">😊</div>
+          <div style="font-size:12px">Yükleniyor...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SAĞ: Şikayet Detayı -->
+    <div class="pnl" id="detay-pnl" style="display:flex;flex-direction:column">
+
+      <!-- Boş durum -->
+      <div id="bos-durum" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--g400)">
+        <div style="font-size:40px;margin-bottom:12px">😊</div>
+        <div style="font-size:13px;font-weight:600;color:var(--g500)">Listeden bir şikayet seçin</div>
+        <div style="font-size:11px;color:var(--g400);margin-top:4px">veya yeni şikayet oluşturun</div>
+        <button class="btn btn-p" style="margin-top:16px" onclick="modal_ac('modal-yeni')">+ Yeni Şikayet</button>
+      </div>
+
+      <!-- Detay içeriği -->
+      <div id="detay-icerik" style="display:none;flex:1;flex-direction:column;overflow:hidden">
+
+        <!-- Başlık -->
+        <div id="detay-baslik" style="padding:12px 14px;border-bottom:1px solid var(--g200);background:var(--g50);flex-shrink:0">
+          <div class="row" style="margin-bottom:5px">
+            <span id="d-no" class="mono" style="font-size:12px">—</span>
+            <span id="d-durum-badge" class="bx br">Açık</span>
+            <span id="d-ncr-badge" style="display:none" class="ncr-badge" onclick="ncr_git()">⛔ NCR Açık</span>
+            <div class="mla" style="display:flex;gap:6px">
+              <button class="btn btn-o btn-sm" onclick="modal_ac('modal-guncelle')">✏ Güncelle</button>
+              <button class="btn btn-sm" id="btn-ncr" onclick="ncr_ac()" style="background:var(--red-l);color:var(--red);border:1px solid #fca5a5;font-weight:700">⛔ NCR Aç</button>
+              <button class="btn btn-g btn-sm" id="btn-kapat" onclick="sikayet_kapat()">✓ Kapat</button>
+            </div>
+          </div>
+          <div id="d-konu" style="font-size:14px;font-weight:800;color:var(--g900)">—</div>
+          <div id="d-musteri" style="font-size:11px;color:var(--g500);margin-top:2px">—</div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+          <div class="tab active" onclick="st(this,'t-genel')">📋 Genel Bilgi</div>
+          <div class="tab" onclick="st(this,'t-8d')">🔧 8D Aksiyonlar</div>
+          <div class="tab" onclick="st(this,'t-gecmis')">📅 Zaman Çizelgesi</div>
+        </div>
+
+        <!-- Tab: Genel Bilgi -->
+        <div class="tc on pb" id="t-genel">
+          <div class="sec">
+            <div class="g3">
+              <div><div class="fl">Şikayet No</div><div class="fv mono" id="d-no2">—</div></div>
+              <div><div class="fl">Açılış Tarihi</div><div class="fv" id="d-tarih">—</div></div>
+              <div><div class="fl">Kapanış Tarihi</div><div class="fv" id="d-kapanis">—</div></div>
+              <div><div class="fl">Müşteri</div><div class="fv" id="d-musteri2">—</div></div>
+              <div><div class="fl">İlgili Sipariş</div><div class="fv" id="d-siparis">—</div></div>
+              <div><div class="fl">Ürün / Parça</div><div class="fv" id="d-parca">—</div></div>
+              <div><div class="fl">Kategori</div><div class="fv" id="d-kategori">—</div></div>
+              <div><div class="fl">Sorumlu</div><div class="fv" id="d-sorumlu">—</div></div>
+              <div>
+                <div class="fl">Şiddet</div>
+                <div id="d-siddet-bar" class="siddet">
+                  <div class="sd"></div><div class="sd"></div><div class="sd"></div><div class="sd"></div>
+                </div>
+                <div class="fv" id="d-siddet" style="margin-top:3px">—</div>
+              </div>
+            </div>
+          </div>
+          <div class="sec">
+            <div class="st">Şikayet Açıklaması</div>
+            <div id="d-aciklama" style="font-size:12px;color:var(--g700);line-height:1.7">—</div>
+          </div>
+          <div class="sec" id="sec-musteri-beklenti">
+            <div class="st">Müşteri Beklentisi / Talebi</div>
+            <div id="d-beklenti" style="font-size:12px;color:var(--g700);line-height:1.7">—</div>
+          </div>
+          <div class="sec">
+            <div class="st">Bağlı Kayıtlar</div>
+            <div class="row" style="flex-wrap:wrap;gap:6px">
+              <span id="d-ncr-link" style="display:none" class="ncr-badge" onclick="ncr_git()">⛔ NCR bağlı</span>
+              <span id="d-capa-link" style="display:none" class="bx bp" style="cursor:pointer">🔧 CAPA bağlı</span>
+              <span id="d-no-bagli" style="font-size:11px;color:var(--g400)">Henüz bağlı kayıt yok</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab: 8D Aksiyonlar -->
+        <div class="tc pb" id="t-8d">
+          <div class="sec" style="padding-bottom:6px">
+            <div class="row">
+              <div style="font-size:11px;color:var(--g500)">AS9100 §10.2 — 8D Metodolojisi</div>
+              <button class="btn btn-o btn-sm mla" onclick="modal_ac('modal-8d')">+ Adım Güncelle</button>
+            </div>
+          </div>
+          <div class="sekiz-d" id="sekiz-d-listesi">
+            <!-- JS ile doldurulur -->
+          </div>
+        </div>
+
+        <!-- Tab: Zaman Çizelgesi -->
+        <div class="tc pb" id="t-gecmis">
+          <div id="zaman-cizelgesi">
+            <!-- JS ile doldurulur -->
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<!-- ══ MODAL: YENİ ŞİKAYET ══ -->
+<div class="modal-bg" id="modal-yeni">
+  <div class="modal">
+    <div class="mh">
+      <span style="font-size:18px">😊</span>
+      <span class="mht">Yeni Müşteri Şikayeti</span>
+      <button class="btn btn-o btn-sm mla" onclick="modal_kapat('modal-yeni')">✕</button>
+    </div>
+    <div class="mb">
+      <div class="g2" style="gap:12px">
+        <div class="form-row">
+          <label>Müşteri *</label>
+          <select id="f-musteri">
+            <option value="">Seçin...</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label>İlgili Sipariş No</label>
+          <input type="text" id="f-siparis" placeholder="SP-2026-XXX">
+        </div>
+        <div class="form-row">
+          <label>Ürün / Parça Adı</label>
+          <input type="text" id="f-parca" placeholder="Parça adı veya kod">
+        </div>
+        <div class="form-row">
+          <label>Kategori *</label>
+          <select id="f-kategori">
+            <option value="">Seçin...</option>
+            <option>Ürün Kalitesi</option>
+            <option>Geç Teslimat</option>
+            <option>Yanlış Ürün</option>
+            <option>Hasar / Ambalaj</option>
+            <option>Boyut / Tolerans</option>
+            <option>Yüzey Kalitesi</option>
+            <option>Belge / CoC Eksik</option>
+            <option>Diğer</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label>Şiddet Seviyesi *</label>
+          <select id="f-siddet">
+            <option value="">Seçin...</option>
+            <option value="Düşük">Düşük — Minör, toleranslı</option>
+            <option value="Orta">Orta — İşlevsel etki var</option>
+            <option value="Yüksek">Yüksek — Kullanım engelli</option>
+            <option value="Kritik">Kritik — Güvenlik / IAW</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label>Sorumlu *</label>
+          <select id="f-sorumlu">
+            <option value="">Seçin...</option>
+            <option>Kalite Müdürü</option>
+            <option>Üretim Müdürü</option>
+            <option>Satış Yöneticisi</option>
+            <option>Genel Müdür</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <label>Şikayet Konusu *</label>
+        <input type="text" id="f-konu" placeholder="Kısa ve net başlık">
+      </div>
+      <div class="form-row">
+        <label>Şikayet Açıklaması *</label>
+        <textarea id="f-aciklama" rows="4" placeholder="Müşterinin bildirdiği sorun detaylı olarak..."></textarea>
+      </div>
+      <div class="form-row">
+        <label>Müşteri Talebi / Beklentisi</label>
+        <textarea id="f-beklenti" rows="2" placeholder="Müşteri ne istiyor? (iade, yeniden imalat, indirim vb.)"></textarea>
+      </div>
+      <div class="form-row" style="padding:8px 0 0">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+          <input type="checkbox" id="f-ncr-otomatik" style="width:auto" checked>
+          <span style="font-size:11px;color:var(--g700)">NCR otomatik oluştur (şiddet Yüksek / Kritik ise önerilir)</span>
+        </label>
+      </div>
+    </div>
+    <div class="mf">
+      <button class="btn btn-o" onclick="modal_kapat('modal-yeni')">İptal</button>
+      <button class="btn btn-p" onclick="sikayet_kaydet()">✓ Şikayet Oluştur</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: GÜNCELLE ══ -->
+<div class="modal-bg" id="modal-guncelle">
+  <div class="modal">
+    <div class="mh">
+      <span class="mht">Şikayet Güncelle</span>
+      <button class="btn btn-o btn-sm mla" onclick="modal_kapat('modal-guncelle')">✕</button>
+    </div>
+    <div class="mb">
+      <div class="form-row">
+        <label>Durum</label>
+        <select id="gu-durum">
+          <option>Açık</option>
+          <option>İşlemde</option>
+          <option>NCR Açıldı</option>
+          <option>Kapandı</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Güncelleme Notu</label>
+        <textarea id="gu-not" rows="3" placeholder="Yapılan işlem, gelişme..."></textarea>
+      </div>
+      <div class="form-row">
+        <label>Sorumlu</label>
+        <select id="gu-sorumlu">
+          <option>Kalite Müdürü</option>
+          <option>Üretim Müdürü</option>
+          <option>Satış Yöneticisi</option>
+          <option>Genel Müdür</option>
+        </select>
+      </div>
+    </div>
+    <div class="mf">
+      <button class="btn btn-o" onclick="modal_kapat('modal-guncelle')">İptal</button>
+      <button class="btn btn-p" onclick="guncelle_kaydet()">✓ Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: 8D ADIM ══ -->
+<div class="modal-bg" id="modal-8d">
+  <div class="modal">
+    <div class="mh">
+      <span class="mht">8D Adım Güncelle</span>
+      <button class="btn btn-o btn-sm mla" onclick="modal_kapat('modal-8d')">✕</button>
+    </div>
+    <div class="mb">
+      <div class="form-row">
+        <label>8D Adımı</label>
+        <select id="ad-adim">
+          <option value="D1">D1 — Ekip Oluşturma</option>
+          <option value="D2">D2 — Problem Tanımlama</option>
+          <option value="D3">D3 — Geçici Tedbir (Containment)</option>
+          <option value="D4">D4 — Kök Neden Analizi</option>
+          <option value="D5">D5 — Kalıcı Düzeltici Faaliyet</option>
+          <option value="D6">D6 — Uygulama ve Doğrulama</option>
+          <option value="D7">D7 — Tekrar Önleme</option>
+          <option value="D8">D8 — Ekip ve Müşteri Tebriği</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Durum</label>
+        <select id="ad-durum">
+          <option>Bekliyor</option>
+          <option>Devam Ediyor</option>
+          <option>Tamamlandı</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Açıklama / Yapılan İşlem</label>
+        <textarea id="ad-aciklama" rows="4" placeholder="Bu adımda yapılan işlem..."></textarea>
+      </div>
+      <div class="form-row">
+        <label>Sorumlu</label>
+        <input type="text" id="ad-sorumlu" placeholder="Ad Soyad">
+      </div>
+      <div class="form-row">
+        <label>Hedef Tarih</label>
+        <input type="date" id="ad-tarih">
+      </div>
+    </div>
+    <div class="mf">
+      <button class="btn btn-o" onclick="modal_kapat('modal-8d')">İptal</button>
+      <button class="btn btn-p" onclick="sekizd_kaydet()">✓ Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="utils/airtable.js"></script>
+<script src="utils/sidebar.js"></script>
+<script>
+/* ══════════════════════════════════════════════════
+   ERSAN MES — MÜŞTERI ŞİKAYET YÖNETİMİ
+   AS9100 §9.1.2 · Sayfa: ersan_sikayet.html
+══════════════════════════════════════════════════ */
+
+// ── Veri ──────────────────────────────────────────
+let sikayet_listesi = [];   // Airtable'dan gelen tüm kayıtlar
+let secili_id       = null; // Seçili şikayetin Airtable ID'si
+let aktif_tab_filtre = 'Hepsi';
+
+// ── 8D adım şablonu ──────────────────────────────
+const SEKIZD = [
+  { kod:'D1', baslik:'Ekip Oluşturma',            renk:'#6366f1' },
+  { kod:'D2', baslik:'Problem Tanımlama',          renk:'#f59e0b' },
+  { kod:'D3', baslik:'Geçici Tedbir (Containment)',renk:'#ef4444' },
+  { kod:'D4', baslik:'Kök Neden Analizi',          renk:'#dc2626' },
+  { kod:'D5', baslik:'Kalıcı Düzeltici Faaliyet',  renk:'#059669' },
+  { kod:'D6', baslik:'Uygulama ve Doğrulama',      renk:'#0d9488' },
+  { kod:'D7', baslik:'Tekrar Önleme',              renk:'#2563eb' },
+  { kod:'D8', baslik:'Ekip ve Müşteri Tebriği',    renk:'#7c3aed' }
+];
+
+// ── Sayfa yükle ──────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+  await sikayet_listesi_yukle();
+  await musteri_select_yukle();
+  kpi_hesapla();
+  as9100_serit_guncelle();
+});
+
+// ── Airtable: listeyi çek ────────────────────────
+async function sikayet_listesi_yukle() {
+  try {
+    const res = await airtable('list', 'Sikayet_Kayitlari', {
+      sort: [{ field: 'Acilis_Tarihi', direction: 'desc' }]
+    });
+    sikayet_listesi = res.records || [];
+    liste_render();
+    kpi_hesapla();
+    as9100_serit_guncelle();
+  } catch(e) {
+    console.error('Şikayet listesi yüklenemedi:', e);
+    document.getElementById('sikayet-liste').innerHTML = `
+      <div style="padding:30px;text-align:center;color:var(--g400)">
+        <div style="font-size:20px">⚠</div>
+        <div style="font-size:12px;margin-top:6px">Veri yüklenemedi<br><span style="font-size:10px">${e.message}</span></div>
+      </div>`;
+  }
+}
+
+// ── Liste render ─────────────────────────────────
+function liste_render() {
+  const aramaQ = document.getElementById('arama').value.toLowerCase();
+  const durumQ = document.getElementById('filtre-durum').value;
+
+  const filtreli = sikayet_listesi.filter(r => {
+    const f = r.fields;
+    const durumEsle = !durumQ || f.Durum === durumQ;
+    const tabEsle   = aktif_tab_filtre === 'Hepsi' || f.Durum === aktif_tab_filtre;
+    const aramaEsle = !aramaQ ||
+      (f.Sikayet_No||'').toLowerCase().includes(aramaQ) ||
+      (f.Musteri||'').toLowerCase().includes(aramaQ) ||
+      (f.Konu||'').toLowerCase().includes(aramaQ);
+    return durumEsle && tabEsle && aramaEsle;
+  });
+
+  document.getElementById('liste-sayac').textContent = `${filtreli.length} kayıt`;
+
+  const liste = document.getElementById('sikayet-liste');
+  if (filtreli.length === 0) {
+    liste.innerHTML = `<div style="padding:40px;text-align:center;color:var(--g400)">
+      <div style="font-size:20px">🔍</div>
+      <div style="font-size:11px;margin-top:6px">Şikayet bulunamadı</div>
+    </div>`;
+    return;
+  }
+
+  liste.innerHTML = '';
+  filtreli.forEach(r => {
+    const f = r.fields;
+    const durumCls = { 'Açık':'acik', 'İşlemde':'islemde', 'NCR Açıldı':'islemde', 'Kapandı':'kapandi' }[f.Durum] || 'acik';
+    const el = document.createElement('div');
+    el.className = `si ${durumCls}${r.id === secili_id ? ' sel' : ''}`;
+    el.onclick = () => sikayet_sec(r.id);
+    el.innerHTML = `
+      <div class="row">
+        <span class="si-no">${f.Sikayet_No || '—'}</span>
+        ${durum_badge(f.Durum)}
+        ${f.Sikayet_NCR_No ? '<span class="ncr-badge" style="font-size:8.5px">⛔ NCR</span>' : ''}
+        <span style="margin-left:auto;font-size:9.5px;color:var(--g400)">${formatTarih(f.Acilis_Tarihi)}</span>
+      </div>
+      <div class="si-mus">${f.Musteri || '—'}</div>
+      <div class="si-konu">${f.Konu || '—'}</div>
+      <div class="row" style="margin-top:2px">
+        ${siddet_chip(f.Siddet)}
+        <span style="font-size:9.5px;color:var(--g400);margin-left:auto">${f.Kategori || '—'}</span>
+      </div>`;
+    liste.appendChild(el);
+  });
+}
+
+// ── Şikayet seç + detay göster ──────────────────
+async function sikayet_sec(id) {
+  secili_id = id;
+  liste_render(); // seçimi güncelle
+  document.getElementById('bos-durum').style.display  = 'none';
+  document.getElementById('detay-icerik').style.display = 'flex';
+
+  const r = sikayet_listesi.find(x => x.id === id);
+  if (!r) return;
+  const f = r.fields;
+
+  // Başlık
+  document.getElementById('d-no').textContent       = f.Sikayet_No || '—';
+  document.getElementById('d-no2').textContent      = f.Sikayet_No || '—';
+  document.getElementById('d-konu').textContent     = f.Konu || '—';
+  document.getElementById('d-musteri').textContent  = `${f.Musteri || '—'} · ${f.Sorumlu || '—'}`;
+  document.getElementById('d-durum-badge').outerHTML = durum_badge(f.Durum, 'd-durum-badge');
+
+  // NCR badge
+  const ncrBadge = document.getElementById('d-ncr-badge');
+  const ncrLink  = document.getElementById('d-ncr-link');
+  const noBagli  = document.getElementById('d-no-bagli');
+  if (f.Sikayet_NCR_No) {
+    ncrBadge.style.display = 'inline-flex';
+    ncrBadge.textContent   = `⛔ ${f.Sikayet_NCR_No}`;
+    ncrLink.style.display  = 'inline-flex';
+    ncrLink.textContent    = `⛔ ${f.Sikayet_NCR_No}`;
+    noBagli.style.display  = 'none';
+    document.getElementById('btn-ncr').style.display = 'none';
+  } else {
+    ncrBadge.style.display = 'none';
+    ncrLink.style.display  = 'none';
+    noBagli.style.display  = 'inline';
+    document.getElementById('btn-ncr').style.display = 'inline-flex';
+  }
+
+  // Kapat butonu
+  document.getElementById('btn-kapat').style.display = f.Durum === 'Kapandı' ? 'none' : 'inline-flex';
+
+  // Genel bilgi
+  document.getElementById('d-tarih').textContent    = formatTarih(f.Acilis_Tarihi);
+  document.getElementById('d-kapanis').textContent  = f.Kapanis_Tarihi ? formatTarih(f.Kapanis_Tarihi) : '—';
+  document.getElementById('d-musteri2').textContent = f.Musteri || '—';
+  document.getElementById('d-siparis').textContent  = f.Siparis_No || '—';
+  document.getElementById('d-parca').textContent    = f.Parca || '—';
+  document.getElementById('d-kategori').textContent = f.Kategori || '—';
+  document.getElementById('d-sorumlu').textContent  = f.Sorumlu || '—';
+  document.getElementById('d-siddet').textContent   = f.Siddet || '—';
+  document.getElementById('d-aciklama').textContent = f.Aciklama || '—';
+  document.getElementById('d-beklenti').textContent = f.Musteri_Beklentisi || '—';
+
+  // Şiddet bar
+  siddet_bar_render(f.Siddet);
+
+  // 8D
+  sekizd_render(f);
+
+  // Zaman çizelgesi
+  zaman_render(f);
+}
+
+// ── 8D render ────────────────────────────────────
+function sekizd_render(f) {
+  const el = document.getElementById('sekiz-d-listesi');
+  let adimlar;
+  try { adimlar = JSON.parse(f.SekizD_Adimlar || '{}'); } catch(e) { adimlar = {}; }
+
+  el.innerHTML = '';
+  SEKIZD.forEach(d => {
+    const adim  = adimlar[d.kod] || {};
+    const durum = adim.durum || 'Bekliyor';
+    const cls   = durum === 'Tamamlandı' ? 'tamam' : durum === 'Devam Ediyor' ? 'devam' : 'bekle';
+    const ikon  = durum === 'Tamamlandı' ? '✓' : durum === 'Devam Ediyor' ? '…' : d.kod;
+
+    const div = document.createElement('div');
+    div.className = `ad ${cls}`;
+    div.innerHTML = `
+      <div class="ad-no" style="background:${cls === 'bekle' ? 'var(--g300)' : d.renk}">${cls === 'bekle' ? d.kod.slice(1) : ikon}</div>
+      <div style="flex:1">
+        <div class="ad-baslik">${d.kod} — ${d.baslik}</div>
+        <div class="ad-icerik">${adim.aciklama || '<span style="color:var(--g300)">Henüz girilmedi</span>'}</div>
+        ${adim.sorumlu ? `<div style="font-size:9.5px;color:var(--g400);margin-top:3px">👤 ${adim.sorumlu}${adim.tarih ? ' · ' + adim.tarih : ''}</div>` : ''}
+      </div>
+      <span class="bx" style="align-self:flex-start;font-size:9px;${
+        durum === 'Tamamlandı' ? 'background:var(--green-l);color:#065f46' :
+        durum === 'Devam Ediyor' ? 'background:var(--amber-l);color:#92400e' :
+        'background:var(--g100);color:var(--g400)'}">${durum}</span>`;
+    el.appendChild(div);
+  });
+}
+
+// ── Zaman çizelgesi render ───────────────────────
+function zaman_render(f) {
+  let gecmis;
+  try { gecmis = JSON.parse(f.Gecmis || '[]'); } catch(e) { gecmis = []; }
+
+  const el = document.getElementById('zaman-cizelgesi');
+  if (gecmis.length === 0) {
+    el.innerHTML = `<div style="padding:30px;text-align:center;color:var(--g400);font-size:11px">Zaman çizelgesi yok</div>`;
+    return;
+  }
+
+  el.innerHTML = gecmis.map(g => `
+    <div class="zc-item">
+      <div class="zc-ic" style="background:var(--g100)">
+        ${{ 'yeni':'🆕', 'guncelleme':'✏', 'ncr':'⛔', 'kapandi':'✓', '8d':'🔧' }[g.tip] || '📌'}
+      </div>
+      <div class="zc-icerik">
+        <div class="zc-baslik">${g.baslik}</div>
+        <div class="zc-alt">${g.kullanici || '—'} · ${formatTarih(g.tarih)}</div>
+        ${g.not ? `<div style="font-size:10.5px;color:var(--g700);margin-top:4px;padding:5px 8px;background:var(--g50);border-radius:4px">${g.not}</div>` : ''}
+      </div>
+    </div>`).join('');
+}
+
+// ── KPI hesapla ──────────────────────────────────
+function kpi_hesapla() {
+  const acik     = sikayet_listesi.filter(r => r.fields.Durum === 'Açık').length;
+  const islemde  = sikayet_listesi.filter(r => r.fields.Durum === 'İşlemde' || r.fields.Durum === 'NCR Açıldı').length;
+  const ncrli    = sikayet_listesi.filter(r => r.fields.Sikayet_NCR_No).length;
+  const kapandi  = sikayet_listesi.filter(r => r.fields.Durum === 'Kapandı').length;
+
+  // Ortalama kapanış süresi
+  const kapananlar = sikayet_listesi.filter(r => r.fields.Durum === 'Kapandı' && r.fields.Acilis_Tarihi && r.fields.Kapanis_Tarihi);
+  let ortSure = '—';
+  if (kapananlar.length > 0) {
+    const toplam = kapananlar.reduce((s, r) => {
+      const acilis  = new Date(r.fields.Acilis_Tarihi);
+      const kapanis = new Date(r.fields.Kapanis_Tarihi);
+      return s + Math.round((kapanis - acilis) / (1000*60*60*24));
+    }, 0);
+    ortSure = Math.round(toplam / kapananlar.length);
+  }
+
+  document.getElementById('kpi-acik').textContent    = acik;
+  document.getElementById('kpi-islemde').textContent = islemde;
+  document.getElementById('kpi-ncr').textContent     = ncrli;
+  document.getElementById('kpi-kapandi').textContent = kapandi;
+  document.getElementById('kpi-sure').textContent    = ortSure;
+}
+
+// ── AS9100 şerit güncelle ────────────────────────
+function as9100_serit_guncelle() {
+  const toplam = sikayet_listesi.length;
+  const acik   = sikayet_listesi.filter(r => r.fields.Durum === 'Açık').length;
+
+  document.getElementById('as-toplam').textContent = `ℹ §9.1.2 · ${toplam} şikayet kaydı`;
+  document.getElementById('as-ort').textContent    = '✓ 8D metodolojisi aktif';
+
+  const chip = document.getElementById('as-acik-chip');
+  if (acik > 0) {
+    chip.textContent = `⚠ ${acik} açık şikayet`;
+    chip.style.display = 'inline-flex';
+    chip.className     = 'chip c-w';
+  }
+}
+
+// ── Kaydet ───────────────────────────────────────
+async function sikayet_kaydet() {
+  const f = {
+    musteri:   document.getElementById('f-musteri').value,
+    siparis:   document.getElementById('f-siparis').value.trim(),
+    parca:     document.getElementById('f-parca').value.trim(),
+    kategori:  document.getElementById('f-kategori').value,
+    siddet:    document.getElementById('f-siddet').value,
+    sorumlu:   document.getElementById('f-sorumlu').value,
+    konu:      document.getElementById('f-konu').value.trim(),
+    aciklama:  document.getElementById('f-aciklama').value.trim(),
+    beklenti:  document.getElementById('f-beklenti').value.trim(),
+    ncrOtom:   document.getElementById('f-ncr-otomatik').checked
+  };
+
+  if (!f.musteri || !f.kategori || !f.siddet || !f.sorumlu || !f.konu || !f.aciklama) {
+    toast('⚠ Zorunlu alanları doldurun', 'amber'); return;
+  }
+
+  const no = await generateCode('SKY');
+  const ilkGecmis = [{
+    tip: 'yeni', baslik: 'Şikayet oluşturuldu',
+    kullanici: sessionStorage.getItem('kullanici') || 'Sistem',
+    tarih: new Date().toISOString(), not: f.konu
+  }];
+
+  await airtable('create', 'Sikayet_Kayitlari', {
+    fields: {
+      Sikayet_No:          no,
+      Musteri:             f.musteri,
+      Siparis_No:          f.siparis,
+      Parca:               f.parca,
+      Kategori:            f.kategori,
+      Siddet:              f.siddet,
+      Sorumlu:             f.sorumlu,
+      Konu:                f.konu,
+      Aciklama:            f.aciklama,
+      Musteri_Beklentisi:  f.beklenti,
+      Durum:               'Açık',
+      Acilis_Tarihi:       new Date().toISOString(),
+      SekizD_Adimlar:      '{}',
+      Gecmis:              JSON.stringify(ilkGecmis)
+    }
+  });
+
+  toast(`✓ ${no} oluşturuldu`);
+  modal_kapat('modal-yeni');
+  form_temizle_yeni();
+  await sikayet_listesi_yukle();
+
+  // NCR otomatik aç
+  if (f.ncrOtom && (f.siddet === 'Yüksek' || f.siddet === 'Kritik')) {
+    toast('ℹ NCR otomatik oluşturma için kalite modülüne yönlendiriliyorsunuz...', 'blue');
+    setTimeout(() => window.open(`ersan_kalite_ncr.html?kaynak=sikayet&no=${no}`, '_blank'), 1500);
+  }
+}
+
+// ── Güncelle ─────────────────────────────────────
+async function guncelle_kaydet() {
+  if (!secili_id) return;
+  const r = sikayet_listesi.find(x => x.id === secili_id);
+  if (!r) return;
+
+  const yeniDurum   = document.getElementById('gu-durum').value;
+  const yeniNot     = document.getElementById('gu-not').value.trim();
+  const yeniSorumlu = document.getElementById('gu-sorumlu').value;
+
+  let gecmis;
+  try { gecmis = JSON.parse(r.fields.Gecmis || '[]'); } catch(e) { gecmis = []; }
+  gecmis.unshift({
+    tip: 'guncelleme', baslik: `Durum: ${yeniDurum}`,
+    kullanici: sessionStorage.getItem('kullanici') || 'Sistem',
+    tarih: new Date().toISOString(), not: yeniNot
+  });
+
+  const guncelleme = {
+    Durum:   yeniDurum,
+    Sorumlu: yeniSorumlu,
+    Gecmis:  JSON.stringify(gecmis)
+  };
+  if (yeniDurum === 'Kapandı') {
+    guncelleme.Kapanis_Tarihi = new Date().toISOString();
+  }
+
+  await airtable('update', 'Sikayet_Kayitlari', { id: secili_id, fields: guncelleme });
+  toast('✓ Güncellendi');
+  modal_kapat('modal-guncelle');
+  await sikayet_listesi_yukle();
+  sikayet_sec(secili_id);
+}
+
+// ── Kapat ────────────────────────────────────────
+async function sikayet_kapat() {
+  if (!secili_id) return;
+  if (!confirm('Şikayeti çözümlendi olarak kapatmak istiyor musunuz?')) return;
+
+  const r = sikayet_listesi.find(x => x.id === secili_id);
+  let gecmis;
+  try { gecmis = JSON.parse(r.fields.Gecmis || '[]'); } catch(e) { gecmis = []; }
+  gecmis.unshift({
+    tip: 'kapandi', baslik: 'Şikayet kapatıldı',
+    kullanici: sessionStorage.getItem('kullanici') || 'Sistem',
+    tarih: new Date().toISOString()
+  });
+
+  await airtable('update', 'Sikayet_Kayitlari', {
+    id: secili_id,
+    fields: {
+      Durum: 'Kapandı',
+      Kapanis_Tarihi: new Date().toISOString(),
+      Gecmis: JSON.stringify(gecmis)
+    }
+  });
+
+  toast('✓ Şikayet kapatıldı');
+  await sikayet_listesi_yukle();
+  sikayet_sec(secili_id);
+}
+
+// ── NCR aç ───────────────────────────────────────
+async function ncr_ac() {
+  if (!secili_id) return;
+  const r = sikayet_listesi.find(x => x.id === secili_id);
+  if (!r) return;
+
+  const ncr_no = await generateCode('NCR');
+  let gecmis;
+  try { gecmis = JSON.parse(r.fields.Gecmis || '[]'); } catch(e) { gecmis = []; }
+  gecmis.unshift({
+    tip: 'ncr', baslik: `NCR açıldı: ${ncr_no}`,
+    kullanici: sessionStorage.getItem('kullanici') || 'Sistem',
+    tarih: new Date().toISOString()
+  });
+
+  await airtable('update', 'Sikayet_Kayitlari', {
+    id: secili_id,
+    fields: {
+      Durum: 'NCR Açıldı',
+      Sikayet_NCR_No: ncr_no,
+      Gecmis: JSON.stringify(gecmis)
+    }
+  });
+
+  toast(`✓ NCR ${ncr_no} oluşturuldu`);
+  await sikayet_listesi_yukle();
+  sikayet_sec(secili_id);
+  setTimeout(() => window.open(`ersan_kalite_ncr.html?kaynak=sikayet&no=${ncr_no}&sikayet=${r.fields.Sikayet_No}`, '_blank'), 800);
+}
+
+// ── NCR'a git ────────────────────────────────────
+function ncr_git() {
+  const r = sikayet_listesi.find(x => x.id === secili_id);
+  if (r?.fields?.Sikayet_NCR_No) {
+    window.location.href = `ersan_kalite_ncr.html?no=${r.fields.Sikayet_NCR_No}`;
+  }
+}
+
+// ── 8D kaydet ────────────────────────────────────
+async function sekizd_kaydet() {
+  if (!secili_id) return;
+  const r = sikayet_listesi.find(x => x.id === secili_id);
+  if (!r) return;
+
+  let adimlar;
+  try { adimlar = JSON.parse(r.fields.SekizD_Adimlar || '{}'); } catch(e) { adimlar = {}; }
+
+  const kod = document.getElementById('ad-adim').value;
+  adimlar[kod] = {
+    durum:     document.getElementById('ad-durum').value,
+    aciklama:  document.getElementById('ad-aciklama').value.trim(),
+    sorumlu:   document.getElementById('ad-sorumlu').value.trim(),
+    tarih:     document.getElementById('ad-tarih').value
+  };
+
+  let gecmis;
+  try { gecmis = JSON.parse(r.fields.Gecmis || '[]'); } catch(e) { gecmis = []; }
+  gecmis.unshift({
+    tip: '8d', baslik: `${kod} güncellendi: ${adimlar[kod].durum}`,
+    kullanici: sessionStorage.getItem('kullanici') || 'Sistem',
+    tarih: new Date().toISOString(), not: adimlar[kod].aciklama
+  });
+
+  await airtable('update', 'Sikayet_Kayitlari', {
+    id: secili_id,
+    fields: {
+      SekizD_Adimlar: JSON.stringify(adimlar),
+      Gecmis: JSON.stringify(gecmis),
+      Durum: r.fields.Durum === 'Açık' ? 'İşlemde' : r.fields.Durum
+    }
+  });
+
+  toast(`✓ ${kod} kaydedildi`);
+  modal_kapat('modal-8d');
+  await sikayet_listesi_yukle();
+  sikayet_sec(secili_id);
+}
+
+// ── Müşteri select doldur ────────────────────────
+async function musteri_select_yukle() {
+  try {
+    const res = await airtable('list', 'Musteriler', {
+      sort: [{ field: 'Firma_Adi', direction: 'asc' }],
+      fields: ['Firma_Adi']
+    });
+    const sel = document.getElementById('f-musteri');
+    res.records.forEach(r => {
+      const opt = document.createElement('option');
+      opt.value = opt.textContent = r.fields.Firma_Adi || r.id;
+      sel.appendChild(opt);
+    });
+  } catch(e) {
+    // Airtable tablosu yoksa statik ekle
+    ['Ersan Müşteri A','Ersan Müşteri B','Ersan Müşteri C'].forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = opt.textContent = m;
+      document.getElementById('f-musteri').appendChild(opt);
+    });
+  }
+}
+
+// ── Filtreler ────────────────────────────────────
+function filtrele() { liste_render(); }
+
+function tab_filtre(durum, btn) {
+  aktif_tab_filtre = durum;
+  document.querySelectorAll('.lf-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  liste_render();
+}
+
+function durum_filtre(durum) {
+  document.getElementById('filtre-durum').value = durum;
+  liste_render();
+}
+
+// ── Tab geçiş ────────────────────────────────────
+function st(el, tabId) {
+  const bar = el.closest('.tabs');
+  bar.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  const pnl = el.closest('.pnl') || document.getElementById('detay-icerik');
+  pnl.querySelectorAll('.tc').forEach(t => t.classList.remove('on'));
+  document.getElementById(tabId).classList.add('on');
+}
+
+// ── Modal yönetimi ───────────────────────────────
+function modal_ac(id) { document.getElementById(id).classList.add('ac'); }
+function modal_kapat(id) { document.getElementById(id).classList.remove('ac'); }
+document.querySelectorAll('.modal-bg').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('ac'); });
+});
+
+// ── Form temizle ─────────────────────────────────
+function form_temizle_yeni() {
+  ['f-musteri','f-siparis','f-parca','f-kategori','f-siddet','f-sorumlu','f-konu','f-aciklama','f-beklenti'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('f-ncr-otomatik').checked = true;
+}
+
+// ── Yardımcı: Durum badge ────────────────────────
+function durum_badge(durum, id) {
+  const m = {
+    'Açık':       'bx br',
+    'İşlemde':    'bx ba',
+    'NCR Açıldı': 'bx br',
+    'Kapandı':    'bx bg'
+  };
+  const cls = m[durum] || 'bx bz';
+  return `<span class="${cls}"${id ? ` id="${id}"` : ''}>${durum || '—'}</span>`;
+}
+
+function siddet_chip(siddet) {
+  const m = {'Düşük':'bz','Orta':'ba','Yüksek':'br','Kritik':'br'};
+  return `<span class="bx ${m[siddet]||'bz'}" style="font-size:8.5px">${siddet||'—'}</span>`;
+}
+
+function siddet_bar_render(siddet) {
+  const seviye = {'Düşük':1,'Orta':2,'Yüksek':3,'Kritik':4}[siddet] || 0;
+  const renkler = ['aktif-d','aktif-o','aktif-y','aktif-k'];
+  document.querySelectorAll('#d-siddet-bar .sd').forEach((sd, i) => {
+    sd.className = 'sd' + (i < seviye ? ` ${renkler[seviye-1]}` : '');
+  });
+}
+
+function formatTarih(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return `${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}`;
+}
+
+function toast(msg, tip) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.style.display = 'block';
+  el.style.background = tip === 'amber' ? 'var(--amber)' : tip === 'blue' ? 'var(--blue)' : 'var(--lacivert)';
+  setTimeout(() => el.style.display = 'none', 2800);
+}
+</script>
+</body>
+</html>
