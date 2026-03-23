@@ -141,8 +141,8 @@
       <div style="font-size:11px;color:var(--metin4);margin-top:1px;">Physical Inventory Count — AS9100 7.1.3</div>
     </div>
     <div style="display:flex;align-items:center;gap:8px;">
-      <button class="btn btn-g btn-sm" onclick="yeniSayimBaslat()">+ Yeni Sayim Baslat</button>
-      <button class="btn btn-outline btn-sm" onclick="pdfRapor()">Sayim Raporu PDF</button>
+      <button class="btn btn-g btn-sm" onclick="yeniSayimBaslat()">+ Yeni Sayım Başlat</button>
+      <button class="btn btn-outline btn-sm" onclick="pdfRapor()">Sayım Raporu PDF</button>
       <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
     </div>
   </div>
@@ -150,18 +150,18 @@
 
     <!-- AS9100 SERIDI -->
     <div class="as-serit" id="as-serit">
-      <div class="as-chip as-chip-green" id="as-chip-plan">&#10003; Aylik Sayim Plani</div>
+      <div class="as-chip as-chip-green" id="as-chip-plan">&#10003; Aylık Sayım Planı</div>
       <div class="as-chip as-chip-green" id="as-chip-onay">&#10003; Iki Kisi Onayi</div>
-      <div class="as-chip as-chip-green" id="as-chip-yaklasan">&#10003; Sayim Takvimi Uygun</div>
-      <div class="as-chip as-chip-green" id="as-chip-arsiv">&#10003; Sayim Kayitlari Arsivde</div>
+      <div class="as-chip as-chip-green" id="as-chip-yaklasan">&#10003; Sayım Takvimi Uygun</div>
+      <div class="as-chip as-chip-green" id="as-chip-arsiv">&#10003; Sayım Kayıtları Arşivde</div>
     </div>
 
     <!-- KPI KARTLARI -->
     <div class="kpi-row">
       <div class="kpi s1">
-        <div class="kpi-lbl">Son Sayim Sonucu</div>
+        <div class="kpi-lbl">Son Sayım Sonucu</div>
         <div class="kpi-val" id="kpi-sonuc">—</div>
-        <div class="kpi-alt" id="kpi-sonuc-alt">Sayim yapilmadi</div>
+        <div class="kpi-alt" id="kpi-sonuc-alt">Sayım yapılmadı</div>
       </div>
       <div class="kpi s2">
         <div class="kpi-lbl">Fark Tespit</div>
@@ -169,7 +169,7 @@
         <div class="kpi-alt" id="kpi-fark-alt">Fark olan kalem</div>
       </div>
       <div class="kpi s3">
-        <div class="kpi-lbl">Sonraki Sayim</div>
+        <div class="kpi-lbl">Sonraki Sayım</div>
         <div class="kpi-val" id="kpi-sonraki">—</div>
         <div class="kpi-alt" id="kpi-sonraki-alt">Periyodik sayim plani</div>
       </div>
@@ -181,7 +181,7 @@
     <!-- SAYIM GECMISI -->
     <div class="card" id="gecmis-card">
       <div class="card-head">
-        <div class="card-title">Sayim Gecmisi</div>
+        <div class="card-title">Sayım Geçmişi</div>
       </div>
       <div class="card-body" id="gecmis-body">
         <div class="bos-durum">
@@ -199,7 +199,7 @@
 <div class="qr-modal-overlay" id="qr-modal">
   <div class="qr-modal">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-      <h3 style="margin:0;">QR ile Hizli Sayim</h3>
+      <h3 style="margin:0;">QR ile Hızlı Sayım</h3>
       <button onclick="qrModalKapat()" style="background:none;border:none;font-size:18px;cursor:pointer;color:#6b7280;">&times;</button>
     </div>
     <div style="font-size:12px;color:var(--metin3);margin-bottom:12px;">Lot numarasini girin veya QR barkod okutun:</div>
@@ -314,7 +314,7 @@ function asChipsGuncelle() {
   var chipYaklasan = document.getElementById('as-chip-yaklasan');
   var chipArsiv = document.getElementById('as-chip-arsiv');
 
-  // 1: Aylik Sayim Plani — green if last month has a count
+  // 1: Aylık Sayım Planı — green if last month has a count
   var simdi = new Date();
   var gecenAy = new Date(simdi.getFullYear(), simdi.getMonth() - 1, 1);
   var gecenAySonu = new Date(simdi.getFullYear(), simdi.getMonth(), 0);
@@ -325,10 +325,10 @@ function asChipsGuncelle() {
   }
   if (gecenAySayim) {
     chipPlan.className = 'as-chip as-chip-green';
-    chipPlan.innerHTML = '&#10003; Aylik Sayim Plani';
+    chipPlan.innerHTML = '&#10003; Aylık Sayım Planı';
   } else {
     chipPlan.className = 'as-chip as-chip-red';
-    chipPlan.innerHTML = '&#10007; Aylik Sayim Eksik';
+    chipPlan.innerHTML = '&#10007; Aylık Sayım Eksik';
   }
 
   // 2: Iki Kisi Onayi — green if last count sayan != onaylayan
@@ -362,7 +362,7 @@ function asChipsGuncelle() {
       chipYaklasan.innerHTML = '&#9888; ' + ayAdi + ' Sayimi Yaklasiyor';
     } else {
       chipYaklasan.className = 'as-chip as-chip-green';
-      chipYaklasan.innerHTML = '&#10003; Sayim Takvimi Uygun';
+      chipYaklasan.innerHTML = '&#10003; Sayım Takvimi Uygun';
     }
   } else {
     chipYaklasan.className = 'as-chip as-chip-red';
@@ -371,7 +371,7 @@ function asChipsGuncelle() {
 
   // 4: Arsiv — always green if records exist
   chipArsiv.className = 'as-chip as-chip-green';
-  chipArsiv.innerHTML = '&#10003; Sayim Kayitlari Arsivde';
+  chipArsiv.innerHTML = '&#10003; Sayım Kayıtları Arşivde';
 }
 
 // ── KPI GUNCELLE ──
@@ -468,7 +468,7 @@ function aktifSayimRender() {
     + '</div>'
     + '<div style="display:flex;gap:6px;">'
     + '<button class="btn btn-g btn-sm" onclick="qrModalAc()" style="background:#059669;">'
-    + '&#128248; QR ile Hizli Sayim</button>'
+    + '&#128248; QR ile Hızlı Sayım</button>'
     + '</div>'
     + '</div>';
 
