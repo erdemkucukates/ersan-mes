@@ -10,7 +10,7 @@
 <script src="ersan_log.js" defer></script>
 <style>
 /* Split layout */
-.split { display:flex; gap:0; height:calc(100vh - 52px); }
+.split { display:flex; gap:0; flex:1; min-height:0; overflow:hidden; }
 .split-sol { width:280px; flex-shrink:0; background:var(--beyaz); border-right:1px solid var(--border); display:flex; flex-direction:column; overflow:hidden; }
 .split-sag { flex:1; overflow-y:auto; background:var(--bg); }
 
@@ -124,7 +124,7 @@
 .bos-panel-text { font-size:13px; }
 
 /* Topbar */
-.topbar { height:52px; background:var(--beyaz); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; padding:0 20px; margin-left:220px; }
+.topbar { height:52px; background:var(--beyaz); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; padding:0 20px; flex-shrink:0; }
 .topbar-baslik { font-size:15px; font-weight:700; color:var(--laci); }
 .topbar-sag { display:flex; gap:8px; align-items:center; }
 .topbar-sag button { padding:6px 14px; border-radius:6px; font-size:11px; font-weight:600; cursor:pointer; border:1px solid var(--border); background:var(--beyaz); color:var(--metin2); }
@@ -156,6 +156,7 @@
 
 <div class="app">
 <div id="sb-mount"></div>
+<div class="icerik-alani main">
 
 <div class="topbar">
   <div class="topbar-baslik">Personel Defteri</div>
@@ -164,11 +165,11 @@
   </div>
 </div>
 
-<div class="as-serit" style="margin-left:220px;">
+<div class="as-serit" style="flex-shrink:0;">
   <b>AS9100 &sect;7.2</b> — Yetkinlik: Kuruluş, gerekli yetkinliği belirlenmeli, kişilerin uygun eğitim/deneyime sahip olmasını sağlamalıdır.
 </div>
 
-<div class="kpi-row" style="margin-left:220px;">
+<div class="kpi-row" style="flex-shrink:0;">
   <div class="kpi-card"><div class="kpi-deger" id="kpi-toplam">0</div><div class="kpi-etiket">Toplam Personel</div></div>
   <div class="kpi-card kpi-yesil"><div class="kpi-deger" id="kpi-yetkin">0</div><div class="kpi-etiket">Yetkin (&ge;80%)</div></div>
   <div class="kpi-card kpi-sari"><div class="kpi-deger" id="kpi-egitim">0</div><div class="kpi-etiket">Eğitim Bekleyen</div></div>
@@ -176,7 +177,7 @@
   <div class="kpi-card kpi-mavi"><div class="kpi-deger" id="kpi-egitmen">0</div><div class="kpi-etiket">Eğitmen</div></div>
 </div>
 
-<div class="split" style="margin-left:220px;">
+<div class="split">
   <!-- SOL LİSTE -->
   <div class="split-sol">
     <div class="sol-ust">
@@ -202,6 +203,8 @@
     </div>
   </div>
 </div>
+
+</div><!-- /icerik-alani main -->
 
 <!-- YENİ PERSONEL MODAL -->
 <div class="modal-bg" id="modal-yeni">
@@ -380,6 +383,7 @@ function yukle() {
     })
     .catch(function(e) {
       console.error('Personel yükleme hatası:', e);
+      document.getElementById('sol-liste').innerHTML = '<div style="padding:30px;text-align:center;color:var(--metin4);font-size:11px;">⚠ Yükleme hatası:<br>' + (e.message || 'Bağlantı hatası') + '</div>';
     });
 }
 
