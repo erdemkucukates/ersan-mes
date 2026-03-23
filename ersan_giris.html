@@ -86,6 +86,7 @@
       <span style="font-size:14px">&#9888;</span>
       <span id="hata-metin">E-posta veya şifre hatalı</span>
     </div>
+    <form onsubmit="event.preventDefault();giris();">
     <div class="form-row">
       <label class="form-label">E-posta</label>
       <input class="form-input" type="text" id="kadi"
@@ -108,9 +109,10 @@
         <button class="sifre-goz" onclick="sifreGoster()" type="button" id="goz-btn">&#128065;</button>
       </div>
     </div>
-    <button class="btn-giris" id="giris-btn" onclick="giris()">
+    <button class="btn-giris" id="giris-btn" type="submit">
       <span id="btn-yazi">Giriş Yap &#8594;</span>
     </button>
+    </form>
     <div class="form-alt">
       Ersan MES v7.0 &nbsp;·&nbsp; AS9100 Rev.D<br>
       Şifrenizi unuttunuz mu? <strong style="color:#F5A623;cursor:pointer">it@ersanmakine.com.tr</strong>
@@ -147,14 +149,21 @@ async function giris(){
   try {
     var prefix = girilen.includes('@') ? girilen.split('@')[0] : girilen;
 
+    console.log('[GIRIS] prefix:', prefix);
     var res = await airtable('list', 'Kullanicilar', {
       filterByFormula: "AND({Mail_Prefix}='" + prefix + "', {Aktif}=1)"
     });
+    console.log('[GIRIS] Airtable yanit:', JSON.stringify(res));
 
     var kayitlar = res.records || [];
 
-    if (kayitlar.length === 0 || kayitlar[0].fields.Sifre_Hash !== sifre) {
-      throw new Error('Hatalı giriş');
+    if (kayitlar.length === 0) {
+      console.log('[GIRIS] Kullanici bulunamadi');
+      throw new Error('Kullanici bulunamadi');
+    }
+    if (kayitlar[0].fields.Sifre_Hash !== sifre) {
+      console.log('[GIRIS] Sifre eslesmiyor. Beklenen:', kayitlar[0].fields.Sifre_Hash, 'Girilen:', sifre);
+      throw new Error('Sifre hatali');
     }
 
     var k = kayitlar[0].fields;
