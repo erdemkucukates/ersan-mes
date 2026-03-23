@@ -220,10 +220,15 @@
     ];
 
     var h = '';
-    // Logo
-    h += '<div class="sb-logo" onclick="sbGit(\'ersan_anasayfa.html\')" style="cursor:pointer">';
-    h += '<div class="sb-logo-ic">\u2699</div>';
-    h += '<div><div class="sb-logo-t">ERSAN MES</div><div class="sb-logo-s">v7.0 \u00B7 AS9100 Rev.D</div></div></div>';
+    // Logo — SVG
+    h += '<div class="sb-logo" onclick="sbGit(\'ersan_anasayfa.html\')">';
+    h += '<svg viewBox="0 0 210 56" style="height:42px;width:auto">';
+    h += '<polygon points="9,6 44,6 36,19 0,19" fill="#F5A623"/>';
+    h += '<polygon points="12,27 42,27 34,40 5,40" fill="#D28A10"/>';
+    h += '<polygon points="16,48 38,48 30,58 8,58" fill="#A67214"/>';
+    h += '<text x="54" y="30" font-family="\'Segoe UI\',Arial,sans-serif" font-weight="800" font-size="23" fill="#ffffff">ERSAN</text>';
+    h += '<text x="56" y="46" font-family="\'Segoe UI\',Arial,sans-serif" font-weight="700" font-size="14" fill="#F5A623" letter-spacing="4">MES</text>';
+    h += '</svg></div>';
     // User
     h += '<div class="sb-user">';
     h += '<div class="sb-user-ava" id="sb-ava">' + initials + '</div>';

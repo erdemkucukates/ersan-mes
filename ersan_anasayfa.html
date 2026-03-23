@@ -7,179 +7,168 @@
 <link rel="stylesheet" href="utils/sidebar.css">
 <link rel="stylesheet" href="ersan_styles.css">
 <script src="utils/sidebar.js" defer></script>
+<script src="utils/airtable.js"></script>
 <script src="ersan_log.js" defer></script>
 <script>if(!sessionStorage.getItem('kullanici'))window.location.href='ersan_giris.html';</script>
-
-  <!-- LAYOUT FIX v3 -->
-  <link rel="stylesheet" href="utils/sidebar.css">
-  <style>html,body{height:100%;margin:0;padding:0;overflow:hidden}.app{display:flex!important;flex-direction:row!important;height:100vh!important;width:100vw!important;overflow:hidden!important;gap:0!important;padding:0!important;margin:0!important}#sb-mount,.sb{width:210px!important;min-width:210px!important;max-width:210px!important;flex:0 0 210px!important;height:100vh!important;overflow-y:scroll!important;overflow-x:hidden!important;margin:0!important;border-right:none!important}.main,.icerik-alani{flex:1 1 0!important;min-width:0!important;height:100vh!important;overflow:hidden!important;display:flex!important;flex-direction:column!important}.main>.tb,.main>.topbar,.main>[class*="topbar"]{flex-shrink:0!important}</style>
-  <!-- /LAYOUT FIX -->
 </head>
 <body data-page="anasayfa">
 <div class="app">
 <div id="sb-mount"></div>
 <div class="icerik-alani main">
-  <div class="topbar">
-    <div class="topbar-baslik">Ana Sayfa</div>
-    <div style="display:flex;align-items:center;gap:8px">
-      <span style="font-size:12px;color:var(--metin3)">Ersan Endustriyel Makine</span>
-      <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
-    </div>
-  </div>
-  <div class="sayfa-icerik">
 
-    <!-- KPI SATIRI -->
-    <div class="kpi-grid" style="margin-bottom:16px">
-      <div class="kpi-kart">
-        <div class="kpi-etiket">Acik Teklif</div>
-        <div class="kpi-deger" id="kpi-teklif">&mdash;</div>
-        <div class="kpi-alt">bekleyen onay</div>
-      </div>
-      <div class="kpi-kart yesil">
-        <div class="kpi-etiket">Aktif Siparis</div>
-        <div class="kpi-deger" id="kpi-siparis">&mdash;</div>
-        <div class="kpi-alt">uretimde</div>
-      </div>
-      <div class="kpi-kart sari">
-        <div class="kpi-etiket">Is Emri</div>
-        <div class="kpi-deger" id="kpi-isemri">&mdash;</div>
-        <div class="kpi-alt">acik</div>
-      </div>
-      <div class="kpi-kart sari">
-        <div class="kpi-etiket">Bekleyen Satinalma</div>
-        <div class="kpi-deger" id="kpi-satinalma">&mdash;</div>
-        <div class="kpi-alt">onay bekliyor</div>
-      </div>
-      <div class="kpi-kart kirmizi">
-        <div class="kpi-etiket">Acik NCR</div>
-        <div class="kpi-deger" id="kpi-ncr">&mdash;</div>
-        <div class="kpi-alt">inceleme gerekiyor</div>
-      </div>
-      <div class="kpi-kart">
-        <div class="kpi-etiket">Karantina Malzeme</div>
-        <div class="kpi-deger" id="kpi-karantina">&mdash;</div>
-        <div class="kpi-alt">bekleyen muayene</div>
-      </div>
-    </div>
-
-    <!-- SATIS & URETIM AKISI -->
-    <div style="font-size:12px;font-weight:600;color:var(--laci);margin-bottom:10px">Satis &amp; Uretim Akisi</div>
-    <div id="grup-satis" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-bottom:20px"></div>
-
-    <!-- KALITE & UYGUNLUK -->
-    <div style="font-size:12px;font-weight:600;color:var(--laci);margin-bottom:10px">Kalite &amp; Uygunluk</div>
-    <div id="grup-kalite" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-bottom:20px"></div>
-
-    <!-- DESTEK SURECLERI -->
-    <div style="font-size:12px;font-weight:600;color:var(--laci);margin-bottom:10px">Destek Surecleri</div>
-    <div id="grup-destek" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-bottom:20px"></div>
-
+<!-- TOP BAR -->
+<div class="topbar" style="flex-shrink:0">
+  <div class="topbar-baslik">Ana Sayfa</div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <span style="font-size:10.5px;color:var(--metin3)" id="tb-sirket">Ersan Endüstriyel</span>
+    <div style="width:30px;height:30px;background:#1a2b47;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fff" id="tb-ava">EK</div>
   </div>
 </div>
 
+<!-- İÇERİK WRAPPER -->
+<div style="flex:1;min-height:0;overflow-y:auto;padding:14px 18px">
+
+  <!-- BANNER — Özet istatistikler -->
+  <div style="background:linear-gradient(135deg,#1a2b47 0%,#2d4a7a 100%);border-radius:10px;padding:16px 20px;margin-bottom:14px;display:flex;gap:0;align-items:center;flex-wrap:wrap">
+    <div style="text-align:center;padding:0 18px;border-right:1px solid rgba(255,255,255,.12)">
+      <div style="font-size:26px;font-weight:800;color:#fff;line-height:1" id="bn-teklif">&mdash;</div>
+      <div style="font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.45);margin-top:3px">Açık Teklif</div>
+    </div>
+    <div style="text-align:center;padding:0 18px;border-right:1px solid rgba(255,255,255,.12)">
+      <div style="font-size:26px;font-weight:800;color:#fff;line-height:1" id="bn-siparis">&mdash;</div>
+      <div style="font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.45);margin-top:3px">Aktif Sipariş</div>
+    </div>
+    <div style="text-align:center;padding:0 18px;border-right:1px solid rgba(255,255,255,.12)">
+      <div style="font-size:26px;font-weight:800;color:#fff;line-height:1" id="bn-isemri">&mdash;</div>
+      <div style="font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.45);margin-top:3px">İş Emri</div>
+    </div>
+    <div style="text-align:center;padding:0 18px;border-right:1px solid rgba(255,255,255,.12)">
+      <div style="font-size:26px;font-weight:800;color:#fff;line-height:1" id="bn-satinalma">&mdash;</div>
+      <div style="font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.45);margin-top:3px">Bekleyen PR</div>
+    </div>
+    <div style="text-align:center;padding:0 18px;border-right:1px solid rgba(255,255,255,.12)">
+      <div style="font-size:26px;font-weight:800;color:#F5A623;line-height:1" id="bn-ncr">&mdash;</div>
+      <div style="font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.4);margin-top:3px">Açık NCR</div>
+    </div>
+    <div style="text-align:center;padding:0 18px">
+      <div style="font-size:26px;font-weight:800;color:#F5A623;line-height:1" id="bn-kalib">&mdash;</div>
+      <div style="font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.4);margin-top:3px">Kalibrasyon</div>
+    </div>
+    <div style="margin-left:auto;text-align:right">
+      <div style="font-size:9.5px;color:rgba(255,255,255,.3)">AS9100 Rev.D</div>
+      <div style="font-size:22px;font-weight:800;color:#F5A623;margin-top:2px">v7.0</div>
+    </div>
+  </div>
+
+  <!-- MODÜL KARTLAR: Satış & Üretim -->
+  <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#9ca3af;margin-bottom:9px;display:flex;align-items:center;gap:8px">
+    Satış & Üretim Akışı
+    <div style="flex:1;height:1px;background:#e5e7eb"></div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:14px" id="mod-satis"></div>
+
+  <!-- MODÜL KARTLAR: Kalite -->
+  <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#9ca3af;margin-bottom:9px;display:flex;align-items:center;gap:8px">
+    Kalite & Uygunluk
+    <div style="flex:1;height:1px;background:#e5e7eb"></div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:14px" id="mod-kalite"></div>
+
+  <!-- MODÜL KARTLAR: Destek -->
+  <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#9ca3af;margin-bottom:9px;display:flex;align-items:center;gap:8px">
+    Destek Süreçleri
+    <div style="flex:1;height:1px;background:#e5e7eb"></div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:14px" id="mod-destek"></div>
+
+</div><!-- /içerik wrapper -->
+
+</div><!-- /main -->
+</div><!-- /app -->
+
 <script>
-// ── MODUL KARTLARI ──
-function modulKart(ikon, baslik, aciklama, standart, renk, url) {
-  return '<a href="' + url + '" style="text-decoration:none">' +
-    '<div class="kart" style="cursor:pointer;transition:box-shadow .15s,transform .1s;border-top:3px solid ' + renk + ';" ' +
-    'onmouseover="this.style.boxShadow=\'0 4px 12px rgba(0,0,0,.1)\';this.style.transform=\'translateY(-2px)\'" ' +
-    'onmouseout="this.style.boxShadow=\'\';this.style.transform=\'\'">' +
-    '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">' +
-    '<div style="width:32px;height:32px;border-radius:8px;background:' + renk + '22;display:flex;align-items:center;justify-content:center;font-size:16px">' + ikon + '</div>' +
-    '<div>' +
-    '<div style="font-size:12px;font-weight:700;color:var(--laci)">' + baslik + '</div>' +
-    '<div style="font-size:10px;color:var(--metin3)">' + standart + '</div>' +
-    '</div>' +
-    '<div style="margin-left:auto"><span class="badge badge-yesil" style="font-size:9px">Aktif</span></div>' +
-    '</div>' +
-    '<div style="font-size:11px;color:var(--metin3);line-height:1.4">' + aciklama + '</div>' +
-    '</div></a>';
-}
-
-var satis = [
-  { ikon:'&#128203;', baslik:'Teklif Yonetimi', aciklama:'Teknik resim bazli AI maliyet hesaplama, teklif olusturma, PDF gonderme', standart:'AS9100 \u00A78.2', renk:'#378ADD', url:'ersan_teklif.html' },
-  { ikon:'&#128230;', baslik:'Siparis Yonetimi', aciklama:'Onaylanan tekliften siparis, SP gruplama, PDF viewer, teknik resim', standart:'AS9100 \u00A78.2', renk:'#378ADD', url:'ersan_siparisler.html' },
-  { ikon:'&#128722;', baslik:'Satinalma', aciklama:'AI muzakere paketi, RFQ, tedarikci teklif karsilastirma', standart:'AS9100 \u00A78.4', renk:'#BA7517', url:'ersan_satinalma.html' },
-  { ikon:'&#128229;', baslik:'On Kabul', aciklama:'Malzeme on kabul formu, tedarikci satinalma siparis eslestirme', standart:'AS9100 \u00A78.4', renk:'#BA7517', url:'ersan_on_kabul.html' },
-  { ikon:'&#128300;', baslik:'Girdi Kalite', aciklama:'Malzeme muayenesi, MAT ID, QR etiket, kabul/red karari', standart:'AS9100 \u00A78.4', renk:'#BA7517', url:'ersan_girdi_kalite.html' },
-  { ikon:'&#9881;', baslik:'Is Emirleri', aciklama:'WO olusturma, lot numarasi, traveler, operasyon rotasi, tezgah atama', standart:'AS9100 \u00A78.5', renk:'#7c3aed', url:'ersan_isemirleri.html' },
-  { ikon:'&#128202;', baslik:'Uretim / Atolye', aciklama:'Operasyon rotasi, traveller takibi, QR tarama, tezgah durumu', standart:'AS9100 \u00A78.5', renk:'#7c3aed', url:'ersan_uretim.html' },
-  { ikon:'&#128666;', baslik:'Sevkiyat', aciklama:'8 madde sevk kontrol, CoC olusturma, irsaliye, kalite onay', standart:'AS9100 \u00A78.5.4', renk:'#1D9E75', url:'ersan_sevkiyat.html' }
+var MODROLLER_SATIS = [
+  { ikon:'\uD83D\uDCBC', ad:'Teklif Y\u00F6netimi',  url:'ersan_teklif.html',    std:'AS9100 \u00A78.2', aciklama:'Teknik resim bazl\u0131 fiyatlama', durum:'aktif', renk:'#14b8a6' },
+  { ikon:'\uD83D\uDCE6', ad:'Sipari\u015F Y\u00F6netimi', url:'ersan_siparisler.html',std:'AS9100 \u00A78.2', aciklama:'SP gruplama, PDF viewer', durum:'aktif', renk:'#3b82f6' },
+  { ikon:'\uD83D\uDED2', ad:'Sat\u0131nalma',        url:'ersan_satinalma_pr.html',std:'AS9100 \u00A78.4',aciklama:'PR\u2192RFQ\u2192PO teklif kar\u015F\u0131la\u015Ft\u0131rma', durum:'aktif', renk:'#f59e0b' },
+  { ikon:'\uD83D\uDE9A', ad:'\u00D6n Kabul',         url:'ersan_satinalma_grn.html',std:'AS9100 \u00A78.4',aciklama:'Malzeme kabul formu, tedarik\u00E7i', durum:'aktif', renk:'#f59e0b' },
+  { ikon:'\uD83D\uDCE5', ad:'Girdi Kalite',     url:'ersan_kalite_iqc.html', std:'AS9100 \u00A78.4', aciklama:'Malzeme muayenesi, kabul/red', durum:'aktif', renk:'#ef4444' },
+  { ikon:'\uD83D\uDCCB', ad:'\u0130\u015F Emirleri',      url:'ersan_isemirleri.html', std:'AS9100 \u00A78.5', aciklama:'WO olu\u015Fturma, traveller takibi', durum:'aktif', renk:'#10b981' },
+  { ikon:'\uD83C\uDFED', ad:'\u00DCretim / At\u00F6lye',  url:'ersan_atolye.html',     std:'AS9100 \u00A78.5', aciklama:'Operasyon rotas\u0131, tezgah durumu', durum:'aktif', renk:'#10b981' },
+  { ikon:'\uD83D\uDCE4', ad:'Sevkiyat',         url:'ersan_sevkiyat.html',   std:'AS9100 \u00A78.5.4',aciklama:'8 madde sevk kontrol, CoC', durum:'aktif', renk:'#0d9488' }
 ];
 
-var kalite = [
-  { ikon:'&#9989;', baslik:'Kalite Kontrol', aciklama:'Girdi kalite, uretim muayenesi, NCR, CAPA hub sayfasi', standart:'AS9100 \u00A78.6', renk:'#1D9E75', url:'ersan_kalite.html' },
-  { ikon:'&#9888;', baslik:'NCR Yonetimi', aciklama:'Uygunsuzluk raporu, AI kok neden, iskarta/yeniden isle/sapma karari', standart:'AS9100 \u00A78.7', renk:'#E24B4A', url:'ersan_ncr.html' },
-  { ikon:'&#128260;', baslik:'CAPA', aciklama:'Duzeltici faaliyet, 5-Why, AI analizi, onleyici aksiyon, kapanis', standart:'AS9100 \u00A710.2', renk:'#E24B4A', url:'ersan_duzeltici.html' },
-  { ikon:'&#128203;', baslik:'Ic Denetim', aciklama:'Denetim plani, AI kontrol listesi, bulgu kaydi, kapanis takibi', standart:'AS9100 \u00A79.2', renk:'#0F6E56', url:'ersan_denetim.html' }
+var MODROLLER_KALITE = [
+  { ikon:'\u2705', ad:'Kalite Kontrol',   url:'ersan_kalite_iqc.html',  std:'AS9100 \u00A78.6', aciklama:'Girdi kalite, IQC, NCR hub', durum:'aktif', renk:'#059669' },
+  { ikon:'\u26D4', ad:'NCR Y\u00F6netimi',     url:'ersan_kalite_ncr.html',  std:'AS9100 \u00A78.7', aciklama:'Uygunsuzluk, k\u00F6k neden, iskarta', durum:'uyari', renk:'#dc2626' },
+  { ikon:'\uD83D\uDD27', ad:'CAPA',             url:'ersan_kalite_capa.html', std:'AS9100 \u00A710.2',aciklama:'D\u00FCzeltici faaliyet, 5-Why', durum:'aktif', renk:'#7c3aed' },
+  { ikon:'\uD83D\uDD0D', ad:'\u0130\u00E7 Denetim',       url:'ersan_denetim_panel.html',std:'AS9100 \u00A79.2',aciklama:'Denetim plan\u0131, bulgu takibi', durum:'aktif', renk:'#84cc16' }
 ];
 
-var destek = [
-  { ikon:'&#128101;', baslik:'Musteri Yonetimi', aciklama:'Musteri bilgileri, siparis gecmisi, sikayet, AI 8D raporu', standart:'AS9100 \u00A78.5.5', renk:'#64748b', url:'ersan_musteri.html' },
-  { ikon:'&#128295;', baslik:'Ekipman & Bakim', aciklama:'Bakim takvimi, ariza kaydi, kalibrasyon, MTBF/MTTR', standart:'AS9100 \u00A77.1.3', renk:'#64748b', url:'ersan_bakim.html' },
-  { ikon:'&#128100;', baslik:'Personel', aciklama:'Yetkinlik matrisi, egitim takibi, performans degerlendirme', standart:'AS9100 \u00A77.2', renk:'#64748b', url:'ersan_personel.html' },
-  { ikon:'&#9888;', baslik:'Risk Yonetimi', aciklama:'Risk tanimlama, degerlendirme, onlem, AI risk analizi', standart:'AS9100 \u00A76.1', renk:'#64748b', url:'ersan_risk.html' },
-  { ikon:'&#129466;', baslik:'ISG', aciklama:'Tehlike kaydi, olay bildirimi, guvenlik takibi', standart:'ISO 45001', renk:'#64748b', url:'ersan_isg.html' },
-  { ikon:'&#128196;', baslik:'Dokuman', aciklama:'Prosedur, talimat, form yonetimi, revizyon kontrolu', standart:'AS9100 \u00A77.5', renk:'#64748b', url:'ersan_dokuman.html' }
+var MODROLLER_DESTEK = [
+  { ikon:'\uD83D\uDE0A', ad:'M\u00FC\u015Fteri Y\u00F6netimi', url:'ersan_crm.html',         std:'AS9100 \u00A78.5.5',aciklama:'M\u00FC\u015Fteri bilgileri, \u015Fikayet', durum:'aktif', renk:'#e879f9' },
+  { ikon:'\uD83D\uDD27', ad:'Ekipman & Bak\u0131m',  url:'ersan_ekipman_dashboard.html',std:'AS9100 \u00A77.1.3',aciklama:'Bak\u0131m takvimi, ar\u0131za, kalibrasyon', durum:'aktif', renk:'#f97316' },
+  { ikon:'\uD83D\uDC65', ad:'Personel',         url:'ersan_ik_personel.html', std:'AS9100 \u00A77.2', aciklama:'Yetkinlik matrisi, e\u011Fitim takibi', durum:'aktif', renk:'#ec4899' },
+  { ikon:'\u26A0', ad:'Risk Y\u00F6netimi',    url:'ersan_risk_fmea.html',   std:'AS9100 \u00A76.1', aciklama:'Risk tan\u0131mlama, FMEA analizi', durum:'aktif', renk:'#f59e0b' },
+  { ikon:'\uD83E\uDDBA', ad:'\u0130SG',              url:'ersan_isg.html',          std:'ISO 45001',   aciklama:'Tehlike kayd\u0131, olay bildirimi', durum:'aktif', renk:'#dc2626' },
+  { ikon:'\uD83D\uDCC2', ad:'Dok\u00FCman',          url:'ersan_dms_master.html',   std:'AS9100 \u00A77.5', aciklama:'Pros\u00E9d\u00FCr, talimat, form y\u00F6netimi', durum:'aktif', renk:'#8b5cf6' }
 ];
 
-function renderGrup(containerId, moduller) {
+function modKartRender(containerId, modroller) {
   var el = document.getElementById(containerId);
   if (!el) return;
-  el.innerHTML = moduller.map(function(m) {
-    return modulKart(m.ikon, m.baslik, m.aciklama, m.standart, m.renk, m.url);
+  el.innerHTML = modroller.map(function(m) {
+    var durumHtml = m.durum === 'uyari'
+      ? '<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:10px;font-size:9px;font-weight:700;background:#fee2e2;color:#991b1b">\u25CF Dikkat</span>'
+      : '<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:10px;font-size:9px;font-weight:700;background:#d1fae5;color:#065f46">\u25CF Aktif</span>';
+    return '<div onclick="window.location.href=\'' + m.url + '\'" '
+      + 'style="background:#fff;border:1px solid #e5e7eb;border-radius:9px;padding:12px 13px;cursor:pointer;transition:.15s;border-top:2px solid ' + m.renk + ';box-shadow:0 1px 3px rgba(0,0,0,.06)" '
+      + 'onmouseenter="this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 4px 12px rgba(0,0,0,.1)\'" '
+      + 'onmouseleave="this.style.transform=\'\';this.style.boxShadow=\'0 1px 3px rgba(0,0,0,.06)\'">'
+      + '<div style="font-size:20px;margin-bottom:8px">' + m.ikon + '</div>'
+      + '<div style="font-size:12px;font-weight:700;color:#111827;margin-bottom:3px">' + m.ad + '</div>'
+      + '<div style="font-size:10.5px;color:#6b7280;margin-bottom:6px;line-height:1.4">' + m.aciklama + '</div>'
+      + '<div style="font-size:9px;color:#d1d5db;font-family:monospace;margin-bottom:6px">' + m.std + '</div>'
+      + durumHtml
+      + '</div>';
   }).join('');
 }
 
-// ── API ──
-async function apiGet(tablo, filtre) {
-  var url = '/.netlify/functions/airtable?table=' + encodeURIComponent(tablo);
-  if (filtre) url += '&filterByFormula=' + encodeURIComponent(filtre);
-  url += '&pageSize=100';
-  var res = await fetch(url);
-  if (!res.ok) return [];
-  var data = await res.json();
-  return data.records || [];
-}
-
-// ── KPI YUKLE ──
-async function kpiYukle() {
+async function bannerYukle() {
   try {
-    var teklifler = await apiGet('Teklifler', "NOT(OR({Durum}='Onaylandı',{Durum}='Reddedildi'))");
-    document.getElementById('kpi-teklif').textContent = teklifler.length;
+    var sonuclar = await Promise.allSettled([
+      airtable('list','Teklifler',{filterByFormula:"{Durum}='Bekleyen Onay'"}),
+      airtable('list','Satis Emirleri',{filterByFormula:"OR({Durum}='Uretimde',{Durum}='Planlamada')"}),
+      airtable('list','Is Emirleri',{filterByFormula:"OR({Durum}='Acik',{Durum}='Devam')"}),
+      airtable('list','Satinalma Talepleri',{filterByFormula:"{Durum}='Bekleyen'"}),
+      airtable('list','NCR Kayitlari',{filterByFormula:"{Durum}='Acik'"})
+    ]);
 
-    var siparisler = await apiGet('Satış Emirleri', "NOT({Durum}='Tamamlandı')");
-    document.getElementById('kpi-siparis').textContent = siparisler.length;
+    var sayac = function(r) { return r.status === 'fulfilled' ? (r.value.records ? r.value.records.length : 0) : 0; };
+    var set = function(id, val) { var el = document.getElementById(id); if(el) el.textContent = val; };
 
-    var isEmirleri = await apiGet('İş Emirleri', "NOT({Durum}='Tamamlandı')");
-    document.getElementById('kpi-isemri').textContent = isEmirleri.length;
-
-    var satinalma = await apiGet('Satınalma Talepleri', "{Durum}='Taslak'");
-    document.getElementById('kpi-satinalma').textContent = satinalma.length;
-
-    var ncr = await apiGet('NCR Kayıtları', "NOT({Durum}='Kapatıldı')");
-    document.getElementById('kpi-ncr').textContent = ncr.length;
-
-    var karantina = await apiGet('Malzeme Girişleri', "{Durum}='Karantinada'");
-    document.getElementById('kpi-karantina').textContent = karantina.length;
+    set('bn-teklif',    sayac(sonuclar[0]));
+    set('bn-siparis',   sayac(sonuclar[1]));
+    set('bn-isemri',    sayac(sonuclar[2]));
+    set('bn-satinalma', sayac(sonuclar[3]));
+    set('bn-ncr',       sayac(sonuclar[4]));
   } catch(e) {
-    // KPI yuklenemedi, varsayilan degerler kalir
+    console.warn('Banner yuklenemedi:', e);
   }
 }
 
-// ── INIT ──
+function topbarGuncelle() {
+  var ava  = document.getElementById('tb-ava');
+  if (ava)  ava.textContent = sessionStorage.getItem('kullanici_ava') || 'EK';
+}
+
 document.addEventListener('DOMContentLoaded', function() {
-  renderGrup('grup-satis', satis);
-  renderGrup('grup-kalite', kalite);
-  renderGrup('grup-destek', destek);
-  kpiYukle();
+  modKartRender('mod-satis',   MODROLLER_SATIS);
+  modKartRender('mod-kalite',  MODROLLER_KALITE);
+  modKartRender('mod-destek',  MODROLLER_DESTEK);
+  topbarGuncelle();
+  bannerYukle();
 });
 </script>
-
-<!-- LAYOUT JS -->
-<script>
-(function(){var sb=document.getElementById("sb-mount")||document.querySelector(".sb");var app=sb?sb.parentElement:document.querySelector(".app");var main=app?(app.querySelector(".main")||app.querySelector(".icerik-alani")):null;if(app){app.style.cssText="display:flex!important;flex-direction:row!important;height:100vh!important;width:100vw!important;overflow:hidden!important;gap:0!important;padding:0!important;margin:0!important;";}if(sb){sb.style.cssText="flex:0 0 210px!important;width:210px!important;min-width:210px!important;max-width:210px!important;height:100vh!important;overflow-y:scroll!important;overflow-x:hidden!important;margin:0!important;border-right:none!important;";}if(main){main.style.cssText="flex:1 1 0!important;min-width:0!important;height:100vh!important;overflow:hidden!important;display:flex!important;flex-direction:column!important;margin:0!important;padding:0!important;";var k=Array.from(main.children).filter(function(c){return c.tagName!=="SCRIPT"&&c.tagName!=="STYLE";});if(k.length>0){k[0].style.flexShrink="0";for(var i=1;i<k.length;i++){k[i].style.flex="1 1 0";k[i].style.minHeight="0";k[i].style.overflowY="auto";}}}})();
-</script>
-<!-- /LAYOUT JS -->
 </body>
 </html>
