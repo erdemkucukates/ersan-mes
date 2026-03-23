@@ -38,6 +38,36 @@
       return res2.json();
     }
 
+    if (action === 'create') {
+      var res3 = await fetch(PROXY, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          table: table,
+          fields: opts.fields
+        })
+      });
+      return res3.json();
+    }
+
     throw new Error('Bilinmeyen action: ' + action);
+  };
+
+  // Global log helper
+  window.logIslem = async function (islem, detay, modul) {
+    try {
+      await window.airtable('create', 'Sistem_Logu', {
+        fields: {
+          Tarih:     new Date().toISOString().split('T')[0],
+          Kullanici: sessionStorage.getItem('kullanici') || 'Sistem',
+          Islem:     islem,
+          Detay:     detay || '',
+          Durum:     'Bilgi',
+          Modul:     modul || ''
+        }
+      });
+    } catch(e) {
+      console.warn('Log yazılamadı:', e);
+    }
   };
 })();

@@ -3,40 +3,938 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ersan MES — Sistem Ayarlari</title>
+<title>Ersan MES — Sistem Ayarları</title>
 <link rel="stylesheet" href="utils/sidebar.css">
-<link rel="stylesheet" href="ersan_styles.css">
-<script src="utils/sidebar.js" defer></script>
-<script src="ersan_log.js" defer></script>
+<style>
+:root{
+  --lacivert:#1a2b47;--orange:#F5A623;--orange-l:#fef3c7;
+  --green:#059669;--green-l:#d1fae5;
+  --red:#dc2626;--red-l:#fee2e2;
+  --amber:#d97706;--amber-l:#fef3c7;
+  --blue:#2563eb;--blue-l:#dbeafe;
+  --g50:#f9fafb;--g100:#f3f4f6;--g200:#e5e7eb;
+  --g300:#d1d5db;--g400:#9ca3af;--g500:#6b7280;--g700:#374151;--g900:#111827;
+  --r:7px;--sh:0 1px 3px rgba(0,0,0,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#f0f2f5;color:var(--g700);font-size:13px}
+.app{display:flex;height:100vh;overflow:hidden}
+.main{flex:1;min-width:0;height:100vh;overflow:hidden;display:flex;flex-direction:column}
 
-  <!-- LAYOUT FIX v3 -->
-  <link rel="stylesheet" href="utils/sidebar.css">
-  <style>html,body{height:100%;margin:0;padding:0;overflow:hidden}.app{display:flex!important;flex-direction:row!important;height:100vh!important;width:100vw!important;overflow:hidden!important;gap:0!important;padding:0!important;margin:0!important}#sb-mount,.sb{width:210px!important;min-width:210px!important;max-width:210px!important;flex:0 0 210px!important;height:100vh!important;overflow-y:scroll!important;overflow-x:hidden!important;margin:0!important;border-right:none!important}.main,.icerik-alani{flex:1 1 0!important;min-width:0!important;height:100vh!important;overflow:hidden!important;display:flex!important;flex-direction:column!important}.main>.tb,.main>.topbar,.main>[class*="topbar"]{flex-shrink:0!important}</style>
-  <!-- /LAYOUT FIX -->
+/* TOP BAR */
+.tb{background:#fff;border-bottom:1px solid var(--g200);padding:0 20px;display:flex;align-items:center;gap:10px;height:48px;flex-shrink:0}
+.tb-t{font-size:14px;font-weight:700;color:var(--lacivert)}
+.tb-r{margin-left:auto;display:flex;gap:8px;align-items:center}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:5px;font-size:11.5px;font-weight:600;cursor:pointer;border:none;transition:.15s}
+.btn-p{background:var(--lacivert);color:#fff}.btn-p:hover{background:#243555}
+.btn-o{background:#fff;border:1px solid var(--g300);color:var(--g700)}.btn-o:hover{background:var(--g50)}
+.btn-g{background:var(--green);color:#fff}.btn-g:hover{background:#047857}
+.btn-r{background:var(--red);color:#fff}
+.btn-sm{padding:4px 9px;font-size:10.5px}
+
+/* İÇERİK */
+.icerik{flex:1;min-height:0;overflow-y:auto;display:flex;gap:0}
+
+/* SOL NAV */
+.sol-nav{width:220px;flex-shrink:0;padding:16px 12px;background:#f8f9fa;border-right:1px solid var(--g200)}
+.nav-grup-baslik{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--g400);padding:6px 10px 4px;margin-top:8px}
+.nav-grup-baslik:first-child{margin-top:0}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:6px;cursor:pointer;font-size:12px;color:var(--g500);transition:.12s;margin-bottom:1px}
+.nav-item:hover{background:#fff;color:var(--g900)}
+.nav-item.aktif{background:#fff;color:var(--lacivert);font-weight:700;box-shadow:var(--sh)}
+.nav-item .ni-ic{font-size:14px;width:20px;text-align:center;flex-shrink:0}
+.nav-item .ni-badge{margin-left:auto;font-size:8.5px;padding:1px 5px;border-radius:8px;font-weight:700;color:#fff}
+
+/* SAĞ İÇERİK */
+.sag{flex:1;min-width:0;padding:24px 28px;overflow-y:auto}
+
+/* BÖLÜM BAŞLIĞI */
+.bolum-baslik{margin-bottom:20px}
+.bolum-baslik h2{font-size:16px;font-weight:800;color:var(--g900);margin-bottom:4px}
+.bolum-baslik p{font-size:12px;color:var(--g400)}
+
+/* KART */
+.kart{background:#fff;border:1px solid var(--g200);border-radius:var(--r);box-shadow:var(--sh);margin-bottom:14px;overflow:hidden}
+.kart-baslik{padding:12px 16px;border-bottom:1px solid var(--g200);background:var(--g50);display:flex;align-items:center;gap:8px}
+.kart-baslik-t{font-size:12.5px;font-weight:700;color:var(--g900)}
+.kart-baslik-s{font-size:10.5px;color:var(--g400);margin-left:4px}
+.kart-icerik{padding:16px}
+
+/* FORM */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.form-row{margin-bottom:12px}
+.form-row:last-child{margin-bottom:0}
+.label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--g400);display:block;margin-bottom:5px}
+.input{width:100%;border:1.5px solid var(--g200);border-radius:6px;padding:7px 10px;font-size:12px;font-family:inherit;color:var(--g900);outline:none;background:#fff;transition:.12s}
+.input:focus{border-color:var(--orange);box-shadow:0 0 0 3px rgba(245,166,35,.1)}
+.input:disabled{background:var(--g50);color:var(--g400);cursor:not-allowed}
+select.input{cursor:pointer}
+textarea.input{resize:vertical;min-height:72px}
+
+/* TOGGLE */
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid #f9fafb}
+.toggle-row:last-child{border-bottom:none;padding-bottom:0}
+.toggle-row:first-child{padding-top:0}
+.toggle-info{}
+.toggle-ad{font-size:12.5px;font-weight:600;color:var(--g900)}
+.toggle-aciklama{font-size:10.5px;color:var(--g400);margin-top:2px}
+.toggle{position:relative;width:38px;height:22px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0;position:absolute}
+.toggle-track{position:absolute;inset:0;background:var(--g200);border-radius:11px;cursor:pointer;transition:.2s}
+.toggle input:checked + .toggle-track{background:var(--green)}
+.toggle-track::after{content:'';position:absolute;width:16px;height:16px;background:#fff;border-radius:50%;top:3px;left:3px;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.toggle input:checked + .toggle-track::after{transform:translateX(16px)}
+
+/* BADGE */
+.bx{display:inline-flex;align-items:center;padding:2px 8px;border-radius:10px;font-size:9.5px;font-weight:600}
+.bg{background:var(--green-l);color:#065f46}
+.br{background:var(--red-l);color:#991b1b}
+.ba{background:var(--amber-l);color:#92400e}
+.bb{background:var(--blue-l);color:#1e40af}
+
+/* TABLO */
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--g400);background:var(--g50);padding:7px 10px;border-bottom:1px solid var(--g200);text-align:left}
+.tbl td{padding:9px 10px;border-bottom:1px solid #f9fafb;font-size:11.5px;color:var(--g700);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:#fafafa}
+
+/* PERSONA AVATAR */
+.ava{width:28px;height:28px;border-radius:7px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fff;flex-shrink:0}
+
+/* ROL RENKLERI */
+.rol-yonetici{background:#1a2b47;color:#fff}
+.rol-kalite{background:#dc2626}
+.rol-uretim{background:#059669}
+.rol-satinalma{background:#2563eb}
+.rol-satis{background:#0d9488}
+.rol-personel{background:#7c3aed}
+
+/* KOD */
+.kod{font-family:monospace;font-size:11px;background:var(--g100);padding:2px 6px;border-radius:4px;color:var(--g700)}
+
+/* DURUM NOKTASI */
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0}
+.dot-g{background:var(--green)}.dot-r{background:var(--red)}.dot-a{background:var(--amber)}
+
+/* AYRAÇ */
+.hr{height:1px;background:var(--g200);margin:14px 0}
+
+/* TOAST */
+.toast{position:fixed;top:16px;right:16px;z-index:9999;padding:9px 16px;background:var(--lacivert);color:#fff;border-radius:6px;font-size:12px;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.2);display:none;align-items:center;gap:8px}
+
+/* BÖLÜM GİZLE/GÖSTER */
+.bolum{display:none}.bolum.aktif{display:block}
+
+/* RENK GÖSTERGESİ */
+.renk-kart{display:flex;flex-direction:column;gap:6px;align-items:center;padding:10px;border:2px solid transparent;border-radius:8px;cursor:pointer;transition:.12s}
+.renk-kart:hover{border-color:var(--g300)}
+.renk-kart.secili{border-color:var(--orange)}
+.renk-ornek{width:48px;height:48px;border-radius:8px}
+.renk-ad{font-size:9.5px;font-weight:600;color:var(--g500)}
+
+/* KAYDET ÇUBUĞU */
+.kaydet-cubugu{position:sticky;bottom:0;background:#fff;border-top:1px solid var(--g200);padding:12px 28px;display:flex;align-items:center;gap:10px;z-index:10;display:none}
+.kaydet-cubugu.goster{display:flex}
+</style>
 </head>
-<body>
+<body data-page="sistem">
 <div class="app">
 <div id="sb-mount"></div>
-<div class="icerik-alani main">
-  <div class="topbar">
-    <div class="topbar-baslik">Sistem Ayarlari</div>
-    <div style="display:flex;align-items:center;gap:8px;">
-      <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
-    </div>
-  </div>
-  <div class="sayfa-icerik">
-    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:60vh;color:var(--metin3);">
-      <div style="font-size:48px;margin-bottom:16px;opacity:0.3;">&#9881;</div>
-      <div style="font-size:16px;font-weight:600;color:var(--laci);margin-bottom:8px;">Sistem Ayarlari</div>
-      <div style="font-size:13px;">Bu modul yapim asamasindadir.</div>
-    </div>
+<div class="main">
+
+<!-- TOP BAR -->
+<div class="tb" style="flex-shrink:0">
+  <div class="tb-t">⚙ Sistem Ayarları</div>
+  <div class="tb-r">
+    <span style="font-size:10.5px;color:var(--g400)">v7.0 · AS9100 Rev.D</span>
+    <button class="btn btn-g btn-sm" onclick="tumunuKaydet()">✓ Değişiklikleri Kaydet</button>
   </div>
 </div>
 
-<!-- LAYOUT JS -->
+<!-- İÇERİK -->
+<div class="icerik">
+
+  <!-- SOL NAV -->
+  <div class="sol-nav">
+    <div class="nav-grup-baslik">Genel</div>
+    <div class="nav-item aktif" onclick="bolumGit('sirket',this)"><span class="ni-ic">🏢</span>Şirket Bilgileri</div>
+    <div class="nav-item" onclick="bolumGit('marka',this)"><span class="ni-ic">🎨</span>Marka & Logo</div>
+
+    <div class="nav-grup-baslik">Kullanıcılar</div>
+    <div class="nav-item" onclick="bolumGit('kullanicilar',this)"><span class="ni-ic">👥</span>Kullanıcı Yönetimi</div>
+    <div class="nav-item" onclick="bolumGit('roller',this)"><span class="ni-ic">🔑</span>Roller & Yetkiler</div>
+
+    <div class="nav-grup-baslik">Entegrasyon</div>
+    <div class="nav-item" onclick="bolumGit('airtable',this)"><span class="ni-ic">🗄</span>Airtable Bağlantısı</div>
+    <div class="nav-item" onclick="bolumGit('bildirimler',this)"><span class="ni-ic">🔔</span>Bildirim Ayarları</div>
+
+    <div class="nav-grup-baslik">Sistem</div>
+    <div class="nav-item" onclick="bolumGit('as9100',this)"><span class="ni-ic">✅</span>AS9100 Ayarları</div>
+    <div class="nav-item" onclick="bolumGit('log',this)"><span class="ni-ic">📋</span>Sistem Logu</div>
+    <div class="nav-item" onclick="bolumGit('yedek',this)"><span class="ni-ic">💾</span>Yedekleme</div>
+  </div>
+
+  <!-- SAĞ İÇERİK -->
+  <div class="sag">
+
+    <!-- ŞİRKET BİLGİLERİ -->
+    <div class="bolum aktif" id="b-sirket">
+      <div class="bolum-baslik">
+        <h2>🏢 Şirket Bilgileri</h2>
+        <p>Raporlarda, belgelerde ve çıktılarda görünecek bilgiler</p>
+      </div>
+      <div class="kart">
+        <div class="kart-baslik"><span class="kart-baslik-t">Temel Bilgiler</span></div>
+        <div class="kart-icerik">
+          <div class="form-grid">
+            <div class="form-row">
+              <label class="label">Şirket Adı *</label>
+              <input class="input" type="text" id="sirket-ad" value="Ersan Endüstriyel Makine San. Tic. Ltd. Şti.">
+            </div>
+            <div class="form-row">
+              <label class="label">Kısa Ad</label>
+              <input class="input" type="text" id="sirket-kisa" value="Ersan Endüstriyel">
+            </div>
+            <div class="form-row">
+              <label class="label">Vergi No</label>
+              <input class="input" type="text" id="sirket-vkn" placeholder="1234567890">
+            </div>
+            <div class="form-row">
+              <label class="label">Vergi Dairesi</label>
+              <input class="input" type="text" id="sirket-vd" placeholder="...">
+            </div>
+            <div class="form-row">
+              <label class="label">Telefon</label>
+              <input class="input" type="text" id="sirket-tel" placeholder="+90 (212) ...">
+            </div>
+            <div class="form-row">
+              <label class="label">E-posta</label>
+              <input class="input" type="text" id="sirket-mail" value="info@ersanmakine.com.tr">
+            </div>
+          </div>
+          <div class="form-row" style="margin-top:12px">
+            <label class="label">Adres</label>
+            <textarea class="input" id="sirket-adres" rows="2" placeholder="Şirket adresi..."></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="kart">
+        <div class="kart-baslik"><span class="kart-baslik-t">Kalite Sistemi</span></div>
+        <div class="kart-icerik">
+          <div class="form-grid">
+            <div class="form-row">
+              <label class="label">Standart</label>
+              <select class="input" id="sirket-standart">
+                <option selected>AS9100 Rev.D</option>
+                <option>ISO 9001:2015</option>
+                <option>AS9100 Rev.D + ISO 9001:2015</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label class="label">Sertifika No</label>
+              <input class="input" type="text" id="sirket-sert" placeholder="...">
+            </div>
+            <div class="form-row">
+              <label class="label">Sertifika Geçerlilik</label>
+              <input class="input" type="date" id="sirket-sert-tarih">
+            </div>
+            <div class="form-row">
+              <label class="label">Belgelendirme Kuruluşu</label>
+              <input class="input" type="text" id="sirket-kurul" placeholder="TÜRKAK, Bureau Veritas...">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MARKA -->
+    <div class="bolum" id="b-marka">
+      <div class="bolum-baslik">
+        <h2>🎨 Marka & Logo</h2>
+        <p>Sistem genelinde görünecek marka kimliği ayarları</p>
+      </div>
+      <div class="kart">
+        <div class="kart-baslik"><span class="kart-baslik-t">Mevcut Logo</span></div>
+        <div class="kart-icerik">
+          <div style="display:flex;gap:16px;flex-wrap:wrap">
+            <div style="background:#fff;border:1px solid var(--g200);border-radius:8px;padding:20px 32px;display:flex;align-items:center;justify-content:center">
+              <svg viewBox="0 0 220 60" style="height:52px;width:auto">
+                <polygon points="8,6 42,6 33,18 0,18"  fill="#F5A623"/>
+                <polygon points="11,24 40,24 31,36 4,36" fill="#D28A10"/>
+                <polygon points="14,42 38,42 29,54 8,54" fill="#A67214"/>
+                <text x="52" y="36" font-family="'Segoe UI',sans-serif" font-weight="800" font-size="26" fill="#1a2b47">ERSAN</text>
+                <text x="54" y="52" font-family="'Segoe UI',sans-serif" font-weight="700" font-size="15" fill="#F5A623" letter-spacing="4">MES</text>
+              </svg>
+            </div>
+            <div style="background:#1a2b47;border-radius:8px;padding:20px 32px;display:flex;align-items:center;justify-content:center">
+              <svg viewBox="0 0 220 60" style="height:52px;width:auto">
+                <polygon points="8,6 42,6 33,18 0,18"  fill="#F5A623"/>
+                <polygon points="11,24 40,24 31,36 4,36" fill="#D28A10"/>
+                <polygon points="14,42 38,42 29,54 8,54" fill="#A67214"/>
+                <text x="52" y="36" font-family="'Segoe UI',sans-serif" font-weight="800" font-size="26" fill="#fff">ERSAN</text>
+                <text x="54" y="52" font-family="'Segoe UI',sans-serif" font-weight="700" font-size="15" fill="#F5A623" letter-spacing="4">MES</text>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="kart">
+        <div class="kart-baslik"><span class="kart-baslik-t">Renk Teması</span></div>
+        <div class="kart-icerik">
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <div class="renk-kart secili" onclick="temaSecim(this,'#1a2b47')">
+              <div class="renk-ornek" style="background:#1a2b47"></div>
+              <span class="renk-ad">Lacivert</span>
+            </div>
+            <div class="renk-kart" onclick="temaSecim(this,'#1e3a5f')">
+              <div class="renk-ornek" style="background:#1e3a5f"></div>
+              <span class="renk-ad">Koyu Mavi</span>
+            </div>
+            <div class="renk-kart" onclick="temaSecim(this,'#1f2937')">
+              <div class="renk-ornek" style="background:#1f2937"></div>
+              <span class="renk-ad">Antrasit</span>
+            </div>
+            <div class="renk-kart" onclick="temaSecim(this,'#14532d')">
+              <div class="renk-ornek" style="background:#14532d"></div>
+              <span class="renk-ad">Koyu Yeşil</span>
+            </div>
+          </div>
+          <p style="font-size:10.5px;color:var(--g400);margin-top:12px">Seçilen tema sidebar ve header rengini etkiler.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- KULLANICILAR -->
+    <div class="bolum" id="b-kullanicilar">
+      <div class="bolum-baslik">
+        <h2>👥 Kullanıcı Yönetimi</h2>
+        <p>Sistem kullanıcılarını görüntüle, düzenle ve yönet</p>
+      </div>
+      <div class="kart">
+        <div class="kart-baslik" style="justify-content:space-between">
+          <span class="kart-baslik-t">Personel Listesi</span>
+          <span style="font-size:10.5px;color:var(--g400)" id="kullanici-sayac">16 kullanıcı</span>
+        </div>
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>Kullanıcı</th>
+              <th>E-posta</th>
+              <th>Rol</th>
+              <th>Son Giriş</th>
+              <th>Durum</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="kullanici-tablo">
+            <!-- JS ile doldurulur -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ROLLER -->
+    <div class="bolum" id="b-roller">
+      <div class="bolum-baslik">
+        <h2>🔑 Roller & Yetkiler</h2>
+        <p>Her rolün hangi modüllere erişebileceğini belirle</p>
+      </div>
+      <div class="kart">
+        <div class="kart-baslik"><span class="kart-baslik-t">Rol Matrisi</span></div>
+        <div class="kart-icerik" style="overflow-x:auto">
+          <table class="tbl" style="min-width:700px">
+            <thead>
+              <tr>
+                <th>Modül</th>
+                <th style="text-align:center">Yönetici</th>
+                <th style="text-align:center">Kalite</th>
+                <th style="text-align:center">Üretim</th>
+                <th style="text-align:center">Satınalma</th>
+                <th style="text-align:center">Personel</th>
+              </tr>
+            </thead>
+            <tbody id="rol-tablo">
+              <!-- JS ile doldurulur -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- AIRTABLE -->
+    <div class="bolum" id="b-airtable">
+      <div class="bolum-baslik">
+        <h2>🗄 Airtable Bağlantısı</h2>
+        <p>Veritabanı bağlantı ayarları ve tablo eşleştirmeleri</p>
+      </div>
+      <div class="kart">
+        <div class="kart-baslik">
+          <span class="kart-baslik-t">Bağlantı Durumu</span>
+          <span class="bx bg" style="margin-left:auto" id="at-durum-badge">● Bağlı</span>
+        </div>
+        <div class="kart-icerik">
+          <div class="form-grid">
+            <div class="form-row">
+              <label class="label">Base ID</label>
+              <input class="input" type="text" id="at-base" value="app5LDgJMgocw79Ix" disabled>
+            </div>
+            <div class="form-row">
+              <label class="label">API Anahtarı</label>
+              <div style="position:relative">
+                <input class="input" type="password" id="at-api" value="••••••••••••••••••••" disabled style="padding-right:70px">
+                <button class="btn btn-o btn-sm" onclick="apiGoster()" style="position:absolute;right:4px;top:50%;transform:translateY(-50%);padding:3px 8px">Göster</button>
+              </div>
+            </div>
+          </div>
+          <div class="hr"></div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-o btn-sm" onclick="baglantıTest()">🔌 Bağlantıyı Test Et</button>
+            <span id="at-test-sonuc" style="font-size:11px;color:var(--g400);align-self:center"></span>
+          </div>
+        </div>
+      </div>
+      <div class="kart">
+        <div class="kart-baslik"><span class="kart-baslik-t">Tablo Adları</span><span class="kart-baslik-s">— Airtable'daki gerçek tablo adlarıyla eşleşmeli</span></div>
+        <div class="kart-icerik">
+          <div class="form-grid-3" id="tablo-grid">
+            <!-- JS ile doldurulur -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BİLDİRİMLER -->
+    <div class="bolum" id="b-bildirimler">
+      <div class="bolum-baslik">
+        <h2>🔔 Bildirim Ayarları</h2>
+        <p>Hangi olaylar için otomatik bildirim oluşturulsun</p>
+      </div>
+      <div class="kart">
+        <div class="kart-baslik"><span class="kart-baslik-t">Kalite Bildirimleri</span></div>
+        <div class="kart-icerik" id="bildirim-kalite"><!-- JS --></div>
+      </div>
+      <div class="kart">
+        <div class="kart-baslik"><span class="kart-baslik-t">Ekipman Bildirimleri</span></div>
+        <div class="kart-icerik" id="bildirim-ekipman"><!-- JS --></div>
+      </div>
+      <div class="kart">
+        <div class="kart-baslik"><span class="kart-baslik-t">Satınalma Bildirimleri</span></div>
+        <div class="kart-icerik" id="bildirim-satinalma"><!-- JS --></div>
+      </div>
+    </div>
+
+    <!-- AS9100 -->
+    <div class="bolum" id="b-as9100">
+      <div class="bolum-baslik">
+        <h2>✅ AS9100 Ayarları</h2>
+        <p>Kalite sistemine özgü parametreler ve eşik değerleri</p>
+      </div>
+      <div class="kart">
+        <div class="kart-baslik"><span class="kart-baslik-t">Kodlama Formatları</span></div>
+        <div class="kart-icerik">
+          <div class="form-grid-3" id="kod-grid"><!-- JS --></div>
+        </div>
+      </div>
+      <div class="kart">
+        <div class="kart-baslik"><span class="kart-baslik-t">Eşik Değerleri</span></div>
+        <div class="kart-icerik">
+          <div class="form-grid" id="esik-grid"><!-- JS --></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOG -->
+    <div class="bolum" id="b-log">
+      <div class="bolum-baslik">
+        <h2>📋 Sistem Logu</h2>
+        <p>Son sistem olayları ve işlem kayıtları</p>
+      </div>
+      <div class="kart">
+        <div class="kart-baslik" style="justify-content:space-between">
+          <span class="kart-baslik-t">İşlem Geçmişi</span>
+          <button class="btn btn-o btn-sm" onclick="logYukle()">↻ Yenile</button>
+        </div>
+        <table class="tbl">
+          <thead><tr><th>Zaman</th><th>Kullanıcı</th><th>İşlem</th><th>Detay</th><th>Durum</th></tr></thead>
+          <tbody id="log-tablo">
+            <tr><td colspan="5" style="text-align:center;padding:30px;color:var(--g400)">Yükleniyor...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- YEDEKLEME -->
+    <div class="bolum" id="b-yedek">
+      <div class="bolum-baslik">
+        <h2>💾 Yedekleme</h2>
+        <p>Sistem verilerini dışa aktar ve yedekle</p>
+      </div>
+      <div class="kart">
+        <div class="kart-baslik"><span class="kart-baslik-t">Veri Dışa Aktarma</span></div>
+        <div class="kart-icerik">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div style="border:1px solid var(--g200);border-radius:7px;padding:14px">
+              <div style="font-size:12.5px;font-weight:700;color:var(--g900);margin-bottom:4px">📊 Tüm Veriler</div>
+              <div style="font-size:10.5px;color:var(--g400);margin-bottom:12px">Airtable'daki tüm tabloları JSON formatında indir</div>
+              <button class="btn btn-o btn-sm" onclick="tumVeriIndir()">↓ JSON İndir</button>
+            </div>
+            <div style="border:1px solid var(--g200);border-radius:7px;padding:14px">
+              <div style="font-size:12.5px;font-weight:700;color:var(--g900);margin-bottom:4px">📋 Raporlar</div>
+              <div style="font-size:10.5px;color:var(--g400);margin-bottom:12px">Kalite raporlarını Excel formatında dışa aktar</div>
+              <button class="btn btn-o btn-sm" onclick="raporIndir()">↓ Excel İndir</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="kart">
+        <div class="kart-baslik"><span class="kart-baslik-t">Sistem Bilgisi</span></div>
+        <div class="kart-icerik">
+          <div class="form-grid">
+            <div><div class="label">Versiyon</div><div class="kod">v7.0.0</div></div>
+            <div><div class="label">Standart</div><div class="kod">AS9100 Rev.D</div></div>
+            <div><div class="label">Son Güncelleme</div><div style="font-size:12px" id="son-guncelleme">—</div></div>
+            <div><div class="label">Toplam Kayıt</div><div style="font-size:12px" id="toplam-kayit">Hesaplanıyor...</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /sag -->
+</div><!-- /icerik -->
+
+<!-- KAYDET ÇUBUĞU -->
+<div class="kaydet-cubugu" id="kaydet-cubugu">
+  <span style="font-size:11.5px;color:var(--g500)">⚠ Kaydedilmemiş değişiklikler var</span>
+  <button class="btn btn-o btn-sm" onclick="degisiklikleriIptal()">İptal</button>
+  <button class="btn btn-g btn-sm" onclick="tumunuKaydet()">✓ Kaydet</button>
+</div>
+
+</div><!-- /main -->
+</div><!-- /app -->
+
+<div class="toast" id="toast"></div>
+
+<script src="utils/airtable.js"></script>
+<script src="utils/sidebar.js" defer></script>
 <script>
-(function(){var sb=document.getElementById("sb-mount")||document.querySelector(".sb");var app=sb?sb.parentElement:document.querySelector(".app");var main=app?(app.querySelector(".main")||app.querySelector(".icerik-alani")):null;if(app){app.style.cssText="display:flex!important;flex-direction:row!important;height:100vh!important;width:100vw!important;overflow:hidden!important;gap:0!important;padding:0!important;margin:0!important;";}if(sb){sb.style.cssText="flex:0 0 210px!important;width:210px!important;min-width:210px!important;max-width:210px!important;height:100vh!important;overflow-y:scroll!important;overflow-x:hidden!important;margin:0!important;border-right:none!important;";}if(main){main.style.cssText="flex:1 1 0!important;min-width:0!important;height:100vh!important;overflow:hidden!important;display:flex!important;flex-direction:column!important;margin:0!important;padding:0!important;";var k=Array.from(main.children).filter(function(c){return c.tagName!=="SCRIPT"&&c.tagName!=="STYLE";});if(k.length>0){k[0].style.flexShrink="0";for(var i=1;i<k.length;i++){k[i].style.flex="1 1 0";k[i].style.minHeight="0";k[i].style.overflowY="auto";}}}})();
+// ─────────────────────────────────────────────────
+// VERİ
+
+const ROL_RENK = {
+  'Yönetici':'#1a2b47','Yönetim':'#0f766e','Kalite':'#dc2626',
+  'Üretim':'#059669','Satınalma':'#2563eb','Satiş':'#0d9488','Personel':'#7c3aed'
+};
+
+const MODULLER = [
+  'Satınalma','Satış','CRM','Stok & Depo','Üretim','Kalite',
+  'Ekipman & Bakım','DMS','İK & Yetkinlik','Finans','Risk & FMEA','İç Denetim','KPI'
+];
+
+const TABLOLAR = [
+  ['Satinalma_Talepleri','PR_Kayitlari'],['RFQ_Kayitlari','RFQ_Kayitlari'],
+  ['PO_Kayitlari','PO_Kayitlari'],['GRN_Kayitlari','GRN_Kayitlari'],
+  ['Tedarikciler','Tedarikciler'],['Siparisler','Siparisler'],
+  ['Musteriler','Musteriler'],['Stok_Kalemleri','Stok_Kalemleri'],
+  ['Lot_Takip','Lot_Takip'],['Is_Emirleri','Is_Emirleri'],
+  ['IQC_Kayitlari','IQC_Kayitlari'],['FAI_Kayitlari','FAI_Kayitlari'],
+  ['NCR_Kayitlari','NCR_Kayitlari'],['CAPA_Kayitlari','CAPA_Kayitlari'],
+  ['EQP_Kalibrasyonlar','EQP_Kalibrasyonlar'],['Personel_Listesi','Personel_Listesi'],
+  ['Bildirimler','Bildirimler'],['Sistem_Logu','Sistem_Logu'],
+];
+
+const BILDIRIMLER = {
+  kalite: [
+    {ad:'NCR açıldığında bildir',    id:'n-ncr'},
+    {ad:'Kalibrasyon süresi dolmadan 30 gün önce',id:'n-kalib'},
+    {ad:'CAPA tarihi geçtiğinde',    id:'n-capa'},
+    {ad:'IQC reddedilen lot',        id:'n-iqc'},
+  ],
+  ekipman: [
+    {ad:'Arıza kaydı açıldığında',   id:'n-ariza'},
+    {ad:'Bakım tarihi yaklaştığında (7 gün)', id:'n-bakim'},
+    {ad:'BWO gecikmesinde',          id:'n-bwo'},
+  ],
+  satinalma: [
+    {ad:'PR onay bekleyenler (24 saat)', id:'n-pr'},
+    {ad:'PO teslim tarihi geçtiğinde',  id:'n-po'},
+    {ad:'GRN bekleyen PO',             id:'n-grn'},
+  ]
+};
+
+const KODLAR = [
+  ['Şikayet',  'SKY','SKY-26-00001'],['NCR','NCR','NCR-26-00001'],
+  ['CAPA',     'CAP','CAP-26-00001'],['PO','PO','PO-26-00001'],
+  ['PR',       'PR','PR-26-00001'], ['Sipariş','SP','SP-2026-001'],
+  ['WO',       'WO','WO-26-00001'], ['Traveller','TRV','TRV-26-00001'],
+  ['Ekipman',  'MCH','MCH-TRN-001'],['Personel','PRS','PRS-AK-001'],
+];
+
+const ESIKLER = [
+  ['Kalibrasyon Uyarı Süresi (gün)','esik-kalib','30'],
+  ['Bakım Uyarı Süresi (gün)','esik-bakim','14'],
+  ['NCR Kapatma Süresi (gün)','esik-ncr','30'],
+  ['CAPA Etkinlik Süresi (gün)','esik-capa','90'],
+  ['Sertifika Uyarı Süresi (gün)','esik-sert','60'],
+  ['Maksimum PPM Hedefi','esik-ppm','500'],
+];
+
+// ─────────────────────────────────────────────────
+// NAV
+
+function bolumGit(id, el) {
+  document.querySelectorAll('.bolum').forEach(b => b.classList.remove('aktif'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('aktif'));
+  document.getElementById('b-' + id).classList.add('aktif');
+  el.classList.add('aktif');
+  // Lazy render
+  if (id === 'kullanicilar') kullanicilariRender();
+  if (id === 'roller')       rolleriRender();
+  if (id === 'airtable')     tablolariRender();
+  if (id === 'bildirimler')  bildirimleriRender();
+  if (id === 'as9100')       as9100Render();
+  if (id === 'log')          logYukle();
+}
+
+// ─────────────────────────────────────────────────
+// KULLANICILAR
+
+async function kullanicilariRender() {
+  const tbody = document.getElementById('kullanici-tablo');
+  tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--g400)">Yükleniyor...</td></tr>';
+
+  try {
+    const res = await airtable('list', 'Kullanicilar', {});
+    const kayitlar = res.records || [];
+    document.getElementById('kullanici-sayac').textContent = kayitlar.length + ' kullanıcı';
+
+    if (kayitlar.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--g400)">Kullanıcı bulunamadı</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = kayitlar.map(function(r) {
+      var f = r.fields;
+      var renk = ROL_RENK[f.Rol] || '#6b7280';
+      var sonGiris = f.Son_Giris ? new Date(f.Son_Giris).toLocaleDateString('tr-TR') : '—';
+      return '<tr>'
+        + '<td><div style="display:flex;align-items:center;gap:8px">'
+        + '<div class="ava" style="background:' + renk + '">' + (f.Avatar || '?') + '</div>'
+        + '<div><div style="font-weight:600;font-size:12px;color:var(--g900)">' + (f.Ad_Soyad || '') + '</div></div>'
+        + '</div></td>'
+        + '<td><span class="kod">' + (f.Mail_Prefix || '') + '@ersanmakine.com.tr</span></td>'
+        + '<td><span class="bx" style="background:' + renk + '22;color:' + renk + ';font-size:9px">' + (f.Rol || '') + '</span></td>'
+        + '<td style="font-size:11px;color:var(--g400)">' + sonGiris + '</td>'
+        + '<td><span class="dot ' + (f.Aktif ? 'dot-g' : 'dot-r') + '"></span> <span style="font-size:11px">' + (f.Aktif ? 'Aktif' : 'Pasif') + '</span></td>'
+        + '<td style="display:flex;gap:5px">'
+        + '<button class="btn btn-o btn-sm" onclick="sifreSifirla(\'' + r.id + '\',\'' + (f.Ad_Soyad || '').replace(/'/g,"\\'") + '\')">Şifre Sıfırla</button>'
+        + '<button class="btn btn-o btn-sm" onclick="kullaniciDurum(\'' + r.id + '\',' + !f.Aktif + ')">' + (f.Aktif ? 'Pasife Al' : 'Aktifleştir') + '</button>'
+        + '</td></tr>';
+    }).join('');
+  } catch(e) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--red)">⚠ ' + e.message + '</td></tr>';
+  }
+}
+
+async function sifreSifirla(id, ad) {
+  if (!confirm(ad + ' kullanıcısının şifresi "Ersan2026!" olarak sıfırlanacak. Onaylıyor musunuz?')) return;
+  try {
+    await airtable('update', 'Kullanicilar', {
+      id: id,
+      fields: { Sifre_Hash: 'Ersan2026!', Ilk_Giris: true }
+    });
+    toast('✓ ' + ad + ' şifresi sıfırlandı');
+    kullanicilariRender();
+  } catch(e) {
+    toast('⚠ Hata: ' + e.message);
+  }
+}
+
+async function kullaniciDurum(id, aktif) {
+  try {
+    await airtable('update', 'Kullanicilar', { id: id, fields: { Aktif: aktif } });
+    kullanicilariRender();
+    toast('✓ Kullanıcı durumu güncellendi');
+  } catch(e) {
+    toast('⚠ Hata: ' + e.message);
+  }
+}
+
+// ─────────────────────────────────────────────────
+// ROLLER
+
+function rolleriRender() {
+  const tbody = document.getElementById('rol-tablo');
+  if (tbody.children.length > 0) return;
+  const evet  = '<span style="color:var(--green);font-size:14px">✓</span>';
+  const hayir = '<span style="color:var(--g200);font-size:14px">–</span>';
+  const mat = {
+    'Satınalma':     [1,0,0,1,0],'Satış':         [1,0,0,0,0],
+    'CRM':           [1,0,0,0,0],'Stok & Depo':    [1,0,1,1,1],
+    'Üretim':        [1,0,1,0,1],'Kalite':         [1,1,1,0,0],
+    'Ekipman & Bakım':[1,0,1,0,1],'DMS':           [1,1,1,1,1],
+    'İK & Yetkinlik':[1,0,0,0,0],'Finans':         [1,0,0,0,0],
+    'Risk & FMEA':   [1,1,0,0,0],'İç Denetim':     [1,1,0,0,0],
+    'KPI':           [1,0,0,0,0],
+  };
+  MODULLER.forEach(m => {
+    const v = mat[m] || [1,0,0,0,0];
+    tbody.innerHTML += `<tr>
+      <td style="font-weight:600;font-size:12px">${m}</td>
+      ${v.map(x => `<td style="text-align:center">${x ? evet : hayir}</td>`).join('')}
+    </tr>`;
+  });
+}
+
+// ─────────────────────────────────────────────────
+// TABLOLAR
+
+function tablolariRender() {
+  const grid = document.getElementById('tablo-grid');
+  if (grid.children.length > 0) return;
+  TABLOLAR.forEach(([label, val]) => {
+    grid.innerHTML += `
+      <div class="form-row">
+        <label class="label">${label}</label>
+        <input class="input" type="text" value="${val}" oninput="degisiklikleriIsaretle()">
+      </div>`;
+  });
+}
+
+async function baglantıTest() {
+  const sonuc = document.getElementById('at-test-sonuc');
+  const badge = document.getElementById('at-durum-badge');
+  sonuc.textContent = '⏳ Test ediliyor...';
+  try {
+    await airtable('list', 'Kullanicilar', { pageSize: 1 });
+    sonuc.innerHTML = '<span style="color:var(--green)">✓ Bağlantı başarılı</span>';
+    badge.className = 'bx bg';
+    badge.textContent = '● Bağlı';
+  } catch(e) {
+    sonuc.innerHTML = '<span style="color:var(--red)">✗ Bağlantı hatası: ' + e.message + '</span>';
+    badge.className = 'bx br';
+    badge.textContent = '● Bağlantı Yok';
+  }
+}
+
+// ─────────────────────────────────────────────────
+// BİLDİRİMLER
+
+function bildirimleriRender() {
+  renderToggleGrup('bildirim-kalite', BILDIRIMLER.kalite);
+  renderToggleGrup('bildirim-ekipman', BILDIRIMLER.ekipman);
+  renderToggleGrup('bildirim-satinalma', BILDIRIMLER.satinalma);
+}
+
+function renderToggleGrup(elId, liste) {
+  const el = document.getElementById(elId);
+  if (el.children.length > 0) return;
+  liste.forEach(b => {
+    el.innerHTML += `
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <div class="toggle-ad">${b.ad}</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="${b.id}" checked onchange="degisiklikleriIsaretle()">
+          <div class="toggle-track"></div>
+        </label>
+      </div>`;
+  });
+}
+
+// ─────────────────────────────────────────────────
+// AS9100
+
+function as9100Render() {
+  const kg = document.getElementById('kod-grid');
+  const eg = document.getElementById('esik-grid');
+  if (kg.children.length > 0) return;
+
+  KODLAR.forEach(([label, prefix, ornek]) => {
+    kg.innerHTML += `
+      <div class="form-row">
+        <label class="label">${label} Prefix</label>
+        <input class="input" type="text" value="${prefix}" oninput="degisiklikleriIsaretle()">
+        <div style="font-size:9.5px;color:var(--g400);margin-top:3px">Örn: ${ornek}</div>
+      </div>`;
+  });
+
+  ESIKLER.forEach(([label, id, val]) => {
+    eg.innerHTML += `
+      <div class="form-row">
+        <label class="label">${label}</label>
+        <input class="input" type="number" id="${id}" value="${val}" oninput="degisiklikleriIsaretle()">
+      </div>`;
+  });
+}
+
+// ─────────────────────────────────────────────────
+// LOG
+
+async function logYukle() {
+  const tbody = document.getElementById('log-tablo');
+  tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--g400)">Yükleniyor...</td></tr>';
+  try {
+    const res = await airtable('list', 'Sistem_Logu', { pageSize: 50 });
+    const kayitlar = res.records || [];
+    if (kayitlar.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--g400)">Henüz kayıt yok</td></tr>';
+      return;
+    }
+    tbody.innerHTML = kayitlar.map(r => {
+      const f = r.fields;
+      const dt = f.Tarih ? new Date(f.Tarih).toLocaleString('tr-TR') : '—';
+      const durumCls = f.Durum === 'Hata' ? 'br' : f.Durum === 'Uyarı' ? 'ba' : 'bg';
+      return `<tr>
+        <td style="font-size:11px;color:var(--g400);white-space:nowrap">${dt}</td>
+        <td style="font-size:11px">${f.Kullanici || '—'}</td>
+        <td style="font-size:11.5px;font-weight:600">${f.Islem || '—'}</td>
+        <td style="font-size:11px;color:var(--g500)">${f.Detay || '—'}</td>
+        <td><span class="bx ${durumCls}">${f.Durum || 'Bilgi'}</span></td>
+      </tr>`;
+    }).join('');
+  } catch(e) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--red)">⚠ ${e.message}</td></tr>`;
+  }
+}
+
+// ─────────────────────────────────────────────────
+// TEMA
+
+function temaSecim(el, renk) {
+  document.querySelectorAll('.renk-kart').forEach(k => k.classList.remove('secili'));
+  el.classList.add('secili');
+  toast('Tema seçildi — kaydetmek için "Değişiklikleri Kaydet" butonuna tıklayın');
+  degisiklikleriIsaretle();
+}
+
+// ─────────────────────────────────────────────────
+// KAYDET
+
+let degisiklikVar = false;
+
+function degisiklikleriIsaretle() {
+  degisiklikVar = true;
+  document.getElementById('kaydet-cubugu').classList.add('goster');
+}
+
+async function tumunuKaydet() {
+  var btn = document.querySelector('.btn-g');
+  var eskiMetin = btn.textContent;
+  btn.textContent = '⏳ Kaydediliyor...';
+  btn.disabled = true;
+
+  try {
+    // Şirket bilgilerini Sistem_Ayarlari'na kaydet
+    var fields = {
+      Sirket_Adi:             document.getElementById('sirket-ad').value,
+      Sirket_Kisa_Ad:         document.getElementById('sirket-kisa').value,
+      VKN:                    document.getElementById('sirket-vkn').value,
+      Vergi_Dairesi:          document.getElementById('sirket-vd').value,
+      Telefon:                document.getElementById('sirket-tel').value,
+      Email:                  document.getElementById('sirket-mail').value,
+      Adres:                  document.getElementById('sirket-adres').value,
+      Standart:               document.getElementById('sirket-standart').value,
+      Sertifika_No:           document.getElementById('sirket-sert').value,
+      Sertifika_Gecerlilik:   document.getElementById('sirket-sert-tarih').value || null,
+      Belgelendirme_Kurulusu: document.getElementById('sirket-kurul').value,
+      Guncelleme_Tarihi:      new Date().toISOString().split('T')[0]
+    };
+
+    var mevcut = await airtable('list', 'Sistem_Ayarlari', { pageSize: 1 });
+    if (mevcut.records && mevcut.records.length > 0) {
+      await airtable('update', 'Sistem_Ayarlari', { id: mevcut.records[0].id, fields: fields });
+    } else {
+      await airtable('create', 'Sistem_Ayarlari', { fields: fields });
+    }
+
+    await logIslem('Sistem ayarları güncellendi', '', 'Sistem');
+
+    degisiklikVar = false;
+    document.getElementById('kaydet-cubugu').classList.remove('goster');
+    toast('✓ Tüm ayarlar kaydedildi');
+  } catch(e) {
+    toast('⚠ Kaydetme hatası: ' + e.message);
+  } finally {
+    btn.textContent = eskiMetin;
+    btn.disabled = false;
+  }
+}
+
+function degisiklikleriIptal() {
+  degisiklikVar = false;
+  document.getElementById('kaydet-cubugu').classList.remove('goster');
+  location.reload();
+}
+
+// ─────────────────────────────────────────────────
+// YARDIMCI
+
+function tumVeriIndir() {
+  toast('ℹ Veri dışa aktarma hazırlanıyor...');
+  setTimeout(() => toast('⚠ Bu özellik bir sonraki güncellemede aktif olacak'), 800);
+}
+function raporIndir() {
+  toast('⚠ Bu özellik bir sonraki güncellemede aktif olacak');
+}
+function apiGoster() {
+  const inp = document.getElementById('at-api');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.style.display = 'flex';
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.style.display = 'none', 2800);
+}
+
+// Çıkış uyarısı
+window.addEventListener('beforeunload', (e) => {
+  if (degisiklikVar) { e.preventDefault(); e.returnValue = ''; }
+});
+
+// ─────────────────────────────────────────────────
+// ŞİRKET BİLGİLERİ YÜKLE
+
+async function sirketYukle() {
+  try {
+    var res = await airtable('list', 'Sistem_Ayarlari', { pageSize: 1 });
+    if (!res.records || !res.records[0]) return;
+    var f = res.records[0].fields;
+    var set = function(id, val) { var el = document.getElementById(id); if(el && val) el.value = val; };
+    set('sirket-ad',         f.Sirket_Adi);
+    set('sirket-kisa',       f.Sirket_Kisa_Ad);
+    set('sirket-vkn',        f.VKN);
+    set('sirket-vd',         f.Vergi_Dairesi);
+    set('sirket-tel',        f.Telefon);
+    set('sirket-mail',       f.Email);
+    set('sirket-adres',      f.Adres);
+    set('sirket-standart',   f.Standart);
+    set('sirket-sert',       f.Sertifika_No);
+    set('sirket-sert-tarih', f.Sertifika_Gecerlilik);
+    set('sirket-kurul',      f.Belgelendirme_Kurulusu);
+  } catch(e) { console.warn('Şirket ayarları yüklenemedi:', e); }
+}
+
+// ─────────────────────────────────────────────────
+// BAŞLANGIÇ
+
+document.addEventListener('DOMContentLoaded', function() {
+  sirketYukle();
+});
+
+// Son güncelleme
+document.getElementById('son-guncelleme').textContent = new Date().toLocaleDateString('tr-TR');
+
+// Değişiklik izle
+document.querySelectorAll('.input').forEach(inp => {
+  inp.addEventListener('input', degisiklikleriIsaretle);
+});
 </script>
-<!-- /LAYOUT JS -->
 </body>
 </html>
