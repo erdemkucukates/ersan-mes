@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ersan MES — Şifre Değiştir</title>
+  <link rel="stylesheet" href="ersan_styles.css">
+  <style>
+    body { background:#0d1a2e; display:flex; align-items:center; justify-content:center; min-height:100vh; margin:0; font-family:'Segoe UI',system-ui,sans-serif; }
+    .kart { background:#fff; border-radius:12px; padding:40px; width:400px; max-width:95vw; box-shadow:0 20px 60px rgba(0,0,0,.3); animation:fadeUp .45s cubic-bezier(.22,.68,0,1.2); }
+    @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+    .logo { text-align:center; margin-bottom:28px; }
+    h2 { font-size:20px; font-weight:800; color:#1a2b47; margin-bottom:6px; }
+    .bilgi { font-size:12px; color:#9ca3af; margin-bottom:24px; }
+    .uyari { background:#fffbeb; border:1px solid #fde68a; border-radius:7px; padding:10px 14px; font-size:11.5px; color:#92400e; margin-bottom:20px; display:flex; align-items:flex-start; gap:8px; }
+    label { font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#6b7280; display:block; margin-bottom:5px; margin-top:14px; }
+    input { width:100%; border:1.5px solid #e5e7eb; border-radius:8px; padding:10px 14px; font-size:13px; outline:none; font-family:inherit; color:#111827; box-sizing:border-box; }
+    input:focus { border-color:#F5A623; box-shadow:0 0 0 3px rgba(245,166,35,.12); }
+    .kural { font-size:11px; color:#9ca3af; margin-top:8px; }
+    .kural div { margin-bottom:3px; }
+    .kural .ok { color:#059669; }
+    .kural .ex { color:#dc2626; }
+    .btn { width:100%; padding:12px; background:#1a2b47; color:#fff; border:none; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; margin-top:20px; transition:.18s; }
+    .btn:hover { background:#243555; }
+    .btn:disabled { opacity:.5; cursor:not-allowed; }
+    .hata { background:#fff1f2; color:#991b1b; border-left:3px solid #dc2626; border-radius:7px; padding:9px 14px; font-size:11.5px; margin-bottom:12px; display:none; }
+  </style>
+</head>
+<body>
+<div class="kart">
+  <div class="logo">
+    <svg viewBox="0 0 200 56" style="height:48px;width:auto">
+      <polygon points="8,6 42,6 33,18 0,18"  fill="#F5A623"/>
+      <polygon points="11,24 40,24 31,36 4,36" fill="#D28A10"/>
+      <polygon points="14,42 38,42 29,54 8,54" fill="#A67214"/>
+      <text x="52" y="34" font-family="'Segoe UI',sans-serif" font-weight="800" font-size="24" fill="#1a2b47">ERSAN</text>
+      <text x="54" y="48" font-family="'Segoe UI',sans-serif" font-weight="700" font-size="13" fill="#F5A623" letter-spacing="4">MES</text>
+    </svg>
+  </div>
+
+  <h2>Şifrenizi Belirleyin</h2>
+  <p class="bilgi">İlk girişiniz. Güvenliğiniz için lütfen yeni bir şifre oluşturun.</p>
+
+  <div class="uyari">
+    <span style="font-size:16px;flex-shrink:0;">&#9888;</span>
+    <span>Başlangıç şifresi tüm personelde aynıdır. Kişisel şifrenizi şimdi belirleyin.</span>
+  </div>
+
+  <div class="hata" id="hata"></div>
+
+  <label>Yeni Şifre</label>
+  <input type="password" id="yeni" placeholder="En az 8 karakter" oninput="kurallariGuncelle(this.value)">
+
+  <div class="kural">
+    <div id="k-uzunluk"><span class="ex">&#10007;</span> En az 8 karakter</div>
+    <div id="k-buyuk"><span class="ex">&#10007;</span> En az 1 büyük harf</div>
+    <div id="k-rakam"><span class="ex">&#10007;</span> En az 1 rakam</div>
+  </div>
+
+  <label>Şifreyi Tekrar Girin</label>
+  <input type="password" id="tekrar" placeholder="Aynı şifreyi tekrar girin" onkeydown="if(event.key==='Enter')sifreDegistir()">
+
+  <button class="btn" id="kaydet-btn" onclick="sifreDegistir()">Şifremi Belirle &#8594;</button>
+</div>
+
+<script src="utils/airtable.js"></script>
+<script>
+// Giriş yapılmadan bu sayfaya erişilemez
+if (!sessionStorage.getItem('kullanici_id')) {
+  window.location.href = 'ersan_giris.html';
+}
+
+function kurallariGuncelle(v) {
+  kural('k-uzunluk', v.length >= 8);
+  kural('k-buyuk',   /[A-ZÇĞİÖŞÜ]/.test(v));
+  kural('k-rakam',   /[0-9]/.test(v));
+}
+
+function kural(id, ok) {
+  var el = document.getElementById(id);
+  var metin = el.textContent.substring(2);
+  el.innerHTML = (ok ? '<span class="ok">&#10003;</span>' : '<span class="ex">&#10007;</span>') + ' ' + metin;
+}
+
+async function sifreDegistir() {
+  var yeni   = document.getElementById('yeni').value;
+  var tekrar = document.getElementById('tekrar').value;
+  var hata   = document.getElementById('hata');
+  var btn    = document.getElementById('kaydet-btn');
+
+  hata.style.display = 'none';
+
+  if (yeni.length < 8 || !/[A-ZÇĞİÖŞÜ]/.test(yeni) || !/[0-9]/.test(yeni)) {
+    hata.style.display = 'block';
+    hata.textContent = 'Şifre kurallara uymuyor';
+    return;
+  }
+  if (yeni !== tekrar) {
+    hata.style.display = 'block';
+    hata.textContent = 'Şifreler eşleşmiyor';
+    return;
+  }
+  if (yeni === 'Ersan2026!') {
+    hata.style.display = 'block';
+    hata.textContent = 'Başlangıç şifresi kullanılamaz';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Kaydediliyor...';
+
+  try {
+    await airtable('update', 'Kullanicilar', {
+      id: sessionStorage.getItem('kullanici_id'),
+      fields: {
+        Sifre_Hash: yeni,
+        Ilk_Giris:  false
+      }
+    });
+    window.location.href = 'ersan_anasayfa.html';
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = 'Şifremi Belirle \u2192';
+    hata.style.display = 'block';
+    hata.textContent = 'Hata: ' + e.message;
+  }
+}
+</script>
+</body>
+</html>

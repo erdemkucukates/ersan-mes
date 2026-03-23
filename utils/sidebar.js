@@ -4,6 +4,16 @@
 
 (function () {
 
+  /* ── Oturum kontrolü ── */
+  (function() {
+    var path = window.location.pathname;
+    if (path.indexOf('ersan_giris') > -1 || path.indexOf('ersan_sifre_degistir') > -1) return;
+    if (!sessionStorage.getItem('kullanici')) {
+      window.location.href = 'ersan_giris.html';
+      return;
+    }
+  })();
+
   /* ── Navigate ── */
   window.sbGit = function (file) { window.location.href = file; };
 
@@ -68,8 +78,9 @@
 
   /* ── Logout ── */
   window.sbCikis = function () {
+    if (!confirm('Çıkış yapmak istediğinizden emin misiniz?')) return;
     try { sessionStorage.clear(); } catch (e) {}
-    window.location.href = 'index.html';
+    window.location.href = 'ersan_giris.html';
   };
 
   /* ── Clock ── */
@@ -82,12 +93,16 @@
 
   /* ── Build sidebar HTML ── */
   function buildHTML() {
-    var user = { name: 'Kullan\u0131c\u0131', role: 'Operat\u00F6r' };
+    var user = { name: 'Kullan\u0131c\u0131', role: 'Operat\u00F6r', ava: '' };
     try {
-      var u = sessionStorage.getItem('sb_user');
-      if (u) { var p = JSON.parse(u); user.name = p.name || user.name; user.role = p.role || user.role; }
+      var sName = sessionStorage.getItem('kullanici');
+      var sRole = sessionStorage.getItem('kullanici_rol');
+      var sAva  = sessionStorage.getItem('kullanici_ava');
+      if (sName) user.name = sName;
+      if (sRole) user.role = sRole;
+      if (sAva)  user.ava  = sAva;
     } catch (e) {}
-    var initials = user.name.split(' ').map(function (w) { return w.charAt(0); }).join('').substring(0, 2).toUpperCase();
+    var initials = user.ava || user.name.split(' ').map(function (w) { return w.charAt(0); }).join('').substring(0, 2).toUpperCase();
 
     var DEFS = [
       { id:'satinalma', title:'Sat\u0131nalma', iso:'\u00A78.4', icon:'\uD83D\uDED2', dot:'#3b82f6', items:[

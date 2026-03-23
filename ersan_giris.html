@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — Giriş</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;background:#0d1a2e;display:flex;overflow:hidden}
+  .sol{width:55%;background:#0d1a2e;display:flex;flex-direction:column;padding:52px 64px;position:relative;overflow:hidden}
+  .sol::before{content:'';position:absolute;bottom:-80px;right:-80px;width:480px;height:480px;border:1px solid rgba(245,166,35,.06);border-radius:50%;pointer-events:none}
+  .sol::after{content:'';position:absolute;bottom:-160px;right:-160px;width:640px;height:640px;border:1px solid rgba(245,166,35,.04);border-radius:50%;pointer-events:none}
+  .aksant{position:absolute;top:0;left:0;width:4px;height:100%;background:linear-gradient(to bottom,#F5A623 0%,#D28A10 50%,#A67214 100%)}
+  .logo-wrap{margin-bottom:auto}
+  .slogan{margin-top:auto;margin-bottom:36px}
+  .slogan h1{font-size:38px;font-weight:800;color:#fff;line-height:1.15;letter-spacing:-.5px;margin-bottom:16px}
+  .slogan h1 em{font-style:normal;color:#F5A623}
+  .slogan p{font-size:13px;color:rgba(255,255,255,.4);line-height:1.8;max-width:380px}
+  .chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:28px}
+  .chip{padding:4px 11px;background:rgba(255,255,255,.05);border:1px solid rgba(245,166,35,.15);border-radius:20px;font-size:10.5px;color:rgba(255,255,255,.4)}
+  .chip.vurgu{background:rgba(245,166,35,.1);border-color:rgba(245,166,35,.3);color:rgba(245,166,35,.85)}
+  .sol-alt{margin-top:32px;font-size:10px;color:rgba(255,255,255,.18);letter-spacing:.03em}
+  .sag{flex:1;background:#fff;display:flex;align-items:center;justify-content:center;padding:48px 52px;position:relative}
+  .sag::before{content:'';position:absolute;top:0;left:0;width:4px;height:80px;background:#F5A623;border-radius:0 0 4px 0}
+  .form-kart{width:100%;max-width:380px;animation:fadeUp .45s cubic-bezier(.22,.68,0,1.2)}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+  .form-baslik{margin-bottom:28px}
+  .form-baslik h2{font-size:24px;font-weight:800;color:#1a2b47;letter-spacing:-.4px;margin-bottom:5px}
+  .form-baslik p{font-size:12px;color:#9ca3af}
+  .form-row{margin-bottom:14px}
+  .form-label{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#6b7280;display:block;margin-bottom:6px}
+  .form-input{width:100%;border:1.5px solid #e5e7eb;border-radius:8px;padding:11px 14px;font-size:13px;outline:none;font-family:inherit;color:#111827;transition:.15s;background:#fafafa}
+  .form-input:focus{border-color:#F5A623;background:#fff;box-shadow:0 0 0 3px rgba(245,166,35,.12)}
+  .form-input::placeholder{color:#d1d5db}
+  .sifre-wrap{position:relative}
+  .sifre-goz{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#9ca3af;font-size:15px;padding:4px;transition:.12s}
+  .sifre-goz:hover{color:#6b7280}
+  .mail-ipucu{font-size:10px;color:#9ca3af;margin-top:4px}
+  .mail-ipucu span{color:#F5A623;font-weight:600}
+  .btn-giris{width:100%;padding:12px;background:#1a2b47;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;margin-top:8px;transition:.18s;display:flex;align-items:center;justify-content:center;gap:8px;letter-spacing:.03em;position:relative;overflow:hidden}
+  .btn-giris::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#F5A623,#D28A10);transform:scaleX(0);transition:transform .2s}
+  .btn-giris:hover{background:#243555}
+  .btn-giris:hover::after{transform:scaleX(1)}
+  .btn-giris:active{transform:scale(.99)}
+  .btn-giris.yukleniyor{opacity:.7;cursor:not-allowed;pointer-events:none}
+  .hata-kutu{background:#fff1f2;color:#991b1b;border:1px solid #fca5a5;border-left:3px solid #dc2626;border-radius:7px;padding:10px 14px;font-size:11.5px;margin-bottom:14px;display:none;align-items:center;gap:8px}
+  .form-alt{margin-top:20px;padding-top:16px;border-top:1px solid #f5f5f5;font-size:10px;color:#c0c0c0;text-align:center;line-height:1.7}
+</style>
+</head>
+<body>
+<div class="sol">
+  <div class="aksant"></div>
+  <div class="logo-wrap">
+    <svg viewBox="0 0 300 85" style="width:260px;height:auto">
+      <polygon points="12,9 62,9 49,26 0,26"   fill="#F5A623"/>
+      <polygon points="17,35 58,35 45,52 5,52"  fill="#D28A10"/>
+      <polygon points="22,59 53,59 40,76 10,76" fill="#A67214"/>
+      <text x="80" y="48" font-family="'Segoe UI','Arial',sans-serif" font-weight="800" font-size="36" fill="#ffffff">ERSAN</text>
+      <text x="82" y="66" font-family="'Segoe UI','Arial',sans-serif" font-weight="700" font-size="18" fill="#F5A623" letter-spacing="6">MES</text>
+      <text x="83" y="80" font-family="'Segoe UI','Arial',sans-serif" font-weight="400" font-size="9" fill="#7A9BB5" letter-spacing="2.5">ÜRETİM YÖNETİM SİSTEMİ</text>
+    </svg>
+  </div>
+  <div class="slogan">
+    <h1>Üretimi<br><em>Dijitalleştir.</em><br>Kaliteyi Yakala.</h1>
+    <p>AS9100 Rev.D standardında uçtan uca üretim yönetimi. Satınalmadan sevkiyata, kaliteden KPI'ya tek entegre platform.</p>
+    <div class="chips">
+      <span class="chip vurgu">AS9100 Rev.D</span>
+      <span class="chip">Satınalma</span>
+      <span class="chip">Satış &amp; CRM</span>
+      <span class="chip">Kalite</span>
+      <span class="chip">Üretim</span>
+      <span class="chip">Ekipman</span>
+      <span class="chip">DMS</span>
+      <span class="chip">İK</span>
+    </div>
+  </div>
+  <div class="sol-alt">© 2026 Ersan Endüstriyel Makine &nbsp;·&nbsp; Tüm hakları saklıdır</div>
+</div>
+<div class="sag">
+  <div class="form-kart">
+    <div class="form-baslik">
+      <h2>Giriş Yap</h2>
+      <p>Kurumsal mail adresinizle giriş yapın</p>
+    </div>
+    <div class="hata-kutu" id="hata-kutu">
+      <span style="font-size:14px">&#9888;</span>
+      <span id="hata-metin">E-posta veya şifre hatalı</span>
+    </div>
+    <div class="form-row">
+      <label class="form-label">E-posta</label>
+      <input class="form-input" type="text" id="kadi"
+        placeholder="ad@ersanmakine.com.tr"
+        autocomplete="email"
+        oninput="mailIpucu(this.value)"
+        onkeydown="if(event.key==='Enter')document.getElementById('sifre').focus()">
+      <div class="mail-ipucu" id="mail-ipucu" style="display:none">
+        &#8594; <span id="mail-tam"></span>
+      </div>
+    </div>
+    <div class="form-row">
+      <label class="form-label">Şifre</label>
+      <div class="sifre-wrap">
+        <input class="form-input" type="password" id="sifre"
+          placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;"
+          autocomplete="current-password"
+          style="padding-right:40px"
+          onkeydown="if(event.key==='Enter')giris()">
+        <button class="sifre-goz" onclick="sifreGoster()" type="button" id="goz-btn">&#128065;</button>
+      </div>
+    </div>
+    <button class="btn-giris" id="giris-btn" onclick="giris()">
+      <span id="btn-yazi">Giriş Yap &#8594;</span>
+    </button>
+    <div class="form-alt">
+      Ersan MES v7.0 &nbsp;·&nbsp; AS9100 Rev.D<br>
+      Şifrenizi unuttunuz mu? <strong style="color:#F5A623;cursor:pointer">it@ersanmakine.com.tr</strong>
+    </div>
+  </div>
+</div>
+<script src="utils/airtable.js"></script>
+<script>
+var DOMAIN = '@ersanmakine.com.tr';
+if(sessionStorage.getItem('kullanici')) window.location.href='ersan_anasayfa.html';
+
+function mailIpucu(v){
+  var el=document.getElementById('mail-ipucu');
+  var tm=document.getElementById('mail-tam');
+  if(v&&!v.includes('@')&&v.length>1){tm.textContent=v.toLowerCase()+DOMAIN;el.style.display='block';}
+  else{el.style.display='none';}
+}
+
+async function giris(){
+  var girilen=document.getElementById('kadi').value.trim().toLowerCase();
+  var sifre=document.getElementById('sifre').value;
+  var hata=document.getElementById('hata-kutu');
+  var btn=document.getElementById('giris-btn');
+
+  if(!girilen||!sifre){
+    hata.style.display='flex';
+    document.getElementById('hata-metin').textContent='Lütfen tüm alanları doldurun';
+    return;
+  }
+
+  btn.classList.add('yukleniyor');
+  document.getElementById('btn-yazi').textContent='Giriş yapılıyor...';
+
+  try {
+    var prefix = girilen.includes('@') ? girilen.split('@')[0] : girilen;
+
+    var res = await airtable('list', 'Kullanicilar', {
+      filterByFormula: "AND({Mail_Prefix}='" + prefix + "', {Aktif}=1)"
+    });
+
+    var kayitlar = res.records || [];
+
+    if (kayitlar.length === 0 || kayitlar[0].fields.Sifre_Hash !== sifre) {
+      throw new Error('Hatalı giriş');
+    }
+
+    var k = kayitlar[0].fields;
+    var id = kayitlar[0].id;
+
+    // Son giriş tarihini güncelle
+    await airtable('update', 'Kullanicilar', {
+      id: id,
+      fields: { Son_Giris: new Date().toISOString().split('T')[0] }
+    });
+
+    // SessionStorage'a yaz
+    sessionStorage.setItem('kullanici',      k.Ad_Soyad);
+    sessionStorage.setItem('kullanici_rol',  k.Rol);
+    sessionStorage.setItem('kullanici_ava',  k.Avatar);
+    sessionStorage.setItem('kullanici_mail', k.Mail_Prefix + '@ersanmakine.com.tr');
+    sessionStorage.setItem('kullanici_id',   id);
+    sessionStorage.setItem('giris_tarihi',   new Date().toISOString());
+
+    // İlk giriş kontrolü
+    if (k.Ilk_Giris) {
+      window.location.href = 'ersan_sifre_degistir.html';
+    } else {
+      window.location.href = 'ersan_anasayfa.html';
+    }
+
+  } catch(err) {
+    btn.classList.remove('yukleniyor');
+    document.getElementById('btn-yazi').textContent='Giriş Yap \u2192';
+    hata.style.display='flex';
+    document.getElementById('hata-metin').textContent='E-posta veya şifre hatalı';
+    document.getElementById('sifre').value='';
+    document.getElementById('sifre').focus();
+    btn.style.transition='none';btn.style.transform='translateX(-4px)';
+    setTimeout(function(){btn.style.transform='translateX(4px)'},80);
+    setTimeout(function(){btn.style.transform='';btn.style.transition='.18s'},160);
+  }
+}
+
+function sifreGoster(){
+  var inp=document.getElementById('sifre');var btn=document.getElementById('goz-btn');
+  inp.type=inp.type==='password'?'text':'password';
+  btn.textContent=inp.type==='password'?'\uD83D\uDC41':'\uD83D\uDE48';
+}
+['kadi','sifre'].forEach(function(id){
+  document.getElementById(id).addEventListener('focus',function(){document.getElementById('hata-kutu').style.display='none';});
+});
+</script>
+</body>
+</html>
