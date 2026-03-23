@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — Bildirimler</title>
+<link rel="stylesheet" href="utils/sidebar.css">
+<link rel="stylesheet" href="ersan_styles.css">
+<style>
+.layout{flex:1;min-height:0;display:flex;overflow:hidden}
+.filtre{width:190px;flex-shrink:0;background:#fff;border-right:1px solid #e5e7eb;padding:12px 8px;overflow-y:auto}
+.f-sec{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#9ca3af;padding:6px 8px 4px}
+.f-item{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:6px;cursor:pointer;transition:.1s;margin-bottom:1px}
+.f-item:hover{background:#f9fafb}
+.f-item.aktif{background:#dbeafe}
+.f-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.f-lbl{font-size:12px;color:#374151;flex:1}
+.f-item.aktif .f-lbl{color:#1e40af;font-weight:600}
+.f-ct{font-size:9px;font-weight:700;padding:1px 5px;border-radius:8px;background:#f3f4f6;color:#6b7280}
+.f-item.aktif .f-ct{background:#bfdbfe;color:#1e40af}
+.liste{flex:1;overflow-y:auto;background:#f8f9fb}
+.liste-head{background:#fff;border-bottom:1px solid #e5e7eb;padding:10px 16px;display:flex;align-items:center;gap:8px;position:sticky;top:0;z-index:10}
+.lh-t{font-size:12.5px;font-weight:700;color:#111827}
+.lh-btn{font-size:11px;color:#6b7280;cursor:pointer;padding:3px 8px;border-radius:4px;border:1px solid #e5e7eb;background:#fff;font-family:inherit;margin-left:auto}
+.lh-btn:hover{background:#f9fafb}
+.bx2{display:inline-flex;align-items:center;padding:2px 8px;border-radius:10px;font-size:9.5px;font-weight:600}
+.notif{display:flex;align-items:flex-start;gap:10px;padding:12px 16px;background:#fff;border-bottom:1px solid #f3f4f6;cursor:pointer;transition:.1s}
+.notif:hover{background:#fafafa}
+.notif.okunmamis{background:#fffef5;border-left:3px solid #F5A623}
+.notif.okunmamis:hover{background:#fefce8}
+.notif-ic{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.ic-r{background:#fee2e2}.ic-a{background:#fef3c7}.ic-b{background:#dbeafe}.ic-g{background:#d1fae5}.ic-p{background:#ede9fe}
+.notif-body{flex:1;min-width:0}
+.notif-title{font-size:12.5px;font-weight:600;color:#111827;margin-bottom:2px}
+.notif-sub{font-size:11px;color:#6b7280;margin-bottom:5px;line-height:1.4}
+.notif-meta{display:flex;align-items:center;flex-wrap:wrap;gap:5px}
+.notif-time{font-size:10px;color:#d1d5db;margin-left:auto}
+.notif-actions{display:flex;gap:4px;margin-top:6px}
+.na-btn{font-size:10.5px;padding:3px 9px;border-radius:5px;cursor:pointer;border:1px solid #e5e7eb;background:#fff;color:#374151;font-family:inherit}
+.na-btn:hover{background:#f9fafb}
+.na-btn.primary{background:#1a2b47;color:#fff;border-color:#1a2b47}
+.bos{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;color:#9ca3af}
+.bos-ic{font-size:40px;margin-bottom:12px;opacity:.4}
+.bos-t{font-size:14px;font-weight:600;color:#6b7280;margin-bottom:4px}
+.bos-s{font-size:12px;text-align:center}
+</style>
+</head>
+<body data-page="bildirimler">
+<div class="app">
+<div id="sb-mount"></div>
+<div class="icerik-alani main">
+
+  <div class="topbar">
+    <div class="topbar-baslik">Bildirimler</div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span id="okunmamis-sayac" class="bx2" style="display:none;background:#fee2e2;color:#991b1b"></span>
+      <button class="btn btn-w btn-sm" onclick="tumunuOkunduIsaretle()">Tümünü okundu işaretle</button>
+    </div>
+  </div>
+
+  <div class="layout">
+
+    <div class="filtre">
+      <div class="f-sec">Öncelik</div>
+      <div class="f-item aktif" onclick="filtreSec('tumu',this)"><div class="f-dot" style="background:#6b7280"></div><span class="f-lbl">Tümü</span><span class="f-ct" id="fc-tumu">—</span></div>
+      <div class="f-item" onclick="filtreSec('kritik',this)"><div class="f-dot" style="background:#dc2626"></div><span class="f-lbl">Kritik</span><span class="f-ct" id="fc-kritik">—</span></div>
+      <div class="f-item" onclick="filtreSec('uyari',this)"><div class="f-dot" style="background:#d97706"></div><span class="f-lbl">Uyarı</span><span class="f-ct" id="fc-uyari">—</span></div>
+      <div class="f-item" onclick="filtreSec('bilgi',this)"><div class="f-dot" style="background:#2563eb"></div><span class="f-lbl">Bilgi</span><span class="f-ct" id="fc-bilgi">—</span></div>
+      <div style="height:1px;background:#f3f4f6;margin:8px 4px"></div>
+      <div class="f-sec">Modül</div>
+      <div class="f-item" onclick="filtreSec('ncr',this)"><div class="f-dot" style="background:#dc2626"></div><span class="f-lbl">Kalite / NCR</span><span class="f-ct" id="fc-ncr">—</span></div>
+      <div class="f-item" onclick="filtreSec('capa',this)"><div class="f-dot" style="background:#7c3aed"></div><span class="f-lbl">CAPA</span><span class="f-ct" id="fc-capa">—</span></div>
+      <div class="f-item" onclick="filtreSec('kalibrasyon',this)"><div class="f-dot" style="background:#d97706"></div><span class="f-lbl">Kalibrasyon</span><span class="f-ct" id="fc-kalib">—</span></div>
+      <div class="f-item" onclick="filtreSec('sistem',this)"><div class="f-dot" style="background:#2563eb"></div><span class="f-lbl">Sistem</span><span class="f-ct" id="fc-sistem">—</span></div>
+      <div style="height:1px;background:#f3f4f6;margin:8px 4px"></div>
+      <div class="f-sec">Durum</div>
+      <div class="f-item" onclick="filtreSec('okunmamis',this)"><div class="f-dot" style="background:#F5A623"></div><span class="f-lbl">Okunmamış</span><span class="f-ct" id="fc-okunmamis">—</span></div>
+    </div>
+
+    <div class="liste">
+      <div class="liste-head">
+        <span class="lh-t" id="liste-baslik">Tüm Bildirimler</span>
+        <button class="lh-btn" onclick="yukle()">↻ Yenile</button>
+      </div>
+      <div id="bildirim-listesi">
+        <div class="bos"><div class="bos-ic">🔔</div><div class="bos-t">Yükleniyor...</div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<script src="utils/airtable.js"></script>
+<script src="utils/sidebar.js"></script>
+<script>
+var tumBildirimler = [];
+var aktifFiltre = 'tumu';
+
+var TIP_MAP = {
+  'ncr':         { cls:'ic-r', ikon:'\u26D4', oncelik:'kritik' },
+  'capa':        { cls:'ic-p', ikon:'\uD83D\uDD27', oncelik:'uyari' },
+  'kalibrasyon': { cls:'ic-a', ikon:'\uD83D\uDCCF', oncelik:'uyari' },
+  'bakim':       { cls:'ic-a', ikon:'\u2699', oncelik:'uyari' },
+  'sistem':      { cls:'ic-b', ikon:'\u2139', oncelik:'bilgi' },
+  'pr':          { cls:'ic-b', ikon:'\uD83D\uDCDD', oncelik:'bilgi' },
+};
+
+function formatZaman(iso) {
+  if (!iso) return '\u2014';
+  var fark = (Date.now() - new Date(iso)) / 1000;
+  if (fark < 60)    return 'az \u00F6nce';
+  if (fark < 3600)  return Math.round(fark/60) + ' dk \u00F6nce';
+  if (fark < 86400) return Math.round(fark/3600) + ' s \u00F6nce';
+  if (fark < 604800)return Math.round(fark/86400) + ' g \u00F6nce';
+  return new Date(iso).toLocaleDateString('tr-TR');
+}
+
+function setTxt(id, val) { var e = document.getElementById(id); if(e) e.textContent = val; }
+
+async function yukle() {
+  var el = document.getElementById('bildirim-listesi');
+  el.innerHTML = '<div class="bos"><div class="bos-ic">\uD83D\uDD14</div><div class="bos-t">Y\u00FCkleniyor...</div></div>';
+
+  try {
+    var res = await airtable('list', 'Bildirimler', {});
+    tumBildirimler = (res.records || []).sort(function(a, b) {
+      return (b.fields.Olusturma_Tarihi || '').localeCompare(a.fields.Olusturma_Tarihi || '');
+    });
+    sayaclariGuncelle();
+    render(aktifFiltre);
+  } catch(e) {
+    el.innerHTML = '<div class="bos"><div class="bos-ic">\u26A0</div><div class="bos-t">Y\u00FCklenemedi</div><div class="bos-s">' + e.message + '</div></div>';
+  }
+}
+
+function sayaclariGuncelle() {
+  var say = function(fn) { return tumBildirimler.filter(fn).length; };
+  var tip = function(t) { return say(function(r) { return (r.fields.Tip||'').toLowerCase() === t; }); };
+  var oncelik = function(o) { return say(function(r) { var t = TIP_MAP[(r.fields.Tip||'').toLowerCase()]; return t && t.oncelik === o; }); };
+
+  setTxt('fc-tumu',      say(function() { return true; }));
+  setTxt('fc-kritik',    oncelik('kritik'));
+  setTxt('fc-uyari',     oncelik('uyari'));
+  setTxt('fc-bilgi',     oncelik('bilgi'));
+  setTxt('fc-ncr',       tip('ncr'));
+  setTxt('fc-capa',      tip('capa'));
+  setTxt('fc-kalib',     tip('kalibrasyon'));
+  setTxt('fc-sistem',    tip('sistem'));
+  var okunsz = say(function(r) { return !r.fields.Okundu; });
+  setTxt('fc-okunmamis', okunsz);
+  var sc = document.getElementById('okunmamis-sayac');
+  if (sc) { sc.textContent = okunsz + ' okunmam\u0131\u015F'; sc.style.display = okunsz > 0 ? 'inline-flex' : 'none'; }
+}
+
+function filtreSec(filtre, el) {
+  document.querySelectorAll('.f-item').forEach(function(i) { i.classList.remove('aktif'); });
+  el.classList.add('aktif');
+  aktifFiltre = filtre;
+  var baslikMap = { 'tumu':'T\u00FCm Bildirimler','kritik':'Kritik','uyari':'Uyar\u0131lar','bilgi':'Bilgi','ncr':'Kalite / NCR','capa':'CAPA','kalibrasyon':'Kalibrasyon','sistem':'Sistem','okunmamis':'Okunmam\u0131\u015Flar' };
+  setTxt('liste-baslik', baslikMap[filtre] || 'Bildirimler');
+  render(filtre);
+}
+
+function render(filtre) {
+  var liste = tumBildirimler;
+  if (filtre === 'okunmamis')   liste = liste.filter(function(r) { return !r.fields.Okundu; });
+  else if (filtre === 'kritik') liste = liste.filter(function(r) { var t = TIP_MAP[(r.fields.Tip||'').toLowerCase()]; return t && t.oncelik === 'kritik'; });
+  else if (filtre === 'uyari')  liste = liste.filter(function(r) { var t = TIP_MAP[(r.fields.Tip||'').toLowerCase()]; return t && t.oncelik === 'uyari'; });
+  else if (filtre === 'bilgi')  liste = liste.filter(function(r) { var t = TIP_MAP[(r.fields.Tip||'').toLowerCase()]; return t && t.oncelik === 'bilgi'; });
+  else if (filtre !== 'tumu')   liste = liste.filter(function(r) { return (r.fields.Tip||'').toLowerCase() === filtre; });
+
+  var el = document.getElementById('bildirim-listesi');
+  if (liste.length === 0) {
+    el.innerHTML = '<div class="bos"><div class="bos-ic">\u2713</div><div class="bos-t">Bu kategoride bildirim yok</div><div class="bos-s">Harika, temiz g\u00F6r\u00FCn\u00FCyor!</div></div>';
+    return;
+  }
+
+  el.innerHTML = liste.map(function(r) {
+    var f = r.fields;
+    var tip = TIP_MAP[(f.Tip||'sistem').toLowerCase()] || TIP_MAP['sistem'];
+    var sayfaUrl = f.Kaynak_Sayfa ? f.Kaynak_Sayfa + (f.Kaynak_No ? '?no=' + f.Kaynak_No : '') : '';
+
+    var oncelikBadge = tip.oncelik === 'kritik'
+      ? '<span class="bx2" style="background:#fee2e2;color:#991b1b">Kritik</span>'
+      : tip.oncelik === 'uyari'
+      ? '<span class="bx2" style="background:#fef3c7;color:#92400e">Uyar\u0131</span>'
+      : '<span class="bx2" style="background:#dbeafe;color:#1e40af">Bilgi</span>';
+
+    var tipBadge = '<span class="bx2" style="background:#f3f4f6;color:#6b7280">' + (f.Tip||'Sistem') + '</span>';
+
+    var aksiyonlar = '';
+    if (sayfaUrl) {
+      aksiyonlar = '<div class="notif-actions"><button class="na-btn primary" onclick="sayfayaGit(\'' + sayfaUrl + '\',\'' + r.id + '\')">Git \u2192</button>'
+        + (!f.Okundu ? '<button class="na-btn" onclick="okunduIsaretle(\'' + r.id + '\',event)">Okundu</button>' : '') + '</div>';
+    } else if (!f.Okundu) {
+      aksiyonlar = '<div class="notif-actions"><button class="na-btn" onclick="okunduIsaretle(\'' + r.id + '\',event)">Okundu</button></div>';
+    }
+
+    return '<div class="notif ' + (!f.Okundu ? 'okunmamis' : '') + '" id="notif-' + r.id + '">'
+      + '<div class="notif-ic ' + tip.cls + '">' + tip.ikon + '</div>'
+      + '<div class="notif-body">'
+      + '<div class="notif-title">' + (f.Baslik||'\u2014') + '</div>'
+      + (f.Mesaj ? '<div class="notif-sub">' + f.Mesaj + '</div>' : '')
+      + '<div class="notif-meta">' + oncelikBadge + ' ' + tipBadge + ' ' + aksiyonlar
+      + '<span class="notif-time">' + formatZaman(f.Olusturma_Tarihi) + '</span></div>'
+      + '</div></div>';
+  }).join('');
+}
+
+async function okunduIsaretle(id, e) {
+  if (e) e.stopPropagation();
+  await airtable('update', 'Bildirimler', { id: id, fields: { Okundu: true } });
+  var notif = document.getElementById('notif-' + id);
+  if (notif) notif.classList.remove('okunmamis');
+  var r = tumBildirimler.find(function(r) { return r.id === id; });
+  if (r) r.fields.Okundu = true;
+  sayaclariGuncelle();
+}
+
+async function tumunuOkunduIsaretle() {
+  var okunmayanlar = tumBildirimler.filter(function(r) { return !r.fields.Okundu; });
+  if (okunmayanlar.length === 0) return;
+  await Promise.all(okunmayanlar.map(function(r) { return airtable('update', 'Bildirimler', { id: r.id, fields: { Okundu: true } }); }));
+  tumBildirimler.forEach(function(r) { r.fields.Okundu = true; });
+  sayaclariGuncelle();
+  render(aktifFiltre);
+}
+
+function sayfayaGit(url, id) {
+  okunduIsaretle(id, null);
+  setTimeout(function() { location.href = url; }, 150);
+}
+
+document.addEventListener('DOMContentLoaded', yukle);
+</script>
+</body>
+</html>

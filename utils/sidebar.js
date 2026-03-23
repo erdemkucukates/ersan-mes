@@ -279,7 +279,7 @@
     // Bottom actions
     h += '<div class="sb-bot">';
     h += '<div class="sb-bot-item" onclick="sbGit(\'ersan_sistem.html\')"><span>\u2699</span> Sistem Ayarlar\u0131</div>';
-    h += '<div class="sb-bot-item"><span>\uD83D\uDD14</span> Bildirimler</div>';
+    h += '<div class="sb-bot-item" onclick="sbGit(\'ersan_bildirimler.html\')"><span>\uD83D\uDD14</span> Bildirimler</div>';
     h += '<div class="sb-bot-item" onclick="window._yardimToggle?window._yardimToggle():location.href=\'ersan_yardim_ai.html\'"><span>\u2753</span> Yard\u0131m</div>';
     h += '<div class="sb-bot-item" style="color:rgba(255,100,100,.5)" onclick="sbCikis()"><span>\u21A9</span> \u00C7\u0131k\u0131\u015F</div>';
     h += '</div>';
@@ -367,6 +367,21 @@
     var ypScript = document.createElement('script');
     ypScript.src = 'utils/yardim.js';
     document.head.appendChild(ypScript);
+
+    // Ana sayfada tüm sidebar gruplarını kapat
+    var sayfa = document.body.getAttribute('data-page') || '';
+    if (sayfa === 'anasayfa' || window.location.pathname.indexOf('ersan_anasayfa') > -1) {
+      setTimeout(function() {
+        document.querySelectorAll('.sb-children').forEach(function(ch) {
+          ch.classList.add('closed');
+          ch.style.maxHeight = '0';
+          ch.style.overflow = 'hidden';
+        });
+        document.querySelectorAll('.sb-grp').forEach(function(grp) {
+          grp.classList.remove('open');
+        });
+      }, 100);
+    }
   }
 
   if (document.readyState === 'loading') {
