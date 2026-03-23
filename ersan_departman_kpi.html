@@ -86,7 +86,7 @@ var departmanlar = [
 
 var personelListesi = [];
 var kpiKayitlari = [];
-var kpiHedefleri = {};
+var kpiHedefleri = { Uretim: 85, Kalite: 90, Satis: 80, Satinalma: 85, Bakim: 80, Yonetim: 90 };
 var aktifDonem = 'Q1-2026';
 
 function toast(msg, tip) {
@@ -105,27 +105,29 @@ function yukle() {
   var grid = document.getElementById('deptGrid');
   grid.innerHTML = '<div class="yukleniyor"><div class="spinner"></div> Yukleniyor...</div>';
 
-  var p1 = fetch('/.netlify/functions/airtable?table=Personel&pageSize=100')
+  var p1 = fetch('/.netlify/functions/airtable', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({method: 'GET', path: '/v0/app5LDgJMgocw79Ix/' + encodeURIComponent('Personel') + '?pageSize=100'})
+    })
     .then(function(r) { return r.json(); })
     .then(function(d) {
       personelListesi = (d.records || []).map(function(r) { return { id: r.id, f: r.fields || {} }; });
     })
     .catch(function(e) { console.warn('Personel yuklenemedi:', e); personelListesi = []; });
 
-  var p2 = fetch('/.netlify/functions/airtable?table=KPI%20Kayitlari&pageSize=100')
+  var p2 = fetch('/.netlify/functions/airtable', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({method: 'GET', path: '/v0/app5LDgJMgocw79Ix/' + encodeURIComponent('KPI Kayitlari') + '?pageSize=100'})
+    })
     .then(function(r) { return r.json(); })
     .then(function(d) {
       kpiKayitlari = (d.records || []).map(function(r) { return { id: r.id, f: r.fields || {} }; });
     })
     .catch(function(e) { console.warn('KPI Kayitlari yuklenemedi:', e); kpiKayitlari = []; });
 
-  // Config
-  var p3 = fetch('ersan_config.json')
-    .then(function(r) { return r.json(); })
-    .then(function(d) { kpiHedefleri = d.kpiHedefleri || {}; })
-    .catch(function() { kpiHedefleri = {}; });
-
-  Promise.all([p1, p2, p3]).then(function() {
+  Promise.all([p1, p2]).then(function() {
     try {
       render();
     } catch(e) {

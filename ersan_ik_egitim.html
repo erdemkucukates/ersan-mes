@@ -120,14 +120,14 @@
 <div id="sb-mount"></div>
 <div class="icerik-alani main">
   <div class="topbar">
-    <div class="topbar-baslik">Egitim Plani</div>
+    <div class="topbar-baslik">Eğitim Planı</div>
     <div style="display:flex;align-items:center;gap:8px;">
       <select id="yilFiltre" class="filtre-bar select" style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;" onchange="listeYenile()">
         <option value="2026">2026</option>
         <option value="2025">2025</option>
-        <option value="">Tum Yillar</option>
+        <option value="">Tüm Yıllar</option>
       </select>
-      <button class="btn btn-p" onclick="yeniEgitimModal()">+ Yeni Egitim</button>
+      <button class="btn btn-p" onclick="yeniEgitimModal()">+ Yeni Eğitim</button>
       <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
     </div>
   </div>
@@ -152,11 +152,11 @@
   </div>
 </div>
 
-<!-- Yeni Egitim Modal -->
+<!-- Yeni Eğitim Modal -->
 <div class="modal-bg" id="modalEgitim">
   <div class="modal-kutu">
     <div class="modal-ust">
-      <h3 id="modalBaslik">Yeni Egitim</h3>
+      <h3 id="modalBaslik">Yeni Eğitim</h3>
       <button class="modal-kapat" onclick="modalKapat()">&times;</button>
     </div>
     <div class="modal-govde">
@@ -477,7 +477,7 @@ function yeniEgitimModal() {
     html += '<label class="chk-item"><input type="checkbox" value="' + p + '"> ' + p + '</label>';
   });
   document.getElementById('katilimciSecim').innerHTML = html;
-  document.getElementById('modalBaslik').textContent = 'Yeni Egitim';
+  document.getElementById('modalBaslik').textContent = 'Yeni Eğitim';
   document.getElementById('modalEgitim').classList.add('acik');
 }
 

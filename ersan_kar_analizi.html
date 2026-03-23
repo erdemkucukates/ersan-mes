@@ -136,9 +136,11 @@ var siparisAnaliz = [];
 
 // ── API Helper ──
 async function apiGet(tablo, query) {
-  var url = '/.netlify/functions/airtable?table=' + encodeURIComponent(tablo);
-  if (query) url += '&' + query;
-  var r = await fetch(url);
+  var r = await fetch('/.netlify/functions/airtable', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({method: 'GET', path: '/v0/app5LDgJMgocw79Ix/' + encodeURIComponent(tablo) + '?' + (query || '')})
+  });
   return r.json();
 }
 

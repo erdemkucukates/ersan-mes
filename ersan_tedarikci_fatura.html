@@ -102,16 +102,15 @@
 <body data-page="finans-fatura">
 <div class="app">
 <div id="sb-mount"></div>
-<div class="main-area" style="margin-left:220px;padding:18px 24px;">
-
-<!-- Topbar -->
-<div class="topbar">
-  <h1>Tedarikçi Faturaları</h1>
-  <div class="topbar-btns">
-    <button class="btn btn-b" onclick="faturaModalAc()">+ Fatura Gir</button>
-    <button class="btn btn-w" onclick="excelIndir()">↓ Excel</button>
+<div class="icerik-alani main">
+  <div class="topbar">
+    <div class="topbar-baslik">Tedarikçi Faturaları</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button class="btn btn-b btn-sm" onclick="faturaModalAc()">+ Fatura Gir</button>
+      <button class="btn btn-w btn-sm" onclick="excelIndir()">↓ Excel</button>
+    </div>
   </div>
-</div>
+  <div class="sayfa-icerik">
 
 <!-- 3-Way Match Band -->
 <div class="match-band" id="matchBand">
@@ -178,7 +177,8 @@
   </div>
 </div>
 
-</div><!-- main-area -->
+  </div><!-- sayfa-icerik -->
+</div><!-- icerik-alani main -->
 
 <!-- Yeni Fatura Modal -->
 <div class="modal-mask" id="faturaModal">

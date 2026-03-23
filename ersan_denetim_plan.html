@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ersan MES — Denetim Plani</title>
+<title>Ersan MES — Denetim Planı</title>
 <link rel="stylesheet" href="utils/sidebar.css">
 <link rel="stylesheet" href="ersan_styles.css">
 <script src="utils/sidebar.js" defer></script>
@@ -102,9 +102,9 @@ textarea.form-input { resize:vertical; min-height:60px; }
 <div id="sb-mount"></div>
 <div class="icerik-alani main">
   <div class="topbar">
-    <div class="topbar-baslik">Denetim Plani</div>
+    <div class="topbar-baslik">Denetim Planı</div>
     <div style="display:flex;align-items:center;gap:8px;">
-      <button class="btn-topbar" onclick="excelIndir()">Excel Indir</button>
+      <button class="btn-topbar" onclick="excelIndir()">Excel İndir</button>
       <button class="btn-topbar primary" onclick="modalAc()">+ Yeni Denetim Ekle</button>
       <div style="width:28px;height:28px;border-radius:50%;background:var(--laci);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">EK</div>
     </div>
@@ -115,14 +115,14 @@ textarea.form-input { resize:vertical; min-height:60px; }
     <div class="kpi-row" id="kpiRow">
       <div class="kpi s-blue"><div class="kpi-val" id="kpiPlan">0</div><div class="kpi-lbl">Planlanan Denetim</div><div class="kpi-sub" id="kpiPlanSub">-</div></div>
       <div class="kpi s-green"><div class="kpi-val" id="kpiMadde">0</div><div class="kpi-lbl">Kapsanan Madde</div><div class="kpi-sub" id="kpiMaddeSub">-</div></div>
-      <div class="kpi s-amber"><div class="kpi-val" id="kpiSure">0</div><div class="kpi-lbl">Ort. Sure (gun)</div><div class="kpi-sub" id="kpiSureSub">-</div></div>
-      <div class="kpi s-purple"><div class="kpi-val" id="kpiDenetci">0</div><div class="kpi-lbl">Denetci Sayisi</div><div class="kpi-sub" id="kpiDenetciSub">-</div></div>
+      <div class="kpi s-amber"><div class="kpi-val" id="kpiSure">0</div><div class="kpi-lbl">Ort. Süre (gün)</div><div class="kpi-sub" id="kpiSureSub">-</div></div>
+      <div class="kpi s-purple"><div class="kpi-val" id="kpiDenetci">0</div><div class="kpi-lbl">Denetçi Sayısı</div><div class="kpi-sub" id="kpiDenetciSub">-</div></div>
     </div>
 
     <!-- PLAN TABLE -->
     <div class="card">
       <div class="card-head">
-        <div class="card-title">Yillik Denetim Plani</div>
+        <div class="card-title">Yillik Denetim Planı</div>
         <span style="font-size:11px;color:var(--metin3);" id="planSayi">0 kayit</span>
       </div>
       <div class="tablo-scroll">
@@ -224,7 +224,7 @@ textarea.form-input { resize:vertical; min-height:60px; }
 
 <script>
 /* ══════════════════════════════════════════════════
-   ERSAN MES — Denetim Plani
+   ERSAN MES — Denetim Planı
    localStorage: ersan_denetimler, ersan_denetim_checklist
    ══════════════════════════════════════════════════ */
 
@@ -326,7 +326,7 @@ function kpiGuncelle() {
   document.getElementById('kpiSure').textContent = ortSure;
   document.getElementById('kpiSureSub').textContent = 'Toplam ' + topSure + ' gun planlandi';
 
-  // Denetci Sayisi
+  // Denetçi Sayısı
   var denetciler = {};
   den.forEach(function(d) {
     denetciler[d.denetci] = true;
