@@ -187,7 +187,7 @@
       <div class="kpi-kart"><div class="kpi-baslik">Toplam Firsat</div><div class="kpi-deger" id="kpiToplam">0</div><div class="kpi-alt">Aktif firsatlar</div></div>
       <div class="kpi-kart"><div class="kpi-baslik">Pipeline Deger</div><div class="kpi-deger" id="kpiDeger">0 &#8378;</div><div class="kpi-alt">Tahmini toplam</div></div>
       <div class="kpi-kart"><div class="kpi-baslik">Kazanilan</div><div class="kpi-deger" id="kpiKazan" style="color:var(--yesil);">0</div><div class="kpi-alt" id="kpiKazanTutar">0 &#8378;</div></div>
-      <div class="kpi-kart"><div class="kpi-baslik">Kayip</div><div class="kpi-deger" id="kpiKayip" style="color:var(--kirmizi);">0</div><div class="kpi-alt" id="kpiKayipTutar">0 &#8378;</div></div>
+      <div class="kpi-kart"><div class="kpi-baslik">Kayıp</div><div class="kpi-deger" id="kpiKayip" style="color:var(--kirmizi);">0</div><div class="kpi-alt" id="kpiKayipTutar">0 &#8378;</div></div>
       <div class="kpi-kart"><div class="kpi-baslik">Kazanma Orani</div><div class="kpi-deger" id="kpiOran">0%</div><div class="kpi-alt">Kazanilan / Toplam</div></div>
     </div>
     <!-- Ozet Bar -->
@@ -230,9 +230,9 @@
             <option value="Temas">Temas</option>
             <option value="Nitelendirme">Nitelendirme</option>
             <option value="Teklif">Teklif</option>
-            <option value="Muzakere">Muzakere</option>
-            <option value="Kazanildi">Kazanildi</option>
-            <option value="Kayip">Kayip</option>
+            <option value="Muzakere">Müzakere</option>
+            <option value="Kazanildi">Kazanıldı</option>
+            <option value="Kayip">Kayıp</option>
           </select>
         </div>
       </div>
@@ -278,7 +278,7 @@
 <div class="modal-bg" id="modalOzet">
   <div class="modal-kutu" style="width:500px;">
     <div class="modal-head">
-      <h3>Pipeline Ozeti</h3>
+      <h3>Pipeline Özeti</h3>
       <button class="modal-kapat" onclick="modalKapat('modalOzet')">&times;</button>
     </div>
     <div class="modal-body" id="ozetBody"></div>
@@ -300,6 +300,7 @@ var ASAMALAR = [
   { key: 'Kayip',        icon: '&#10060;',  renk: '#dc2626', bg: '#fef2f2',   border: '#fca5a5' }
 ];
 var OLASILIK = { 'Temas': 10, 'Nitelendirme': 25, 'Teklif': 50, 'Muzakere': 75, 'Kazanildi': 100, 'Kayip': 0 };
+var ASAMA_LABEL = { 'Temas':'Temas', 'Nitelendirme':'Nitelendirme', 'Teklif':'Teklif', 'Muzakere':'Müzakere', 'Kazanildi':'Kazanıldı', 'Kayip':'Kayıp' };
 var firsatlar = [];
 var duzenleId = null;
 var aktifFiltreSorumlu = '';
@@ -480,7 +481,7 @@ function ozetBarGuncelle() {
       if (f.Asama === a.key) { sayi++; tutar += (f.Tahmini_Deger || 0); }
     });
     html += '<div class="ozet-adim" style="background:' + a.bg + ';border:1px solid ' + a.border + ';" onclick="ozetTikla(\'' + a.key + '\')">';
-    html += '<div class="ozet-label" style="color:' + a.renk + ';">' + a.icon + ' ' + a.key + '</div>';
+    html += '<div class="ozet-label" style="color:' + a.renk + ';">' + a.icon + ' ' + (ASAMA_LABEL[a.key]||a.key) + '</div>';
     html += '<div class="ozet-sayi" style="color:' + a.renk + ';">' + sayi + '</div>';
     html += '<div class="ozet-tutar" style="color:' + a.renk + ';">' + paraBirligi(tutar) + '</div>';
     html += '</div>';
@@ -505,7 +506,7 @@ function kanbanRender() {
     html += '<div class="kanban-col" id="col-' + a.key + '">';
     html += '<div class="kanban-head" style="background:' + a.bg + ';">';
     html += '<span class="kh-icon">' + a.icon + '</span>';
-    html += '<span class="kh-label" style="color:' + a.renk + ';">' + a.key + '</span>';
+    html += '<span class="kh-label" style="color:' + a.renk + ';">' + (ASAMA_LABEL[a.key]||a.key) + '</span>';
     html += '<span class="kh-count" style="color:' + a.renk + ';">' + kartlar.length + '</span>';
     html += '</div>';
     html += '<div class="kanban-body">';
@@ -595,7 +596,7 @@ function firsatDetayAc(id) {
   var footer = '';
   if (f.Asama !== 'Kazanildi' && f.Asama !== 'Kayip') {
     footer += '<button class="btn btn-yesil" onclick="firsatSonrakiAsama(\'' + f.id + '\')">Sonraki Asama &#8594;</button>';
-    footer += '<button class="btn btn-kirmizi" onclick="firsatKaybet(\'' + f.id + '\')">Kayip Isaretle</button>';
+    footer += '<button class="btn btn-kirmizi" onclick="firsatKaybet(\'' + f.id + '\')">Kayıp İşaretle</button>';
     if (f.Asama === 'Teklif' || f.Asama === 'Muzakere') {
       footer += '<button class="btn btn-sari" onclick="teklifOlusturYonlendir(\'' + f.id + '\')">Teklif Olustur</button>';
     }
@@ -630,7 +631,7 @@ function firsatSonrakiAsama(id) {
   logIslem('Guncellendi', 'Pipeline', f.id, f.Firsat_No, eskiAsama, f.Asama, 'Asama degisikligi');
 }
 
-/* ── Kayip Isaretle ── */
+/* ── Kayıp İşaretle ── */
 function firsatKaybet(id) {
   var f = firsatlar.find(function(x) { return x.id === id; });
   if (!f) return;
@@ -778,7 +779,7 @@ function ozetModalAc() {
     var agirlikli = tutar * (OLASILIK[a.key] / 100);
     toplamAgirlikli += agirlikli;
     html += '<tr style="border-bottom:1px solid #f1f5f9;">';
-    html += '<td style="padding:6px;"><span style="color:' + a.renk + ';font-weight:600;">' + a.icon + ' ' + a.key + '</span></td>';
+    html += '<td style="padding:6px;"><span style="color:' + a.renk + ';font-weight:600;">' + a.icon + ' ' + (ASAMA_LABEL[a.key]||a.key) + '</span></td>';
     html += '<td style="padding:6px;text-align:center;">' + sayi + '</td>';
     html += '<td style="padding:6px;text-align:right;">' + paraBirligi(tutar) + '</td>';
     html += '<td style="padding:6px;text-align:right;">' + paraBirligi(Math.round(agirlikli)) + '</td>';
