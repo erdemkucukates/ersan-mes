@@ -118,10 +118,10 @@
   </div>
   <div class="sayfa-icerik">
     <div class="kpi-grid" style="margin-bottom:12px">
-      <div class="kpi-kart pr-kpi" style="border-top:3px solid #3b82f6"><div class="kpi-etiket pr-kpi-label">Toplam</div><div class="kpi-deger pr-kpi-num" id="kpi-toplam">-</div></div>
-      <div class="kpi-kart pr-kpi" style="border-top:3px solid #f59e0b"><div class="kpi-etiket pr-kpi-label">Onay Bekleyen</div><div class="kpi-deger pr-kpi-num" id="kpi-onay">-</div></div>
-      <div class="kpi-kart pr-kpi" style="border-top:3px solid #10b981"><div class="kpi-etiket pr-kpi-label">Onaylanan</div><div class="kpi-deger pr-kpi-num" id="kpi-onayli">-</div></div>
-      <div class="kpi-kart pr-kpi" style="border-top:3px solid #8b5cf6"><div class="kpi-etiket pr-kpi-label">RFQ</div><div class="kpi-deger pr-kpi-num" id="kpi-rfq">-</div></div>
+      <div class="kpi-kart pr-kpi" style="border-top:3px solid #3b82f6"><div class="kpi-etiket pr-kpi-label">Toplam</div><div class="kpi-deger pr-kpi-num" id="kpi-toplam">-</div><div style="font-size:10px;color:#9ca3af;margin-top:2px">Tüm talepler</div></div>
+      <div class="kpi-kart pr-kpi" style="border-top:3px solid #f59e0b"><div class="kpi-etiket pr-kpi-label">Onay Bekleyen</div><div class="kpi-deger pr-kpi-num" id="kpi-onay">-</div><div style="font-size:10px;color:#9ca3af;margin-top:2px">İnceleme gerekiyor</div></div>
+      <div class="kpi-kart pr-kpi" style="border-top:3px solid #10b981"><div class="kpi-etiket pr-kpi-label">Onaylanan</div><div class="kpi-deger pr-kpi-num" id="kpi-onayli">-</div><div style="font-size:10px;color:#9ca3af;margin-top:2px">RFQ'ya dönüştü</div></div>
+      <div class="kpi-kart pr-kpi" style="border-top:3px solid #8b5cf6"><div class="kpi-etiket pr-kpi-label">RFQ</div><div class="kpi-deger pr-kpi-num" id="kpi-rfq">-</div><div style="font-size:10px;color:#9ca3af;margin-top:2px">Teklif sürecinde</div></div>
     </div>
     <!-- Arama + Filtre -->
     <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
@@ -131,12 +131,12 @@
     <!-- Filtre Drawer -->
     <div class="filter-drawer" id="filter-drawer">
       <div class="fd-grid">
-        <div><label class="fd-label">PR Tipi</label><select class="fd-inp" id="fd-tip" onchange="listeyiUygula()"><option value="">Tumu</option><option>Siparise Bagli</option><option>Genel Alim</option></select></div>
-        <div><label class="fd-label">Kategori</label><select class="fd-inp" id="fd-kat" onchange="listeyiUygula()"><option value="">Tumu</option><option>Hammadde</option><option>Fason</option><option>Hizmet</option><option>Sarf Malzeme</option><option>Yedek Parca</option></select></div>
-        <div><label class="fd-label">Talep Eden</label><select class="fd-inp" id="fd-kisi" onchange="listeyiUygula()"><option value="">Tumu</option></select></div>
-        <div><label class="fd-label">Ihtiyac Tarihi Araligi</label><div class="fd-date-row"><input class="fd-inp" type="date" id="fd-t1" oninput="listeyiUygula()"><input class="fd-inp" type="date" id="fd-t2" oninput="listeyiUygula()"></div></div>
+        <div><label class="fd-label">PR Tipi</label><select class="fd-inp" id="fd-tip" onchange="listeyiUygula()"><option value="">Tümü</option><option>Siparişe Bağlı</option><option>Genel Alım</option></select></div>
+        <div><label class="fd-label">Kategori</label><select class="fd-inp" id="fd-kat" onchange="listeyiUygula()"><option value="">Tümü</option><option>Hammadde</option><option>Fason</option><option>Hizmet</option><option>Sarf Malzeme</option><option>Yedek Parça</option></select></div>
+        <div><label class="fd-label">Talep Eden</label><select class="fd-inp" id="fd-kisi" onchange="listeyiUygula()"><option value="">Tümü</option></select></div>
+        <div><label class="fd-label">İhtiyaç Tarihi Aralığı</label><div class="fd-date-row"><input class="fd-inp" type="date" id="fd-t1" oninput="listeyiUygula()"><input class="fd-inp" type="date" id="fd-t2" oninput="listeyiUygula()"></div></div>
       </div>
-      <div><label class="fd-label" style="margin-bottom:6px">Aciliyet</label><div class="acil-btn-row"><button class="acil-toggle" onclick="acilToggle('Normal',this,'on-n')">Normal</button><button class="acil-toggle" onclick="acilToggle('Yuksek',this,'on-y')">Yuksek</button><button class="acil-toggle" onclick="acilToggle('Kritik',this,'on-k')">Kritik</button></div></div>
+      <div><label class="fd-label" style="margin-bottom:6px">Aciliyet</label><div class="acil-btn-row"><button class="acil-toggle" onclick="acilToggle('Normal',this,'on-n')">Normal</button><button class="acil-toggle" onclick="acilToggle('Yuksek',this,'on-y')">Yüksek</button><button class="acil-toggle" onclick="acilToggle('Kritik',this,'on-k')">Kritik</button></div></div>
       <div class="fd-footer"><button class="fd-clear" onclick="filtreleriTemizle()">Filtreleri temizle</button><button class="fd-clear" onclick="drawerToggle()" style="color:var(--laci)">Kapat</button></div>
     </div>
     <!-- Chip'ler -->
@@ -144,19 +144,19 @@
     <!-- Sekmeler -->
     <div style="display:flex;border-bottom:1px solid var(--border);margin-bottom:0">
       <button id="tab-bekleyen" class="pr-tab-btn pr-tab-active" onclick="sekmeAyarla('bekleyen',this)">Bekleyen <span class="pr-tab-badge" id="tn-bekleyen"></span></button>
-      <button id="tab-rfq" class="pr-tab-btn" onclick="sekmeAyarla('rfq',this)">RFQ Gonderildi <span class="pr-tab-badge" id="tn-rfq"></span></button>
+      <button id="tab-rfq" class="pr-tab-btn" onclick="sekmeAyarla('rfq',this)">RFQ Gönderildi <span class="pr-tab-badge" id="tn-rfq"></span></button>
     </div>
     <!-- Kritik Banner -->
     <div class="kritik-banner" id="kritik-banner"><div class="kritik-dot"></div><span id="kritik-txt"></span></div>
     <!-- Tablo -->
     <div style="background:var(--beyaz);border:1px solid var(--border);border-radius:0 0 8px 8px;overflow:hidden;">
-      <div style="padding:8px 14px;border-bottom:1px solid var(--border);background:var(--bg2);display:flex;align-items:center;justify-content:space-between"><span style="font-size:12px;color:var(--metin4)"><b id="liste-count">0</b> kayit</span></div>
+      <div style="padding:8px 14px;border-bottom:1px solid var(--border);background:var(--bg2);display:flex;align-items:center;justify-content:space-between"><span style="font-size:12px;color:var(--metin4)"><b id="liste-count">0</b> kayıt</span></div>
       <div style="overflow-x:auto">
-        <table class="pr-tablo"><thead><tr><th style="width:32px;text-align:center"><input type="checkbox" id="chk-hepsi" onchange="tumunuSec(this.checked)"></th><th style="width:75px;cursor:pointer" onclick="sirala('tarih')">Tarih <span id="sort-tarih"></span></th><th style="width:110px;cursor:pointer" onclick="sirala('prNo')">PR No <span id="sort-prNo"></span></th><th style="width:110px;cursor:pointer" onclick="sirala('seKalem')">Siparis Kalemi <span id="sort-seKalem"></span></th><th style="cursor:pointer" onclick="sirala('aciklama')">Aciklama <span id="sort-aciklama"></span></th><th style="cursor:pointer" onclick="sirala('mCinsi')">M.Cinsi <span id="sort-mCinsi"></span></th><th style="cursor:pointer" onclick="sirala('mTipi')">M.Tipi <span id="sort-mTipi"></span></th><th style="text-align:center;cursor:pointer" onclick="sirala('o1')">Olcu 1 <span id="sort-o1"></span></th><th style="text-align:center;cursor:pointer" onclick="sirala('o2')">Olcu 2 <span id="sort-o2"></span></th><th style="text-align:center;cursor:pointer" onclick="sirala('o3')">Olcu 3 <span id="sort-o3"></span></th><th style="cursor:pointer" onclick="sirala('aciliyet')">Aciliyet <span id="sort-aciliyet"></span></th><th style="width:80px"></th></tr></thead><tbody id="pr-tbody"></tbody></table>
+        <table class="pr-tablo"><thead><tr><th style="width:32px;text-align:center"><input type="checkbox" id="chk-hepsi" onchange="tumunuSec(this.checked)"></th><th style="width:75px;cursor:pointer" onclick="sirala('tarih')">Tarih <span id="sort-tarih"></span></th><th style="width:110px;cursor:pointer" onclick="sirala('prNo')">PR No <span id="sort-prNo"></span></th><th style="width:110px;cursor:pointer" onclick="sirala('seKalem')">Sipariş Kalemi <span id="sort-seKalem"></span></th><th style="cursor:pointer" onclick="sirala('aciklama')">Açıklama <span id="sort-aciklama"></span></th><th style="cursor:pointer" onclick="sirala('mCinsi')">M.Cinsi <span id="sort-mCinsi"></span></th><th style="cursor:pointer" onclick="sirala('mTipi')">M.Tipi <span id="sort-mTipi"></span></th><th style="text-align:center;cursor:pointer" onclick="sirala('o1')">Ölçü 1 <span id="sort-o1"></span></th><th style="text-align:center;cursor:pointer" onclick="sirala('o2')">Ölçü 2 <span id="sort-o2"></span></th><th style="text-align:center;cursor:pointer" onclick="sirala('o3')">Ölçü 3 <span id="sort-o3"></span></th><th style="cursor:pointer" onclick="sirala('aciliyet')">Aciliyet <span id="sort-aciliyet"></span></th><th style="width:80px"></th></tr></thead><tbody id="pr-tbody"></tbody></table>
       </div>
     </div>
     <!-- Footer -->
-    <div class="list-footer"><div class="lf-info">Secili: <b id="secili-pr">&mdash;</b></div><button class="rfq-quick-btn" id="rfq-quick-btn" onclick="hizliRfq()">&#8594; RFQ Olustur</button></div>
+    <div class="list-footer"><div class="lf-info">Seçili: <b id="secili-pr">&mdash;</b></div><button class="rfq-quick-btn" id="rfq-quick-btn" onclick="hizliRfq()">&#8594; RFQ Oluştur</button></div>
   </div>
 </div>
 <div id="pr-modal" style="display:none"></div>
