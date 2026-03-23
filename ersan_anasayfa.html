@@ -6,10 +6,106 @@
 <title>Ersan MES — Ana Sayfa</title>
 <link rel="stylesheet" href="utils/sidebar.css">
 <link rel="stylesheet" href="ersan_styles.css">
-<script src="utils/sidebar.js" defer></script>
-<script src="utils/airtable.js"></script>
-<script src="ersan_log.js" defer></script>
 <script>if(!sessionStorage.getItem('kullanici'))window.location.href='ersan_giris.html';</script>
+<style>
+/* Dashboard styles */
+.dash-wrap{flex:1;min-height:0;overflow-y:auto;padding:14px 18px}
+.tb{display:flex;align-items:center;justify-content:space-between;padding:8px 18px;background:#fff;border-bottom:1px solid #e5e7eb;flex-shrink:0}
+.tb-left{display:flex;flex-direction:column;gap:1px}
+.tb-t{font-size:15px;font-weight:800;color:#1a2b47}
+.tb-sub{font-size:10px;color:#9ca3af}
+.tb-right{display:flex;align-items:center;gap:10px}
+.tb-tarih{font-size:10px;color:#9ca3af}
+.tb-rol{padding:2px 8px;border-radius:10px;font-size:9px;font-weight:700;color:#fff}
+.tb-user{display:flex;align-items:center;gap:6px}
+.tb-isim{font-size:11px;font-weight:600;color:#374151}
+.tb-ava{width:28px;height:28px;border-radius:7px;background:#1a2b47;display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:800;color:#fff}
+
+/* Welcome Banner */
+.wc{background:linear-gradient(135deg,#1a2b47 0%,#2d4a7a 100%);border-radius:10px;padding:18px 22px;margin-bottom:14px;display:flex;align-items:center;gap:0;flex-wrap:wrap}
+.wc-stat{text-align:center;padding:0 18px;border-right:1px solid rgba(255,255,255,.12)}
+.wc-stat:last-of-type{border-right:none}
+.wc-val{font-size:26px;font-weight:800;color:#fff;line-height:1}
+.wc-val.warn{color:#F5A623}
+.wc-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.45);margin-top:3px}
+.wc-right{margin-left:auto;text-align:right}
+.wc-ver{font-size:9.5px;color:rgba(255,255,255,.3)}
+.wc-v{font-size:22px;font-weight:800;color:#F5A623;margin-top:2px}
+
+/* KPI Row */
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:14px}
+.kc{background:#fff;border:1px solid #e5e7eb;border-radius:9px;padding:12px 14px;position:relative;border-top:2px solid var(--kc-renk,#3b82f6)}
+.kc-ic{font-size:18px;margin-bottom:4px}
+.kc-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#9ca3af;margin-bottom:2px}
+.kc-val{font-size:24px;font-weight:800;color:var(--kc-renk,#1a2b47);line-height:1}
+.kc-sub{font-size:10px;color:#d1d5db;margin-top:3px}
+.kc-trend{position:absolute;top:10px;right:10px;font-size:12px;font-weight:700}
+.trend-up{color:#10b981}.trend-dn{color:#ef4444}.trend-eq{color:#d1d5db}
+
+/* Cards */
+.dash-card{background:#fff;border:1px solid #e5e7eb;border-radius:9px;box-shadow:0 1px 3px rgba(0,0,0,.06);margin-bottom:14px;overflow:hidden}
+.dash-card-h{padding:10px 14px;border-bottom:1px solid #f3f4f6;display:flex;align-items:center;justify-content:space-between}
+.dash-card-t{font-size:12px;font-weight:700;color:#111827}
+.dash-card-s{font-size:10px;color:#9ca3af}
+.dash-card-b{padding:14px}
+
+/* Table */
+.dtbl{width:100%;border-collapse:collapse;font-size:11.5px}
+.dtbl th{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#9ca3af;background:#f9fafb;padding:7px 10px;text-align:left;border-bottom:1px solid #e5e7eb}
+.dtbl td{padding:8px 10px;border-bottom:1px solid #f9fafb;color:#374151;vertical-align:middle}
+.dtbl tr:hover td{background:#fafafa;cursor:pointer}
+.dtbl .mono{font-family:monospace;font-size:10.5px;font-weight:600;color:#1a2b47}
+
+/* Badges */
+.badge-d{padding:2px 8px;border-radius:10px;font-size:9px;font-weight:700;display:inline-block}
+.bd-g{background:#d1fae5;color:#065f46}.bd-a{background:#fef3c7;color:#92400e}.bd-r{background:#fee2e2;color:#991b1b}.bd-b{background:#dbeafe;color:#1e40af}.bd-gr{background:#f3f4f6;color:#6b7280}
+
+/* Alarm */
+.alarm-item{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid #f9fafb;cursor:pointer;transition:.1s}
+.alarm-item:hover{background:#fafafa}
+.alarm-item:last-child{border-bottom:none}
+.alarm-ic{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.alarm-ic.r{background:#fee2e2;color:#991b1b}.alarm-ic.a{background:#fef3c7;color:#92400e}.alarm-ic.b{background:#dbeafe;color:#1e40af}
+.alarm-title{font-size:11.5px;font-weight:600;color:#111827}
+.alarm-sub{font-size:10px;color:#9ca3af;margin-top:1px}
+.alarm-time{font-size:9px;color:#d1d5db;white-space:nowrap;flex-shrink:0}
+
+/* Pipeline */
+.pipe{display:flex;gap:0;margin-bottom:14px}
+.pipe-step{flex:1;text-align:center;padding:14px 8px;position:relative}
+.pipe-step::after{content:'';position:absolute;right:0;top:20%;height:60%;width:1px;background:#e5e7eb}
+.pipe-step:last-child::after{display:none}
+.pipe-num{font-size:22px;font-weight:800;line-height:1}
+.pipe-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:#9ca3af;margin-top:4px}
+
+/* Op bar */
+.op-bar{margin-bottom:10px}
+.op-bar-h{display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px}
+.op-bar-h span:first-child{font-weight:600;color:#374151}
+.op-bar-h span:last-child{font-weight:700}
+.op-track{height:8px;background:#f3f4f6;border-radius:4px;overflow:hidden}
+.op-fill{height:100%;border-radius:4px;transition:width .4s}
+
+/* Quick access */
+.qa-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
+.qa-card{background:#fff;border:1px solid #e5e7eb;border-radius:9px;padding:14px;cursor:pointer;transition:.15s;text-align:center}
+.qa-card:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.1)}
+.qa-ic{font-size:24px;margin-bottom:6px}
+.qa-t{font-size:11.5px;font-weight:700;color:#111827;margin-bottom:2px}
+.qa-s{font-size:9.5px;color:#9ca3af}
+
+/* Grid layouts */
+.dash-grid-2{display:grid;grid-template-columns:2fr 1fr;gap:14px}
+.dash-grid-eq{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+
+@media(max-width:900px){
+  .dash-grid-2,.dash-grid-eq{grid-template-columns:1fr}
+  .qa-grid{grid-template-columns:repeat(2,1fr)}
+  .kpi-row{grid-template-columns:repeat(2,1fr)}
+  .wc{flex-direction:column;gap:12px}
+  .wc-stat{border-right:none;border-bottom:1px solid rgba(255,255,255,.1);padding:8px 0}
+}
+</style>
 </head>
 <body data-page="anasayfa">
 <div class="app">
@@ -17,157 +113,431 @@
 <div class="icerik-alani main">
 
 <!-- TOP BAR -->
-<div class="topbar" style="flex-shrink:0">
-  <div class="topbar-baslik">Ana Sayfa</div>
-  <div style="display:flex;align-items:center;gap:8px">
-    <span style="font-size:10.5px;color:var(--metin3)" id="tb-sirket">Ersan Endüstriyel</span>
-    <div style="width:30px;height:30px;background:#1a2b47;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fff" id="tb-ava">EK</div>
+<div class="tb">
+  <div class="tb-left">
+    <div class="tb-t" id="tb-baslik">Dashboard</div>
+    <div class="tb-sub" id="tb-sub">Yükleniyor...</div>
+  </div>
+  <div class="tb-right">
+    <div class="tb-tarih" id="tb-tarih"></div>
+    <div class="tb-rol" id="tb-rol-badge" style="background:#1a2b47">—</div>
+    <div class="tb-user">
+      <span class="tb-isim" id="tb-isim">—</span>
+      <div class="tb-ava" id="tb-ava">?</div>
+    </div>
   </div>
 </div>
 
-<!-- İÇERİK WRAPPER -->
-<div style="flex:1;min-height:0;overflow-y:auto;padding:14px 18px">
-
-  <!-- BANNER — Özet istatistikler -->
-  <div style="background:linear-gradient(135deg,#1a2b47 0%,#2d4a7a 100%);border-radius:10px;padding:16px 20px;margin-bottom:14px;display:flex;gap:0;align-items:center;flex-wrap:wrap">
-    <div style="text-align:center;padding:0 18px;border-right:1px solid rgba(255,255,255,.12)">
-      <div style="font-size:26px;font-weight:800;color:#fff;line-height:1" id="bn-teklif">&mdash;</div>
-      <div style="font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.45);margin-top:3px">Açık Teklif</div>
-    </div>
-    <div style="text-align:center;padding:0 18px;border-right:1px solid rgba(255,255,255,.12)">
-      <div style="font-size:26px;font-weight:800;color:#fff;line-height:1" id="bn-siparis">&mdash;</div>
-      <div style="font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.45);margin-top:3px">Aktif Sipariş</div>
-    </div>
-    <div style="text-align:center;padding:0 18px;border-right:1px solid rgba(255,255,255,.12)">
-      <div style="font-size:26px;font-weight:800;color:#fff;line-height:1" id="bn-isemri">&mdash;</div>
-      <div style="font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.45);margin-top:3px">İş Emri</div>
-    </div>
-    <div style="text-align:center;padding:0 18px;border-right:1px solid rgba(255,255,255,.12)">
-      <div style="font-size:26px;font-weight:800;color:#fff;line-height:1" id="bn-satinalma">&mdash;</div>
-      <div style="font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.45);margin-top:3px">Bekleyen PR</div>
-    </div>
-    <div style="text-align:center;padding:0 18px;border-right:1px solid rgba(255,255,255,.12)">
-      <div style="font-size:26px;font-weight:800;color:#F5A623;line-height:1" id="bn-ncr">&mdash;</div>
-      <div style="font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.4);margin-top:3px">Açık NCR</div>
-    </div>
-    <div style="text-align:center;padding:0 18px">
-      <div style="font-size:26px;font-weight:800;color:#F5A623;line-height:1" id="bn-kalib">&mdash;</div>
-      <div style="font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.4);margin-top:3px">Kalibrasyon</div>
-    </div>
-    <div style="margin-left:auto;text-align:right">
-      <div style="font-size:9.5px;color:rgba(255,255,255,.3)">AS9100 Rev.D</div>
-      <div style="font-size:22px;font-weight:800;color:#F5A623;margin-top:2px">v7.0</div>
-    </div>
+<!-- DASHBOARD İÇERİK -->
+<div class="dash-wrap" id="dash-icerik">
+  <div style="padding:40px;text-align:center;color:#9ca3af">
+    <div style="font-size:24px;margin-bottom:8px">⏳</div>
+    <div style="font-size:13px">Dashboard yükleniyor...</div>
   </div>
-
-  <!-- MODÜL KARTLAR: Satış & Üretim -->
-  <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#9ca3af;margin-bottom:9px;display:flex;align-items:center;gap:8px">
-    Satış & Üretim Akışı
-    <div style="flex:1;height:1px;background:#e5e7eb"></div>
-  </div>
-  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:14px" id="mod-satis"></div>
-
-  <!-- MODÜL KARTLAR: Kalite -->
-  <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#9ca3af;margin-bottom:9px;display:flex;align-items:center;gap:8px">
-    Kalite & Uygunluk
-    <div style="flex:1;height:1px;background:#e5e7eb"></div>
-  </div>
-  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:14px" id="mod-kalite"></div>
-
-  <!-- MODÜL KARTLAR: Destek -->
-  <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#9ca3af;margin-bottom:9px;display:flex;align-items:center;gap:8px">
-    Destek Süreçleri
-    <div style="flex:1;height:1px;background:#e5e7eb"></div>
-  </div>
-  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:14px" id="mod-destek"></div>
-
-</div><!-- /içerik wrapper -->
+</div>
 
 </div><!-- /main -->
 </div><!-- /app -->
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="utils/airtable.js"></script>
+<script src="utils/sidebar.js"></script>
 <script>
-var MODROLLER_SATIS = [
-  { ikon:'\uD83D\uDCBC', ad:'Teklif Y\u00F6netimi',  url:'ersan_teklif.html',    std:'AS9100 \u00A78.2', aciklama:'Teknik resim bazl\u0131 fiyatlama', durum:'aktif', renk:'#14b8a6' },
-  { ikon:'\uD83D\uDCE6', ad:'Sipari\u015F Y\u00F6netimi', url:'ersan_siparisler.html',std:'AS9100 \u00A78.2', aciklama:'SP gruplama, PDF viewer', durum:'aktif', renk:'#3b82f6' },
-  { ikon:'\uD83D\uDED2', ad:'Sat\u0131nalma',        url:'ersan_satinalma_pr.html',std:'AS9100 \u00A78.4',aciklama:'PR\u2192RFQ\u2192PO teklif kar\u015F\u0131la\u015Ft\u0131rma', durum:'aktif', renk:'#f59e0b' },
-  { ikon:'\uD83D\uDE9A', ad:'\u00D6n Kabul',         url:'ersan_satinalma_grn.html',std:'AS9100 \u00A78.4',aciklama:'Malzeme kabul formu, tedarik\u00E7i', durum:'aktif', renk:'#f59e0b' },
-  { ikon:'\uD83D\uDCE5', ad:'Girdi Kalite',     url:'ersan_kalite_iqc.html', std:'AS9100 \u00A78.4', aciklama:'Malzeme muayenesi, kabul/red', durum:'aktif', renk:'#ef4444' },
-  { ikon:'\uD83D\uDCCB', ad:'\u0130\u015F Emirleri',      url:'ersan_isemirleri.html', std:'AS9100 \u00A78.5', aciklama:'WO olu\u015Fturma, traveller takibi', durum:'aktif', renk:'#10b981' },
-  { ikon:'\uD83C\uDFED', ad:'\u00DCretim / At\u00F6lye',  url:'ersan_atolye.html',     std:'AS9100 \u00A78.5', aciklama:'Operasyon rotas\u0131, tezgah durumu', durum:'aktif', renk:'#10b981' },
-  { ikon:'\uD83D\uDCE4', ad:'Sevkiyat',         url:'ersan_sevkiyat.html',   std:'AS9100 \u00A78.5.4',aciklama:'8 madde sevk kontrol, CoC', durum:'aktif', renk:'#0d9488' }
-];
+// ─── GLOBAL ─────────────────────────────────────
+var ROL = sessionStorage.getItem('kullanici_rol') || '';
+var KULLANICI = sessionStorage.getItem('kullanici') || '';
+var AVA = sessionStorage.getItem('kullanici_ava') || '?';
 
-var MODROLLER_KALITE = [
-  { ikon:'\u2705', ad:'Kalite Kontrol',   url:'ersan_kalite_iqc.html',  std:'AS9100 \u00A78.6', aciklama:'Girdi kalite, IQC, NCR hub', durum:'aktif', renk:'#059669' },
-  { ikon:'\u26D4', ad:'NCR Y\u00F6netimi',     url:'ersan_kalite_ncr.html',  std:'AS9100 \u00A78.7', aciklama:'Uygunsuzluk, k\u00F6k neden, iskarta', durum:'uyari', renk:'#dc2626' },
-  { ikon:'\uD83D\uDD27', ad:'CAPA',             url:'ersan_kalite_capa.html', std:'AS9100 \u00A710.2',aciklama:'D\u00FCzeltici faaliyet, 5-Why', durum:'aktif', renk:'#7c3aed' },
-  { ikon:'\uD83D\uDD0D', ad:'\u0130\u00E7 Denetim',       url:'ersan_denetim_panel.html',std:'AS9100 \u00A79.2',aciklama:'Denetim plan\u0131, bulgu takibi', durum:'aktif', renk:'#84cc16' }
-];
+var ROL_RENK_MAP = {
+  'Yönetici':'#1a2b47','Yönetim':'#0f766e','Kalite':'#dc2626',
+  'Üretim':'#059669','Satınalma':'#2563eb','Personel':'#7c3aed'
+};
 
-var MODROLLER_DESTEK = [
-  { ikon:'\uD83D\uDE0A', ad:'M\u00FC\u015Fteri Y\u00F6netimi', url:'ersan_crm.html',         std:'AS9100 \u00A78.5.5',aciklama:'M\u00FC\u015Fteri bilgileri, \u015Fikayet', durum:'aktif', renk:'#e879f9' },
-  { ikon:'\uD83D\uDD27', ad:'Ekipman & Bak\u0131m',  url:'ersan_ekipman_dashboard.html',std:'AS9100 \u00A77.1.3',aciklama:'Bak\u0131m takvimi, ar\u0131za, kalibrasyon', durum:'aktif', renk:'#f97316' },
-  { ikon:'\uD83D\uDC65', ad:'Personel',         url:'ersan_ik_personel.html', std:'AS9100 \u00A77.2', aciklama:'Yetkinlik matrisi, e\u011Fitim takibi', durum:'aktif', renk:'#ec4899' },
-  { ikon:'\u26A0', ad:'Risk Y\u00F6netimi',    url:'ersan_risk_fmea.html',   std:'AS9100 \u00A76.1', aciklama:'Risk tan\u0131mlama, FMEA analizi', durum:'aktif', renk:'#f59e0b' },
-  { ikon:'\uD83E\uDDBA', ad:'\u0130SG',              url:'ersan_isg.html',          std:'ISO 45001',   aciklama:'Tehlike kayd\u0131, olay bildirimi', durum:'aktif', renk:'#dc2626' },
-  { ikon:'\uD83D\uDCC2', ad:'Dok\u00FCman',          url:'ersan_dms_master.html',   std:'AS9100 \u00A77.5', aciklama:'Pros\u00E9d\u00FCr, talimat, form y\u00F6netimi', durum:'aktif', renk:'#8b5cf6' }
-];
+function setEl(id, val) { var el = document.getElementById(id); if (el) el.textContent = val; }
 
-function modKartRender(containerId, modroller) {
-  var el = document.getElementById(containerId);
-  if (!el) return;
-  el.innerHTML = modroller.map(function(m) {
-    var durumHtml = m.durum === 'uyari'
-      ? '<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:10px;font-size:9px;font-weight:700;background:#fee2e2;color:#991b1b">\u25CF Dikkat</span>'
-      : '<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:10px;font-size:9px;font-weight:700;background:#d1fae5;color:#065f46">\u25CF Aktif</span>';
-    return '<div onclick="window.location.href=\'' + m.url + '\'" '
-      + 'style="background:#fff;border:1px solid #e5e7eb;border-radius:9px;padding:12px 13px;cursor:pointer;transition:.15s;border-top:2px solid ' + m.renk + ';box-shadow:0 1px 3px rgba(0,0,0,.06)" '
-      + 'onmouseenter="this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 4px 12px rgba(0,0,0,.1)\'" '
-      + 'onmouseleave="this.style.transform=\'\';this.style.boxShadow=\'0 1px 3px rgba(0,0,0,.06)\'">'
-      + '<div style="font-size:20px;margin-bottom:8px">' + m.ikon + '</div>'
-      + '<div style="font-size:12px;font-weight:700;color:#111827;margin-bottom:3px">' + m.ad + '</div>'
-      + '<div style="font-size:10.5px;color:#6b7280;margin-bottom:6px;line-height:1.4">' + m.aciklama + '</div>'
-      + '<div style="font-size:9px;color:#d1d5db;font-family:monospace;margin-bottom:6px">' + m.std + '</div>'
-      + durumHtml
-      + '</div>';
-  }).join('');
+function formatZaman(iso) {
+  if (!iso) return '—';
+  var fark = (new Date() - new Date(iso)) / 1000;
+  if (fark < 3600)   return Math.round(fark/60) + 'dk';
+  if (fark < 86400)  return Math.round(fark/3600) + 's';
+  if (fark < 604800) return Math.round(fark/86400) + 'g';
+  return new Date(iso).toLocaleDateString('tr-TR');
 }
 
-async function bannerYukle() {
-  try {
-    var sonuclar = await Promise.allSettled([
-      airtable('list','Teklifler',{filterByFormula:"{Durum}='Bekleyen Onay'"}),
-      airtable('list','Satis Emirleri',{filterByFormula:"OR({Durum}='Uretimde',{Durum}='Planlamada')"}),
-      airtable('list','Is Emirleri',{filterByFormula:"OR({Durum}='Acik',{Durum}='Devam')"}),
-      airtable('list','Satinalma Talepleri',{filterByFormula:"{Durum}='Bekleyen'"}),
-      airtable('list','NCR Kayitlari',{filterByFormula:"{Durum}='Acik'"})
-    ]);
+function formatTarih() {
+  var gunler = ['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'];
+  var aylar = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+  var d = new Date();
+  return gunler[d.getDay()] + ', ' + d.getDate() + ' ' + aylar[d.getMonth()] + ' ' + d.getFullYear();
+}
 
-    var sayac = function(r) { return r.status === 'fulfilled' ? (r.value.records ? r.value.records.length : 0) : 0; };
-    var set = function(id, val) { var el = document.getElementById(id); if(el) el.textContent = val; };
+function renderKpilar(kpiler) {
+  return '<div class="kpi-row">' + kpiler.map(function(k) {
+    var trendHtml = '';
+    if (k.trend === 'up') trendHtml = '<div class="kc-trend trend-up">\u2191</div>';
+    else if (k.trend === 'dn') trendHtml = '<div class="kc-trend trend-dn">\u2193</div>';
+    else trendHtml = '<div class="kc-trend trend-eq">\u2192</div>';
+    return '<div class="kc" style="--kc-renk:' + k.renk + '">'
+      + trendHtml
+      + '<div class="kc-ic">' + k.ic + '</div>'
+      + '<div class="kc-label">' + k.label + '</div>'
+      + '<div class="kc-val">' + k.val + '</div>'
+      + '<div class="kc-sub">' + k.sub + '</div>'
+      + '</div>';
+  }).join('') + '</div>';
+}
 
-    set('bn-teklif',    sayac(sonuclar[0]));
-    set('bn-siparis',   sayac(sonuclar[1]));
-    set('bn-isemri',    sayac(sonuclar[2]));
-    set('bn-satinalma', sayac(sonuclar[3]));
-    set('bn-ncr',       sayac(sonuclar[4]));
-  } catch(e) {
-    console.warn('Banner yuklenemedi:', e);
+function durum2badge(d) {
+  if (!d) return '<span class="badge-d bd-gr">—</span>';
+  var dl = d.toLowerCase();
+  if (dl.indexOf('acik')>-1||dl.indexOf('açık')>-1) return '<span class="badge-d bd-r">' + d + '</span>';
+  if (dl.indexOf('devam')>-1||dl.indexOf('uretim')>-1) return '<span class="badge-d bd-a">' + d + '</span>';
+  if (dl.indexOf('tamam')>-1||dl.indexOf('kapan')>-1) return '<span class="badge-d bd-g">' + d + '</span>';
+  if (dl.indexOf('bekl')>-1||dl.indexOf('plan')>-1) return '<span class="badge-d bd-b">' + d + '</span>';
+  return '<span class="badge-d bd-gr">' + d + '</span>';
+}
+
+// ─── TOPBAR ─────────────────────────────────────
+function topbarInit(baslik, sub) {
+  setEl('tb-baslik', baslik);
+  setEl('tb-sub', sub);
+  setEl('tb-tarih', formatTarih());
+  setEl('tb-isim', KULLANICI.split(' ')[0]);
+  setEl('tb-ava', AVA);
+  var badge = document.getElementById('tb-rol-badge');
+  if (badge) {
+    badge.textContent = ROL || 'Personel';
+    badge.style.background = ROL_RENK_MAP[ROL] || '#7c3aed';
   }
 }
 
-function topbarGuncelle() {
-  var ava  = document.getElementById('tb-ava');
-  if (ava)  ava.textContent = sessionStorage.getItem('kullanici_ava') || 'EK';
+// ─── SAFE AIRTABLE ──────────────────────────────
+async function safeList(tablo, opts) {
+  try {
+    var res = await airtable('list', tablo, opts || {});
+    return res.records || [];
+  } catch(e) { return []; }
 }
 
+// ═══════════════════════════════════════════════
+// YÖNETİCİ DASHBOARD
+// ═══════════════════════════════════════════════
+async function dashYonetici() {
+  topbarInit('Yönetici Paneli', 'AS9100 Rev.D — Genel Durum');
+  var ic = document.getElementById('dash-icerik');
+
+  // Skeleton
+  ic.innerHTML = '<div class="wc" id="wc-banner"><div style="color:rgba(255,255,255,.5);font-size:12px">Veriler yükleniyor...</div></div>'
+    + '<div id="kpi-area"></div>'
+    + '<div class="dash-grid-2">'
+    + '<div id="wo-card"></div>'
+    + '<div id="alarm-card"></div>'
+    + '</div>'
+    + '<div class="dash-grid-eq">'
+    + '<div id="trend-card"></div>'
+    + '<div id="pipe-card"></div>'
+    + '</div>';
+
+  // Fetch all data
+  var sonuclar = await Promise.allSettled([
+    safeList('Satis Emirleri', {filterByFormula:"OR({Durum}='Uretimde',{Durum}='Planlamada')"}),
+    safeList('Is Emirleri', {filterByFormula:"OR({Durum}='Acik',{Durum}='Devam')"}),
+    safeList('NCR Kayitlari', {filterByFormula:"{Durum}='Acik'"}),
+    safeList('Satinalma Talepleri', {filterByFormula:"{Durum}='Bekleyen'"}),
+    safeList('Is Emirleri', {})
+  ]);
+
+  var s = function(i) { return sonuclar[i].status === 'fulfilled' ? sonuclar[i].value : []; };
+  var siparisler = s(0), woAcik = s(1), ncrAcik = s(2), prBekleyen = s(3), tumWo = s(4);
+
+  // Banner
+  document.getElementById('wc-banner').innerHTML =
+    '<div class="wc-stat"><div class="wc-val">' + siparisler.length + '</div><div class="wc-lbl">Aktif Sipariş</div></div>'
+    + '<div class="wc-stat"><div class="wc-val">' + woAcik.length + '</div><div class="wc-lbl">Açık İş Emri</div></div>'
+    + '<div class="wc-stat"><div class="wc-val warn">' + ncrAcik.length + '</div><div class="wc-lbl">Açık NCR</div></div>'
+    + '<div class="wc-stat"><div class="wc-val">' + prBekleyen.length + '</div><div class="wc-lbl">Bekleyen PR</div></div>'
+    + '<div class="wc-right"><div class="wc-ver">AS9100 Rev.D</div><div class="wc-v">v7.0</div></div>';
+
+  // KPI
+  document.getElementById('kpi-area').innerHTML = renderKpilar([
+    {ic:'\uD83D\uDCE6',label:'Aktif Sipariş',val:siparisler.length,sub:'üretimde/planlamada',renk:'#3b82f6',trend:'eq'},
+    {ic:'\uD83D\uDCCB',label:'Açık İş Emri',val:woAcik.length,sub:'devam eden',renk:'#10b981',trend:'up'},
+    {ic:'\u26D4',label:'Açık NCR',val:ncrAcik.length,sub:'inceleme gerekiyor',renk:'#ef4444',trend:ncrAcik.length>0?'dn':'eq'},
+    {ic:'\uD83D\uDED2',label:'Bekleyen PR',val:prBekleyen.length,sub:'onay bekliyor',renk:'#f59e0b',trend:'eq'},
+    {ic:'\uD83C\uDFED',label:'Toplam WO',val:tumWo.length,sub:'tüm iş emirleri',renk:'#8b5cf6',trend:'up'}
+  ]);
+
+  // WO Tablosu
+  var woRows = woAcik.slice(0, 8).map(function(r) {
+    var f = r.fields;
+    return '<tr onclick="location.href=\'ersan_isemirleri.html\'">'
+      + '<td class="mono">' + (f['IE No'] || f['Name'] || '—') + '</td>'
+      + '<td>' + (f['Parca Adi'] || f['Parca No'] || '—') + '</td>'
+      + '<td>' + (f['Miktar'] || '—') + '</td>'
+      + '<td>' + (f['Termin'] ? new Date(f['Termin']).toLocaleDateString('tr-TR') : '—') + '</td>'
+      + '<td>' + durum2badge(f['Durum']) + '</td></tr>';
+  }).join('');
+  document.getElementById('wo-card').innerHTML =
+    '<div class="dash-card"><div class="dash-card-h"><span class="dash-card-t">Aktif İş Emirleri</span><span class="dash-card-s">' + woAcik.length + ' kayıt</span></div>'
+    + '<table class="dtbl"><thead><tr><th>WO No</th><th>Parça</th><th>Miktar</th><th>Termin</th><th>Durum</th></tr></thead>'
+    + '<tbody>' + (woRows || '<tr><td colspan="5" style="text-align:center;padding:20px;color:#9ca3af">Açık iş emri yok</td></tr>') + '</tbody></table></div>';
+
+  // Alarmlar
+  document.getElementById('alarm-card').innerHTML =
+    '<div class="dash-card"><div class="dash-card-h"><span class="dash-card-t">Kritik Uyarılar</span><span class="dash-card-s" id="alarm-sayac">' + ncrAcik.length + ' uyarı</span></div>'
+    + '<div class="dash-card-b" id="alarm-liste">' + (ncrAcik.length > 0
+      ? ncrAcik.slice(0,5).map(function(r) {
+          var f = r.fields;
+          return '<div class="alarm-item" onclick="location.href=\'ersan_kalite_ncr.html\'">'
+            + '<div class="alarm-ic r">\u26D4</div>'
+            + '<div style="flex:1"><div class="alarm-title">NCR: ' + (f['NCR No'] || f['Name'] || '—') + '</div>'
+            + '<div class="alarm-sub">' + (f['Parca'] || f['Aciklama'] || '') + '</div></div>'
+            + '<div class="alarm-time">' + formatZaman(f['Olusturma Tarihi'] || f['createdTime']) + '</div></div>';
+        }).join('')
+      : '<div style="padding:20px;text-align:center;color:#059669">\u2713 Uyarı yok</div>')
+    + '</div></div>';
+
+  // Trend Grafiği
+  document.getElementById('trend-card').innerHTML =
+    '<div class="dash-card"><div class="dash-card-h"><span class="dash-card-t">6 Aylık Trend</span></div>'
+    + '<div class="dash-card-b"><canvas id="chart-trend" height="200"></canvas></div></div>';
+
+  // Pipeline
+  document.getElementById('pipe-card').innerHTML =
+    '<div class="dash-card"><div class="dash-card-h"><span class="dash-card-t">Sipariş Pipeline</span></div>'
+    + '<div class="pipe">'
+    + '<div class="pipe-step"><div class="pipe-num" style="color:#3b82f6">' + siparisler.length + '</div><div class="pipe-lbl">Planlamada</div></div>'
+    + '<div class="pipe-step"><div class="pipe-num" style="color:#10b981">' + woAcik.length + '</div><div class="pipe-lbl">Üretimde</div></div>'
+    + '<div class="pipe-step"><div class="pipe-num" style="color:#f59e0b">0</div><div class="pipe-lbl">Kalite K.</div></div>'
+    + '<div class="pipe-step"><div class="pipe-num" style="color:#8b5cf6">0</div><div class="pipe-lbl">Sevkiyat</div></div>'
+    + '</div></div>';
+
+  // Chart
+  setTimeout(function() {
+    var ctx = document.getElementById('chart-trend');
+    if (!ctx) return;
+    new Chart(ctx, {
+      type:'line',
+      data:{
+        labels:['Eki','Kas','Ara','Oca','Şub','Mar'],
+        datasets:[
+          {label:'Sipariş',data:[4,6,5,8,7,siparisler.length],borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,.1)',fill:true,tension:.3,borderWidth:2,pointRadius:3},
+          {label:'NCR',data:[1,2,1,3,2,ncrAcik.length],borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,.1)',fill:true,tension:.3,borderWidth:2,pointRadius:3}
+        ]
+      },
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},usePointStyle:true}}},scales:{y:{beginAtZero:true,ticks:{font:{size:9}}},x:{ticks:{font:{size:9}}}}}
+    });
+  }, 100);
+}
+
+// ═══════════════════════════════════════════════
+// KALİTE DASHBOARD
+// ═══════════════════════════════════════════════
+async function dashKalite() {
+  topbarInit('Kalite Paneli', 'AS9100 §8.6–10.2 — Kalite Yönetimi');
+  var ic = document.getElementById('dash-icerik');
+
+  var sonuclar = await Promise.allSettled([
+    safeList('NCR Kayitlari', {filterByFormula:"{Durum}='Acik'"}),
+    safeList('NCR Kayitlari', {})
+  ]);
+  var s = function(i) { return sonuclar[i].status === 'fulfilled' ? sonuclar[i].value : []; };
+  var ncrAcik = s(0), tumNcr = s(1);
+
+  ic.innerHTML = renderKpilar([
+    {ic:'\u26D4',label:'Açık NCR',val:ncrAcik.length,sub:'inceleme gerekiyor',renk:'#ef4444',trend:ncrAcik.length>0?'dn':'eq'},
+    {ic:'\uD83D\uDD27',label:'CAPA Aktif',val:'—',sub:'devam eden',renk:'#7c3aed',trend:'eq'},
+    {ic:'\uD83D\uDCCF',label:'Kalibrasyon',val:'—',sub:'süresi yaklaşan',renk:'#f59e0b',trend:'eq'},
+    {ic:'\uD83D\uDE0A',label:'Müşteri Şikayeti',val:'—',sub:'açık şikayet',renk:'#ec4899',trend:'eq'}
+  ])
+  + '<div class="dash-grid-2">'
+  + '<div id="ncr-card"></div>'
+  + '<div id="ncr-chart-card"></div>'
+  + '</div>';
+
+  // NCR Tablosu
+  var ncrRows = tumNcr.slice(0,10).map(function(r) {
+    var f = r.fields;
+    return '<tr onclick="location.href=\'ersan_kalite_ncr.html\'">'
+      + '<td class="mono">' + (f['NCR No'] || f['Name'] || '—') + '</td>'
+      + '<td>' + (f['Parca'] || f['Parca Adi'] || '—') + '</td>'
+      + '<td>' + (f['Kategori'] || '—') + '</td>'
+      + '<td>' + durum2badge(f['Durum']) + '</td></tr>';
+  }).join('');
+
+  document.getElementById('ncr-card').innerHTML =
+    '<div class="dash-card"><div class="dash-card-h"><span class="dash-card-t">NCR Kayıtları</span><span class="dash-card-s">' + tumNcr.length + ' kayıt</span></div>'
+    + '<table class="dtbl"><thead><tr><th>NCR No</th><th>Parça</th><th>Kategori</th><th>Durum</th></tr></thead>'
+    + '<tbody>' + (ncrRows || '<tr><td colspan="4" style="text-align:center;padding:20px;color:#9ca3af">NCR kaydı yok</td></tr>') + '</tbody></table></div>';
+
+  document.getElementById('ncr-chart-card').innerHTML =
+    '<div class="dash-card"><div class="dash-card-h"><span class="dash-card-t">NCR Trend</span></div>'
+    + '<div class="dash-card-b"><canvas id="chart-ncr" height="220"></canvas></div></div>';
+
+  setTimeout(function() {
+    var ctx = document.getElementById('chart-ncr');
+    if (!ctx) return;
+    new Chart(ctx, {
+      type:'bar',
+      data:{
+        labels:['Eki','Kas','Ara','Oca','Şub','Mar'],
+        datasets:[
+          {label:'Açıldı',data:[2,3,1,4,2,ncrAcik.length],backgroundColor:'rgba(239,68,68,.7)',borderRadius:4},
+          {label:'Kapandı',data:[1,2,1,3,2,0],backgroundColor:'rgba(16,185,129,.7)',borderRadius:4}
+        ]
+      },
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10}}}},scales:{y:{beginAtZero:true,ticks:{font:{size:9}}},x:{ticks:{font:{size:9}}}}}
+    });
+  }, 100);
+}
+
+// ═══════════════════════════════════════════════
+// ÜRETİM DASHBOARD
+// ═══════════════════════════════════════════════
+async function dashUretim() {
+  topbarInit('Üretim Paneli', 'AS9100 §8.5 — Üretim Takibi');
+  var ic = document.getElementById('dash-icerik');
+
+  var woList = await safeList('Is Emirleri', {});
+  var woAcik = woList.filter(function(r) { var d = (r.fields['Durum']||''); return d === 'Acik' || d === 'Devam' || d === 'Açık'; });
+
+  ic.innerHTML = renderKpilar([
+    {ic:'\uD83D\uDCCB',label:'Açık WO',val:woAcik.length,sub:'devam eden',renk:'#10b981',trend:'up'},
+    {ic:'\u26A0',label:'Geciken WO',val:'—',sub:'termin aşılmış',renk:'#ef4444',trend:'eq'},
+    {ic:'\uD83D\uDCE5',label:'IQC Bekleyen',val:'—',sub:'muayene bekliyor',renk:'#f59e0b',trend:'eq'},
+    {ic:'\uD83D\uDCC5',label:'Bugün Teslim',val:'—',sub:'termin bugün',renk:'#3b82f6',trend:'eq'}
+  ])
+  + '<div class="dash-grid-2">'
+  + '<div id="wo-card"></div>'
+  + '<div id="op-card"></div>'
+  + '</div>';
+
+  // WO Tablosu
+  var woRows = woAcik.slice(0,12).map(function(r) {
+    var f = r.fields;
+    return '<tr onclick="location.href=\'ersan_isemirleri.html\'">'
+      + '<td class="mono">' + (f['IE No'] || f['Name'] || '—') + '</td>'
+      + '<td>' + (f['Parca Adi'] || f['Parca No'] || '—') + '</td>'
+      + '<td>' + (f['Miktar'] || '—') + '</td>'
+      + '<td>' + (f['Termin'] ? new Date(f['Termin']).toLocaleDateString('tr-TR') : '—') + '</td>'
+      + '<td>' + durum2badge(f['Durum']) + '</td></tr>';
+  }).join('');
+
+  document.getElementById('wo-card').innerHTML =
+    '<div class="dash-card"><div class="dash-card-h"><span class="dash-card-t">Aktif İş Emirleri</span><span class="dash-card-s">' + woAcik.length + '</span></div>'
+    + '<table class="dtbl"><thead><tr><th>WO No</th><th>Parça</th><th>Miktar</th><th>Termin</th><th>Durum</th></tr></thead>'
+    + '<tbody>' + (woRows || '<tr><td colspan="5" style="text-align:center;padding:20px;color:#9ca3af">Açık iş emri yok</td></tr>') + '</tbody></table></div>';
+
+  // Operasyon Yükü
+  var opData = [
+    {ad:'CNC Torna',yuk:75},{ad:'CNC Freze',yuk:60},{ad:'Taşlama',yuk:40},{ad:'Kaynak',yuk:30},{ad:'Kalite Kontrol',yuk:55}
+  ];
+  var opHtml = opData.map(function(o) {
+    var renk = o.yuk > 80 ? '#ef4444' : o.yuk > 50 ? '#f59e0b' : '#10b981';
+    return '<div class="op-bar"><div class="op-bar-h"><span>' + o.ad + '</span><span style="color:' + renk + '">%' + o.yuk + '</span></div>'
+      + '<div class="op-track"><div class="op-fill" style="width:' + o.yuk + '%;background:' + renk + '"></div></div></div>';
+  }).join('');
+
+  document.getElementById('op-card').innerHTML =
+    '<div class="dash-card"><div class="dash-card-h"><span class="dash-card-t">Operasyon Yükü</span></div>'
+    + '<div class="dash-card-b">' + opHtml + '</div></div>';
+}
+
+// ═══════════════════════════════════════════════
+// SATINALMA DASHBOARD
+// ═══════════════════════════════════════════════
+async function dashSatinalma() {
+  topbarInit('Satınalma Paneli', 'AS9100 §8.4 — Tedarik Zinciri');
+  var ic = document.getElementById('dash-icerik');
+
+  var prList = await safeList('Satinalma Talepleri', {});
+  var prBekleyen = prList.filter(function(r) { return (r.fields['Durum']||'') === 'Bekleyen'; });
+
+  ic.innerHTML = renderKpilar([
+    {ic:'\uD83D\uDCDD',label:'Bekleyen PR',val:prBekleyen.length,sub:'onay bekliyor',renk:'#f59e0b',trend:'eq'},
+    {ic:'\uD83D\uDCCB',label:'Açık RFQ',val:'—',sub:'teklif bekleniyor',renk:'#3b82f6',trend:'eq'},
+    {ic:'\uD83D\uDCE6',label:'Aktif PO',val:'—',sub:'gönderilmiş',renk:'#10b981',trend:'up'},
+    {ic:'\u26A0',label:'Geciken PO',val:'—',sub:'termin aşılmış',renk:'#ef4444',trend:'eq'}
+  ])
+  + '<div class="dash-grid-2">'
+  + '<div id="pr-card"></div>'
+  + '<div id="ted-chart-card"></div>'
+  + '</div>';
+
+  // PR Tablosu
+  var prRows = prList.slice(0,10).map(function(r) {
+    var f = r.fields;
+    var ac = f['Aciliyet'] || 'Normal';
+    var acCls = ac === 'Kritik' ? 'bd-r' : ac === 'Yüksek' ? 'bd-a' : 'bd-gr';
+    return '<tr onclick="location.href=\'ersan_satinalma_pr.html\'">'
+      + '<td class="mono">' + (f['PR No'] || f['Name'] || '—') + '</td>'
+      + '<td>' + (f['Aciklama'] || f['Malzeme'] || '—') + '</td>'
+      + '<td><span class="badge-d ' + acCls + '">' + ac + '</span></td>'
+      + '<td>' + durum2badge(f['Durum']) + '</td></tr>';
+  }).join('');
+
+  document.getElementById('pr-card').innerHTML =
+    '<div class="dash-card"><div class="dash-card-h"><span class="dash-card-t">Satınalma Talepleri</span><span class="dash-card-s">' + prList.length + ' kayıt</span></div>'
+    + '<table class="dtbl"><thead><tr><th>PR No</th><th>Açıklama</th><th>Aciliyet</th><th>Durum</th></tr></thead>'
+    + '<tbody>' + (prRows || '<tr><td colspan="4" style="text-align:center;padding:20px;color:#9ca3af">PR kaydı yok</td></tr>') + '</tbody></table></div>';
+
+  // Tedarikçi Chart
+  document.getElementById('ted-chart-card').innerHTML =
+    '<div class="dash-card"><div class="dash-card-h"><span class="dash-card-t">Tedarikçi Dağılımı</span></div>'
+    + '<div class="dash-card-b" style="display:flex;justify-content:center"><canvas id="chart-tedarikci" width="220" height="220"></canvas></div></div>';
+
+  setTimeout(function() {
+    var ctx = document.getElementById('chart-tedarikci');
+    if (!ctx) return;
+    new Chart(ctx, {
+      type:'doughnut',
+      data:{
+        labels:['A Seviye','B Seviye','C Seviye','Değerlendirilmedi'],
+        datasets:[{data:[5,8,3,4],backgroundColor:['#10b981','#3b82f6','#f59e0b','#d1d5db'],borderWidth:0}]
+      },
+      options:{responsive:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},usePointStyle:true}}}}
+    });
+  }, 100);
+}
+
+// ═══════════════════════════════════════════════
+// PERSONEL DASHBOARD (FALLBACK)
+// ═══════════════════════════════════════════════
+async function dashPersonel() {
+  topbarInit('Kişisel Panel', 'Hızlı Erişim');
+  var ic = document.getElementById('dash-icerik');
+
+  var moduller = [
+    {ic:'\uD83D\uDCBC',ad:'Teklifler',url:'ersan_teklif.html',std:'§8.2',aciklama:'Teklif oluşturma'},
+    {ic:'\uD83D\uDCE6',ad:'Siparişler',url:'ersan_siparisler.html',std:'§8.2',aciklama:'Sipariş takibi'},
+    {ic:'\uD83D\uDED2',ad:'Satınalma',url:'ersan_satinalma_pr.html',std:'§8.4',aciklama:'PR/RFQ/PO'},
+    {ic:'\uD83D\uDCCB',ad:'İş Emirleri',url:'ersan_isemirleri.html',std:'§8.5',aciklama:'WO yönetimi'},
+    {ic:'\u2705',ad:'Kalite',url:'ersan_kalite_iqc.html',std:'§8.6',aciklama:'IQC/NCR/CAPA'},
+    {ic:'\uD83D\uDD27',ad:'Ekipman',url:'ersan_ekipman_dashboard.html',std:'§7.1.3',aciklama:'Bakım takibi'},
+    {ic:'\uD83D\uDC65',ad:'İK',url:'ersan_ik_personel.html',std:'§7.2',aciklama:'Personel/eğitim'},
+    {ic:'\uD83D\uDCC2',ad:'Doküman',url:'ersan_dms_master.html',std:'§7.5',aciklama:'DMS yönetimi'}
+  ];
+
+  ic.innerHTML = '<div style="margin-bottom:14px;font-size:13px;color:#6b7280">Hoş geldin, <strong style="color:#1a2b47">' + KULLANICI.split(' ')[0] + '</strong>. Hızlı erişim modüllerini aşağıda bulabilirsin.</div>'
+    + '<div class="qa-grid">' + moduller.map(function(m) {
+      return '<div class="qa-card" onclick="location.href=\'' + m.url + '\'">'
+        + '<div class="qa-ic">' + m.ic + '</div>'
+        + '<div class="qa-t">' + m.ad + '</div>'
+        + '<div class="qa-s">' + m.aciklama + ' · ' + m.std + '</div></div>';
+    }).join('') + '</div>';
+}
+
+// ─── BAŞLAT ─────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function() {
-  modKartRender('mod-satis',   MODROLLER_SATIS);
-  modKartRender('mod-kalite',  MODROLLER_KALITE);
-  modKartRender('mod-destek',  MODROLLER_DESTEK);
-  topbarGuncelle();
-  bannerYukle();
+  var rolMap = {
+    'Yönetici':  dashYonetici,
+    'Yönetim':   dashYonetici,
+    'Kalite':    dashKalite,
+    'Üretim':    dashUretim,
+    'Satınalma': dashSatinalma
+  };
+  var dashFn = rolMap[ROL] || dashPersonel;
+  dashFn();
 });
 </script>
 </body>
