@@ -362,7 +362,7 @@ function tabloRender(liste) {
 
     var pc = acil==='Kritik'?'p-k':acil==='Y\u00FCksek'||acil==='Yuksek'?'p-y':'';
     var brd = acil==='Kritik'?'brd-k':acil==='Y\u00FCksek'||acil==='Yuksek'?'brd-y':'brd-n';
-    var acilCls = acil==='Kritik'?'pr-acil-kritik':acil==='Y\u00FCksek'||acil==='Yuksek'?'pr-acil-yuksek':'pr-acil-normal';
+    var acilStyle = acil==='Kritik'?'background:#fee2e2;color:#991b1b;padding:2px 9px;border-radius:10px;font-size:9.5px;font-weight:600;display:inline-flex':acil==='Y\u00FCksek'||acil==='Yuksek'?'background:#fef3c7;color:#92400e;padding:2px 9px;border-radius:10px;font-size:9.5px;font-weight:600;display:inline-flex':'background:#f3f4f6;color:#6b7280;padding:2px 9px;border-radius:10px;font-size:9.5px;font-weight:600;display:inline-flex';
     var isSel = seciliPR === r.id;
     var isChk = seciliIds.indexOf(r.id)>=0;
     return '<tr class="'+pc+(isSel?' sel-row':'')+'" onclick="prSatirSec(\''+r.id+'\')" style="cursor:pointer">'+
@@ -376,9 +376,9 @@ function tabloRender(liste) {
       '<td style="text-align:center;font-family:monospace;font-size:11px">'+escH(o1)+'</td>'+
       '<td style="text-align:center;font-family:monospace;font-size:11px">'+escH(o2)+'</td>'+
       '<td style="text-align:center;font-family:monospace;font-size:11px">'+escH(o3)+'</td>'+
-      '<td><span class="'+acilCls+'">'+escH(acil)+'</span></td>'+
+      '<td><span style="'+acilStyle+'">'+escH(acil)+'</span></td>'+
       '<td style="text-align:right">'+
-      '<button class="pr-rfq-btn" onclick="event.stopPropagation();rfqDonustur(\''+r.id+'\')">RFQ</button>'+
+      '<button onclick="event.stopPropagation();rfqDonustur(\''+r.id+'\')" style="padding:3px 10px;border-radius:4px;font-size:10.5px;font-weight:600;border:1px solid #bfdbfe;background:#eff6ff;color:#1e40af;cursor:pointer;white-space:nowrap;font-family:inherit">RFQ →</button>'+
       '</td></tr>';
   }).join('');
   secimGuncelle();
