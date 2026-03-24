@@ -589,17 +589,23 @@ function kaydet() {
     .catch(function(e) { toast('Hata: ' + e.message, 4000); });
   } else {
     // POST
+    var postBody = {
+      method: 'POST',
+      path: '/v0/app5LDgJMgocw79Ix/' + encodeURIComponent(AIRTABLE_TABLE),
+      body: { fields: fields }
+    };
+    console.log('Kaydet POST body:', JSON.stringify(postBody));
     fetch('/.netlify/functions/airtable', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        method: 'POST',
-        path: '/v0/app5LDgJMgocw79Ix/' + encodeURIComponent(AIRTABLE_TABLE),
-        body: { fields: fields }
-      })
+      body: JSON.stringify(postBody)
     })
-    .then(function(r) { return r.json(); })
+    .then(function(r) {
+      console.log('Kaydet response status:', r.status);
+      return r.json();
+    })
     .then(function(d) {
+      console.log('Kaydet response:', JSON.stringify(d));
       if (d.error) { toast('Airtable hata: ' + (d.error.message || JSON.stringify(d.error)), 5000); return; }
       seciliTalep._id = d.id;
       degismis = false;
