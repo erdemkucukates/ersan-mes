@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ersan MES — Fiyat Hazirlama</title>
+<link rel="stylesheet" href="utils/sidebar.css">
+<link rel="stylesheet" href="ersan_styles.css">
+<script src="utils/sidebar.js" defer></script>
+<script src="ersan_log.js" defer></script>
+<style>
+/* Layout */
+.fh-layout{display:flex;gap:0;height:calc(100vh - 52px)}
+.fh-sol{width:320px;flex-shrink:0;background:var(--beyaz);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.fh-sag{flex:1;background:var(--bg);overflow-y:auto;padding:20px}
+
+/* Top bar */
+.fh-tb{height:52px;background:var(--beyaz);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:12px}
+.fh-tb-title{font-size:15px;font-weight:700;color:var(--metin)}
+.fh-tb-badge{font-size:10px;background:var(--mavi-acik);color:var(--mavi-koyu);padding:2px 8px;border-radius:10px;font-weight:600}
+.fh-tb-spacer{flex:1}
+.fh-tb-btn{padding:7px 14px;border-radius:6px;border:1px solid var(--border);background:var(--beyaz);color:var(--metin2);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;transition:all .15s}
+.fh-tb-btn:hover{border-color:var(--mavi);color:var(--mavi)}
+.fh-tb-btn.primary{background:var(--mavi);color:#fff;border-color:var(--mavi)}
+.fh-tb-btn.primary:hover{background:var(--mavi-koyu)}
+
+/* Sol liste */
+.fh-sol-hd{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.fh-sol-ara{flex:1;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;color:var(--metin2);background:var(--bg2)}
+.fh-sol-ara:focus{outline:none;border-color:var(--mavi)}
+.fh-liste{flex:1;overflow-y:auto}
+.fh-item{padding:10px 14px;border-bottom:1px solid var(--bg);cursor:pointer;transition:background .12s}
+.fh-item:hover{background:var(--mavi-acik)}
+.fh-item.secili{background:var(--mavi-acik);border-left:3px solid var(--mavi)}
+.fh-item-no{font-size:11px;font-weight:700;color:var(--mavi)}
+.fh-item-musteri{font-size:12px;color:var(--metin2);margin-top:2px}
+.fh-item-tarih{font-size:10px;color:var(--metin4);margin-top:2px}
+.fh-item-durum{display:inline-block;font-size:9px;font-weight:700;padding:1px 6px;border-radius:8px;margin-top:3px}
+.fh-item-durum.yeni{background:#fef3c7;color:#92400e}
+.fh-item-durum.ai{background:#ede9fe;color:#6d28d9}
+.fh-item-durum.hazir{background:#d1fae5;color:#065f46}
+.fh-item-durum.tamam{background:#dbeafe;color:#1e40af}
+
+/* Sag form */
+.fh-card{background:var(--beyaz);border:1px solid var(--border);border-radius:8px;margin-bottom:16px;overflow:hidden}
+.fh-card-hd{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:var(--metin)}
+.fh-card-bd{padding:14px}
+.fh-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fh-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.fh-full{grid-column:1/-1}
+.f-grp{margin-bottom:0}
+.f-lbl{font-size:10px;font-weight:600;color:var(--metin3);text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px;display:block}
+.f-inp{width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;color:var(--metin2);background:var(--beyaz);font-family:inherit}
+.f-inp:focus{outline:none;border-color:var(--mavi);box-shadow:0 0 0 3px rgba(55,138,221,.1)}
+.f-inp.ai-dolu{background:#f5f3ff;border-color:#a78bfa;color:#4c1d95}
+select.f-inp{cursor:pointer}
+textarea.f-inp{resize:vertical;min-height:60px}
+
+/* Upload zones */
+.upload-zone{border:2px dashed var(--border2);border-radius:8px;padding:24px 16px;text-align:center;cursor:pointer;transition:all .2s;position:relative;background:var(--bg2)}
+.upload-zone:hover,.upload-zone.drag-over{border-color:var(--mavi);background:var(--mavi-acik)}
+.upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer}
+.upload-icon{font-size:28px;margin-bottom:6px}
+.upload-text{font-size:12px;font-weight:500;color:var(--metin2)}
+.upload-sub{font-size:10px;color:var(--metin4);margin-top:3px}
+.dosya-liste{margin-top:8px;display:flex;flex-direction:column;gap:4px}
+.dosya-item{display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;font-size:11px;color:var(--metin2)}
+.dosya-item .sil{margin-left:auto;cursor:pointer;color:var(--kirmizi);font-size:13px}
+
+/* AI buton */
+.ai-btn{width:100%;padding:12px;background:linear-gradient(135deg,#7c3aed,#6366f1);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity .15s;box-shadow:0 4px 16px rgba(99,102,241,.25)}
+.ai-btn:hover{opacity:.9}
+.ai-btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* AI progress */
+.ai-ilerleme{display:none;margin-top:10px}
+.ai-ilerleme.aktif{display:block}
+.ai-adim{display:flex;align-items:center;gap:8px;padding:6px 0;font-size:11px;color:var(--metin3)}
+.ai-adim.tamam{color:var(--yesil)}
+.ai-adim.aktif-adim{color:var(--mavi);font-weight:600}
+.ai-adim-ic{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;background:var(--bg);border:1px solid var(--border)}
+.ai-adim.tamam .ai-adim-ic{background:var(--yesil-bg);border-color:var(--yesil);color:var(--yesil)}
+.ai-adim.aktif-adim .ai-adim-ic{background:var(--mavi-acik);border-color:var(--mavi);color:var(--mavi);animation:pulse 1.2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* Kalem tablosu */
+.kalem-tbl{width:100%;border-collapse:collapse;margin-top:8px}
+.kalem-tbl th{background:var(--bg2);padding:6px 8px;font-size:10px;font-weight:600;color:var(--metin3);text-transform:uppercase;text-align:left;border-bottom:1px solid var(--border)}
+.kalem-tbl td{padding:5px 8px;border-bottom:1px solid var(--bg);font-size:12px;color:var(--metin2)}
+.kalem-tbl tr:hover{background:var(--bg2)}
+
+/* Yazdır butonu */
+.yazdir-btn{padding:10px 20px;background:var(--yesil);color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px}
+.yazdir-btn:hover{opacity:.9}
+
+/* Kritik saat banner */
+.kritik-banner{display:none;padding:8px 16px;background:#FCEBEB;border-bottom:1px solid #F09595;font-size:12px;color:#791F1F;font-weight:500;align-items:center;gap:8px}
+.kritik-banner.show{display:flex}
+
+/* Bos durum */
+.fh-bos{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--metin4);text-align:center;padding:40px}
+.fh-bos-ic{font-size:48px;margin-bottom:12px;opacity:.4}
+
+/* Toast */
+.toast{position:fixed;bottom:20px;right:20px;padding:10px 18px;background:var(--laci);color:#fff;border-radius:8px;font-size:12px;font-weight:500;z-index:9999;opacity:0;transform:translateY(10px);transition:all .3s;pointer-events:none;max-width:360px}
+.toast.show{opacity:1;transform:translateY(0)}
+
+/* Print template */
+@media print{
+  .sb,.fh-sol,.fh-tb,.toast,.ai-btn,.ai-ilerleme,.upload-zone,.dosya-liste,.yazdir-btn,.fh-tb-btn{display:none!important}
+  .fh-sag{padding:0!important;overflow:visible!important}
+  .fh-card{border:none!important;box-shadow:none!important;break-inside:avoid}
+  .sablon-sayfa{page-break-after:always;padding:8mm;font-size:11pt}
+  .sablon-sayfa:last-child{page-break-after:auto}
+  .sablon-header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #0f2744;padding-bottom:8px;margin-bottom:12px}
+  .sablon-logo{font-size:16pt;font-weight:800;color:#0f2744}
+  .sablon-logo-sub{font-size:8pt;color:#64748b}
+  .sablon-info{text-align:right;font-size:9pt;color:#334155}
+  .sablon-tablo{width:100%;border-collapse:collapse;margin:8px 0}
+  .sablon-tablo th{background:#f0f4f8;padding:4px 8px;font-size:9pt;font-weight:600;text-align:left;border:1px solid #cbd5e1}
+  .sablon-tablo td{padding:4px 8px;font-size:9pt;border:1px solid #cbd5e1}
+  .sablon-alan{border:1px solid #cbd5e1;min-height:60px;padding:6px;margin:4px 0}
+  .sablon-footer{border-top:1px solid #cbd5e1;padding-top:8px;margin-top:auto;font-size:8pt;color:#64748b;display:flex;justify-content:space-between}
+  .sablon-imza{display:flex;gap:40px;margin-top:16px}
+  .sablon-imza-kutu{flex:1;border-top:1px solid #0f2744;padding-top:4px;text-align:center;font-size:9pt;color:#334155}
+}
+
+/* Sablon onizleme (ekranda) */
+.sablon-onizleme{background:#fff;border:1px solid var(--border);border-radius:8px;padding:20px;margin-top:12px;font-size:12px;color:var(--metin)}
+.sablon-header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid var(--laci);padding-bottom:8px;margin-bottom:12px}
+.sablon-logo{font-size:18px;font-weight:800;color:var(--laci)}
+.sablon-logo-sub{font-size:10px;color:var(--metin3)}
+.sablon-info{text-align:right;font-size:10px;color:var(--metin2)}
+.sablon-tablo{width:100%;border-collapse:collapse;margin:8px 0}
+.sablon-tablo th{background:var(--bg2);padding:5px 8px;font-size:10px;font-weight:600;text-align:left;border:1px solid var(--border)}
+.sablon-tablo td{padding:5px 8px;font-size:11px;border:1px solid var(--border)}
+.sablon-alan{border:1px solid var(--border);min-height:50px;padding:6px;margin:4px 0;border-radius:4px;background:var(--bg2)}
+.sablon-imza{display:flex;gap:40px;margin-top:16px}
+.sablon-imza-kutu{flex:1;border-top:2px solid var(--laci);padding-top:6px;text-align:center;font-size:10px;color:var(--metin2)}
+
+/* Modal */
+.modal-ov{position:fixed;inset:0;background:rgba(15,39,68,.5);z-index:500;display:none;align-items:center;justify-content:center}
+.modal-ov.show{display:flex}
+.modal-bx{background:var(--beyaz);border-radius:10px;width:94%;max-width:720px;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.modal-hd{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border)}
+.modal-hd h3{font-size:14px;font-weight:700;color:var(--metin)}
+.modal-bd{padding:18px}
+.modal-ft{display:flex;justify-content:flex-end;gap:8px;padding:12px 18px;border-top:1px solid var(--border)}
+</style>
+</head>
+<body>
+<div id="app" style="display:flex;height:100vh">
+  <div id="sb-mount"></div>
+  <div class="main" style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+
+    <!-- Top bar -->
+    <div class="fh-tb">
+      <span style="font-size:18px">💰</span>
+      <span class="fh-tb-title">Fiyat Hazirlama</span>
+      <span class="fh-tb-badge">AS9100 §8.2</span>
+      <span class="fh-tb-spacer"></span>
+      <button class="fh-tb-btn primary" onclick="yeniTalep()">+ Yeni Fiyat Talebi</button>
+    </div>
+
+    <!-- Kritik saat banner -->
+    <div class="kritik-banner" id="kritikBanner">
+      <span style="width:7px;height:7px;border-radius:50%;background:#E24B4A;flex-shrink:0"></span>
+      <span id="kritikMesaj">Son teslim tarihine 4 saatten az kaldi!</span>
+    </div>
+
+    <div class="fh-layout">
+      <!-- Sol liste -->
+      <div class="fh-sol">
+        <div class="fh-sol-hd">
+          <input class="fh-sol-ara" placeholder="Talep ara..." oninput="listeFiltre(this.value)">
+        </div>
+        <div class="fh-liste" id="fhListe">
+          <!-- JS ile doldurulur -->
+        </div>
+      </div>
+
+      <!-- Sag detay -->
+      <div class="fh-sag" id="fhSag">
+        <div class="fh-bos" id="fhBos">
+          <div class="fh-bos-ic">💰</div>
+          <div style="font-size:14px;font-weight:600;color:var(--metin3)">Fiyat Hazirlama Modulu</div>
+          <div style="font-size:12px;margin-top:6px">Sol listeden bir talep secin veya "Yeni Fiyat Talebi" butonuna basin</div>
+        </div>
+        <div id="fhDetay" style="display:none">
+
+          <!-- Genel Bilgiler -->
+          <div class="fh-card">
+            <div class="fh-card-hd">📋 Genel Bilgiler</div>
+            <div class="fh-card-bd">
+              <div class="fh-grid">
+                <div class="f-grp">
+                  <label class="f-lbl">Talep No</label>
+                  <input class="f-inp" id="fTalepNo" readonly style="background:var(--bg2)">
+                </div>
+                <div class="f-grp">
+                  <label class="f-lbl">Tarih</label>
+                  <input class="f-inp" id="fTarih" type="date">
+                </div>
+                <div class="f-grp">
+                  <label class="f-lbl">Musteri</label>
+                  <select class="f-inp" id="fMusteri">
+                    <option value="">Seciniz...</option>
+                  </select>
+                </div>
+                <div class="f-grp">
+                  <label class="f-lbl">Teklif/Ihale Ref</label>
+                  <input class="f-inp" id="fTeklifRef" placeholder="Musterinin referans no">
+                </div>
+                <div class="f-grp">
+                  <label class="f-lbl">Parca Adi</label>
+                  <input class="f-inp" id="fParcaAdi">
+                </div>
+                <div class="f-grp">
+                  <label class="f-lbl">Cizim No</label>
+                  <input class="f-inp" id="fCizimNo">
+                </div>
+                <div class="f-grp">
+                  <label class="f-lbl">Dosya No</label>
+                  <input class="f-inp" id="fDosyaNo">
+                </div>
+                <div class="f-grp">
+                  <label class="f-lbl">Adet</label>
+                  <input class="f-inp" id="fAdet" type="number" min="1">
+                </div>
+                <div class="f-grp">
+                  <label class="f-lbl">Malzeme</label>
+                  <input class="f-inp" id="fMalzeme">
+                </div>
+                <div class="f-grp">
+                  <label class="f-lbl">Son Teslim Tarihi</label>
+                  <input class="f-inp" id="fTeslimTarihi" type="date">
+                </div>
+                <div class="f-grp fh-full">
+                  <label class="f-lbl">Hazirlayan</label>
+                  <input class="f-inp" id="fHazirlayan">
+                </div>
+                <div class="f-grp fh-full">
+                  <label class="f-lbl">Notlar</label>
+                  <textarea class="f-inp" id="fNotlar" rows="2"></textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dosya Yukleme -->
+          <div class="fh-card">
+            <div class="fh-card-hd">📎 Dosya Yukleme</div>
+            <div class="fh-card-bd">
+              <div class="fh-grid">
+                <div>
+                  <label class="f-lbl" style="margin-bottom:6px">Teklif Formu (PDF)</label>
+                  <div class="upload-zone" id="zoneTeklif" ondragover="zoneDrag(event,this)" ondragleave="zoneLeave(this)" ondrop="zoneDrop(event,'teklif')">
+                    <input type="file" accept=".pdf" onchange="dosyaSec(event,'teklif')">
+                    <div class="upload-icon">📄</div>
+                    <div class="upload-text">Teklif PDF surukle veya tikla</div>
+                    <div class="upload-sub">Musteriden gelen teklif isteme formu</div>
+                  </div>
+                  <div class="dosya-liste" id="dosyaTeklif"></div>
+                </div>
+                <div>
+                  <label class="f-lbl" style="margin-bottom:6px">Teknik Resimler (PDF)</label>
+                  <div class="upload-zone" id="zoneResim" ondragover="zoneDrag(event,this)" ondragleave="zoneLeave(this)" ondrop="zoneDrop(event,'resim')">
+                    <input type="file" accept=".pdf,.png,.jpg,.jpeg" multiple onchange="dosyaSec(event,'resim')">
+                    <div class="upload-icon">📐</div>
+                    <div class="upload-text">Teknik resim surukle (coklu)</div>
+                    <div class="upload-sub">PNG, JPG veya PDF</div>
+                  </div>
+                  <div class="dosya-liste" id="dosyaResim"></div>
+                </div>
+              </div>
+
+              <!-- AI buton -->
+              <div style="margin-top:14px">
+                <button class="ai-btn" id="aiBtn" onclick="aiOku()" disabled>
+                  🤖 AI ile Otomatik Doldur
+                </button>
+                <div class="ai-ilerleme" id="aiIlerleme">
+                  <div class="ai-adim" id="aiAdim1"><span class="ai-adim-ic">1</span> Teklif formu okunuyor...</div>
+                  <div class="ai-adim" id="aiAdim2"><span class="ai-adim-ic">2</span> Teknik resimler analiz ediliyor...</div>
+                  <div class="ai-adim" id="aiAdim3"><span class="ai-adim-ic">3</span> Kalemler esitleniyor...</div>
+                  <div class="ai-adim" id="aiAdim4"><span class="ai-adim-ic">4</span> Form alanlari dolduruluyor...</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Kalemler -->
+          <div class="fh-card" id="kalemlerCard" style="display:none">
+            <div class="fh-card-hd">📦 Kalemler <span id="kalemSayisi" style="margin-left:auto;font-size:10px;background:var(--mavi-acik);color:var(--mavi-koyu);padding:1px 8px;border-radius:10px"></span></div>
+            <div class="fh-card-bd">
+              <table class="kalem-tbl">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Parca Adi</th>
+                    <th>Cizim No</th>
+                    <th>Adet</th>
+                    <th>Malzeme</th>
+                    <th>Olcu (mm)</th>
+                  </tr>
+                </thead>
+                <tbody id="kalemTbody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Sablon Onizleme + Yazdir -->
+          <div class="fh-card" id="sablonCard" style="display:none">
+            <div class="fh-card-hd">
+              🖨 Fiyat Hazirlama Sablonu
+              <span style="margin-left:auto;display:flex;gap:8px">
+                <button class="yazdir-btn" onclick="sablonYazdir()" id="tekYazdirBtn">🖨 Sablon Yazdir</button>
+                <button class="yazdir-btn" onclick="topluYazdir()" id="topluYazdirBtn" style="display:none;background:var(--mavi)">🖨 Toplu Yazdir (<span id="topluSayi">0</span> sablon)</button>
+              </span>
+            </div>
+            <div class="fh-card-bd" id="sablonIcerik">
+              <!-- Sablon onizleme JS ile doldurulur -->
+            </div>
+          </div>
+
+          <!-- Kaydet -->
+          <div style="display:flex;gap:10px;margin-top:8px">
+            <button class="fh-tb-btn primary" onclick="kaydet()" style="flex:1;justify-content:center;padding:12px">💾 Kaydet</button>
+            <button class="fh-tb-btn" onclick="talepSil()" style="color:var(--kirmizi);border-color:var(--kirmizi)">🗑 Sil</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ═══════════════════════════════════════════════════════
+   ERSAN MES — Fiyat Hazirlama Modulu
+   AI PDF okuma + Cift tarafli yazdir sablonu
+   ═══════════════════════════════════════════════════════ */
+
+var AIRTABLE_TABLE = 'Fiyat_Talepleri';
+
+var MUSTERILER = [
+  'Tosyali Metalurji A.S.',
+  'Diler Demir-Celik A.S.',
+  'Colakoglu Metalurji A.S.',
+  'Turk Traktor A.S.',
+  'Hidromek',
+  'Roketsan',
+  'Aselsan',
+  'FNSS',
+  'Otokar',
+  'BMC',
+  'MAN Turkiye',
+  'Cummins Turkiye',
+  'Teklas Kaucuk',
+  'Diger'
+];
+
+var talepler = [];
+var seciliTalep = null;
+var dosyalar = { teklif: [], resim: [] };
+var degismis = false;
+
+/* ── Init ── */
+document.addEventListener('DOMContentLoaded', function() {
+  musteriDoldur();
+  talepleriYukle();
+  // Hazirlayan alanini session'dan doldur
+  try {
+    var k = sessionStorage.getItem('kullanici');
+    if (k) document.getElementById('fHazirlayan').value = k;
+  } catch(e){}
+});
+
+// Kaydedilmemis degisiklik uyarisi
+window.addEventListener('beforeunload', function(e) {
+  if (degismis) { e.preventDefault(); e.returnValue = ''; }
+});
+
+/* ── Musteri listesi ── */
+function musteriDoldur() {
+  var sel = document.getElementById('fMusteri');
+  MUSTERILER.forEach(function(m) {
+    var o = document.createElement('option');
+    o.value = m; o.textContent = m;
+    sel.appendChild(o);
+  });
+}
+
+/* ── Airtable CRUD ── */
+function talepleriYukle() {
+  fetch('/.netlify/functions/airtable?table=' + encodeURIComponent(AIRTABLE_TABLE) + '&pageSize=100&sort%5B0%5D%5Bfield%5D=Olusturma_Tarihi&sort%5B0%5D%5Bdirection%5D=desc')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      talepler = (d.records || []).map(function(r) {
+        return Object.assign({ _id: r.id }, r.fields);
+      });
+      listeRender();
+    })
+    .catch(function(e) { toast('Talepler yuklenemedi: ' + e.message, 4000); });
+}
+
+function listeRender(filtre) {
+  var el = document.getElementById('fhListe');
+  var q = (filtre || '').toLowerCase();
+  var list = talepler.filter(function(t) {
+    if (!q) return true;
+    return (t.Talep_No || '').toLowerCase().indexOf(q) > -1 ||
+           (t.Musteri_Adi || '').toLowerCase().indexOf(q) > -1 ||
+           (t.Parca_Adi || '').toLowerCase().indexOf(q) > -1;
+  });
+  if (list.length === 0) {
+    el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--metin4);font-size:12px">Talep bulunamadi</div>';
+    return;
+  }
+  el.innerHTML = list.map(function(t) {
+    var cls = seciliTalep && seciliTalep._id === t._id ? ' secili' : '';
+    var durumCls = 'yeni';
+    if (t.Durum === 'AI Okunuyor') durumCls = 'ai';
+    else if (t.Durum === 'Sablon Hazir') durumCls = 'hazir';
+    else if (t.Durum === 'Tamamlandi') durumCls = 'tamam';
+    return '<div class="fh-item' + cls + '" onclick="talepSec(\'' + t._id + '\')">' +
+      '<div class="fh-item-no">' + (t.Talep_No || '—') + '</div>' +
+      '<div class="fh-item-musteri">' + (t.Musteri_Adi || 'Belirtilmemis') + ' — ' + (t.Parca_Adi || '') + '</div>' +
+      '<div class="fh-item-tarih">' + (t.Tarih || '') + '</div>' +
+      '<span class="fh-item-durum ' + durumCls + '">' + (t.Durum || 'Yeni') + '</span>' +
+      '</div>';
+  }).join('');
+}
+
+function listeFiltre(v) { listeRender(v); }
+
+/* ── Talep sec ── */
+function talepSec(id) {
+  if (degismis && !confirm('Kaydedilmemis degisiklikler var. Devam?')) return;
+  seciliTalep = talepler.find(function(t) { return t._id === id; });
+  if (!seciliTalep) return;
+  degismis = false;
+  dosyalar = { teklif: [], resim: [] };
+  formDoldur(seciliTalep);
+  document.getElementById('fhBos').style.display = 'none';
+  document.getElementById('fhDetay').style.display = 'block';
+  listeRender();
+  kritikKontrol();
+}
+
+function formDoldur(t) {
+  document.getElementById('fTalepNo').value = t.Talep_No || '';
+  document.getElementById('fTarih').value = t.Tarih || '';
+  document.getElementById('fMusteri').value = t.Musteri_Adi || '';
+  document.getElementById('fTeklifRef').value = t.Teklif_Ref || '';
+  document.getElementById('fParcaAdi').value = t.Parca_Adi || '';
+  document.getElementById('fCizimNo').value = t.Cizim_No || '';
+  document.getElementById('fDosyaNo').value = t.Dosya_No || '';
+  document.getElementById('fAdet').value = t.Adet || '';
+  document.getElementById('fMalzeme').value = t.Malzeme || '';
+  document.getElementById('fTeslimTarihi').value = t.Teslim_Tarihi || '';
+  document.getElementById('fHazirlayan').value = t.Hazirlayan || '';
+  document.getElementById('fNotlar').value = t.Notlar || '';
+
+  // AI sonuc varsa kalemleri goster
+  if (t.AI_Sonuc) {
+    try {
+      var sonuc = JSON.parse(t.AI_Sonuc);
+      if (sonuc.kalemler && sonuc.kalemler.length > 0) {
+        kalemlerGoster(sonuc.kalemler);
+      }
+    } catch(e) {}
+  }
+
+  // Kalemler varsa goster
+  if (t.Kalemler) {
+    try {
+      var kalemler = JSON.parse(t.Kalemler);
+      if (kalemler.length > 0) kalemlerGoster(kalemler);
+    } catch(e) {}
+  }
+
+  // Sablon goster
+  if (t.Durum === 'Sablon Hazir' || t.Durum === 'Tamamlandi') {
+    sablonOlustur();
+  }
+
+  // Dosya listelerini temizle
+  document.getElementById('dosyaTeklif').innerHTML = '';
+  document.getElementById('dosyaResim').innerHTML = '';
+  aiDurumGuncelle();
+}
+
+/* ── Yeni talep ── */
+function yeniTalep() {
+  if (degismis && !confirm('Kaydedilmemis degisiklikler var. Devam?')) return;
+  var bugun = new Date();
+  var gg = ('0' + bugun.getDate()).slice(-2);
+  var aa = ('0' + (bugun.getMonth() + 1)).slice(-2);
+  var yy = bugun.getFullYear().toString().slice(-2);
+  var sira = ('00' + (talepler.length + 1)).slice(-3);
+  var no = 'FH-' + yy + aa + gg + '-' + sira;
+
+  seciliTalep = {
+    _id: null,
+    Talep_No: no,
+    Durum: 'Yeni',
+    Tarih: bugun.toISOString().split('T')[0],
+    Musteri_Adi: '',
+    Teklif_Ref: '',
+    Parca_Adi: '',
+    Cizim_No: '',
+    Dosya_No: '',
+    Adet: '',
+    Malzeme: '',
+    Teslim_Tarihi: '',
+    Hazirlayan: '',
+    Notlar: '',
+    Kalemler: '',
+    AI_Sonuc: ''
+  };
+
+  dosyalar = { teklif: [], resim: [] };
+  degismis = true;
+  formDoldur(seciliTalep);
+  document.getElementById('fhBos').style.display = 'none';
+  document.getElementById('fhDetay').style.display = 'block';
+  document.getElementById('kalemlerCard').style.display = 'none';
+  document.getElementById('sablonCard').style.display = 'none';
+  document.getElementById('dosyaTeklif').innerHTML = '';
+  document.getElementById('dosyaResim').innerHTML = '';
+
+  // Hazirlayan
+  try {
+    var k = sessionStorage.getItem('kullanici');
+    if (k) document.getElementById('fHazirlayan').value = k;
+  } catch(e){}
+
+  listeRender();
+  toast('Yeni fiyat talebi olusturuldu: ' + no);
+}
+
+/* ── Kaydet ── */
+function kaydet() {
+  var fields = {
+    Talep_No: document.getElementById('fTalepNo').value,
+    Durum: seciliTalep.Durum || 'Yeni',
+    Tarih: document.getElementById('fTarih').value,
+    Musteri_Adi: document.getElementById('fMusteri').value,
+    Teklif_Ref: document.getElementById('fTeklifRef').value,
+    Parca_Adi: document.getElementById('fParcaAdi').value,
+    Cizim_No: document.getElementById('fCizimNo').value,
+    Dosya_No: document.getElementById('fDosyaNo').value,
+    Adet: parseInt(document.getElementById('fAdet').value) || null,
+    Malzeme: document.getElementById('fMalzeme').value,
+    Teslim_Tarihi: document.getElementById('fTeslimTarihi').value,
+    Hazirlayan: document.getElementById('fHazirlayan').value,
+    Notlar: document.getElementById('fNotlar').value,
+    Kalemler: seciliTalep.Kalemler || '',
+    AI_Sonuc: seciliTalep.AI_Sonuc || '',
+    Olusturma_Tarihi: seciliTalep.Olusturma_Tarihi || new Date().toISOString().split('T')[0]
+  };
+
+  if (seciliTalep._id) {
+    // PATCH
+    fetch('/.netlify/functions/airtable', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ table: AIRTABLE_TABLE, id: seciliTalep._id, fields: fields })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function() {
+      degismis = false;
+      toast('Talep guncellendi');
+      talepleriYukle();
+    })
+    .catch(function(e) { toast('Hata: ' + e.message, 4000); });
+  } else {
+    // POST
+    fetch('/.netlify/functions/airtable', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        method: 'POST',
+        path: '/v0/app5LDgJMgocw79Ix/' + encodeURIComponent(AIRTABLE_TABLE),
+        body: { fields: fields }
+      })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      seciliTalep._id = d.id;
+      degismis = false;
+      toast('Talep kaydedildi');
+      talepleriYukle();
+    })
+    .catch(function(e) { toast('Hata: ' + e.message, 4000); });
+  }
+}
+
+/* ── Sil ── */
+function talepSil() {
+  if (!seciliTalep || !seciliTalep._id) return;
+  if (!confirm('Bu talebi silmek istediginizden emin misiniz?')) return;
+  fetch('/.netlify/functions/airtable', {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ table: AIRTABLE_TABLE, id: seciliTalep._id })
+  })
+  .then(function() {
+    seciliTalep = null;
+    degismis = false;
+    document.getElementById('fhBos').style.display = '';
+    document.getElementById('fhDetay').style.display = 'none';
+    toast('Talep silindi');
+    talepleriYukle();
+  })
+  .catch(function(e) { toast('Hata: ' + e.message, 4000); });
+}
+
+/* ── Dosya yukleme ── */
+function zoneDrag(e, el) { e.preventDefault(); el.classList.add('drag-over'); }
+function zoneLeave(el) { el.classList.remove('drag-over'); }
+
+function zoneDrop(e, tip) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  var files = Array.from(e.dataTransfer.files);
+  files.forEach(function(f) { dosyaEkle(f, tip); });
+}
+
+function dosyaSec(e, tip) {
+  var files = Array.from(e.target.files);
+  files.forEach(function(f) { dosyaEkle(f, tip); });
+  e.target.value = '';
+}
+
+function dosyaEkle(file, tip) {
+  dosyalar[tip].push(file);
+  dosyaListeRender(tip);
+  aiDurumGuncelle();
+  degismis = true;
+}
+
+function dosyaListeRender(tip) {
+  var el = document.getElementById(tip === 'teklif' ? 'dosyaTeklif' : 'dosyaResim');
+  el.innerHTML = dosyalar[tip].map(function(f, i) {
+    var boyut = f.size > 1048576 ? (f.size / 1048576).toFixed(1) + ' MB' : (f.size / 1024).toFixed(0) + ' KB';
+    return '<div class="dosya-item">' +
+      '<span>📄</span><span>' + f.name + '</span><span style="color:var(--metin4);font-size:10px">(' + boyut + ')</span>' +
+      '<span class="sil" onclick="dosyaSil(\'' + tip + '\',' + i + ')">✕</span></div>';
+  }).join('');
+}
+
+function dosyaSil(tip, idx) {
+  dosyalar[tip].splice(idx, 1);
+  dosyaListeRender(tip);
+  aiDurumGuncelle();
+}
+
+function aiDurumGuncelle() {
+  var btn = document.getElementById('aiBtn');
+  btn.disabled = dosyalar.teklif.length === 0 && dosyalar.resim.length === 0;
+}
+
+/* ── AI Oku ── */
+async function aiOku() {
+  var btn = document.getElementById('aiBtn');
+  btn.disabled = true;
+  btn.innerHTML = '⏳ AI Analiz Ediliyor...';
+
+  var ilerleme = document.getElementById('aiIlerleme');
+  ilerleme.classList.add('aktif');
+
+  try {
+    // Adim 1: Teklif formu oku
+    adimGuncelle(1, 'aktif');
+    var teklifIcerik = '';
+    if (dosyalar.teklif.length > 0) {
+      teklifIcerik = await dosyaToBase64(dosyalar.teklif[0]);
+    }
+
+    // Adim 2: Teknik resimler
+    adimGuncelle(1, 'tamam');
+    adimGuncelle(2, 'aktif');
+    var resimler = [];
+    for (var i = 0; i < dosyalar.resim.length; i++) {
+      resimler.push(await dosyaToBase64(dosyalar.resim[i]));
+    }
+
+    // Adim 3: AI analiz
+    adimGuncelle(2, 'tamam');
+    adimGuncelle(3, 'aktif');
+
+    var content = [];
+
+    // Sistem promptu
+    var sistemPrompt = 'Sen Ersan Endustriyel Makine icin fiyat teklifi hazirlayan bir asistansin.\n\n' +
+      'Verilen PDF dosyalarini analiz et ve su bilgileri cikar:\n' +
+      '- musteri_adi: Musterinin tam adi\n' +
+      '- teklif_ref: Musterinin teklif/ihale referans numarasi\n' +
+      '- dosya_no: Dosya numarasi\n' +
+      '- kalemler: Her kalem icin { parca_adi, cizim_no, adet, malzeme, olcu }\n\n' +
+      'ERSAN\'A OZEL BILGILER:\n' +
+      '- Ersan Endustriyel Makine: CNC isleme, torna, freze, taslama\n' +
+      '- Sik kullanilan malzemeler: 4140, 4340, 1040, AISI 304L, UDDEHOLM DIEVAR\n' +
+      '- Fason islemler: Isil islem, taslama, induksiyon sertlestirme\n' +
+      '- Musteri firmalari: Tosyali, Diler, Colakoglu, Turk Traktor, Hidromek\n' +
+      '- XFA/SAP formatindaki PDF\'lerde kalem tablosunu mutlaka oku\n\n' +
+      'Yaniti SADECE JSON olarak ver, baska metin ekleme:\n' +
+      '{\n' +
+      '  "musteri_adi": "...",\n' +
+      '  "teklif_ref": "...",\n' +
+      '  "dosya_no": "...",\n' +
+      '  "kalemler": [\n' +
+      '    { "parca_adi": "...", "cizim_no": "...", "adet": 0, "malzeme": "...", "olcu": "..." }\n' +
+      '  ]\n' +
+      '}';
+
+    // Teklif formu
+    if (teklifIcerik) {
+      content.push({
+        type: 'image',
+        source: { type: 'base64', media_type: 'application/pdf', data: teklifIcerik }
+      });
+      content.push({ type: 'text', text: 'Yukardaki teklif isteme formu PDF\'ini analiz et.' });
+    }
+
+    // Teknik resimler
+    for (var j = 0; j < resimler.length; j++) {
+      var tip = dosyalar.resim[j].type || 'application/pdf';
+      content.push({
+        type: 'image',
+        source: { type: 'base64', media_type: tip, data: resimler[j] }
+      });
+      content.push({ type: 'text', text: 'Teknik resim ' + (j + 1) + '/' + resimler.length });
+    }
+
+    content.push({ type: 'text', text: sistemPrompt });
+
+    var res = await fetch('/.netlify/functions/claude', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 4096,
+        messages: [{ role: 'user', content: content }]
+      })
+    });
+
+    var data = await res.json();
+    if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+
+    var aiText = '';
+    if (data.content && data.content.length > 0) {
+      aiText = data.content[0].text || '';
+    }
+
+    // JSON parse
+    var jsonMatch = aiText.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('AI JSON yaniti donmedi');
+    var sonuc = JSON.parse(jsonMatch[0]);
+
+    // Adim 4: Form doldur
+    adimGuncelle(3, 'tamam');
+    adimGuncelle(4, 'aktif');
+
+    // Form alanlarini doldur (AI)
+    if (sonuc.musteri_adi) {
+      var sel = document.getElementById('fMusteri');
+      var found = false;
+      for (var k = 0; k < sel.options.length; k++) {
+        if (sel.options[k].value.toLowerCase().indexOf(sonuc.musteri_adi.toLowerCase().split(' ')[0]) > -1) {
+          sel.value = sel.options[k].value;
+          sel.classList.add('ai-dolu');
+          found = true;
+          break;
+        }
+      }
+      if (!found && sonuc.musteri_adi) {
+        // Diger sec, notlara yaz
+        sel.value = 'Diger';
+        document.getElementById('fNotlar').value = 'AI tespit: ' + sonuc.musteri_adi + '\n' + (document.getElementById('fNotlar').value || '');
+      }
+    }
+
+    if (sonuc.teklif_ref) { aiAlanDoldur('fTeklifRef', sonuc.teklif_ref); }
+    if (sonuc.dosya_no) { aiAlanDoldur('fDosyaNo', sonuc.dosya_no); }
+
+    // Kalemler
+    if (sonuc.kalemler && sonuc.kalemler.length > 0) {
+      // Ilk kalemi ana forma yaz
+      var ilk = sonuc.kalemler[0];
+      if (ilk.parca_adi) aiAlanDoldur('fParcaAdi', ilk.parca_adi);
+      if (ilk.cizim_no) aiAlanDoldur('fCizimNo', ilk.cizim_no);
+      if (ilk.adet) aiAlanDoldur('fAdet', ilk.adet);
+      if (ilk.malzeme) aiAlanDoldur('fMalzeme', ilk.malzeme);
+
+      kalemlerGoster(sonuc.kalemler);
+      seciliTalep.Kalemler = JSON.stringify(sonuc.kalemler);
+    }
+
+    seciliTalep.AI_Sonuc = JSON.stringify(sonuc);
+    seciliTalep.Durum = 'Sablon Hazir';
+    degismis = true;
+
+    adimGuncelle(4, 'tamam');
+
+    // Sablon olustur
+    sablonOlustur();
+
+    toast('AI analizi tamamlandi! Alanlar dolduruldu.');
+
+  } catch (e) {
+    console.error('AI hata:', e);
+    toast('AI hatasi: ' + e.message, 5000);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '🤖 AI ile Otomatik Doldur';
+    aiDurumGuncelle();
+  }
+}
+
+function aiAlanDoldur(id, deger) {
+  var el = document.getElementById(id);
+  el.value = deger;
+  el.classList.add('ai-dolu');
+}
+
+function adimGuncelle(no, durum) {
+  var el = document.getElementById('aiAdim' + no);
+  el.className = 'ai-adim';
+  if (durum === 'tamam') el.classList.add('tamam');
+  else if (durum === 'aktif') el.classList.add('aktif-adim');
+}
+
+function dosyaToBase64(file) {
+  return new Promise(function(resolve, reject) {
+    var reader = new FileReader();
+    reader.onload = function() {
+      var result = reader.result;
+      var base64 = result.split(',')[1];
+      resolve(base64);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+/* ── Kalemler tablosu ── */
+function kalemlerGoster(kalemler) {
+  var card = document.getElementById('kalemlerCard');
+  card.style.display = 'block';
+  document.getElementById('kalemSayisi').textContent = kalemler.length + ' kalem';
+
+  var tbody = document.getElementById('kalemTbody');
+  tbody.innerHTML = kalemler.map(function(k, i) {
+    return '<tr>' +
+      '<td>' + (i + 1) + '</td>' +
+      '<td>' + (k.parca_adi || '—') + '</td>' +
+      '<td>' + (k.cizim_no || '—') + '</td>' +
+      '<td>' + (k.adet || '—') + '</td>' +
+      '<td>' + (k.malzeme || '—') + '</td>' +
+      '<td>' + (k.olcu || '—') + '</td>' +
+      '</tr>';
+  }).join('');
+}
+
+/* ── Sablon ── */
+function sablonOlustur() {
+  var card = document.getElementById('sablonCard');
+  card.style.display = 'block';
+
+  var kalemler = [];
+  try { kalemler = JSON.parse(seciliTalep.Kalemler || '[]'); } catch(e) {}
+
+  // Toplu yazdir butonu
+  if (kalemler.length > 1) {
+    document.getElementById('topluYazdirBtn').style.display = 'inline-flex';
+    document.getElementById('topluSayi').textContent = kalemler.length;
+    document.getElementById('tekYazdirBtn').textContent = '🖨 Ilk Kalem Yazdir';
+  } else {
+    document.getElementById('topluYazdirBtn').style.display = 'none';
+    document.getElementById('tekYazdirBtn').textContent = '🖨 Sablon Yazdir';
+  }
+
+  // Onizleme — ilk kalem
+  var k = kalemler[0] || {};
+  document.getElementById('sablonIcerik').innerHTML = sablonHTML(k, 0, kalemler.length);
+}
+
+function sablonHTML(kalem, idx, toplam) {
+  var talepNo = document.getElementById('fTalepNo').value;
+  var musteri = document.getElementById('fMusteri').value;
+  var tarih = document.getElementById('fTarih').value;
+  var dosyaNo = document.getElementById('fDosyaNo').value;
+  var hazirlayan = document.getElementById('fHazirlayan').value;
+  var teklifRef = document.getElementById('fTeklifRef').value;
+
+  return '<div class="sablon-onizleme sablon-sayfa">' +
+    '<div class="sablon-header">' +
+      '<div><div class="sablon-logo">ERSAN</div><div class="sablon-logo-sub">Endustriyel Makine San. Tic. Ltd. Sti.</div></div>' +
+      '<div class="sablon-info">' +
+        '<div><b>Fiyat Hazirlama Formu</b></div>' +
+        '<div>No: ' + talepNo + (toplam > 1 ? ' / K' + (idx + 1) : '') + '</div>' +
+        '<div>Tarih: ' + tarih + '</div>' +
+      '</div>' +
+    '</div>' +
+
+    '<table class="sablon-tablo">' +
+      '<tr><th style="width:25%">Musteri</th><td>' + musteri + '</td><th style="width:15%">Teklif Ref</th><td>' + teklifRef + '</td></tr>' +
+      '<tr><th>Dosya No</th><td>' + dosyaNo + '</td><th>Kalem</th><td>' + (idx + 1) + ' / ' + toplam + '</td></tr>' +
+    '</table>' +
+
+    '<table class="sablon-tablo">' +
+      '<tr><th style="width:25%">Parca Adi</th><td colspan="3">' + (kalem.parca_adi || '') + '</td></tr>' +
+      '<tr><th>Cizim No</th><td>' + (kalem.cizim_no || '') + '</td><th style="width:15%">Adet</th><td>' + (kalem.adet || '') + '</td></tr>' +
+      '<tr><th>Malzeme</th><td>' + (kalem.malzeme || '') + '</td><th>Olcu</th><td>' + (kalem.olcu || '') + '</td></tr>' +
+    '</table>' +
+
+    '<div style="margin-top:12px"><b style="font-size:11px;color:var(--metin3)">OPERASYON PLANI</b></div>' +
+    '<table class="sablon-tablo">' +
+      '<tr><th>Op</th><th>Islem</th><th>Tezgah</th><th>Sure (dk)</th><th>Maliyet (TL)</th></tr>' +
+      '<tr><td>Op10</td><td></td><td></td><td></td><td></td></tr>' +
+      '<tr><td>Op20</td><td></td><td></td><td></td><td></td></tr>' +
+      '<tr><td>Op30</td><td></td><td></td><td></td><td></td></tr>' +
+      '<tr><td>Op40</td><td></td><td></td><td></td><td></td></tr>' +
+      '<tr><td>Op50</td><td></td><td></td><td></td><td></td></tr>' +
+    '</table>' +
+
+    '<div style="margin-top:12px"><b style="font-size:11px;color:var(--metin3)">FASON ISLEMLER</b></div>' +
+    '<table class="sablon-tablo">' +
+      '<tr><th>Islem</th><th>Tedarikci</th><th>Birim Fiyat</th><th>Toplam</th></tr>' +
+      '<tr><td>Isil Islem</td><td></td><td></td><td></td></tr>' +
+      '<tr><td>Taslama</td><td></td><td></td><td></td></tr>' +
+      '<tr><td>Kaplama</td><td></td><td></td><td></td></tr>' +
+    '</table>' +
+
+    '<div style="margin-top:12px"><b style="font-size:11px;color:var(--metin3)">MALIYET OZETI</b></div>' +
+    '<table class="sablon-tablo">' +
+      '<tr><th style="width:50%">Kalem</th><th>Birim</th><th>Toplam</th></tr>' +
+      '<tr><td>Malzeme</td><td></td><td></td></tr>' +
+      '<tr><td>Iscilik</td><td></td><td></td></tr>' +
+      '<tr><td>Fason</td><td></td><td></td></tr>' +
+      '<tr><td>Genel Gider (%15)</td><td></td><td></td></tr>' +
+      '<tr><td>Kar Marji (%20)</td><td></td><td></td></tr>' +
+      '<tr><td style="font-weight:700">BIRIM FIYAT</td><td style="font-weight:700"></td><td style="font-weight:700"></td></tr>' +
+      '<tr><td style="font-weight:700">TOPLAM (' + (kalem.adet || '?') + ' adet)</td><td></td><td style="font-weight:700"></td></tr>' +
+    '</table>' +
+
+    '<div style="margin-top:12px"><b style="font-size:11px;color:var(--metin3)">NOTLAR</b></div>' +
+    '<div class="sablon-alan"></div>' +
+
+    '<div class="sablon-imza">' +
+      '<div class="sablon-imza-kutu">Hazirlayan<br><small>' + hazirlayan + '</small></div>' +
+      '<div class="sablon-imza-kutu">Kontrol Eden</div>' +
+      '<div class="sablon-imza-kutu">Onaylayan</div>' +
+    '</div>' +
+
+    '<div style="margin-top:12px;font-size:9px;color:var(--metin4);text-align:center">' +
+      'Ersan Endustriyel Makine San. Tic. Ltd. Sti. — Basiskele Sanayi Sitesi 12.Blok No:2, Kocaeli — AS9100 Rev.D' +
+    '</div>' +
+  '</div>';
+}
+
+/* ── Yazdir ── */
+function sablonYazdir() {
+  window.print();
+}
+
+function topluYazdir() {
+  var kalemler = [];
+  try { kalemler = JSON.parse(seciliTalep.Kalemler || '[]'); } catch(e) {}
+  if (kalemler.length === 0) return;
+
+  // Tum sablonlari iceriye koy
+  var icerik = document.getElementById('sablonIcerik');
+  icerik.innerHTML = kalemler.map(function(k, i) {
+    return sablonHTML(k, i, kalemler.length);
+  }).join('');
+
+  setTimeout(function() { window.print(); }, 200);
+}
+
+/* ── Kritik saat kontrolu ── */
+function kritikKontrol() {
+  if (!seciliTalep || !seciliTalep.Teslim_Tarihi) {
+    document.getElementById('kritikBanner').classList.remove('show');
+    return;
+  }
+  var teslim = new Date(seciliTalep.Teslim_Tarihi);
+  var simdi = new Date();
+  var farkSaat = (teslim - simdi) / 36e5;
+  if (farkSaat > 0 && farkSaat <= 4) {
+    document.getElementById('kritikMesaj').textContent =
+      'Son teslim tarihine ' + Math.ceil(farkSaat) + ' saat kaldi!';
+    document.getElementById('kritikBanner').classList.add('show');
+  } else {
+    document.getElementById('kritikBanner').classList.remove('show');
+  }
+}
+
+/* ── Degisiklik izleme ── */
+document.addEventListener('input', function(e) {
+  if (e.target.closest('#fhDetay')) degismis = true;
+});
+
+/* ── Toast ── */
+function toast(msg, ms) {
+  var el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(el._t);
+  el._t = setTimeout(function() { el.classList.remove('show'); }, ms || 3000);
+}
+</script>
+</body>
+</html>

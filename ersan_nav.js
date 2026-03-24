@@ -6,6 +6,7 @@ var ERSAN_NAV = [
   ]},
   { group: 'Sat\u0131\u015F', collapsed: false, items: [
     { label: 'Teklifler',   href: 'ersan_teklif.html' },
+    { label: 'Fiyat Haz\u0131rlama', href: 'ersan_fiyat_hazirlama.html' },
     { label: 'Sipari\u015Fler',  href: 'ersan_siparisler.html' },
     { label: 'M\u00FC\u015Fteriler', href: 'ersan_musteriler.html' },
     { label: 'Sevkiyat',    href: 'ersan_sevkiyat.html' },

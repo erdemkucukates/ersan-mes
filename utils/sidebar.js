@@ -116,6 +116,7 @@
       ]},
       { id:'satis', title:'Sat\u0131\u015F', iso:'\u00A78.2', icon:'\uD83D\uDCBC', dot:'#14b8a6', items:[
         {f:'ersan_teklif.html',          l:'Teklifler',            i:'\uD83D\uDCB0'},
+        {f:'ersan_fiyat_hazirlama.html', l:'Fiyat Haz\u0131rlama', i:'\uD83D\uDCB0'},
         {f:'ersan_siparisler.html',      l:'M\u00FC\u015Fteri Sipari\u015Fleri', i:'\uD83D\uDCCB'},
         {f:'ersan_musteriler.html',      l:'M\u00FC\u015Fteriler', i:'\uD83E\uDD1D'},
         {f:'ersan_sevkiyat.html',        l:'Sevkiyat',             i:'\uD83D\uDCE4'},
