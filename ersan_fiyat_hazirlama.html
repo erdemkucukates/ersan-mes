@@ -852,13 +852,41 @@ async function aiOku() {
       '  "guven": 90\n' +
       '}';
 
-    // Teklif formu
+    // Teklif formu (XFA kontrolu ile)
     if (teklifHazir) {
+      var xfaMetin = null;
       if (teklifHazir.tip === 'application/pdf') {
-        content.push({
-          type: 'document',
-          source: { type: 'base64', media_type: 'application/pdf', data: teklifHazir.b64 }
-        });
+        // XFA/SAP PDF kontrolu
+        try {
+          var raw = atob(teklifHazir.b64);
+          var isXFA = raw.indexOf('xdp:xdp') > -1 || raw.indexOf('XFA') > -1 ||
+                      raw.indexOf('Adobe LiveCycle') > -1 || raw.indexOf('AcroForm') > -1;
+          if (isXFA) {
+            console.log('XFA PDF tespit edildi, sunucu tarafinda aciliyor...');
+            toast('XFA PDF aciliyor...');
+            var xfaRes = await fetch('/.netlify/functions/parse-xfa', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ b64: teklifHazir.b64 })
+            });
+            var xfaData = await xfaRes.json();
+            if (xfaData.success && xfaData.text) {
+              console.log('XFA metin cikarildi:', xfaData.text.substring(0, 200));
+              xfaMetin = xfaData.text;
+              content.push({ type: 'text', text: 'Teklif formu metni (XFA PDF den cikarildi):\n\n' + xfaData.text });
+            } else {
+              console.warn('XFA acilamadi, direkt PDF gonderiliyor');
+            }
+          }
+        } catch(xfaErr) { console.warn('XFA kontrol hatasi:', xfaErr); }
+
+        // XFA acilamadiysa direkt PDF gonder
+        if (!xfaMetin) {
+          content.push({
+            type: 'document',
+            source: { type: 'base64', media_type: 'application/pdf', data: teklifHazir.b64 }
+          });
+        }
       } else {
         content.push({
           type: 'image',
