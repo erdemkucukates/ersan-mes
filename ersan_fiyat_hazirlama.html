@@ -363,6 +363,7 @@ var MUSTERILER = [
 var talepler = [];
 var seciliTalep = null;
 var dosyalar = { teklif: [], resim: [] };
+var resimUrller = []; // Airtable'dan yuklenen resim URL'leri
 var degismis = false;
 
 /* ── Init ── */
@@ -441,32 +442,45 @@ function talepSec(id) {
   if (!seciliTalep) return;
   degismis = false;
   dosyalar = { teklif: [], resim: [] };
-  // Kaydedilmis resimleri geri yukle
-  if (seciliTalep.Resim_Base64_List) {
+  resimUrller = [];
+  // Kaydedilmis resim URL'lerini yukle
+  if (seciliTalep.Resim_Urller) {
+    try {
+      resimUrller = JSON.parse(seciliTalep.Resim_Urller);
+      console.log('Resim URL geri yukleme:', resimUrller.length, 'dosya');
+      if (resimUrller.length > 0) {
+        toast(resimUrller.length + ' teknik resim yuklendi');
+        // URL'leri dosya listesi olarak goster
+        var el = document.getElementById('dosyaResim');
+        if (el) {
+          el.innerHTML = resimUrller.map(function(r, i) {
+            return '<div class="dosya-item"><span>📄</span><span>' + r.ad + '</span><span style="color:var(--yesil);font-size:10px">(kaydedilmis)</span></div>';
+          }).join('');
+        }
+        aiDurumGuncelle();
+      }
+    } catch(e) { console.warn('Resim URL parse hatasi:', e); }
+  }
+  // Eski base64 format desteği (geriye uyumluluk)
+  if (resimUrller.length === 0 && seciliTalep.Resim_Base64_List) {
     try {
       var resimListesi = JSON.parse(seciliTalep.Resim_Base64_List);
-      console.log('Resim geri yukleme:', resimListesi.length, 'dosya');
       resimListesi.forEach(function(r) {
-        if (!r.b64 || r.b64.length < 10) {
-          console.warn('Resim base64 yok (buyuk dosya):', r.ad, r.boyut, 'bytes');
-          return;
-        }
+        if (!r.b64 || r.b64.length < 10) return;
         try {
           var byteStr = atob(r.b64);
           var arr = new Uint8Array(byteStr.length);
           for (var i = 0; i < byteStr.length; i++) arr[i] = byteStr.charCodeAt(i);
           var blob = new Blob([arr], { type: r.tip });
-          var file = new File([blob], r.ad, { type: r.tip });
-          dosyalar.resim.push(file);
-          console.log('Resim yuklendi:', r.ad, file.size, 'bytes');
-        } catch(re) { console.warn('Resim decode hatasi:', r.ad, re); }
+          dosyalar.resim.push(new File([blob], r.ad, { type: r.tip }));
+        } catch(re) {}
       });
       if (dosyalar.resim.length > 0) {
-        toast(dosyalar.resim.length + ' teknik resim yuklendi');
+        toast(dosyalar.resim.length + ' teknik resim yuklendi (eski format)');
         dosyaListeRender('resim');
         aiDurumGuncelle();
       }
-    } catch(e) { console.warn('Resim geri yukleme hatasi:', e); }
+    } catch(e) {}
   }
   formDoldur(seciliTalep);
   document.getElementById('fhBos').style.display = 'none';
@@ -548,6 +562,7 @@ function yeniTalep() {
   };
 
   dosyalar = { teklif: [], resim: [] };
+  resimUrller = [];
   degismis = true;
   formDoldur(seciliTalep);
   document.getElementById('fhBos').style.display = 'none';
@@ -591,34 +606,43 @@ async function kaydet() {
   // Teslim suresi (number)
   var uretimSuresi = parseInt(document.getElementById('fUretimSuresi').value);
   if (!isNaN(uretimSuresi) && uretimSuresi > 0) fields.Teslim_Suresi = uretimSuresi;
-  // Teknik resimleri kaydet — per-dosya 200KB limit, toplam 95K karakter limit
+  // Teknik resimleri Netlify Blobs'a upload et
   if (dosyalar.resim.length > 0) {
     try {
-      var resimListesi = [];
-      var buyukDosyaVar = false;
+      var uploadUrller = [];
       for (var ri = 0; ri < dosyalar.resim.length; ri++) {
         var dosya = dosyalar.resim[ri];
-        if (dosya.size > 200 * 1024) {
-          // 200KB ustu — sadece referans
-          resimListesi.push({ ad: dosya.name, tip: dosya.type, boyut: dosya.size, b64: '' });
-          buyukDosyaVar = true;
-          console.warn('Dosya buyuk, sadece isim:', dosya.name, dosya.size);
+        toast('Resim yukleniyor: ' + dosya.name + '...');
+        var dataUrl = await dosyaToDataUrl(dosya);
+        var upRes = await fetch('/.netlify/functions/upload-pdf', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            filename: dosya.name,
+            data: dataUrl,
+            recordId: fields.Talep_No || 'FH-unknown',
+            table: 'Fiyat_Talepleri',
+            field: 'skip'
+          })
+        });
+        var upData = await upRes.json();
+        if (upData.success && upData.url) {
+          uploadUrller.push({ ad: dosya.name, url: upData.url, tip: dosya.type });
+          console.log('Resim yuklendi:', dosya.name, upData.url);
         } else {
-          var b64 = await dosyaToBase64(dosya);
-          resimListesi.push({ ad: dosya.name, tip: dosya.type || 'application/pdf', boyut: dosya.size, b64: b64 });
+          console.warn('Resim upload basarisiz:', dosya.name, upData.error);
         }
       }
-      var jsonStr = JSON.stringify(resimListesi);
-      if (jsonStr.length > 95000) {
-        // Hala cok buyuk — tum base64'leri kaldir
-        resimListesi = resimListesi.map(function(r) { return { ad: r.ad, tip: r.tip, boyut: r.boyut, b64: '' }; });
-        jsonStr = JSON.stringify(resimListesi);
-        buyukDosyaVar = true;
+      if (uploadUrller.length > 0) {
+        fields.Resim_Urller = JSON.stringify(uploadUrller);
+        resimUrller = uploadUrller;
+        toast(uploadUrller.length + ' teknik resim kaydedildi');
       }
-      fields.Resim_Base64_List = jsonStr;
-      if (buyukDosyaVar) toast('Buyuk resimler icin sadece dosya adi kaydedildi', 3000);
-      console.log('Resim kayit:', resimListesi.map(function(r) { return r.ad + ' b64:' + (r.b64 ? r.b64.length : 0); }));
-    } catch(e) { console.warn('Resim kayit hatasi:', e); }
+    } catch(e) { console.warn('Resim upload hatasi:', e); }
+  }
+  // Mevcut URL'ler varsa koru (dosya yuklemeden kaydet)
+  if (dosyalar.resim.length === 0 && resimUrller.length > 0) {
+    fields.Resim_Urller = JSON.stringify(resimUrller);
   }
   // Bos stringleri ve null/undefined temizle (Talep_No ve Durum korunsun)
   var koruma = ['Talep_No', 'Durum', 'Tarih', 'Olusturma_Tarihi'];
@@ -1034,6 +1058,15 @@ function dosyaToBase64(file) {
   });
 }
 
+function dosyaToDataUrl(file) {
+  return new Promise(function(resolve, reject) {
+    var reader = new FileReader();
+    reader.onload = function() { resolve(reader.result); };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 async function dosyaHazirla(dosya) {
   var ext = dosya.name.split('.').pop().toLowerCase();
 
@@ -1289,12 +1322,20 @@ function topluYazdir() {
 
   for (var i = 0; i < kalemler.length; i++) {
     // Her kalem icin: kendi teknik resmi + kendi sablonu
-    var resim = dosyalar.resim[i] || dosyalar.resim[0] || null;
+    var rUrl = resimUrller[i] || resimUrller[0] || null;
+    var rDosya = dosyalar.resim[i] || dosyalar.resim[0] || null;
     var sHtml = sablonHTML(kalemler[i], i, kalemler.length);
 
-    if (resim) {
-      var ext = resim.name.split('.').pop().toLowerCase();
-      var blobUrl = URL.createObjectURL(resim);
+    if (rUrl) {
+      // URL'den
+      if ((rUrl.tip || '').indexOf('pdf') > -1 || rUrl.ad.toLowerCase().indexOf('.pdf') > -1) {
+        sayfalar.push('<div class="sayfa"><iframe src="' + rUrl.url + '" style="width:148mm;height:210mm;border:none"></iframe></div>');
+      } else {
+        sayfalar.push('<div class="sayfa" style="display:flex;align-items:center;justify-content:center"><img src="' + rUrl.url + '" style="max-width:148mm;max-height:210mm;object-fit:contain"></div>');
+      }
+    } else if (rDosya) {
+      var ext = rDosya.name.split('.').pop().toLowerCase();
+      var blobUrl = URL.createObjectURL(rDosya);
       if (ext === 'pdf') {
         sayfalar.push('<div class="sayfa"><iframe src="' + blobUrl + '" style="width:148mm;height:210mm;border:none"></iframe></div>');
       } else {
@@ -1331,18 +1372,28 @@ function topluYazdir() {
 
 function yazdirPencereAc(sablonIcerik) {
   var talepNo = (seciliTalep && seciliTalep.Talep_No) || '';
-  var resimVar = dosyalar.resim.length > 0;
+  var resimVar = resimUrller.length > 0 || dosyalar.resim.length > 0;
 
   if (resimVar) {
-    var resimDosya = dosyalar.resim[0];
-    var ext = resimDosya.name.split('.').pop().toLowerCase();
-    var blobUrl = URL.createObjectURL(resimDosya);
-
     var resimSayfa = '';
-    if (ext === 'pdf') {
-      resimSayfa = '<div class="sayfa"><iframe src="' + blobUrl + '" style="width:148mm;height:210mm;border:none;display:block"></iframe></div>';
+    if (resimUrller.length > 0) {
+      // URL'den yukle
+      var rUrl = resimUrller[0].url;
+      var rTip = resimUrller[0].tip || '';
+      if (rTip.indexOf('pdf') > -1 || resimUrller[0].ad.toLowerCase().indexOf('.pdf') > -1) {
+        resimSayfa = '<div class="sayfa"><iframe src="' + rUrl + '" style="width:148mm;height:210mm;border:none;display:block"></iframe></div>';
+      } else {
+        resimSayfa = '<div class="sayfa" style="display:flex;align-items:center;justify-content:center"><img src="' + rUrl + '" style="max-width:148mm;max-height:210mm;object-fit:contain" alt="Teknik Resim"></div>';
+      }
     } else {
-      resimSayfa = '<div class="sayfa" style="display:flex;align-items:center;justify-content:center"><img src="' + blobUrl + '" style="max-width:148mm;max-height:210mm;object-fit:contain" alt="Teknik Resim"></div>';
+      var resimDosya = dosyalar.resim[0];
+      var ext = resimDosya.name.split('.').pop().toLowerCase();
+      var blobUrl = URL.createObjectURL(resimDosya);
+      if (ext === 'pdf') {
+        resimSayfa = '<div class="sayfa"><iframe src="' + blobUrl + '" style="width:148mm;height:210mm;border:none;display:block"></iframe></div>';
+      } else {
+        resimSayfa = '<div class="sayfa" style="display:flex;align-items:center;justify-content:center"><img src="' + blobUrl + '" style="max-width:148mm;max-height:210mm;object-fit:contain" alt="Teknik Resim"></div>';
+      }
     }
 
     var sablonSrc = sablonWrap(sablonIcerik).replace(/"/g, '&quot;');
