@@ -444,9 +444,9 @@ function talepSec(id) {
   dosyalar = { teklif: [], resim: [] };
   resimUrller = [];
   // Kaydedilmis resim URL'lerini yukle
-  if (seciliTalep.Resim_Urller) {
+  if (seciliTalep.Resim_Base64_List) {
     try {
-      resimUrller = JSON.parse(seciliTalep.Resim_Urller);
+      resimUrller = JSON.parse(seciliTalep.Resim_Base64_List);
       console.log('Resim URL geri yukleme:', resimUrller.length, 'dosya');
       if (resimUrller.length > 0) {
         toast(resimUrller.length + ' teknik resim yuklendi');
@@ -634,7 +634,7 @@ async function kaydet() {
         }
       }
       if (uploadUrller.length > 0) {
-        fields.Resim_Urller = JSON.stringify(uploadUrller);
+        fields.Resim_Base64_List = JSON.stringify(uploadUrller);
         resimUrller = uploadUrller;
         toast(uploadUrller.length + ' teknik resim kaydedildi');
       }
@@ -642,7 +642,7 @@ async function kaydet() {
   }
   // Mevcut URL'ler varsa koru (dosya yuklemeden kaydet)
   if (dosyalar.resim.length === 0 && resimUrller.length > 0) {
-    fields.Resim_Urller = JSON.stringify(resimUrller);
+    fields.Resim_Base64_List = JSON.stringify(resimUrller);
   }
   // Bos stringleri ve null/undefined temizle (Talep_No ve Durum korunsun)
   var koruma = ['Talep_No', 'Durum', 'Tarih', 'Olusturma_Tarihi'];
