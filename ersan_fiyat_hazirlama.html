@@ -560,8 +560,11 @@ function kaydet() {
   };
   // Adet sayisal ise ekle (null Airtable'da hata verir)
   if (!isNaN(adetVal) && adetVal > 0) fields.Adet = adetVal;
-  // Bos stringleri temizle
-  Object.keys(fields).forEach(function(k) { if (fields[k] === '') delete fields[k]; });
+  // Bos stringleri temizle (Talep_No ve Durum kornsun)
+  var koruma = ['Talep_No', 'Durum', 'Tarih', 'Olusturma_Tarihi'];
+  Object.keys(fields).forEach(function(k) {
+    if (fields[k] === '' && koruma.indexOf(k) === -1) delete fields[k];
+  });
 
   if (seciliTalep._id) {
     // PATCH
@@ -571,7 +574,8 @@ function kaydet() {
       body: JSON.stringify({ table: AIRTABLE_TABLE, id: seciliTalep._id, fields: fields })
     })
     .then(function(r) { return r.json(); })
-    .then(function() {
+    .then(function(d) {
+      if (d.error) { toast('Airtable hata: ' + (d.error.message || JSON.stringify(d.error)), 5000); return; }
       degismis = false;
       toast('Talep guncellendi');
       talepleriYukle();
@@ -590,6 +594,7 @@ function kaydet() {
     })
     .then(function(r) { return r.json(); })
     .then(function(d) {
+      if (d.error) { toast('Airtable hata: ' + (d.error.message || JSON.stringify(d.error)), 5000); return; }
       seciliTalep._id = d.id;
       degismis = false;
       toast('Talep kaydedildi');
