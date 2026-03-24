@@ -732,26 +732,55 @@ async function aiOku() {
     var content = [];
 
     // Sistem promptu
-    var sistemPrompt = 'Sen Ersan Endustriyel Makine icin fiyat teklifi hazirlayan bir asistansin.\n\n' +
-      'Verilen PDF dosyalarini analiz et ve su bilgileri cikar:\n' +
-      '- musteri_adi: Musterinin tam adi\n' +
-      '- teklif_ref: Musterinin teklif/ihale referans numarasi\n' +
-      '- dosya_no: Dosya numarasi\n' +
-      '- kalemler: Her kalem icin { parca_adi, cizim_no, adet, malzeme, olcu }\n\n' +
-      'ERSAN\'A OZEL BILGILER:\n' +
-      '- Ersan Endustriyel Makine: CNC isleme, torna, freze, taslama\n' +
-      '- Sik kullanilan malzemeler: 4140, 4340, 1040, AISI 304L, UDDEHOLM DIEVAR\n' +
-      '- Fason islemler: Isil islem, taslama, induksiyon sertlestirme\n' +
-      '- Musteri firmalari: Tosyali, Diler, Colakoglu, Turk Traktor, Hidromek\n' +
-      '- XFA/SAP formatindaki PDF\'lerde kalem tablosunu mutlaka oku\n\n' +
-      'Yaniti SADECE JSON olarak ver, baska metin ekleme:\n' +
+    var sistemPrompt = 'Sen bir satin alma formu okuma asistanisin.\n' +
+      'Sana verilen PDF veya goruntu dosyalarini dikkatlice oku.\n\n' +
+      '## GOREV\n' +
+      'Tum dosyalari tara ve asagidaki JSON formatinda bilgileri cikar.\n' +
+      'SADECE JSON dondur. Baska hicbir sey yazma.\n\n' +
+      '## CIKARILACAK BILGILER\n\n' +
+      '### musteri_adi\n' +
+      '- Belgedeki "ALICI FIRMA", "MUSTERI", "IHALEYI DUZENLEYEN", "SATINALMA", "FIRMA ADI", "COMPANY" gibi etiketlerin yanindaki firma adi\n' +
+      '- Ersan Endustriyel = satici, biz, ATLA\n' +
+      '- Tum unvan dahil yaz: "A.S.", "Ltd.", "San." dahil\n' +
+      '- Ornekler: "Tosyali Metalurji Sanayi A.S.", "Diler Demir-Celik End. A.S.", "Colakoglu Metalurji A.S."\n\n' +
+      '### teklif_ref\n' +
+      '- "TEKLIF NO", "IHALE NO", "SIPARIS NO", "PO NUMBER", "FORM NO" etiketinin yanindaki numara\n\n' +
+      '### tarih\n' +
+      '- "TARIH", "DATE" etiketinin yanindaki tarih -> YYYY-MM-DD formatina cevir\n\n' +
+      '### kalemler — DIKKAT: Her teknik resim = 1 kalem\n' +
+      'Her kalem icin sunlari cikar:\n' +
+      '- parca_adi: Parca adi, malzeme tanimi\n' +
+      '- cizim_no: Resim numarasi, cizim no, drawing no\n' +
+      '- dosya_no: Dosya no, is talep no\n' +
+      '- adet: COK ONEMLI — Bu kalemin kac adet uretilecegi.\n' +
+      '  * Teknik resimlerde "ADET", "QTY", "QUANTITY", "MIKTAR" yazan sayi\n' +
+      '  * Teklif formunda kalem satirindaki miktar\n' +
+      '  * TOPLAM adet degil, BU PARCA icin adet\n' +
+      '  * Tabloda "TOT. Q.TY" veya "TOPLAM ADET" varsa onu al\n' +
+      '  * Eger "3 PHASE x 3 COLUMN = 9" gibi bir hesap varsa sonucu al: 9\n' +
+      '- malzeme: Malzeme cinsi (4140, AISI 304L, EPOXIDIC RESIN vb.)\n' +
+      '- agirlik: Agirlik bilgisi (varsa, "kg" birimi dahil)\n' +
+      '- olcu: Boyutlar (varsa, "O310xO290x206" formatinda)\n\n' +
+      '### Tekil alanlar (birden fazla kalem varsa ilk kalemi baz al):\n' +
+      '- malzeme: Ilk kalemin malzemesi\n' +
+      '- cizim_no: Ilk kalemin cizim no\n' +
+      '- dosya_no: Dosya/is emri no\n' +
+      '- adet: Ilk kalemin adedi\n\n' +
+      '### guven: 0-100 arasi guven skoru\n\n' +
+      '## CIKTI FORMATI — SADECE BU JSON, BASKA HICBIR SEY YOK:\n' +
       '{\n' +
       '  "musteri_adi": "...",\n' +
       '  "teklif_ref": "...",\n' +
+      '  "tarih": "YYYY-MM-DD",\n' +
+      '  "malzeme": "...",\n' +
+      '  "cizim_no": "...",\n' +
       '  "dosya_no": "...",\n' +
+      '  "adet": "9",\n' +
       '  "kalemler": [\n' +
-      '    { "parca_adi": "...", "cizim_no": "...", "adet": 0, "malzeme": "...", "olcu": "..." }\n' +
-      '  ]\n' +
+      '    { "parca_adi": "...", "cizim_no": "...", "dosya_no": "...", "adet": "9", "malzeme": "...", "agirlik": "...", "olcu": "..." }\n' +
+      '  ],\n' +
+      '  "notlar": "...",\n' +
+      '  "guven": 90\n' +
       '}';
 
     // Teklif formu
@@ -784,7 +813,7 @@ async function aiOku() {
 
     var apiBody = JSON.stringify({
       model: 'claude-sonnet-4-20250514',
-      max_tokens: 2000,
+      max_tokens: 4096,
       messages: [{ role: 'user', content: content }]
     });
     var data = await claudeAPI(apiBody);
@@ -795,10 +824,29 @@ async function aiOku() {
       aiText = data.content[0].text || '';
     }
 
-    // JSON parse
-    var jsonMatch = aiText.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error('AI JSON yaniti donmedi');
-    var sonuc = JSON.parse(jsonMatch[0]);
+    // JSON parse (guclendirilmis)
+    var sonuc;
+    try {
+      var temiz = aiText.replace(/```json\n?/gi, '').replace(/```\n?/gi, '').trim();
+      sonuc = JSON.parse(temiz);
+    } catch(e1) {
+      try {
+        var jsonMatch = aiText.match(/\{[\s\S]*\}/);
+        if (jsonMatch) sonuc = JSON.parse(jsonMatch[0]);
+        else throw new Error('JSON bulunamadi');
+      } catch(e2) {
+        console.error('AI yaniti:', aiText);
+        throw new Error('AI yaniti parse edilemedi');
+      }
+    }
+    // adet alanini string'e cevir
+    if (sonuc.adet) sonuc.adet = String(sonuc.adet);
+    if (sonuc.kalemler) {
+      sonuc.kalemler = sonuc.kalemler.map(function(k) {
+        if (k.adet) k.adet = String(k.adet);
+        return k;
+      });
+    }
 
     // Adim 4: Form doldur
     adimGuncelle(3, 'tamam');
