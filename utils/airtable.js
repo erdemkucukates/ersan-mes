@@ -14,14 +14,18 @@
     if (action === 'list') {
       var query = 'pageSize=' + (opts.pageSize || 100);
       if (opts.filterByFormula) query += '&filterByFormula=' + encodeURIComponent(opts.filterByFormula);
-      var res = await fetch(PROXY, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          method: 'GET',
-          path: '/v0/' + BASE_ID + '/' + encodeURIComponent(table) + '?' + query
-        })
-      });
+      if (opts.sort) {
+        for (var si = 0; si < opts.sort.length; si++) {
+          query += '&sort[' + si + '][field]=' + encodeURIComponent(opts.sort[si].field);
+          if (opts.sort[si].direction) query += '&sort[' + si + '][direction]=' + opts.sort[si].direction;
+        }
+      }
+      var listUrl = PROXY + '?table=' + encodeURIComponent(table) + '&' + query;
+      var res = await fetch(listUrl);
+      if (!res.ok && res.status === 422) {
+        console.warn('Airtable 422 list hatasi:', table, '- GET ile tekrar deneniyor');
+        res = await fetch(listUrl);
+      }
       return res.json();
     }
 
