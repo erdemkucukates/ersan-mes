@@ -456,9 +456,7 @@ function formDoldur(t) {
   document.getElementById('fDosyaNo').value = t.Dosya_No || '';
   document.getElementById('fAdet').value = t.Adet || '';
   document.getElementById('fMalzeme').value = t.Malzeme || '';
-  // Uretim suresi — Notlar'dan parse et
-  var uretimMatch = (t.Notlar || '').match(/Uretim Suresi:\s*(\d+)/);
-  document.getElementById('fUretimSuresi').value = uretimMatch ? uretimMatch[1] : '';
+  document.getElementById('fUretimSuresi').value = t.Teslim_Suresi || '';
   document.getElementById('fHazirlayan').value = t.Hazirlayan || '';
   document.getElementById('fNotlar').value = t.Notlar || '';
 
@@ -559,13 +557,11 @@ function kaydet() {
     AI_Sonuc: seciliTalep.AI_Sonuc || '',
     Olusturma_Tarihi: seciliTalep.Olusturma_Tarihi || new Date().toISOString().split('T')[0]
   };
-  // Adet sayisal ise ekle (null Airtable'da hata verir)
+  // Adet sayisal ise ekle
   if (!isNaN(adetVal) && adetVal > 0) fields.Adet = adetVal;
-  // Uretim suresi — Notlar'a ekle (Teslim_Tarihi date tipinde, sayi yazamayiz)
-  var uretimSuresi = document.getElementById('fUretimSuresi').value;
-  if (uretimSuresi) {
-    fields.Notlar = (fields.Notlar ? fields.Notlar + '\n' : '') + 'Uretim Suresi: ' + uretimSuresi + ' is gunu';
-  }
+  // Teslim suresi (number)
+  var uretimSuresi = parseInt(document.getElementById('fUretimSuresi').value);
+  if (!isNaN(uretimSuresi) && uretimSuresi > 0) fields.Teslim_Suresi = uretimSuresi;
   // Bos stringleri temizle (Talep_No ve Durum kornsun)
   var koruma = ['Talep_No', 'Durum', 'Tarih', 'Olusturma_Tarihi'];
   Object.keys(fields).forEach(function(k) {
@@ -589,23 +585,17 @@ function kaydet() {
     .catch(function(e) { toast('Hata: ' + e.message, 4000); });
   } else {
     // POST
-    var postBody = {
-      method: 'POST',
-      path: '/v0/app5LDgJMgocw79Ix/' + encodeURIComponent(AIRTABLE_TABLE),
-      body: { fields: fields }
-    };
-    console.log('Kaydet POST body:', JSON.stringify(postBody));
     fetch('/.netlify/functions/airtable', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(postBody)
+      body: JSON.stringify({
+        method: 'POST',
+        path: '/v0/app5LDgJMgocw79Ix/' + encodeURIComponent(AIRTABLE_TABLE),
+        body: { fields: fields }
+      })
     })
-    .then(function(r) {
-      console.log('Kaydet response status:', r.status);
-      return r.json();
-    })
+    .then(function(r) { return r.json(); })
     .then(function(d) {
-      console.log('Kaydet response:', JSON.stringify(d));
       if (d.error) { toast('Airtable hata: ' + (d.error.message || JSON.stringify(d.error)), 5000); return; }
       seciliTalep._id = d.id;
       degismis = false;
