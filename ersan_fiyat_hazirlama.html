@@ -307,17 +307,11 @@ textarea.f-inp{resize:vertical;min-height:60px}
             </div>
           </div>
 
-          <!-- Sablon Onizleme + Yazdir -->
-          <div class="fh-card" id="sablonCard" style="display:none">
-            <div class="fh-card-hd">
-              🖨 Fiyat Hazirlama Sablonu
-              <span style="margin-left:auto;display:flex;gap:8px">
-                <button class="yazdir-btn" onclick="sablonYazdir()" id="tekYazdirBtn">🖨 PDF Goruntule & Yazdir</button>
-                <button class="yazdir-btn" onclick="topluYazdir()" id="topluYazdirBtn" style="display:none;background:var(--mavi)">🖨 Toplu Yazdir (<span id="topluSayi">0</span> sablon)</button>
-              </span>
-            </div>
-            <div class="fh-card-bd" id="sablonIcerik">
-              <!-- Sablon onizleme JS ile doldurulur -->
+          <!-- Yazdir butonlari -->
+          <div id="sablonCard" style="display:none;margin-top:8px">
+            <div style="display:flex;gap:8px">
+              <button class="yazdir-btn" onclick="sablonYazdir()" id="tekYazdirBtn">🖨 PDF Goruntule & Yazdir</button>
+              <button class="yazdir-btn" onclick="topluYazdir()" id="topluYazdirBtn" style="display:none;background:var(--mavi)">🖨 Toplu Yazdir (<span id="topluSayi">0</span> sablon)</button>
             </div>
           </div>
 
@@ -546,6 +540,7 @@ function yeniTalep() {
 
 /* ── Kaydet ── */
 function kaydet() {
+  var adetVal = parseInt(document.getElementById('fAdet').value);
   var fields = {
     Talep_No: document.getElementById('fTalepNo').value,
     Durum: seciliTalep.Durum || 'Yeni',
@@ -555,7 +550,6 @@ function kaydet() {
     Parca_Adi: document.getElementById('fParcaAdi').value,
     Cizim_No: document.getElementById('fCizimNo').value,
     Dosya_No: document.getElementById('fDosyaNo').value,
-    Adet: parseInt(document.getElementById('fAdet').value) || null,
     Malzeme: document.getElementById('fMalzeme').value,
     Uretim_Suresi: document.getElementById('fUretimSuresi').value,
     Hazirlayan: document.getElementById('fHazirlayan').value,
@@ -564,6 +558,10 @@ function kaydet() {
     AI_Sonuc: seciliTalep.AI_Sonuc || '',
     Olusturma_Tarihi: seciliTalep.Olusturma_Tarihi || new Date().toISOString().split('T')[0]
   };
+  // Adet sayisal ise ekle (null Airtable'da hata verir)
+  if (!isNaN(adetVal) && adetVal > 0) fields.Adet = adetVal;
+  // Bos stringleri temizle
+  Object.keys(fields).forEach(function(k) { if (fields[k] === '') delete fields[k]; });
 
   if (seciliTalep._id) {
     // PATCH
@@ -950,7 +948,6 @@ function sablonOlustur() {
   var kalemler = [];
   try { kalemler = JSON.parse(seciliTalep.Kalemler || '[]'); } catch(e) {}
 
-  // Toplu yazdir butonu
   if (kalemler.length > 1) {
     document.getElementById('topluYazdirBtn').style.display = 'inline-flex';
     document.getElementById('topluSayi').textContent = kalemler.length;
@@ -959,10 +956,6 @@ function sablonOlustur() {
     document.getElementById('topluYazdirBtn').style.display = 'none';
     document.getElementById('tekYazdirBtn').textContent = '🖨 PDF Goruntule & Yazdir';
   }
-
-  // Onizleme — ilk kalem
-  var k = kalemler[0] || {};
-  document.getElementById('sablonIcerik').innerHTML = sablonHTML(k, 0, kalemler.length);
 }
 
 function sablonHTML(kalem, idx, toplam) {
@@ -1139,13 +1132,54 @@ function sablonYazdir() {
 }
 
 function topluYazdir() {
+  if (!seciliTalep) return;
   var kalemler = [];
   try { kalemler = JSON.parse(seciliTalep.Kalemler || '[]'); } catch(e) {}
-  if (kalemler.length === 0) return;
-  var sHtml = kalemler.map(function(k, i) {
-    return sablonHTML(k, i, kalemler.length);
-  }).join('<div style="page-break-after:always"></div>');
-  yazdirPencereAc(sHtml);
+  if (kalemler.length === 0) { sablonYazdir(); return; }
+
+  var talepNo = seciliTalep.Talep_No || '';
+  var sayfalar = [];
+
+  for (var i = 0; i < kalemler.length; i++) {
+    // Her kalem icin: kendi teknik resmi + kendi sablonu
+    var resim = dosyalar.resim[i] || dosyalar.resim[0] || null;
+    var sHtml = sablonHTML(kalemler[i], i, kalemler.length);
+
+    if (resim) {
+      var ext = resim.name.split('.').pop().toLowerCase();
+      var blobUrl = URL.createObjectURL(resim);
+      if (ext === 'pdf') {
+        sayfalar.push('<div class="sayfa"><iframe src="' + blobUrl + '" style="width:148mm;height:210mm;border:none"></iframe></div>');
+      } else {
+        sayfalar.push('<div class="sayfa" style="display:flex;align-items:center;justify-content:center"><img src="' + blobUrl + '" style="max-width:148mm;max-height:210mm;object-fit:contain"></div>');
+      }
+    }
+    sayfalar.push('<div class="sayfa"><iframe srcdoc="' + sablonWrap(sHtml).replace(/"/g, '&quot;') + '" style="width:148mm;height:210mm;border:none"></iframe></div>');
+  }
+
+  var win = window.open('', '_blank');
+  win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8">' +
+    '<title>Toplu Yazdir — ' + talepNo + ' (' + kalemler.length + ' kalem)</title>' +
+    '<style>' +
+    '@page{size:A5;margin:0}' +
+    '*{box-sizing:border-box;margin:0;padding:0}' +
+    'body{background:#f0f0f0}' +
+    '.sayfa{width:148mm;height:210mm;page-break-after:always;overflow:hidden;background:#fff;margin:8px auto}' +
+    '.sayfa:last-child{page-break-after:auto}' +
+    '.ust-bar{background:#1a2b47;color:#fff;padding:8px 16px;font-family:"Segoe UI",sans-serif;font-size:12px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:99}' +
+    '.ust-bar strong{color:#F5A623;font-family:monospace}' +
+    '.ust-bar button{padding:5px 14px;border-radius:5px;border:none;background:#F5A623;color:#1a2b47;font-weight:700;cursor:pointer;font-size:11px;margin-left:auto}' +
+    '@media print{.ust-bar{display:none}body{background:#fff}.sayfa{margin:0}}' +
+    '</style></head><body>' +
+    '<div class="ust-bar">' +
+      '\uD83D\uDDA8 <strong>' + talepNo + '</strong>' +
+      ' \u00B7 ' + kalemler.length + ' kalem \u00B7 Her kalem: Teknik Resim + Sablon' +
+      ' \u00B7 Cift tarafli yazdir' +
+      '<button onclick="window.print()">Yazdir</button>' +
+    '</div>' +
+    sayfalar.join('\n') +
+    '</body></html>');
+  win.document.close();
 }
 
 function yazdirPencereAc(sablonIcerik) {
