@@ -342,6 +342,7 @@ var AIRTABLE_TABLE = 'Fiyat_Talepleri';
 var MUSTERILER = [
   'Tosyali Metalurji A.S.',
   'Diler Demir-Celik A.S.',
+  'Diler Demir-Celik End. A.S.',
   'Colakoglu Metalurji A.S.',
   'Erdemir A.S.',
   'Isdas Celik A.S.',
@@ -352,6 +353,7 @@ var MUSTERILER = [
   'FNSS',
   'Otokar',
   'BMC',
+  'Ford Otosan',
   'MAN Turkiye',
   'Cummins Turkiye',
   'Teklas Kaucuk',
@@ -852,31 +854,61 @@ async function aiOku() {
     adimGuncelle(3, 'tamam');
     adimGuncelle(4, 'aktif');
 
-    // Form alanlarini doldur (AI)
+    // Form alanlarini doldur (AI) — Musteri
     if (sonuc.musteri_adi) {
       var sel = document.getElementById('fMusteri');
-      var aiMusteri = sonuc.musteri_adi;
-      var found = false;
-      // Fuzzy eslesme: ilk kelimeye gore ara
-      var araKelime = aiMusteri.toLowerCase().split(' ')[0];
+      var aiMusteri = sonuc.musteri_adi.trim();
+
+      // Turkce normalize fonksiyonu
+      var norm = function(s) {
+        return s.toLowerCase()
+          .replace(/ğ/g,'g').replace(/ü/g,'u').replace(/ş/g,'s')
+          .replace(/ı/g,'i').replace(/ö/g,'o').replace(/ç/g,'c')
+          .replace(/İ/g,'i').replace(/Ğ/g,'g').replace(/Ü/g,'u')
+          .replace(/Ş/g,'s').replace(/Ö/g,'o').replace(/Ç/g,'c');
+      };
+
+      var eslesme = null;
+      // 1. Tam eslesme
+      eslesme = MUSTERILER.find(function(m) { return m === aiMusteri; });
+      // 2. Buyuk/kucuk harf duyarsiz
+      if (!eslesme) eslesme = MUSTERILER.find(function(m) { return m.toLowerCase() === aiMusteri.toLowerCase(); });
+      // 3. Turkce normalize
+      if (!eslesme) eslesme = MUSTERILER.find(function(m) { return norm(m) === norm(aiMusteri); });
+      // 4. Ilk kelime eslesmesi (Tosyali, Diler, Colakoglu...)
+      if (!eslesme) {
+        var aiIlk = norm(aiMusteri.split(' ')[0]);
+        eslesme = MUSTERILER.find(function(m) {
+          var mIlk = norm(m.split(' ')[0]);
+          return mIlk.indexOf(aiIlk) > -1 || aiIlk.indexOf(mIlk) > -1;
+        });
+      }
+      // 5. Kismi icerik eslesmesi
+      if (!eslesme) eslesme = MUSTERILER.find(function(m) {
+        return norm(aiMusteri).indexOf(norm(m.split(' ')[0])) > -1 ||
+               norm(m).indexOf(norm(aiMusteri.split(' ')[0])) > -1;
+      });
+
+      var secilenMusteri = eslesme || aiMusteri;
+      console.log('AI musteri:', aiMusteri, '-> Secilen:', secilenMusteri);
+
+      // Dropdown'da sec veya ekle
+      var optFound = false;
       for (var k = 0; k < sel.options.length; k++) {
-        var optVal = sel.options[k].value.toLowerCase();
-        if (optVal.indexOf(araKelime) > -1 || araKelime.indexOf(optVal.split(' ')[0]) > -1) {
-          sel.value = sel.options[k].value;
-          sel.classList.add('ai-dolu');
-          found = true;
+        if (sel.options[k].value === secilenMusteri) {
+          sel.value = secilenMusteri;
+          optFound = true;
           break;
         }
       }
-      if (!found) {
-        // Listede yoksa yeni option ekle (Diger'den once)
-        var opt = document.createElement('option');
-        opt.value = aiMusteri;
-        opt.textContent = aiMusteri;
-        sel.add(opt, sel.options.length - 1);
-        sel.value = aiMusteri;
-        sel.classList.add('ai-dolu');
+      if (!optFound) {
+        var yeniOpt = document.createElement('option');
+        yeniOpt.value = secilenMusteri;
+        yeniOpt.textContent = secilenMusteri;
+        sel.add(yeniOpt, sel.options.length - 1);
+        sel.value = secilenMusteri;
       }
+      sel.classList.add('ai-dolu');
     }
 
     if (sonuc.teklif_ref) { aiAlanDoldur('fTeklifRef', sonuc.teklif_ref); }
