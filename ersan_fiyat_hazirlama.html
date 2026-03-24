@@ -666,6 +666,31 @@ function aiDurumGuncelle() {
   btn.disabled = dosyalar.teklif.length === 0 && dosyalar.resim.length === 0;
 }
 
+/* ── Claude API (retry ile) ── */
+async function claudeAPI(body, deneme) {
+  deneme = deneme || 1;
+  try {
+    var res = await fetch('/.netlify/functions/claude', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: body
+    });
+    if (res.status === 529 && deneme < 4) {
+      toast('AI yogun, ' + (deneme * 3) + ' sn beklenip tekrar deneniyor... (' + deneme + '/3)');
+      await new Promise(function(r) { setTimeout(r, deneme * 3000); });
+      return claudeAPI(body, deneme + 1);
+    }
+    return await res.json();
+  } catch(e) {
+    if (deneme < 4) {
+      toast('Baglanti hatasi, tekrar deneniyor... (' + deneme + '/3)');
+      await new Promise(function(r) { setTimeout(r, deneme * 3000); });
+      return claudeAPI(body, deneme + 1);
+    }
+    throw e;
+  }
+}
+
 /* ── AI Oku ── */
 async function aiOku() {
   var btn = document.getElementById('aiBtn');
@@ -752,17 +777,12 @@ async function aiOku() {
 
     content.push({ type: 'text', text: sistemPrompt });
 
-    var res = await fetch('/.netlify/functions/claude', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 4096,
-        messages: [{ role: 'user', content: content }]
-      })
+    var apiBody = JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 2000,
+      messages: [{ role: 'user', content: content }]
     });
-
-    var data = await res.json();
+    var data = await claudeAPI(apiBody);
     if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
 
     var aiText = '';
@@ -952,77 +972,139 @@ function sablonHTML(kalem, idx, toplam) {
   var dosyaNo = document.getElementById('fDosyaNo').value;
   var hazirlayan = document.getElementById('fHazirlayan').value;
   var teklifRef = document.getElementById('fTeklifRef').value;
+  var kalemNo = 'K' + (idx + 1);
+  var toplamStr = toplam > 1 ? '/' + toplam : '';
+  var no = (talepNo || 'FH-------') + ' / ' + kalemNo;
+  var malzStr = kalem.malzeme || '';
+  var ops1 = ['Op10','Op20','Op30','Op40','Op50'];
+  var ops2 = ['Op60','Op70','Op80','Op90','Op100'];
+  var fasonlar = ['Isil Islem','Taslama','Induksiyon Sertlestirme','Nitrasyon','Sementasyon','Kaplama','Disli Acma','Kama Yeri Acma'];
 
-  return '<div class="sablon-onizleme sablon-sayfa">' +
-    '<div class="sablon-header">' +
-      '<div><div class="sablon-logo">ERSAN</div><div class="sablon-logo-sub">Endustriyel Makine San. Tic. Ltd. Sti.</div></div>' +
-      '<div class="sablon-info">' +
-        '<div><b>Fiyat Hazirlama Formu</b></div>' +
-        '<div>No: ' + talepNo + (toplam > 1 ? ' / K' + (idx + 1) : '') + '</div>' +
-        '<div>Tarih: ' + tarih + '</div>' +
+  function opSatir(op) {
+    return '<tr>' +
+      '<td style="padding:3px 4px;border:0.5px solid #e5e7eb;height:18px;font-size:8px;background:#f9fafb;font-weight:700;color:#1a2b47">' + op + '</td>' +
+      '<td style="padding:3px 4px;border:0.5px solid #e5e7eb;height:18px;font-size:8px"></td>' +
+      '<td style="padding:3px 4px;border:0.5px solid #e5e7eb;height:18px;font-size:8px;text-align:center"></td>' +
+    '</tr>';
+  }
+  function opTablo(ops) {
+    return '<table style="width:100%;border-collapse:collapse">' +
+      '<thead><tr>' +
+        '<th style="font-size:7px;font-weight:700;text-transform:uppercase;background:#f3f4f6;padding:3px 4px;border:0.5px solid #d1d5db;text-align:left;width:30px">Op</th>' +
+        '<th style="font-size:7px;font-weight:700;text-transform:uppercase;background:#f3f4f6;padding:3px 4px;border:0.5px solid #d1d5db;text-align:left">Islem</th>' +
+        '<th style="font-size:7px;font-weight:700;text-transform:uppercase;background:#f3f4f6;padding:3px 4px;border:0.5px solid #d1d5db;text-align:center;width:32px">Sure</th>' +
+      '</tr></thead><tbody>' + ops.map(opSatir).join('') + '</tbody></table>';
+  }
+  function fasonSatir(islem) {
+    return '<tr>' +
+      '<td style="padding:3px 5px;border:0.5px solid #e5e7eb;height:20px;text-align:center"><div style="width:11px;height:11px;border:1.5px solid #374151;border-radius:2px;display:inline-block"></div></td>' +
+      '<td style="padding:3px 5px;border:0.5px solid #e5e7eb;height:20px;font-size:8px">' + islem + '</td>' +
+      '<td style="padding:3px 5px;border:0.5px solid #e5e7eb;height:20px"></td>' +
+      '<td style="padding:3px 5px;border:0.5px solid #e5e7eb;height:20px"></td>' +
+    '</tr>';
+  }
+  var thStl = 'font-size:7px;font-weight:700;text-transform:uppercase;background:#f3f4f6;padding:3px 5px;border:0.5px solid #d1d5db';
+  var lbl = 'padding:3px 5px;border:0.5px solid #d1d5db;font-size:7.5px;font-weight:700;color:#6b7280;background:#f9fafb;text-transform:uppercase';
+  var val = 'padding:3px 5px;border:0.5px solid #d1d5db;font-size:8.5px;font-weight:600;color:#1a2b47;background:#fff7ed';
+  var baslik = 'font-size:7.5px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:#fff;background:#1a2b47;padding:2px 6px;margin:5px 0 3px';
+
+  return '<div style="width:148mm;min-height:210mm;padding:7mm;font-family:Segoe UI,sans-serif;font-size:9px;color:#222;background:#fff">' +
+
+    // BASLIK
+    '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;padding-bottom:5px;border-bottom:2px solid #1a2b47">' +
+      '<div style="display:flex;align-items:center;gap:7px">' +
+        '<svg viewBox="0 0 100 28" style="height:24px;width:auto">' +
+          '<polygon points="4,2 18,2 15,9 0,9" fill="#F5A623"/>' +
+          '<polygon points="5,11 17,11 14,18 3,18" fill="#D28A10"/>' +
+          '<polygon points="6,20 16,20 13,26 4,26" fill="#A67214"/>' +
+          '<text x="21" y="16" font-family="Segoe UI" font-weight="800" font-size="14" fill="#1a2b47">ERSAN</text>' +
+        '</svg>' +
+        '<div>' +
+          '<div style="font-size:11px;font-weight:800;color:#1a2b47">Ersan Endustriyel Makine</div>' +
+          '<div style="font-size:7.5px;color:#9ca3af">San. Tic. Ltd. Sti. · Basiskele, Kocaeli</div>' +
+        '</div>' +
+      '</div>' +
+      '<div style="text-align:right">' +
+        '<div style="font-size:11px;font-weight:800;color:#1a2b47">Fiyat Hazirlama Formu</div>' +
+        '<div style="font-size:8px;color:#F5A623;font-family:monospace;font-weight:700">No: ' + no + toplamStr + '</div>' +
+        '<div style="font-size:7.5px;color:#9ca3af">Tarih: ' + (tarih || new Date().toISOString().split('T')[0]) + '</div>' +
       '</div>' +
     '</div>' +
 
-    '<table class="sablon-tablo">' +
-      '<tr><th style="width:25%">Musteri</th><td>' + musteri + '</td><th style="width:15%">Teklif Ref</th><td>' + teklifRef + '</td></tr>' +
-      '<tr><th>Dosya No</th><td>' + dosyaNo + '</td><th>Kalem</th><td>' + (idx + 1) + ' / ' + toplam + '</td></tr>' +
+    // BILGI TABLOSU
+    '<table style="width:100%;border-collapse:collapse;margin-bottom:5px">' +
+      '<tr><td style="' + lbl + ';width:70px">Musteri</td><td colspan="3" style="' + val + '">' + (musteri || '—') + '</td></tr>' +
+      '<tr><td style="' + lbl + '">Parca Adi</td><td colspan="3" style="' + val + '">' + (kalem.parca_adi || '—') + '</td></tr>' +
+      '<tr><td style="' + lbl + '">Cizim No</td><td style="' + val + '">' + (kalem.cizim_no || '—') + '</td><td style="' + lbl + '">Adet</td><td style="' + val + '">' + (kalem.adet || '—') + '</td></tr>' +
+      '<tr><td style="' + lbl + '">Dosya No</td><td style="' + val + '">' + (dosyaNo || '—') + '</td><td style="' + lbl + '">Kalem</td><td style="' + val + '">' + kalemNo + toplamStr + '</td></tr>' +
+      (malzStr ? '<tr><td style="' + lbl + ';font-size:7px">Musteri<br>Malzemesi</td><td colspan="3" style="padding:3px 5px;border:0.5px solid #d1d5db;font-size:8.5px;font-weight:700;color:#7c3aed;background:#ede9fe">' + malzStr + '</td></tr>' : '') +
     '</table>' +
 
-    '<table class="sablon-tablo">' +
-      '<tr><th style="width:25%">Parca Adi</th><td colspan="3">' + (kalem.parca_adi || '') + '</td></tr>' +
-      '<tr><th>Cizim No</th><td>' + (kalem.cizim_no || '') + '</td><th style="width:15%">Adet</th><td>' + (kalem.adet || '') + '</td></tr>' +
-      (kalem.malzeme ? '<tr><th style="font-size:9px">Musteri<br>Malzemesi</th><td colspan="3" style="font-weight:700;color:#7c3aed;background:#ede9fe">' + kalem.malzeme + '</td></tr>' : '') +
-    '</table>' +
-
-    '<div style="display:flex;align-items:center;gap:6px;margin:8px 0 4px">' +
-      '<span style="font-size:10px;font-weight:700;color:#6b7280;white-space:nowrap">Kullanilacak Malzeme</span>' +
-      '<div style="flex:1;height:20px;border:1px solid #cbd5e1;border-radius:2px;background:#fafafa"></div>' +
-      '<span style="font-size:10px;font-weight:700;color:#6b7280;white-space:nowrap;margin-left:6px">Sekil</span>' +
-      '<div style="width:80px;height:20px;border:1px solid #cbd5e1;border-radius:2px;background:#fafafa;flex-shrink:0"></div>' +
+    // OLCULER
+    '<div style="' + baslik + ';display:flex;justify-content:space-between"><span>Olculer</span><span style="font-weight:400;font-size:7px;letter-spacing:0">(elle doldurulacak)</span></div>' +
+    '<div style="border:0.5px solid #d1d5db;padding:4px 5px;margin-bottom:5px">' +
+      '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">' +
+        '<span style="font-size:7.5px;font-weight:700;color:#6b7280;white-space:nowrap">Kullanilacak Malzeme</span>' +
+        '<div style="flex:1;height:18px;border:1px solid #d1d5db;border-radius:2px;background:#fafafa"></div>' +
+        '<span style="font-size:7.5px;font-weight:700;color:#6b7280;white-space:nowrap;margin-left:6px">Sekil</span>' +
+        '<div style="width:72px;height:18px;border:1px solid #d1d5db;border-radius:2px;background:#fafafa;flex-shrink:0"></div>' +
+      '</div>' +
+      '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px">' +
+        '<div><div style="font-size:7px;color:#9ca3af;margin-bottom:1px">Olcu 1 (mm)</div><div style="height:18px;border:1px solid #d1d5db;border-radius:2px;background:#fafafa"></div></div>' +
+        '<div><div style="font-size:7px;color:#9ca3af;margin-bottom:1px">Olcu 2 (mm)</div><div style="height:18px;border:1px solid #d1d5db;border-radius:2px;background:#fafafa"></div></div>' +
+        '<div><div style="font-size:7px;color:#9ca3af;margin-bottom:1px">Olcu 3 (mm)</div><div style="height:18px;border:1px solid #d1d5db;border-radius:2px;background:#fafafa"></div></div>' +
+      '</div>' +
     '</div>' +
 
-    '<div style="margin-top:12px"><b style="font-size:11px;color:var(--metin3)">OPERASYON PLANI</b></div>' +
-    '<table class="sablon-tablo">' +
-      '<tr><th>Op</th><th>Islem</th><th>Tezgah</th><th>Sure (dk)</th><th>Maliyet (TL)</th></tr>' +
-      '<tr><td>Op10</td><td></td><td></td><td></td><td></td></tr>' +
-      '<tr><td>Op20</td><td></td><td></td><td></td><td></td></tr>' +
-      '<tr><td>Op30</td><td></td><td></td><td></td><td></td></tr>' +
-      '<tr><td>Op40</td><td></td><td></td><td></td><td></td></tr>' +
-      '<tr><td>Op50</td><td></td><td></td><td></td><td></td></tr>' +
-    '</table>' +
-
-    '<div style="margin-top:12px"><b style="font-size:11px;color:var(--metin3)">FASON ISLEMLER</b></div>' +
-    '<table class="sablon-tablo">' +
-      '<tr><th>Islem</th><th>Tedarikci</th><th>Birim Fiyat</th><th>Toplam</th></tr>' +
-      '<tr><td>Isil Islem</td><td></td><td></td><td></td></tr>' +
-      '<tr><td>Taslama</td><td></td><td></td><td></td></tr>' +
-      '<tr><td>Kaplama</td><td></td><td></td><td></td></tr>' +
-    '</table>' +
-
-    '<div style="margin-top:12px"><b style="font-size:11px;color:var(--metin3)">MALIYET OZETI</b></div>' +
-    '<table class="sablon-tablo">' +
-      '<tr><th style="width:50%">Kalem</th><th>Birim</th><th>Toplam</th></tr>' +
-      '<tr><td>Malzeme</td><td></td><td></td></tr>' +
-      '<tr><td>Iscilik</td><td></td><td></td></tr>' +
-      '<tr><td>Fason</td><td></td><td></td></tr>' +
-      '<tr><td>Genel Gider (%15)</td><td></td><td></td></tr>' +
-      '<tr><td>Kar Marji (%20)</td><td></td><td></td></tr>' +
-      '<tr><td style="font-weight:700">BIRIM FIYAT</td><td style="font-weight:700"></td><td style="font-weight:700"></td></tr>' +
-      '<tr><td style="font-weight:700">TOPLAM (' + (kalem.adet || '?') + ' adet)</td><td></td><td style="font-weight:700"></td></tr>' +
-    '</table>' +
-
-    '<div style="margin-top:12px"><b style="font-size:11px;color:var(--metin3)">NOTLAR</b></div>' +
-    '<div class="sablon-alan"></div>' +
-
-    '<div class="sablon-imza">' +
-      '<div class="sablon-imza-kutu">Hazirlayan<br><small>' + hazirlayan + '</small></div>' +
-      '<div class="sablon-imza-kutu">Kontrol Eden</div>' +
-      '<div class="sablon-imza-kutu">Onaylayan</div>' +
+    // OPERASYON PLANI
+    '<div style="' + baslik + '">Operasyon Plani</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:5px">' +
+      opTablo(ops1) + opTablo(ops2) +
     '</div>' +
 
-    '<div style="margin-top:12px;font-size:9px;color:var(--metin4);text-align:center">' +
+    // FASON ISLEMLER
+    '<div style="' + baslik + '">Fason Islemler</div>' +
+    '<table style="width:100%;border-collapse:collapse;margin-bottom:5px">' +
+      '<thead><tr>' +
+        '<th style="' + thStl + ';width:22px;text-align:center">&#10003;</th>' +
+        '<th style="' + thStl + ';text-align:left">Islem</th>' +
+        '<th style="' + thStl + ';width:55px;text-align:left">B. Fiyat</th>' +
+        '<th style="' + thStl + ';width:70px;text-align:left">Tedarikci</th>' +
+      '</tr></thead><tbody>' +
+      fasonlar.map(fasonSatir).join('') +
+      '<tr>' +
+        '<td style="padding:3px 5px;border:0.5px solid #e5e7eb;height:20px;text-align:center"><div style="width:11px;height:11px;border:1.5px solid #374151;border-radius:2px;display:inline-block"></div></td>' +
+        '<td style="padding:3px 5px;border:0.5px solid #e5e7eb;height:20px;font-size:8px;color:#9ca3af;font-style:italic">Diger: ___________</td>' +
+        '<td style="padding:3px 5px;border:0.5px solid #e5e7eb;height:20px"></td>' +
+        '<td style="padding:3px 5px;border:0.5px solid #e5e7eb;height:20px"></td>' +
+      '</tr>' +
+      '</tbody></table>' +
+
+    // NOT
+    '<div style="' + baslik + '">Not</div>' +
+    '<div style="border:0.5px solid #d1d5db;min-height:22px;padding:3px 5px;margin-bottom:5px;background:#fafafa"></div>' +
+
+    // ALT SATIR
+    '<div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:5px;padding-top:5px;border-top:0.5px solid #e5e7eb">' +
+      '<div>' +
+        '<div style="font-size:7px;color:#9ca3af;margin-bottom:2px">Hazirlayan</div>' +
+        '<div style="border-top:1px solid #374151;width:80px;margin-bottom:2px"></div>' +
+        '<div style="font-size:8.5px;font-weight:700;color:#1a2b47">' + (hazirlayan || '') + '</div>' +
+      '</div>' +
+      '<div style="text-align:center;font-size:7px;color:#9ca3af">' +
+        '<div style="font-weight:700;color:#1a2b47;font-size:8px">' + (talepNo || '') + '</div>' +
+        '<div>AS9100 Rev.D · §8.2</div>' +
+      '</div>' +
+      '<div style="text-align:right">' +
+        '<div style="font-size:7px;color:#9ca3af;margin-bottom:2px">Onaylayan</div>' +
+        '<div style="border-top:1px solid #374151;width:80px;margin-bottom:2px"></div>' +
+      '</div>' +
+    '</div>' +
+
+    '<div style="margin-top:5px;text-align:center;font-size:6.5px;color:#9ca3af;border-top:0.5px solid #e5e7eb;padding-top:4px">' +
       'Ersan Endustriyel Makine San. Tic. Ltd. Sti. — Basiskele Sanayi Sitesi 12.Blok No:2, Kocaeli — AS9100 Rev.D' +
     '</div>' +
+
   '</div>';
 }
 
