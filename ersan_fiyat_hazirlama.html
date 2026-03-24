@@ -819,13 +819,7 @@ async function aiOku() {
       '- parca_adi: Parca adi, malzeme tanimi\n' +
       '- cizim_no: Resim numarasi, cizim no, drawing no\n' +
       '- dosya_no: Dosya no, is talep no\n' +
-      '- adet: KURAL — Belgede "MIKTAR", "ADET", "QTY", "QUANTITY", "ADT", "PCS" kelimesinin YANINDA veya ALTINDA yazan sayi.\n' +
-      '  * Bu kelimelerden biriyle eslesmeyem hicbir sayiyi adet olarak dondurme.\n' +
-      '  * Eger bu kelimelerle eslesen bir sayi bulamazsan adet = "" dondur.\n' +
-      '  * YANLIS ornekler: 24 (tarihten), 6000298591 (teklif no), 212 (tel no), 0.001 (oran)\n' +
-      '  * DOGRU ornek: "MIKTAR: 25 ADT" -> adet = "25"\n' +
-      '  * Tabloda "TOT. Q.TY" veya "TOPLAM ADET" varsa onu al\n' +
-      '  * Eger "3 PHASE x 3 COLUMN = 9" gibi bir hesap varsa sonucu al: 9\n' +
+      '- adet: Belgede "MIKTAR", "ADET", "QTY", "QUANTITY" veya es anlamlisi bir kelime varsa, o kelimenin hemen yanindaki veya altindaki rakami yaz. Bu kelimelerden biri yoksa veya emin degilsen "" dondur.\n' +
       '- malzeme: Malzeme cinsi (4140, AISI 304L, EPOXIDIC RESIN vb.)\n' +
       '- agirlik: Agirlik bilgisi (varsa, "kg" birimi dahil)\n' +
       '- olcu: Boyutlar (varsa, "O310xO290x206" formatinda)\n\n' +
