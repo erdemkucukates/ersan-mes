@@ -230,8 +230,8 @@ textarea.f-inp{resize:vertical;min-height:60px}
                   <input class="f-inp" id="fMalzeme">
                 </div>
                 <div class="f-grp">
-                  <label class="f-lbl">Son Teslim Tarihi</label>
-                  <input class="f-inp" id="fTeslimTarihi" type="date">
+                  <label class="f-lbl">Uretim Suresi (is gunu)</label>
+                  <input class="f-inp" id="fUretimSuresi" type="number" min="1" placeholder="orn: 15">
                 </div>
                 <div class="f-grp fh-full">
                   <label class="f-lbl">Hazirlayan</label>
@@ -349,6 +349,8 @@ var MUSTERILER = [
   'Tosyali Metalurji A.S.',
   'Diler Demir-Celik A.S.',
   'Colakoglu Metalurji A.S.',
+  'Erdemir A.S.',
+  'Isdas Celik A.S.',
   'Turk Traktor A.S.',
   'Hidromek',
   'Roketsan',
@@ -460,7 +462,7 @@ function formDoldur(t) {
   document.getElementById('fDosyaNo').value = t.Dosya_No || '';
   document.getElementById('fAdet').value = t.Adet || '';
   document.getElementById('fMalzeme').value = t.Malzeme || '';
-  document.getElementById('fTeslimTarihi').value = t.Teslim_Tarihi || '';
+  document.getElementById('fUretimSuresi').value = t.Uretim_Suresi || '';
   document.getElementById('fHazirlayan').value = t.Hazirlayan || '';
   document.getElementById('fNotlar').value = t.Notlar || '';
 
@@ -515,7 +517,7 @@ function yeniTalep() {
     Dosya_No: '',
     Adet: '',
     Malzeme: '',
-    Teslim_Tarihi: '',
+    Uretim_Suresi: '',
     Hazirlayan: '',
     Notlar: '',
     Kalemler: '',
@@ -555,7 +557,7 @@ function kaydet() {
     Dosya_No: document.getElementById('fDosyaNo').value,
     Adet: parseInt(document.getElementById('fAdet').value) || null,
     Malzeme: document.getElementById('fMalzeme').value,
-    Teslim_Tarihi: document.getElementById('fTeslimTarihi').value,
+    Uretim_Suresi: document.getElementById('fUretimSuresi').value,
     Hazirlayan: document.getElementById('fHazirlayan').value,
     Notlar: document.getElementById('fNotlar').value,
     Kalemler: seciliTalep.Kalemler || '',
@@ -780,19 +782,27 @@ async function aiOku() {
     // Form alanlarini doldur (AI)
     if (sonuc.musteri_adi) {
       var sel = document.getElementById('fMusteri');
+      var aiMusteri = sonuc.musteri_adi;
       var found = false;
+      // Fuzzy eslesme: ilk kelimeye gore ara
+      var araKelime = aiMusteri.toLowerCase().split(' ')[0];
       for (var k = 0; k < sel.options.length; k++) {
-        if (sel.options[k].value.toLowerCase().indexOf(sonuc.musteri_adi.toLowerCase().split(' ')[0]) > -1) {
+        var optVal = sel.options[k].value.toLowerCase();
+        if (optVal.indexOf(araKelime) > -1 || araKelime.indexOf(optVal.split(' ')[0]) > -1) {
           sel.value = sel.options[k].value;
           sel.classList.add('ai-dolu');
           found = true;
           break;
         }
       }
-      if (!found && sonuc.musteri_adi) {
-        // Diger sec, notlara yaz
-        sel.value = 'Diger';
-        document.getElementById('fNotlar').value = 'AI tespit: ' + sonuc.musteri_adi + '\n' + (document.getElementById('fNotlar').value || '');
+      if (!found) {
+        // Listede yoksa yeni option ekle (Diger'den once)
+        var opt = document.createElement('option');
+        opt.value = aiMusteri;
+        opt.textContent = aiMusteri;
+        sel.add(opt, sel.options.length - 1);
+        sel.value = aiMusteri;
+        sel.classList.add('ai-dolu');
       }
     }
 
@@ -1124,22 +1134,10 @@ function yazdirPencereAc(sablonIcerik) {
   }
 }
 
-/* ── Kritik saat kontrolu ── */
+/* ── Kritik kontrol (uretim suresi) ── */
 function kritikKontrol() {
-  if (!seciliTalep || !seciliTalep.Teslim_Tarihi) {
-    document.getElementById('kritikBanner').classList.remove('show');
-    return;
-  }
-  var teslim = new Date(seciliTalep.Teslim_Tarihi);
-  var simdi = new Date();
-  var farkSaat = (teslim - simdi) / 36e5;
-  if (farkSaat > 0 && farkSaat <= 4) {
-    document.getElementById('kritikMesaj').textContent =
-      'Son teslim tarihine ' + Math.ceil(farkSaat) + ' saat kaldi!';
-    document.getElementById('kritikBanner').classList.add('show');
-  } else {
-    document.getElementById('kritikBanner').classList.remove('show');
-  }
+  // Kritik banner artik kullanilmiyor (teslim tarihi kaldirildi)
+  document.getElementById('kritikBanner').classList.remove('show');
 }
 
 /* ── Degisiklik izleme ── */
