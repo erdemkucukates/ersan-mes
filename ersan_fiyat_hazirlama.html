@@ -645,11 +645,13 @@ async function kaydet() {
     fields.Resim_Base64_List = JSON.stringify(resimUrller);
   }
   // Bos stringleri ve null/undefined temizle (Talep_No ve Durum korunsun)
-  var koruma = ['Talep_No', 'Durum', 'Tarih', 'Olusturma_Tarihi'];
+  var koruma = ['Talep_No', 'Durum'];
   Object.keys(fields).forEach(function(k) {
     if (fields[k] === null || fields[k] === undefined) { delete fields[k]; return; }
     if (fields[k] === '' && koruma.indexOf(k) === -1) delete fields[k];
   });
+  // Durum bossa sil (Single Select bos string kabul etmez)
+  if (!fields.Durum) delete fields.Durum;
   // Gonderilecek alanlari logla
   var fieldsLog = {};
   Object.keys(fields).forEach(function(k) {
