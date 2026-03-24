@@ -265,7 +265,7 @@ textarea.f-inp{resize:vertical;min-height:60px}
                 <div>
                   <label class="f-lbl" style="margin-bottom:6px">Teknik Resimler (PDF)</label>
                   <div class="upload-zone" id="zoneResim" ondragover="zoneDrag(event,this)" ondragleave="zoneLeave(this)" ondrop="zoneDrop(event,'resim')">
-                    <input type="file" accept=".pdf,.png,.jpg,.jpeg" multiple onchange="dosyaSec(event,'resim')">
+                    <input type="file" accept=".pdf,.png,.jpg,.jpeg,.tiff,.tif,.webp,.gif" multiple onchange="dosyaSec(event,'resim')">
                     <div class="upload-icon">📐</div>
                     <div class="upload-text">Teknik resim surukle (coklu)</div>
                     <div class="upload-sub">PNG, JPG veya PDF</div>
@@ -678,17 +678,21 @@ async function aiOku() {
   try {
     // Adim 1: Teklif formu oku
     adimGuncelle(1, 'aktif');
-    var teklifIcerik = '';
+    var teklifHazir = null;
     if (dosyalar.teklif.length > 0) {
-      teklifIcerik = await dosyaToBase64(dosyalar.teklif[0]);
+      try {
+        teklifHazir = await dosyaHazirla(dosyalar.teklif[0]);
+      } catch(e) { toast('Teklif dosyasi okunamadi: ' + e.message, 4000); }
     }
 
     // Adim 2: Teknik resimler
     adimGuncelle(1, 'tamam');
     adimGuncelle(2, 'aktif');
-    var resimler = [];
+    var resimHazir = [];
     for (var i = 0; i < dosyalar.resim.length; i++) {
-      resimler.push(await dosyaToBase64(dosyalar.resim[i]));
+      try {
+        resimHazir.push(await dosyaHazirla(dosyalar.resim[i]));
+      } catch(e) { toast(dosyalar.resim[i].name + ' okunamadi: ' + e.message, 4000); }
     }
 
     // Adim 3: AI analiz
@@ -721,22 +725,21 @@ async function aiOku() {
       '}';
 
     // Teklif formu
-    if (teklifIcerik) {
+    if (teklifHazir) {
       content.push({
         type: 'image',
-        source: { type: 'base64', media_type: 'application/pdf', data: teklifIcerik }
+        source: { type: 'base64', media_type: teklifHazir.tip, data: teklifHazir.b64 }
       });
       content.push({ type: 'text', text: 'Yukardaki teklif isteme formu PDF\'ini analiz et.' });
     }
 
     // Teknik resimler
-    for (var j = 0; j < resimler.length; j++) {
-      var tip = dosyalar.resim[j].type || 'application/pdf';
+    for (var j = 0; j < resimHazir.length; j++) {
       content.push({
         type: 'image',
-        source: { type: 'base64', media_type: tip, data: resimler[j] }
+        source: { type: 'base64', media_type: resimHazir[j].tip, data: resimHazir[j].b64 }
       });
-      content.push({ type: 'text', text: 'Teknik resim ' + (j + 1) + '/' + resimler.length });
+      content.push({ type: 'text', text: 'Teknik resim ' + (j + 1) + '/' + resimHazir.length });
     }
 
     content.push({ type: 'text', text: sistemPrompt });
@@ -848,6 +851,40 @@ function dosyaToBase64(file) {
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
+}
+
+async function dosyaHazirla(dosya) {
+  var ext = dosya.name.split('.').pop().toLowerCase();
+
+  // TIFF -> Canvas -> PNG (Claude API TIFF desteklemiyor)
+  if (ext === 'tiff' || ext === 'tif') {
+    var url = URL.createObjectURL(dosya);
+    return new Promise(function(res, rej) {
+      var img = new Image();
+      img.onload = function() {
+        var canvas = document.createElement('canvas');
+        canvas.width  = Math.min(img.width,  2000);
+        canvas.height = Math.min(img.height, 2000);
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        var b64 = canvas.toDataURL('image/png').split(',')[1];
+        URL.revokeObjectURL(url);
+        res({ b64: b64, tip: 'image/png' });
+      };
+      img.onerror = function() { URL.revokeObjectURL(url); rej(new Error('TIFF yuklenemedi')); };
+      img.src = url;
+    });
+  }
+
+  // PDF
+  if (ext === 'pdf') {
+    var b64 = await dosyaToBase64(dosya);
+    return { b64: b64, tip: 'application/pdf' };
+  }
+
+  // JPG, JPEG, PNG, WEBP, GIF
+  var tipMap = { jpg:'jpeg', jpeg:'jpeg', png:'png', webp:'webp', gif:'gif' };
+  var b64img = await dosyaToBase64(dosya);
+  return { b64: b64img, tip: 'image/' + (tipMap[ext] || 'jpeg') };
 }
 
 /* ── Kalemler tablosu ── */
