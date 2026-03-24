@@ -344,7 +344,7 @@
       mainEl.style.cssText = 'flex:1 1 0!important;min-width:0!important;height:100vh!important;overflow:hidden!important;display:flex!important;flex-direction:column!important;margin:0!important;padding:0!important;';
       var children = Array.from(mainEl.children).filter(function(c){ return c.tagName!=='SCRIPT' && c.tagName!=='STYLE'; });
       children.forEach(function(child) {
-        var isTb = child.classList.contains('tb') || child.className.indexOf('topbar')>=0 || child.tagName==='NAV';
+        var isTb = child.classList.contains('tb') || child.className.indexOf('topbar')>=0 || child.className.indexOf('-tb')>=0 || child.tagName==='NAV';
         if (isTb) { child.style.flexShrink='0'; }
         else { child.style.flex='1 1 0'; child.style.minHeight='0'; child.style.overflowY='auto'; }
       });
