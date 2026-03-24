@@ -726,17 +726,25 @@ async function aiOku() {
 
     // Teklif formu
     if (teklifHazir) {
-      content.push({
-        type: 'image',
-        source: { type: 'base64', media_type: teklifHazir.tip, data: teklifHazir.b64 }
-      });
+      if (teklifHazir.tip === 'application/pdf') {
+        content.push({
+          type: 'document',
+          source: { type: 'base64', media_type: 'application/pdf', data: teklifHazir.b64 }
+        });
+      } else {
+        content.push({
+          type: 'image',
+          source: { type: 'base64', media_type: teklifHazir.tip, data: teklifHazir.b64 }
+        });
+      }
       content.push({ type: 'text', text: 'Yukardaki teklif isteme formu PDF\'ini analiz et.' });
     }
 
     // Teknik resimler
     for (var j = 0; j < resimHazir.length; j++) {
+      var icerikTipi = resimHazir[j].tip === 'application/pdf' ? 'document' : 'image';
       content.push({
-        type: 'image',
+        type: icerikTipi,
         source: { type: 'base64', media_type: resimHazir[j].tip, data: resimHazir[j].b64 }
       });
       content.push({ type: 'text', text: 'Teknik resim ' + (j + 1) + '/' + resimHazir.length });
