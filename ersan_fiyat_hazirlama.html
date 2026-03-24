@@ -456,7 +456,9 @@ function formDoldur(t) {
   document.getElementById('fDosyaNo').value = t.Dosya_No || '';
   document.getElementById('fAdet').value = t.Adet || '';
   document.getElementById('fMalzeme').value = t.Malzeme || '';
-  document.getElementById('fUretimSuresi').value = t.Teslim_Tarihi || '';
+  // Uretim suresi — Notlar'dan parse et
+  var uretimMatch = (t.Notlar || '').match(/Uretim Suresi:\s*(\d+)/);
+  document.getElementById('fUretimSuresi').value = uretimMatch ? uretimMatch[1] : '';
   document.getElementById('fHazirlayan').value = t.Hazirlayan || '';
   document.getElementById('fNotlar').value = t.Notlar || '';
 
@@ -511,7 +513,7 @@ function yeniTalep() {
     Dosya_No: '',
     Adet: '',
     Malzeme: '',
-    Teslim_Tarihi: '',
+    Uretim_Suresi_Lokal: '',
     Hazirlayan: '',
     Notlar: '',
     Kalemler: '',
@@ -551,7 +553,6 @@ function kaydet() {
     Cizim_No: document.getElementById('fCizimNo').value,
     Dosya_No: document.getElementById('fDosyaNo').value,
     Malzeme: document.getElementById('fMalzeme').value,
-    Teslim_Tarihi: document.getElementById('fUretimSuresi').value,
     Hazirlayan: document.getElementById('fHazirlayan').value,
     Notlar: document.getElementById('fNotlar').value,
     Kalemler: seciliTalep.Kalemler || '',
@@ -560,6 +561,11 @@ function kaydet() {
   };
   // Adet sayisal ise ekle (null Airtable'da hata verir)
   if (!isNaN(adetVal) && adetVal > 0) fields.Adet = adetVal;
+  // Uretim suresi — Notlar'a ekle (Teslim_Tarihi date tipinde, sayi yazamayiz)
+  var uretimSuresi = document.getElementById('fUretimSuresi').value;
+  if (uretimSuresi) {
+    fields.Notlar = (fields.Notlar ? fields.Notlar + '\n' : '') + 'Uretim Suresi: ' + uretimSuresi + ' is gunu';
+  }
   // Bos stringleri temizle (Talep_No ve Durum kornsun)
   var koruma = ['Talep_No', 'Durum', 'Tarih', 'Olusturma_Tarihi'];
   Object.keys(fields).forEach(function(k) {
