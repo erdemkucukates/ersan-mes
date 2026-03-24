@@ -161,13 +161,6 @@ textarea.f-inp{resize:vertical;min-height:60px}
       <span class="fh-tb-spacer"></span>
       <button class="fh-tb-btn primary" onclick="yeniTalep()">+ Yeni Fiyat Talebi</button>
     </div>
-
-    <!-- Kritik saat banner -->
-    <div class="kritik-banner" id="kritikBanner">
-      <span style="width:7px;height:7px;border-radius:50%;background:#E24B4A;flex-shrink:0"></span>
-      <span id="kritikMesaj">Son teslim tarihine 4 saatten az kaldi!</span>
-    </div>
-
     <div class="fh-layout">
       <!-- Sol liste -->
       <div class="fh-sol">
@@ -181,6 +174,10 @@ textarea.f-inp{resize:vertical;min-height:60px}
 
       <!-- Sag detay -->
       <div class="fh-sag" id="fhSag">
+        <div class="kritik-banner" id="kritikBanner">
+          <span style="width:7px;height:7px;border-radius:50%;background:#E24B4A;flex-shrink:0"></span>
+          <span id="kritikMesaj">Son teslim tarihine 4 saatten az kaldi!</span>
+        </div>
         <div class="fh-bos" id="fhBos">
           <div style="font-size:44px;margin-bottom:12px;opacity:.2">💰</div>
           <div style="font-size:15px;font-weight:700;color:var(--metin2);margin-bottom:6px">Fiyat Hazirlama Modulu</div>
