@@ -445,15 +445,27 @@ function talepSec(id) {
   if (seciliTalep.Resim_Base64_List) {
     try {
       var resimListesi = JSON.parse(seciliTalep.Resim_Base64_List);
+      console.log('Resim geri yukleme:', resimListesi.length, 'dosya');
       resimListesi.forEach(function(r) {
-        if (!r.b64) return; // Bos base64 atla (buyuk dosya referansi)
-        var byteStr = atob(r.b64);
-        var arr = new Uint8Array(byteStr.length);
-        for (var i = 0; i < byteStr.length; i++) arr[i] = byteStr.charCodeAt(i);
-        var blob = new Blob([arr], { type: r.tip });
-        dosyalar.resim.push(new File([blob], r.ad, { type: r.tip }));
+        if (!r.b64 || r.b64.length < 10) {
+          console.warn('Resim base64 yok (buyuk dosya):', r.ad, r.boyut, 'bytes');
+          return;
+        }
+        try {
+          var byteStr = atob(r.b64);
+          var arr = new Uint8Array(byteStr.length);
+          for (var i = 0; i < byteStr.length; i++) arr[i] = byteStr.charCodeAt(i);
+          var blob = new Blob([arr], { type: r.tip });
+          var file = new File([blob], r.ad, { type: r.tip });
+          dosyalar.resim.push(file);
+          console.log('Resim yuklendi:', r.ad, file.size, 'bytes');
+        } catch(re) { console.warn('Resim decode hatasi:', r.ad, re); }
       });
-      if (dosyalar.resim.length > 0) toast(dosyalar.resim.length + ' teknik resim yuklendi');
+      if (dosyalar.resim.length > 0) {
+        toast(dosyalar.resim.length + ' teknik resim yuklendi');
+        dosyaListeRender('resim');
+        aiDurumGuncelle();
+      }
     } catch(e) { console.warn('Resim geri yukleme hatasi:', e); }
   }
   formDoldur(seciliTalep);
@@ -579,38 +591,33 @@ async function kaydet() {
   // Teslim suresi (number)
   var uretimSuresi = parseInt(document.getElementById('fUretimSuresi').value);
   if (!isNaN(uretimSuresi) && uretimSuresi > 0) fields.Teslim_Suresi = uretimSuresi;
-  // Teknik resimleri base64 olarak kaydet (max 90KB toplam — Airtable long text limiti)
+  // Teknik resimleri kaydet — per-dosya 200KB limit, toplam 95K karakter limit
   if (dosyalar.resim.length > 0) {
     try {
-      var toplamBoyut = dosyalar.resim.reduce(function(t, f) { return t + f.size; }, 0);
-      if (toplamBoyut > 70 * 1024) {
-        // Cok buyuk — sadece referans kaydet
-        fields.Resim_Base64_List = JSON.stringify(dosyalar.resim.map(function(f) {
-          return { ad: f.name, tip: f.type, boyut: f.size };
-        }));
-        toast('Resimler buyuk — sadece dosya adlari kaydedildi', 3000);
-      } else {
-        var resimListesi = [];
-        for (var ri = 0; ri < dosyalar.resim.length; ri++) {
-          var b64 = await dosyaToBase64(dosyalar.resim[ri]);
-          resimListesi.push({
-            ad: dosyalar.resim[ri].name,
-            tip: dosyalar.resim[ri].type || 'application/pdf',
-            boyut: dosyalar.resim[ri].size,
-            b64: b64
-          });
-        }
-        var jsonStr = JSON.stringify(resimListesi);
-        if (jsonStr.length > 95000) {
-          // JSON cok buyuk, sadece referans
-          fields.Resim_Base64_List = JSON.stringify(dosyalar.resim.map(function(f) {
-            return { ad: f.name, tip: f.type, boyut: f.size };
-          }));
-          toast('Base64 cok buyuk — sadece dosya adlari kaydedildi', 3000);
+      var resimListesi = [];
+      var buyukDosyaVar = false;
+      for (var ri = 0; ri < dosyalar.resim.length; ri++) {
+        var dosya = dosyalar.resim[ri];
+        if (dosya.size > 200 * 1024) {
+          // 200KB ustu — sadece referans
+          resimListesi.push({ ad: dosya.name, tip: dosya.type, boyut: dosya.size, b64: '' });
+          buyukDosyaVar = true;
+          console.warn('Dosya buyuk, sadece isim:', dosya.name, dosya.size);
         } else {
-          fields.Resim_Base64_List = jsonStr;
+          var b64 = await dosyaToBase64(dosya);
+          resimListesi.push({ ad: dosya.name, tip: dosya.type || 'application/pdf', boyut: dosya.size, b64: b64 });
         }
       }
+      var jsonStr = JSON.stringify(resimListesi);
+      if (jsonStr.length > 95000) {
+        // Hala cok buyuk — tum base64'leri kaldir
+        resimListesi = resimListesi.map(function(r) { return { ad: r.ad, tip: r.tip, boyut: r.boyut, b64: '' }; });
+        jsonStr = JSON.stringify(resimListesi);
+        buyukDosyaVar = true;
+      }
+      fields.Resim_Base64_List = jsonStr;
+      if (buyukDosyaVar) toast('Buyuk resimler icin sadece dosya adi kaydedildi', 3000);
+      console.log('Resim kayit:', resimListesi.map(function(r) { return r.ad + ' b64:' + (r.b64 ? r.b64.length : 0); }));
     } catch(e) { console.warn('Resim kayit hatasi:', e); }
   }
   // Bos stringleri ve null/undefined temizle (Talep_No ve Durum korunsun)
