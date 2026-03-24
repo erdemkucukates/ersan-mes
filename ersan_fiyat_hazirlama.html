@@ -808,47 +808,36 @@ async function aiOku() {
       } catch(e) { toast('Teklif dosyasi okunamadi: ' + e.message, 4000); }
     }
 
-    // Adim 2: Teknik resimler AI'a gonderilmiyor (karisiyor)
+    // Adim 2: Teknik resimler (sadece malzeme icin)
     adimGuncelle(1, 'tamam');
+    adimGuncelle(2, 'aktif');
+    var resimHazir = [];
+    for (var i = 0; i < dosyalar.resim.length; i++) {
+      try {
+        resimHazir.push(await dosyaHazirla(dosyalar.resim[i]));
+      } catch(e) { console.warn(dosyalar.resim[i].name + ' okunamadi:', e.message); }
+    }
     adimGuncelle(2, 'tamam');
 
-    // Adim 3: AI analiz — sadece teklif formu
+    // Adim 3: AI analiz
     adimGuncelle(3, 'aktif');
 
     var content = [];
 
     // Sistem promptu
-    var sistemPrompt = 'Sen bir satin alma formu okuma asistanisin.\n' +
-      'Sana verilen PDF veya goruntu dosyalarini dikkatlice oku.\n\n' +
-      '## GOREV\n' +
-      'Tum dosyalari tara ve asagidaki JSON formatinda bilgileri cikar.\n' +
-      'SADECE JSON dondur. Baska hicbir sey yazma.\n\n' +
-      '## CIKARILACAK BILGILER\n\n' +
-      '### musteri_adi\n' +
-      '- Belgedeki "ALICI FIRMA", "MUSTERI", "IHALEYI DUZENLEYEN", "SATINALMA", "FIRMA ADI", "COMPANY" gibi etiketlerin yanindaki firma adi\n' +
-      '- Ersan Endustriyel = satici, biz, ATLA\n' +
-      '- Tum unvan dahil yaz: "A.S.", "Ltd.", "San." dahil\n' +
-      '- Ornekler: "Tosyali Metalurji Sanayi A.S.", "Diler Demir-Celik End. A.S.", "Colakoglu Metalurji A.S."\n\n' +
-      '### teklif_ref\n' +
-      '- "TEKLIF NO", "IHALE NO", "SIPARIS NO", "PO NUMBER", "FORM NO" etiketinin yanindaki numara\n\n' +
-      '### tarih\n' +
-      '- "TARIH", "DATE" etiketinin yanindaki tarih -> YYYY-MM-DD formatina cevir\n\n' +
-      '### kalemler — DIKKAT: Her teknik resim = 1 kalem\n' +
-      'Her kalem icin sunlari cikar:\n' +
-      '- parca_adi: Parca adi, malzeme tanimi\n' +
-      '- cizim_no: Resim numarasi, cizim no, drawing no\n' +
-      '- dosya_no: Dosya no, is talep no\n' +
-      '- adet: Belgede "MIKTAR", "ADET", "QTY", "QUANTITY" veya es anlamlisi bir kelime varsa, o kelimenin hemen yanindaki veya altindaki rakami yaz. Bu kelimelerden biri yoksa veya emin degilsen "" dondur.\n' +
-      '- malzeme: Malzeme cinsi (4140, AISI 304L, EPOXIDIC RESIN vb.)\n' +
-      '- agirlik: Agirlik bilgisi (varsa, "kg" birimi dahil)\n' +
-      '- olcu: Boyutlar (varsa, "O310xO290x206" formatinda)\n\n' +
-      '### Tekil alanlar (birden fazla kalem varsa ilk kalemi baz al):\n' +
-      '- malzeme: Ilk kalemin malzemesi\n' +
-      '- cizim_no: Ilk kalemin cizim no\n' +
-      '- dosya_no: Dosya/is emri no\n' +
-      '- adet: Ilk kalemin adedi\n\n' +
-      '### guven: 0-100 arasi guven skoru\n\n' +
-      '## CIKTI FORMATI — SADECE BU JSON, BASKA HICBIR SEY YOK:\n' +
+    var sistemPrompt = 'Sen bir satin alma belgesi okuma asistanisin.\n' +
+      'Sana bir TEKLIF FORMU ve TEKNIK RESIM(ler) verilecek.\n' +
+      'Her belgeden FARKLI bilgileri cikar:\n\n' +
+      'TEKLIF FORMU -> musteri_adi, teklif_ref, tarih, adet, cizim_no, dosya_no, parca_adi\n' +
+      'TEKNIK RESIM -> SADECE malzeme (celik kalitesi, malzeme kodu, standart)\n\n' +
+      'KURALLAR:\n' +
+      '- musteri_adi: "ALICI FIRMA", "MUSTERI", "SATINALMA" etiketinden al. Ersan = satici, ATLA\n' +
+      '- adet: SADECE teklif formundaki "MIKTAR", "ADET", "QTY" etiketinin yanindaki rakam\n' +
+      '- malzeme: SADECE teknik resimdeki "MALZEME", "MATERIAL" alanindaki deger\n' +
+      '  Ornekler: 4140, 1040, AISI 304L, X2CrNi19-11, UDDEHOLM DIEVAR, EPOXIDIC RESIN\n' +
+      '- Teknik resimdeki boyut rakamlari (O280, 160, 206) ADET DEGILDIR\n' +
+      '- Bulamadigin alani bos birak, tahmin etme\n\n' +
+      'SADECE JSON dondur:\n' +
       '{\n' +
       '  "musteri_adi": "...",\n' +
       '  "teklif_ref": "...",\n' +
@@ -856,11 +845,10 @@ async function aiOku() {
       '  "malzeme": "...",\n' +
       '  "cizim_no": "...",\n' +
       '  "dosya_no": "...",\n' +
-      '  "adet": "9",\n' +
+      '  "adet": "25",\n' +
       '  "kalemler": [\n' +
-      '    { "parca_adi": "...", "cizim_no": "...", "dosya_no": "...", "adet": "9", "malzeme": "...", "agirlik": "...", "olcu": "..." }\n' +
+      '    { "parca_adi": "...", "cizim_no": "...", "dosya_no": "...", "adet": "25", "malzeme": "...", "olcu": "..." }\n' +
       '  ],\n' +
-      '  "notlar": "...",\n' +
       '  "guven": 90\n' +
       '}';
 
@@ -880,7 +868,17 @@ async function aiOku() {
       content.push({ type: 'text', text: 'Yukardaki teklif isteme formu PDF\'ini analiz et.' });
     }
 
-    // Teknik resimler AI'a gonderilmiyor — sadece teklif formu okunuyor
+    // Teknik resimler — sadece malzeme icin
+    if (resimHazir.length > 0) {
+      content.push({ type: 'text', text: 'Asagidaki dosya(lar) TEKNIK RESIMDIR. Sadece MALZEME bilgisini (celik kalitesi, malzeme standardı) buradan al. Boyut rakamlari adet DEGILDIR.' });
+      for (var j = 0; j < resimHazir.length; j++) {
+        var icerikTipi = resimHazir[j].tip === 'application/pdf' ? 'document' : 'image';
+        content.push({
+          type: icerikTipi,
+          source: { type: 'base64', media_type: resimHazir[j].tip, data: resimHazir[j].b64 }
+        });
+      }
+    }
 
     content.push({ type: 'text', text: sistemPrompt });
 
