@@ -579,15 +579,16 @@ async function kaydet() {
   // Teslim suresi (number)
   var uretimSuresi = parseInt(document.getElementById('fUretimSuresi').value);
   if (!isNaN(uretimSuresi) && uretimSuresi > 0) fields.Teslim_Suresi = uretimSuresi;
-  // Teknik resimleri base64 olarak kaydet
+  // Teknik resimleri base64 olarak kaydet (max 90KB toplam — Airtable long text limiti)
   if (dosyalar.resim.length > 0) {
     try {
       var toplamBoyut = dosyalar.resim.reduce(function(t, f) { return t + f.size; }, 0);
-      if (toplamBoyut > 5 * 1024 * 1024) {
-        toast('Resimler cok buyuk (>5MB) — sadece referans kaydedildi', 3000);
+      if (toplamBoyut > 70 * 1024) {
+        // Cok buyuk — sadece referans kaydet
         fields.Resim_Base64_List = JSON.stringify(dosyalar.resim.map(function(f) {
-          return { ad: f.name, tip: f.type, boyut: f.size, b64: '' };
+          return { ad: f.name, tip: f.type, boyut: f.size };
         }));
+        toast('Resimler buyuk — sadece dosya adlari kaydedildi', 3000);
       } else {
         var resimListesi = [];
         for (var ri = 0; ri < dosyalar.resim.length; ri++) {
@@ -599,15 +600,33 @@ async function kaydet() {
             b64: b64
           });
         }
-        fields.Resim_Base64_List = JSON.stringify(resimListesi);
+        var jsonStr = JSON.stringify(resimListesi);
+        if (jsonStr.length > 95000) {
+          // JSON cok buyuk, sadece referans
+          fields.Resim_Base64_List = JSON.stringify(dosyalar.resim.map(function(f) {
+            return { ad: f.name, tip: f.type, boyut: f.size };
+          }));
+          toast('Base64 cok buyuk — sadece dosya adlari kaydedildi', 3000);
+        } else {
+          fields.Resim_Base64_List = jsonStr;
+        }
       }
     } catch(e) { console.warn('Resim kayit hatasi:', e); }
   }
-  // Bos stringleri temizle (Talep_No ve Durum kornsun)
+  // Bos stringleri ve null/undefined temizle (Talep_No ve Durum korunsun)
   var koruma = ['Talep_No', 'Durum', 'Tarih', 'Olusturma_Tarihi'];
   Object.keys(fields).forEach(function(k) {
+    if (fields[k] === null || fields[k] === undefined) { delete fields[k]; return; }
     if (fields[k] === '' && koruma.indexOf(k) === -1) delete fields[k];
   });
+  // Gonderilecek alanlari logla
+  var fieldsLog = {};
+  Object.keys(fields).forEach(function(k) {
+    fieldsLog[k] = typeof fields[k] === 'string' && fields[k].length > 50
+      ? fields[k].substring(0, 50) + '... (' + fields[k].length + ' chr)'
+      : fields[k];
+  });
+  console.log('Kaydet fields:', JSON.stringify(fieldsLog, null, 2));
 
   if (seciliTalep._id) {
     // PATCH
