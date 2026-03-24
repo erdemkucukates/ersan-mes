@@ -806,18 +806,11 @@ async function aiOku() {
       } catch(e) { toast('Teklif dosyasi okunamadi: ' + e.message, 4000); }
     }
 
-    // Adim 2: Teknik resimler
+    // Adim 2: Teknik resimler AI'a gonderilmiyor (karisiyor)
     adimGuncelle(1, 'tamam');
-    adimGuncelle(2, 'aktif');
-    var resimHazir = [];
-    for (var i = 0; i < dosyalar.resim.length; i++) {
-      try {
-        resimHazir.push(await dosyaHazirla(dosyalar.resim[i]));
-      } catch(e) { toast(dosyalar.resim[i].name + ' okunamadi: ' + e.message, 4000); }
-    }
-
-    // Adim 3: AI analiz
     adimGuncelle(2, 'tamam');
+
+    // Adim 3: AI analiz — sadece teklif formu
     adimGuncelle(3, 'aktif');
 
     var content = [];
@@ -885,15 +878,7 @@ async function aiOku() {
       content.push({ type: 'text', text: 'Yukardaki teklif isteme formu PDF\'ini analiz et.' });
     }
 
-    // Teknik resimler
-    for (var j = 0; j < resimHazir.length; j++) {
-      var icerikTipi = resimHazir[j].tip === 'application/pdf' ? 'document' : 'image';
-      content.push({
-        type: icerikTipi,
-        source: { type: 'base64', media_type: resimHazir[j].tip, data: resimHazir[j].b64 }
-      });
-      content.push({ type: 'text', text: 'Teknik resim ' + (j + 1) + '/' + resimHazir.length });
-    }
+    // Teknik resimler AI'a gonderilmiyor — sadece teklif formu okunuyor
 
     content.push({ type: 'text', text: sistemPrompt });
 
