@@ -812,15 +812,26 @@ async function aiOku() {
       'Normal tablo ornegi:\n' +
       '"MIKTAR: 25 ADT" -> adet = 25\n\n' +
       'MALZEME OKUMA KURALI:\n' +
+      'Teknik resimlerde malzeme bilgisi su formatlarda yazilabilir:\n\n' +
+      'FORMAT 1 — POZ altinda parantez icinde:\n' +
+      '  POZ-22\n' +
+      '  (St-37)     <- Bu malzemedir\n\n' +
+      'FORMAT 2 — POZ yaninda MALZEME etiketiyle:\n' +
+      '  POZ-1\n' +
+      '  MALZEME: C-10.4.0    <- Bu malzemedir\n\n' +
+      'FORMAT 3 — Antet/baslik tablosunda:\n' +
+      '  MALZEME | 4140    <- Bu malzemedir\n\n' +
       'Oncelik sirasi:\n' +
       '1. Teklif formundaki bu kalemin aciklamasinda "MALZEME:", "MATERIAL:" yazan yer\n' +
-      '2. Teknik resimde bu kaleme ait poz bilgisi varsa (Poz 3, POZ-2 gibi):\n' +
-      '   - Resimde birden fazla poz olabilir\n' +
-      '   - Teklif formundaki poz numarasiyla eslestir\n' +
-      '   - O poza ait malzeme bilgisini oku (antet degil, o pozun malzeme alani)\n' +
-      '3. Resimde tek poz varsa veya poz eslestirme yapilamiyorsa:\n' +
-      '   - Resmin antet/baslik kismindaki malzeme alanini oku\n' +
-      '4. Hicbirinde bulunamazsa bos birak\n\n' +
+      '2. Teknik resimde teklif formundaki POZ numarasiyla eslesen POZ etiketinin\n' +
+      '   hemen yaninda veya altinda parantez icindeki yazi -> (St-37), (c-1040)\n' +
+      '3. Teknik resimde POZ etiketinin yaninda "MALZEME:" yazan yer\n' +
+      '4. Resim tek pozlu ise antet/baslik tablosundaki malzeme alani\n' +
+      '5. Hicbirinde bulunamazsa bos birak\n\n' +
+      'ORNEK:\n' +
+      'Teklif formunda "POZ-22 imali" yaziyorsa ->\n' +
+      'teknik resimde POZ-22 etiketini bul ->\n' +
+      'altinda "(St-37)" yaziyorsa -> malzeme = St-37\n\n' +
       'DOSYA NO:\n' +
       'Teklif formundaki kalem satirinda "DOSYA NO" sutunundan al. Her kalemin kendi dosya nosu olabilir.\n\n' +
       'STOK KODU:\n' +
@@ -899,11 +910,22 @@ async function aiOku() {
       ]
     }}]};
 
-    // Teklif formu (XFA kontrolu ile)
+    // Ornek 3 — Diler + cok pozlu teknik resim
+    var fewShotUser3 = [{ type: 'text', text: 'Teklif formu:\nALICI FIRMA: DILER DEMIR-CELIK END. AS\nKALEM NO | MAL.KODU | DOSYA NO | MALZEME TANIMI          | MIKTAR | CIZIM NO\n00010    | 2096551  | 6541     | MIL ARA KUTUK P2/POZ-2  | 2      | ADT\n00020    | 2009813  | 4149     | ROLE IMALI P-22/POZ-22  | 50     | ADT\n\nTeknik resimde birden fazla poz var:\nPOZ-19 (c-1040)\nPOZ-20 (St-37)\nPOZ-21 (St-37)\nPOZ-22 (St-37)\nPOZ-23 (St-37)' }];
+    var fewShotAsst3 = { role: 'assistant', content: [{ type: 'tool_use', id: 'ex_3', name: 'teklif_formu_kaydet', input: {
+      musteri_adi: 'Diler Demir-Celik End. AS', musteri_gerekce: 'ALICI FIRMA etiketinden',
+      teklif_ref: '', proje_adi: 'Mil ve Role Imalati',
+      kalemler: [
+        { parca_adi: 'Mil Ara Kutuk P2 / POZ-2', dosya_no: '6541', cizim_no: '', adet: '2', adet_gerekce: 'MIKTAR sutununda "2 ADT" — ADT birim, 2 adet', malzeme: 'c-1040', stok_kodu: '2096551' },
+        { parca_adi: 'Role Imalati P-22 / POZ-22', dosya_no: '4149', cizim_no: '', adet: '50', adet_gerekce: 'MIKTAR sutununda "50 ADT"', malzeme: 'St-37', stok_kodu: '2009813' }
+      ]
+    }}]};
+
+    // Teklif formu (XFA kontrolu + PDF->goruntu)
     if (teklifHazir) {
       var xfaMetin = null;
+      // XFA kontrolu (sadece direkt PDF ise, goruntye cevrildiyse gereksiz)
       if (teklifHazir.tip === 'application/pdf') {
-        // XFA/SAP PDF kontrolu
         try {
           var raw = atob(teklifHazir.b64);
           var isXFA = raw.indexOf('xdp:xdp') > -1 || raw.indexOf('XFA') > -1 ||
@@ -921,8 +943,6 @@ async function aiOku() {
               console.log('XFA metin cikarildi:', xfaData.text.substring(0, 200));
               xfaMetin = xfaData.text;
               content.push({ type: 'text', text: 'Teklif formu metni (XFA PDF den cikarildi):\n\n' + xfaData.text });
-            } else {
-              console.warn('XFA acilamadi, direkt PDF gonderiliyor');
             }
           }
         } catch(xfaErr) { console.warn('XFA kontrol hatasi:', xfaErr); }
@@ -934,7 +954,16 @@ async function aiOku() {
             source: { type: 'base64', media_type: 'application/pdf', data: teklifHazir.b64 }
           });
         }
+      } else if (teklifHazir.tumSayfalar && teklifHazir.tumSayfalar.length > 0) {
+        // PDF goruntye cevrildi — her sayfayi ayri image olarak gonder
+        for (var si = 0; si < teklifHazir.tumSayfalar.length; si++) {
+          content.push({
+            type: 'image',
+            source: { type: 'base64', media_type: 'image/png', data: teklifHazir.tumSayfalar[si] }
+          });
+        }
       } else {
+        // Goruntu (JPG, PNG, TIFF)
         content.push({
           type: 'image',
           source: { type: 'base64', media_type: teklifHazir.tip, data: teklifHazir.b64 }
@@ -943,15 +972,29 @@ async function aiOku() {
       content.push({ type: 'text', text: 'Yukardaki teklif isteme formu PDF\'ini analiz et.' });
     }
 
-    // Teknik resimler — sadece malzeme icin
+    // Teknik resimler — malzeme + poz eslestirme icin
     if (resimHazir.length > 0) {
-      content.push({ type: 'text', text: 'Asagidaki dosya(lar) TEKNIK RESIMDIR. Sadece MALZEME bilgisini (celik kalitesi, malzeme standardı) buradan al. Boyut rakamlari adet DEGILDIR.' });
+      content.push({ type: 'text', text: 'Asagidaki dosya(lar) TEKNIK RESIMDIR. Malzeme bilgisini (celik kalitesi, malzeme standardi) ve POZ numaralarini buradan al. Boyut rakamlari adet DEGILDIR.' });
       for (var j = 0; j < resimHazir.length; j++) {
-        var icerikTipi = resimHazir[j].tip === 'application/pdf' ? 'document' : 'image';
-        content.push({
-          type: icerikTipi,
-          source: { type: 'base64', media_type: resimHazir[j].tip, data: resimHazir[j].b64 }
-        });
+        if (resimHazir[j].tumSayfalar && resimHazir[j].tumSayfalar.length > 0) {
+          // PDF goruntye cevrildi
+          for (var rsi = 0; rsi < resimHazir[j].tumSayfalar.length; rsi++) {
+            content.push({
+              type: 'image',
+              source: { type: 'base64', media_type: 'image/png', data: resimHazir[j].tumSayfalar[rsi] }
+            });
+          }
+        } else if (resimHazir[j].tip === 'application/pdf') {
+          content.push({
+            type: 'document',
+            source: { type: 'base64', media_type: 'application/pdf', data: resimHazir[j].b64 }
+          });
+        } else {
+          content.push({
+            type: 'image',
+            source: { type: 'base64', media_type: resimHazir[j].tip, data: resimHazir[j].b64 }
+          });
+        }
       }
     }
 
@@ -973,6 +1016,10 @@ async function aiOku() {
         { role: 'user', content: fewShotUser2 },
         fewShotAsst2,
         { role: 'user', content: [{ type: 'tool_result', tool_use_id: 'ex_2', content: 'OK' }] },
+        // Ornek 3 — Diler + cok pozlu teknik resim
+        { role: 'user', content: fewShotUser3 },
+        fewShotAsst3,
+        { role: 'user', content: [{ type: 'tool_result', tool_use_id: 'ex_3', content: 'OK' }] },
         // Gercek belge
         { role: 'user', content: dosyaIcerikleri }
       ]
@@ -1175,9 +1222,24 @@ async function dosyaHazirla(dosya) {
     });
   }
 
-  // PDF
+  // PDF -> Sunucuda goruntye cevir
   if (ext === 'pdf') {
     var b64 = await dosyaToBase64(dosya);
+    try {
+      var pdfRes = await fetch('/.netlify/functions/pdf-to-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ b64: b64 })
+      });
+      var pdfJson = await pdfRes.json();
+      if (pdfJson.success && pdfJson.pages && pdfJson.pages.length > 0) {
+        console.log('PDF ' + pdfJson.count + ' sayfaya cevrildi');
+        return { b64: pdfJson.pages[0], tip: 'image/png', tumSayfalar: pdfJson.pages };
+      }
+    } catch(e) {
+      console.warn('PDF->goruntu hatasi, direkt PDF gonderiliyor:', e);
+    }
+    // Fallback: direkt PDF
     return { b64: b64, tip: 'application/pdf' };
   }
 
