@@ -802,16 +802,23 @@ async function aiOku() {
       'GENEL KURAL: Emin olmadigin her alani bos birak. Yanlis deger yerine bos tercih et.\n\n' +
       'MUSTERI:\n' +
       'Sadece teklif formundaki "ALICI FIRMA", "MUSTERI", "IHALEYI DUZENLEYEN" etiketinden al.\n' +
-      'Ersan Endustriyel = satici taraf, alma.\n\n' +
+      'Ersan Endustriyel = satici taraf, alma.\n' +
+      'Turkce karakterleri koru: c->ç, s->ş, g->ğ, i->ı, o->ö, u->ü gerekiyorsa dogru yaz.\n' +
+      'Orn: "DILER DEMIR-CELIK" -> "Diler Demir-Çelik", "COLAKOGLU" -> "Çolakoğlu"\n\n' +
       'ADET — COK ONEMLI:\n' +
+      'MIKTAR veya ADET sutunundaki degeri oku.\n' +
+      'Bu deger birden fazla basamakli olabilir (orn: 25, 100, 1000).\n' +
+      'Sayi ile ADT/ADET kelimesi arasinda bosluk olsa bile TAM SAYIYI al.\n' +
+      'Ornekler: "25 ADT" -> 25, "100 ADT" -> 100, "2 ADT" -> 2\n' +
+      'Sadece tek basamak degil, tam sayiyi dondur.\n' +
       'Her kalemin KENDI satirindaki adeti al. Genel/toplam adeti alma.\n' +
-      '"ADT", "ADET", "PCS", "MIKTAR", "QTY" kelimesinin TAM ONUNDEKI sayi.\n\n' +
+      'Emin degilsen bos birak.\n\n' +
       'XFA/SAP format ornegi:\n' +
       '"6003091192 10 2099557 IZALATOR 4709-04-003 12 ADT"\n' +
       '-> "10" = kalem sirasi (ADET DEGIL)\n' +
       '-> "12 ADT" = bu kalemin adeti (DOGRU)\n\n' +
       'Normal tablo ornegi:\n' +
-      '"MIKTAR: 25 ADT" -> adet = 25\n\n' +
+      '"MIKTAR: 25 ADT" -> adet = 25 (iki basamakli tam sayi)\n\n' +
       'MALZEME OKUMA KURALI:\n' +
       'Teknik resimlerde malzeme bilgisi su formatlarda yazilabilir:\n\n' +
       'FORMAT 1 — POZ altinda parantez icinde:\n' +
@@ -835,8 +842,11 @@ async function aiOku() {
       'altinda "(St-37)" yaziyorsa -> malzeme = St-37\n\n' +
       'DOSYA NO:\n' +
       'Teklif formundaki kalem satirinda "DOSYA NO" sutunundan al. Her kalemin kendi dosya nosu olabilir.\n\n' +
-      'STOK KODU:\n' +
-      'Teklif formundaki kalem satirindaki "MALZEME KODU", "STOK KODU", "KOD" sutunundan al.\n\n' +
+      'STOK KODU (MALZEME KODU):\n' +
+      'Teklif formundaki kalem satirindaki "MALZEME KODU", "STOK KODU", "KOD" sutunundan al.\n' +
+      'Rakamlari dikkatli oku: 0 (sifir) ile 9 (dokuz) karistirma,\n' +
+      '5 ile 6 karistirma, 1 ile 7 karistirma.\n' +
+      'Tum 7 rakam eksiksiz yaz. Emin degilsen bos birak.\n\n' +
       'PARCA ADI KURALI:\n' +
       'parca_adi = teklif formundaki MALZEME TANIMI sutunundaki metin.\n' +
       'Teknik resimdeki poz numarasi veya malzeme bilgisini parca adina YAZMA.\n' +
@@ -880,11 +890,11 @@ async function aiOku() {
               properties: {
                 parca_adi: { type: 'string', description: 'Bu kalemin parca adi veya malzeme tanimi' },
                 cizim_no: { type: 'string', description: 'Bu kaleme ait cizim/resim numarasi. Tire ve rakamlardan olusur. Orn: 4709-04-003, HTZ-2550_R6' },
-                adet: { type: 'string', description: 'BU KALEME AIT adet. Kalem satirinda "ADT", "ADET", "PCS", "MIKTAR", "QTY" kelimesinin HEMEN ONUNDEKI tam sayi. Toplam veya genel adet degil. Emin degilsen bos.' },
+                adet: { type: 'string', description: 'BU KALEME AIT adet. MIKTAR sutunundaki tam sayiyi oku. Birden fazla basamak olabilir (25, 100, 1000). Sayi ile ADT arasinda bosluk olsa bile tam sayiyi al. Sadece tek basamak degil, tum basamaklari dondur. Emin degilsen bos.' },
                 adet_gerekce: { type: 'string', description: 'Adeti hangi kelime grubundan aldin? Tam alinti. Orn: "12 ADT — ADT onundeki 12" veya "bulunamadi"' },
                 dosya_no: { type: 'string', description: 'Bu kaleme ait dosya numarasi. Teklif formundaki kalem satirinda "DOSYA NO" sutunundan al. Diler formunda her kalemin kendi dosya nosu var. Orn: 6541, 4149, 3027. Yoksa bos.' },
                 malzeme: { type: 'string', description: 'Malzeme cinsi/kalitesi. Oncelik: 1) Teklif formunda "MALZEME:" yazan yer, 2) Teknik resimde poz eslesmesi varsa o pozun malzeme alani, 3) Resmin antet kismindaki malzeme. Orn: 4140, AISI 304L, HGW 2372.4. Bulamazsan bos.' },
-                stok_kodu: { type: 'string', description: 'Musterinin bu kaleme ait malzeme kodu, stok kodu veya urun kodu. Teklif formundaki kalem satirinda "MALZEME KODU", "STOK KODU", "KOD" gibi sutundan al. Orn: 2005531, 2099557. Yoksa bos.' }
+                stok_kodu: { type: 'string', description: 'Musterinin bu kaleme ait malzeme kodu, stok kodu veya urun kodu. MALZEME KODU sutunundan al. Rakamlari dikkatli oku: 0/9 ve 5/6 ve 1/7 karistirma. Tum 7 rakam eksiksiz. Orn: 2005531, 2099557. Yoksa bos.' }
               },
               required: ['parca_adi', 'adet', 'adet_gerekce']
             }
@@ -895,7 +905,7 @@ async function aiOku() {
     }];
 
     // Few-shot ornekleri
-    var fewShotUser1 = [{ type: 'text', text: 'Diler Demir-Celik teklif formu.\nTablo sutun sirasi (soldan saga):\nKALEM NO | MALZEME KODU | DOSYA NO | MALZEME TANIMI | MIKTAR | OLCU BIRIMI | MENSEI/MARKA | CIZIM NO | TESLIM TARIHI | BIRIM FIYATI | PB | TOPLAM FIYAT | PB\n\nKalem satiri 1:\n00010 | 2096551 | 6541 | MIL ARA KUTUK AKTARMA SEHPA P2 // POZ-2 IMAL EDILECEKTIR. | [MIKTAR HUCRESI] | ADT | | | 14.Mar.2026\n\nKalem satiri 2:\n00020 | 2009813 | 4149 | ROLE IMALI HIZALAMA AVARE P-22 // POZ-22 IMAL EDILECEKTIR. | [MIKTAR HUCRESI] | ADT | | | 14.Mar.2026\n\nMIKTAR hucrelerindeki rakamlari sutun hizasina gore tespit et.\nBold Arial fontunda: 2 ile 7 karisabilir, 5 ile 6 karisabilir.' }];
+    var fewShotUser1 = [{ type: 'text', text: 'Diler Demir-Celik teklif formu (gorsel tablo).\nALICI FIRMA: DILER DEMIR-CELIK END. A.S.\nTARIH: 18.03.2026   TEKLIF NO: 6000297897\n\nTablo sutun sirasi (soldan saga):\nKALEM NO | MALZEME KODU | DOSYA NO | MALZEME TANIMI | MIKTAR | OLCU BIRIMI | MENSEI/MARKA | CIZIM NO | TESLIM TARIHI\n\n00010 | 2096551 | 6541 | MIL ARA KUTUK AKTARMA SEHPA P2 // POZ-2 IMAL EDILECEKTIR. | 2 | ADT | | | 14.Mar.2026\n00020 | 2009813 | 4149 | ROLE IMALI HIZALAMA AVARE P-22 // POZ-22 IMAL EDILECEKTIR. | 50 | ADT | | | 14.Mar.2026\n\nDikkat: MIKTAR sutunundaki rakami tam oku — 2 basamakli olabilir (25, 50). Tek basamak sanma.' }];
     var fewShotAsst1 = { role: 'assistant', content: [{ type: 'tool_use', id: 'ex_1', name: 'teklif_formu_kaydet', input: {
       musteri_adi: 'Diler Demir-Celik End. AS', musteri_gerekce: 'ALICI FIRMA etiketinin yanindan',
       teklif_ref: '6000297897', tarih: '2026-03-18', proje_adi: 'Mil ve Role Imalati',
@@ -916,14 +926,13 @@ async function aiOku() {
       ]
     }}]};
 
-    // Ornek 3 — Diler + cok pozlu teknik resim
-    var fewShotUser3 = [{ type: 'text', text: 'Teklif formu:\nALICI FIRMA: DILER DEMIR-CELIK END. AS\nKALEM NO | MAL.KODU | DOSYA NO | MALZEME TANIMI          | MIKTAR | CIZIM NO\n00010    | 2096551  | 6541     | MIL ARA KUTUK P2/POZ-2  | 2      | ADT\n00020    | 2009813  | 4149     | ROLE IMALI P-22/POZ-22  | 50     | ADT\n\nTeknik resimde birden fazla poz var:\nPOZ-19 (c-1040)\nPOZ-20 (St-37)\nPOZ-21 (St-37)\nPOZ-22 (St-37)\nPOZ-23 (St-37)' }];
+    // Ornek 3 — Diler bicak teklifi (tek kalem, 25 adet)
+    var fewShotUser3 = [{ type: 'text', text: 'Diler Demir-Celik teklif formu.\nALICI FIRMA: DILER DEMIR-CELIK END. A.S.\nTARIH: 24.03.2026   TEKLIF NO: 6000298591\n\nKALEM NO | MALZEME KODU | DOSYA NO | MALZEME TANIMI | MIKTAR | OLCU BIRIMI | CIZIM NO\n00010 | 2005531 | 3027 | BICAK IMALI 2. MAKAS // 2.MAKAS BICAGI 160 LIK | 25 | ADT | HTZ-2550_R6_\n\nDikkat: MIKTAR sutununda "25" yaziyor — iki basamakli tam sayi, 2 degil.' }];
     var fewShotAsst3 = { role: 'assistant', content: [{ type: 'tool_use', id: 'ex_3', name: 'teklif_formu_kaydet', input: {
-      musteri_adi: 'Diler Demir-Celik End. AS', musteri_gerekce: 'ALICI FIRMA etiketinden',
-      teklif_ref: '', proje_adi: 'Mil ve Role Imalati',
+      musteri_adi: 'Diler Demir-Çelik End. A.Ş.', musteri_gerekce: 'ALICI FIRMA etiketinden',
+      teklif_ref: '6000298591', tarih: '2026-03-24', proje_adi: 'Bicak Imali 2. Makas',
       kalemler: [
-        { parca_adi: 'Mil Ara Kutuk Aktarma Sehpa P2 // POZ-2 Imal Edilecektir.', dosya_no: '6541', cizim_no: '', adet: '2', adet_gerekce: 'MIKTAR sutununda "2 ADT" — ADT birim, 2 adet', malzeme: 'c-1040', stok_kodu: '2096551' },
-        { parca_adi: 'Role Imali Hizalama Avare P-22 // POZ-22 Imal Edilecektir.', dosya_no: '4149', cizim_no: '', adet: '50', adet_gerekce: 'MIKTAR sutununda "50 ADT"', malzeme: 'St-37', stok_kodu: '2009813' }
+        { parca_adi: 'Bicak Imali 2. Makas // 2.Makas Bicagi 160 Lik', dosya_no: '3027', cizim_no: 'HTZ-2550_R6_', adet: '25', adet_gerekce: 'MIKTAR sutununda "25" — iki basamakli tam sayi, ADT birim sutununda', malzeme: '', stok_kodu: '2005531' }
       ]
     }}]};
 
@@ -1278,7 +1287,7 @@ async function dosyaHazirla(dosya) {
         }
       }
     } catch(e) {
-      console.warn('Sunucu PDF->PNG basarisiz:', e.message);
+      // Sessizce tarayici fallback'e gec
     }
 
     // 2. Fallback: PDF.js ile tarayicida render et
