@@ -816,6 +816,22 @@ async function aiOku() {
       '3. Ikisinde de yoksa bos birak\n\n' +
       'STOK KODU:\n' +
       'Teklif formundaki kalem satirindaki "MALZEME KODU", "STOK KODU", "KOD" sutunundan al.\n\n' +
+      'GORSEL TABLO OKUMA (OZELLIKLE DILER DEMIR-CELIK FORMU):\n' +
+      'Bu form gorsel olarak geldiginde su ozellikleri var:\n' +
+      '- Yazi tipi: Bold, siyah, sans-serif (Arial/Helvetica benzeri)\n' +
+      '- MIKTAR sutunu DAR — rakam tablo hucresinin sag veya sol kenarina yapisik durabilir\n' +
+      '- Rakamlar bazen hucre cizgisiyle ic ice gecmis gorunur\n' +
+      '- Dikkat edilmesi gereken karisikliklar:\n' +
+      '  * 2 <-> 7 (alt kismi benzer)\n' +
+      '  * 5 <-> 6 (ust kismi benzer)\n' +
+      '  * 1 <-> 7 (dikey cizgi)\n' +
+      '  * 50 <-> 60 (5 ve 6 bold yazida cok benzer)\n\n' +
+      'Bu formu gorunce sunu yap:\n' +
+      '1. Once tum tablo sutun basliklarini tespit et: KALEM NO, MALZEME KODU, DOSYA NO, MALZEME TANIMI, MIKTAR, OLCU BIRIMI\n' +
+      '2. Her kalem satirinda sutun hizasina dikkat et — MIKTAR sutununun tam altindaki hucreyi bul\n' +
+      '3. O hucredeki rakami yakindan analiz et — hucre cizgisine degiyor olsa bile rakamin kendisine bak\n' +
+      '4. OLCU BIRIMI sutununda "ADT" yazar — bu birim, adet degil, karistirma\n' +
+      '5. Emin olamiyorsan gerekcede "gorsel belirsiz" yaz ve bos birak\n\n' +
       'Her alan icin gerekce alanina hangi satirdan/kelimeden aldigini yaz.';
 
     // Tool schema
@@ -852,11 +868,14 @@ async function aiOku() {
     }];
 
     // Few-shot ornekleri
-    var fewShotUser1 = [{ type: 'text', text: 'Teklif formu metni:\nALICI FIRMA: DILER DEMIR-CELIK END. AS\nTARIH: 24.03.2026   TEKLIF NO: 6000298591\nKALEM | MALZEME KODU | DOSYA NO | MALZEME TANIMI          | MIKTAR | CIZIM NO    | TESLIM\n00010 | 2005531      | 3027     | BICAK IMALI 2. MAKAS    | 25 ADT | HTZ-2550_R6 | 23.Mar.2026' }];
+    var fewShotUser1 = [{ type: 'text', text: 'Diler Demir-Celik teklif formu.\nTablo sutun sirasi (soldan saga):\nKALEM NO | MALZEME KODU | DOSYA NO | MALZEME TANIMI | MIKTAR | OLCU BIRIMI | MENSEI/MARKA | CIZIM NO | TESLIM TARIHI | BIRIM FIYATI | PB | TOPLAM FIYAT | PB\n\nKalem satiri 1:\n00010 | 2096551 | 6541 | MIL ARA KUTUK AKTARMA SEHPA P2 // POZ-2 IMAL EDILECEKTIR. | [MIKTAR HUCRESI] | ADT | | | 14.Mar.2026\n\nKalem satiri 2:\n00020 | 2009813 | 4149 | ROLE IMALI HIZALAMA AVARE P-22 // POZ-22 IMAL EDILECEKTIR. | [MIKTAR HUCRESI] | ADT | | | 14.Mar.2026\n\nMIKTAR hucrelerindeki rakamlari sutun hizasina gore tespit et.\nBold Arial fontunda: 2 ile 7 karisabilir, 5 ile 6 karisabilir.' }];
     var fewShotAsst1 = { role: 'assistant', content: [{ type: 'tool_use', id: 'ex_1', name: 'teklif_formu_kaydet', input: {
-      musteri_adi: 'Diler Demir-Celik End. AS', musteri_gerekce: 'ALICI FIRMA etiketinin yanindan alindi',
-      teklif_ref: '6000298591', tarih: '2026-03-24', proje_adi: 'Bicak Imali 2. Makas',
-      kalemler: [{ parca_adi: 'Bicak Imali 2. Makas', cizim_no: 'HTZ-2550_R6', adet: '25', adet_gerekce: '25 ADT — MIKTAR sutununda ADT kelimesinin hemen onundeki sayi', malzeme: '', stok_kodu: '2005531' }]
+      musteri_adi: 'Diler Demir-Celik End. AS', musteri_gerekce: 'ALICI FIRMA etiketinin yanindan',
+      teklif_ref: '6000297897', tarih: '2026-03-18', proje_adi: 'Mil ve Role Imalati',
+      kalemler: [
+        { parca_adi: 'Mil Ara Kutuk Aktarma Sehpa P2 // POZ-2', cizim_no: '', adet: '2', adet_gerekce: 'MIKTAR sutunu altindaki hucrede "2" rakami — hucre kenarina yapisik ama rakam 2, ADT birim sutununda', malzeme: '', stok_kodu: '2096551' },
+        { parca_adi: 'Role Imalati Hizalama Avare P-22 // POZ-22', cizim_no: '', adet: '50', adet_gerekce: 'MIKTAR sutunu altindaki hucrede "50" — bold fontta 5 ve 6 benzer ama sutun hizasina gore 50 okunuyor', malzeme: '', stok_kodu: '2009813' }
+      ]
     }}]};
 
     var fewShotUser2 = [{ type: 'text', text: 'XFA PDF metni:\n6003091192 Tosyali Metalurji Sanayi A.S. 2026-03-24\n6003091192 10 2099557 IZALATOR 4709-04-003 12 ADT MALZEME: HGW 2372.4\n6003091192 20 2099811 YATAY KOLON PARCASI 4709-04-007 12 ADT MALZEME: HGW 2372.4\n6003091192 40 2099791 YATAY KOLON 4709-04-004 3 ADT MALZEME: X2CrNi19-11' }];
