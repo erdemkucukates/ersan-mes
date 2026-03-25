@@ -207,27 +207,11 @@ textarea.f-inp{resize:vertical;min-height:60px}
                 </div>
                 <div class="f-grp">
                   <label class="f-lbl">Teklif/Ihale Ref</label>
-                  <input class="f-inp" id="fTeklifRef" placeholder="Musterinin referans no">
+                  <input class="f-inp" id="fTeklifRef" placeholder="Teklif no, ihale no veya dosya no">
                 </div>
-                <div class="f-grp">
-                  <label class="f-lbl">Parca Adi</label>
-                  <input class="f-inp" id="fParcaAdi">
-                </div>
-                <div class="f-grp">
-                  <label class="f-lbl">Cizim No</label>
-                  <input class="f-inp" id="fCizimNo">
-                </div>
-                <div class="f-grp">
-                  <label class="f-lbl">Dosya No</label>
-                  <input class="f-inp" id="fDosyaNo">
-                </div>
-                <div class="f-grp">
-                  <label class="f-lbl">Adet</label>
-                  <input class="f-inp" id="fAdet" type="number" min="1">
-                </div>
-                <div class="f-grp">
-                  <label class="f-lbl">Malzeme</label>
-                  <input class="f-inp" id="fMalzeme">
+                <div class="f-grp fh-full">
+                  <label class="f-lbl">Proje Adi</label>
+                  <input class="f-inp" id="fProjeAdi">
                 </div>
                 <div class="f-grp">
                   <label class="f-lbl">Uretim Suresi (is gunu)</label>
@@ -299,7 +283,7 @@ textarea.f-inp{resize:vertical;min-height:60px}
                     <th>Cizim No</th>
                     <th>Adet</th>
                     <th>Malzeme</th>
-                    <th>Olcu (mm)</th>
+                    <th>Stok/Mal. Kodu</th>
                   </tr>
                 </thead>
                 <tbody id="kalemTbody"></tbody>
@@ -412,7 +396,7 @@ function listeRender(filtre) {
     if (!q) return true;
     return (t.Talep_No || '').toLowerCase().indexOf(q) > -1 ||
            (t.Musteri_Adi || '').toLowerCase().indexOf(q) > -1 ||
-           (t.Parca_Adi || '').toLowerCase().indexOf(q) > -1;
+           (t.Proje_Adi || t.Parca_Adi || '').toLowerCase().indexOf(q) > -1;
   });
   if (list.length === 0) {
     el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--metin4);font-size:12px">Talep bulunamadi</div>';
@@ -426,7 +410,7 @@ function listeRender(filtre) {
     else if (t.Durum === 'Tamamlandi') durumCls = 'tamam';
     return '<div class="fh-item' + cls + '" onclick="talepSec(\'' + t._id + '\')">' +
       '<div class="fh-item-no">' + (t.Talep_No || '—') + '</div>' +
-      '<div class="fh-item-musteri">' + (t.Musteri_Adi || 'Belirtilmemis') + ' — ' + (t.Parca_Adi || '') + '</div>' +
+      '<div class="fh-item-musteri">' + (t.Musteri_Adi || 'Belirtilmemis') + ' — ' + (t.Proje_Adi || t.Parca_Adi || '') + '</div>' +
       '<div class="fh-item-tarih">' + (t.Tarih || '') + '</div>' +
       '<span class="fh-item-durum ' + durumCls + '">' + (t.Durum || 'Yeni') + '</span>' +
       '</div>';
@@ -494,11 +478,7 @@ function formDoldur(t) {
   document.getElementById('fTarih').value = t.Tarih || '';
   document.getElementById('fMusteri').value = t.Musteri_Adi || '';
   document.getElementById('fTeklifRef').value = t.Teklif_Ref || '';
-  document.getElementById('fParcaAdi').value = t.Parca_Adi || '';
-  document.getElementById('fCizimNo').value = t.Cizim_No || '';
-  document.getElementById('fDosyaNo').value = t.Dosya_No || '';
-  document.getElementById('fAdet').value = t.Adet || '';
-  document.getElementById('fMalzeme').value = t.Malzeme || '';
+  document.getElementById('fProjeAdi').value = t.Proje_Adi || t.Parca_Adi || '';
   document.getElementById('fUretimSuresi').value = t.Teslim_Suresi || '';
   document.getElementById('fHazirlayan').value = t.Hazirlayan || '';
   document.getElementById('fNotlar').value = t.Notlar || '';
@@ -549,11 +529,7 @@ function yeniTalep() {
     Tarih: bugun.toISOString().split('T')[0],
     Musteri_Adi: '',
     Teklif_Ref: '',
-    Parca_Adi: '',
-    Cizim_No: '',
-    Dosya_No: '',
-    Adet: '',
-    Malzeme: '',
+    Proje_Adi: '',
     Uretim_Suresi_Lokal: '',
     Hazirlayan: '',
     Notlar: '',
@@ -584,25 +560,19 @@ function yeniTalep() {
 
 /* ── Kaydet ── */
 async function kaydet() {
-  var adetVal = parseInt(document.getElementById('fAdet').value);
   var fields = {
     Talep_No: document.getElementById('fTalepNo').value,
     Durum: seciliTalep.Durum || 'Yeni',
     Tarih: document.getElementById('fTarih').value,
     Musteri_Adi: document.getElementById('fMusteri').value,
     Teklif_Ref: document.getElementById('fTeklifRef').value,
-    Parca_Adi: document.getElementById('fParcaAdi').value,
-    Cizim_No: document.getElementById('fCizimNo').value,
-    Dosya_No: document.getElementById('fDosyaNo').value,
-    Malzeme: document.getElementById('fMalzeme').value,
+    Proje_Adi: document.getElementById('fProjeAdi').value,
     Hazirlayan: document.getElementById('fHazirlayan').value,
     Notlar: document.getElementById('fNotlar').value,
     Kalemler: seciliTalep.Kalemler || '',
     AI_Sonuc: seciliTalep.AI_Sonuc || '',
     Olusturma_Tarihi: seciliTalep.Olusturma_Tarihi || new Date().toISOString().split('T')[0]
   };
-  // Adet sayisal ise ekle
-  if (!isNaN(adetVal) && adetVal > 0) fields.Adet = adetVal;
   // Teslim suresi (number)
   var uretimSuresi = parseInt(document.getElementById('fUretimSuresi').value);
   if (!isNaN(uretimSuresi) && uretimSuresi > 0) fields.Teslim_Suresi = uretimSuresi;
@@ -826,31 +796,79 @@ async function aiOku() {
 
     // Sistem promptu
     var sistemPrompt = 'Sen bir satin alma belgesi okuma asistanisin.\n' +
-      'Sana bir TEKLIF FORMU ve TEKNIK RESIM(ler) verilecek.\n' +
-      'Her belgeden FARKLI bilgileri cikar:\n\n' +
-      'TEKLIF FORMU -> musteri_adi, teklif_ref, tarih, adet, cizim_no, dosya_no, parca_adi\n' +
-      'TEKNIK RESIM -> SADECE malzeme (celik kalitesi, malzeme kodu, standart)\n\n' +
-      'KURALLAR:\n' +
-      '- musteri_adi: "ALICI FIRMA", "MUSTERI", "SATINALMA" etiketinden al. Ersan = satici, ATLA\n' +
-      '- adet: SADECE teklif formundaki "MIKTAR", "ADET", "QTY" etiketinin yanindaki rakam\n' +
-      '- malzeme: SADECE teknik resimdeki "MALZEME", "MATERIAL" alanindaki deger\n' +
-      '  Ornekler: 4140, 1040, AISI 304L, X2CrNi19-11, UDDEHOLM DIEVAR, EPOXIDIC RESIN\n' +
-      '- Teknik resimdeki boyut rakamlari (O280, 160, 206) ADET DEGILDIR\n' +
-      '- Bulamadigin alani bos birak, tahmin etme\n\n' +
-      'SADECE JSON dondur:\n' +
-      '{\n' +
-      '  "musteri_adi": "...",\n' +
-      '  "teklif_ref": "...",\n' +
-      '  "tarih": "YYYY-MM-DD",\n' +
-      '  "malzeme": "...",\n' +
-      '  "cizim_no": "...",\n' +
-      '  "dosya_no": "...",\n' +
-      '  "adet": "25",\n' +
-      '  "kalemler": [\n' +
-      '    { "parca_adi": "...", "cizim_no": "...", "dosya_no": "...", "adet": "25", "malzeme": "...", "olcu": "..." }\n' +
-      '  ],\n' +
-      '  "guven": 90\n' +
-      '}';
+      'Sana teklif formu ve/veya teknik resim verilecek.\n\n' +
+      'GENEL KURAL: Emin olmadigin her alani bos birak. Yanlis deger yerine bos tercih et.\n\n' +
+      'MUSTERI:\n' +
+      'Sadece teklif formundaki "ALICI FIRMA", "MUSTERI", "IHALEYI DUZENLEYEN" etiketinden al.\n' +
+      'Ersan Endustriyel = satici taraf, alma.\n\n' +
+      'ADET — COK ONEMLI:\n' +
+      'Her kalemin KENDI satirindaki adeti al. Genel/toplam adeti alma.\n' +
+      '"ADT", "ADET", "PCS", "MIKTAR", "QTY" kelimesinin TAM ONUNDEKI sayi.\n\n' +
+      'XFA/SAP format ornegi:\n' +
+      '"6003091192 10 2099557 IZALATOR 4709-04-003 12 ADT"\n' +
+      '-> "10" = kalem sirasi (ADET DEGIL)\n' +
+      '-> "12 ADT" = bu kalemin adeti (DOGRU)\n\n' +
+      'Normal tablo ornegi:\n' +
+      '"MIKTAR: 25 ADT" -> adet = 25\n\n' +
+      'MALZEME:\n' +
+      '1. Once teklif formundaki o kalemin aciklamasina bak: "MALZEME: X" veya "MATERIAL: X"\n' +
+      '2. Bulamazsan teknik resmin antet/baslik bolumundeki malzeme alanina bak\n' +
+      '3. Ikisinde de yoksa bos birak\n\n' +
+      'STOK KODU:\n' +
+      'Teklif formundaki kalem satirindaki "MALZEME KODU", "STOK KODU", "KOD" sutunundan al.\n\n' +
+      'Her alan icin gerekce alanina hangi satirdan/kelimeden aldigini yaz.';
+
+    // Tool schema
+    var tools = [{
+      name: 'teklif_formu_kaydet',
+      description: 'Teklif formundan cikarilan bilgileri kaydet. Her alan icin gerekce yaz.',
+      input_schema: {
+        type: 'object',
+        properties: {
+          musteri_adi: { type: 'string', description: 'Alici/musteri firma adi. SADECE teklif formundaki "ALICI FIRMA", "MUSTERI", "IHALEYI DUZENLEYEN" gibi etiketlerden al. Ersan = satici, alma.' },
+          musteri_gerekce: { type: 'string', description: 'musteri_adi hangi satir/etiketten alindi?' },
+          teklif_ref: { type: 'string', description: 'Teklif numarasi, ihale numarasi veya dosya numarasi' },
+          tarih: { type: 'string', description: 'YYYY-MM-DD formati. Emin degilsen bos.' },
+          proje_adi: { type: 'string', description: 'Tek kalem varsa o parcanin adi. Cok kalem varsa kisa ozet. Orn: "Yatay Kolon Parcalari", "Bicak Imalati"' },
+          kalemler: {
+            type: 'array',
+            description: 'Her kalem ayri bir obje. Teklif formundaki her satir/urun icin bir kalem.',
+            items: {
+              type: 'object',
+              properties: {
+                parca_adi: { type: 'string', description: 'Bu kalemin parca adi veya malzeme tanimi' },
+                cizim_no: { type: 'string', description: 'Bu kaleme ait cizim/resim numarasi. Tire ve rakamlardan olusur. Orn: 4709-04-003, HTZ-2550_R6' },
+                adet: { type: 'string', description: 'BU KALEME AIT adet. Kalem satirinda "ADT", "ADET", "PCS", "MIKTAR", "QTY" kelimesinin HEMEN ONUNDEKI tam sayi. Toplam veya genel adet degil. Emin degilsen bos.' },
+                adet_gerekce: { type: 'string', description: 'Adeti hangi kelime grubundan aldin? Tam alinti. Orn: "12 ADT — ADT onundeki 12" veya "bulunamadi"' },
+                malzeme: { type: 'string', description: 'Malzeme cinsi/kalitesi. Oncelik sirasi: 1) Bu kalemin teklif formundaki aciklamasinda "MALZEME:" yazan yer, 2) Teknik resmin antet/baslik kismindaki malzeme alani. Orn: 4140, AISI 304L, HGW 2372.4, UDDEHOLM DIEVAR. Bulamazsan bos.' },
+                stok_kodu: { type: 'string', description: 'Musterinin bu kaleme ait malzeme kodu, stok kodu veya urun kodu. Teklif formundaki kalem satirinda "MALZEME KODU", "STOK KODU", "KOD" gibi sutundan al. Orn: 2005531, 2099557. Yoksa bos.' }
+              },
+              required: ['parca_adi', 'adet', 'adet_gerekce']
+            }
+          }
+        },
+        required: ['musteri_adi', 'musteri_gerekce', 'kalemler']
+      }
+    }];
+
+    // Few-shot ornekleri
+    var fewShotUser1 = [{ type: 'text', text: 'Teklif formu metni:\nALICI FIRMA: DILER DEMIR-CELIK END. AS\nTARIH: 24.03.2026   TEKLIF NO: 6000298591\nKALEM | MALZEME KODU | DOSYA NO | MALZEME TANIMI          | MIKTAR | CIZIM NO    | TESLIM\n00010 | 2005531      | 3027     | BICAK IMALI 2. MAKAS    | 25 ADT | HTZ-2550_R6 | 23.Mar.2026' }];
+    var fewShotAsst1 = { role: 'assistant', content: [{ type: 'tool_use', id: 'ex_1', name: 'teklif_formu_kaydet', input: {
+      musteri_adi: 'Diler Demir-Celik End. AS', musteri_gerekce: 'ALICI FIRMA etiketinin yanindan alindi',
+      teklif_ref: '6000298591', tarih: '2026-03-24', proje_adi: 'Bicak Imali 2. Makas',
+      kalemler: [{ parca_adi: 'Bicak Imali 2. Makas', cizim_no: 'HTZ-2550_R6', adet: '25', adet_gerekce: '25 ADT — MIKTAR sutununda ADT kelimesinin hemen onundeki sayi', malzeme: '', stok_kodu: '2005531' }]
+    }}]};
+
+    var fewShotUser2 = [{ type: 'text', text: 'XFA PDF metni:\n6003091192 Tosyali Metalurji Sanayi A.S. 2026-03-24\n6003091192 10 2099557 IZALATOR 4709-04-003 12 ADT MALZEME: HGW 2372.4\n6003091192 20 2099811 YATAY KOLON PARCASI 4709-04-007 12 ADT MALZEME: HGW 2372.4\n6003091192 40 2099791 YATAY KOLON 4709-04-004 3 ADT MALZEME: X2CrNi19-11' }];
+    var fewShotAsst2 = { role: 'assistant', content: [{ type: 'tool_use', id: 'ex_2', name: 'teklif_formu_kaydet', input: {
+      musteri_adi: 'Tosyali Metalurji Sanayi A.S.', musteri_gerekce: 'Satirin basinda firma adi olarak geciyor',
+      teklif_ref: '6003091192', tarih: '2026-03-24', proje_adi: 'Yatay Kolon Parcalari',
+      kalemler: [
+        { parca_adi: 'Izolator (POZ 3)', cizim_no: '4709-04-003', adet: '12', adet_gerekce: '12 ADT — ADT kelimesinin hemen onunde, 10 kalem sirasidir adet degil', malzeme: 'HGW 2372.4 (DIN 7735)', stok_kodu: '2099557' },
+        { parca_adi: 'Yatay Kolon Parcasi (POZ 7)', cizim_no: '4709-04-007', adet: '12', adet_gerekce: '12 ADT — ADT kelimesinin hemen onunde', malzeme: 'HGW 2372.4 (DIN 7735)', stok_kodu: '2099811' },
+        { parca_adi: 'Yatay Kolon (POZ 4)', cizim_no: '4709-04-004', adet: '3', adet_gerekce: '3 ADT — ADT kelimesinin hemen onunde', malzeme: 'X2CrNi19-11 EN10088-3 (AISI 304L)', stok_kodu: '2099791' }
+      ]
+    }}]};
 
     // Teklif formu (XFA kontrolu ile)
     if (teklifHazir) {
@@ -908,38 +926,56 @@ async function aiOku() {
       }
     }
 
-    content.push({ type: 'text', text: sistemPrompt });
+    // Dosya icerikleri (gercek belge)
+    var dosyaIcerikleri = content.slice();
 
     var apiBody = JSON.stringify({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 4096,
-      messages: [{ role: 'user', content: content }]
+      system: sistemPrompt,
+      tools: tools,
+      tool_choice: { type: 'tool', name: 'teklif_formu_kaydet' },
+      messages: [
+        // Ornek 1 — Diler
+        { role: 'user', content: fewShotUser1 },
+        fewShotAsst1,
+        { role: 'user', content: [{ type: 'tool_result', tool_use_id: 'ex_1', content: 'OK' }] },
+        // Ornek 2 — Tosyali XFA
+        { role: 'user', content: fewShotUser2 },
+        fewShotAsst2,
+        { role: 'user', content: [{ type: 'tool_result', tool_use_id: 'ex_2', content: 'OK' }] },
+        // Gercek belge
+        { role: 'user', content: dosyaIcerikleri }
+      ]
     });
     var data = await claudeAPI(apiBody);
     if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
 
-    var aiText = '';
-    if (data.content && data.content.length > 0) {
-      aiText = data.content[0].text || '';
+    // Tool use yanitindan input'u al
+    var sonuc = null;
+    if (data.content) {
+      for (var ci = 0; ci < data.content.length; ci++) {
+        if (data.content[ci].type === 'tool_use' && data.content[ci].name === 'teklif_formu_kaydet') {
+          sonuc = data.content[ci].input;
+          break;
+        }
+      }
     }
-
-    // JSON parse (guclendirilmis)
-    var sonuc;
-    try {
-      var temiz = aiText.replace(/```json\n?/gi, '').replace(/```\n?/gi, '').trim();
-      sonuc = JSON.parse(temiz);
-    } catch(e1) {
+    if (!sonuc) {
+      // Fallback: text yaniti varsa JSON parse dene
+      var aiText = '';
+      if (data.content && data.content.length > 0) aiText = data.content[0].text || '';
+      console.warn('Tool use bulunamadi, text parse deneniyor:', aiText);
       try {
+        var temiz = aiText.replace(/```json\n?/gi, '').replace(/```\n?/gi, '').trim();
+        sonuc = JSON.parse(temiz);
+      } catch(e1) {
         var jsonMatch = aiText.match(/\{[\s\S]*\}/);
         if (jsonMatch) sonuc = JSON.parse(jsonMatch[0]);
-        else throw new Error('JSON bulunamadi');
-      } catch(e2) {
-        console.error('AI yaniti:', aiText);
-        throw new Error('AI yaniti parse edilemedi');
+        else throw new Error('AI yaniti parse edilemedi');
       }
     }
     // adet alanini string'e cevir
-    if (sonuc.adet) sonuc.adet = String(sonuc.adet);
     if (sonuc.kalemler) {
       sonuc.kalemler = sonuc.kalemler.map(function(k) {
         if (k.adet) k.adet = String(k.adet);
@@ -1008,20 +1044,28 @@ async function aiOku() {
       sel.classList.add('ai-dolu');
     }
 
-    if (sonuc.teklif_ref) { aiAlanDoldur('fTeklifRef', sonuc.teklif_ref); }
-    if (sonuc.dosya_no) { aiAlanDoldur('fDosyaNo', sonuc.dosya_no); }
+    if (sonuc.teklif_ref) aiAlanDoldur('fTeklifRef', sonuc.teklif_ref);
+
+    // Proje adi
+    if (sonuc.kalemler && sonuc.kalemler.length === 1) {
+      aiAlanDoldur('fProjeAdi', sonuc.proje_adi || sonuc.kalemler[0].parca_adi || '');
+    } else if (sonuc.kalemler && sonuc.kalemler.length > 1) {
+      aiAlanDoldur('fProjeAdi', sonuc.proje_adi || '');
+    }
 
     // Kalemler
     if (sonuc.kalemler && sonuc.kalemler.length > 0) {
-      // Ilk kalemi ana forma yaz
-      var ilk = sonuc.kalemler[0];
-      if (ilk.parca_adi) aiAlanDoldur('fParcaAdi', ilk.parca_adi);
-      if (ilk.cizim_no) aiAlanDoldur('fCizimNo', ilk.cizim_no);
-      if (ilk.adet) aiAlanDoldur('fAdet', ilk.adet);
-      if (ilk.malzeme) aiAlanDoldur('fMalzeme', ilk.malzeme);
-
       kalemlerGoster(sonuc.kalemler);
       seciliTalep.Kalemler = JSON.stringify(sonuc.kalemler);
+    }
+
+    // Debug log
+    console.log('=== AI GEREKCELERI ===');
+    console.log('Musteri:', sonuc.musteri_adi, '->', sonuc.musteri_gerekce);
+    if (sonuc.kalemler) {
+      sonuc.kalemler.forEach(function(k, i) {
+        console.log('Kalem ' + (i+1) + ': ' + k.parca_adi + ' | Adet: ' + k.adet + ' -> ' + k.adet_gerekce + ' | Stok: ' + (k.stok_kodu || ''));
+      });
     }
 
     seciliTalep.AI_Sonuc = JSON.stringify(sonuc);
@@ -1128,7 +1172,7 @@ function kalemlerGoster(kalemler) {
       '<td>' + (k.cizim_no || '—') + '</td>' +
       '<td>' + (k.adet || '—') + '</td>' +
       '<td>' + (k.malzeme || '—') + '</td>' +
-      '<td>' + (k.olcu || '—') + '</td>' +
+      '<td>' + (k.stok_kodu || '—') + '</td>' +
       '</tr>';
   }).join('');
 }
@@ -1155,7 +1199,7 @@ function sablonHTML(kalem, idx, toplam) {
   var talepNo = document.getElementById('fTalepNo').value;
   var musteri = document.getElementById('fMusteri').value;
   var tarih = document.getElementById('fTarih').value;
-  var dosyaNo = document.getElementById('fDosyaNo').value;
+  var projeAdi = document.getElementById('fProjeAdi').value;
   var hazirlayan = document.getElementById('fHazirlayan').value;
   var teklifRef = document.getElementById('fTeklifRef').value;
   var kalemNo = 'K' + (idx + 1);
@@ -1220,9 +1264,11 @@ function sablonHTML(kalem, idx, toplam) {
     // BILGI TABLOSU
     '<table style="width:100%;border-collapse:collapse;margin-bottom:5px">' +
       '<tr><td style="' + lbl + ';width:70px">Musteri</td><td colspan="3" style="' + val + '">' + (musteri || '—') + '</td></tr>' +
+      '<tr><td style="' + lbl + '">Proje Adi</td><td colspan="3" style="' + val + '">' + (projeAdi || '—') + '</td></tr>' +
       '<tr><td style="' + lbl + '">Parca Adi</td><td colspan="3" style="' + val + '">' + (kalem.parca_adi || '—') + '</td></tr>' +
       '<tr><td style="' + lbl + '">Cizim No</td><td style="' + val + '">' + (kalem.cizim_no || '—') + '</td><td style="' + lbl + '">Adet</td><td style="' + val + '">' + (kalem.adet || '—') + '</td></tr>' +
-      '<tr><td style="' + lbl + '">Dosya No</td><td style="' + val + '">' + (dosyaNo || '—') + '</td><td style="' + lbl + '">Kalem</td><td style="' + val + '">' + kalemNo + toplamStr + '</td></tr>' +
+      '<tr><td style="' + lbl + '">Teklif Ref</td><td style="' + val + '">' + (teklifRef || '—') + '</td><td style="' + lbl + '">Kalem</td><td style="' + val + '">' + kalemNo + toplamStr + '</td></tr>' +
+      (kalem.stok_kodu ? '<tr><td style="' + lbl + '">Stok Kodu</td><td colspan="3" style="' + val + '">' + kalem.stok_kodu + '</td></tr>' : '') +
       (malzStr ? '<tr><td style="' + lbl + ';font-size:7px">Musteri<br>Malzemesi</td><td colspan="3" style="padding:3px 5px;border:0.5px solid #d1d5db;font-size:8.5px;font-weight:700;color:#7c3aed;background:#ede9fe">' + malzStr + '</td></tr>' : '') +
     '</table>' +
 
