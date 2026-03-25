@@ -800,6 +800,13 @@ async function aiOku() {
     var sistemPrompt = 'Sen bir satin alma belgesi okuma asistanisin.\n' +
       'Sana teklif formu ve/veya teknik resim verilecek.\n\n' +
       'GENEL KURAL: Emin olmadigin her alani bos birak. Yanlis deger yerine bos tercih et.\n\n' +
+      'PLATFORM TESPITI:\n' +
+      'Belge birkac farkli formattan gelebilir:\n' +
+      'A) Diler/Standart Form: "TEKLIF NO" veya "FORM NO" alani -> teklif_ref buradan\n' +
+      'B) Pratis Platform: "Ihale No" alani -> teklif_ref buradan (orn: 1402358-5 veya 10599642)\n' +
+      'C) SAP/XFA Form: "Teklif No" alani -> teklif_ref buradan\n\n' +
+      'ONEMLI: Cizim numarasi (orn: SSH RS CLK47-4, HTZ-2550_R6) HICBIR ZAMAN\n' +
+      'teklif_ref alanina gitmez. Cizim numarasi kalem detayindaki cizim_no alanina gider.\n\n' +
       'MUSTERI:\n' +
       'Sadece teklif formundaki "ALICI FIRMA", "MUSTERI", "IHALEYI DUZENLEYEN" etiketinden al.\n' +
       'Ersan Endustriyel = satici taraf, alma.\n' +
@@ -819,6 +826,10 @@ async function aiOku() {
       '-> "12 ADT" = bu kalemin adeti (DOGRU)\n\n' +
       'Normal tablo ornegi:\n' +
       '"MIKTAR: 25 ADT" -> adet = 25 (iki basamakli tam sayi)\n\n' +
+      'PRATIS PLATFORM FORMATINDA ADET:\n' +
+      'Pratis belgelerinde kalem listesi soyle gorunur:\n' +
+      '"RS GRES POMPASI ALT SOMUN CLK47-4    6 Adet    0    Kapali Zarf"\n' +
+      'Bu satirda parca adindan sonra gelen "6 Adet" ifadesindeki sayi adettir -> 6\n\n' +
       'MALZEME OKUMA KURALI:\n' +
       'Teknik resimlerde malzeme bilgisi su formatlarda yazilabilir:\n\n' +
       'FORMAT 1 — POZ altinda parantez icinde:\n' +
@@ -846,7 +857,13 @@ async function aiOku() {
       'Teklif formundaki kalem satirindaki "MALZEME KODU", "STOK KODU", "KOD" sutunundan al.\n' +
       'Rakamlari dikkatli oku: 0 (sifir) ile 9 (dokuz) karistirma,\n' +
       '5 ile 6 karistirma, 1 ile 7 karistirma.\n' +
-      'Tum 7 rakam eksiksiz yaz. Emin degilsen bos birak.\n\n' +
+      'Emin degilsen bos birak.\n\n' +
+      'STOK KODU FORMAT CESITLERI:\n' +
+      '- Standart: 7 haneli (orn: 2005531, 2099813)\n' +
+      '- Pratis/SAP uzun format: 18 haneli, basinda sifirlar olabilir\n' +
+      '  (orn: 000000000002130792 -> stok_kodu: "000000000002130792")\n' +
+      '  Bu uzun kodlari da stok kodu olarak kabul et, kisaltma.\n' +
+      '- Pratis belgede: "Malzeme Kodu" etiketi altinda veya kalem detayinda aranir.\n\n' +
       'PARCA ADI KURALI:\n' +
       'parca_adi = teklif formundaki MALZEME TANIMI sutunundaki metin.\n' +
       'Teknik resimdeki poz numarasi veya malzeme bilgisini parca adina YAZMA.\n' +
@@ -879,7 +896,7 @@ async function aiOku() {
         properties: {
           musteri_adi: { type: 'string', description: 'Alici/musteri firma adi. SADECE teklif formundaki "ALICI FIRMA", "MUSTERI", "IHALEYI DUZENLEYEN" gibi etiketlerden al. Ersan = satici, alma.' },
           musteri_gerekce: { type: 'string', description: 'musteri_adi hangi satir/etiketten alindi?' },
-          teklif_ref: { type: 'string', description: 'Teklif numarasi, ihale numarasi veya dosya numarasi' },
+          teklif_ref: { type: 'string', description: 'Teklif numarasi, ihale numarasi veya dosya numarasi. Diler: TEKLIF NO, Pratis: Ihale No, SAP: Teklif No. CIZIM NUMARASINI BURAYA YAZMA — cizim numarasi kalem cizim_no alanina gider.' },
           tarih: { type: 'string', description: 'YYYY-MM-DD formati. Emin degilsen bos.' },
           proje_adi: { type: 'string', description: 'Tek kalem varsa o parcanin adi. Cok kalem varsa kisa ozet. Orn: "Yatay Kolon Parcalari", "Bicak Imalati"' },
           kalemler: {
@@ -894,7 +911,7 @@ async function aiOku() {
                 adet_gerekce: { type: 'string', description: 'Adeti hangi kelime grubundan aldin? Tam alinti. Orn: "12 ADT — ADT onundeki 12" veya "bulunamadi"' },
                 dosya_no: { type: 'string', description: 'Bu kaleme ait dosya numarasi. Teklif formundaki kalem satirinda "DOSYA NO" sutunundan al. Diler formunda her kalemin kendi dosya nosu var. Orn: 6541, 4149, 3027. Yoksa bos.' },
                 malzeme: { type: 'string', description: 'Malzeme cinsi/kalitesi. Oncelik: 1) Teklif formunda "MALZEME:" yazan yer, 2) Teknik resimde poz eslesmesi varsa o pozun malzeme alani, 3) Resmin antet kismindaki malzeme. Orn: 4140, AISI 304L, HGW 2372.4. Bulamazsan bos.' },
-                stok_kodu: { type: 'string', description: 'Musterinin bu kaleme ait malzeme kodu, stok kodu veya urun kodu. MALZEME KODU sutunundan al. Rakamlari dikkatli oku: 0/9 ve 5/6 ve 1/7 karistirma. Tum 7 rakam eksiksiz. Orn: 2005531, 2099557. Yoksa bos.' }
+                stok_kodu: { type: 'string', description: 'Musterinin bu kaleme ait malzeme kodu, stok kodu veya urun kodu. MALZEME KODU sutunundan al. Standart 7 hane (orn: 2005531) veya Pratis 18 hane (orn: 000000000002130792). Kisaltma yapma, oldugu gibi yaz. Yoksa bos.' }
               },
               required: ['parca_adi', 'adet', 'adet_gerekce']
             }
@@ -933,6 +950,16 @@ async function aiOku() {
       teklif_ref: '6000298591', tarih: '2026-03-24', proje_adi: 'Bicak Imali 2. Makas',
       kalemler: [
         { parca_adi: 'Bicak Imali 2. Makas // 2.Makas Bicagi 160 Lik', dosya_no: '3027', cizim_no: 'HTZ-2550_R6_', adet: '25', adet_gerekce: 'MIKTAR sutununda "25" — iki basamakli tam sayi, ADT birim sutununda', malzeme: '', stok_kodu: '2005531' }
+      ]
+    }}]};
+
+    // Ornek 4 — Pratis platform (Colakoglu)
+    var fewShotUser4 = [{ type: 'text', text: 'Teklif formu (Pratis platform):\nIhale No: 1402358-5\nIhaleyi Duzenleyen: COLAKOGLU METALURJI A.S. - KEMAL UMUR\nAcilis Tarihi: 24-03-2026 08:43\nKapanis Tarihi: 24-03-2026 15:00\n\nKalem Listesi:\n1  RS GRES POMPASI ALT SOMUN CLK47-4  6 Adet  0  Kapali Zarf\nMalzeme Kodu: 000000000002130792\n\nTeknik resim:\nParca Adi: Lincoln Gres Pompasi Alt Somun\nCizim No: SSH RS CLK47-4\nMalzeme: 1040' }];
+    var fewShotAsst4 = { role: 'assistant', content: [{ type: 'tool_use', id: 'ex_4', name: 'teklif_formu_kaydet', input: {
+      musteri_adi: 'Çolakoğlu Metalurji A.Ş.', musteri_gerekce: 'Ihaleyi Duzenleyen alanindan — Turkce karakterler korundu',
+      teklif_ref: '1402358-5', tarih: '2026-03-24', proje_adi: 'RS Gres Pompasi Alt Somun CLK47-4',
+      kalemler: [
+        { parca_adi: 'RS Gres Pompasi Alt Somun CLK47-4', dosya_no: '', cizim_no: 'SSH RS CLK47-4', adet: '6', adet_gerekce: 'Pratis kalem listesinde "6 Adet" yaziyor', malzeme: '1040', stok_kodu: '000000000002130792' }
       ]
     }}]};
 
@@ -1033,10 +1060,14 @@ async function aiOku() {
         { role: 'user', content: fewShotUser2 },
         fewShotAsst2,
         { role: 'user', content: [{ type: 'tool_result', tool_use_id: 'ex_2', content: 'OK' }] },
-        // Ornek 3 — Diler + cok pozlu teknik resim
+        // Ornek 3 — Diler bicak (25 adet)
         { role: 'user', content: fewShotUser3 },
         fewShotAsst3,
         { role: 'user', content: [{ type: 'tool_result', tool_use_id: 'ex_3', content: 'OK' }] },
+        // Ornek 4 — Pratis platform (Colakoglu)
+        { role: 'user', content: fewShotUser4 },
+        fewShotAsst4,
+        { role: 'user', content: [{ type: 'tool_result', tool_use_id: 'ex_4', content: 'OK' }] },
         // Gercek belge
         { role: 'user', content: dosyaIcerikleri }
       ]
@@ -1232,7 +1263,7 @@ async function pdfToImageBrowser(b64) {
 
   for (var p = 1; p <= sayfaSayisi; p++) {
     var page = await pdf.getPage(p);
-    var scale = 2.0; // yuksek cozunurluk
+    var scale = 3.0; // yuksek cozunurluk — adet ve stok kodu icin
     var vp = page.getViewport({ scale: scale });
 
     var canvas = document.createElement('canvas');
