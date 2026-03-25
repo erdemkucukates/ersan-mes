@@ -6,6 +6,7 @@
 <title>Ersan MES — Fiyat Hazirlama</title>
 <link rel="stylesheet" href="utils/sidebar.css">
 <link rel="stylesheet" href="ersan_styles.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="utils/sidebar.js" defer></script>
 <script src="ersan_log.js" defer></script>
 <style>
@@ -836,6 +837,11 @@ async function aiOku() {
       'Teklif formundaki kalem satirinda "DOSYA NO" sutunundan al. Her kalemin kendi dosya nosu olabilir.\n\n' +
       'STOK KODU:\n' +
       'Teklif formundaki kalem satirindaki "MALZEME KODU", "STOK KODU", "KOD" sutunundan al.\n\n' +
+      'PARCA ADI KURALI:\n' +
+      'parca_adi = teklif formundaki MALZEME TANIMI sutunundaki metin.\n' +
+      'Teknik resimdeki poz numarasi veya malzeme bilgisini parca adina YAZMA.\n' +
+      'Orn: "MIL ARA KUTUK AKTARMA SEHPA P2 // POZ-2 IMAL EDILECEKTIR." -> parca_adi = "Mil Ara Kutuk Aktarma Sehpa P2 // POZ-2 Imal Edilecektir."\n' +
+      'POZ bilgisi zaten parca adinin icinde varsa tamam, ama teknik resimden ekstra bilgi ekleme.\n\n' +
       'GORSEL TABLO OKUMA (OZELLIKLE DILER DEMIR-CELIK FORMU):\n' +
       'Bu form gorsel olarak geldiginde su ozellikleri var:\n' +
       '- Yazi tipi: Bold, siyah, sans-serif (Arial/Helvetica benzeri)\n' +
@@ -894,8 +900,8 @@ async function aiOku() {
       musteri_adi: 'Diler Demir-Celik End. AS', musteri_gerekce: 'ALICI FIRMA etiketinin yanindan',
       teklif_ref: '6000297897', tarih: '2026-03-18', proje_adi: 'Mil ve Role Imalati',
       kalemler: [
-        { parca_adi: 'Mil Ara Kutuk Aktarma Sehpa P2 // POZ-2', cizim_no: '', dosya_no: '6541', adet: '2', adet_gerekce: 'MIKTAR sutunu altindaki hucrede "2" rakami — hucre kenarina yapisik ama rakam 2, ADT birim sutununda', malzeme: '', stok_kodu: '2096551' },
-        { parca_adi: 'Role Imalati Hizalama Avare P-22 // POZ-22', cizim_no: '', dosya_no: '4149', adet: '50', adet_gerekce: 'MIKTAR sutunu altindaki hucrede "50" — bold fontta 5 ve 6 benzer ama sutun hizasina gore 50 okunuyor', malzeme: '', stok_kodu: '2009813' }
+        { parca_adi: 'Mil Ara Kutuk Aktarma Sehpa P2 // POZ-2 Imal Edilecektir.', cizim_no: '', dosya_no: '6541', adet: '2', adet_gerekce: 'MIKTAR sutunu altindaki hucrede "2" rakami — hucre kenarina yapisik ama rakam 2, ADT birim sutununda', malzeme: '', stok_kodu: '2096551' },
+        { parca_adi: 'Role Imali Hizalama Avare P-22 // POZ-22 Imal Edilecektir.', cizim_no: '', dosya_no: '4149', adet: '50', adet_gerekce: 'MIKTAR sutunu altindaki hucrede "50" — bold fontta 5 ve 6 benzer ama sutun hizasina gore 50 okunuyor', malzeme: '', stok_kodu: '2009813' }
       ]
     }}]};
 
@@ -916,8 +922,8 @@ async function aiOku() {
       musteri_adi: 'Diler Demir-Celik End. AS', musteri_gerekce: 'ALICI FIRMA etiketinden',
       teklif_ref: '', proje_adi: 'Mil ve Role Imalati',
       kalemler: [
-        { parca_adi: 'Mil Ara Kutuk P2 / POZ-2', dosya_no: '6541', cizim_no: '', adet: '2', adet_gerekce: 'MIKTAR sutununda "2 ADT" — ADT birim, 2 adet', malzeme: 'c-1040', stok_kodu: '2096551' },
-        { parca_adi: 'Role Imalati P-22 / POZ-22', dosya_no: '4149', cizim_no: '', adet: '50', adet_gerekce: 'MIKTAR sutununda "50 ADT"', malzeme: 'St-37', stok_kodu: '2009813' }
+        { parca_adi: 'Mil Ara Kutuk Aktarma Sehpa P2 // POZ-2 Imal Edilecektir.', dosya_no: '6541', cizim_no: '', adet: '2', adet_gerekce: 'MIKTAR sutununda "2 ADT" — ADT birim, 2 adet', malzeme: 'c-1040', stok_kodu: '2096551' },
+        { parca_adi: 'Role Imali Hizalama Avare P-22 // POZ-22 Imal Edilecektir.', dosya_no: '4149', cizim_no: '', adet: '50', adet_gerekce: 'MIKTAR sutununda "50 ADT"', malzeme: 'St-37', stok_kodu: '2009813' }
       ]
     }}]};
 
@@ -928,8 +934,10 @@ async function aiOku() {
       if (teklifHazir.tip === 'application/pdf') {
         try {
           var raw = atob(teklifHazir.b64);
-          var isXFA = raw.indexOf('xdp:xdp') > -1 || raw.indexOf('XFA') > -1 ||
-                      raw.indexOf('Adobe LiveCycle') > -1 || raw.indexOf('AcroForm') > -1;
+          var isXFA = raw.indexOf('xdp:xdp') > -1 ||
+                      raw.indexOf('Adobe LiveCycle') > -1 ||
+                      raw.indexOf('XFAVersion') > -1 ||
+                      (raw.indexOf('<xfa:') > -1 && raw.indexOf('</xfa:') > -1);
           if (isXFA) {
             console.log('XFA PDF tespit edildi, sunucu tarafinda aciliyor...');
             toast('XFA PDF aciliyor...');
@@ -1200,6 +1208,35 @@ function dosyaToDataUrl(file) {
   });
 }
 
+async function pdfToImageBrowser(b64) {
+  if (!window.pdfjsLib) throw new Error('PDF.js yok');
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+  var binary = atob(b64);
+  var bytes  = new Uint8Array(binary.length);
+  for (var i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+
+  var pdf = await pdfjsLib.getDocument({ data: bytes }).promise;
+  var sayfaSayisi = Math.min(pdf.numPages, 5); // max 5 sayfa
+  var sayfalar = [];
+
+  for (var p = 1; p <= sayfaSayisi; p++) {
+    var page = await pdf.getPage(p);
+    var scale = 2.0; // yuksek cozunurluk
+    var vp = page.getViewport({ scale: scale });
+
+    var canvas = document.createElement('canvas');
+    canvas.width  = vp.width;
+    canvas.height = vp.height;
+
+    await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
+    sayfalar.push(canvas.toDataURL('image/png').split(',')[1]);
+  }
+
+  return sayfalar;
+}
+
 async function dosyaHazirla(dosya) {
   var ext = dosya.name.split('.').pop().toLowerCase();
 
@@ -1222,24 +1259,41 @@ async function dosyaHazirla(dosya) {
     });
   }
 
-  // PDF -> Sunucuda goruntye cevir
+  // PDF -> Goruntye cevir (sunucu veya tarayici)
   if (ext === 'pdf') {
     var b64 = await dosyaToBase64(dosya);
+
+    // 1. Sunucu tarafi dene
     try {
       var pdfRes = await fetch('/.netlify/functions/pdf-to-image', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ b64: b64 })
       });
-      var pdfJson = await pdfRes.json();
-      if (pdfJson.success && pdfJson.pages && pdfJson.pages.length > 0) {
-        console.log('PDF ' + pdfJson.count + ' sayfaya cevrildi');
-        return { b64: pdfJson.pages[0], tip: 'image/png', tumSayfalar: pdfJson.pages };
+      if (pdfRes.ok) {
+        var pdfJson = await pdfRes.json();
+        if (pdfJson.success && pdfJson.pages && pdfJson.pages.length > 0) {
+          console.log('PDF ' + pdfJson.count + ' sayfaya cevrildi (sunucu)');
+          return { b64: pdfJson.pages[0], tip: 'image/png', tumSayfalar: pdfJson.pages };
+        }
       }
     } catch(e) {
-      console.warn('PDF->goruntu hatasi, direkt PDF gonderiliyor:', e);
+      console.warn('Sunucu PDF->PNG basarisiz:', e.message);
     }
-    // Fallback: direkt PDF
+
+    // 2. Fallback: PDF.js ile tarayicida render et
+    try {
+      var sayfalar = await pdfToImageBrowser(b64);
+      if (sayfalar && sayfalar.length > 0) {
+        console.log('PDF ' + sayfalar.length + ' sayfaya cevrildi (tarayici)');
+        return { b64: sayfalar[0], tip: 'image/png', tumSayfalar: sayfalar };
+      }
+    } catch(e) {
+      console.warn('Tarayici PDF->PNG basarisiz:', e.message);
+    }
+
+    // 3. Son fallback: direkt PDF
+    console.warn('PDF direkt gonderiliyor — dogruluk dusuk olabilir');
     return { b64: b64, tip: 'application/pdf' };
   }
 
