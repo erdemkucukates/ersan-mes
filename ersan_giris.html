@@ -149,9 +149,24 @@ async function giris(){
   try {
     var prefix = girilen.includes('@') ? girilen.split('@')[0] : girilen;
 
+    console.log('=== GİRİŞ DEBUG ===');
+    console.log('Girilen değer:', girilen, '| Prefix:', prefix, '| Şifre uzunluğu:', sifre.length);
+    console.log('Airtable sorgu:', "AND({Mail_Prefix}='" + prefix + "', {Aktif}=1)");
+
     var res = await airtable('list', 'Kullanicilar', {
       filterByFormula: "AND({Mail_Prefix}='" + prefix + "', {Aktif}=1)"
     });
+
+    console.log('Airtable ham yanıt:', JSON.stringify(res));
+    console.log('Kayıt sayısı:', (res.records || []).length);
+    if (res.records && res.records.length > 0) {
+      var dbFields = res.records[0].fields;
+      console.log('Bulunan fields:', Object.keys(dbFields));
+      console.log('Sifre_Hash:', JSON.stringify(dbFields.Sifre_Hash));
+      console.log('Girilen sifre:', JSON.stringify(sifre));
+      console.log('Eşleşiyor mu:', dbFields.Sifre_Hash === sifre);
+      console.log('Aktif değeri:', dbFields.Aktif, typeof dbFields.Aktif);
+    }
 
     var kayitlar = res.records || [];
 
