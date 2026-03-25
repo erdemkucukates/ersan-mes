@@ -150,32 +150,34 @@ async function giris(){
     var prefix = girilen.includes('@') ? girilen.split('@')[0] : girilen;
 
     console.log('=== GİRİŞ DEBUG ===');
-    console.log('Girilen değer:', girilen, '| Prefix:', prefix, '| Şifre uzunluğu:', sifre.length);
-    console.log('Airtable sorgu:', "AND({Mail_Prefix}='" + prefix + "', {Aktif}=1)");
+    console.log('Prefix:', prefix, '| Şifre uzunluğu:', sifre.length);
 
-    var res = await airtable('list', 'Kullanicilar', {
-      filterByFormula: "AND({Mail_Prefix}='" + prefix + "', {Aktif}=1)"
+    var res = await airtable('list', 'Kullanicilar', {});
+
+    console.log('Toplam kayıt:', (res.records || []).length);
+
+    // JS tarafında Mail_Prefix + Aktif filtrele
+    var kayit = (res.records || []).find(function(rec) {
+      var f = rec.fields;
+      return f.Mail_Prefix && f.Mail_Prefix.toLowerCase().trim() === prefix.toLowerCase().trim() && f.Aktif;
     });
 
-    console.log('Airtable ham yanıt:', JSON.stringify(res));
-    console.log('Kayıt sayısı:', (res.records || []).length);
-    if (res.records && res.records.length > 0) {
-      var dbFields = res.records[0].fields;
-      console.log('Bulunan fields:', Object.keys(dbFields));
-      console.log('Sifre_Hash:', JSON.stringify(dbFields.Sifre_Hash));
-      console.log('Girilen sifre:', JSON.stringify(sifre));
-      console.log('Eşleşiyor mu:', dbFields.Sifre_Hash === sifre);
-      console.log('Aktif değeri:', dbFields.Aktif, typeof dbFields.Aktif);
-    }
-
-    var kayitlar = res.records || [];
-
-    if (kayitlar.length === 0 || kayitlar[0].fields.Sifre_Hash !== sifre) {
+    if (!kayit) {
+      console.log('Kullanıcı bulunamadı:', prefix);
       throw new Error('Hatalı giriş');
     }
 
-    var k = kayitlar[0].fields;
-    var id = kayitlar[0].id;
+    console.log('Eşleşen kullanıcı:', kayit.fields.Ad_Soyad);
+    console.log('Sifre_Hash:', JSON.stringify(kayit.fields.Sifre_Hash));
+    console.log('Girilen sifre:', JSON.stringify(sifre));
+    console.log('Eşleşiyor mu:', kayit.fields.Sifre_Hash?.trim() === sifre?.trim());
+
+    if (kayit.fields.Sifre_Hash?.trim() !== sifre?.trim()) {
+      throw new Error('Hatalı giriş');
+    }
+
+    var k = kayit.fields;
+    var id = kayit.id;
 
     // Son giriş tarihini güncelle
     await airtable('update', 'Kullanicilar', {
