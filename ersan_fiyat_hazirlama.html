@@ -280,6 +280,7 @@ textarea.f-inp{resize:vertical;min-height:60px}
                   <tr>
                     <th>#</th>
                     <th>Parca Adi</th>
+                    <th>Dosya No</th>
                     <th>Cizim No</th>
                     <th>Adet</th>
                     <th>Malzeme</th>
@@ -810,10 +811,18 @@ async function aiOku() {
       '-> "12 ADT" = bu kalemin adeti (DOGRU)\n\n' +
       'Normal tablo ornegi:\n' +
       '"MIKTAR: 25 ADT" -> adet = 25\n\n' +
-      'MALZEME:\n' +
-      '1. Once teklif formundaki o kalemin aciklamasina bak: "MALZEME: X" veya "MATERIAL: X"\n' +
-      '2. Bulamazsan teknik resmin antet/baslik bolumundeki malzeme alanina bak\n' +
-      '3. Ikisinde de yoksa bos birak\n\n' +
+      'MALZEME OKUMA KURALI:\n' +
+      'Oncelik sirasi:\n' +
+      '1. Teklif formundaki bu kalemin aciklamasinda "MALZEME:", "MATERIAL:" yazan yer\n' +
+      '2. Teknik resimde bu kaleme ait poz bilgisi varsa (Poz 3, POZ-2 gibi):\n' +
+      '   - Resimde birden fazla poz olabilir\n' +
+      '   - Teklif formundaki poz numarasiyla eslestir\n' +
+      '   - O poza ait malzeme bilgisini oku (antet degil, o pozun malzeme alani)\n' +
+      '3. Resimde tek poz varsa veya poz eslestirme yapilamiyorsa:\n' +
+      '   - Resmin antet/baslik kismindaki malzeme alanini oku\n' +
+      '4. Hicbirinde bulunamazsa bos birak\n\n' +
+      'DOSYA NO:\n' +
+      'Teklif formundaki kalem satirinda "DOSYA NO" sutunundan al. Her kalemin kendi dosya nosu olabilir.\n\n' +
       'STOK KODU:\n' +
       'Teklif formundaki kalem satirindaki "MALZEME KODU", "STOK KODU", "KOD" sutunundan al.\n\n' +
       'GORSEL TABLO OKUMA (OZELLIKLE DILER DEMIR-CELIK FORMU):\n' +
@@ -856,7 +865,8 @@ async function aiOku() {
                 cizim_no: { type: 'string', description: 'Bu kaleme ait cizim/resim numarasi. Tire ve rakamlardan olusur. Orn: 4709-04-003, HTZ-2550_R6' },
                 adet: { type: 'string', description: 'BU KALEME AIT adet. Kalem satirinda "ADT", "ADET", "PCS", "MIKTAR", "QTY" kelimesinin HEMEN ONUNDEKI tam sayi. Toplam veya genel adet degil. Emin degilsen bos.' },
                 adet_gerekce: { type: 'string', description: 'Adeti hangi kelime grubundan aldin? Tam alinti. Orn: "12 ADT — ADT onundeki 12" veya "bulunamadi"' },
-                malzeme: { type: 'string', description: 'Malzeme cinsi/kalitesi. Oncelik sirasi: 1) Bu kalemin teklif formundaki aciklamasinda "MALZEME:" yazan yer, 2) Teknik resmin antet/baslik kismindaki malzeme alani. Orn: 4140, AISI 304L, HGW 2372.4, UDDEHOLM DIEVAR. Bulamazsan bos.' },
+                dosya_no: { type: 'string', description: 'Bu kaleme ait dosya numarasi. Teklif formundaki kalem satirinda "DOSYA NO" sutunundan al. Diler formunda her kalemin kendi dosya nosu var. Orn: 6541, 4149, 3027. Yoksa bos.' },
+                malzeme: { type: 'string', description: 'Malzeme cinsi/kalitesi. Oncelik: 1) Teklif formunda "MALZEME:" yazan yer, 2) Teknik resimde poz eslesmesi varsa o pozun malzeme alani, 3) Resmin antet kismindaki malzeme. Orn: 4140, AISI 304L, HGW 2372.4. Bulamazsan bos.' },
                 stok_kodu: { type: 'string', description: 'Musterinin bu kaleme ait malzeme kodu, stok kodu veya urun kodu. Teklif formundaki kalem satirinda "MALZEME KODU", "STOK KODU", "KOD" gibi sutundan al. Orn: 2005531, 2099557. Yoksa bos.' }
               },
               required: ['parca_adi', 'adet', 'adet_gerekce']
@@ -873,8 +883,8 @@ async function aiOku() {
       musteri_adi: 'Diler Demir-Celik End. AS', musteri_gerekce: 'ALICI FIRMA etiketinin yanindan',
       teklif_ref: '6000297897', tarih: '2026-03-18', proje_adi: 'Mil ve Role Imalati',
       kalemler: [
-        { parca_adi: 'Mil Ara Kutuk Aktarma Sehpa P2 // POZ-2', cizim_no: '', adet: '2', adet_gerekce: 'MIKTAR sutunu altindaki hucrede "2" rakami — hucre kenarina yapisik ama rakam 2, ADT birim sutununda', malzeme: '', stok_kodu: '2096551' },
-        { parca_adi: 'Role Imalati Hizalama Avare P-22 // POZ-22', cizim_no: '', adet: '50', adet_gerekce: 'MIKTAR sutunu altindaki hucrede "50" — bold fontta 5 ve 6 benzer ama sutun hizasina gore 50 okunuyor', malzeme: '', stok_kodu: '2009813' }
+        { parca_adi: 'Mil Ara Kutuk Aktarma Sehpa P2 // POZ-2', cizim_no: '', dosya_no: '6541', adet: '2', adet_gerekce: 'MIKTAR sutunu altindaki hucrede "2" rakami — hucre kenarina yapisik ama rakam 2, ADT birim sutununda', malzeme: '', stok_kodu: '2096551' },
+        { parca_adi: 'Role Imalati Hizalama Avare P-22 // POZ-22', cizim_no: '', dosya_no: '4149', adet: '50', adet_gerekce: 'MIKTAR sutunu altindaki hucrede "50" — bold fontta 5 ve 6 benzer ama sutun hizasina gore 50 okunuyor', malzeme: '', stok_kodu: '2009813' }
       ]
     }}]};
 
@@ -883,9 +893,9 @@ async function aiOku() {
       musteri_adi: 'Tosyali Metalurji Sanayi A.S.', musteri_gerekce: 'Satirin basinda firma adi olarak geciyor',
       teklif_ref: '6003091192', tarih: '2026-03-24', proje_adi: 'Yatay Kolon Parcalari',
       kalemler: [
-        { parca_adi: 'Izolator (POZ 3)', cizim_no: '4709-04-003', adet: '12', adet_gerekce: '12 ADT — ADT kelimesinin hemen onunde, 10 kalem sirasidir adet degil', malzeme: 'HGW 2372.4 (DIN 7735)', stok_kodu: '2099557' },
-        { parca_adi: 'Yatay Kolon Parcasi (POZ 7)', cizim_no: '4709-04-007', adet: '12', adet_gerekce: '12 ADT — ADT kelimesinin hemen onunde', malzeme: 'HGW 2372.4 (DIN 7735)', stok_kodu: '2099811' },
-        { parca_adi: 'Yatay Kolon (POZ 4)', cizim_no: '4709-04-004', adet: '3', adet_gerekce: '3 ADT — ADT kelimesinin hemen onunde', malzeme: 'X2CrNi19-11 EN10088-3 (AISI 304L)', stok_kodu: '2099791' }
+        { parca_adi: 'Izolator (POZ 3)', cizim_no: '4709-04-003', dosya_no: '', adet: '12', adet_gerekce: '12 ADT — ADT kelimesinin hemen onunde, 10 kalem sirasidir adet degil', malzeme: 'HGW 2372.4 (DIN 7735)', stok_kodu: '2099557' },
+        { parca_adi: 'Yatay Kolon Parcasi (POZ 7)', cizim_no: '4709-04-007', dosya_no: '', adet: '12', adet_gerekce: '12 ADT — ADT kelimesinin hemen onunde', malzeme: 'HGW 2372.4 (DIN 7735)', stok_kodu: '2099811' },
+        { parca_adi: 'Yatay Kolon (POZ 4)', cizim_no: '4709-04-004', dosya_no: '', adet: '3', adet_gerekce: '3 ADT — ADT kelimesinin hemen onunde', malzeme: 'X2CrNi19-11 EN10088-3 (AISI 304L)', stok_kodu: '2099791' }
       ]
     }}]};
 
@@ -1188,6 +1198,7 @@ function kalemlerGoster(kalemler) {
     return '<tr>' +
       '<td>' + (i + 1) + '</td>' +
       '<td>' + (k.parca_adi || '—') + '</td>' +
+      '<td>' + (k.dosya_no || '—') + '</td>' +
       '<td>' + (k.cizim_no || '—') + '</td>' +
       '<td>' + (k.adet || '—') + '</td>' +
       '<td>' + (k.malzeme || '—') + '</td>' +
@@ -1286,7 +1297,8 @@ function sablonHTML(kalem, idx, toplam) {
       '<tr><td style="' + lbl + '">Proje Adi</td><td colspan="3" style="' + val + '">' + (projeAdi || '—') + '</td></tr>' +
       '<tr><td style="' + lbl + '">Parca Adi</td><td colspan="3" style="' + val + '">' + (kalem.parca_adi || '—') + '</td></tr>' +
       '<tr><td style="' + lbl + '">Cizim No</td><td style="' + val + '">' + (kalem.cizim_no || '—') + '</td><td style="' + lbl + '">Adet</td><td style="' + val + '">' + (kalem.adet || '—') + '</td></tr>' +
-      '<tr><td style="' + lbl + '">Teklif Ref</td><td style="' + val + '">' + (teklifRef || '—') + '</td><td style="' + lbl + '">Kalem</td><td style="' + val + '">' + kalemNo + toplamStr + '</td></tr>' +
+      '<tr><td style="' + lbl + '">Dosya No</td><td style="' + val + '">' + (kalem.dosya_no || '—') + '</td><td style="' + lbl + '">Kalem</td><td style="' + val + '">' + kalemNo + toplamStr + '</td></tr>' +
+      '<tr><td style="' + lbl + '">Teklif Ref</td><td colspan="3" style="' + val + '">' + (teklifRef || '—') + '</td></tr>' +
       (kalem.stok_kodu ? '<tr><td style="' + lbl + '">Stok Kodu</td><td colspan="3" style="' + val + '">' + kalem.stok_kodu + '</td></tr>' : '') +
       (malzStr ? '<tr><td style="' + lbl + ';font-size:7px">Musteri<br>Malzemesi</td><td colspan="3" style="padding:3px 5px;border:0.5px solid #d1d5db;font-size:8.5px;font-weight:700;color:#7c3aed;background:#ede9fe">' + malzStr + '</td></tr>' : '') +
     '</table>' +
